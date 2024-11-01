@@ -132,6 +132,14 @@ export class PodmanDownload {
     );
   }
 
+  protected getArtifactsToDownload(): {
+    version: string;
+    downloadName: string;
+    artifactName: string;
+  }[] {
+    return this.#artifactsToDownload;
+  }
+
   protected getPodman5DownloadFedoraImage(): Podman5DownloadFedoraImage {
     return this.#podman5DownloadFedoraImage;
   }
