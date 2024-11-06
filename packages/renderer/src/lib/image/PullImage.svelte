@@ -234,6 +234,7 @@ async function searchImages(value: string): Promise<string[]> {
           }}
           onEnter={pullImage}
           disabled={pullFinished || pullInProgress}
+          isShortName={selectedProviderConnection?.type === 'podman' && Boolean(podmanFQN)}
           required
           initialFocus />
         {#if selectedProviderConnection?.type === 'podman' && podmanFQN}
