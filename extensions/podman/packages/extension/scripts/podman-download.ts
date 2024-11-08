@@ -18,12 +18,18 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as https from 'node:https';
 import { Octokit } from 'octokit';
 import type { OctokitOptions } from '@octokit/core/dist-types/types';
 import { hashFile } from 'hasha';
 import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
+
+// Add support for WSL
+export enum DiskType {
+  // WSL = 'wsl',
+  Hyperv = 'hyperv',
+  Applehv = 'applehv',
+}
 
 // to make this file a module
 export class PodmanDownload {
@@ -126,6 +132,14 @@ export class PodmanDownload {
     );
   }
 
+  protected getArtifactsToDownload(): {
+    version: string;
+    downloadName: string;
+    artifactName: string;
+  }[] {
+    return this.#artifactsToDownload;
+  }
+
   protected getPodman5DownloadFedoraImage(): Podman5DownloadFedoraImage {
     return this.#podman5DownloadFedoraImage;
   }
@@ -157,15 +171,15 @@ export class PodmanDownload {
       return;
     }
 
+    // WSL
     if (this.#platform === 'win32') {
       // download the fedora image
-
       await this.#podman5DownloadFedoraImage?.download('x64');
       await this.#podman5DownloadFedoraImage?.download('arm64');
-    } else if (this.#platform === 'darwin') {
-      // download the podman 5 machines OS
-      await this.#podman5DownloadMachineOS?.download();
     }
+
+    // HyperV + applev
+    await this.#podman5DownloadMachineOS?.setAndDownload(this.#platform);
   }
 }
 
@@ -343,6 +357,7 @@ export class Podman5DownloadMachineOS {
   #version: string;
   #shaCheck: ShaCheck;
   #assetsFolder: string;
+  #ociRegistryProjectLink: string;
 
   constructor(
     readonly version: string,
@@ -396,7 +411,7 @@ export class Podman5DownloadMachineOS {
     filename: string,
     layer: { digest: string; size: number },
   ): Promise<void> {
-    const blobURL = `https://quay.io/v2/podman/machine-os/blobs/${layer.digest}`;
+    const blobURL = `${this.#ociRegistryProjectLink}/blobs/${layer.digest}`;
 
     const blobResponse = await fetch(blobURL);
     const total = layer.size;
@@ -435,9 +450,23 @@ export class Podman5DownloadMachineOS {
     }
   }
 
-  // For macOS, need to grab images from quay.io/podman/machine-os repository
-  async download(): Promise<void> {
-    const manifestUrl = `https://quay.io/v2/podman/machine-os/manifests/${this.#version}`;
+  async setAndDownload(platform: string): Promise<void> {
+    this.#ociRegistryProjectLink = 'https://quay.io/v2/podman/machine-os';
+    // download the podman 5 machines OS
+    if (platform === 'win32') {
+      // Here add downloading of WSL
+      // this.#ociRegistryProjectLink = 'https://quay.io/v2/podman/machine-os-wsl';
+      // await this.download(DiskType.WSL);
+      await this.download(DiskType.Hyperv);
+    } else {
+      await this.download(DiskType.Applehv);
+    }
+  }
+
+  // For Windows WSL, need to grab images from quay.io/podman/machine-os-wsl repository
+  // Otherwise grab images from quay.io/podman/machine-os repository
+  async download(diskType: DiskType): Promise<void> {
+    const manifestUrl = `${this.#ociRegistryProjectLink}/manifests/${this.#version}`;
 
     // get first level of manifests
     const rootManifest = await this.getManifest(manifestUrl);
@@ -452,7 +481,13 @@ export class Podman5DownloadMachineOS {
     // grab applehv as annotations / disktype
     const keepManifests = manifests.filter(manifest => {
       const annotations = manifest.annotations;
-      return annotations && annotations.disktype === 'applehv';
+      // Here add statement for WSL
+      return (
+        annotations &&
+        ((diskType === DiskType.Hyperv && annotations.disktype === 'hyperv') ||
+          // (diskType === DiskType.WSL && annotations.disktype === 'wsl') ||
+          (diskType === DiskType.Applehv && annotations.disktype === 'applehv'))
+      );
     });
 
     // should have aarch64 for arm64 and x86_64 for x64
@@ -469,10 +504,10 @@ export class Podman5DownloadMachineOS {
 
     // now get the zstd entry from the arch manifest
     const amd64ZstdManifest = await this.getManifest(
-      `https://quay.io/v2/podman/machine-os/manifests/${amd64Manifest.digest}`,
+      `${this.#ociRegistryProjectLink}/manifests/${amd64Manifest.digest}`,
     );
     const arm64ZstdManifest = await this.getManifest(
-      `https://quay.io/v2/podman/machine-os/manifests/${arm64Manifest.digest}`,
+      `${this.#ociRegistryProjectLink}/manifests/${arm64Manifest.digest}`,
     );
 
     // download the zstd layers

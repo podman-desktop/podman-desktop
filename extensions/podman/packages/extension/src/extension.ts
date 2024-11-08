@@ -2077,7 +2077,11 @@ export async function createMachine(
     // check if we have an embedded asset for the image path for macOS or Windows
     let suffix = '';
     if (isWindows()) {
-      suffix = `-${process.arch}.tar.zst`;
+      if (wslEnabled) {
+        suffix = `-${process.arch}.tar.zst`;
+      } else {
+        suffix = `-${process.arch}.zst`;
+      }
     } else if (isMac()) {
       suffix = `-${process.arch}.zst`;
     }
