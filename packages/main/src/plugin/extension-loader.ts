@@ -78,6 +78,8 @@ import type { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 import type { ProgressImpl } from './tasks/progress-impl.js';
 import { ProgressLocation } from './tasks/progress-impl.js';
+import type { TaskManager } from './tasks/task-manager.js';
+import type { Task, TaskAction } from './tasks/tasks.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import type { TrayMenuRegistry } from './tray-menu-registry.js';
 import type { IDisposable } from './types/disposable.js';
@@ -194,6 +196,7 @@ export class ExtensionLoader {
     private dialogRegistry: DialogRegistry,
     private safeStorageRegistry: SafeStorageRegistry,
     private certificates: Certificates,
+    private taskManager: TaskManager,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -1062,6 +1065,9 @@ export class ExtensionLoader {
       ): Promise<containerDesktopAPI.Uri | undefined> => {
         return dialogRegistry.saveDialog(options);
       },
+      createTask: (options?: { title?: string; action?: TaskAction }): Task => {
+        return this.taskManager.createTask(options);
+      },
     };
 
     const fileSystemMonitoring = this.fileSystemMonitoring;
@@ -1094,6 +1100,8 @@ export class ExtensionLoader {
     };
 
     const containerProviderRegistry = this.containerProviderRegistry;
+    const taskManager = this.taskManager;
+    const navigationManager = this.navigationManager;
     const containerEngine: typeof containerDesktopAPI.containerEngine = {
       listContainers(): Promise<containerDesktopAPI.ContainerInfo[]> {
         return containerProviderRegistry.listSimpleContainers();
@@ -1124,13 +1132,45 @@ export class ExtensionLoader {
         eventCollect: (eventName: 'stream' | 'error' | 'finish', data: string) => void,
         options?: containerDesktopAPI.BuildImageOptions,
       ) {
-        return containerProviderRegistry.buildImage(context, eventCollect, options);
+        const task = taskManager.createTask({
+          title: `${extensionInfo.name}: Build ${options?.tag ?? 'image'}`,
+          action: {
+            name: 'Go to task >',
+            execute: () => {
+              navigationManager.navigateToImageBuild().catch((err: unknown) => {
+                console.error(`Something went wrong while trying to navigate to image build: ${String(err)}`);
+              });
+            },
+          },
+        });
+        return containerProviderRegistry
+          .buildImage(context, eventCollect, options)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while trying to build image: ${String(err)}`;
+            throw err;
+          });
       },
       listImages(options?: containerDesktopAPI.ListImagesOptions): Promise<containerDesktopAPI.ImageInfo[]> {
         return containerProviderRegistry.podmanListImages(options);
       },
       saveImage(engineId: string, id: string, filename: string, token?: containerDesktopAPI.CancellationToken) {
-        return containerProviderRegistry.saveImage(engineId, id, filename, token);
+        const task = taskManager.createTask({
+          title: `${extensionInfo.name}: Save image`,
+        });
+        return containerProviderRegistry
+          .saveImage(engineId, id, filename, token)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while trying to save images: ${String(err)}`;
+            throw err;
+          });
       },
       pushImage(
         engineId: string,
