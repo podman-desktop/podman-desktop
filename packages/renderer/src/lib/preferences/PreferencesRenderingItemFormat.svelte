@@ -129,7 +129,7 @@ function autoSave(): Promise<void> {
   return Promise.resolve();
 }
 
-function ensureType(value: any): boolean {
+function ensureType(value: unknown): boolean {
   switch (typeof value) {
     case 'boolean':
       return record.type === 'boolean';
