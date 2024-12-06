@@ -38,6 +38,8 @@ import { Emitter } from './events/emitter.js';
 import { ExtensionLoader } from './extension-loader.js';
 import { PluginSystem } from './index.js';
 import type { MessageBox } from './message-box.js';
+import { TaskManager } from './tasks/task-manager.js';
+import { Disposable } from './types/disposable.js';
 import { Deferred } from './util/deferred.js';
 import { HttpServer } from './webview/webview-registry.js';
 
@@ -91,8 +93,10 @@ beforeAll(() => {
 });
 
 const handlers = new Map<string, any>();
+
 beforeEach(() => {
   vi.clearAllMocks();
+  handlers.clear();
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
@@ -105,7 +109,7 @@ beforeEach(() => {
     ];
   });
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
-  vi.spyOn(Updater.prototype, 'init').mockReturnValue({ dispose: vi.fn() } as any);
+  vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);
   // to avoid port conflict when tests are running on windows host
   vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
@@ -318,7 +322,8 @@ test('configurationRegistry propagated', async () => {
 const pushImageHandlerId = 'container-provider-registry:pushImage';
 const pushImageHandlerOnDataEvent = `${pushImageHandlerId}-onData`;
 
-test('push image command sends onData message with callbackId, event name and event data ', async () => {
+test('push image command sends onData message with callbackId, event name and data, mark task as success on end event', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get(pushImageHandlerId);
   expect(handle).not.equal(undefined);
@@ -333,10 +338,15 @@ test('push image command sends onData message with callbackId, event name and ev
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback('data', 'push image output');
+  expect(createTaskSpy).toHaveBeenCalledOnce();
+  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Push image '${'registry.com/repo/image:latest'}'` });
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'data', 'push image output');
+  registeredCallback('end', '');
+  expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
 });
 
-test('push image sends data event with error and end event when fails', async () => {
+test('push image sends data event with error, "end" event when fails and set task error value', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   const pushError = new Error('push error');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:pushImage');
@@ -350,4 +360,5 @@ test('push image sends data event with error and end event when fails', async ()
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
+  expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
 });

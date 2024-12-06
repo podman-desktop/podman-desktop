@@ -155,7 +155,6 @@ type CallbackType = (name: string, data?: string) => void;
 describe('Expect Push Image dialog', () => {
   let callback: CallbackType | undefined;
   const closeCallback = vi.fn();
-
   function button(name: 'Cancel' | 'Push image' | 'Done') {
     return screen.queryByRole('button', { name });
   }
