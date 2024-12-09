@@ -298,7 +298,8 @@ describe('includeExtensionInfo', () => {
       }),
     );
   });
-  
+});
+
 test.each(['bug', 'feature'])('Expect %s to have specific telemetry track events', async category => {
   const { title, description, preview } = renderGitHubIssueFeedback({
     category: category,
