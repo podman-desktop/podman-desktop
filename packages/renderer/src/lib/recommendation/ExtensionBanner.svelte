@@ -1,7 +1,13 @@
 <script lang="ts">
+import { CloseButton } from '@podman-desktop/ui-svelte';
+
 import FeaturedExtension from '/@/lib/featured/FeaturedExtension.svelte';
 
-import type { ExtensionBanner } from '../../../../main/src/plugin/recommendations/recommendations-api';
+import { CONFIGURATION_DEFAULT_SCOPE } from '../../../../main/src/plugin/configuration-registry-constants';
+import {
+  type ExtensionBanner,
+  ignoreRecommendationMap,
+} from '../../../../main/src/plugin/recommendations/recommendations-api';
 
 // Pass in the theme appearance colour of PD to the banner, we do it here so we don't have to do multiple isDark checks when rendering multiple banners.
 let { banner, isDark }: { banner: ExtensionBanner; isDark: boolean } = $props();
@@ -22,6 +28,40 @@ $effect(() => {
     style = undefined;
   }
 });
+
+async function onClose(): Promise<void> {
+  const result = await window.showMessageBox({
+    title: 'Hide extension recommendation',
+    message: `Do you want to hide ${banner.featured.displayName} extension?`,
+    type: 'warning',
+    buttons: ["Don't hide", 'Hide all recomendations', 'Hide only this'],
+  });
+
+  if (result && result.response === 1) {
+    for (const key in ignoreRecommendationMap) {
+      await window.updateConfigurationValue(
+        `extensions.${ignoreRecommendationMap[key]}`,
+        true,
+        CONFIGURATION_DEFAULT_SCOPE,
+      );
+    }
+    await window.telemetryTrack('hideRecomendationExtension', {
+      extension: 'All extensions',
+    });
+  } else if (result && result.response === 2) {
+    const matchingRecomendationSettings = ignoreRecommendationMap[banner.extensionId];
+    if (matchingRecomendationSettings) {
+      await window.updateConfigurationValue(
+        `extensions.${matchingRecomendationSettings}`,
+        true,
+        CONFIGURATION_DEFAULT_SCOPE,
+      );
+      await window.telemetryTrack('hideRecomendationExtension', {
+        extension: banner.featured.displayName,
+      });
+    }
+  }
+}
 </script>
 
 <div
@@ -46,6 +86,9 @@ $effect(() => {
 
   <!-- feature extension actions -->
   <div class="flex flex-col">
+    <div class="flex flex-row justify-end">
+      <CloseButton on:click={onClose} />
+    </div>
     <FeaturedExtension displayTitle={true} variant="secondary" featuredExtension={banner.featured} />
     <span class="text-base w-full text-end">{banner.featured.description}</span>
   </div>

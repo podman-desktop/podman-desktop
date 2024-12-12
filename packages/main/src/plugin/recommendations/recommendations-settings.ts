@@ -18,5 +18,8 @@
 
 export enum RecommendationsSettings {
   SectionName = 'extensions',
-  IgnoreRecommendations = 'ignoreRecommendations',
+  // Ai Lab
+  IgnoreRecommendationAiLab = 'ignoreRecommendationAiLab',
+  // Red Hat Extension Pack
+  IgnoreRecommendationRhEp = 'ignoreRecommendationRedHatExtensionPack',
 }

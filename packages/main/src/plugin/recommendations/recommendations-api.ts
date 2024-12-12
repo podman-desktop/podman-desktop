@@ -58,3 +58,8 @@ export interface RecommendedRegistry {
 
   extensionDetails: RecommendedRegistryExtensionDetails;
 }
+
+export const ignoreRecommendationMap: Record<string, string> = {
+  'redhat.ai-lab': 'ignoreRecommendationAiLab',
+  'redhat.redhat-pack': 'ignoreRecommendationRedHatExtensionPack',
+};

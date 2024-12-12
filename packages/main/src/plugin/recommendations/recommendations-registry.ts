@@ -21,10 +21,11 @@ import type { ExtensionLoader } from '/@/plugin/extension-loader.js';
 import type { ExtensionsCatalog } from '/@/plugin/extensions-catalog/extensions-catalog.js';
 import type { Featured } from '/@/plugin/featured/featured.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
-import type {
-  ExtensionBanner,
-  RecommendedRegistry,
-  RecommendedRegistryExtensionDetails,
+import {
+  type ExtensionBanner,
+  ignoreRecommendationMap,
+  type RecommendedRegistry,
+  type RecommendedRegistryExtensionDetails,
 } from '/@/plugin/recommendations/recommendations-api.js';
 
 import { default as recommendations } from '../../../../../recommendations.json';
@@ -38,17 +39,13 @@ export class RecommendationsRegistry {
     private extensionsCatalog: ExtensionsCatalog,
   ) {}
 
-  isRecommendationEnabled(): boolean {
+  isRecommendationEnabled(recommendation: string): boolean {
     return !this.configurationRegistry
       .getConfiguration(RecommendationsSettings.SectionName)
-      .get<boolean>(RecommendationsSettings.IgnoreRecommendations, false);
+      .get<boolean>(recommendation, false);
   }
 
   async getRegistries(): Promise<RecommendedRegistry[]> {
-    // Do not recommend any registry when user selected the ignore preference
-    if (!this.isRecommendationEnabled()) {
-      return [];
-    }
     const installedExtensions = await this.extensionLoader.listExtensions();
 
     const fetchableExtensions = await this.extensionsCatalog.getFetchableExtensions();
@@ -59,13 +56,18 @@ export class RecommendationsRegistry {
         let extensionDetails: RecommendedRegistryExtensionDetails | undefined;
 
         if (matchingExtension) {
-          extensionDetails = {
-            id: matchingExtension.extensionId,
-            displayName: registry.extensionId,
-            fetchable: true,
-            fetchLink: matchingExtension.link,
-            fetchVersion: matchingExtension.version,
-          };
+          const matchingRecomendationSettings = ignoreRecommendationMap[matchingExtension.extensionId];
+          if (matchingRecomendationSettings) {
+            if (this.isRecommendationEnabled(matchingRecomendationSettings)) {
+              extensionDetails = {
+                id: matchingExtension.extensionId,
+                displayName: registry.extensionId,
+                fetchable: true,
+                fetchLink: matchingExtension.link,
+                fetchVersion: matchingExtension.version,
+              };
+            }
+          }
         }
 
         return {
@@ -85,11 +87,16 @@ export class RecommendationsRegistry {
    * @param limit the maximum number of extension banners returned. Default 1, use -1 for no limit
    */
   async getExtensionBanners(limit = 1): Promise<ExtensionBanner[]> {
-    // Do not recommend any extension when user selected the ignore preference
-    if (!this.isRecommendationEnabled()) return [];
-
     const featuredExtensions: Record<string, FeaturedExtension> = Object.fromEntries(
-      (await this.featured.getFeaturedExtensions()).map(featured => [featured.id, featured]),
+      (await this.featured.getFeaturedExtensions()).map(featured => {
+        const matchingRecomendationSettings = ignoreRecommendationMap[featured.id];
+        if (matchingRecomendationSettings) {
+          if (this.isRecommendationEnabled(matchingRecomendationSettings)) {
+            return [featured.id, featured];
+          }
+        }
+        return [];
+      }),
     );
 
     // Filter and shuffle the extensions
@@ -139,8 +146,14 @@ export class RecommendationsRegistry {
       title: 'Extensions',
       type: 'object',
       properties: {
-        [RecommendationsSettings.SectionName + '.' + RecommendationsSettings.IgnoreRecommendations]: {
-          description: 'When enabled, the notifications for extension recommendations will not be shown.',
+        [RecommendationsSettings.SectionName + '.' + RecommendationsSettings.IgnoreRecommendationAiLab]: {
+          description: 'When enabled, the notifications for extension Ai Lab will not be shown.',
+          type: 'boolean',
+          default: false,
+          hidden: false,
+        },
+        [RecommendationsSettings.SectionName + '.' + RecommendationsSettings.IgnoreRecommendationRhEp]: {
+          description: 'When enabled, the notifications for extension Red Hat Extension Pack will not be shown.',
           type: 'boolean',
           default: false,
           hidden: false,
