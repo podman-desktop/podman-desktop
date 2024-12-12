@@ -83,6 +83,7 @@ let formEl: HTMLFormElement | undefined = $state();
 let connectionAuditResult: AuditResult | undefined = $state();
 let logsTerminal: Terminal | undefined = $state();
 
+let existingFormData: { [key: string]: unknown } | undefined;
 let operationFailed = false;
 let osMemory: string;
 let osCpu: string;
@@ -131,6 +132,7 @@ onMount(async () => {
       errorMessage = value.errorMessage;
       operationSuccessful = value.operationSuccessful;
       tokenId = value.tokenId;
+      existingFormData = value.formData;
     }
   }
 
@@ -152,6 +154,7 @@ onMount(async () => {
       console.warn(e && typeof e === 'object' && 'message' in e ? e.message : e);
     }
   }
+  dataToConfigurationValues();
   pageIsLoading = false;
 });
 
@@ -284,12 +287,34 @@ async function getConfigurationValue(configurationKey: IConfigurationPropertyRec
       );
       internalSetConfigurationValue(configurationKey.id, false, value as string);
       return value;
+      // } else if (existingFormData && existingFormData[configurationKey.id]) {
+      //   const value = existingFormData[configurationKey.id];
+      //   // internalSetConfigurationValue(configurationKey.id, true, value as string);
+      //   console.log(`getconfigvalue ${configurationKey.id}: ${value}`)
+      //   return value;
     }
     const initialValue = await getInitialValue(configurationKey);
     internalSetConfigurationValue(configurationKey.id, false, initialValue as string);
     return initialValue;
   }
 }
+
+function dataToConfigurationValues(): void {
+  if (!existingFormData) {
+    return;
+  }
+  for (let dataItem in existingFormData) {
+    if (
+      typeof existingFormData[dataItem] === 'number' ||
+      typeof existingFormData[dataItem] === 'string' ||
+      typeof existingFormData[dataItem] === 'boolean'
+    )
+      configurationValues.set(dataItem, { modified: true, value: existingFormData[dataItem] });
+  }
+}
+
+let logsTerminal: Terminal;
+let loggerHandlerKey: symbol | undefined = undefined;
 
 function getLoggerHandler(): ConnectionCallback {
   return {
@@ -351,6 +376,7 @@ function updateStore(): void {
         operationStarted: operationStarted,
         errorMessage: errorMessage ?? '',
         tokenId,
+        formData: existingFormData,
       });
     }
     return map;
@@ -392,6 +418,7 @@ async function handleOnSubmit(e: SubmitEvent): Promise<void> {
     operationStarted = true;
     operationFailed = false;
     operationCancelled = false;
+    existingFormData = data;
 
     try {
       tokenId = await window.getCancellableTokenSource();
@@ -469,7 +496,12 @@ function getConnectionResourceConfigurationNumberValue(
   configurationKey: IConfigurationPropertyRecordedSchema,
   configurationValues: Map<string, { modified: boolean; value: string | boolean | number }>,
 ): number | undefined {
-  const value = getConnectionResourceConfigurationValue(configurationKey, configurationValues);
+  let value;
+  if (existingFormData && configurationKey.id && existingFormData[configurationKey.id]) {
+    value = existingFormData[configurationKey.id];
+  } else {
+    value = getConnectionResourceConfigurationValue(configurationKey, configurationValues);
+  }
   if (typeof value === 'number') {
     return value;
   }
