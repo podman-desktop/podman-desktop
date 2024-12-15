@@ -35,7 +35,7 @@ async function onClick(action?: ItemAction): Promise<void> {
   }
 }
 </script>
-  
+
 <svelte:window on:keyup={handleEscape} on:click={onWindowClick}/>
 
 <div bind:this={outsideWindow}>
