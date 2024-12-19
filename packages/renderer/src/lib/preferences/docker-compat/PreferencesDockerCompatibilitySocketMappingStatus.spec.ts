@@ -27,6 +27,7 @@ import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '
 import PreferencesDockerCompatibilitySocketMappingStatus from './PreferencesDockerCompatibilitySocketMappingStatus.svelte';
 
 const podmanServerInfo = {
+  name: 'podman',
   type: 'podman' as DockerSocketServerInfoType,
   serverVersion: '1.0.0',
   operatingSystem: 'Linux',
@@ -35,6 +36,7 @@ const podmanServerInfo = {
 };
 
 const dockerServerInfo = {
+  name: 'docker',
   type: 'docker' as DockerSocketServerInfoType,
   serverVersion: '1.0.0',
   operatingSystem: 'Linux',

@@ -53,7 +53,7 @@ onMount(async () => {
           <RefreshButton label="Refresh the status" onclick={refreshSocketMappingStatus} />
         </div>
         {#if dockerSocketMappingStatusInfo?.status === 'running' && dockerSocketMappingStatusInfo?.serverInfo}
-          <Label name="{dockerSocketMappingStatusInfo.serverInfo.type} is listening">
+          <Label name="{dockerSocketMappingStatusInfo.serverInfo.name} is listening">
             <ProviderInfoCircle type={engineType} />
           </Label>
         {:else if dockerSocketMappingStatusInfo?.status === 'unreachable'}
@@ -100,7 +100,7 @@ onMount(async () => {
       aria-label="Server information">
       <div class="grid grid-cols-2 gap-x-8 gap-y-2">
         <div>Server:</div>
-        <div>{dockerSocketMappingStatusInfo.serverInfo.type}</div>
+        <div>{dockerSocketMappingStatusInfo.serverInfo.name}</div>
 
         <div>Version:</div>
         <div>{dockerSocketMappingStatusInfo.serverInfo.serverVersion}</div>

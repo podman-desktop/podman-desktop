@@ -43,8 +43,14 @@ const providerRegistry: ProviderRegistry = {
 } as unknown as ProviderRegistry;
 
 export class TestDockerCompatibility extends DockerCompatibility {
+  public override getNameFromServerInfo(
+    info: { Name?: string; OperatingSystem?: string },
+    podmanInfo?: unknown,
+  ): string {
+    return super.getNameFromServerInfo(info, podmanInfo);
+  }
   public override getTypeFromServerInfo(
-    info: { OperatingSystem?: string },
+    info: { Name?: string; OperatingSystem?: string },
     podmanInfo?: unknown,
   ): DockerSocketServerInfoType {
     return super.getTypeFromServerInfo(info, podmanInfo);
@@ -111,6 +117,7 @@ describe('getTypeFromServerInfo', async () => {
     const serverInfo = {
       OperatingSystem: 'Docker Desktop',
     };
+    expect(dockerCompatibility.getNameFromServerInfo(serverInfo)).toBe('docker');
     expect(dockerCompatibility.getTypeFromServerInfo(serverInfo)).toBe('docker');
   });
 
@@ -135,9 +142,19 @@ describe('getTypeFromServerInfo', async () => {
       ServerVersion: '1.0.0',
     };
 
+    expect(dockerCompatibility.getNameFromServerInfo(serverInfo, podmanInfo)).toBe('podman');
     expect(dockerCompatibility.getTypeFromServerInfo(serverInfo, podmanInfo)).toBe('podman');
   });
 
+  test('check lima', async () => {
+    const dockerCompatibility = new TestDockerCompatibility(configurationRegistry, providerRegistry);
+    const serverInfo = {
+      Name: 'lima-default',
+      OperatingSystem: 'Linux',
+    };
+    expect(dockerCompatibility.getNameFromServerInfo(serverInfo)).toBe('lima');
+    expect(dockerCompatibility.getTypeFromServerInfo(serverInfo)).toBe('docker');
+  });
   test('check unknown', async () => {
     const dockerCompatibility = new TestDockerCompatibility(configurationRegistry, providerRegistry);
     const serverInfo = {
@@ -220,6 +237,7 @@ describe('getSystemDockerSocketMappingStatus', async () => {
         osType: 'foo',
         serverVersion: '1.0.0',
         type: 'docker',
+        name: 'podman',
       },
       status: 'running',
     });
@@ -294,6 +312,7 @@ describe('getSystemDockerSocketMappingStatus', async () => {
         osType: 'foo',
         serverVersion: '1.0.0',
         type: 'docker',
+        name: 'podman',
       },
       status: 'running',
     });

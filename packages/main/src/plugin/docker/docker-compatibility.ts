@@ -63,12 +63,28 @@ export class DockerCompatibility {
     this.#configurationRegistry.registerConfigurations([dockerCompatibilityConfiguration]);
   }
 
+  protected getNameFromServerInfo(info: { Name?: string; OperatingSystem?: string }, podmanInfo?: unknown): string {
+    if (info.OperatingSystem === 'Docker Desktop') {
+      return 'docker';
+    } else if (info.Name?.startsWith('lima')) {
+      // lima instance host names all start with "lima"
+      return 'lima';
+    } else if (info.OperatingSystem === 'podman' || podmanInfo) {
+      // if podman info is available, then it is podman
+      return 'podman';
+    }
+    return 'unknown';
+  }
+
   protected getTypeFromServerInfo(
-    info: { OperatingSystem?: string },
+    info: { Name?: string; OperatingSystem?: string },
     podmanInfo?: unknown,
   ): DockerSocketServerInfoType {
     if (info.OperatingSystem === 'Docker Desktop') {
       return 'docker';
+    } else if (info.Name?.startsWith('lima')) {
+      // lima instance host names all start with "lima"
+      return podmanInfo ? 'podman' : 'docker';
     } else if (info.OperatingSystem === 'podman' || podmanInfo) {
       // if podman info is available, then it is podman
       return 'podman';
@@ -122,6 +138,7 @@ export class DockerCompatibility {
       const status: DockerSocketMappingStatusInfo = {
         status: 'running',
         serverInfo: {
+          name: this.getNameFromServerInfo(compatInfo, podmanInfo),
           type: this.getTypeFromServerInfo(compatInfo, podmanInfo),
           serverVersion,
           operatingSystem: compatInfo.OperatingSystem,

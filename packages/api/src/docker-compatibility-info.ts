@@ -35,6 +35,7 @@ export interface DockerSocketMappingStatusInfo {
     displayName: string;
   };
   serverInfo?: {
+    name: string;
     type: DockerSocketServerInfoType;
     serverVersion: string;
     operatingSystem: string;
