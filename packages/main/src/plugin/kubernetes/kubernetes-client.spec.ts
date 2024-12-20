@@ -311,6 +311,7 @@ beforeAll(() => {
       Exec: vi.fn(),
       V1DeleteOptions: vi.fn(),
       V1Job: vi.fn(),
+      Health: vi.fn(),
     };
   });
 });
@@ -458,21 +459,18 @@ describe.each([
 });
 
 test('Check connection to Kubernetes cluster', async () => {
-  // Mock k8sApi.getCode() to return the version of the cluster
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
-  });
-
+  vi.mocked(clientNode.Health).mockReturnValue({
+    readyz: vi.fn().mockResolvedValue(true),
+  } as unknown as clientNode.Health);
   const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
   const result = await client.checkConnection();
   expect(result).toBeTruthy();
 });
 
 test('Check connection to Kubernetes cluster in error', async () => {
-  // Mock k8sApi.getCode() to return the version of the cluster
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
-  });
+  vi.mocked(clientNode.Health).mockReturnValue({
+    readyz: vi.fn().mockRejectedValue(undefined),
+  } as unknown as clientNode.Health);
 
   const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
   const result = await client.checkConnection();
@@ -546,7 +544,6 @@ test('kube watcher', () => {
 test('should throw error if cannot call the cluster (readNamespacedDeployment reject)', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedDeployment: () => Promise.reject(new Error('K8sError')),
   });
 
@@ -562,7 +559,6 @@ test('should throw error if cannot call the cluster (readNamespacedDeployment re
 test('should return undefined if deployment does not exist', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ gitVersion: 'v1.20.0' }),
     readNamespacedDeployment: () => Promise.resolve(undefined),
   });
 
@@ -580,7 +576,6 @@ test('should return deployment if it exists', async () => {
   };
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedDeployment: () => Promise.resolve(v1Deployment),
   });
 
@@ -591,8 +586,8 @@ test('should return deployment if it exists', async () => {
 
 test('should throw error if cannot call the cluster (readNamespacedIngress reject)', async () => {
   const client = createTestClient('default');
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedIngress: () => Promise.reject(new Error('K8sError')),
   });
 
@@ -608,7 +603,6 @@ test('should throw error if cannot call the cluster (readNamespacedIngress rejec
 test('should return undefined if ingress does not exist', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedIngress: () => Promise.resolve(undefined),
   });
 
@@ -625,8 +619,8 @@ test('should return ingress if it exists', async () => {
     },
   };
   const client = createTestClient('default');
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedIngress: () => Promise.resolve(v1Ingress),
   });
 
@@ -638,6 +632,7 @@ test('should return ingress if it exists', async () => {
 // Routes
 test('should return empty routes list if there is no active namespace', async () => {
   const client = createTestClient();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
 
   const list = await client.listRoutes();
   expect(list.length).toBe(0);
@@ -645,9 +640,7 @@ test('should return empty routes list if there is no active namespace', async ()
 
 test('should return empty routes list if cannot connect to cluster', async () => {
   const client = createTestClient('default');
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
-  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
 
   const list = await client.listRoutes();
   expect(list.length).toBe(0);
@@ -655,8 +648,8 @@ test('should return empty routes list if cannot connect to cluster', async () =>
 
 test('should return empty routes list if cannot execute call to cluster', async () => {
   const client = createTestClient('default');
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     listNamespacedCustomObject: () => Promise.reject(new Error('K8sError')),
   });
 
@@ -690,8 +683,8 @@ test('should return route list if connection to cluster is ok', async () => {
     },
   };
   const client = createTestClient('default');
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     listNamespacedCustomObject: () =>
       Promise.resolve({
         items: [v1Route],
@@ -706,7 +699,6 @@ test('should return route list if connection to cluster is ok', async () => {
 test('should throw error if cannot call the cluster (getNamespacedCustomObject reject)', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     getNamespacedCustomObject: () => Promise.reject(new Error('K8sError')),
   });
 
@@ -722,7 +714,6 @@ test('should throw error if cannot call the cluster (getNamespacedCustomObject r
 test('should return undefined if route does not exist', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     getNamespacedCustomObject: () => Promise.resolve({}),
   });
 
@@ -757,7 +748,6 @@ test('should return route if it exists', async () => {
   };
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     getNamespacedCustomObject: () =>
       Promise.resolve({
         body: v1Route,
@@ -771,9 +761,9 @@ test('should return route if it exists', async () => {
 
 test('Expect deleteIngress is not called if there is no active namespace', async () => {
   const client = createTestClient();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   const deleteIngressMock = vi.fn();
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedIngress: deleteIngressMock,
   });
 
@@ -784,8 +774,8 @@ test('Expect deleteIngress is not called if there is no active namespace', async
 test('Expect deleteIngress is not called if there is no active connection', async () => {
   const client = createTestClient('default');
   const deleteIngressMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
     deleteNamespacedIngress: deleteIngressMock,
   });
 
@@ -796,8 +786,8 @@ test('Expect deleteIngress is not called if there is no active connection', asyn
 test('Expect deleteIngress to be called if there is active connection', async () => {
   const client = createTestClient('default');
   const deleteIngressMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedIngress: deleteIngressMock,
   });
 
@@ -808,8 +798,8 @@ test('Expect deleteIngress to be called if there is active connection', async ()
 test('Expect deleteRoute is not called if there is no active namespace', async () => {
   const client = createTestClient();
   const deleteRouteMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedCustomObject: deleteRouteMock,
   });
 
@@ -820,8 +810,8 @@ test('Expect deleteRoute is not called if there is no active namespace', async (
 test('Expect deleteRoute is not called if there is no active connection', async () => {
   const client = createTestClient('default');
   const deleteRouteMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
     deleteNamespacedCustomObject: deleteRouteMock,
   });
 
@@ -832,8 +822,8 @@ test('Expect deleteRoute is not called if there is no active connection', async 
 test('Expect deleteRoute to be called if there is active connection', async () => {
   const client = createTestClient('default');
   const deleteRouteMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedCustomObject: deleteRouteMock,
   });
 
@@ -844,7 +834,6 @@ test('Expect deleteRoute to be called if there is active connection', async () =
 test('should throw error if cannot call the cluster (readNamespacedService reject)', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedService: () => Promise.reject(new Error('K8sError')),
   });
 
@@ -860,7 +849,6 @@ test('should throw error if cannot call the cluster (readNamespacedService rejec
 test('should return undefined if service does not exist', async () => {
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedService: () => Promise.resolve(undefined),
   });
 
@@ -878,7 +866,6 @@ test('should return service if it exists', async () => {
   };
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     readNamespacedService: () => Promise.resolve(v1Service),
   });
 
@@ -889,9 +876,9 @@ test('should return service if it exists', async () => {
 
 test('Expect deleteService is not called if there is no active namespace', async () => {
   const client = createTestClient();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   const deleteServiceMock = vi.fn();
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedService: deleteServiceMock,
   });
 
@@ -902,8 +889,8 @@ test('Expect deleteService is not called if there is no active namespace', async
 test('Expect deleteService is not called if there is no active connection', async () => {
   const client = createTestClient('default');
   const deleteServiceMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
     deleteNamespacedService: deleteServiceMock,
   });
 
@@ -914,8 +901,8 @@ test('Expect deleteService is not called if there is no active connection', asyn
 test('Expect deleteService to be called if there is an active connection', async () => {
   const client = createTestClient('default');
   const deleteServiceMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedService: deleteServiceMock,
   });
 
@@ -1197,9 +1184,7 @@ test('setupWatcher sends kubernetes-context-update when kubeconfig file is delet
 
 test('Test should exec into container ', async () => {
   const client = createTestClient('default');
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
-  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
 
   let stdout = '';
   const onStdOutFn = (data: Buffer): void => {
@@ -1264,9 +1249,7 @@ test('Test should exec into container ', async () => {
 
 test('Test should exec into container only once', async () => {
   const client = createTestClient('default');
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
-  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
 
   const onStdOutFn = vi.fn();
 
@@ -1298,9 +1281,7 @@ test('Test should exec into container only once', async () => {
 
 test('Test should throw an exception during exec command if resize parameters are wrong', async () => {
   const client = createTestClient('default');
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
-  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
 
   const execResp = await client.execIntoContainer(
     'test-pod',
@@ -1318,9 +1299,7 @@ test('Test should throw an exception during exec command if resize parameters ar
 
 test('Test should throw an exception during exec command if internal kube method fails', async () => {
   const client = createTestClient('default');
-  makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
-  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
 
   await expect(
     client.execIntoContainer(
@@ -1345,7 +1324,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNamespacedPod: () =>
         Promise.resolve({
           body: v1Pod,
@@ -1368,7 +1346,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNamespacedDeployment: () =>
         Promise.resolve({
           body: v1Deployment,
@@ -1391,7 +1368,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNode: () =>
         Promise.resolve({
           body: v1Node,
@@ -1414,7 +1390,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNamespacedIngress: () =>
         Promise.resolve({
           body: v1Ingress,
@@ -1454,7 +1429,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       getNamespacedCustomObject: () =>
         Promise.resolve({
           body: v1Route,
@@ -1477,7 +1451,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNamespacedService: () =>
         Promise.resolve({
           body: v1Service,
@@ -1500,7 +1473,6 @@ describe('Tests that managedFields are removed from the object when using read',
       },
     };
     makeApiClientMock.mockReturnValue({
-      getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
       readNamespacedConfigMap: () =>
         Promise.resolve({
           body: v1ConfigMap,
@@ -1516,8 +1488,8 @@ describe('Tests that managedFields are removed from the object when using read',
 test('Expect deleteConfigMap is not called if there is no active connection', async () => {
   const client = createTestClient('default');
   const deleteConfigMapMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
     deleteNamespacedConfigMap: deleteConfigMapMock,
   });
 
@@ -1529,10 +1501,9 @@ test('Expect deleteConfigMap to be called if there is an active connection', asy
   const client = createTestClient('default');
   const deleteConfigMapMock = vi.fn();
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedConfigMap: deleteConfigMapMock,
   });
-
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   await client.deleteConfigMap('name');
   expect(deleteConfigMapMock).toBeCalled();
 });
@@ -1540,8 +1511,8 @@ test('Expect deleteConfigMap to be called if there is an active connection', asy
 test('Expect deleteSecret to be called if there is no active connection', async () => {
   const client = createTestClient('default');
   const deleteSecretMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.reject(new Error('K8sError')),
     deleteNamespacedSecret: deleteSecretMock,
   });
 
@@ -1553,10 +1524,9 @@ test('Expect deleteSecret to be called if there is an active connection', async 
   const client = createTestClient('default');
   const deleteSecretMock = vi.fn();
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ body: { gitVersion: 'v1.20.0' } }),
     deleteNamespacedSecret: deleteSecretMock,
   });
-
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
   await client.deleteSecret('name');
   expect(deleteSecretMock).toBeCalled();
 });
@@ -1571,7 +1541,6 @@ test('Expect readNamespacedSecret to return the secret', async () => {
     },
   };
   makeApiClientMock.mockReturnValue({
-    getCode: () => Promise.resolve({ gitVersion: 'v1.20.0' }),
     readNamespacedSecret: () => Promise.resolve(v1Secret),
   });
 
