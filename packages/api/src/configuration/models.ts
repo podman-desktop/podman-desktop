@@ -18,5 +18,5 @@
 
 export interface IExperimentalConfiguration {
   // href to the discussion
-  discussion: string;
+  githubDiscussionLink?: string;
 }
