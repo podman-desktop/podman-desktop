@@ -32,6 +32,13 @@ const linux = os.platform() === 'linux';
 export function isLinux(): boolean {
   return linux;
 }
+const freebsd = os.platform() === 'freebsd';
+export function isFreeBSD(): boolean {
+  return freebsd;
+}
+export function isUnixLike(): boolean {
+  return linux || freebsd;
+}
 
 export const stoppedExtensions = { val: false };
 

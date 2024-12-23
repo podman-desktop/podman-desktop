@@ -20,7 +20,7 @@ import { promisify } from 'node:util';
 import { type ProxySettings } from '@podman-desktop/api';
 import WinReg from 'winreg';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isMac, isUnixLike, isWindows } from '../util.js';
 import type { Proxy } from './proxy.js';
 import { Exec } from './util/exec.js';
 
@@ -29,7 +29,7 @@ export async function getProxySettingsFromSystem(proxy: Proxy): Promise<ProxySet
     return getWindowsProxySettings();
   } else if (isMac()) {
     return getMacOSProxySettings(new Exec(proxy));
-  } else if (isLinux()) {
+  } else if (isUnixLike()) {
     const httpProxy = process.env['HTTP_PROXY'];
     const httpsProxy = process.env['HTTPS_PROXY'];
     const noProxy = process.env['NO_PROXY'];

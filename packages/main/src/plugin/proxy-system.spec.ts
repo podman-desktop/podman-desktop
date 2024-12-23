@@ -47,6 +47,7 @@ function setupPlatform(platform: Platform): void {
   vi.spyOn(util, 'isWindows').mockReturnValue(platform === Platform.WINDOWS);
   vi.spyOn(util, 'isMac').mockReturnValue(platform === Platform.MACOS);
   vi.spyOn(util, 'isLinux').mockReturnValue(platform === Platform.LINUX);
+  vi.spyOn(util, 'isUnixLike').mockReturnValue(platform === Platform.LINUX);
 }
 
 describe('Windows platform tests', () => {
