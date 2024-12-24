@@ -28,4 +28,12 @@ export class OS {
   isLinux(): boolean {
     return process.platform === 'linux';
   }
+
+  isFreeBSD(): boolean {
+    return process.platform === 'freebsd';
+  }
+
+  isUnixLike(): boolean {
+    return isLinux() || isFreeBSD();
+  }
 }
