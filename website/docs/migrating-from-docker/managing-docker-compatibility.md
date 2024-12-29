@@ -17,7 +17,7 @@ As a developer, you can:
 
 - Check the system socket mapping status to know whether the socket is reachable. The default socket path is:
 
-  - _/var/run/docker.sock_ on macOS
+  - _/var/run/docker.sock_ on macOS and Linux
   - _npipe:////./pipe/docker_engine_ on Windows
 
 - Use all Docker tools, including CLI, with the Podman engine without any reconfiguration. These tools connect to the default Podman socket, thereby enabling you to use all Docker commands with Podman. For example, you can run the `docker run` command on the Podman engine to start a container.
@@ -57,6 +57,17 @@ As a developer, you can:
 4. **Podman Compose CLI Support** setting: Check whether the Podman Compose CLI is supported. If not, use the **Setup...** button to install and set up the CLI.
 5. **Third-Party Docker Tool Compatibility** setting: Customize the setting, if needed. When enabled, you can use third-party Docker tools with Podman.
 ![Docker compatibility page on macOS](img/docker-compatibility-page-on-macOS.png)
+</TabItem>
+   <TabItem value="linux" label="Linux" className="markdown">
+
+#### Procedure
+
+1. Go to **Settings > Docker Compatibility**.
+2. **System socket status** setting: View the socket mapping status to check whether the socket is reachable.
+3. **Docker CLI Context** setting: Select a socket context to work with from the dropdown list.
+4. **Podman Compose CLI Support** setting: Check whether the Podman Compose CLI is supported. If not, use the **Setup...** button to install and set up the CLI.
+![Docker compatibility page on Linux](img/docker-compatibility-page-on-linux.png)
+
 </TabItem>
 </Tabs>
 
