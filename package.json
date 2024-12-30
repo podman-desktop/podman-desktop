@@ -72,8 +72,8 @@
     "test:watch": "vitest watch",
     "test:website": "vitest run -r website --passWithNoTests --coverage",
     "watch": "node scripts/watch.mjs",
-    "format:check": "biome format",
-    "format:fix": "biome format --write",
+    "format:check": "biome format && prettier --cache --check \"website/**/*.md\"",
+    "format:fix": "biome format --write && prettier --cache --write \"website/**/*.md\"",
     "markdownlint:check": "markdownlint-cli2 \"website/**/*.md\" \"#website/node_modules\" \"#website/api\"",
     "markdownlint:fix": "markdownlint-cli2 --fix \"website/**/*.md\" \"#website/node_modules\"",
     "lint:clean": "rimraf .eslintcache",
@@ -112,7 +112,8 @@
       "node --max-old-space-size=6144 node_modules/eslint/bin/eslint.js --cache --fix",
       "biome format --write"
     ],
-    "*.{md,css,json}": "biome format --write"
+    "*.md": "prettier --cache --write",
+    "*.{css,json}": "biome format --write"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -167,6 +168,7 @@
     "minimist": "^1.2.8",
     "msw": "^2.7.0",
     "postcss-import": "^16.1.0",
+    "prettier": "^3.3.3",
     "proxy": "^2.2.0",
     "typescript": "5.6.3",
     "typescript-eslint": "^8.18.2",

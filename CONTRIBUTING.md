@@ -216,7 +216,7 @@ When contributing the new code, you should consider not lowering overall code co
 
 ### Step 7. Code formatter / linter
 
-We use `@biomejs/biome` as a formatter and `eslint` for linting.
+We use `@biomejs/biome` (and `prettier` for markdown) as formatter and `eslint` for linting.
 
 Check that your code is properly formatted with the linter and formatter:
 
@@ -315,7 +315,6 @@ Legal name must be used (no pseudonyms or anonymous contributions)
 
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`.
-
 
 ### Skipping Jobs for Draft Pull Requests on GitHub
 
