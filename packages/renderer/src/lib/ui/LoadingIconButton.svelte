@@ -6,53 +6,60 @@ import type { ILoadingStatus } from '../preferences/Util';
 import LoadingIcon from './LoadingIcon.svelte';
 import { capitalize } from './Util';
 
-export let action: string;
-export let icon: IconDefinition;
-export let state: ILoadingStatus | undefined;
-export let leftPosition: string;
-export let color: 'primary' | 'secondary' = 'secondary';
-export let tooltip: string = capitalize(action);
-export let clickAction: () => Promise<void> | void;
-
-let disable: boolean;
-$: {
-  if (state?.inProgress || state?.status === 'unsupported') {
-    disable = true;
-  } else {
-    switch (action) {
-      case 'start':
-        disable = state?.status !== 'stopped' && state?.status !== 'failed';
-        break;
-      case 'restart':
-        disable = state?.status !== 'started';
-        break;
-      case 'stop':
-        disable = state?.status !== 'started';
-        break;
-      case 'delete':
-        disable = state?.status !== 'failed' && state?.status !== 'stopped' && state?.status !== 'unknown';
-        break;
-      case 'update':
-        disable = state?.status === 'unknown';
-        break;
-      case 'edit':
-        disable = state?.status !== 'started' && state?.status !== 'stopped';
-        break;
-    }
-  }
+interface Props {
+  action: string;
+  icon: IconDefinition;
+  state?: ILoadingStatus;
+  leftPosition: string;
+  color?: 'primary' | 'secondary';
+  tooltip?: string;
+  clickAction: () => Promise<void> | void;
 }
 
-$: loading = state?.inProgress && action === state?.action;
+const {
+  action,
+  icon,
+  state,
+  leftPosition,
+  color = 'secondary',
+  tooltip = capitalize(action),
+  clickAction,
+}: Props = $props();
 
-$: style = disable
-  ? 'text-[var(--pd-action-button-disabled-text)] cursor-not-allowed'
-  : color === 'secondary'
-    ? 'text-[var(--pd-action-button-text)] hover:text-[var(--pd-action-button-hover-text)]'
-    : 'text-[var(--pd-action-button-primary-text)] hover:text-[var(--pd-action-button-primary-hover-text)]';
+const disable = $derived.by(() => {
+  if (state?.inProgress || state?.status === 'unsupported') {
+    return true;
+  }
+
+  switch (action) {
+    case 'start':
+      return state?.status !== 'stopped' && state?.status !== 'failed';
+    case 'restart':
+      return state?.status !== 'started';
+    case 'stop':
+      return state?.status !== 'started';
+    case 'delete':
+      return state?.status !== 'failed' && state?.status !== 'stopped' && state?.status !== 'unknown';
+    case 'update':
+      return state?.status === 'unknown';
+    case 'edit':
+      return state?.status !== 'started' && state?.status !== 'stopped';
+  }
+});
+
+const loading = $derived(state?.inProgress && action === state?.action);
+
+const style = $derived(
+  disable
+    ? 'text-[var(--pd-action-button-disabled-text)] cursor-not-allowed'
+    : color === 'secondary'
+      ? 'text-[var(--pd-action-button-text)] hover:text-[var(--pd-action-button-hover-text)]'
+      : 'text-[var(--pd-action-button-primary-text)] hover:text-[var(--pd-action-button-primary-hover-text)]',
+);
 </script>
 
 <Tooltip bottom tip={tooltip}>
-  <button aria-label={capitalize(action)} class="mx-2.5 my-2 {style}" on:click={clickAction} disabled={disable}>
+  <button aria-label={capitalize(action)} class="mx-2.5 my-2 {style}" onclick={clickAction} disabled={disable}>
     <LoadingIcon
       icon={icon}
       loadingWidthClass="w-6"
