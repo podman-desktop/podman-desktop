@@ -134,17 +134,18 @@ Before creating a Podman machine, you can use one of the following ways to enabl
 **_Configuring an environment variable_**
 
 1. Perform one of the following steps:
+
    - As a normal user, set the following variable at session level:
 
-      ```shell-session
-      > $env:CONTAINERS_MACHINE_PROVIDER = 'hyperv'
-      ```
+     ```shell-session
+     > $env:CONTAINERS_MACHINE_PROVIDER = 'hyperv'
+     ```
 
    - As an admin user, set the following variable at system level:
 
-      ```shell-session
-      # [System.Environment]::SetEnvironmentVariable('CONTAINERS_MACHINE_PROVIDER','hyperv')
-      ```
+     ```shell-session
+     # [System.Environment]::SetEnvironmentVariable('CONTAINERS_MACHINE_PROVIDER','hyperv')
+     ```
 
 1. [Create and start a Podman machine](/docs/podman/creating-a-podman-machine) using the UI.
 
@@ -161,7 +162,7 @@ Before creating a Podman machine, you can use one of the following ways to enabl
    ...
    ```
 
-1. [Create and start a Podman machine](/docs/podman/creating-a-podman-machine) using the UI.  
+1. [Create and start a Podman machine](/docs/podman/creating-a-podman-machine) using the UI.
 
 #### Verification
 

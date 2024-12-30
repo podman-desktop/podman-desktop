@@ -15,11 +15,11 @@ Today, we're thrilled to announce our application for Podman Desktop to join the
 
 ### About Podman Desktop
 
-Podman Desktop builds upon the innovations brought by Podman, offering a powerful yet user-friendly environment for containerized development. Podman provides a daemonless, rootless container engine that enhances security and flexibility, while Podman Desktop delivers an intuitive graphical interface for managing containers and interacting with Kubernetes. Enhanced by a plug-in system that allows developers to customize their inner loop container workflows to their needs and offers flexible extension points for other projects as well as other container engines.  
+Podman Desktop builds upon the innovations brought by Podman, offering a powerful yet user-friendly environment for containerized development. Podman provides a daemonless, rootless container engine that enhances security and flexibility, while Podman Desktop delivers an intuitive graphical interface for managing containers and interacting with Kubernetes. Enhanced by a plug-in system that allows developers to customize their inner loop container workflows to their needs and offers flexible extension points for other projects as well as other container engines.
 
 ### Why the CNCF?
 
-The CNCF is a vital organization for the cloud-native world, supporting collaboration and driving innovation for critical projects like Kubernetes, Prometheus, and Envoy. As a  CNCF project, Podman Desktop will benefit from increased visibility, a neutral home for open governance, and access to a wealth of resources and expertise. CNCF projects will take a renewed interest in collaborating with us.  This move will help us grow our community, ensure the project's long-term sustainability, and accelerate its development.
+The CNCF is a vital organization for the cloud-native world, supporting collaboration and driving innovation for critical projects like Kubernetes, Prometheus, and Envoy. As a CNCF project, Podman Desktop will benefit from increased visibility, a neutral home for open governance, and access to a wealth of resources and expertise. CNCF projects will take a renewed interest in collaborating with us. This move will help us grow our community, ensure the project's long-term sustainability, and accelerate its development.
 
 ### How Podman Desktop simplifies containers and Kubernetes
 
@@ -35,7 +35,7 @@ Podman Desktop has a natural affinity to Kubernetes due to its design and featur
 
 ### Join the growing Podman Desktop community
 
-As a  CNCF project, we have the opportunity to open our doors to a wider community of contributors and users. We believe that open source thrives on collaboration and diverse perspectives. By broadening our contributor base, we can accelerate innovation, improve the quality of Podman Desktop, and ensure it meets the needs of a diverse range of users.
+As a CNCF project, we have the opportunity to open our doors to a wider community of contributors and users. We believe that open source thrives on collaboration and diverse perspectives. By broadening our contributor base, we can accelerate innovation, improve the quality of Podman Desktop, and ensure it meets the needs of a diverse range of users.
 
 ### You can contribute in various ways
 
@@ -51,9 +51,9 @@ As a  CNCF project, we have the opportunity to open our doors to a wider communi
 
 - Providing website contributions: The [Podman Desktop website](https://podman-desktop.io/) is also open source. You can contribute to its content, design, or translations.
 
-- Becoming an Adopter: If you are a happy user, we’d love to know and share the word. Consider adding yourself or your organization to  [the list of adopters](https://github.com/podman-desktop/podman-desktop/blob/main/ADOPTERS.md) with a pull request.
+- Becoming an Adopter: If you are a happy user, we’d love to know and share the word. Consider adding yourself or your organization to [the list of adopters](https://github.com/podman-desktop/podman-desktop/blob/main/ADOPTERS.md) with a pull request.
 
-Before you start contributing, it's helpful to familiarize yourself with the [project's contribution guidelines](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md)  and code architecture. These resources provide valuable information on coding style, testing procedures, and the overall development process. You can also join #podman-desktop on the Kubernetes Slack to connect with other contributors and get help.
+Before you start contributing, it's helpful to familiarize yourself with the [project's contribution guidelines](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md) and code architecture. These resources provide valuable information on coding style, testing procedures, and the overall development process. You can also join #podman-desktop on the Kubernetes Slack to connect with other contributors and get help.
 
 ### KubeCon 2024 and beyond
 

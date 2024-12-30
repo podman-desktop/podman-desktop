@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: Installing the Minikube extension 
+title: Installing the Minikube extension
 description: Tutorial on how to install the Minikube extension and use it
 keywords: [podman desktop, podman, minikube, kubernetes]
 tags: [podman, kubernetes, minikube]

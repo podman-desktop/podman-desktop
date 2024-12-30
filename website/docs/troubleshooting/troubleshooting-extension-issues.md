@@ -6,7 +6,6 @@ keywords: [podman desktop, podman, extensions, troubleshoot]
 tags: [troubleshooting-extension-issues]
 ---
 
-
 # Troubleshooting extension-related issues
 
 ## Podman Desktop failed to create a Minikube cluster

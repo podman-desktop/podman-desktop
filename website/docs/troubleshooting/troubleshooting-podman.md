@@ -234,7 +234,7 @@ This might appear when either:
 
 _Note:_ If Docker Desktop is started again, it will automatically re-alias the default Docker socket location and the Podman compatibility warning will re-appear.
 
-## Uninstalling Podman Desktop preserves the old configuration data  
+## Uninstalling Podman Desktop preserves the old configuration data
 
 #### Issue
 
@@ -254,8 +254,8 @@ Podman stores its configuration files in the `$HOME/.config/containers` director
 - Using CLI
   - Run the `podman machine reset` command.
 - Using UI
-   1. Click the **Troubleshooting** icon in the status bar.
-   1. Click the **Cleanup/Purge data** button to delete all resources from the engine.
+  1.  Click the **Troubleshooting** icon in the status bar.
+  1.  Click the **Cleanup/Purge data** button to delete all resources from the engine.
 
 ## Kubernetes clusters are not reachable from Podman Desktop
 

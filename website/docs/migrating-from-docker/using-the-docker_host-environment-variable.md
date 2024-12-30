@@ -25,9 +25,9 @@ Alternatively, you can add a `podman` context by using the `docker context creat
 
 - For example, set the value of the context in this pattern on a macOS machine:
 
-    `docker context create podman --docker "host=unix://$HOME.local/share/containers/podman/machine/podman.sock"`
+  `docker context create podman --docker "host=unix://$HOME.local/share/containers/podman/machine/podman.sock"`
 
-    Where, the path specified after the `unix://` scheme denotes the `DOCKER_HOST` value.
+  Where, the path specified after the `unix://` scheme denotes the `DOCKER_HOST` value.
 
 Then, you can run the `docker context use podman` command to switch to that context. This way you can use your Docker CLI to run your tasks on a remote Podman engine. When you run the `docker ps` command, it queries the Podman socket specified in the current context.
 
@@ -50,35 +50,35 @@ $ podman machine inspect --format '{{.ConnectionInfo.PodmanPipe.Path}}'
 
 2. Set the `DOCKER_HOST` environment variable to your Podman pipe location. You'll need to replace back slashes with forward slashes and add the `npipe://` scheme to the path retrieved previously: <!-- markdownlint-disable MD029 -->
 
-    > Example:
-    >
-    > **prefix**podman-pipe
-    >
-    > **npipe://**//./pipe/podman-machine-default
+   > Example:
+   >
+   > **prefix**podman-pipe
+   >
+   > **npipe://**//./pipe/podman-machine-default
 
-    Depending on your terminal emulator of preference, there is a little variation between the commands to set a session level environment variable:
+   Depending on your terminal emulator of preference, there is a little variation between the commands to set a session level environment variable:
 
    ##### cmd - Command Prompt
 
-    ```cmd
-    set DOCKER_HOST=npipe://<inspect_command_output>
-    ```
+   ```cmd
+   set DOCKER_HOST=npipe://<inspect_command_output>
+   ```
 
    ##### Git Bash
 
-    ```bash
-    export DOCKER_HOST=npipe://<inspect_command_output>
-    ```
+   ```bash
+   export DOCKER_HOST=npipe://<inspect_command_output>
+   ```
 
    ##### Powershell
 
-    Don't miss the quotes used with the value. Otherwise, powershell will interpret it as a separate command instead of a value.
+   Don't miss the quotes used with the value. Otherwise, powershell will interpret it as a separate command instead of a value.
 
-    ```powershell
-    $env:DOCKER_HOST="npipe://<inspect_command_output>"
-    ```
+   ```powershell
+   $env:DOCKER_HOST="npipe://<inspect_command_output>"
+   ```
 
-    Ideally, you should set `DOCKER_HOST` at the system or user level environment variables (or even load it in your CL emulator init script of choice).
+   Ideally, you should set `DOCKER_HOST` at the system or user level environment variables (or even load it in your CL emulator init script of choice).
 
 :::note
 

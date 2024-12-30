@@ -1,5 +1,5 @@
 ---
-title: Podman AI Lab - For developers to build AI Applications with LLMs running locally 
+title: Podman AI Lab - For developers to build AI Applications with LLMs running locally
 description: Learn how to create your first AI application, by using Podman AI Lab
 slug: podman-ai-lab-create-ai-app-with-llm-running-locally
 authors: [phmartin]
@@ -197,19 +197,15 @@ Podman AI Lab provides a way for a user to extend the provided catalog with its 
   "recipes": [
     {
       "id": "search-podman-desktop-io",
-      "description" : "Search on Podman-desktop.io website",
-      "name" : "Search Podman-desktop.io",
+      "description": "Search on Podman-desktop.io website",
+      "name": "Search Podman-desktop.io",
       "repository": "https://github.com/redhat-developer/podman-desktop-demo",
       "ref": "main",
       "icon": "natural-language-processing",
-      "categories": [
-        "natural-language-processing"
-      ],
+      "categories": ["natural-language-processing"],
       "basedir": "ai-lab-demo/recipe",
       "readme": "",
-      "recommended": [
-        "hf.TheBloke.mistral-7b-instruct-v0.2.Q4_K_M"
-      ],
+      "recommended": ["hf.TheBloke.mistral-7b-instruct-v0.2.Q4_K_M"],
       "backend": "llama-cpp"
     }
   ]

@@ -44,10 +44,10 @@ As a developer, you can:
 2. **System socket status** setting: View the socket mapping status to check whether the socket is reachable.
 3. **Docker CLI Context** setting: Select a socket context to work with from the dropdown list.
 4. **Podman Compose CLI Support** setting: Check whether the Podman Compose CLI is supported. If not, use the **Setup...** button to install and set up the CLI.
-![Docker compatibility page on Windows](img/docker-compatibility-page-on-windows.png)
+   ![Docker compatibility page on Windows](img/docker-compatibility-page-on-windows.png)
 
 </TabItem>
-   <TabItem value="macOS" label="macOS" className="markdown">
+<TabItem value="macOS" label="macOS" className="markdown">
 
 #### Procedure
 
@@ -56,9 +56,10 @@ As a developer, you can:
 3. **Docker CLI Context** setting: Select a socket context to work with from the dropdown list.
 4. **Podman Compose CLI Support** setting: Check whether the Podman Compose CLI is supported. If not, use the **Setup...** button to install and set up the CLI.
 5. **Third-Party Docker Tool Compatibility** setting: Customize the setting, if needed. When enabled, you can use third-party Docker tools with Podman.
-![Docker compatibility page on macOS](img/docker-compatibility-page-on-macOS.png)
+   ![Docker compatibility page on macOS](img/docker-compatibility-page-on-macOS.png)
+
 </TabItem>
-   <TabItem value="linux" label="Linux" className="markdown">
+<TabItem value="linux" label="Linux" className="markdown">
 
 #### Procedure
 
@@ -66,7 +67,7 @@ As a developer, you can:
 2. **System socket status** setting: View the socket mapping status to check whether the socket is reachable.
 3. **Docker CLI Context** setting: Select a socket context to work with from the dropdown list.
 4. **Podman Compose CLI Support** setting: Check whether the Podman Compose CLI is supported. If not, use the **Setup...** button to install and set up the CLI.
-![Docker compatibility page on Linux](img/docker-compatibility-page-on-linux.png)
+   ![Docker compatibility page on Linux](img/docker-compatibility-page-on-linux.png)
 
 </TabItem>
 </Tabs>

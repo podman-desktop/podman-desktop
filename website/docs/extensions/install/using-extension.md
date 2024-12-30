@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Usage 
+title: Usage
 description: Use extensions for daily development tasks
 keywords: [podman desktop, podman, extensions]
 tags: [using-extensions-for-development-tasks]
@@ -28,7 +28,7 @@ Podman Desktop provides a wide range of extensions that can be used to integrate
 
 - Headlamp: Enables creating an extensible Kubernetes web UI. For more details, click the **More details** link in the **Catalog** tab of the Extensions page.
 
-    ![more details link](../img/more-details-link.png)
+  ![more details link](../img/more-details-link.png)
 
 **_CLI extensions_**
 
@@ -40,7 +40,7 @@ Podman Desktop provides a wide range of extensions that can be used to integrate
 
 Red Hat extension pack is a set of the following extensions that a developer can use for authentication and development purposes:
 
-- Podman AI Lab: Enables working and experimenting with Large Language Models (LLMs) in your local development environment. See [Running LLMs locally](/docs/ai-lab) and [Tutorial- Running an AI application](/tutorial/running-an-ai-application).  
+- Podman AI Lab: Enables working and experimenting with Large Language Models (LLMs) in your local development environment. See [Running LLMs locally](/docs/ai-lab) and [Tutorial- Running an AI application](/tutorial/running-an-ai-application).
 
 - Bootable containers: Enables building a bootable disk image from your container image. For more details, click the **More details** link in the **Catalog** tab of the Extensions page.
 
@@ -52,11 +52,11 @@ Red Hat extension pack is a set of the following extensions that a developer can
 
 - OpenShift Checker: Analyzes a Containerfile and highlights the directives and commands that could cause an unexpected behavior when you run it on an OCP cluster. After identifying issues, you can update your Containerfile to make it OpenShift-compliant. For more details, click the **More details** link in the **Catalog** tab of the Extensions page.
 
-    :::note
+  :::note
 
-    You can also install the above extensions individually from the catalog rather than installing the entire pack.
+  You can also install the above extensions individually from the catalog rather than installing the entire pack.
 
-    :::
+  :::
 
 **_Other extensions_**
 

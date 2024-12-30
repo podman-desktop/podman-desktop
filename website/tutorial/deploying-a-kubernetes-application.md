@@ -110,6 +110,6 @@ This YAML configuration creates a service named `my-nginx` to expose the Nginx d
 1. In the Kubernetes explorer, go to **Services**.
 1. Click the name of the `my-nginx` service.
 1. Click **Forward...**.
-  ![forward button](img/forward-button.png)
+   ![forward button](img/forward-button.png)
 1. Click **Open** to view the Nginx welcome page in a web browser.
    ![welcome page](img/welcome-page.png)

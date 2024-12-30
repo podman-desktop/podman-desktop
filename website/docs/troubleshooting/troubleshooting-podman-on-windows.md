@@ -81,7 +81,7 @@ Older versions of WSL might cause networking issues, such as the `Get-NetTCPConn
 
 ## Windows 10 Enterprise LTSC version 21H2: Podman Desktop is unable to detect WSL2 machine
 
-On a Windows 10 LTSC version, running the `wsl --install --no-distribution` command does not work, and the Podman Desktop setup does not run smoothly.  
+On a Windows 10 LTSC version, running the `wsl --install --no-distribution` command does not work, and the Podman Desktop setup does not run smoothly.
 
 You must install a specific Windows Subsystem for Linux (WSL) distribution to make the Podman Desktop setup run smoothly. After setting up Podman Desktop, you can unintsall the WSL distribution.
 
@@ -97,6 +97,6 @@ You must install a specific Windows Subsystem for Linux (WSL) distribution to ma
 
 1. Run the `wsl --update` command.
 1. Run the `wsl --install -d <distro>` command to install a specific WSL distribution.
-    - Replace `distro` with any official WSL distribution, such as `ubuntu-24.04`.
+   - Replace `distro` with any official WSL distribution, such as `ubuntu-24.04`.
 1. Restart your machine.
 1. (Optional): Run the `wsl --unregister <distro>` to uninstall the WSL distribution.
