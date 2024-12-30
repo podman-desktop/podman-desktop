@@ -10,30 +10,47 @@ import { context as storeContext } from '/@/stores/context';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
 
-export let title: string;
-export let icon: IconDefinition | string;
-export let fontAwesomeIcon: IconDefinition | undefined = undefined;
-export let hidden = false;
-export let disabledWhen = '';
-export let enabled: boolean = true;
-export let onClick: () => void = () => {};
-export let menu = false;
-export let detailed = false;
-export let inProgress = false;
-export let iconOffset = '';
-export let tooltip: string = '';
+interface Props {
+  title: string;
+  icon: IconDefinition | string;
+  fontAwesomeIcon?: IconDefinition;
+  hidden?: boolean;
+  disabledWhen?: string;
+  enabled?: boolean;
+  onClick?: () => void;
+  menu?: boolean;
+  detailed?: boolean;
+  inProgress?: boolean;
+  iconOffset?: string;
+  tooltip?: string;
+  contextUI?: ContextUI;
+}
 
-export let contextUI: ContextUI | undefined = undefined;
+let {
+  title,
+  icon,
+  fontAwesomeIcon,
+  hidden = false,
+  disabledWhen = '',
+  enabled = true,
+  onClick = () => {},
+  menu = false,
+  detailed = false,
+  inProgress = false,
+  iconOffset = '',
+  tooltip = '',
+  contextUI,
+}: Props = $props();
 
-let positionLeftClass = 'left-1';
+let positionLeftClass = $state('left-1');
 if (detailed) positionLeftClass = 'left-2';
-let positionTopClass = 'top-1';
+let positionTopClass = $state('top-1');
 if (detailed) positionTopClass = '[0.2rem]';
 
 let globalContext: ContextUI;
 let contextsUnsubscribe: Unsubscriber;
 
-$: {
+$effect(() => {
   if (disabledWhen !== '') {
     if (contextUI) {
       globalContext = contextUI;
@@ -48,7 +65,7 @@ $: {
       });
     }
   }
-}
+});
 
 function computeEnabled() {
   // Deserialize the `when` property
@@ -80,19 +97,21 @@ const buttonClass =
 const buttonDisabledClass =
   'text-[var(--pd-action-button-disabled-text)] font-medium rounded-full inline-flex items-center px-2 py-2 text-center';
 
-// $: handleClick = enabled && !inProgress ? onClick : () => {};
-$: handleClick = () => {
+function handleClick() {
   if (enabled && !inProgress) {
     onClick();
   }
-};
-$: styleClass = detailed
-  ? enabled && !inProgress
-    ? buttonDetailedClass
-    : buttonDetailedDisabledClass
-  : enabled && !inProgress
-    ? buttonClass
-    : buttonDisabledClass;
+}
+
+const styleClass = $derived(
+  detailed
+    ? enabled && !inProgress
+      ? buttonDetailedClass
+      : buttonDetailedDisabledClass
+    : enabled && !inProgress
+      ? buttonClass
+      : buttonDisabledClass,
+);
 </script>
 
 <!-- If menu = true, use the menu, otherwise implement the button -->
@@ -110,7 +129,7 @@ $: styleClass = detailed
   <button
     title={title}
     aria-label={title}
-    on:click={handleClick}
+    onclick={handleClick}
     class="{styleClass} relative"
     class:disabled={inProgress}
     class:hidden={hidden}
