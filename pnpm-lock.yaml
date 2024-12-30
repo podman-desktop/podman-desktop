@@ -986,6 +986,9 @@ importers:
       markdownlint-cli2:
         specifier: ^0.17.0
         version: 0.17.0
+      markdownlint-cli2-formatter-summarize:
+        specifier: ^0.0.7
+        version: 0.0.7(markdownlint-cli2@0.17.0)
       postcss:
         specifier: ^8.4.49
         version: 8.4.49
@@ -7869,6 +7872,11 @@ packages:
 
   markdownlint-cli2-formatter-default@0.0.5:
     resolution: {integrity: sha512-4XKTwQ5m1+Txo2kuQ3Jgpo/KmnG+X90dWt4acufg6HVGadTUG5hzHF/wssp9b5MBYOMCnZ9RMPaU//uHsszF8Q==}
+    peerDependencies:
+      markdownlint-cli2: '>=0.0.4'
+
+  markdownlint-cli2-formatter-summarize@0.0.7:
+    resolution: {integrity: sha512-WYIuEen9A7B+OkTeAF8peRWysHKYUGYZQ8EIGAIXUm21S+UnPwxgz1EgUDpkvGlcbD/XS4474v8cnOI5so2MvQ==}
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
@@ -20041,6 +20049,10 @@ snapshots:
   markdown-table@3.0.4: {}
 
   markdownlint-cli2-formatter-default@0.0.5(markdownlint-cli2@0.17.0):
+    dependencies:
+      markdownlint-cli2: 0.17.0
+
+  markdownlint-cli2-formatter-summarize@0.0.7(markdownlint-cli2@0.17.0):
     dependencies:
       markdownlint-cli2: 0.17.0
 
