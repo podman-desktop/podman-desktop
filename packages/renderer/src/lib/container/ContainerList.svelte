@@ -48,29 +48,38 @@ import ContainerEmptyScreen from './ContainerEmptyScreen.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerGroupInfoUI, type ContainerInfoUI } from './ContainerInfoUI';
 
 const containerUtils = new ContainerUtils();
-let openChoiceModal = false;
-let enginesList: EngineInfoUI[];
+let openChoiceModal = $state(false);
+let enginesList: EngineInfoUI[] = $state([]);
 
 // groups of containers that will be displayed
-let containerGroups: ContainerGroupInfoUI[] = [];
+let containerGroups: ContainerGroupInfoUI[] = $state([]);
 let viewContributions: ViewInfoUI[] = [];
 let globalContext: ContextUI;
 let containersInfo: ContainerInfo[] = [];
-export let searchTerm = '';
-$: updateContainers(containersInfo, globalContext, viewContributions, searchTerm);
+
+interface Props {
+  searchTerm?: string;
+}
+
+let { searchTerm = $bindable('') }: Props = $props();
+
+$effect(() => {
+  updateContainers(containersInfo, globalContext, viewContributions, searchTerm);
+});
 
 function fromExistingImage(): void {
   openChoiceModal = false;
   handleNavigation({ page: NavigationPage.IMAGES });
 }
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let providerConnections = $derived(
+  $providerInfos
+    .flatMap(provider => provider.containerConnections)
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state(false);
 async function deleteSelectedContainers(): Promise<void> {
   const podGroups = containerGroups
     .filter(group => group.type === ContainerGroupInfoTypeUI.POD)
@@ -299,7 +308,7 @@ function setStoppedFilter(): void {
   searchTerm = containerUtils.filterSetStopped(searchTerm);
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number = $state(0);
 let table: Table;
 
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
@@ -374,9 +383,8 @@ const row = new TableRow<ContainerGroupInfoUI | ContainerInfoUI>({
   },
 });
 
-let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[];
-$: containersAndGroups = containerGroups.map(group =>
-  group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group,
+let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[] = $derived(
+  containerGroups.map(group => (group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group)),
 );
 </script>
 
