@@ -85,8 +85,8 @@ Click **Add repositories**
 On the **Add custom repositories** page, select the following:
 
 - In the **Name** list, enter EPEL 9.
-- In the **URL** field, enter <https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/>
-- In the **GPG key** field, enter <https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9>
+- In the **URL** field, enter `https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/`
+- In the **GPG key** field, enter `https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9`
 - Click **Save**.
 
 Close the tab and switch back to the previous one
@@ -165,4 +165,4 @@ Start the image by clicking on the **Run image** icon
 
 ![images list](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine15.png)
 
-Once the container is started, the Apache server can be accessed on <http://localhost:9000>
+Once the container is started, the Apache server can be accessed on [localhost:9000](http://localhost:9000)
