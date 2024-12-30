@@ -1,17 +1,17 @@
 <script lang="ts">
 import { faCircleInfo, faTriangleExclamation, faXmarkCircle } from '@fortawesome/free-solid-svg-icons';
-import type { AuditRecord, AuditResult } from '@podman-desktop/api';
+import type { AuditResult } from '@podman-desktop/api';
 import Fa from 'svelte-fa';
 
-export let auditResult: AuditResult;
+interface Props {
+  auditResult: AuditResult;
+}
 
-let infoRecords: AuditRecord[];
-let warningRecords: AuditRecord[];
-let errorRecords: AuditRecord[];
+const { auditResult }: Props = $props();
 
-$: infoRecords = auditResult?.records.filter(record => record.type === 'info');
-$: warningRecords = auditResult?.records.filter(record => record.type === 'warning');
-$: errorRecords = auditResult?.records.filter(record => record.type === 'error');
+const infoRecords = $derived(auditResult?.records.filter(record => record.type === 'info'));
+const warningRecords = $derived(auditResult?.records.filter(record => record.type === 'warning'));
+const errorRecords = $derived(auditResult?.records.filter(record => record.type === 'error'));
 </script>
 
 {#if errorRecords && errorRecords.length > 0}
