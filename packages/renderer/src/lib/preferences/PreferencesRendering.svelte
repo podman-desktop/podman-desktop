@@ -12,8 +12,13 @@ import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import { isDefaultScope, isPropertyValidInContext } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let key: string;
+interface Props {
+  properties: IConfigurationPropertyRecordedSchema[];
+  key: string;
+  searchValue?: string;
+}
+
+let { properties = [], key, searchValue = '' }: Props = $props();
 
 // Context variables
 let contextsUnsubscribe: Unsubscriber;
@@ -21,26 +26,25 @@ let globalContext: ContextUI;
 
 // Search and matching records
 let updateSearchValueTimeout: NodeJS.Timeout;
-let matchingRecords: Map<string, IConfigurationPropertyRecordedSchema[]>;
-export let searchValue = '';
-$: searchValue;
-$: matchingRecords = properties
-  .filter(property => property.parentId.startsWith(key) && isDefaultScope(property.scope) && !property.hidden)
-  .filter(property => isPropertyValidInContext(property.when, globalContext))
-  .filter(
-    property =>
-      !searchValue ||
-      matchValue(property.title, searchValue) ||
-      (!!property.description && matchValue(property.description, searchValue)) ||
-      (!!property.markdownDescription && matchValue(property.markdownDescription, searchValue)),
-  )
-  .reduce((map, property) => {
-    if (!map.has(property.parentId)) {
-      map.set(property.parentId, []);
-    }
-    map.get(property.parentId)?.push(property);
-    return map;
-  }, new Map<string, IConfigurationPropertyRecordedSchema[]>());
+const matchingRecords = $derived(
+  properties
+    .filter(property => property.parentId.startsWith(key) && isDefaultScope(property.scope) && !property.hidden)
+    .filter(property => isPropertyValidInContext(property.when, globalContext))
+    .filter(
+      property =>
+        !searchValue ||
+        matchValue(property.title, searchValue) ||
+        (!!property.description && matchValue(property.description, searchValue)) ||
+        (!!property.markdownDescription && matchValue(property.markdownDescription, searchValue)),
+    )
+    .reduce((map, property) => {
+      if (!map.has(property.parentId)) {
+        map.set(property.parentId, []);
+      }
+      map.get(property.parentId)?.push(property);
+      return map;
+    }, new Map<string, IConfigurationPropertyRecordedSchema[]>()),
+);
 
 onMount(async () => {
   contextsUnsubscribe = context.subscribe(value => {
