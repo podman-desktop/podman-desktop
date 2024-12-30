@@ -20,11 +20,11 @@ With Podman Desktop, you can deploy a pod to your Kubernetes cluster with an act
 
 #### Procedure
 
-1. Select your [Kubernetes context](/docs/kubernetes/viewing-and-selecting-current-kubernetes-context). 
+1. Select your [Kubernetes context](/docs/kubernetes/viewing-and-selecting-current-kubernetes-context).
 
     :::note
 
-    Your pod or container is deployed to the `default` namespace of the Kubernetes cluster. To switch to a different namespace, use this command: `kubectl config set-context --current --namespace=<name-of-the-namespace>`. 
+    Your pod or container is deployed to the `default` namespace of the Kubernetes cluster. To switch to a different namespace, use this command: `kubectl config set-context --current --namespace=<name-of-the-namespace>`.
 
     :::
 
@@ -34,9 +34,9 @@ With Podman Desktop, you can deploy a pod to your Kubernetes cluster with an act
 1. Select the **Deploy to Kubernetes** option from the dropdown list.
 1. Select the checkbox to expose the service locally by using the default ingress controller.
   ![expose the service locally](img/expose-the-service-locally.png)
-1. Conditional: When you configure custom port mapping while running an image, you have the option to select an Ingress host port from the dropdown list. 
+1. Conditional: When you configure custom port mapping while running an image, you have the option to select an Ingress host port from the dropdown list.
   ![ingress-host-port](img/ingress-host-port.png)
-  Otherwise, you do not see the option. 
+  Otherwise, you do not see the option.
 
 1. Click **Deploy** and then **Done**.
 

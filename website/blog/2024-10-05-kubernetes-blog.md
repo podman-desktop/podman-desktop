@@ -12,25 +12,27 @@ hide_table_of_contents: false
 The integration of Podman Desktop with Kubernetes helps you to run your application on a Kubernetes cluster, such as Kind or Minikube.
 
 This blog covers the following aspects:
+
 - Build a containerized application from registry images
 - Create a pod
 - Set up a local Kubernetes cluster
 - Deploy the application to Kubernetes
 - Verify the running service
 
-## Building a containerized application 
+## Building a containerized application
 
 With this blog, you will build a containerized application that uses:
+
 - a back-end Redis server container
 - a front-end Python application container
 
 To do so, you can pull the relevant images from the `quay.io` registry.
 
 1. Go to the **Images** component page.
-2. Click **Pull**. 
+2. Click **Pull**.
   ![pull from registry](img/building-a-kubernetes-application/pulling-from-registry.png)
 3. Start the first container:
-    1. Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-backend`. 
+    1. Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-backend`.
     ![enter image name](img/building-a-kubernetes-application/enter-image-name.png)
     2. Click **Pull image**. A download complete notification opens.
     3. Click **Done**.
@@ -43,12 +45,12 @@ To do so, you can pull the relevant images from the `quay.io` registry.
     ![view Logs tab](img/building-a-kubernetes-application/redis-running-in-logs.png)
 
 4. Start the second container:
-    1. Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-frontend`. 
+    1. Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-frontend`.
     2. Click **Pull image** and then **Done**.
     3. Click the `Run Image` icon corresponding to the new image added.
     4. Enter the container name `python-app`.
     ![enter image name](img/building-a-kubernetes-application/python-app-image.png)
-      
+
         :::note
 
         If the default port is already in use, you can specify a different port in the `Port mapping` field.
@@ -59,11 +61,11 @@ To do so, you can pull the relevant images from the `quay.io` registry.
   
         :::note
 
-        You can find the IP address in the **Inspect** tab of the `redis-server` Container Details page. 
+        You can find the IP address in the **Inspect** tab of the `redis-server` Container Details page.
 
         :::
 
-    6. Click **Start Container**. 
+    6. Click **Start Container**.
     ![start a front-end container](img/building-a-kubernetes-application/starting-a-frontend-container.png)
     7. Click the **Logs** tab to view that the application is running on port `5000`.
     ![front-end app running](img/building-a-kubernetes-application/frontend-app-running.png)
@@ -71,8 +73,8 @@ To do so, you can pull the relevant images from the `quay.io` registry.
     9. View the running front-end application.
     ![running front-end application](img/building-a-kubernetes-application/running-application-locally.png)
 
-
 ## Creating a pod
+
 You can use both the containers to create a pod. This way both the front-end and back end container applications can share resources, such as storage and network.
 
 **_Pod creation with existing containers_**
@@ -87,10 +89,9 @@ You can use both the containers to create a pod. This way both the front-end and
 6. Click the name of the pod and then click the **Summary** tab to view its summary.
   ![viewing pod details](img/building-a-kubernetes-application/viewing-pod-details.png)
 
-
 **_Alternative: Pod creation with Kubernetes YAML_**
 
-You can generate a Kubernetes manifest for any existing pod or container and use it to create a local Kubernetes YAML file. Then, you can customize that file and create a pod from it. 
+You can generate a Kubernetes manifest for any existing pod or container and use it to create a local Kubernetes YAML file. Then, you can customize that file and create a pod from it.
 
 At the time of pod creation, you can select a runtime to indicate whether you want to run the pod on a Podman engine or a Kubernetes cluster. Based on the selection, you get to see the newly created pod running in that environment on the Pods component page.
 
@@ -109,16 +110,17 @@ The following procedure creates a pod that runs on a Podman engine.
   ![play kubernetes yaml](img/building-a-kubernetes-application/play-kubernetes-yaml.png)
 9. Select the YAML file from your machine.
 10. Check that the **Runtime** field is set to `Podman container engine`.
-11. Click **Play** and then **Done**. 
+11. Click **Play** and then **Done**.
 13. View the newly created pod on the same page.
 
 After creating the pod, set up a local Kubernetes cluster to deploy the pod.
 
 ## Setting up a local Kubernetes cluster
 
-You can set up a local Kubernetes cluster. Once the cluster is connected and running, you can deploy your application on it. 
+You can set up a local Kubernetes cluster. Once the cluster is connected and running, you can deploy your application on it.
 
 Based on your preference, use the Kind or Minikube extension:
+
 1. [Install the extension](/docs/extensions/install) from the Extensions catalog.
 2. Create a Kubernetes cluster. See [Kind cluster creation](/docs/kind/installing-extension) or [Minikube cluster creation](/docs/minikube/installing-extension).
 
@@ -132,19 +134,18 @@ You can deploy the application pod to a Kubernetes cluster that has an active co
 2. Go to the **Pods** component page.
 3. Click the overflow menu icon corresponding to the pod.
   ![overflow menu icon](img/building-a-kubernetes-application/overflow-menu-icon.png)
-4. Select the **Deploy to Kubernetes** option from the dropdown list. 
+4. Select the **Deploy to Kubernetes** option from the dropdown list.
 5. Select the checkbox to expose the service locally using the ingress controller.
   ![expose the service locally](img/building-a-kubernetes-application/expose-the-service-locally.png)
 
     :::note
 
-    When you configure custom port mapping while running an image, you get the option to select an Ingress host port from the dropdown list. 
+    When you configure custom port mapping while running an image, you get the option to select an Ingress host port from the dropdown list.
     ![ingress-host-port](img/building-a-kubernetes-application/ingress-host-port.png)
-    Otherwise, you do not see the option. 
+    Otherwise, you do not see the option.
     :::
 
 6. Click **Deploy** and then **Done**.
-
 
 ## Verifying the running service
 
@@ -157,6 +158,6 @@ You can deploy the application pod to a Kubernetes cluster that has an active co
 
     :::note
 
-    Use the **Apply YAML** button to directly apply a Kubernetes YAML file to create a resource. 
+    Use the **Apply YAML** button to directly apply a Kubernetes YAML file to create a resource.
 
     :::

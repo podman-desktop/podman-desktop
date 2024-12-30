@@ -97,7 +97,7 @@ Fri Aug 16 18:58:14 2024
 
 You might encounter the following error inside the containers:
 
-```
+```console
 # nvidia-smi
 Failed to initialize NVML: N/A
 ```
@@ -106,7 +106,7 @@ This problem is related to a mismatch between the Container Device Interface (CD
 
 To fix this problem, generate a new CDI specification by running the following inside the Podman machine:
 
-```
+```shell
 nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 ```
 
@@ -166,11 +166,11 @@ Example output:
 
 ```sh
 $  podman run --rm -it --device /dev/dri --name gpu-info quay.io/slopezpa/fedora-vgpu vulkaninfo | grep "GPU"
-		GPU id = 0 (Virtio-GPU Venus (Apple M1 Pro))
-		GPU id = 1 (llvmpipe (LLVM 17.0.6, 128 bits))
+  GPU id = 0 (Virtio-GPU Venus (Apple M1 Pro))
+  GPU id = 1 (llvmpipe (LLVM 17.0.6, 128 bits))
 GPU0:
-	deviceType        = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
-	deviceName        = Virtio-GPU Venus (Apple M1 Pro)
+ deviceType        = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
+ deviceName        = Virtio-GPU Venus (Apple M1 Pro)
 GPU1:
 ```
 

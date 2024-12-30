@@ -6,7 +6,7 @@ keywords: [podman desktop, podman, access logs, troubleshoot]
 tags: [acessing-podman-desktop-logs, troubleshooting-podman-desktop]
 ---
 
-# Access Podman Desktop logs 
+# Access Podman Desktop logs
 
 When you face any connection issues or any other problems with your task execution, you can access the Podman Desktop logs to troubleshoot. In addition, you can also resolve those issues using the **Repair & Connections** and **Stores** tabs.
 
@@ -33,7 +33,6 @@ If you do not want to track the previous event logs, you can remove them from th
     1. Click **Ping** to view the response time of the container engine.
     1. Click **Check containers** to view the response time of the available containers.
 1. Optional: Click **Reconnect Providers** to reconnect to the container engine socket.
-
 
 #### Procedure: Resolve event-related issues
 

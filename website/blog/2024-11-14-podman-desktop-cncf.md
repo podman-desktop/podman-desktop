@@ -28,20 +28,20 @@ Podman Desktop enables developers to run Kubernetes locally, mirroring their pro
 
 ### Open source and the CNCF: A perfect match for developer tools
 
-We believe in the power of open source. Open source software fosters transparency, encourages collaboration, and drives innovation. By donating Podman Desktop to the CNCF, we're ensuring it remains open and accessible to all, fostering a vibrant community around it. The CNCF is the perfect home for Podman Desktop because it champions open source values and provides a neutral ground for collaborative development. This ensures that Podman Desktop remains vendor-neutral and driven by the needs of its users, keeping options open and avoiding vendor lock-in. 
+We believe in the power of open source. Open source software fosters transparency, encourages collaboration, and drives innovation. By donating Podman Desktop to the CNCF, we're ensuring it remains open and accessible to all, fostering a vibrant community around it. The CNCF is the perfect home for Podman Desktop because it champions open source values and provides a neutral ground for collaborative development. This ensures that Podman Desktop remains vendor-neutral and driven by the needs of its users, keeping options open and avoiding vendor lock-in.
 
 Furthermore, while the CNCF has fostered incredible innovation and many developers profit from the number of projects available through the CNCF, there's a recognized need for more developer-focused tooling. Podman Desktop fills this gap perfectly by providing a developer-centric, streamlined, and intuitive experience for containerizing, managing, and deploying cloud-native applications.
 Podman Desktop has a natural affinity to Kubernetes due to its design and features that seamlessly bridge the gap between local container development and Kubernetes deployments. This close relationship aligns perfectly with the CNCF's mission to drive the adoption of cloud-native technologies.
 
 ### Join the growing Podman Desktop community
 
-As a  CNCF project, we have the opportunity to open our doors to a wider community of contributors and users. We believe that open source thrives on collaboration and diverse perspectives. By broadening our contributor base, we can accelerate innovation, improve the quality of Podman Desktop, and ensure it meets the needs of a diverse range of users. 
+As a  CNCF project, we have the opportunity to open our doors to a wider community of contributors and users. We believe that open source thrives on collaboration and diverse perspectives. By broadening our contributor base, we can accelerate innovation, improve the quality of Podman Desktop, and ensure it meets the needs of a diverse range of users.
 
-### You can contribute in various ways:
+### You can contribute in various ways
 
 - Reporting issues: If you encounter bugs or have suggestions for improvements, you can report them on the [GitHub issue tracker](https://github.com/podman-desktop/podman-desktop/issues). Be sure to provide detailed information and steps to reproduce the issue.
 
-- Working on issues: You can browse the [issue tracker](https://github.com/podman-desktop/podman-desktop/issues) and contribute by fixing bugs or implementing new features. This involves forking the repository, making changes, and submitting pull requests.   
+- Working on issues: You can browse the [issue tracker](https://github.com/podman-desktop/podman-desktop/issues) and contribute by fixing bugs or implementing new features. This involves forking the repository, making changes, and submitting pull requests.
 
 - Contributing code: Beyond addressing existing issues, you can propose and contribute entirely new features or enhancements to Podman Desktop's functionality, user interface, or integrations with other tools. Learn more about [how to contribute](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md).
 
@@ -70,4 +70,3 @@ We're incredibly excited about this new chapter for Podman Desktop and can't wai
 - Contribute to the project: [https://github.com/podman-desktop/podman-desktop/](https://github.com/podman-desktop/podman-desktop/)
 
 - Read [10 Reasons Why Developers Should Consider Podman Desktop](https://developers.redhat.com/e-books/infographic-10-reasons-why-developer-should-consider-podman-desktop)
- 

@@ -39,17 +39,17 @@ spec:
           ports:
             - containerPort: 80
 ```
+
 This YAML manifest creates three pods that run the NGINX web server.
 
 #### Procedure: Applying a YAML manifest to create a `Deployment` object
 
-1. Go to the **Kubernetes** component page. 
+1. Go to the **Kubernetes** component page.
 1. Click **Deployments** in the left navigation pane.
 1. Click **Apply YAML** and select the YAML manifest file. A confirmation notification opens.
   ![applying a yaml manifest](img/applying-a-yaml-manifest.png)
 1. Click **OK**.
   ![confirmation notification](img/confirmation-notification.png)
-
 
 #### Verification
 
@@ -63,5 +63,3 @@ This YAML manifest creates three pods that run the NGINX web server.
     When you apply any other YAML manifest, you can view the newly created object on the corresponding component page.
 
     :::
-
-

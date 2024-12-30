@@ -94,7 +94,7 @@ Docker compatibility is a way to configure an environment in which you can run y
 
 Podman Desktop provides a wide range of extensions that can be used to integrate your local tools with Podman Desktop. After installing the required extension, you can do development tasks like creating a Kubernetes cluster, creating an AI application, or creating a bootable container. List of extensions available:
 
-_Built-in extensions_
+#### Built-in extensions
 
 - Compose
 - Podman
@@ -106,13 +106,15 @@ _Built-in extensions_
 - Kubectl CLI
 - Registries
 
-_Other extensions_
+#### Other extensions
 
 - Bootable containers
 - Image Layers Explorer
 - Headlamp
 - Podman AI Lab
 - Red Hat extensions
+
+#### Manage extensions
 
 You can enable or disable an extension, if needed. You can also create your own custom extensions to add icons, UI components, or menus to your application front-end page.
 

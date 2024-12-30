@@ -12,7 +12,6 @@ import ReactPlayer from 'react-player'
 
 The Minikube extension provides the capability of creating a local Kubernetes cluster. This extension can be installed and used as a one-click deployment for a test cluster.
 
-
 #### Procedure
 
 If you have Podman Desktop already installed, <a href="podman-desktop:extension/podman-desktop.minikube">**click to launch the installation**</a> of Minikube in Podman Desktop.

@@ -23,7 +23,7 @@ For our first experiment, we will work on a micro-service for the podman-desktop
 
 If you haven't done it yet, first [install Podman Desktop and its extension Podman AI Lab](https://podman-desktop.io/docs/ai-lab/installing).
 
-To have a better experience, it is recommended to use the GPU acceleration to serve the model. If you have such a GPU on your machine, you will need to create a Podman machine with the LibKrun provider (on MacOS). More details on [the GPU support for Podman AI Lab](https://developers.redhat.com/articles/2024/09/10/gpu-support-podman-ai-lab). 
+To have a better experience, it is recommended to use the GPU acceleration to serve the model. If you have such a GPU on your machine, you will need to create a Podman machine with the LibKrun provider (on MacOS). More details on [the GPU support for Podman AI Lab](https://developers.redhat.com/articles/2024/09/10/gpu-support-podman-ai-lab).
 
 At the time of writing, the GPU support is still experimental on Podman AI Lab. You will need to enable the option on the Preferences to enable it.
 
@@ -41,7 +41,7 @@ Once a model is downloaded, we can test and interact with this model to try to f
 
 Let's start a new playground (from the `Models > Playgrounds` menu), and send our first prompt:
 
-```
+```text
 Give me a list of pages in the website podman-desktop.io related to "build an image"
 ```
 
@@ -49,11 +49,11 @@ The model should reply with some list of pages, in a human-readable form (see th
 
 ![a first prompt with human-readable output](./img/ai-lab-first-app/04-ai-lab-demo-prompt-1.png)
 
-The problem is that the response is in human-readable form, but we don't want the API to return this response as is. We want to have the name and the url of the pages, and send them to the website, so the website can display these pages with its preferred format. 
+The problem is that the response is in human-readable form, but we don't want the API to return this response as is. We want to have the name and the url of the pages, and send them to the website, so the website can display these pages with its preferred format.
 
 For this, we can try to ask the model to reply with a structured response, with the following prompt:
 
-```
+```text
 Give me a list of pages in the website podman-desktop.io related to "build an image" as JSON output as an array of objects with 2 fields name and url
 ```
 
@@ -65,7 +65,7 @@ We don't expect the user to ask such a precise question, and we would prefer to 
 
 Podman AI Lab supports this feature, let's restart a Playground session with the following system prompt:
 
-```
+```text
 Give me a list of pages in the website podman-desktop.io related to the request as JSON output as an array of objects with 2 fields name and url
 ```
 
@@ -79,7 +79,7 @@ We can see in the screenshot below that the model still returns a response suita
 
 ## Testing a recipe
 
-Now that we have a suitable prompt to use for our application, it is time to start our application itself. 
+Now that we have a suitable prompt to use for our application, it is time to start our application itself.
 
 Many developers prefer to have a working example of application to start with, and Podman AI Lab provides such examples with a catalog of recipes, visible in the page `AI Apps > Recipe Catalog`.
 
@@ -95,12 +95,11 @@ Back to the recipe's details page, we can access the sources of the recipe by cl
 
 ### Structure of a recipe
 
-The entrypoint of a recipe is the file `ai-lab.yaml` present in the repository of the recipe. 
+The entrypoint of a recipe is the file `ai-lab.yaml` present in the repository of the recipe.
 
 Let's examine the content of this file (the syntax of the file is specified in [this documentation](https://github.com/containers/podman-desktop-extension-ai-lab/blob/main/PACKAGING-GUIDE.md#recipe-configuration-file)) for the chatbot example.
 
-
-```
+```yaml
 version: v1.0
 application:
   type: language
@@ -142,7 +141,7 @@ We can adapt this source code, by replacing the UI part with a framework to make
 
 An interesting part of the source code is that the recipe does not expose to the user the system prompt, but defines one internally (`You are world class technical advisor`):
 
-```
+```python
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are world class technical advisor."),
     MessagesPlaceholder(variable_name="history"),
@@ -160,7 +159,7 @@ As discussed in the previous section, we have replaced the `streamlit` part with
 
 We have also indicated our own system prompt:
 
-```
+```python
 prompt = ChatPromptTemplate.from_messages([
     ("system", """
         reply in JSON format with an array of objects with 2 fields name and url
@@ -192,7 +191,7 @@ The last step is to add this application to the Podman AI Lab recipe catalog.
 
 Podman AI Lab provides a way for a user to extend the provided catalog with its own recipes. This can be done by adding a file in a specific directory, as described [in this documentation](https://github.com/containers/podman-desktop-extension-ai-lab/tree/main?tab=readme-ov-file#-providing-a-custom-catalog).
 
-```
+```json
 {
   "version": "1.0",
   "recipes": [

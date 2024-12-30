@@ -107,7 +107,7 @@ This YAML configuration creates a service named `my-nginx` to expose the Nginx d
 
 ## Verifying the service: port forwarding
 
-1. In the Kubernetes explorer, go to **Services**. 
+1. In the Kubernetes explorer, go to **Services**.
 1. Click the name of the `my-nginx` service.
 1. Click **Forward...**.
   ![forward button](img/forward-button.png)

@@ -88,14 +88,15 @@ You must install a specific Windows Subsystem for Linux (WSL) distribution to ma
 #### Solution: Enable Podman Desktop setup to run smoothly
 
 **_Windows 11 or later version_**
+
 1. Run the `wsl --update` command to update the WSL kernel.
-1. Run the `wsl --install --no-distribution` command to not install any WSL distribution. 
+1. Run the `wsl --install --no-distribution` command to not install any WSL distribution.
 1. Restart your machine.
 
-**_Windows 10 LTSC version_** 
+**_Windows 10 LTSC version_**
 
 1. Run the `wsl --update` command.
-1. Run the `wsl --install -d <distro>` command to install a specific WSL distribution. 
+1. Run the `wsl --install -d <distro>` command to install a specific WSL distribution.
     - Replace `distro` with any official WSL distribution, such as `ubuntu-24.04`.
 1. Restart your machine.
-1. (Optional): Run the `wsl --unregister <distro>` to uninstall the WSL distribution. 
+1. (Optional): Run the `wsl --unregister <distro>` to uninstall the WSL distribution.

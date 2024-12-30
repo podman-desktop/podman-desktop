@@ -70,6 +70,7 @@ Podman Desktop requires [Podman Engine](https://docs.podman.io/en/latest/index.h
 ## Using `libkrun` as machine provider
 
 By default, Podman uses the `Apple HyperVisor` provider type. If you are already running an `Apple HyperVisor` Podman machine and want to create a `GPU enabled (LibKrun)` machine, reset the Podman machine to avoid any port conflicts:
+
 - Using the UI: Click the **Troubleshooting** icon in the status bar and then **Cleanup / Purge data**.
 - Using the CLI: Run the `podman machine reset` command.
 
@@ -87,7 +88,7 @@ To use `podman machine` CLI commands with the `libkrun` provider type, configure
 
 **_Configuring the `containers.conf` file_**
 
-1. Open the `containers.conf` file, which is placed in the `$HOME/.config/containers` directory. 
+1. Open the `containers.conf` file, which is placed in the `$HOME/.config/containers` directory.
 1. Add the `provider` attribute and set its value to `libkrun` in the file.
 
    ```vim

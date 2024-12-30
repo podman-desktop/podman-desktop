@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 # How to create your first extension
 
-Extensions are a powerful tool to customize and extend the functionality of Podman Desktop. Whether you want to add new container management features, streamline current workflows, or create custom UI elements specific to your tech stack, building extensions allows you to tailor the Podman Desktop experience to your specific needs. 
+Extensions are a powerful tool to customize and extend the functionality of Podman Desktop. Whether you want to add new container management features, streamline current workflows, or create custom UI elements specific to your tech stack, building extensions allows you to tailor the Podman Desktop experience to your specific needs.
 
 In this guide, we'll introduce how you can build your own Podman Desktop extension, with links to detailed documentation that covers each part of the process.
 
@@ -53,7 +53,7 @@ Below is an example of how the [bootc extension](https://github.com/containers/p
 
 ## Adding and configuring commands
 
-Commands are the backbone of most extensions, allowing users to interact with the application and trigger specific actions. 
+Commands are the backbone of most extensions, allowing users to interact with the application and trigger specific actions.
 
 If you need to define and register custom commands, the **[Commands](/docs/extensions/developing/commands)** guide will show you how to create commands that respond to user actions or input, and tie them into your extension’s workflow.
 

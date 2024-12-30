@@ -16,7 +16,7 @@ Kind is a *built-in* extension to Podman Desktop and no installation is necessar
 
 :::
 
-The Kind extension provides the capability of creating a local Kubernetes cluster using only containers rather than a Virtual Machine. 
+The Kind extension provides the capability of creating a local Kubernetes cluster using only containers rather than a Virtual Machine.
 
 #### Procedure
 

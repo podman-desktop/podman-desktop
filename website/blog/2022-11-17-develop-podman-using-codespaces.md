@@ -144,8 +144,7 @@ We need to reuse the image of the previous step. For that let's use the build se
 },
 ```
 
-In order to avoid to redo all the build steps each time we open a workspace using this dev container, we published the image to quay.io at [quay.io/podman-desktop/devcontainer-parent:next
-](https://quay.io/repository/podman-desktop/devcontainer-parent?tab=tags&tag=next). This parent image is not changing much so it's better to use is as a parent one.
+In order to avoid to redo all the build steps each time we open a workspace using this dev container, we published the image to quay.io at [quay.io/podman-desktop/devcontainer-parent:next](https://quay.io/repository/podman-desktop/devcontainer-parent?tab=tags&tag=next). This parent image is not changing much so it's better to use is as a parent one.
 
 Inside `.devcontainer` directory there is a `.parent` directory with everything related to the parent image.
 

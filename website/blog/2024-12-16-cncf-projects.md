@@ -13,13 +13,14 @@ import ReactPlayer from 'react-player'
 
 # Launching CNCF projects from Podman Desktop
 
-Podman Desktop serves as a powerful tool for managing and visualizing cloud-native applications and can interact seamlessly with a range of [CNCF (Cloud Native Computing Foundation)](https://www.cncf.io/) projects. 
+Podman Desktop serves as a powerful tool for managing and visualizing cloud-native applications and can interact seamlessly with a range of [CNCF (Cloud Native Computing Foundation)](https://www.cncf.io/) projects.
 
-It's an accessible platform for developers working with single-container applications, multi-container configurations with Compose files, and complex, distributed applications on Kubernetes clusters. 
+It's an accessible platform for developers working with single-container applications, multi-container configurations with Compose files, and complex, distributed applications on Kubernetes clusters.
 
 ## Key features of Podman Desktop for CNCF projects
 
 Podman Desktop brings together three powerful features for managing small to large-scale projects:
+
 * **Container Management**: Supports creating, running, and monitoring containers.
 * **Compose Support**: Allows you to deploy applications defined in [Compose files](https://www.compose-spec.io/). This is particularly useful for managing applications that require multiple services, such as web servers, databases, and caches.
 * **Kubernetes Integration**: Offers tools to manage multi-node Kubernetes clusters, making it ideal for handling more complex distributed applications that need orchestration across several pods and services. You can setup your own development cluster with Podman Desktop using our [Minikube](/docs/minikube/installing-extension) or [Kind](/docs/kind/installing-extension) extensions.
@@ -29,7 +30,6 @@ Podman Desktop brings together three powerful features for managing small to lar
 [Minikube](https://minikube.sigs.k8s.io/docs/) is a local Kubernetes development cluster which allows for an easy way to learn and develop for Kubernetes.
 
 Minikube can be seamlessly integrated with Podman Desktop, enabling Kubernetes development workflows within Podman’s environment. This is made possible by [installing the Minikube extension](https://podman-desktop.io/docs/minikube/installing-extension), which allows creating, managing, and deploying clusters directly from the Podman Desktop.
-
 
 The following video provides a complete guide from installation to cluster creation:
 
@@ -43,14 +43,13 @@ A popular method for deploying Backstage is through a [Helm chart](https://githu
 
 ![backstage services](img/cncf-projects/backstage.png)
 
-
 You can also access your deployed Backstage instance by using Podman Desktop's port forwarding feature. This feature allows you to securely forward a local port to the Backstage service running on your Kubernetes cluster, making it easy to access the instance from a local browser.
 
 ![backstage port forward](img/cncf-projects/backstage_port.png)
 
 ## Dapr
 
-[Dapr](https://docs.dapr.io/) (Distributed Application Runtime) is an open-source, event-driven runtime designed to help developers build resilient, stateless, and stateful applications that can run seamlessly on cloud or edge environments. 
+[Dapr](https://docs.dapr.io/) (Distributed Application Runtime) is an open-source, event-driven runtime designed to help developers build resilient, stateless, and stateful applications that can run seamlessly on cloud or edge environments.
 
 Dapr abstracts the complexities of distributed systems, offering building blocks for service invocation, state management, publish/subscribe messaging, and resource bindings, which simplify the development of microservices and cloud-native applications.
 

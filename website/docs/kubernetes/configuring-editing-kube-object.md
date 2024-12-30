@@ -46,7 +46,7 @@ spec:
 
 #### Procedure: Creating an object
 
-1. Go to the **Kubernetes** component page. 
+1. Go to the **Kubernetes** component page.
 2. Click one of the options to open the object page.
 
    ![kube objects](img/kube-objects.png)

@@ -42,7 +42,7 @@ To help you get started, we've provided templates ranging from a minimal "Hello 
 
 Here are some examples from [our templates documentation](/docs/extensions/templates):
 
-- [Basic "Hello World" example.](https://github.com/podman-desktop/extension-template-minimal) 
+- [Basic "Hello World" example.](https://github.com/podman-desktop/extension-template-minimal)
 - [Simple webview template.](https://github.com/podman-desktop/extension-template-webview)
 - [Full-stack webview template.](https://github.com/podman-desktop/extension-template-full)
 

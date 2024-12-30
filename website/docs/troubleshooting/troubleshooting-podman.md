@@ -240,7 +240,6 @@ _Note:_ If Docker Desktop is started again, it will automatically re-alias the d
 
 After uninstalling Podman Desktop, the configuration data persists even though it is not needed for a fresh installation.
 
-
 #### Solution
 
 **_Deleting Podman Desktop configuration_**
@@ -248,11 +247,12 @@ After uninstalling Podman Desktop, the configuration data persists even though i
 1. Go to the `$HOME/.local/share/containers` directory, where `$HOME` denotes the home folder of the current user.
 1. Delete the `podman-desktop` folder.
 
-**_Deleting Podman configuration_** 
+**_Deleting Podman configuration_**
 
-Podman stores its configuration files in the `$HOME/.config/containers` directory. Options available to delete Podman configuration: 
+Podman stores its configuration files in the `$HOME/.config/containers` directory. Options available to delete Podman configuration:
+
 - Using CLI
-   - Run the `podman machine reset` command.
+  - Run the `podman machine reset` command.
 - Using UI
    1. Click the **Troubleshooting** icon in the status bar.
    1. Click the **Cleanup/Purge data** button to delete all resources from the engine.
@@ -269,5 +269,4 @@ Kubernetes clusters from cloud providers require an executable installed on the 
 
 1. Move the binary located in your `.kube/config` file to a system bin directory, such as `/usr/local/bin/`.
 
-1. Set the value of the `command` parameter to the full path of the executable in your Kubernetes configuration file. For example, `command: /usr/local/bin/<cloud-provider-binary>`, where `cloud-provider-binary` denotes the binary name, such as `aws` or `oci`. 
-
+1. Set the value of the `command` parameter to the full path of the executable in your Kubernetes configuration file. For example, `command: /usr/local/bin/<cloud-provider-binary>`, where `cloud-provider-binary` denotes the binary name, such as `aws` or `oci`.
