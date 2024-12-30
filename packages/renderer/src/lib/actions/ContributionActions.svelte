@@ -13,24 +13,30 @@ import { context as storeContext } from '/@/stores/context';
 import type { Menu } from '../../../../main/src/plugin/menu-registry';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 
-export let args: unknown[];
+interface Props {
+  args: unknown[];
+  contextPrefix?: string;
+  dropdownMenu?: boolean;
+  contributions: Menu[];
+  detailed?: boolean;
+  contextUI?: ContextUI;
+  onError: (errorMessage: string) => void;
+}
 
-export let contextPrefix: string | undefined = undefined;
+const {
+  args,
+  contextPrefix,
+  dropdownMenu = false,
+  contributions = [],
+  detailed = false,
+  contextUI,
+  onError,
+}: Props = $props();
 
-export let dropdownMenu = false;
-export let contributions: Menu[] = [];
-export let detailed = false;
-export let contextUI: ContextUI | undefined = undefined;
-
-let filteredContributions: Menu[] = [];
-$: {
-  console.log('[ContributionActions] contextUI', contextUI?.collectAllValues());
-
-  filteredContributions = contributions.reduce((previousValue, currentValue) => {
+const filteredContributions = $derived(
+  contributions.reduce((previousValue, currentValue) => {
     // Transform the unknown[] args objects as contexts
     const argsContexts = args.map(arg => transformObjectToContext(arg, contextPrefix));
-
-    console.log('[ContributionActions] argsContexts', argsContexts);
 
     // If no when property is set, we keep all additional menus
     if (currentValue.when === undefined) return [...previousValue, currentValue];
@@ -50,13 +56,13 @@ $: {
       }
     }
     return previousValue;
-  }, [] as Menu[]);
-}
+  }, [] as Menu[]),
+);
 
-let globalContext: ContextUI;
+let globalContext: ContextUI | undefined = $state();
 let contextsUnsubscribe: Unsubscriber;
 
-$: {
+$effect(() => {
   if (contextUI) {
     globalContext = contextUI;
   } else {
@@ -67,7 +73,7 @@ $: {
       globalContext = value;
     });
   }
-}
+});
 
 function getIcon(menu: Menu): IconDefinition | string {
   const defaultIcon = faPlug;
@@ -90,7 +96,6 @@ onDestroy(() => {
     contextsUnsubscribe();
   }
 });
-export let onError: (errorMessage: string) => void;
 
 async function executeContribution(menu: Menu): Promise<void> {
   try {
