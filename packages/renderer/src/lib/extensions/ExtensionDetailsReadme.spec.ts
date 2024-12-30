@@ -19,19 +19,12 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import ExtensionDetailsReadme from './ExtensionDetailsReadme.svelte';
 
 async function waitRender(customProperties: object): Promise<void> {
   render(ExtensionDetailsReadme, { ...customProperties });
-  await tick();
-  await tick();
-  await tick();
-  await tick();
-  await tick();
-  await tick();
 }
 
 beforeEach(() => {
@@ -40,16 +33,19 @@ beforeEach(() => {
 
 test('Expect to have readme with URI', async () => {
   const spyFetch = vi.spyOn(window, 'fetch');
-  spyFetch.mockResolvedValueOnce(new Response('#'));
   spyFetch.mockResolvedValueOnce(new Response('# This is my README'));
 
   await waitRender({ readme: { uri: 'http://my-fake-registry/readme-content' } });
 
   // expect Markdown
-  const markdownContent = screen.queryByRole('region', { name: 'markdown-content' });
-  expect(markdownContent).toBeInTheDocument();
+  await vi.waitFor(() => expect(screen.queryByRole('region', { name: 'markdown-content' })).toBeInTheDocument());
 
-  expect(markdownContent).toContainHTML('<h1 id="this-is-my-readme">This is my README</h1>');
+  await vi.waitFor(() => expect(spyFetch).toHaveBeenCalled());
+  await vi.waitFor(() =>
+    expect(screen.queryByRole('region', { name: 'markdown-content' })).toContainHTML(
+      '<h1 id="this-is-my-readme">This is my README</h1>',
+    ),
+  );
 });
 
 test('Expect to have readme with content', async () => {
