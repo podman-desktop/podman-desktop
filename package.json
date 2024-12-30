@@ -75,7 +75,7 @@
     "format:check": "biome format",
     "format:fix": "biome format --write",
     "markdownlint:check": "markdownlint-cli2 \"website/**/*.md\" \"#website/node_modules\" \"#website/api\"",
-    "markdownlint:fix": "markdownlint-cli2-fix \"website/**/*.md\" \"#website/node_modules\"",
+    "markdownlint:fix": "markdownlint-cli2 --fix \"website/**/*.md\" \"#website/node_modules\"",
     "lint:clean": "rimraf .eslintcache",
     "lint:fix": "node --max-old-space-size=6144 node_modules/eslint/bin/eslint.js --cache . --cache-strategy content --fix",
     "lint:check": "node --max-old-space-size=6144 node_modules/eslint/bin/eslint.js --cache . --cache-strategy content",

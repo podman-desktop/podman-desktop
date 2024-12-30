@@ -8,5 +8,9 @@ MD014: false
 MD024: false
 # We have multiple top-level headings in the same document to set different page title and navigation title:
 MD025: false
+# Allow actual numbers in ordered lists:
+MD029: false
+# Allow spaces after marker in ordered lists:
+MD030: false
 # We allow inline HTML (icon):
 MD033: false

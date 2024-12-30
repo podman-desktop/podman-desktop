@@ -1,0 +1,4 @@
+# only show filenames, at the top level
+outputFormatters:
+  - - markdownlint-cli2-formatter-summarize
+    - byFile: true

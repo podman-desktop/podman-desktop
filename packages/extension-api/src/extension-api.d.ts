@@ -3122,7 +3122,7 @@ declare module '@podman-desktop/api' {
      *
      * If the option is not set, the host's native OS and Architecture are used to look up the image in the image cache. However, if no platform is passed and the given image does exist in the local image cache, but its OS or architecture does not match, the container is created with the available image, and a warning is added to the `Warnings` field in the response, for example;
      *
-     * ```
+     * ```text
      * WARNING: The requested image's platform (linux/arm64/v8) does not
      *          match the detected host platform (linux/amd64) and no
      *          specific platform was requested
