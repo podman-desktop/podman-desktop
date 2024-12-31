@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import fs from 'node:fs';
+import { existsSync } from 'node:fs';
+import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { app } from 'electron';
@@ -71,6 +72,9 @@ export class MacosStartup {
       return;
     }
 
+    const stdoutPath = `${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stdout.log`;
+    const stderrPath = `${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stderr.log`;
+
     // write the file
     const plistContent =
       `<?xml version="1.0" encoding="UTF-8"?>
@@ -81,7 +85,9 @@ export class MacosStartup {
     <string>io.podman_desktop.PodmanDesktop</string>
     <key>ProgramArguments</key>
     <array>
-        <string>${this.podmanDesktopBinaryPath}</string>
+        <string>bash</string>
+        <string>-c</string>
+        <string>truncate -s 0 '${stdoutPath}'; truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}'</string>
         ` +
       minimizeSettings +
       `
@@ -89,18 +95,18 @@ export class MacosStartup {
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stdout.log</string>
+    <string>${stdoutPath}</string>
     <key>StandardErrorPath</key>
-    <string>${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stderr.log</string>
+    <string>${stderrPath}</string>
 </dict>
 </plist>
 `;
 
     // ensure the parent directory of the plist file exists
-    await fs.promises.mkdir(path.dirname(this.plistFile), { recursive: true });
+    await mkdir(path.dirname(this.plistFile), { recursive: true });
 
     // write the file
-    await fs.promises.writeFile(this.plistFile, plistContent, 'utf-8');
+    await writeFile(this.plistFile, plistContent, 'utf-8');
     console.info(
       `Installing Podman Desktop startup file at ${this.plistFile} using ${this.podmanDesktopBinaryPath} location.`,
     );
@@ -108,8 +114,8 @@ export class MacosStartup {
 
   async disable(): Promise<void> {
     // remove the file at this.podmanDesktopBinaryPath only if it exists
-    if (fs.existsSync(this.plistFile)) {
-      await fs.promises.unlink(this.plistFile);
+    if (existsSync(this.plistFile)) {
+      await unlink(this.plistFile);
     }
   }
 }
