@@ -987,11 +987,11 @@ importers:
         specifier: ^0.37.2
         version: 0.37.2
       markdownlint-cli2:
-        specifier: ^0.17.0
-        version: 0.17.0
+        specifier: ^0.17.1
+        version: 0.17.1
       markdownlint-cli2-formatter-summarize:
         specifier: ^0.0.7
-        version: 0.0.7(markdownlint-cli2@0.17.0)
+        version: 0.0.7(markdownlint-cli2@0.17.1)
       postcss:
         specifier: ^8.4.49
         version: 8.4.49
@@ -7883,13 +7883,17 @@ packages:
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
-  markdownlint-cli2@0.17.0:
-    resolution: {integrity: sha512-8Xz7wkkkV4wJTf+pvryU3J/fT3BZWD3ZykcjYBR0GuH0GHvrCbswaCdurbuUuAPDGFZy4cxBGYCJSAOW8jM4aQ==}
+  markdownlint-cli2@0.17.1:
+    resolution: {integrity: sha512-n1Im9lhKJJE12/u2N0GWBwPqeb0HGdylN8XpSFg9hbj35+QalY9Vi6mxwUQdG6wlSrrIq9ZDQ0Q85AQG9V2WOg==}
     engines: {node: '>=18'}
     hasBin: true
 
   markdownlint@0.37.2:
     resolution: {integrity: sha512-m8QhYnRA1ptbhIjhVVBUkKQcUelVxuyO/yXyLewnc1+xs4eXhST/+hIy29goO+EYVLmWtknH4SmYQ4s0caoKqw==}
+    engines: {node: '>=18'}
+
+  markdownlint@0.37.3:
+    resolution: {integrity: sha512-eoQqH0291YCCjd+Pe1PUQ9AmWthlVmS0XWgcionkZ8q34ceZyRI+pYvsWksXJJL8OBkWCPwp1h/pnXxrPFC4oA==}
     engines: {node: '>=18'}
 
   matcher@3.0.0:
@@ -20058,21 +20062,21 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  markdownlint-cli2-formatter-default@0.0.5(markdownlint-cli2@0.17.0):
+  markdownlint-cli2-formatter-default@0.0.5(markdownlint-cli2@0.17.1):
     dependencies:
-      markdownlint-cli2: 0.17.0
+      markdownlint-cli2: 0.17.1
 
-  markdownlint-cli2-formatter-summarize@0.0.7(markdownlint-cli2@0.17.0):
+  markdownlint-cli2-formatter-summarize@0.0.7(markdownlint-cli2@0.17.1):
     dependencies:
-      markdownlint-cli2: 0.17.0
+      markdownlint-cli2: 0.17.1
 
-  markdownlint-cli2@0.17.0:
+  markdownlint-cli2@0.17.1:
     dependencies:
       globby: 14.0.2
       js-yaml: 4.1.0
       jsonc-parser: 3.3.1
-      markdownlint: 0.37.2
-      markdownlint-cli2-formatter-default: 0.0.5(markdownlint-cli2@0.17.0)
+      markdownlint: 0.37.3
+      markdownlint-cli2-formatter-default: 0.0.5(markdownlint-cli2@0.17.1)
       micromatch: 4.0.8
     transitivePeerDependencies:
       - supports-color
@@ -20081,6 +20085,20 @@ snapshots:
     dependencies:
       markdown-it: 14.1.0
       micromark: 4.0.1
+      micromark-extension-directive: 3.0.2
+      micromark-extension-gfm-autolink-literal: 2.1.0
+      micromark-extension-gfm-footnote: 2.1.0
+      micromark-extension-gfm-table: 2.1.0
+      micromark-extension-math: 3.1.0
+      micromark-util-types: 2.0.1
+    transitivePeerDependencies:
+      - supports-color
+
+  markdownlint@0.37.3:
+    dependencies:
+      markdown-it: 14.1.0
+      micromark: 4.0.1
+      micromark-core-commonmark: 2.0.2
       micromark-extension-directive: 3.0.2
       micromark-extension-gfm-autolink-literal: 2.1.0
       micromark-extension-gfm-footnote: 2.1.0
