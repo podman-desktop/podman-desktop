@@ -55,7 +55,6 @@ const config = {
         'ssh2',
         '@segment/analytics-node',
         'express',
-        'electron-devtools-installer',
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],
       output: {
