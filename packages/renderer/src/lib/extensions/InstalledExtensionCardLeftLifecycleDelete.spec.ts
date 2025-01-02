@@ -68,7 +68,7 @@ test('Expect to delete pd Extension', async () => {
     publisher: '',
     removable: true,
     version: 'v1.2.3',
-    state: '',
+    state: 'stopped',
     path: '',
     readme: '',
   };

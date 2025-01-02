@@ -37,7 +37,7 @@ const disable = $derived.by(() => {
     case 'restart':
       return state?.status !== 'started';
     case 'stop':
-      return state?.status !== 'started';
+      return state?.status !== 'started' && state?.status !== 'starting';
     case 'delete':
       return state?.status !== 'failed' && state?.status !== 'stopped' && state?.status !== 'unknown';
     case 'update':
