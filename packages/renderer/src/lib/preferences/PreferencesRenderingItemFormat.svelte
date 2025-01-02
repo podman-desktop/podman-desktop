@@ -14,8 +14,6 @@ import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/
 import Markdown from '../markdown/Markdown.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
 
-let invalidText: string | undefined = $state(undefined);
-
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
   initialValue: Promise<any>;
@@ -45,6 +43,7 @@ let {
 let currentRecord: IConfigurationPropertyRecordedSchema;
 let recordUpdateTimeout: NodeJS.Timeout;
 
+let invalidText: string | undefined = $state(undefined);
 let recordValue: string | boolean | number | undefined = $state(undefined);
 
 $effect(() => {
