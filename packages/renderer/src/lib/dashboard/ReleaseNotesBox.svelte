@@ -8,16 +8,19 @@ import type { ReleaseNotes } from '/@api/release-notes-info';
 
 import Markdown from '../markdown/Markdown.svelte';
 
-let showBanner = false;
-let notesAvailable = false;
-let notesURL: string;
-let currentVersion: string;
-let notesInfo: ReleaseNotes | undefined;
+let showBanner = $state(false);
+let notesAvailable = $state(false);
+let notesURL: string | undefined = $state();
+let currentVersion: string | undefined = $state();
+let notesInfo: ReleaseNotes | undefined = $state();
+let imageError: boolean = $state(false);
+
 const receiveShowReleaseNotes = window.events?.receive('show-release-notes', () => {
   showBanner = true;
 });
 
 async function openReleaseNotes() {
+  if (!notesURL) return;
   await window.openExternal(notesURL);
 }
 
@@ -43,6 +46,10 @@ onMount(async () => {
   await getInfoFromNotes();
 });
 
+function onImageError(): void {
+  imageError = true;
+}
+
 onDestroy(async () => {
   receiveShowReleaseNotes.dispose();
 });
@@ -51,9 +58,10 @@ onDestroy(async () => {
 {#if showBanner}
   {#if notesAvailable}
     <div class="flex bg-[var(--pd-content-card-bg)] rounded-md p-5 gap-3 flex-row flex-nowrap h-[200px] items-center">
-      {#if notesInfo?.image}
+      {#if notesInfo?.image && !imageError}
         <img
           src={notesInfo.image}
+          onerror={onImageError}
           class="max-h-[100%] w-auto max-w-[20%] object-contain rounded-md self-start"
           alt={`Podman Desktop ${currentVersion} release image`} />
       {/if}

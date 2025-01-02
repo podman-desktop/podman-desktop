@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -67,6 +67,28 @@ test('expect banner to be visible', async () => {
   expect(screen.getAllByText(responseJSON.summary)[0]).toBeInTheDocument();
   expect(screen.getByRole('img')).toBeInTheDocument();
   expect(screen.getByRole('img')).toHaveAttribute('src', responseJSON.image);
+});
+
+test('expect image to be hidden if there is a loading error', async () => {
+  const { getByRole, queryByRole } = render(ReleaseNotesBox);
+
+  const image: HTMLImageElement = await vi.waitFor(() => {
+    const img = getByRole('img', {
+      name: 'Podman Desktop 1.1.0 release image',
+    });
+    expect(img).toBeInTheDocument();
+    expect(img).instanceof(HTMLImageElement);
+    return img as HTMLImageElement;
+  });
+
+  // svelte never render the image, so we need
+  // to manually send an error event
+  await fireEvent.error(image);
+
+  await vi.waitFor(() => {
+    const img = queryByRole('img');
+    expect(img).toBeNull();
+  });
 });
 
 test('expect no release notes available', async () => {
