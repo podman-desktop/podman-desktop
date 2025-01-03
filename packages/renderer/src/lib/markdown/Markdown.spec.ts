@@ -30,7 +30,7 @@ async function waitRender(customProperties: object): Promise<void> {
 }
 
 beforeAll(() => {
-  Object.defineProperty(window, 'executeCommand', { value: vi.fn(), writable: true });
+  Object.defineProperty(window, 'executeCommand', { value: vi.fn() });
 });
 
 test('Expect to have bold', async () => {
@@ -171,7 +171,7 @@ describe('Custom warnings', () => {
   });
 
   test('Expect button to be in error mode if execution fails', async () => {
-    vi.spyOn(window, 'executeCommand').mockRejectedValue('error');
+    vi.mocked(window.executeCommand).mockRejectedValue('error');
     const warnings = [
       {
         state: 'failed',
