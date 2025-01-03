@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import * as fs from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+import { env } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as util from '../../util.js';
 import type { DockerContextParsingInfo } from './docker-context-handler.js';
 import { DockerContextHandler } from './docker-context-handler.js';
 
-export class TestDockerContextHandler extends DockerContextHandler {
+class TestDockerContextHandler extends DockerContextHandler {
   override getDockerConfigPath(): string {
     return super.getDockerConfigPath();
   }
@@ -42,6 +42,16 @@ export class TestDockerContextHandler extends DockerContextHandler {
 
 // mock exists sync
 vi.mock('node:fs');
+
+vi.mock('@podman-desktop/api', async () => {
+  return {
+    env: {
+      isLinux: false,
+      isWindows: false,
+      isMac: false,
+    },
+  };
+});
 
 const originalConsoleError = console.error;
 let dockerContextHandler: TestDockerContextHandler;
@@ -174,7 +184,7 @@ describe('getContexts', () => {
 
   test('check default on Windows', async () => {
     vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+    vi.mocked(env).isWindows = true;
 
     const contexts = await dockerContextHandler.getContexts();
 

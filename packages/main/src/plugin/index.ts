@@ -76,7 +76,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
-import type { DockerContextInfo, DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
+import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
@@ -2859,17 +2859,6 @@ export class PluginSystem {
       'docker-compatibility:getSystemDockerSocketMappingStatus',
       async (): Promise<DockerSocketMappingStatusInfo> => {
         return dockerCompatibility.getSystemDockerSocketMappingStatus();
-      },
-    );
-
-    this.ipcHandle('docker-compatibility:listDockerContexts', async (): Promise<DockerContextInfo[]> => {
-      return dockerCompatibility.listDockerContexts();
-    });
-
-    this.ipcHandle(
-      'docker-compatibility:switchDockerContext',
-      async (_listener, dockerContextName: string): Promise<void> => {
-        return dockerCompatibility.switchDockerContext(dockerContextName);
       },
     );
 
