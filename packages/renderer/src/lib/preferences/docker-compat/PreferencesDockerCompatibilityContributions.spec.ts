@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
@@ -31,18 +32,6 @@ import PreferencesDockerCompatibilityContributions from './PreferencesDockerComp
 
 beforeEach(() => {
   vi.resetAllMocks();
-
-  Object.defineProperty(global, 'window', {
-    value: {
-      getConfigurationValue: vi.fn(),
-      navigator: {
-        clipboard: {
-          writeText: vi.fn(),
-        },
-      },
-    },
-    writable: true,
-  });
 });
 
 test('display group', async () => {
@@ -144,4 +133,88 @@ test('no group if empty', async () => {
   // no list item
   const listItems = screen.queryAllByRole('list');
   expect(listItems.length).toBe(0);
+});
+
+test('display enum', async () => {
+  // one extension
+  extensionInfos.set([
+    {
+      id: 'my.extensionId',
+      name: 'My Extension',
+      description: 'My Extension description',
+      version: '1.0.0',
+      publisher: 'My Publisher',
+      icon: 'my-icon',
+      state: 'started',
+    } as ExtensionInfo,
+  ]);
+
+  // set the context value
+  const contextUi = new ContextUI();
+  context.set(contextUi);
+  const enumValues = [
+    { label: 'Value 1', value: 'value1', selected: false },
+    { label: 'Value 2', value: 'value2', selected: true },
+  ];
+  contextUi.setValue('my.extensionId.DockerCompatibility.my.property', enumValues);
+
+  configurationProperties.set([
+    {
+      id: 'my.property',
+      title: 'Property title',
+      markdownDescription: 'Property Description',
+      parentId: '',
+      type: 'string',
+      enum: [],
+      scope: 'DockerCompatibility',
+      group: 'my.extensionId',
+      extension: {
+        id: 'my.extensionId',
+      },
+    },
+  ]);
+
+  // mock the configuration
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue();
+
+  render(PreferencesDockerCompatibilityContributions);
+
+  // check that the group is being displayed
+  const groupName = screen.getByRole('list', { name: 'my.extensionId' });
+  expect(groupName).toBeInTheDocument();
+
+  // search for text "My: Property"
+  const propertyTitle = screen.getByRole('status', { name: 'My: Property' });
+  expect(propertyTitle).toBeInTheDocument();
+
+  // check markdown description
+  const propertyDescription = screen.getByRole('document', { name: 'my.property' });
+  expect(propertyDescription).toBeInTheDocument();
+
+  // search for a combobox element
+  const dropdownElement = screen.getByRole('combobox');
+  expect(dropdownElement).toBeInTheDocument();
+
+  // check that the selected value is being displayed
+  const selectedValue = screen.getByRole('button', { name: 'Value 2' });
+  expect(selectedValue).toBeInTheDocument();
+
+  // click on the first child of the dropdown
+  await userEvent.click(selectedValue);
+
+  // check that the value 1 is also displayed
+  const value1 = screen.getByRole('button', { name: 'Value 1' });
+  expect(value1).toBeInTheDocument();
+
+  // click on the value 1
+  await userEvent.click(value1);
+
+  // check that the value 1 is now selected
+  const selectedValue1 = screen.getByRole('button', { name: 'Value 1' });
+  expect(selectedValue1).toBeInTheDocument();
+
+  // now expect that there is a call to update the configuration
+  await vi.waitFor(() =>
+    expect(window.updateConfigurationValue).toHaveBeenCalledWith('my.property', 'value1', 'DockerCompatibility'),
+  );
 });

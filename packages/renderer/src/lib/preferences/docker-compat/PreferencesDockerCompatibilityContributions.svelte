@@ -1,5 +1,6 @@
 <script lang="ts">
 /* eslint-disable import/no-duplicates */
+import { Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber, type Writable } from 'svelte/store';
 
@@ -50,8 +51,17 @@ onDestroy(() => {
   }
 });
 
+interface EnumItem {
+  label: string;
+  value: string;
+  selected: boolean;
+}
+
 interface PropertyWithDisplayName extends IConfigurationPropertyRecordedSchema {
+  id: string;
   displayName: string;
+  selectedValue?: string;
+  enumItems?: EnumItem[];
 }
 
 interface GroupItem {
@@ -115,11 +125,34 @@ function extractGroupItems(): void {
 
       const displayName = `${leftPart}: ${rightPart}`;
 
-      // add the property to the group
-      groupItem.properties.push({ ...property, displayName });
+      if (property.id) {
+        const newItem: PropertyWithDisplayName = { ...property, id: property.id, displayName };
+
+        // do we have a dynamic enum ?
+        if (property.enum) {
+          // get the enum from the context using the following key
+          // ${groupName}.DockerCompatibility.${property.id}
+
+          // get the enum from the context
+          const enumKey = `${name}.DockerCompatibility.${property.id}`;
+          const enumItems = globalContext.getValue<EnumItem[]>(enumKey);
+          if (enumItems) {
+            newItem.enumItems = enumItems;
+            newItem.selectedValue = enumItems.find(item => item.selected)?.value;
+          }
+        }
+
+        // add the property to the group
+        groupItem.properties.push(newItem);
+      }
     }
   }
   groupItems.items = updatedGroupItems;
+}
+
+async function onChangeProperty(property: PropertyWithDisplayName, value: unknown): Promise<void> {
+  // notify a configuration change using the DockerCompatibility scope
+  await window.updateConfigurationValue(property.id, value, 'DockerCompatibility');
 }
 </script>
 
@@ -156,6 +189,16 @@ function extractGroupItems(): void {
                   <Markdown markdown={property.markdownDescription} />
                 </div>
               </div>
+              {#if property.enumItems && property.enumItems.length > 0}
+                <Dropdown
+                  name="select-property-{property.id}"
+                  ariaLabel="dropdown for property {property.id}"
+                  disabled={property.enumItems.length === 0}
+                  bind:value={property.selectedValue}
+                  onChange={(val: unknown) => onChangeProperty(property, val)}
+                  options={property.enumItems}>
+                </Dropdown>
+              {/if}
             </div>
           </div>
         </div>
