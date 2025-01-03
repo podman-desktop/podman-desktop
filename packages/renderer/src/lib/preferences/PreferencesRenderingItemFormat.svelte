@@ -16,12 +16,12 @@ import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
 
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
-  initialValue: Promise<any>;
+  initialValue: Promise<unknown>;
   givenValue?: unknown;
   setRecordValue?: (id: string, value: string | boolean | number) => void;
   invalidRecord?: (error: string) => void;
   validRecord?: () => void;
-  updateResetButtonVisibility?: (recordValue: any) => void;
+  updateResetButtonVisibility?: (recordValue: unknown) => void;
   resetToDefault?: boolean;
   enableAutoSave?: boolean;
   enableSlider?: boolean;
@@ -44,7 +44,7 @@ let currentRecord: IConfigurationPropertyRecordedSchema;
 let recordUpdateTimeout: NodeJS.Timeout;
 
 let invalidText: string | undefined = $state(undefined);
-let recordValue: string | boolean | number | undefined = $state(undefined);
+let recordValue: unknown = $state(undefined);
 
 $effect(() => {
   updateResetButtonVisibility?.(recordValue);

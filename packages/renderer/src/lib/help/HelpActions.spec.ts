@@ -54,7 +54,7 @@ suite('HelpActions component', () => {
   });
 
   test('simulate clicking outside the menu closes it', async () => {
-    vi.mocked(receiveEventMock).mockImplementation((channel: string, callback: () => void) => {
+    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
         dispose: () => {},
@@ -94,14 +94,14 @@ suite('HelpActions component', () => {
     // Expect receiveEventMock to have been called
     // why we do this is because we are mocking receiveEvent already, so we're not "toggling" it
     // this test ensures that the event is only called once / we are toggling correctly.
-    expect(receiveEventMock).toHaveBeenCalledTimes(1);
+    expect(window.events.receive).toHaveBeenCalledTimes(1);
 
     // Remove the span after (unsure if needed, but dont want to break other tests)
     span.remove();
   });
 
   test.each(Items)('contains item with $title', async ({ title, tooltip }) => {
-    vi.mocked(receiveEventMock).mockImplementation((channel: string, callback: () => void) => {
+    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
         dispose: () => {},
