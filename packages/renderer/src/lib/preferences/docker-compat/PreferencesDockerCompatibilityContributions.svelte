@@ -135,7 +135,20 @@ function extractGroupItems(): void {
 
           // get the enum from the context
           const enumKey = `${name}.DockerCompatibility.${property.id}`;
-          const enumItems = globalContext.getValue<EnumItem[]>(enumKey);
+          const enumItemsRaw = globalContext.getValue<unknown>(enumKey);
+
+          // check if the raw value is an array and contains the expected fields of EnumItem type
+          if (!Array.isArray(enumItemsRaw)) {
+            continue;
+          }
+          if (
+            !enumItemsRaw.every(
+              item => typeof item === 'object' && 'label' in item && 'value' in item && 'selected' in item,
+            )
+          ) {
+            continue;
+          }
+          const enumItems = enumItemsRaw as EnumItem[];
           if (enumItems) {
             newItem.enumItems = enumItems;
             newItem.selectedValue = enumItems.find(item => item.selected)?.value;

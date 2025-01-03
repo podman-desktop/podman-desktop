@@ -218,3 +218,106 @@ test('display enum', async () => {
     expect(window.updateConfigurationValue).toHaveBeenCalledWith('my.property', 'value1', 'DockerCompatibility'),
   );
 });
+
+test('check invalid enum (not array) makes no renderim as enum', async () => {
+  // one extension
+  extensionInfos.set([
+    {
+      id: 'my.extensionId',
+      name: 'My Extension',
+      description: 'My Extension description',
+      version: '1.0.0',
+      publisher: 'My Publisher',
+      icon: 'my-icon',
+      state: 'started',
+    } as ExtensionInfo,
+  ]);
+
+  // set the context value
+  const contextUi = new ContextUI();
+  context.set(contextUi);
+  contextUi.setValue(
+    'my.extensionId.DockerCompatibility.my.property',
+    'pure string, should be an array with expected fields',
+  );
+
+  configurationProperties.set([
+    {
+      id: 'my.property',
+      title: 'Property title',
+      markdownDescription: 'Property Description',
+      parentId: '',
+      type: 'string',
+      enum: [],
+      scope: 'DockerCompatibility',
+      group: 'my.extensionId',
+      extension: {
+        id: 'my.extensionId',
+      },
+    },
+  ]);
+
+  // mock the configuration
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue();
+
+  render(PreferencesDockerCompatibilityContributions);
+
+  // check that the group is being displayed
+  const groupName = screen.getByRole('list', { name: 'my.extensionId' });
+  expect(groupName).toBeInTheDocument();
+
+  // search for a combobox element
+  const dropdownElement = screen.queryByRole('combobox');
+  expect(dropdownElement).not.toBeInTheDocument();
+});
+
+test('check invalid enum (missing fields) makes no renderim as enum', async () => {
+  // one extension
+  extensionInfos.set([
+    {
+      id: 'my.extensionId',
+      name: 'My Extension',
+      description: 'My Extension description',
+      version: '1.0.0',
+      publisher: 'My Publisher',
+      icon: 'my-icon',
+      state: 'started',
+    } as ExtensionInfo,
+  ]);
+
+  // set the context value
+  const contextUi = new ContextUI();
+  context.set(contextUi);
+  contextUi.setValue('my.extensionId.DockerCompatibility.my.property', [
+    { label: 'Value 1', value: 'value1' /*missing the selected field*/ },
+  ]);
+
+  configurationProperties.set([
+    {
+      id: 'my.property',
+      title: 'Property title',
+      markdownDescription: 'Property Description',
+      parentId: '',
+      type: 'string',
+      enum: [],
+      scope: 'DockerCompatibility',
+      group: 'my.extensionId',
+      extension: {
+        id: 'my.extensionId',
+      },
+    },
+  ]);
+
+  // mock the configuration
+  vi.mocked(window.updateConfigurationValue).mockResolvedValue();
+
+  render(PreferencesDockerCompatibilityContributions);
+
+  // check that the group is being displayed
+  const groupName = screen.getByRole('list', { name: 'my.extensionId' });
+  expect(groupName).toBeInTheDocument();
+
+  // search for a combobox element
+  const dropdownElement = screen.queryByRole('combobox');
+  expect(dropdownElement).not.toBeInTheDocument();
+});
