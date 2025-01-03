@@ -1134,6 +1134,24 @@ describe('setContextValue', async () => {
     api.context.setValue('key', 'value', 'onboarding');
     expect(setValueSpy).toBeCalledWith('publisher.name.onboarding.key', 'value');
   });
+
+  test('with DockerCompatibility scope the key is prefixed before calling setValue', async () => {
+    const disposables: IDisposable[] = [];
+    const api = extensionLoader.createApi(
+      'path',
+      {
+        name: 'name',
+        publisher: 'publisher',
+        version: '1',
+        displayName: 'dname',
+      },
+      disposables,
+    );
+    const setValueSpy = vi.spyOn(context, 'setValue');
+
+    api.context.setValue('key', 'value', 'DockerCompatibility');
+    expect(setValueSpy).toBeCalledWith('publisher.name.DockerCompatibility.key', 'value');
+  });
 });
 
 describe('Removing extension by user', async () => {

@@ -4549,7 +4549,7 @@ declare module '@podman-desktop/api' {
      * @param scope the scope to use to save the value
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    export function setValue(key: string, value: any, scope?: 'onboarding'): void;
+    export function setValue(key: string, value: any, scope?: 'onboarding' | 'DockerCompatibility'): void;
   }
 
   export type CliToolInstallationSource = 'extension' | 'external';

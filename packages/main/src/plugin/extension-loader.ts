@@ -1338,8 +1338,8 @@ export class ExtensionLoader {
 
     const contextAPI: typeof containerDesktopAPI.context = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setValue: (key: string, value: any, scope?: 'onboarding'): void => {
-        if (scope === 'onboarding') {
+      setValue: (key: string, value: any, scope?: 'onboarding' | 'DockerCompatibility'): void => {
+        if (scope === 'onboarding' || scope === 'DockerCompatibility') {
           key = `${extensionInfo.id}.${scope}.${key}`;
         }
         this.context.setValue(key, value);
