@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import type { Component } from 'svelte';
 import { type Writable, writable } from 'svelte/store';
 import type { IconSize } from 'svelte-fa';
 
@@ -34,8 +35,7 @@ export interface NavigationRegistryEntry {
   name: string;
   icon: {
     iconImage?: string | { readonly light: string; readonly dark: string };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    iconComponent?: any;
+    iconComponent?: Component;
     faIcon?: { definition: IconDefinition; size: IconSize };
   };
   tooltip: string;
