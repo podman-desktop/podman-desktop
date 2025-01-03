@@ -18,11 +18,11 @@ function handleEscape({ key }: KeyboardEvent): void {
   }
 }
 
-function onWindowClick(e: any): void {
+function onWindowClick(e: Event): void {
   const target = e.target as HTMLElement;
   // Listen to anything **but** the button that has "data-task-button" attribute with a value of "Help"
   if (target && target.getAttribute('data-task-button') !== 'Help') {
-    showMenu = outsideWindow.contains(e.target);
+    showMenu = outsideWindow.contains(target);
   }
 }
 
