@@ -39,9 +39,6 @@ vi.mock('@xterm/xterm', () => {
   };
 });
 
-const getConfigurationValueMock = vi.fn();
-const pushManifestMock = vi.fn();
-
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,13 +46,7 @@ beforeAll(() => {
       func();
     },
   };
-  (window as any).ResizeObserver = vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() });
-  (window as any).getImageInspect = vi.fn().mockImplementation(() => Promise.resolve({}));
-  (window as any).logsContainer = vi.fn().mockResolvedValue(undefined);
-  (window as any).refreshTerminal = vi.fn();
-  (window as any).getConfigurationValue = getConfigurationValueMock;
-  (window as any).showMessageBox = vi.fn();
-  (window as any).pushManifest = pushManifestMock;
+  (window.dispatchEvent as unknown) = vi.fn();
 });
 
 const fakedManifest: ImageInfoUI = {
@@ -95,4 +86,14 @@ test('Expect to render PushManifestModal correctly with Push manifest button', a
 
   // Be able to click it
   fireEvent.click(pushButton);
+
+  // expect resize event to be dispatched
+  const event: Event = await vi.waitFor(() => {
+    expect(window.dispatchEvent).toHaveBeenCalled();
+    const calls = vi.mocked(window.dispatchEvent).mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0]).toBeInstanceOf(Event);
+    return calls[0][0];
+  });
+  expect(event.type).toBe('resize');
 });
