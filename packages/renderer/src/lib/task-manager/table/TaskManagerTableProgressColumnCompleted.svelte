@@ -36,14 +36,14 @@ const { icon, iconColor } = $derived.by(() => {
 });
 </script>
 
-<div class="flex flex-row items-center" aria-label="completed status for task {task.name}" role="status">
+<div class="flex flex-row items-center max-w-full" aria-label="completed status for task {task.name}" role="status">
   <div class={iconColor} role="img" aria-label="{task.status} icon of task {task.name}">
     <Fa size="0.875x" icon={icon} />
   </div>
   <div class="ml-1 text-[var(--pd-table-body-text)]">{task.status}</div>
 
   {#if task.status === 'failure'}
-    <div class="cursor-default ml-1 text-[var(--pd-state-error)]" title={task.error}>
+    <div class="cursor-default ml-1 text-[var(--pd-state-error)] overflow-hidden text-ellipsis" title={task.error}>
       ({task.error})
     </div>
   {/if}
