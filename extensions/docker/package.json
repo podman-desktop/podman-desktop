@@ -40,7 +40,7 @@
       "properties": {
         "docker.cli.context": {
           "type": "string",
-          "enum": [""],
+          "enum": [],
           "markdownDescription": "Select the active Docker CLI context:",
           "group": "podman-desktop.docker",
           "scope": "DockerCompatibility"
