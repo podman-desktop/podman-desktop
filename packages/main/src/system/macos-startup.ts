@@ -85,9 +85,9 @@ export class MacosStartup {
     <string>io.podman_desktop.PodmanDesktop</string>
     <key>ProgramArguments</key>
     <array>
-        <string>bash</string>
+        <string>/bin/bash</string>
         <string>-c</string>
-        <string>truncate -s 0 '${stdoutPath}'; truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}'</string>
+        <string>/usr/bin/truncate -s 0 '${stdoutPath}'; /usr/bin/truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}'</string>
         ` +
       minimizeSettings +
       `

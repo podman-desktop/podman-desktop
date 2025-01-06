@@ -113,7 +113,7 @@ describe('enable', () => {
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringContaining('fakeAppHome/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist'),
       expect.stringContaining(
-        `truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stdout.log'; truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stderr.log'; 'fakeAppExe'`,
+        `/usr/bin/truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stdout.log'; /usr/bin/truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stderr.log'; 'fakeAppExe'`,
       ),
       'utf-8',
     );
