@@ -40,13 +40,9 @@ vi.mock('@xterm/xterm', () => {
 });
 
 beforeAll(() => {
-  (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
-      func();
-    },
-  };
-  (window.dispatchEvent as unknown) = vi.fn();
+  Object.defineProperty(window, 'dispatchEvent', {
+    value: vi.fn(),
+  });
 });
 
 const fakedManifest: ImageInfoUI = {
