@@ -78,6 +78,9 @@ export class TaskManager {
             description: 'Replace the current task manager widget by the new one',
             type: 'boolean',
             default: false,
+            experimental: {
+              githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
+            },
           },
         },
       },

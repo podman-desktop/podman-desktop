@@ -1,4 +1,8 @@
 <script lang="ts">
+import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
+import { Link } from '@podman-desktop/ui-svelte';
+import Fa from 'svelte-fa';
+
 import { getInitialValue } from '/@/lib/preferences/Util';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 
@@ -36,6 +40,7 @@ const recordUI = $derived.by(() => {
     description: record.description,
     markdownDescription: record.markdownDescription,
     original: record,
+    experimental: record.experimental,
   };
 });
 
@@ -56,30 +61,51 @@ function updateResetButtonVisibility(recordValue: unknown) {
 function doResetToDefault() {
   resetToDefault = true;
 }
+
+function openGitHubDiscussion(): void {
+  if (!recordUI.experimental?.githubDiscussionLink) return;
+
+  window.openExternal(recordUI.experimental.githubDiscussionLink).catch(console.error);
+}
 </script>
 
-<div class="flex flex-row px-2 py-2 justify-between w-full text-[color:var(--pd-invert-content-card-text)]">
-  <div
-    class="flex flex-col {recordUI.original.type === 'string' &&
+<div class="flex flex-col px-2 py-2 w-full text-[color:var(--pd-invert-content-card-text)] space-y-2">
+  <div class="flex flex-row justify-between">
+    <div
+      class="flex flex-col {recordUI.original.type === 'string' &&
     (!recordUI.original.enum || recordUI.original.enum.length === 0)
       ? 'w-full'
       : ''}">
-    <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
-      {recordUI.title}
-      {#if showResetButton}
-        <div class="ml-2">
-          <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
+      <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
+        <div class="flex flex-row space-x-1 items-center">
+          <span>{recordUI.title}</span>
+          {#if record.experimental?.githubDiscussionLink !== undefined}
+            <Fa title="experimental" size="xs" icon={faFlask}/>
+          {/if}
         </div>
+        {#if showResetButton}
+          <div class="ml-2">
+            <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
+          </div>
+        {/if}
+      </div>
+      {#if recordUI.markdownDescription}
+        <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">
+          <Markdown markdown={recordUI.markdownDescription} />
+        </div>
+      {:else}
+        <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">{recordUI.description}</div>
+      {/if}
+      {#if recordUI.original.type === 'string' && (!recordUI.original.enum || recordUI.original.enum.length === 0)}
+        <PreferencesRenderingItemFormat
+          record={recordUI.original}
+          updateResetButtonVisibility={updateResetButtonVisibility}
+          resetToDefault={resetToDefault}
+          enableAutoSave={true}
+          initialValue={getInitialValue(recordUI.original)} />
       {/if}
     </div>
-    {#if recordUI.markdownDescription}
-      <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">
-        <Markdown markdown={recordUI.markdownDescription} />
-      </div>
-    {:else}
-      <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">{recordUI.description}</div>
-    {/if}
-    {#if recordUI.original.type === 'string' && (!recordUI.original.enum || recordUI.original.enum.length === 0)}
+    {#if recordUI.original.type !== 'string' || (recordUI.original.enum && recordUI.original.enum.length > 0)}
       <PreferencesRenderingItemFormat
         record={recordUI.original}
         updateResetButtonVisibility={updateResetButtonVisibility}
@@ -88,12 +114,12 @@ function doResetToDefault() {
         initialValue={getInitialValue(recordUI.original)} />
     {/if}
   </div>
-  {#if recordUI.original.type !== 'string' || (recordUI.original.enum && recordUI.original.enum.length > 0)}
-    <PreferencesRenderingItemFormat
-      record={recordUI.original}
-      updateResetButtonVisibility={updateResetButtonVisibility}
-      resetToDefault={resetToDefault}
-      enableAutoSave={true}
-      initialValue={getInitialValue(recordUI.original)} />
+  {#if record.experimental?.githubDiscussionLink !== undefined}
+    <Link aria-label="GitHub discussion link" on:click={openGitHubDiscussion} class="flex flex-row space-x-1 w-min items-center">
+      <span class="text-nowrap text-sm">
+        Join discussion on GitHub
+      </span>
+      <Fa icon={faArrowUpRightFromSquare}/>
+    </Link>
   {/if}
 </div>
