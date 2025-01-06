@@ -59,7 +59,7 @@ async function pushManifestFinished() {
         {/if}
       </p>
     {/if}
-    <div class="h-[185px] max-w-full w-full" hidden={initTerminal === false}>
+    <div class="h-[185px]" hidden={initTerminal === false}>
       <TerminalWindow class="h-full" bind:terminal={logsPush} disableStdIn />
     </div>
   </div>
