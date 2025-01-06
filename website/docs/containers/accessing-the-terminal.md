@@ -19,17 +19,17 @@ Make sure you have:
 
 #### Procedure
 
-1. Go to the **Containers** component page. 
+1. Go to the **Containers** component page.
 1. Click the name of the container, such as `python-app`. The Container Details page opens.
-  ![python app container](img/python-app-container.png)
+   ![python app container](img/python-app-container.png)
 1. Select the **Terminal** tab.
 1. Run any commands to interact with the container. For example, run the `ls -al` command to list hidden files.
-  ![interaction with container](img/interacting-with-container.png)
+   ![interaction with container](img/interacting-with-container.png)
 1. Click the **close** icon on the right side of the page.
 
-    :::note
+   :::note
 
-    Alternatively, click the **overflow menu** icon and then select the **Open Terminal** option to access the container terminal.
-    ![open the terminal](img/opening-terminal.png)
-    
-    :::
+   Alternatively, click the **overflow menu** icon and then select the **Open Terminal** option to access the container terminal.
+   ![open the terminal](img/opening-terminal.png)
+
+   :::

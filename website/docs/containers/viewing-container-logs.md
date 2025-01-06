@@ -19,17 +19,16 @@ Make sure you have:
 
 #### Procedure
 
-1. Go to the **Containers** component page. 
+1. Go to the **Containers** component page.
 1. Click the name of the container, such as `python-app`.
-    ![python app container](img/python-app-container.png)
+   ![python app container](img/python-app-container.png)
 1. Analyze the logs of the container.
-    ![analyze the logs](img/analyzing-the-logs.png)
+   ![analyze the logs](img/analyzing-the-logs.png)
 1. Click the **close** icon on the right side of the page.
 
-    :::note
+   :::note
 
-    Alternatively, click the **overflow menu** icon and then select the **Open Logs** option to view the container logs.
-    ![open the logs](img/opening-logs.png)
-    
-    :::
+   Alternatively, click the **overflow menu** icon and then select the **Open Logs** option to view the container logs.
+   ![open the logs](img/opening-logs.png)
 
+   :::

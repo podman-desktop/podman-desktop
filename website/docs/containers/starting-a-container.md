@@ -14,12 +14,12 @@ You can interact with the running container by using the terminal or by opening 
 #### Prerequisites
 
 - [A running Podman machine](/docs/podman/creating-a-podman-machine).
-- The **Images** list has your image, such as `quay.io/podman/hello`. See [Pulling an image](/docs/containers/images/pulling-an-image). 
+- The **Images** list has your image, such as `quay.io/podman/hello`. See [Pulling an image](/docs/containers/images/pulling-an-image).
 
 #### Procedure
 
 1. Go to the **Images** component page.
-1. Click the **Run Image** icon corresponding to the image you want to run. For example, `quay.io/podman/hello`. 
+1. Click the **Run Image** icon corresponding to the image you want to run. For example, `quay.io/podman/hello`.
    ![Run Image icon](img/running-an-image.png)
 1. Review or edit the container configuration details.
 1. Click **Start Container**. The Container Details page opens.
@@ -35,21 +35,20 @@ You can interact with the running container by using the terminal or by opening 
 1. Click your running container name to perform any of the following tasks:
    - [View the logs](/docs/containers/viewing-container-logs)
    - Inspect the container
-      1. Go to **Inspect**.
-      1. Click the content area to activate it.
-      1. Press <kbd>Ctrl</kbd> + <kbd>F</kbd> on Windows and Linux, or <kbd>⌘</kbd> + <kbd>F</kbd> on macOS to start searching the content.
+     1. Go to **Inspect**.
+     1. Click the content area to activate it.
+     1. Press <kbd>Ctrl</kbd> + <kbd>F</kbd> on Windows and Linux, or <kbd>⌘</kbd> + <kbd>F</kbd> on macOS to start searching the content.
    - Generate a Kubernetes YAML manifest when your container engine is Podman:
-      1. Go to **Kube**.
-      1. Click the content area to activate it.
-      1. Press <kbd>Ctrl</kbd> + <kbd>F</kbd> on Windows and Linux, or <kbd>⌘</kbd> + <kbd>F</kbd> on macOS to start searching the content.
-      1. Optional: Copy the content to a YAML file.
-      1. Optional: Reuse this file to create a pod that you can run on a Podman engine or a Kubernetes cluster. See [Pod creation with Kubernetes YAML](https://podman-desktop.io/blog/2024/10/05/kubernetes-blog#creating-a-pod).
+     1. Go to **Kube**.
+     1. Click the content area to activate it.
+     1. Press <kbd>Ctrl</kbd> + <kbd>F</kbd> on Windows and Linux, or <kbd>⌘</kbd> + <kbd>F</kbd> on macOS to start searching the content.
+     1. Optional: Copy the content to a YAML file.
+     1. Optional: Reuse this file to create a pod that you can run on a Podman engine or a Kubernetes cluster. See [Pod creation with Kubernetes YAML](https://podman-desktop.io/blog/2024/10/05/kubernetes-blog#creating-a-pod).
    - [Access the terminal](/docs/containers/accessing-the-terminal)
    - Access the application by exposing a port:
-      1. Click **<Icon icon="fa-solid fa-external-link" size="lg" />**.
-      1. View the running application at `localhost:port` in your browser.
+     1. Click **<Icon icon="fa-solid fa-external-link" size="lg" />**.
+     1. View the running application at `localhost:port` in your browser.
    - [Deploy the container to a Kubernetes cluster](/docs/kubernetes/deploying-a-pod-to-kubernetes)
-
 
 #### Additional resources
 
