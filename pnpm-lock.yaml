@@ -482,8 +482,8 @@ importers:
         version: 1.16.0
     devDependencies:
       '@types/ssh2':
-        specifier: ^1.15.1
-        version: 1.15.1
+        specifier: ^1.15.3
+        version: 1.15.3
       '@types/sshpk':
         specifier: ^1.17.4
         version: 1.17.4
@@ -4026,8 +4026,8 @@ packages:
   '@types/sockjs@0.3.36':
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
 
-  '@types/ssh2@1.15.1':
-    resolution: {integrity: sha512-ZIbEqKAsi5gj35y4P4vkJYly642wIbY6PqoN0xiyQGshKUGXR9WQjF/iF9mXBQ8uBKy3ezfsCkcoHKhd0BzuDA==}
+  '@types/ssh2@1.15.3':
+    resolution: {integrity: sha512-pUhXytp7aRAj1AKCQpdKNKGb32e53MUGPu186U9cm8mbX6kxF0UcngI/RVoKvJTWdHqDFiNrSDiPR/JZWexcCQ==}
 
   '@types/sshpk@1.17.4':
     resolution: {integrity: sha512-5gI/7eJn6wmkuIuFY8JZJ1g5b30H9K5U5vKrvOuYu+hoZLb2xcVEgxhYZ2Vhbs0w/ACyzyfkJq0hQtBfSCugjw==}
@@ -15174,13 +15174,13 @@ snapshots:
   '@types/docker-modem@3.0.6':
     dependencies:
       '@types/node': 20.17.11
-      '@types/ssh2': 1.15.1
+      '@types/ssh2': 1.15.3
 
   '@types/dockerode@3.3.33':
     dependencies:
       '@types/docker-modem': 3.0.6
       '@types/node': 20.17.11
-      '@types/ssh2': 1.15.1
+      '@types/ssh2': 1.15.3
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -15389,7 +15389,7 @@ snapshots:
     dependencies:
       '@types/node': 20.17.11
 
-  '@types/ssh2@1.15.1':
+  '@types/ssh2@1.15.3':
     dependencies:
       '@types/node': 18.19.64
 
