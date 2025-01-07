@@ -25,7 +25,7 @@ import { generateAsync } from 'dts-for-context-bridge';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -134,12 +134,12 @@ const setupUiPackageWatcher = () => {
     spawnProcess = null;
   }
 
-  const exe = join(__dirname, '..', 'node_modules', '.bin', 'svelte-package').concat(
-    process.platform === 'win32' ? '.cmd' : '',
-  );
+  const dirname = join(__dirname, '..', 'node_modules', '.bin');
+  const exe = 'svelte-package'.concat(process.platform === 'win32' ? '.cmd' : '');
+  const newPath = `${process.env.PATH}${delimiter}${dirname}`;
   spawnProcess = spawn(exe, ['-w'], {
     cwd: './packages/ui/',
-    env: { ...process.env },
+    env: { PATH: newPath, ...process.env },
     shell: process.platform === 'win32',
   });
 
