@@ -37,3 +37,48 @@ test('...', () => {
   vi.mocked(window.windowMethod).mockResolvedValue('a string');
 });
 ```
+
+### Mock before tests, not during tests
+
+If you need to mock functions for some tests, execute the mock from the `beforeEach` callback inside a `describe`,
+so the environment is clearly defined in the `describe` and the `test` is only executing the tests:
+
+Do not write:
+
+```ts
+vi.mock('node:fs');
+
+test('first behaviour', () => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+  codeToTest();
+  expect(...);
+});
+
+test('second behaviour', () => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+  otherCodeToTest();
+  expect(...);
+});
+```
+
+Instead, write:
+
+```ts
+vi.mock('node:fs');
+
+describe('the file exists', () => {
+  beforeEach(() => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+  });
+
+  test('first behaviour', () => {
+    codeToTest();
+    expect(...);
+  });
+
+  test('second behaviour', () => {
+    otherCodeToTest();
+    expect(...);
+  });
+});
+```
