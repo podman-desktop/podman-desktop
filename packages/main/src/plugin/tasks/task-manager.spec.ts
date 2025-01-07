@@ -81,6 +81,9 @@ test('task manager init should register a configuration option', async () => {
             type: 'boolean',
             description: 'Replace the current task manager widget by the new one',
             default: false,
+            experimental: {
+              githubDiscussionLink: expect.any(String),
+            },
           },
         }),
       }),
