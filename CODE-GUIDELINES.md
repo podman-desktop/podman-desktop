@@ -40,8 +40,10 @@ test('...', () => {
 
 ### Mock before tests, not during tests
 
-If you need to mock functions for some tests, execute the mock from the `beforeEach` callback inside a `describe`,
-so the environment is clearly defined in the `describe` and the `test` is only executing the tests:
+When you mock functions for some tests, it is recommended to define the mocks from the `beforeEach` callback inside a `describe`,
+so the environment created by the mocks is clearly defined in the `describe`, and the `test` is only executing the tests:
+
+You also need to reset (or restore) the mocks from the `afterEach` callback, so these mocks are not used for other tests.
 
 Do not write:
 
@@ -64,11 +66,20 @@ test('second behaviour', () => {
 Instead, write:
 
 ```ts
+import { existsSync, PathLike } from 'node:fs';
+import { afterEach, beforeEach, describe, expect, MockedFunction, test, vi } from 'vitest';
+
 vi.mock('node:fs');
 
 describe('the file exists', () => {
+  let existsSyncMock: MockedFunction<(path: PathLike) => boolean>;
+
   beforeEach(() => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
+    existsSyncMock = vi.mocked(existsSync).mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    existsSyncMock.mockReset();
   });
 
   test('first behaviour', () => {
