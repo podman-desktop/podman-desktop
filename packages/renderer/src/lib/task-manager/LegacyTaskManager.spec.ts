@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { tasksInfo } from '/@/stores/tasks';
@@ -107,6 +108,22 @@ test('Expect that the tasks manager is hidden if user click on the hide button',
   // expect the tasks manager has been hidden
   tasksManager = screen.queryByTitle('Tasks manager');
   expect(tasksManager).not.toBeInTheDocument();
+});
+
+test('Expect that the task manager is hidden if user clicks outside of it', async () => {
+  render(LegacyTaskManager, { showTaskManager: true });
+
+  let legacyTasksManager = screen.queryByTitle('Tasks manager');
+  expect(legacyTasksManager).toBeInTheDocument();
+
+  // Click "outside" the tasks manager element
+  const event = new MouseEvent('click', { bubbles: true });
+  document.body.dispatchEvent(event);
+
+  await tick();
+
+  legacyTasksManager = screen.queryByTitle('Tasks manager');
+  expect(legacyTasksManager).not.toBeInTheDocument();
 });
 
 test('Expect no tasks', async () => {
