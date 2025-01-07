@@ -31,6 +31,8 @@ interface OnboardingInfoWithSelected extends OnboardingInfo {
 
 let onboardingProviders: OnboardingInfoWithSelected[] = [];
 
+const podmanProviderName = 'podman';
+
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();
   if (!ver) {
@@ -46,13 +48,16 @@ onMount(async () => {
   podmanDesktopVersion = await window.getPodmanDesktopVersion();
 
   onboardingsUnsubscribe = onboardingList.subscribe(value => {
-    // Add "selected" property to each provider and add to onboardingEnabledProviders
-    onboardingProviders = value.map(provider => {
+    // Add "selected" property to each provider
+    const sortedProviders = value.map(provider => {
       return {
         ...provider,
         selected: true,
       };
     });
+
+    // Sort providers by podman name so it appears first
+    onboardingProviders = sortByPodmanName(sortedProviders);
   });
 });
 
@@ -70,6 +75,12 @@ async function closeWelcome() {
   if (showTelemetry) {
     await welcomeUtils.setTelemetry(telemetry);
   }
+}
+
+// Function to sort providers by "Podman" name, make sure that a provider with the name "podman" is always first
+function sortByPodmanName(providers: OnboardingInfoWithSelected[]): OnboardingInfoWithSelected[] {
+  // We slice to avoid mutating the original array
+  return providers.slice().sort((a, b) => (a.name === podmanProviderName ? -1 : b.name === podmanProviderName ? 1 : 0));
 }
 
 // Function to toggle provider selection
