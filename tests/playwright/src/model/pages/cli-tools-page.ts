@@ -19,6 +19,8 @@
 import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { SettingsPage } from './settings-page';
 
 export class CLIToolsPage extends SettingsPage {
@@ -87,6 +89,15 @@ export class CLIToolsPage extends SettingsPage {
 
       await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
       await this.getVersionSelectionButton(version).click();
+
+      const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
+      try {
+        await playExpect(confirmationDialog).toBeVisible();
+        await handleConfirmationDialog(this.page, toolName);
+      } catch {
+        console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
+      }
+
       return this;
     });
   }
