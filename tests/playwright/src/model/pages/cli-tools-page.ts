@@ -19,8 +19,7 @@
 import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
-import { handleConfirmationDialog } from '/@/utility/operations';
-
+import { handleConfirmationDialog } from '../../utility/operations';
 import { SettingsPage } from './settings-page';
 
 export class CLIToolsPage extends SettingsPage {
