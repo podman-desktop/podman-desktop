@@ -34,7 +34,7 @@ const RUNNING = 'RUNNING';
 const NOT_INSTALLED = 'NOT-INSTALLED';
 const DOWNLOADABLE = 'DOWNLOADABLE';
 const OPENSHIFT_LOCAL = 'Red Hat Openshift Local';
-const OPENSHIFT_SANDBOX = 'Red Hat OpenShift Sandbox';
+const OPENSHIFT_SANDBOX = 'Developer Sandbox';
 const OPENSHIFT_CHECKER = 'Red Hat Openshift Checker';
 
 let pdRunner: Runner;
@@ -196,7 +196,7 @@ for (const { extensionName, extensionType } of extentionTypes) {
                 await goToDashboard();
                 await playExpect(extensionDashboardProvider).toBeVisible();
                 await playExpect(extensionDashboardStatus).toBeVisible();
-                if (extensionType === 'Red Hat OpenShift Sandbox') {
+                if (extensionType === OPENSHIFT_SANDBOX) {
                   await playExpect(extensionDashboardStatus).toHaveText(RUNNING);
                 } else {
                   await playExpect(extensionDashboardStatus).toHaveText(NOT_INSTALLED);
