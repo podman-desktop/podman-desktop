@@ -379,7 +379,7 @@ export interface LibPod {
   resolveShortnameImage(shortname: string): Promise<{ Names: string[] }>;
   restartPod(podId: string): Promise<void>;
   generateKube(names: string[]): Promise<string>;
-  playKube(yamlContentFilePath: string): Promise<PlayKubeInfo>;
+  playKube(file: string | NodeJS.ReadableStream, options?: { build?: boolean }): Promise<PlayKubeInfo>;
   pruneAllImages(dangling: boolean): Promise<void>;
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
@@ -825,11 +825,14 @@ export class LibpodDockerode {
     };
 
     // add playKube
-    prototypeOfDockerode.playKube = function (yamlContentFilePath: string): Promise<PlayKubeInfo> {
+    prototypeOfDockerode.playKube = function (
+      file: string | NodeJS.ReadableStream,
+      options?: { build?: boolean },
+    ): Promise<PlayKubeInfo> {
       const optsf = {
         path: '/v4.2.0/libpod/play/kube',
         method: 'POST',
-        file: yamlContentFilePath,
+        file: file,
         statusCodes: {
           200: true,
           204: true,
@@ -838,25 +841,28 @@ export class LibpodDockerode {
         options: {},
       };
 
-      // patch the modem to not send x-tar header as content-type
-      const originalBuildRequest = this.modem.buildRequest;
-      this.modem.buildRequest = function (
-        options: RequestOptions,
-        context: DialOptions,
-        data?: string | Buffer | NodeJS.ReadableStream,
-        callback?: DockerModem.RequestCallback,
-      ): void {
-        // in case of kube play, docker-modem will send the header application/tar while it's basically the content of the file so it should be application/yaml
-        if (context && typeof context === 'object' && 'path' in context) {
-          if (String(context.path).includes('/libpod/play/kube')) {
-            if (options && typeof options === 'object' && 'headers' in options) {
-              options.headers = { 'Content-Type': 'application/yaml' };
+      // if we don't build - we should send Content-Type application/yaml
+      if (!options?.build) {
+        // patch the modem to not send x-tar header as content-type
+        const originalBuildRequest = this.modem.buildRequest;
+        this.modem.buildRequest = function (
+          options: RequestOptions,
+          context: DialOptions,
+          data?: string | Buffer | NodeJS.ReadableStream,
+          callback?: DockerModem.RequestCallback,
+        ): void {
+          // in case of kube play, docker-modem will send the header application/tar while it's basically the content of the file so it should be application/yaml
+          if (context && typeof context === 'object' && 'path' in context) {
+            if (String(context.path).includes('/libpod/play/kube')) {
+              if (options && typeof options === 'object' && 'headers' in options) {
+                options.headers = { 'Content-Type': 'application/yaml' };
+              }
             }
           }
-        }
 
-        originalBuildRequest.call(this, options, context, data, callback);
-      };
+          originalBuildRequest.call(this, options, context, data, callback);
+        };
+      }
 
       return new Promise((resolve, reject) => {
         this.modem.dial(optsf, (err: unknown, data: unknown) => {

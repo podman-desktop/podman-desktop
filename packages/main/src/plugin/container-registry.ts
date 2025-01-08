@@ -19,6 +19,7 @@
 import * as crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Writable } from 'node:stream';
@@ -28,10 +29,12 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
+import { loadAll } from 'js-yaml';
 import moment from 'moment';
 import StreamValues from 'stream-json/streamers/StreamValues.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
+import { getImageNamePrefix } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import type {
   ContainerCreateOptions,
@@ -2435,21 +2438,89 @@ export class ContainerProviderRegistry {
   async playKube(
     kubernetesYamlFilePath: string,
     selectedProvider: ProviderContainerConnectionInfo,
+    options?: {
+      build?: boolean;
+    },
   ): Promise<PlayKubeInfo> {
-    let telemetryOptions = {};
+    const telemetryOptions: Record<string, unknown> = {};
     try {
-      // grab all connections
-      const matchingContainerProvider = Array.from(this.internalProviders.values()).find(
-        containerProvider =>
-          containerProvider.connection.endpoint.socketPath === selectedProvider.endpoint.socketPath &&
-          containerProvider.connection.name === selectedProvider.name,
-      );
-      if (!matchingContainerProvider?.libpodApi) {
+      const provider = this.getMatchingContainerProvider(selectedProvider);
+      if (!provider?.libpodApi) {
         throw new Error('No provider with a running engine');
       }
-      return matchingContainerProvider.libpodApi.playKube(kubernetesYamlFilePath);
-    } catch (error) {
-      telemetryOptions = { error: error };
+
+      // if we don't build, we use the file directory
+      if (!options?.build) {
+        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+      }
+
+      const content = await readFile(kubernetesYamlFilePath, 'utf8');
+      const resources = loadAll(content);
+
+      const parent = path.basename(kubernetesYamlFilePath);
+
+      // keep the contexts we will need to tar
+      const contexts: Map<string, string> = new Map();
+
+      // for each resource
+      for (const resource of resources) {
+        // ensure resource is valid object
+        if (!resource || typeof resource !== 'object') throw new Error(`invalid resource in ${kubernetesYamlFilePath}`);
+
+        // ensure kind property exists
+        if (!('kind' in resource) || typeof resource.kind !== 'string')
+          throw new Error(`invalid kubernetes resource in ${kubernetesYamlFilePath}: missing kind field`);
+
+        // ignore non-pod resource
+        if (resource.kind !== 'pod') continue;
+
+        // ensure containers exists on pod resource
+        if (!('spec' in resource) || !resource.spec || typeof resource.spec !== 'object')
+          throw new Error(`invalid kubernetes resource in ${kubernetesYamlFilePath}: pod missing spec field`);
+        if (
+          !('containers' in resource.spec) ||
+          typeof resource.spec.containers !== 'object' ||
+          !Array.isArray(resource.spec.containers)
+        )
+          throw new Error(`invalid kubernetes resource in ${kubernetesYamlFilePath}: pod missing spec field`);
+
+        for (const container of resource.spec.containers) {
+          if (!('image' in container || typeof container.image !== 'string'))
+            throw new Error(
+              `invalid kubernetes resource in ${kubernetesYamlFilePath}: pod has a container without defined image`,
+            );
+
+          const image: string = container.image;
+          const buildDirectory = path.join(parent, getImageNamePrefix(image));
+
+          // search for containerfile in the build directory
+          const containerfile: string | undefined = ['Containerfile', 'Dockerfile'].find(file =>
+            existsSync(path.join(buildDirectory, file)),
+          );
+          if (!containerfile) continue;
+
+          contexts.set(image, buildDirectory);
+        }
+      }
+
+      // if we have no context let's just use the the yaml
+      if (contexts.size === 0) {
+        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+      }
+
+      const tarStream: NodeJS.ReadableStream = tar.pack(parent, {
+        entries: Array.from(contexts.keys()),
+        finish(myStream: Pack) {
+          myStream.entry({ name: `play.yaml` }, content);
+          myStream.finalize();
+        },
+      });
+
+      return provider.libpodApi.playKube(tarStream, {
+        build: true,
+      });
+    } catch (error: unknown) {
+      telemetryOptions['error'] = error;
       throw error;
     } finally {
       this.telemetryService.track('playKube', telemetryOptions);

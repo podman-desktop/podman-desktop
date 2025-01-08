@@ -9,7 +9,7 @@ let providerUnsubscribe: Unsubscriber;
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { V1NamespaceList } from '@kubernetes/client-node/dist/api';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import { handleNavigation } from '/@/navigation';
@@ -26,6 +26,7 @@ import WarningMessage from '../ui/WarningMessage.svelte';
 let runStarted = false;
 let runFinished = false;
 let runError = '';
+let kubeBuild: boolean = false;
 let runWarning = '';
 let kubernetesYamlFilePath: string | undefined = undefined;
 let hasInvalidFields = true;
@@ -191,6 +192,10 @@ function goBackToPodsPage(): void {
           options={kubeFileDialogOptions}
           class="w-full p-2" />
       </div>
+
+      <Checkbox class="mx-1 my-auto" bind:checked={kubeBuild} >
+        <div>Enable build</div>
+      </Checkbox>
 
       <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Runtime</div>
 
