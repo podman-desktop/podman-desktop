@@ -18,12 +18,12 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { env } from '@podman-desktop/api';
 
 import { type DockerContextInfo, UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
+import type { DockerConfig } from './docker-config.js';
 
 // omit current context as it is coming from another source
 // disabling the rule as we're not only extending the interface but omitting one field
@@ -35,8 +35,14 @@ export interface DockerContextParsingInfo extends Omit<DockerContextInfo, 'isCur
  * Handle the `docker context`, allowing to list them and switch between them.
  */
 export class DockerContextHandler {
+  #dockerConfig: DockerConfig;
+
+  constructor(dockerConfig: DockerConfig) {
+    this.#dockerConfig = dockerConfig;
+  }
+
   protected getDockerConfigPath(): string {
-    return join(homedir(), '.docker', 'config.json');
+    return join(this.#dockerConfig.getPath(), 'config.json');
   }
 
   protected async getCurrentContext(): Promise<string> {
@@ -82,7 +88,7 @@ export class DockerContextHandler {
     });
 
     // now, read the ~/.docker/contexts/meta directory if it exists
-    const dockerContextsMetaPath = join(homedir(), '.docker', 'contexts', 'meta');
+    const dockerContextsMetaPath = join(this.#dockerConfig.getPath(), 'contexts', 'meta');
     const dockerContextsMetaExists = existsSync(dockerContextsMetaPath);
     // no directories, no contexts !
     if (!dockerContextsMetaExists) {
@@ -150,7 +156,8 @@ export class DockerContextHandler {
   async switchContext(contextName: string): Promise<void> {
     const dockerConfigExists = existsSync(this.getDockerConfigPath());
     if (!dockerConfigExists) {
-      throw new Error(`Docker config file ${this.getDockerConfigPath()} does not exist`);
+      // write an empty file using tabs for indentation
+      await promises.writeFile(this.getDockerConfigPath(), JSON.stringify({}, null, '\t'));
     }
 
     // check if the context exists

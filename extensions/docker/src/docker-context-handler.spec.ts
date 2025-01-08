@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { env } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { DockerConfig } from './docker-config.js';
 import type { DockerContextParsingInfo } from './docker-context-handler.js';
 import { DockerContextHandler } from './docker-context-handler.js';
 
@@ -56,10 +56,14 @@ vi.mock('@podman-desktop/api', async () => {
 const originalConsoleError = console.error;
 let dockerContextHandler: TestDockerContextHandler;
 
+const dockerConfig = {
+  getPath: () => 'dummyPath',
+} as unknown as DockerConfig;
+
 beforeEach(() => {
   vi.resetAllMocks();
   console.error = vi.fn();
-  dockerContextHandler = new TestDockerContextHandler();
+  dockerContextHandler = new TestDockerContextHandler(dockerConfig);
 });
 
 afterEach(() => {
@@ -68,7 +72,7 @@ afterEach(() => {
 
 test('getDockerConfigPath', async () => {
   const configPath = dockerContextHandler.getDockerConfigPath();
-  expect(configPath).toEqual(join(homedir(), '.docker', 'config.json'));
+  expect(configPath).toEqual(join('dummyPath', 'config.json'));
 });
 
 describe('getCurrentContext', () => {
@@ -98,10 +102,17 @@ describe('getCurrentContext', () => {
 });
 
 describe('switchContext', () => {
-  test('should report an error if file does not exists', async () => {
+  test('should write an empty file if file does not exists', async () => {
     vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
-    await expect(() => dockerContextHandler.switchContext('foo')).rejects.toThrowError('does not exist');
+    vi.spyOn(dockerContextHandler, 'getContexts').mockResolvedValue([
+      { name: 'foo' } as unknown as DockerContextParsingInfo,
+    ]);
+    vi.spyOn(fs.promises, 'readFile').mockResolvedValue(JSON.stringify({}));
+
+    await dockerContextHandler.switchContext('foo');
+
+    expect(fs.promises.writeFile).toBeCalledWith(expect.any(String), JSON.stringify({}, null, '\t'));
   });
 
   test('should throw error if context does not exists', async () => {

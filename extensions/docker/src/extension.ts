@@ -24,6 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api';
 import { getDockerInstallation } from './docker-cli';
 import { DockerCompatibilitySetup } from './docker-compatibility-setup';
+import { DockerConfig } from './docker-config';
 import { DockerContextHandler } from './docker-context-handler';
 
 let stopLoop = false;
@@ -168,7 +169,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     socketPath = UNIX_SOCKET_PATH;
   }
 
-  const dockerContextHandler = new DockerContextHandler();
+  const dockerConfig = new DockerConfig();
+  const dockerContextHandler = new DockerContextHandler(dockerConfig);
   const dockerCompatibilitySetup = new DockerCompatibilitySetup(dockerContextHandler);
   dockerCompatibilitySetup.init().catch((err: unknown) => {
     console.error('Error while initializing docker compatibility setup', err);
