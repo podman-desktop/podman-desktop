@@ -56,14 +56,14 @@ async function waitRender(customProperties: object): Promise<void> {
 
 test('Expect the close button is on the page', async () => {
   await waitRender({ showWelcome: true });
-  const button = screen.getByRole('button', { name: 'Go to Podman Desktop' });
+  const button = screen.getByRole('button', { name: 'Skip' });
   expect(button).toBeInTheDocument();
   expect(button).toBeEnabled();
 });
 
 test('Expect that the close button closes the window', async () => {
   await waitRender({ showWelcome: true });
-  const button = screen.getByRole('button', { name: 'Go to Podman Desktop' });
+  const button = screen.getByRole('button', { name: 'Skip' });
   await fireEvent.click(button);
   // and the button is gone
   expect(button).not.toBeInTheDocument();
