@@ -12,8 +12,9 @@ export let initialFocus: boolean = false;
 export let id: string | undefined = undefined;
 export let name: string | undefined = undefined;
 export let error: boolean = false;
+export let headings: string[] = [];
 
-export let searchFunction: SearchFunction = async (_s: string) => [];
+export let searchFunctions: SearchFunction[] = [async (_s: string) => []];
 export let onChange = function (_s: string) {};
 export let onEnter = function () {};
 
@@ -22,6 +23,8 @@ let list: HTMLDivElement;
 let scrollElements: HTMLElement[] = [];
 let value: string;
 let items: string[] = [];
+let itemHeadings: { [index: number]: string[] } = {};
+let searchResults: string[][] = [];
 let inputDelayTimeout: NodeJS.Timeout;
 let opened: boolean = false;
 let highlightIndex: number = -1;
@@ -45,7 +48,6 @@ function onInput(): void {
 }
 
 function onKeyDown(e: KeyboardEvent): void {
-  onChange(value);
   switch (e.key) {
     case 'ArrowDown':
       onDownKey(e);
@@ -66,6 +68,7 @@ function onKeyDown(e: KeyboardEvent): void {
       onEnterKey(e);
       break;
   }
+  onChange(value);
 }
 
 function onUpKey(e: KeyboardEvent): void {
@@ -141,35 +144,55 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
+  items = [];
+  searchResults = [];
+  itemHeadings = {};
   loading = true;
-  searchFunction(value)
-    .then(result => {
-      // if the component has been disabled in the meantime
-      if (disabled) {
-        return;
-      }
-      items = result.toSorted((a: string, b: string) => {
-        const dockerIoValue = `docker.io/${value}`;
-        const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
-        const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
-        if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
-          return a.localeCompare(b);
-        } else if (aStartsWithValue && !bStartsWithValue) {
-          return -1;
-        } else {
-          return 1;
+  for (const [index, searchFunction] of searchFunctions.entries()) {
+    searchFunction(value)
+      .then(result => {
+        // if the component has been disabled in the meantime
+        if (disabled) {
+          return;
+        }
+        searchResults[index] = result.toSorted((a: string, b: string) => {
+          const dockerIoValue = `docker.io/${value}`;
+          const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
+          const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+          if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
+            return a.localeCompare(b);
+          } else if (aStartsWithValue && !bStartsWithValue) {
+            return -1;
+          } else {
+            return 1;
+          }
+        });
+      })
+      .catch(() => {
+        searchResults[index] = [];
+      })
+      .finally(() => {
+        if (searchResults.length === searchFunctions.length) {
+          updateHeadings();
         }
       });
-      highlightIndex = -1;
-      open();
-    })
-    .catch(() => {
-      // We do not display the error
-      items = [];
-    })
-    .finally(() => {
-      loading = false;
-    });
+  }
+}
+
+function updateHeadings(): void {
+  for (const [index, result] of searchResults.entries()) {
+    if (headings?.[index]) {
+      if (itemHeadings[items.length]) {
+        itemHeadings[items.length].push(headings[index]);
+      } else {
+        itemHeadings[items.length] = [headings[index]];
+      }
+    }
+    items = items.concat(result);
+  }
+  highlightIndex = -1;
+  open();
+  loading = false;
 }
 
 function open(): void {
@@ -234,6 +257,11 @@ function onWindowClick(e: Event): void {
     bind:this={list}
     class="max-h-80 overflow-auto bg-[var(--pd-content-card-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px]">
     {#each items as item, i}
+      {#if itemHeadings[i]}
+        {#each itemHeadings[i] as heading}
+          <button class='p-[2px] text-[var(--pd-button-disabled-text)] w-full text-start' disabled>{heading}</button>
+        {/each}
+      {/if}
       <button
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}

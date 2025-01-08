@@ -268,7 +268,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
           id="imageName"
           name="imageName"
           placeholder="Image name"
-          searchFunction={searchImages}
+          searchFunctions={[searchImages]}
           onChange={async (s: string) => {
             validateImageName(s);
             await resolveShortname();
