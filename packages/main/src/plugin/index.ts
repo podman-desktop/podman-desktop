@@ -1322,6 +1322,13 @@ export class PluginSystem {
           cancellationTokenRegistry,
           cancellableTokenId,
         );
+
+        // add the cancellation to the task if provided
+        if (cancellableTokenId) {
+          task.cancellable = true;
+          task.cancellationTokenSourceId = cancellableTokenId;
+        }
+
         return containerProviderRegistry
           .buildImage(
             containerBuildContextDirectory,
