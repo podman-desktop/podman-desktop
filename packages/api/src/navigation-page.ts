@@ -21,6 +21,7 @@ export enum NavigationPage {
   CONTAINERS = 'containers',
   CONTAINER_EXPORT = 'container-export',
   CONTAINER = 'container',
+  CONTAINER_CREATE_EXISITNG_IMAGE = 'create-container-existing-image',
   CONTAINER_LOGS = 'container-logs',
   CONTAINER_INSPECT = 'container-inspect',
   CONTAINER_TERMINAL = 'container-terminal',
