@@ -111,7 +111,7 @@ function startOnboardingQueue() {
         <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded">
           {#if onboardingProviders && onboardingProviders.length > 0}
             <div class="flex justify-center text-sm text-[var(--pd-content-card-text)] pb-2">
-              <div>Click below to start the onboarding for the following extensions:</div>
+              <div>Choose the extensions to include:</div>
             </div>
             <div aria-label="providerList" class="grid grid-cols-3 gap-3">
               {#each onboardingProviders as onboarding}
@@ -144,12 +144,7 @@ function startOnboardingQueue() {
         </div>
       </div>
       <div class="flex justify-center p-2 text-sm items-center">
-        Configure these and more under <Link
-          on:click={async () => {
-            await closeWelcome();
-            router.goto('/preferences');
-          }}>Settings</Link
-        >.
+        Configure these and more under Settings.
       </div>
     </div>
 
@@ -173,11 +168,7 @@ function startOnboardingQueue() {
         </div>
         <div class="flex justify-center p-1 text-sm text-[var(--pd-content-card-text)]">
           <div>
-            You can always modify this preference later in <Link
-              on:click={async () => {
-                await closeWelcome();
-                router.goto('/preferences/default/preferences.telemetry');
-              }}>Settings &gt; Preferences</Link>
+            You can always modify this preference later in Settings &gt; Preferences
           </div>
         </div>
       </div>
@@ -186,16 +177,16 @@ function startOnboardingQueue() {
     <!-- Footer - button bar -->
     <div class="flex justify-end flex-none bg-[var(--pd-content-bg)] p-8">
       <div class="flex flex-row">
-        <!-- If Providers have any onboarding elements selected, create a button that says "Start onboarding" rather than Go to Podman Desktop -->
+        <!-- If Providers have any onboarding elements selected, create a button that says "Start onboarding" rather than Skip -->
         {#if onboardingProviders && onboardingProviders.filter(o => o.selected).length > 0}
-          <!-- We will "always" show the "Go to Podman Desktop" button
+          <!-- We will "always" show the "Skip" button
           in-case anything were to happen with the Start onboarding button / sequence not working correctly.
           we do not want the user to not be able to continue. -->
           <Button
             type="secondary"
             on:click={async () => {
               await closeWelcome();
-            }}>Go to Podman Desktop</Button>
+            }}>Skip</Button>
           <Button
             class="ml-2"
             on:click={async () => {
@@ -206,7 +197,7 @@ function startOnboardingQueue() {
           <Button
             on:click={async () => {
               await closeWelcome();
-            }}>Go to Podman Desktop</Button>
+            }}>Skip</Button>
         {/if}
       </div>
     </div>
