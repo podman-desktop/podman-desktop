@@ -312,3 +312,51 @@ test('should show error border', async () => {
   expect(parentInput).toHaveClass('focus-within:border-[var(--pd-input-field-stroke-error)]');
   expect(parentInput).not.toHaveClass('hover:border-b-[var(--pd-input-field-hover-stroke)]');
 });
+
+test('should include heading based on given order and searchFunctions order', async () => {
+  const searchFunction1 = async (s: string) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return [s + '11', s + '12', s + '13', s + '14'];
+  };
+
+  const searchFunction2 = async (s: string) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return [s + '21', s + '22', s + '23', s + '24'];
+  };
+
+  const searchFunction3 = async (s: string) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return [s + '31', s + '32', s + '33'];
+  };
+
+  const searchFunction4 = async (s: string) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return [s + '41', s + '42', s + '43', s + '44'];
+  };
+  render(Typeahead, {
+    initialFocus: true,
+    searchFunctions: [searchFunction1, searchFunction2, searchFunction3, searchFunction4],
+    headings: ['searchFunction1 results', 'searchFunction2 results', 'searchFunction3 results'],
+    delay: 10,
+  });
+
+  const input = screen.getByRole('textbox');
+
+  await userEvent.type(input, 'test');
+
+  await waitFor(() => {
+    const list = screen.getByRole('row');
+    const items = within(list).getAllByRole('button');
+    expect(items.length).toBe(18);
+    expect(items[0].textContent).toBe('searchFunction1 results');
+    expect(items[0]).toBeDisabled();
+    expect(items[1].textContent).toBe('test11');
+    expect(items[5].textContent).toBe('searchFunction2 results');
+    expect(items[5]).toBeDisabled();
+    expect(items[6].textContent).toBe('test21');
+    expect(items[10].textContent).toBe('searchFunction3 results');
+    expect(items[10]).toBeDisabled();
+    expect(items[11].textContent).toBe('test31');
+    expect(items[14].textContent).toBe('test41');
+  });
+});

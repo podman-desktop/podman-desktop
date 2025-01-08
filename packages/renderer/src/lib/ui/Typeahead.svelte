@@ -172,6 +172,9 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
+  items = [];
+  searchResults = [];
+  itemHeadings = {};
   loading = true;
   onInputChange?.(value)
     .then(() => {
@@ -247,6 +250,11 @@ function onWindowClick(e: Event): void {
     bind:this={list}
     class="max-h-80 overflow-auto bg-[var(--pd-content-card-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px]">
     {#each items as item, i}
+      {#if itemHeadings[i]}
+        {#each itemHeadings[i] as heading}
+          <button class='p-[2px] text-[var(--pd-button-disabled-text)] w-full text-start' disabled>{heading}</button>
+        {/each}
+      {/if}
       <button
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}
