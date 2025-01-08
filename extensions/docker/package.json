@@ -44,6 +44,11 @@
           "markdownDescription": "Select the active Docker CLI context:",
           "group": "podman-desktop.docker",
           "scope": "DockerCompatibility"
+        },
+        "docker.config": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Docker Config directory. See [documentation](https://docs.docker.com/reference/cli/docker/#configuration-files)"
         }
       }
     }
