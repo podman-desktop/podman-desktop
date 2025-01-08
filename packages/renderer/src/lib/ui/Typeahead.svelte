@@ -172,9 +172,7 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
-  items = [];
   searchResults = [];
-  itemHeadings = {};
   loading = true;
   onInputChange?.(value)
     .then(() => {
