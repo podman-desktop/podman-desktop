@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte';
+import { type Component, onMount } from 'svelte';
 
 import WindowsExitIcon from '/@/lib/images/WindowsExitIcon.svelte';
 import WindowsMaxIcon from '/@/lib/images/WindowsMaxIcon.svelte';
@@ -7,8 +7,7 @@ import WindowsMinIcon from '/@/lib/images/WindowsMinIcon.svelte';
 import WindowsUnmaxIcon from '/@/lib/images/WindowsUnmaxIcon.svelte';
 
 const iconSize = '16';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let icon: any;
+let icon: Component;
 let state = 'initial';
 
 export let name: string;

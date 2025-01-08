@@ -63,13 +63,12 @@ const kubeFileDialogOptions: OpenDialogOptions = {
   ],
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function removeEmptyOrNull(obj: any) {
-  Object.keys(obj).forEach(
-    k =>
-      (obj[k] && typeof obj[k] === 'object' && removeEmptyOrNull(obj[k])) ||
-      (!obj[k] && obj[k] !== undefined && delete obj[k]),
-  );
+function removeEmptyOrNull(obj: object) {
+  Object.keys(obj).forEach(k => {
+    const val = obj[k as keyof typeof obj];
+    (val && typeof val === 'object' && removeEmptyOrNull(val)) ||
+      (!val && val !== undefined && delete obj[k as keyof typeof obj]);
+  });
   return obj;
 }
 

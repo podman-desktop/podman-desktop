@@ -25,8 +25,8 @@ function handleEscape({ key }: KeyboardEvent): void {
   }
 }
 
-function onWindowClick(e: MouseEvent): void {
-  showMenu = outsideWindow.contains(e.target as Node);
+function onWindowClick(e: Event): void {
+  showMenu = e.target instanceof Node && outsideWindow.contains(e.target);
 }
 
 export function onButtonClick(e: MouseEvent): void {

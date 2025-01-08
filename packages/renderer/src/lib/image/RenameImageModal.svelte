@@ -28,7 +28,7 @@ function disableSave(name: string, tag: string): boolean {
 
 let imageNameErrorMessage = '';
 function validateImageName(event: Event): void {
-  let inputName = (event.target as unknown as Input).value;
+  let inputName = event.target instanceof Input ? event.target.value : undefined;
   if (inputName === undefined || inputName.trim() === '') {
     imageNameErrorMessage = 'Please enter a value';
   } else {
@@ -38,7 +38,7 @@ function validateImageName(event: Event): void {
 
 let imageTagErrorMessage = '';
 function validateImageTag(event: Event): void {
-  let inputName = (event.target as unknown as Input).value;
+  let inputName = event.target instanceof Input ? event.target.value : undefined;
   if (inputName === undefined || inputName.trim() === '') {
     imageTagErrorMessage = 'Please enter a value';
   } else {

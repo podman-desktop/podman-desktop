@@ -35,8 +35,7 @@ let deployUsingServices = true;
 let deployUsingRoutes = true;
 let deployUsingRestrictedSecurityContext = false;
 let createdPod: V1Pod | undefined = undefined;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let bodyPod: any;
+let bodyPod: V1Pod;
 
 let createIngress = false;
 let ingressPort: number;
@@ -99,7 +98,7 @@ onMount(async () => {
 
   // Go through bodyPod.spec.containers and create a string array of port that we'll be exposing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bodyPod.spec.containers.forEach((container: any) => {
+  bodyPod.spec?.containers.forEach((container: any) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     container.ports?.forEach((port: any) => {
       containerPortArray.push(port.hostPort);
@@ -179,7 +178,7 @@ async function deployToKube() {
     bodyPod.spec?.containers?.forEach((container: any) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       container?.ports?.forEach((port: any) => {
-        let portName = `${bodyPod.metadata.name}-${port.hostPort}`;
+        let portName = `${bodyPod.metadata?.name}-${port.hostPort}`;
         if (port.hostPort) {
           // create service
           const service = {
@@ -199,7 +198,7 @@ async function deployToKube() {
                 },
               ],
               selector: {
-                app: bodyPod.metadata.name,
+                app: bodyPod.metadata?.name,
               },
             },
           };
@@ -211,7 +210,7 @@ async function deployToKube() {
               apiVersion: 'route.openshift.io/v1',
               kind: 'Route',
               metadata: {
-                name: `${bodyPod.metadata.name}-${port.hostPort}`,
+                name: `${bodyPod.metadata?.name}-${port.hostPort}`,
                 namespace: currentNamespace,
               },
               spec: {
@@ -220,7 +219,7 @@ async function deployToKube() {
                 },
                 to: {
                   kind: 'Service',
-                  name: `${bodyPod.metadata.name}-${port.hostPort}`,
+                  name: `${bodyPod.metadata?.name}-${port.hostPort}`,
                 },
                 tls: {
                   termination: 'edge',
@@ -271,7 +270,7 @@ async function deployToKube() {
       apiVersion: 'networking.k8s.io/v1',
       kind: 'Ingress',
       metadata: {
-        name: bodyPod.metadata.name,
+        name: bodyPod.metadata?.name,
         namespace: currentNamespace,
       },
       spec: {
@@ -381,7 +380,7 @@ async function deployToKube() {
 // If statement required as bodyPod.metadata is undefined when bodyPod is undefined
 $: {
   if (bodyPod?.metadata?.labels) {
-    bodyPod.metadata.labels.app = bodyPod.metadata.name;
+    bodyPod.metadata.labels.app = bodyPod.metadata.name ?? '';
   }
 }
 
@@ -403,7 +402,7 @@ function updateKubeResult() {
       </div>
     {/if}
 
-    {#if bodyPod}
+    {#if bodyPod?.metadata}
       <div class="pt-2 pb-4">
         <label for="contextToUse" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
           >Pod Name:</label>

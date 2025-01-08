@@ -573,7 +573,7 @@ function deleteDevice(index: number) {
 
 // called when user change the container's name
 function checkContainerName(event: Event) {
-  const containerValue = (event.target as unknown as Input).value;
+  const containerValue = event.target instanceof Input ? event.target.value : '';
 
   // ok, now check if we already have a matching container: same name and same engine ID
   const containerAlreadyExists = $containersInfos.find(
