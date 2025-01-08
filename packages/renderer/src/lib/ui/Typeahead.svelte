@@ -12,6 +12,7 @@ export let initialFocus: boolean = false;
 export let id: string | undefined = undefined;
 export let name: string | undefined = undefined;
 export let error: boolean = false;
+// the headings will be shown in the provided order: 1st heading - 1st function result, 2nd heading - 2nd function result, ...
 export let headings: string[] = [];
 
 export let searchFunctions: SearchFunction[] = [async (_s: string) => []];
