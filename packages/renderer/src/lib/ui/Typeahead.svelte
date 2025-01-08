@@ -174,6 +174,9 @@ function processInput(): void {
       .finally(() => {
         if (searchResults.length === searchFunctions.length) {
           updateHeadings();
+          highlightIndex = -1;
+          open();
+          loading = false;
         }
       });
   }
@@ -190,9 +193,6 @@ function updateHeadings(): void {
     }
     items = items.concat(result);
   }
-  highlightIndex = -1;
-  open();
-  loading = false;
 }
 
 function open(): void {
