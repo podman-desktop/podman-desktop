@@ -111,7 +111,7 @@ function isContextBeingChecked(contextName: string, experimental: boolean): bool
   return !!$kubernetesContextsCheckingStateDelayed?.get(contextName);
 }
 
-async function startMonitoring(contextName: string): Promise<void> {
+async function connect(contextName: string): Promise<void> {
   await window.telemetryTrack('kubernetes.monitoring.start.non-current');
   $kubernetesContexts = clearKubeUIContextErrors($kubernetesContexts, contextName);
   window.kubernetesRefreshContextState(contextName).catch((e: unknown) => {
@@ -225,7 +225,7 @@ async function startMonitoring(contextName: string): Promise<void> {
                     {/if}                    
                   </div>
                   {#if !$kubernetesContextsState.get(context.name)}
-                    <div><Button on:click={() => startMonitoring(context.name)}>Start monitoring</Button></div>
+                    <div><Button on:click={() => connect(context.name)}>Connect</Button></div>
                   {/if}
                 </div>
               {/if}
