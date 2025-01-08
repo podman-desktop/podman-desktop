@@ -351,64 +351,66 @@ function updateStore() {
 
 async function handleOnSubmit(e: SubmitEvent) {
   errorMessage = undefined;
-  const formData = new FormData(e.target as HTMLFormElement);
+  if (e.target instanceof HTMLFormElement) {
+    const formData = new FormData(e.target);
 
-  const data: { [key: string]: unknown } = {};
+    const data: { [key: string]: unknown } = {};
 
-  // handle checkboxes that are not submitted in case of unchecked
-  // get all configuration keys
-  configurationKeys.forEach(key => {
-    // do we have the value in the form
-    if (key.id && !formData.has(key.id) && key.type === 'boolean') {
-      data[key.id] = false;
-    }
-  });
-
-  for (let field of formData) {
-    const [key, value] = field;
-    let updatedValue: unknown = value;
-    const configurationDef = configurationKeys.find(configKey => configKey.id === key);
-    if (!connectionInfo || configurationValues.get(key)?.modified) {
-      // definition of the key
-      // update the value to be true and not on
-      if (configurationDef?.type === 'boolean' && value === 'on') {
-        updatedValue = true;
+    // handle checkboxes that are not submitted in case of unchecked
+    // get all configuration keys
+    configurationKeys.forEach(key => {
+      // do we have the value in the form
+      if (key.id && !formData.has(key.id) && key.type === 'boolean') {
+        data[key.id] = false;
       }
-      data[key] = updatedValue;
-    }
-  }
+    });
 
-  // send the data to the right provider
-  inProgress = true;
-  operationStarted = true;
-  operationFailed = false;
-  operationCancelled = false;
-
-  try {
-    tokenId = await window.getCancellableTokenSource();
-    // clear terminal
-    logsTerminal?.clear();
-    loggerHandlerKey = registerConnectionCallback(getLoggerHandler());
-    updateStore();
-    await callback(providerInfo.internalId, data, loggerHandlerKey, eventCollect, tokenId, taskId);
-  } catch (error: unknown) {
-    //display error
-    tokenId = undefined;
-    // filter cancellation message to avoid displaying error and allow user to restart the creation
-    if (
-      error &&
-      typeof error === 'object' &&
-      'message' in error &&
-      error.message &&
-      typeof error.message === 'string' &&
-      error.message.indexOf('Execution cancelled') >= 0
-    ) {
-      errorMessage = 'Action cancelled. See logs for more details';
-      return;
+    for (let field of formData) {
+      const [key, value] = field;
+      let updatedValue: unknown = value;
+      const configurationDef = configurationKeys.find(configKey => configKey.id === key);
+      if (!connectionInfo || configurationValues.get(key)?.modified) {
+        // definition of the key
+        // update the value to be true and not on
+        if (configurationDef?.type === 'boolean' && value === 'on') {
+          updatedValue = true;
+        }
+        data[key] = updatedValue;
+      }
     }
-    errorMessage = String(error);
-    operationStarted = false;
-    inProgress = false;
+
+    // send the data to the right provider
+    inProgress = true;
+    operationStarted = true;
+    operationFailed = false;
+    operationCancelled = false;
+
+    try {
+      tokenId = await window.getCancellableTokenSource();
+      // clear terminal
+      logsTerminal?.clear();
+      loggerHandlerKey = registerConnectionCallback(getLoggerHandler());
+      updateStore();
+      await callback(providerInfo.internalId, data, loggerHandlerKey, eventCollect, tokenId, taskId);
+    } catch (error: unknown) {
+      //display error
+      tokenId = undefined;
+      // filter cancellation message to avoid displaying error and allow user to restart the creation
+      if (
+        error &&
+        typeof error === 'object' &&
+        'message' in error &&
+        error.message &&
+        typeof error.message === 'string' &&
+        error.message.indexOf('Execution cancelled') >= 0
+      ) {
+        errorMessage = 'Action cancelled. See logs for more details';
+        return;
+      }
+      errorMessage = String(error);
+      operationStarted = false;
+      inProgress = false;
+    }
   }
 }
 
