@@ -147,7 +147,7 @@ export async function resourceConnectionAction(
   resourceConnectionAction: ResourceElementActions,
   expectedResourceState: ResourceElementState,
 ): Promise<void> {
-  return test.step('Perform resource connection action', async () => {
+  return test.step(`Performs "${resourceConnectionAction}" action, expects "${expectedResourceState}" state.`, async () => {
     const navigationBar = new NavigationBar(page);
     await navigationBar.openSettings();
     await resourceCard.performConnectionAction(resourceConnectionAction);
