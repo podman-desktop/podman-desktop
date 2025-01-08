@@ -22,7 +22,7 @@ import { render } from '@testing-library/svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { writable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
@@ -54,10 +54,10 @@ beforeEach(() => {
 
   vi.mocked(Terminal).mockReturnValue(TerminalMock);
   vi.mocked(FitAddon).mockReturnValue(FitAddonMock);
+});
 
-  Object.defineProperty(window, 'addEventListener', {
-    value: vi.fn(),
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 test('expect terminal constructor to have been called on mount', async () => {
@@ -139,6 +139,9 @@ test('addon fit should be loaded on mount', async () => {
 });
 
 test('matchMedia resize listener should trigger fit addon', async () => {
+  // spy the event listener
+  vi.spyOn(window, 'addEventListener');
+
   render(TerminalWindow, {
     terminal: writable() as unknown as Terminal,
   });
