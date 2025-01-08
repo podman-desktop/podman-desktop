@@ -145,9 +145,7 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
-  items = [];
   searchResults = [];
-  itemHeadings = {};
   loading = true;
   for (const [index, searchFunction] of searchFunctions.entries()) {
     searchFunction(value)
@@ -184,6 +182,8 @@ function processInput(): void {
 }
 
 function updateHeadings(): void {
+  items = [];
+  itemHeadings = {};
   for (const [index, result] of searchResults.entries()) {
     if (headings?.[index]) {
       if (itemHeadings[items.length]) {
