@@ -23,6 +23,7 @@ import typescript from 'typescript';
 import { expect } from 'vitest';
 
 global.window.matchMedia = () => {};
+global.window.addEventListener = vi.fn();
 
 // read the given path and extract the method names from the Window interface
 function extractWindowMethods(filePath) {
