@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
+import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
 import PreferencesContainerConnectionEdit from '/@/lib/preferences/PreferencesContainerConnectionEdit.svelte';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
@@ -46,6 +47,9 @@ onMount(async () => {
     {:else}
       empty
     {/if}
+  </Route>
+  <Route path="/experimental" breadcrumb="Preferences">
+    <ExperimentalPage properties={properties}/>
   </Route>
   <Route path="/default/:key/*" breadcrumb="Preferences" let:meta>
     <PreferencesRendering key={meta.params.key} properties={properties} />
