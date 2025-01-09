@@ -1,0 +1,94 @@
+<script lang="ts">
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
+import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
+import { getInitialValue } from '/@/lib/preferences/Util';
+import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
+
+import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+
+interface Props {
+  properties: IConfigurationPropertyRecordedSchema[];
+}
+
+let { properties = [] }: Props = $props();
+
+let experimental: IConfigurationPropertyRecordedSchema[] = $derived(
+  properties.filter(property => !!property.experimental),
+);
+
+let values: Record<string, boolean> = $state({});
+let all: boolean = $derived(Object.values(values).every(value => value));
+let loading: boolean = $state(false);
+
+function update(propertyId: string, value: unknown): void {
+  if (value === undefined) {
+    values[propertyId] = false;
+  } else if (typeof value === 'boolean') {
+    values[propertyId] = value;
+  }
+}
+
+function refresh(): void {
+  experimental.forEach(property => {
+    if (!property.id) return;
+
+    getInitialValue(property)
+      .then(update.bind(undefined, property.id))
+      .catch((err: unknown) => console.error(`Error getting initial value ${property.id}`, err));
+  });
+}
+
+async function onCheckedAll(event: { detail: boolean }): Promise<void> {
+  loading = true;
+  try {
+    for (const property of experimental) {
+      if (!property.id) continue;
+
+      await window.updateConfigurationValue(property.id, event.detail, property.scope);
+    }
+  } finally {
+    loading = false;
+  }
+}
+
+$effect(() => {
+  refresh();
+});
+</script>
+
+<SettingsPage title="Experimental Features">
+  <div class="flex flex-col space-y-5 text-[var(--pd-content-header)]">
+
+    <div class="ml-2 flex flex-row bg-[var(--pd-invert-content-card-bg)] rounded-md px-2 pt-2">
+      <div class="flex flex-col w-full text-[color:var(--pd-invert-content-card-text)]">
+        <div>
+          <span>Enable all experimental features</span>
+        </div>
+        <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">
+          <Markdown markdown="Enable the section to turn on **all experimental features** and give feedback to developers. Or select individual features to try bellow." />
+        </div>
+      </div>
+      <div class="flex flex-row text-start items-center justify-start">
+        <SlideToggle
+          id="input-experimental-enable-all"
+          name="Enable all experimental features"
+          left
+          checked={all}
+          on:checked={onCheckedAll}
+          disabled={loading}
+        >
+          <span class="text-xs">{'Enabled'}</span>
+        </SlideToggle>
+      </div>
+    </div>
+
+    {#each experimental as configItem}
+      <div>
+        <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2">
+          <PreferencesRenderingItem record={configItem} />
+        </div>
+      </div>
+    {/each}
+  </div>
+</SettingsPage>
