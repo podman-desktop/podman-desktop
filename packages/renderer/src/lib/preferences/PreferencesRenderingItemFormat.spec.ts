@@ -25,7 +25,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
@@ -379,13 +379,13 @@ test('Expect a text input when record is type integer', async () => {
   expect(inputField.name).toBe('record');
 });
 
-describe('external update', () => {
-  const RECORD_ID = 'record';
-  const NUMBER_RECORD: IConfigurationPropertyRecordedSchema = {
-    id: RECORD_ID,
+test('Expect value is updated from an external change', async () => {
+  const recordId = 'record';
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: recordId,
     title: 'Hello',
     parentId: 'parent.record',
-    description: 'number-record-description',
+    description: 'record-description',
     type: 'integer',
     scope: 'DEFAULT',
     default: 1,
@@ -393,6 +393,32 @@ describe('external update', () => {
     maximum: 15,
   };
 
+  await awaitRender(record, {});
+  const inputField = screen.getByRole('textbox', { name: 'record-description' }) as HTMLInputElement;
+  expect(inputField).toBeInTheDocument();
+
+  // initial value should be 1
+  expect(inputField.value).toBe('1');
+
+  // change getConfigurationValue to return 5
+  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(5);
+
+  // now update the configuration value
+  onDidChangeConfiguration.dispatchEvent(
+    new CustomEvent(recordId, {
+      detail: {
+        key: 'record',
+        value: 5,
+      },
+    }),
+  );
+
+  // initial value should be 5
+  await vi.waitFor(() => expect(inputField.value).toBe('5'));
+});
+
+test('Expect boolean record to be updated from checked to not checked', async () => {
+  const RECORD_ID = 'boolean-record-id';
   const BOOLEAN_RECORD: IConfigurationPropertyRecordedSchema = {
     id: RECORD_ID,
     title: 'Hello',
@@ -403,59 +429,32 @@ describe('external update', () => {
     default: true,
   };
 
-  test('Expect value is updated from an external change', async () => {
-    await awaitRender(NUMBER_RECORD, {});
-    const inputField = screen.getByRole('textbox', { name: NUMBER_RECORD.description }) as HTMLInputElement;
-    expect(inputField).toBeInTheDocument();
+  // getConfigurationValue to return true
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-    // initial value should be 1
-    expect(inputField.value).toBe('1');
+  // render
+  await awaitRender(BOOLEAN_RECORD, {});
+  const checkbox = screen.getByRole('checkbox', { name: BOOLEAN_RECORD.description });
 
-    // change getConfigurationValue to return 5
-    vi.mocked(window.getConfigurationValue).mockResolvedValue(5);
-
-    // now update the configuration value
-    onDidChangeConfiguration.dispatchEvent(
-      new CustomEvent(RECORD_ID, {
-        detail: {
-          key: 'record',
-          value: 5,
-        },
-      }),
-    );
-
-    // initial value should be 5
-    await vi.waitFor(() => expect(inputField.value).toBe('5'));
+  // ensure the checkbox is checked
+  await vi.waitFor(() => {
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toBeChecked();
   });
 
-  test('Expect boolean record to be updated from checked to not checked', async () => {
-    // getConfigurationValue to return true
-    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  // getConfigurationValue to return false
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
-    // render
-    await awaitRender(BOOLEAN_RECORD, {});
-    const checkbox = screen.getByRole('checkbox', { name: BOOLEAN_RECORD.description });
+  // now update the configuration value
+  onDidChangeConfiguration.dispatchEvent(
+    new CustomEvent(RECORD_ID, {
+      detail: {
+        key: 'record',
+        value: false,
+      },
+    }),
+  );
 
-    // ensure the checkbox is checked
-    await vi.waitFor(() => {
-      expect(checkbox).toBeInTheDocument();
-      expect(checkbox).toBeChecked();
-    });
-
-    // getConfigurationValue to return false
-    vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
-
-    // now update the configuration value
-    onDidChangeConfiguration.dispatchEvent(
-      new CustomEvent(RECORD_ID, {
-        detail: {
-          key: 'record',
-          value: false,
-        },
-      }),
-    );
-
-    // initial value should be default
-    await vi.waitFor(() => expect(checkbox).not.toBeChecked());
-  });
+  // checkbox should not be checked anymore
+  await vi.waitFor(() => expect(checkbox).not.toBeChecked());
 });
