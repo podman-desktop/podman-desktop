@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Button, Checkbox, Link, Tooltip } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { onboardingList } from '/@/stores/onboarding';
+import { providerInfos } from '/@/stores/providers';
 import type { OnboardingInfo } from '/@api/onboarding';
 
 import IconImage from '../appearance/IconImage.svelte';
@@ -17,19 +17,36 @@ export let showTelemetry = false;
 
 let telemetry = true;
 
-// Global context related
-let contextsUnsubscribe: Unsubscriber;
-
-let onboardingsUnsubscribe: Unsubscriber;
 const welcomeUtils = new WelcomeUtils();
 let podmanDesktopVersion: string;
 
 // Extend ProviderInfo to have a selected property
-interface OnboardingInfoWithSelected extends OnboardingInfo {
+interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
   selected?: boolean;
+  containerEngine?: boolean;
 }
 
-let onboardingProviders: OnboardingInfoWithSelected[] = [];
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
+
+// Get every provider that has a container connections
+$: providersWithContainerConnections = $providerInfos.filter(provider => provider.containerConnections.length > 0);
+
+// Using providerInfos as well as the information we have from onboarding,
+// we will by default auto-select as well as add containerEngine to the list as true/false
+// so we can make sure that extensions with container engines are listed first
+$: onboardingProviders = $onboardingList
+  .map(provider => {
+    // Check if it's in the list, if it is, then it has a container engine
+    const hasContainerConnection = providersWithContainerConnections.some(
+      connectionProvider => connectionProvider.extensionId === provider.extension,
+    );
+    return {
+      ...provider,
+      selected: true,
+      containerEngine: hasContainerConnection,
+    };
+  })
+  .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
 
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();
@@ -44,25 +61,6 @@ onMount(async () => {
     showTelemetry = true;
   }
   podmanDesktopVersion = await window.getPodmanDesktopVersion();
-
-  onboardingsUnsubscribe = onboardingList.subscribe(value => {
-    // Add "selected" property to each provider and add to onboardingEnabledProviders
-    onboardingProviders = value.map(provider => {
-      return {
-        ...provider,
-        selected: true,
-      };
-    });
-  });
-});
-
-onDestroy(() => {
-  if (onboardingsUnsubscribe) {
-    onboardingsUnsubscribe();
-  }
-  if (contextsUnsubscribe) {
-    contextsUnsubscribe();
-  }
 });
 
 async function closeWelcome() {
