@@ -58,7 +58,8 @@ onMount(() => {
     callBack = () => {
       getInitialValue(record)
         .then(v => {
-          if (v) {
+          // v may be `false` which is a valid value for boolean types
+          if (v !== undefined) {
             recordValue = v;
           }
         })
