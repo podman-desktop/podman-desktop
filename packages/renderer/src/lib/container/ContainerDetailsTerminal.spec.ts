@@ -39,22 +39,20 @@ vi.mock('xterm', () => {
   };
 });
 
-const matchMediaMock = vi.fn();
-
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'shellInContainer', { value: shellInContainerMock });
   Object.defineProperty(window, 'shellInContainerResize', { value: shellInContainerResizeMock });
 
-  Object.defineProperty(window, 'matchMedia', { value: matchMediaMock });
+  Object.defineProperty(window, 'matchMedia', { value: vi.fn() });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-  matchMediaMock.mockReturnValue({
+  vi.mocked(window.matchMedia).mockReturnValue({
     addListener: vi.fn(),
     removeListener: vi.fn(),
-  });
+  } as unknown as MediaQueryList);
 
   // reset terminals
   containerTerminals.set([]);
