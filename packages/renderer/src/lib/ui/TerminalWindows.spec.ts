@@ -28,32 +28,12 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
 
-vi.mock('@xterm/xterm', () => ({
-  Terminal: vi.fn(),
-}));
+vi.mock('@xterm/xterm');
 
-vi.mock('@xterm/addon-fit', () => ({
-  FitAddon: vi.fn(),
-}));
-
-const TerminalMock: Terminal = {
-  onWriteParsed: vi.fn(),
-  onResize: vi.fn(),
-  dispose: vi.fn(),
-  loadAddon: vi.fn(),
-  open: vi.fn(),
-  write: vi.fn(),
-} as unknown as Terminal;
-
-const FitAddonMock: FitAddon = {
-  fit: vi.fn(),
-} as unknown as FitAddon;
+vi.mock('@xterm/addon-fit');
 
 beforeEach(() => {
   vi.resetAllMocks();
-
-  vi.mocked(Terminal).mockReturnValue(TerminalMock);
-  vi.mocked(FitAddon).mockReturnValue(FitAddonMock);
 });
 
 afterEach(() => {
@@ -98,7 +78,7 @@ test('showCursor false or undefined should write specific instruction to termina
   await vi.waitFor(() => {
     expect(Terminal).toHaveBeenCalledOnce();
   });
-  expect(TerminalMock.write).toHaveBeenCalledWith('\x1b[?25l');
+  expect(Terminal.prototype.write).toHaveBeenCalledWith('\x1b[?25l');
 });
 
 test('terminal constructor should contains fontSize and lineHeight from configuration', async () => {
@@ -126,6 +106,12 @@ test('terminal constructor should contains fontSize and lineHeight from configur
 });
 
 test('addon fit should be loaded on mount', async () => {
+  const fitAddonMock = {
+    fit: vi.fn(),
+  } as unknown as FitAddon;
+
+  vi.mocked(FitAddon).mockReturnValue(fitAddonMock);
+
   render(TerminalWindow, {
     terminal: writable() as unknown as Terminal,
   });
@@ -135,7 +121,7 @@ test('addon fit should be loaded on mount', async () => {
   });
 
   expect(FitAddon).toHaveBeenCalled();
-  expect(TerminalMock.loadAddon).toHaveBeenCalledWith(FitAddonMock);
+  expect(Terminal.prototype.loadAddon).toHaveBeenCalledWith(fitAddonMock);
 });
 
 test('matchMedia resize listener should trigger fit addon', async () => {
@@ -156,10 +142,10 @@ test('matchMedia resize listener should trigger fit addon', async () => {
   });
 
   // reset fit calls count
-  vi.mocked(FitAddonMock.fit).mockReset();
-  expect(FitAddonMock.fit).not.toHaveBeenCalled();
+  vi.mocked(FitAddon.prototype.fit).mockReset();
+  expect(FitAddon.prototype.fit).not.toHaveBeenCalled();
 
   listener();
 
-  expect(FitAddonMock.fit).toHaveBeenCalled();
+  expect(FitAddon.prototype.fit).toHaveBeenCalled();
 });
