@@ -335,8 +335,12 @@ test('should include heading based on given order and searchFunctions order', as
   };
   render(Typeahead, {
     initialFocus: true,
-    searchFunctions: [searchFunction1, searchFunction2, searchFunction3, searchFunction4],
-    headings: ['searchFunction1 results', 'searchFunction2 results', 'searchFunction3 results'],
+    searchFunctions: [
+      { searchFunction: searchFunction1, heading: 'searchFunction1 results' },
+      { searchFunction: searchFunction2, heading: 'searchFunction2 results' },
+      { searchFunction: searchFunction3, heading: 'searchFunction3 results' },
+      { searchFunction: searchFunction4 },
+    ],
     delay: 10,
   });
 
