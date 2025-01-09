@@ -124,6 +124,10 @@
     "./NumberInput": {
       "types": "./dist/inputs/NumberInput.svelte.d.ts",
       "svelte": "./dist/inputs/NumberInput.svelte"
+    },
+    "./Carousel": {
+      "types": "./dist/carousel/Carousel.svelte.d.ts",
+      "svelte": "./dist/carousel/Carousel.svelte"
     }
   },
   "peerDependencies": {

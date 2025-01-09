@@ -1,8 +1,8 @@
 <script lang="ts">
+import { Carousel } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
-import Carousel from '../carousel/Carousel.svelte';
 import { fadeSlide } from '../ui/animations';
 import GuideCard from './GuideCard.svelte';
 

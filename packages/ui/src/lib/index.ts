@@ -19,6 +19,7 @@ import ErrorMessage from './alert/ErrorMessage.svelte';
 import type { ButtonType } from './button/Button';
 import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
+import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
 import DropdownMenu from './dropdownMenu';
@@ -48,6 +49,7 @@ import { isFontAwesomeIcon } from './utils/icon-utils';
 export type { ButtonType };
 export {
   Button,
+  Carousel,
   Checkbox,
   CloseButton,
   DetailsPage,

@@ -15,12 +15,12 @@ let containerId = Math.random().toString(36).slice(-6);
 
 $: visibleCards = cards.slice(0, cardsFit);
 
-function calcCardsToFit(width: number) {
+function calcCardsToFit(width: number): number {
   const cf = Math.floor(width / cardWidth);
   return cf === 0 ? 1 : cf;
 }
 
-function update(entries: ResizeObserverEntry[]) {
+function update(entries: ResizeObserverEntry[]): void {
   const width = entries[0].contentRect.width;
   cardsFit = calcCardsToFit(width);
 }
@@ -37,11 +37,11 @@ onDestroy(() => {
   resizeObserver.disconnect();
 });
 
-function rotateLeft() {
+function rotateLeft(): void {
   cards = [cards[cards.length - 1], ...cards.slice(0, cards.length - 1)];
 }
 
-function rotateRight() {
+function rotateRight(): void {
   cards = [...cards.slice(1, cards.length), cards[0]];
 }
 </script>
