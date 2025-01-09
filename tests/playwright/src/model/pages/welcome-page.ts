@@ -25,15 +25,15 @@ import { DashboardPage } from './dashboard-page';
 export class WelcomePage extends BasePage {
   readonly welcomeMessage: Locator;
   readonly telemetryConsent: Locator;
-  readonly goToPodmanDesktopButton: Locator;
+  readonly skipOnBoarding: Locator;
   readonly checkLoader: Locator;
 
   constructor(page: Page) {
     super(page);
     this.welcomeMessage = page.getByText('Welcome to Podman Desktop');
     this.telemetryConsent = page.getByText('Telemetry');
-    this.goToPodmanDesktopButton = page.getByRole('button', {
-      name: 'Go to Podman Desktop',
+    this.skipOnBoarding = page.getByRole('button', {
+      name: 'Skip',
       exact: true,
     });
     this.checkLoader = this.page.getByRole('heading', {
@@ -53,8 +53,8 @@ export class WelcomePage extends BasePage {
 
   async closeWelcomePage(): Promise<DashboardPage> {
     return test.step('Close Welcome Page', async () => {
-      await playExpect(this.goToPodmanDesktopButton).toBeEnabled();
-      await this.goToPodmanDesktopButton.click();
+      await playExpect(this.skipOnBoarding).toBeEnabled();
+      await this.skipOnBoarding.click();
       return new DashboardPage(this.page);
     });
   }
@@ -71,7 +71,7 @@ export class WelcomePage extends BasePage {
       await this.waitForInitialization();
       if (skipIfNotPresent) {
         try {
-          await this.goToPodmanDesktopButton.waitFor({ state: 'visible' });
+          await this.skipOnBoarding.waitFor({ state: 'visible' });
         } catch (err) {
           if ((err as Error).name !== 'TimeoutError') {
             throw err;
