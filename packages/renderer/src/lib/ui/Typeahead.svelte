@@ -12,10 +12,9 @@ export let initialFocus: boolean = false;
 export let id: string | undefined = undefined;
 export let name: string | undefined = undefined;
 export let error: boolean = false;
-// the headings will be shown in the provided order: 1st heading - 1st function result, 2nd heading - 2nd function result, ...
-export let headings: string[] = [];
-
-export let searchFunctions: SearchFunction[] = [async (_s: string) => []];
+export let searchFunctions: { searchFunction: SearchFunction; heading?: string }[] = [
+  { searchFunction: async (_s: string) => [] },
+];
 export let onChange = function (_s: string) {};
 export let onEnter = function () {};
 
@@ -25,6 +24,7 @@ let scrollElements: HTMLElement[] = [];
 let value: string;
 let items: string[] = [];
 let itemHeadings: { [index: number]: string[] } = {};
+let headings: string[] = [];
 let searchResults: string[][] = [];
 let inputDelayTimeout: NodeJS.Timeout;
 let opened: boolean = false;
@@ -147,7 +147,7 @@ function makeVisible(): void {
 function processInput(): void {
   searchResults = [];
   loading = true;
-  for (const [index, searchFunction] of searchFunctions.entries()) {
+  for (const [index, { searchFunction, heading }] of searchFunctions.entries()) {
     searchFunction(value)
       .then(result => {
         // if the component has been disabled in the meantime
@@ -166,6 +166,9 @@ function processInput(): void {
             return 1;
           }
         });
+        if (heading) {
+          headings[index] = heading;
+        }
       })
       .catch(() => {
         searchResults[index] = [];
