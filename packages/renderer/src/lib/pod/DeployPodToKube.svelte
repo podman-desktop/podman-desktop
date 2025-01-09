@@ -56,8 +56,7 @@ onMount(async () => {
   }
 
   // parse yaml
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bodyPod = jsYaml.load(kubeDetails) as any;
+  bodyPod = jsYaml.load(kubeDetails) as V1Pod;
 
   // grab default context
   defaultContextName = await window.kubernetesGetCurrentContextName();
@@ -171,208 +170,210 @@ async function deployToKube() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let ingressesToCreate: any[] = [];
 
-  // if we deploy using services, we need to get rid of .hostPort and generate kubernetes services object
-  if (deployUsingServices) {
-    // collect all ports
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    bodyPod.spec?.containers?.forEach((container: any) => {
+  if (bodyPod.metadata?.name) {
+    // if we deploy using services, we need to get rid of .hostPort and generate kubernetes services object
+    if (deployUsingServices) {
+      // collect all ports
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      container?.ports?.forEach((port: any) => {
-        let portName = `${bodyPod.metadata?.name}-${port.hostPort}`;
-        if (port.hostPort) {
-          // create service
-          const service = {
-            apiVersion: 'v1',
-            kind: 'Service',
-            metadata: {
-              name: portName,
-              namespace: currentNamespace,
-            },
-            spec: {
-              ports: [
-                {
-                  name: portName,
-                  port: port.hostPort,
-                  protocol: port.protocol || 'TCP',
-                  targetPort: port.containerPort,
-                },
-              ],
-              selector: {
-                app: bodyPod.metadata?.name,
-              },
-            },
-          };
-          servicesToCreate.push(service);
-
-          if (openshiftRouteGroupSupported && deployUsingRoutes) {
-            // Create OpenShift route object
-            const route = {
-              apiVersion: 'route.openshift.io/v1',
-              kind: 'Route',
+      bodyPod.spec?.containers?.forEach((container: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        container?.ports?.forEach((port: any) => {
+          let portName = `${bodyPod.metadata?.name}-${port.hostPort}`;
+          if (port.hostPort) {
+            // create service
+            const service = {
+              apiVersion: 'v1',
+              kind: 'Service',
               metadata: {
-                name: `${bodyPod.metadata?.name}-${port.hostPort}`,
+                name: portName,
                 namespace: currentNamespace,
               },
               spec: {
-                port: {
-                  targetPort: port.containerPort,
-                },
-                to: {
-                  kind: 'Service',
-                  name: `${bodyPod.metadata?.name}-${port.hostPort}`,
-                },
-                tls: {
-                  termination: 'edge',
+                ports: [
+                  {
+                    name: portName,
+                    port: port.hostPort,
+                    protocol: port.protocol || 'TCP',
+                    targetPort: port.containerPort,
+                  },
+                ],
+                selector: {
+                  app: bodyPod.metadata?.name,
                 },
               },
             };
-            routesToCreate.push(route);
+            servicesToCreate.push(service);
+
+            if (openshiftRouteGroupSupported && deployUsingRoutes) {
+              // Create OpenShift route object
+              const route = {
+                apiVersion: 'route.openshift.io/v1',
+                kind: 'Route',
+                metadata: {
+                  name: `${bodyPod.metadata?.name}-${port.hostPort}`,
+                  namespace: currentNamespace,
+                },
+                spec: {
+                  port: {
+                    targetPort: port.containerPort,
+                  },
+                  to: {
+                    kind: 'Service',
+                    name: `${bodyPod.metadata?.name}-${port.hostPort}`,
+                  },
+                  tls: {
+                    termination: 'edge',
+                  },
+                },
+              };
+              routesToCreate.push(route);
+            }
           }
-        }
+        });
       });
-    });
-  }
-
-  // Check if we are deploying an ingress, if so, we need to create an ingress object using ingressPath and ingressDomain.
-  if (createIngress) {
-    let serviceName = '';
-    let servicePort = 0;
-
-    // Check that there are services (servicesToCreate), if there aren't. Warn that we can't create an ingress.
-    // All services are always created with one port (the first one), so we can use that port to create the ingress.
-    // Must be a number
-    if (servicesToCreate.length === 0) {
-      deployWarning = `In order to create an Ingress a Pod must have a Service associated to a port mapping. Check that your container(s) has a port exposed correctly in order to generate a Service.`;
-      deployStarted = false;
-      return;
-    } else if (servicesToCreate.length === 1) {
-      serviceName = servicesToCreate[0].metadata.name;
-      servicePort = servicesToCreate[0].spec.ports[0].port;
-    } else if (servicesToCreate.length > 1) {
-      // If there was more than one service being created, the user would of had a dialog to pick which port to use
-      // warn out if the user did not pick anything (we do not do form validation for this as we're using svelte for the form)
-      if (!ingressPort) {
-        deployWarning = 'You need to specify a port to create an ingress.';
-        deployStarted = false;
-        return;
-      }
-      const matchingService = servicesToCreate.find(service => service.spec.ports[0].port === ingressPort);
-      if (matchingService) {
-        serviceName = matchingService.metadata.name;
-        servicePort = matchingService.spec.ports[0].port;
-      } else {
-        deployError = 'Unable to find the service that matches the port you want to expose.';
-        return;
-      }
     }
 
-    const ingress = {
-      apiVersion: 'networking.k8s.io/v1',
-      kind: 'Ingress',
-      metadata: {
-        name: bodyPod.metadata?.name,
-        namespace: currentNamespace,
-      },
-      spec: {
-        defaultBackend: {
-          service: {
-            name: serviceName,
-            port: {
-              number: servicePort,
+    // Check if we are deploying an ingress, if so, we need to create an ingress object using ingressPath and ingressDomain.
+    if (createIngress) {
+      let serviceName = '';
+      let servicePort = 0;
+
+      // Check that there are services (servicesToCreate), if there aren't. Warn that we can't create an ingress.
+      // All services are always created with one port (the first one), so we can use that port to create the ingress.
+      // Must be a number
+      if (servicesToCreate.length === 0) {
+        deployWarning = `In order to create an Ingress a Pod must have a Service associated to a port mapping. Check that your container(s) has a port exposed correctly in order to generate a Service.`;
+        deployStarted = false;
+        return;
+      } else if (servicesToCreate.length === 1) {
+        serviceName = servicesToCreate[0].metadata.name;
+        servicePort = servicesToCreate[0].spec.ports[0].port;
+      } else if (servicesToCreate.length > 1) {
+        // If there was more than one service being created, the user would of had a dialog to pick which port to use
+        // warn out if the user did not pick anything (we do not do form validation for this as we're using svelte for the form)
+        if (!ingressPort) {
+          deployWarning = 'You need to specify a port to create an ingress.';
+          deployStarted = false;
+          return;
+        }
+        const matchingService = servicesToCreate.find(service => service.spec.ports[0].port === ingressPort);
+        if (matchingService) {
+          serviceName = matchingService.metadata.name;
+          servicePort = matchingService.spec.ports[0].port;
+        } else {
+          deployError = 'Unable to find the service that matches the port you want to expose.';
+          return;
+        }
+      }
+
+      const ingress = {
+        apiVersion: 'networking.k8s.io/v1',
+        kind: 'Ingress',
+        metadata: {
+          name: bodyPod.metadata?.name,
+          namespace: currentNamespace,
+        },
+        spec: {
+          defaultBackend: {
+            service: {
+              name: serviceName,
+              port: {
+                number: servicePort,
+              },
             },
           },
         },
-      },
-    };
+      };
 
-    // Support for multiple ingress creation in the future
-    ingressesToCreate.push(ingress);
-  }
-
-  // https://github.com/kubernetes-client/javascript/issues/487
-  if (bodyPod?.metadata?.creationTimestamp) {
-    bodyPod.metadata.creationTimestamp = new Date(bodyPod.metadata.creationTimestamp);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const eventProperties: any = {
-    useServices: deployUsingServices,
-    useRoutes: deployUsingRoutes,
-    createIngress: createIngress,
-  };
-  if (openshiftRouteGroupSupported) {
-    eventProperties['isOpenshift'] = true;
-  }
-
-  let previousPod = bodyPod;
-
-  try {
-    // In order to deploy to Kubernetes, we must remove volumes for the pod as we do not support them
-    // if we are deploying using services, remove the hostPort as well as volumeMounts from the container
-    if (bodyPod?.spec?.volumes) {
-      delete bodyPod.spec.volumes;
+      // Support for multiple ingress creation in the future
+      ingressesToCreate.push(ingress);
     }
 
-    if (deployUsingServices) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      bodyPod.spec?.containers?.forEach((container: any) => {
-        // UNUSED
-        // Delete all volume mounts
-        if (container.volumeMounts) {
-          delete container.volumeMounts;
-        }
-
-        // UNUSED
-        // Delete all hostPorts
-        if (container.ports) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          container.ports.forEach((port: any) => {
-            delete port.hostPort;
-          });
-        }
-      });
+    // https://github.com/kubernetes-client/javascript/issues/487
+    if (bodyPod?.metadata?.creationTimestamp) {
+      bodyPod.metadata.creationTimestamp = new Date(bodyPod.metadata.creationTimestamp);
     }
 
-    if (deployUsingRestrictedSecurityContext) {
-      ensureRestrictedSecurityContext(bodyPod);
-    }
-
-    // create pod
-    createdPod = await window.kubernetesCreatePod(currentNamespace, bodyPod);
-
-    // create services
-    for (const service of servicesToCreate) {
-      await window.kubernetesCreateService(currentNamespace, service);
-    }
-
-    // Create routes
-    for (const route of routesToCreate) {
-      const createdRoute = await window.openshiftCreateRoute(currentNamespace, route);
-      createdRoutes = [...createdRoutes, createdRoute];
-    }
-
-    // Create ingresses
-    for (const ingress of ingressesToCreate) {
-      await window.kubernetesCreateIngress(currentNamespace, ingress);
-    }
-
-    // Telemetry
-    await window.telemetryTrack('deployToKube', eventProperties);
-
-    // update status
-    updatePodInterval = setInterval(() => {
-      updatePod().catch((err: unknown) => console.error(`Error updating pod ${createdPod?.metadata?.name}`, err));
-    }, 2000);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    // Revert back to the previous bodyPod so the user can hit deploy again
-    // we only update the bodyPod if we successfully create the pod.
-    bodyPod = previousPod;
-    await window.telemetryTrack('deployToKube', { ...eventProperties, errorMessage: error.message });
-    deployError = error;
-    deployStarted = false;
-    deployFinished = false;
-    return;
+    const eventProperties: any = {
+      useServices: deployUsingServices,
+      useRoutes: deployUsingRoutes,
+      createIngress: createIngress,
+    };
+    if (openshiftRouteGroupSupported) {
+      eventProperties['isOpenshift'] = true;
+    }
+
+    let previousPod = bodyPod;
+
+    try {
+      // In order to deploy to Kubernetes, we must remove volumes for the pod as we do not support them
+      // if we are deploying using services, remove the hostPort as well as volumeMounts from the container
+      if (bodyPod?.spec?.volumes) {
+        delete bodyPod.spec.volumes;
+      }
+
+      if (deployUsingServices) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        bodyPod.spec?.containers?.forEach((container: any) => {
+          // UNUSED
+          // Delete all volume mounts
+          if (container.volumeMounts) {
+            delete container.volumeMounts;
+          }
+
+          // UNUSED
+          // Delete all hostPorts
+          if (container.ports) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            container.ports.forEach((port: any) => {
+              delete port.hostPort;
+            });
+          }
+        });
+      }
+
+      if (deployUsingRestrictedSecurityContext) {
+        ensureRestrictedSecurityContext(bodyPod);
+      }
+
+      // create pod
+      createdPod = await window.kubernetesCreatePod(currentNamespace, bodyPod);
+
+      // create services
+      for (const service of servicesToCreate) {
+        await window.kubernetesCreateService(currentNamespace, service);
+      }
+
+      // Create routes
+      for (const route of routesToCreate) {
+        const createdRoute = await window.openshiftCreateRoute(currentNamespace, route);
+        createdRoutes = [...createdRoutes, createdRoute];
+      }
+
+      // Create ingresses
+      for (const ingress of ingressesToCreate) {
+        await window.kubernetesCreateIngress(currentNamespace, ingress);
+      }
+
+      // Telemetry
+      await window.telemetryTrack('deployToKube', eventProperties);
+
+      // update status
+      updatePodInterval = setInterval(() => {
+        updatePod().catch((err: unknown) => console.error(`Error updating pod ${createdPod?.metadata?.name}`, err));
+      }, 2000);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // Revert back to the previous bodyPod so the user can hit deploy again
+      // we only update the bodyPod if we successfully create the pod.
+      bodyPod = previousPod;
+      await window.telemetryTrack('deployToKube', { ...eventProperties, errorMessage: error.message });
+      deployError = error;
+      deployStarted = false;
+      deployFinished = false;
+      return;
+    }
   }
 }
 
