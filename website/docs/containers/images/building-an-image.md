@@ -16,7 +16,7 @@ With Podman Desktop, you can build an image from a Containerfile on your contain
 
 #### Procedure
 
-1. Go to **<Icon icon="fa-solid fa-cloud" size="lg" /> Images**.
+1. Go to **Images** from the left navigation pane.
 1. Click **<Icon icon="fa-solid fa-cube" size="lg" /> Build an image**.
 1. On the **Build Image from Containerfile** screen
    1. **Containerfile path**: select the `Containerfile` or `Dockerfile` to build.

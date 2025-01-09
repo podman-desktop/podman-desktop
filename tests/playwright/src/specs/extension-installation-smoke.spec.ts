@@ -34,7 +34,7 @@ const RUNNING = 'RUNNING';
 const NOT_INSTALLED = 'NOT-INSTALLED';
 const DOWNLOADABLE = 'DOWNLOADABLE';
 const OPENSHIFT_LOCAL = 'Red Hat Openshift Local';
-const OPENSHIFT_SANDBOX = 'Red Hat OpenShift Sandbox';
+const OPENSHIFT_SANDBOX = 'Developer Sandbox';
 const OPENSHIFT_CHECKER = 'Red Hat Openshift Checker';
 
 let pdRunner: Runner;
@@ -137,7 +137,12 @@ for (const { extensionName, extensionType } of extentionTypes) {
 
         test('Extension is active and there are not errors', async () => {
           const extensionsPage = await navigationBar.openExtensions();
-          const extensionPage = await extensionsPage.openExtensionDetails(extensionName, extensionLabel, extensionType);
+          const extensionHeading = extensionType === OPENSHIFT_SANDBOX ? 'Red Hat OpenShift Sandbox' : extensionType;
+          const extensionPage = await extensionsPage.openExtensionDetails(
+            extensionName,
+            extensionLabel,
+            extensionHeading,
+          );
           await playExpect(extensionPage.heading).toBeVisible();
           await playExpect(extensionPage.status).toHaveText(ACTIVE);
           // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
@@ -196,7 +201,7 @@ for (const { extensionName, extensionType } of extentionTypes) {
                 await goToDashboard();
                 await playExpect(extensionDashboardProvider).toBeVisible();
                 await playExpect(extensionDashboardStatus).toBeVisible();
-                if (extensionType === 'Red Hat OpenShift Sandbox') {
+                if (extensionType === OPENSHIFT_SANDBOX) {
                   await playExpect(extensionDashboardStatus).toHaveText(RUNNING);
                 } else {
                   await playExpect(extensionDashboardStatus).toHaveText(NOT_INSTALLED);

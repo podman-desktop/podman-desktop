@@ -11,6 +11,7 @@ import LegacyTaskManagerGroup from './LegacyTaskManagerGroup.svelte';
 
 // display or not the tasks manager (defaut is false)
 export let showTaskManager = false;
+let outsideWindow: HTMLDivElement;
 
 $: runningTasks = $tasksInfo.filter(task => task.state === 'running');
 $: completedTasks = $tasksInfo.filter(task => task.state !== 'running');
@@ -35,13 +36,22 @@ function handleEscape({ key }: any) {
 window.events?.receive('toggle-legacy-task-manager', () => {
   showTaskManager = !showTaskManager;
 });
+
+function onWindowClick(e: MouseEvent): void {
+  const target = e.target as HTMLElement;
+  // Listen to anything **but** the button that has "data-task-button" attribute with a value of "Help"
+  // Ignore if task manager not visible
+  if (showTaskManager && target && target.getAttribute('data-task-button') !== 'Tasks') {
+    showTaskManager = outsideWindow?.contains(target);
+  }
+}
 </script>
 
 <!-- track keys like "ESC" -->
-<svelte:window on:keyup={handleEscape} />
+<svelte:window on:keyup={handleEscape} on:click={onWindowClick}/>
 
 {#if showTaskManager}
-  <div title="Tasks manager" class="fixed bottom-9 right-4 bg-[var(--pd-modal-bg)] h-96 w-80 z-40">
+  <div title="Tasks manager" class="fixed bottom-9 right-4 bg-[var(--pd-modal-bg)] h-96 w-80 z-40" bind:this={outsideWindow}>
     <!-- Draw the arrow below the box-->
     <div
       class="absolute bottom-0 z-50 right-[17px] transform -translate-x-1/2 translate-y-1/2 rotate-45 w-4 h-4 {$tasksInfo.length >

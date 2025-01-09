@@ -56,7 +56,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
-import type { DockerContextInfo, DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
+import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
 import type { HistoryInfo } from '/@api/history-info';
@@ -2374,14 +2374,6 @@ export function initExposure(): void {
       return ipcInvoke('docker-compatibility:getSystemDockerSocketMappingStatus');
     },
   );
-
-  contextBridge.exposeInMainWorld('getDockerContexts', async (): Promise<DockerContextInfo[]> => {
-    return ipcInvoke('docker-compatibility:listDockerContexts');
-  });
-
-  contextBridge.exposeInMainWorld('switchDockerContext', async (contextName: string): Promise<DockerContextInfo[]> => {
-    return ipcInvoke('docker-compatibility:switchDockerContext', contextName);
-  });
 
   contextBridge.exposeInMainWorld('pathRelative', async (from: string, to: string): Promise<string> => {
     return ipcInvoke('path:relative', from, to);

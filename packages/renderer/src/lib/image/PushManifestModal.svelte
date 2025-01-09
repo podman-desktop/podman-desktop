@@ -20,6 +20,7 @@ let logsPush: Terminal;
 async function pushManifest() {
   initTerminal = true;
   await tick();
+  window.dispatchEvent(new Event('resize'));
   logsPush?.reset();
 
   pushInProgress = true;
@@ -58,8 +59,8 @@ async function pushManifestFinished() {
         {/if}
       </p>
     {/if}
-    <div hidden={initTerminal === false}>
-      <TerminalWindow bind:terminal={logsPush} disableStdIn />
+    <div class="h-[185px]" hidden={initTerminal === false}>
+      <TerminalWindow class="h-full" bind:terminal={logsPush} disableStdIn />
     </div>
   </div>
 

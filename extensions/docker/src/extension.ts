@@ -21,7 +21,10 @@ import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 
+import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api';
 import { getDockerInstallation } from './docker-cli';
+import { DockerCompatibilitySetup } from './docker-compatibility-setup';
+import { DockerContextHandler } from './docker-context-handler';
 
 let stopLoop = false;
 let socketPath: string;
@@ -160,10 +163,16 @@ async function updateProvider(extensionContext: extensionApi.ExtensionContext): 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   const isWindows = os.platform() === 'win32';
   if (isWindows) {
-    socketPath = '//./pipe/docker_engine';
+    socketPath = WINDOWS_NPIPE;
   } else {
-    socketPath = '/var/run/docker.sock';
+    socketPath = UNIX_SOCKET_PATH;
   }
+
+  const dockerContextHandler = new DockerContextHandler();
+  const dockerCompatibilitySetup = new DockerCompatibilitySetup(dockerContextHandler);
+  dockerCompatibilitySetup.init().catch((err: unknown) => {
+    console.error('Error while initializing docker compatibility setup', err);
+  });
 
   // monitor daemon
   monitorDaemon(extensionContext).catch((err: unknown) => {

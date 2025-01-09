@@ -25,5 +25,27 @@
     "mkdirp": "^3.0.1",
     "vite": "^6.0.7",
     "vitest": "^2.1.6"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "docker.cli.context.onChange",
+        "title": "Callback for Docker CLI context change",
+        "category": "Docker",
+        "enablement": "false"
+      }
+    ],
+    "configuration": {
+      "title": "Docker",
+      "properties": {
+        "docker.cli.context": {
+          "type": "string",
+          "enum": [],
+          "markdownDescription": "Select the active Docker CLI context:",
+          "group": "podman-desktop.docker",
+          "scope": "DockerCompatibility"
+        }
+      }
+    }
   }
 }

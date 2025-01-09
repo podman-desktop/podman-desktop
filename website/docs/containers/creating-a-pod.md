@@ -23,7 +23,7 @@ Consider running containers in a pod to:
 
 #### Procedure
 
-1. Go to **<Icon icon="fa-solid fa-cube" size="lg" /> Containers**.
+1. Go to **Containers** from the left navigation pane.
 1. Click the checkbox in the container line for your containers, such as `database` and `frontend`.
 1. Click **<Icon icon="fa-solid fa-cubes" size="lg" />**.
 1. In the **Copy containers to a pod** screen:

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@ import { existsSync, promises } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { isWindows } from '/@/util.js';
-import type { DockerContextInfo } from '/@api/docker-compatibility-info.js';
+import { env } from '@podman-desktop/api';
 
-import { DockerCompatibility } from './docker-compatibility.js';
+import { type DockerContextInfo, UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
 
 // omit current context as it is coming from another source
 // disabling the rule as we're not only extending the interface but omitting one field
@@ -41,7 +40,7 @@ export class DockerContextHandler {
   }
 
   protected async getCurrentContext(): Promise<string> {
-    let currentContext: string = 'default';
+    let currentContext = 'default';
 
     // if $HOME/.docker/config.json exists, read it and get the current context
     const dockerConfigExists = existsSync(this.getDockerConfigPath());
@@ -66,8 +65,8 @@ export class DockerContextHandler {
   protected async getContexts(): Promise<DockerContextParsingInfo[]> {
     const contexts: DockerContextParsingInfo[] = [];
 
-    const defaultHostForWindows = `npipe://${DockerCompatibility.WINDOWS_NPIPE}`;
-    const defaultHostForMacOrLinux = `unix://${DockerCompatibility.UNIX_SOCKET_PATH}`;
+    const defaultHostForWindows = `npipe://${WINDOWS_NPIPE}`;
+    const defaultHostForMacOrLinux = `unix://${UNIX_SOCKET_PATH}`;
 
     // adds the default context
     contexts.push({
@@ -77,7 +76,7 @@ export class DockerContextHandler {
       },
       endpoints: {
         docker: {
-          host: isWindows() ? defaultHostForWindows : defaultHostForMacOrLinux,
+          host: env.isWindows ? defaultHostForWindows : defaultHostForMacOrLinux,
         },
       },
     });
@@ -166,7 +165,7 @@ export class DockerContextHandler {
     // now, write the context name to the ~/.docker/config.json file
     // read current content
     const content = await promises.readFile(this.getDockerConfigPath(), 'utf-8');
-    let config;
+    let config: { currentContext?: string };
     try {
       config = JSON.parse(content);
     } catch (error: unknown) {
@@ -174,7 +173,7 @@ export class DockerContextHandler {
     }
     // update the current context or drop the field if it is the default context
     if (contextName === 'default') {
-      delete config.currentContext;
+      config.currentContext = undefined;
     } else {
       config.currentContext = contextName;
     }

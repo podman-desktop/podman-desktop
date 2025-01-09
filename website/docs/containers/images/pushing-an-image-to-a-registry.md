@@ -18,7 +18,7 @@ With Podman Desktop, you can push an image to registries.
 
 #### Procedure
 
-1. Go to **<Icon icon="fa-solid fa-cloud" size="lg" /> Images**.
+1. Go to **Images** from the left navigation pane.
 1. On your image line, click **<Icon icon="fa-solid fa-ellipsis-v" size="lg" /> > <Icon icon="fa-solid fa-arrow-up" size="lg" />Push Image**.
 1. Select the Image tag for your registry.
 1. Click **<Icon icon="fa-solid fa-arrow-up" size="lg" />Push Image**.
