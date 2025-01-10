@@ -5,6 +5,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 
+import TerminalSearchControls from '/@/lib/ui/TerminalSearchControls.svelte';
+
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
 import { getTerminalTheme } from '../../../../main/src/plugin/terminal-theme';
 
@@ -13,6 +15,7 @@ export let convertEol: boolean | undefined = undefined;
 export let disableStdIn: boolean = true;
 export let screenReaderMode: boolean | undefined = undefined;
 export let showCursor: boolean = false;
+export let search: boolean = false;
 
 let logsXtermDiv: HTMLDivElement;
 let resizeHandler: () => void;
@@ -69,4 +72,7 @@ onDestroy(() => {
 });
 </script>
 
+{#if search && terminal}
+  <TerminalSearchControls terminal={terminal} />
+{/if}
 <div class="{$$props.class} p-[5px] pr-0 bg-[var(--pd-terminal-background)]" role="term" bind:this={logsXtermDiv}></div>

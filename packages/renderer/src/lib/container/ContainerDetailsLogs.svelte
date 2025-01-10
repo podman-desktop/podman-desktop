@@ -88,5 +88,5 @@ onDestroy(() => {
   class:h-0={noLogs === true}
   class:h-full={noLogs === false}
   bind:this={terminalParentDiv}>
-  <TerminalWindow on:init={afterTerminalInit} class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
+  <TerminalWindow search on:init={afterTerminalInit} class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
 </div>

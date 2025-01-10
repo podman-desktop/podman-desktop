@@ -32,6 +32,8 @@ vi.mock('@xterm/xterm');
 
 vi.mock('@xterm/addon-fit');
 
+vi.mock('@xterm/addon-search');
+
 beforeEach(() => {
   vi.resetAllMocks();
 });
@@ -148,4 +150,17 @@ test('matchMedia resize listener should trigger fit addon', async () => {
   listener();
 
   expect(FitAddon.prototype.fit).toHaveBeenCalled();
+});
+
+test('search props should add terminal search controls', async () => {
+  const { getByRole } = render(TerminalWindow, {
+    terminal: writable() as unknown as Terminal,
+    search: true,
+  });
+
+  const searchTextbox = getByRole('textbox', {
+    name: 'Find',
+  });
+
+  expect(searchTextbox).toBeInTheDocument();
 });

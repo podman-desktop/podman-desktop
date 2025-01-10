@@ -25,6 +25,8 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import ContainerDetailsLogs from './ContainerDetailsLogs.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
+vi.mock('@xterm/addon-search');
+
 vi.mock('@xterm/xterm', () => {
   const writeMock = vi.fn();
   return {
