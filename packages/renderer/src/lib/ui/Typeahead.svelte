@@ -40,7 +40,7 @@ let {
 
 let input: HTMLInputElement;
 let list = $state<HTMLDivElement>();
-let scrollElements: HTMLElement[] = [];
+let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
 let items: string[] = $state([]);
 let itemHeadings: { [index: number]: string[] } = $state({});
