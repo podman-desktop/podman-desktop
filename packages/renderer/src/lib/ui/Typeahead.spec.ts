@@ -314,33 +314,25 @@ test('should show error border', async () => {
 });
 
 test('should include heading based on given order and searchFunctions order', async () => {
-  const searchFunction1 = async (s: string) => {
+  const searchFunction = async (s: string) => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    return [s + '11', s + '12', s + '13', s + '14'];
+    const result1 = { values: [s + '11', s + '12', s + '13', s + '14'], group: 'searchFunction1 results' };
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const result2 = { values: [s + '21', s + '22', s + '23', s + '24'], group: 'searchFunction2 results' };
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const result3 = { values: [s + '31', s + '32', s + '33'], group: 'searchFunction3 results' };
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const result4 = { values: [s + '41', s + '42', s + '43', s + '44'] };
+
+    return [result1, result2, result3, result4];
   };
 
-  const searchFunction2 = async (s: string) => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return [s + '21', s + '22', s + '23', s + '24'];
-  };
-
-  const searchFunction3 = async (s: string) => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return [s + '31', s + '32', s + '33'];
-  };
-
-  const searchFunction4 = async (s: string) => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return [s + '41', s + '42', s + '43', s + '44'];
-  };
   render(Typeahead, {
     initialFocus: true,
-    searchFunctions: [
-      { searchFunction: searchFunction1, heading: 'searchFunction1 results' },
-      { searchFunction: searchFunction2, heading: 'searchFunction2 results' },
-      { searchFunction: searchFunction3, heading: 'searchFunction3 results' },
-      { searchFunction: searchFunction4 },
-    ],
+    onInputChange: searchFunction,
     delay: 10,
   });
 

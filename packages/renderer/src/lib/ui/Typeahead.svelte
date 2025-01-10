@@ -1,6 +1,12 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
+interface GroupItem {
+  values: string[];
+  group?: string;
+  sorted?: boolean;
+}
+
 interface Props {
   placeholder?: string;
   required?: boolean;
@@ -18,6 +24,7 @@ interface Props {
   compare?: (a: string, b: string) => number;
 }
 
+// the placeholder text displayed when no option is selected
 let {
   placeholder,
   required = false,
@@ -35,10 +42,9 @@ let {
   compare,
 }: Props = $props();
 
-let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
-let input: HTMLInputElement | undefined = $state();
-let list: HTMLDivElement | undefined = $state();
-let scrollElements: HTMLElement[] = $state([]);
+let input: HTMLInputElement;
+let list = $state<HTMLDivElement>();
+let scrollElements: HTMLElement[] = [];
 let value: string = $state('');
 let items: string[] = $derived(
   resultItems.toSorted(
@@ -54,10 +60,12 @@ let items: string[] = $derived(
       }),
   ),
 );
+let itemHeadings: { [index: number]: string[] } = $state({});
+let inputDelayTimeout: NodeJS.Timeout;
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
-let pageStep: number = $state(10);
-let userValue: string = $state('');
+let pageStep = 10;
+let userValue: string = '';
 let loading: boolean = $state(false);
 
 function onItemSelected(s: string): void {
@@ -172,7 +180,6 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
-  searchResults = [];
   loading = true;
   onInputChange?.(value)
     .then(() => {
