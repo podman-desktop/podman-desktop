@@ -1,37 +1,55 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-type SearchFunction = (s: string) => Promise<string[]>;
+interface GroupItem {
+  values: string[];
+  group?: string;
+  sorted?: boolean;
+}
 
-// the text displayed when no option is selected
-export let placeholder: string | undefined = undefined;
-export let required: boolean = false;
-export let delay: number = 200;
-export let disabled: boolean = false;
-export let initialFocus: boolean = false;
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let error: boolean = false;
-export let searchFunctions: { searchFunction: SearchFunction; heading?: string }[] = [
-  { searchFunction: async (_s: string) => [] },
-];
-export let onChange = function (_s: string) {};
-export let onEnter = function () {};
+interface Props {
+  placeholder?: string;
+  required?: boolean;
+  delay?: number;
+  disabled?: boolean;
+  initialFocus?: boolean;
+  id?: string;
+  name?: string;
+  error?: boolean;
+  className?: string;
+  onInputChange?: (s: string) => Promise<GroupItem[]>;
+  onChange?: (s: string) => void;
+  onEnter?: () => void;
+}
+
+// the placeholder text displayed when no option is selected
+let {
+  placeholder,
+  required = false,
+  delay = 200,
+  disabled = false,
+  initialFocus = false,
+  id,
+  name,
+  error = false,
+  className,
+  onInputChange = async (_s: string) => [],
+  onChange = function (_s: string) {},
+  onEnter = function () {},
+}: Props = $props();
 
 let input: HTMLInputElement;
-let list: HTMLDivElement;
+let list = $state<HTMLDivElement>();
 let scrollElements: HTMLElement[] = [];
-let value: string;
-let items: string[] = [];
-let itemHeadings: { [index: number]: string[] } = {};
-let headings: string[] = [];
-let searchResults: string[][] = [];
+let value: string = $state('');
+let items: string[] = $state([]);
+let itemHeadings: { [index: number]: string[] } = $state({});
 let inputDelayTimeout: NodeJS.Timeout;
-let opened: boolean = false;
-let highlightIndex: number = -1;
+let opened: boolean = $state(false);
+let highlightIndex: number = $state(-1);
 let pageStep = 10;
 let userValue: string = '';
-let loading: boolean = false;
+let loading: boolean = $state(false);
 
 function onItemSelected(s: string): void {
   value = s;
@@ -145,58 +163,49 @@ function makeVisible(): void {
 }
 
 function processInput(): void {
-  searchResults = [];
   loading = true;
-  for (const [index, { searchFunction, heading }] of searchFunctions.entries()) {
-    searchFunction(value)
-      .then(result => {
-        // if the component has been disabled in the meantime
-        if (disabled) {
-          return;
-        }
-        searchResults[index] = result.toSorted((a: string, b: string) => {
-          const dockerIoValue = `docker.io/${value}`;
-          const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
-          const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
-          if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
-            return a.localeCompare(b);
-          } else if (aStartsWithValue && !bStartsWithValue) {
-            return -1;
-          } else {
-            return 1;
-          }
-        });
-        if (heading) {
-          headings[index] = heading;
-        }
-      })
-      .catch(() => {
-        searchResults[index] = [];
-      })
-      .finally(() => {
-        if (searchResults.length === searchFunctions.length) {
-          updateHeadings();
-          highlightIndex = -1;
-          open();
-          loading = false;
-        }
-      });
-  }
-}
-
-function updateHeadings(): void {
   items = [];
   itemHeadings = {};
-  for (const [index, result] of searchResults.entries()) {
-    if (headings?.[index]) {
-      if (itemHeadings[items.length]) {
-        itemHeadings[items.length].push(headings[index]);
-      } else {
-        itemHeadings[items.length] = [headings[index]];
+  onInputChange(value)
+    .then(result => {
+      // if the component has been disabled in the meantime
+      if (disabled) {
+        return;
       }
-    }
-    items = items.concat(result);
-  }
+      for (let { values, group, sorted } of result) {
+        if (group) {
+          if (itemHeadings[items.length]) {
+            itemHeadings[items.length].push(group);
+          } else {
+            itemHeadings[items.length] = [group];
+          }
+        }
+
+        if (!sorted) {
+          // default sorting if the values are not already sorted
+          values = values.toSorted((a: string, b: string) => {
+            if ((a.startsWith(value) && b.startsWith(value)) || (!a.startsWith(value) && !b.startsWith(value))) {
+              return a.localeCompare(b);
+            } else if (a.startsWith(value) && !b.startsWith(value)) {
+              return -1;
+            } else {
+              return 1;
+            }
+          });
+        }
+
+        items = items.concat(values);
+      }
+      highlightIndex = -1;
+      open();
+    })
+    .catch(() => {
+      items = [];
+      itemHeadings = {};
+    })
+    .finally(() => {
+      loading = false;
+    });
 }
 
 function open(): void {
@@ -222,7 +231,7 @@ function onWindowClick(e: Event): void {
 
 <svelte:window on:click={onWindowClick} />
 <div
-  class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {$$props.class ||
+  class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {className ??
     ''}"
   class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
   class:focus-within:bg-[var(--pd-input-field-focused-bg)]={!disabled}
@@ -248,8 +257,8 @@ function onWindowClick(e: Event): void {
     disabled={disabled}
     id={id}
     name={name}
-    on:input={onInput}
-    on:keydown={onKeyDown}
+    oninput={onInput}
+    onkeydown={onKeyDown}
     use:requestFocus />
   {#if loading}
     <Spinner size="1em" />
@@ -270,8 +279,8 @@ function onWindowClick(e: Event): void {
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}
         class="p-1 text-start w-full cursor-pointer"
-        on:click={() => onItemSelected(item)}
-        on:pointerenter={() => {
+        onclick={() => onItemSelected(item)}
+        onpointerenter={() => {
           highlightIndex = i;
         }}>{item}</button>
     {/each}

@@ -245,6 +245,22 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
   isValidName = tags.some(t => t === tag);
 }
+
+async function searchFunction(value: string): Promise<{ values: string[]; group?: string; sorted?: boolean }[]> {
+  const result = (await searchImages(value)).toSorted((a: string, b: string) => {
+    const dockerIoValue = `docker.io/${value}`;
+    const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
+    const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+    if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
+      return a.localeCompare(b);
+    } else if (aStartsWithValue && !bStartsWithValue) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+  return [{ values: result, sorted: true }];
+}
 </script>
 
 <EngineFormPage
@@ -268,7 +284,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
           id="imageName"
           name="imageName"
           placeholder="Image name"
-          searchFunctions={[{searchFunction: searchImages}]}
+          onInputChange={searchFunction}
           onChange={async (s: string) => {
             validateImageName(s);
             await resolveShortname();
