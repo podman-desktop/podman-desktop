@@ -5,8 +5,7 @@ import Fa from 'svelte-fa';
 
 let resizeObserver: ResizeObserver;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let cards: any[];
+export let cards: unknown[];
 export let cardWidth = 340;
 
 let cardsFit = 1;
