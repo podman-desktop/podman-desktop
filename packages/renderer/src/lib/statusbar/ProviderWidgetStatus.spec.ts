@@ -19,20 +19,11 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
-
-// mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
 
 const providerMock = {
   name: 'provider1',
