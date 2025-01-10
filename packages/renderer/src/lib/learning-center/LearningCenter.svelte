@@ -31,7 +31,7 @@ onMount(async () => {
     <div role="region" class="mt-5">
       <div transition:fadeSlide={{ duration: 500 }}>
         <Carousel cards={guides} let:card>
-          <GuideCard guide={card} />
+          <GuideCard guide={card as Guide} />
         </Carousel>
       </div>
     </div>
