@@ -3472,8 +3472,7 @@ test('setupConnectionAPI with errors', async () => {
 
   // filter calls to find the one with container-started-event
   const containerStartedEventCalls = allCalls.filter(call => call[0] === 'container-started-event');
-  expect(containerStartedEventCalls).toHaveLength(1);
-  expect(containerStartedEventCalls[0]?.[1]).toBe(fakeId);
+  expect(containerStartedEventCalls).toHaveLength(0);
 
   stream2.end();
 
@@ -3548,8 +3547,9 @@ test('check handleEvents with loadArchive', async () => {
   } as unknown as Dockerode;
 
   const errorCallback = vi.fn();
+  const reconnectedCallabck = vi.fn();
 
-  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+  containerRegistry.handleEvents(fakeDockerode, errorCallback, reconnectedCallabck);
 
   if (eventsMockCallback) {
     eventsMockCallback?.(undefined, passThrough);
@@ -3587,8 +3587,9 @@ test('check handleEvents is not calling the console.log for health_status event'
   } as unknown as Dockerode;
 
   const errorCallback = vi.fn();
+  const reconnectedCallabck = vi.fn();
 
-  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+  containerRegistry.handleEvents(fakeDockerode, errorCallback, reconnectedCallabck);
 
   if (eventsMockCallback) {
     eventsMockCallback?.(undefined, passThrough);
