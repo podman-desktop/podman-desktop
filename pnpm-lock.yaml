@@ -247,6 +247,9 @@ importers:
       fzstd:
         specifier: ^0.1.1
         version: 0.1.1
+      get-tsconfig:
+        specifier: ^4.8.1
+        version: 4.8.1
       globals:
         specifier: ^15.14.0
         version: 15.14.0

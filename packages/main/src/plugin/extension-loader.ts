@@ -53,6 +53,7 @@ import type { Directories } from './directories.js';
 import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from './extension-loader-settings.js';
+import type { ExtensionWatcher } from './extension-watcher.js';
 import type { FilesystemMonitoring } from './filesystem-monitoring.js';
 import type { IconRegistry } from './icon-registry.js';
 import type { ImageCheckerImpl } from './image-checker.js';
@@ -141,7 +142,6 @@ export class ExtensionLoader {
 
   protected activatedExtensions = new Map<string, ActivatedExtension>();
   protected analyzedExtensions = new Map<string, AnalyzedExtension>();
-  private watcherExtensions = new Map<string, containerDesktopAPI.FileSystemWatcher>();
   private reloadInProgressExtensions = new Map<string, boolean>();
   protected extensionState = new Map<string, string>();
   protected extensionStateErrors = new Map<string, unknown>();
@@ -194,6 +194,7 @@ export class ExtensionLoader {
     private dialogRegistry: DialogRegistry,
     private safeStorageRegistry: SafeStorageRegistry,
     private certificates: Certificates,
+    private extensionWatcher: ExtensionWatcher,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -431,6 +432,13 @@ export class ExtensionLoader {
 
     // now we have all extensions, we can load them
     await this.loadExtensions(analyzedExtensions);
+
+    // handle the reload extensions callback
+    this.extensionWatcher.onNeedToReloadExtension(extension => {
+      this.reloadExtension(extension, false).catch((error: unknown) => {
+        console.error('error while reloading extension', error);
+      });
+    });
   }
 
   async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtension> {
@@ -652,8 +660,7 @@ export class ExtensionLoader {
   }
 
   protected async reloadExtension(extension: AnalyzedExtension, removable: boolean): Promise<void> {
-    const inProgress = this.reloadInProgressExtensions.get(extension.id);
-    if (inProgress) {
+    if (this.reloadInProgressExtensions.has(extension.id)) {
       return;
     }
 
@@ -673,8 +680,18 @@ export class ExtensionLoader {
     } catch (error) {
       console.error('error while reloading extension', error);
     } finally {
-      this.reloadInProgressExtensions.set(extension.id, false);
+      this.reloadInProgressExtensions.delete(extension.id);
     }
+
+    const notification = this.notificationRegistry.addNotification({
+      extensionId: extension.id,
+      type: 'info',
+      title: `Extension ${extension.manifest.displayName} has been updated`,
+    });
+    // remove the notification after few seconds
+    setTimeout(() => {
+      notification.dispose();
+    }, 2_000);
   }
 
   async loadExtension(extension: AnalyzedExtension, checkForMissingDependencies = false): Promise<void> {
@@ -754,19 +771,10 @@ export class ExtensionLoader {
 
     try {
       // in development mode, watch if the extension is updated and reload it
-      if (import.meta.env.DEV && !this.watcherExtensions.has(extension.id)) {
-        const extensionWatcher = this.fileSystemMonitoring.createFileSystemWatcher(extension.path);
-        extensionWatcher.onDidChange(async () => {
-          // wait 1 second before trying to reload the extension
-          // this is to avoid reloading the extension while it is still being updated
-          setTimeout(() => {
-            this.reloadExtension(extension, extension.removable).catch((error: unknown) =>
-              console.error('error while reloading extension', error),
-            );
-          }, 1000);
-        });
-        this.watcherExtensions.set(extension.id, extensionWatcher);
+      if (import.meta.env.DEV) {
+        await this.extensionWatcher.monitor(extension);
       }
+
       if (!this.getDisabledExtensionIds().includes(extension.id)) {
         const beforeLoadingRuntime = performance.now();
         const runtime = this.loadRuntime(extension);
@@ -1697,8 +1705,10 @@ export class ExtensionLoader {
       }
     }
 
-    const watcher = this.watcherExtensions.get(extensionId);
-    watcher?.dispose();
+    // dispose resources for a given extension only if not in a reload
+    if (!this.reloadInProgressExtensions.has(extensionId)) {
+      this.extensionWatcher.untrack(extension);
+    }
 
     const analyzedExtension = this.analyzedExtensions.get(extensionId);
     // dispose subscriptions if any
@@ -1715,6 +1725,7 @@ export class ExtensionLoader {
       Array.from(this.activatedExtensions.keys()).map(extensionId => this.deactivateExtension(extensionId)),
     );
     this.kubernetesClient.dispose();
+    this.extensionWatcher.stop();
   }
 
   async startExtension(extensionId: string): Promise<void> {

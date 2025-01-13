@@ -50,6 +50,7 @@ import type { DialogRegistry } from './dialog-registry.js';
 import type { Directories } from './directories.js';
 import type { ActivatedExtension, AnalyzedExtension, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
+import type { ExtensionWatcher } from './extension-watcher.js';
 import type { FilesystemMonitoring } from './filesystem-monitoring.js';
 import type { IconRegistry } from './icon-registry.js';
 import type { ImageCheckerImpl } from './image-checker.js';
@@ -112,6 +113,10 @@ class TestExtensionLoader extends ExtensionLoader {
 
   setAnalyzedExtension(extensionId: string, analyzedExtension: AnalyzedExtension): void {
     this.analyzedExtensions.set(extensionId, analyzedExtension);
+  }
+
+  override reloadExtension(extension: AnalyzedExtension, removable: boolean): Promise<void> {
+    return super.reloadExtension(extension, removable);
   }
 }
 
@@ -210,6 +215,7 @@ const exec = new Exec(proxy);
 
 const notificationRegistry: NotificationRegistry = {
   registerExtension: vi.fn(),
+  addNotification: vi.fn(),
 } as unknown as NotificationRegistry;
 
 const imageCheckerImpl: ImageCheckerImpl = {
@@ -251,6 +257,13 @@ const dialogRegistry: DialogRegistry = {
 } as unknown as DialogRegistry;
 
 const certificates: Certificates = {} as unknown as Certificates;
+
+const extensionWatcher = {
+  monitor: vi.fn(),
+  untrack: vi.fn(),
+  stop: vi.fn(),
+  reloadExtension: vi.fn(),
+} as unknown as ExtensionWatcher;
 
 vi.mock('electron', () => {
   return {
@@ -304,6 +317,7 @@ beforeAll(() => {
     dialogRegistry,
     safeStorageRegistry,
     certificates,
+    extensionWatcher,
   );
 });
 
@@ -1192,6 +1206,8 @@ test('check dispose when deactivating', async () => {
   // should have call the dispose method
   await extensionLoader.deactivateExtension(extensionId);
   expect(analyzedExtension.dispose).toBeCalled();
+
+  expect(extensionWatcher.untrack).toBeCalled();
 
   expect(telemetry.track).toBeCalledWith('deactivateExtension', { extensionId });
 });
@@ -2666,4 +2682,47 @@ describe('loading extension folders', () => {
       expect(folders[0]).toBe(path.join('path', 'extension1', 'packages', 'extension', 'builtin', `extension1.cdix`));
     });
   });
+});
+
+test('reload extensions', async () => {
+  const extension = {
+    path: 'fakePath',
+    manifest: {
+      displayName: 'My Extension Display Name',
+    },
+    id: 'my.extensionId',
+  } as unknown as AnalyzedExtension;
+
+  // override deactivateExtension
+  const deactivateSpy = vi.spyOn(extensionLoader, 'deactivateExtension');
+  const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+  const loadExtensionSpy = vi.spyOn(extensionLoader, 'loadExtension');
+  const analyzedExtension = {} as unknown as AnalyzedExtension;
+  analyzeExtensionSpy.mockResolvedValue(analyzedExtension);
+
+  const fakeDisposableObject = {
+    dispose: vi.fn(),
+  } as unknown as Disposable;
+  vi.mocked(notificationRegistry.addNotification).mockReturnValue(fakeDisposableObject);
+
+  // reload the extension
+  await extensionLoader.reloadExtension(extension, false);
+
+  expect(deactivateSpy).toBeCalledWith(extension.id);
+  expect(analyzeExtensionSpy).toBeCalledWith(extension.path, false);
+  expect(loadExtensionSpy).toBeCalledWith(analyzedExtension, true);
+
+  expect(vi.mocked(notificationRegistry.addNotification)).toBeCalledWith({
+    extensionId: extension.id,
+    title: 'Extension My Extension Display Name has been updated',
+    type: 'info',
+  });
+
+  // restore the spy
+  deactivateSpy.mockRestore();
+  analyzeExtensionSpy.mockRestore();
+  loadExtensionSpy.mockRestore();
+
+  // wait the notification is disposed
+  await vi.waitFor(() => expect(fakeDisposableObject.dispose).toBeCalled(), { timeout: 5_000 });
 });

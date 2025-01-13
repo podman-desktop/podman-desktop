@@ -144,6 +144,7 @@ import type {
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExtensionLoader } from './extension-loader.js';
+import { ExtensionWatcher } from './extension-watcher.js';
 import { ExtensionsCatalog } from './extensions-catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extensions-catalog/extensions-catalog-api.js';
 import { ExtensionsUpdater } from './extensions-updater/extensions-updater.js';
@@ -664,6 +665,8 @@ export class PluginSystem {
       onboardingRegistry,
     );
 
+    const extensionWatcher = new ExtensionWatcher(fileSystemMonitoring);
+
     this.extensionLoader = new ExtensionLoader(
       commandRegistry,
       menuRegistry,
@@ -700,6 +703,7 @@ export class PluginSystem {
       dialogRegistry,
       safeStorageRegistry,
       certificates,
+      extensionWatcher,
     );
     await this.extensionLoader.init();
 
