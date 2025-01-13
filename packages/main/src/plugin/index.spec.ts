@@ -20,10 +20,11 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
-import type { WebContents } from 'electron';
+import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
@@ -42,6 +43,29 @@ import { TaskManager } from './tasks/task-manager.js';
 import { Disposable } from './types/disposable.js';
 import { Deferred } from './util/deferred.js';
 import { HttpServer } from './webview/webview-registry.js';
+
+vi.mock('electron', () => {
+  return {
+    shell: {
+      openExternal: vi.fn(),
+    },
+    app: {
+      on: vi.fn(),
+      getVersion: vi.fn(),
+    },
+    clipboard: {
+      writeText: vi.fn(),
+    },
+    ipcMain: {
+      handle: vi.fn(),
+      emit: vi.fn(),
+      on: vi.fn(),
+    },
+    BrowserWindow: {
+      getAllWindows: vi.fn(),
+    },
+  };
+});
 
 let pluginSystem: TestPluginSystem;
 
@@ -65,38 +89,11 @@ webContents.send = vi.fn();
 
 const mainWindowDeferred = new Deferred<BrowserWindow>();
 
-beforeAll(() => {
-  vi.mock('electron', () => {
-    return {
-      shell: {
-        openExternal: vi.fn(),
-      },
-      app: {
-        on: vi.fn(),
-        getVersion: vi.fn(),
-      },
-      clipboard: {
-        writeText: vi.fn(),
-      },
-      ipcMain: {
-        handle: vi.fn(),
-        emit: vi.fn().mockReturnValue(true),
-        on: vi.fn(),
-      },
-      BrowserWindow: {
-        getAllWindows: vi.fn(),
-      },
-    };
-  });
-  const trayMenuMock = {} as unknown as TrayMenu;
-  pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
-});
-
 const handlers = new Map<string, any>();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  handlers.clear();
+  vi.mocked(ipcMain.emit).mockReturnValue(true);
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
@@ -113,6 +110,13 @@ beforeEach(() => {
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);
   // to avoid port conflict when tests are running on windows host
   vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
+
+  const trayMenuMock = {} as unknown as TrayMenu;
+  pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
+});
+
+afterEach(() => {
+  handlers.clear();
 });
 
 test('Should queue events until we are ready', async () => {
@@ -361,4 +365,58 @@ test('push image sends data event with error, "end" event when fails and set tas
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
   expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
+});
+
+test('buildImage should create a task', async () => {
+  vi.spyOn(TaskManager.prototype, 'createTask');
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+
+  const handler = handlers.get('container-provider-registry:buildImage');
+  expect(handler).toBeDefined();
+
+  await handler({} as unknown as IpcMainInvokeEvent);
+
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
+    title: 'Building image ',
+    action: {
+      name: 'Go to task >',
+      execute: expect.any(Function),
+    },
+  });
+});
+
+test('buildImage should create a cancellable task if cancellation token is provided', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+  const TASK_MOCK: Task = {
+    status: vi.fn(),
+    cancellable: false,
+    cancellationTokenSourceId: undefined,
+  } as unknown as Task;
+  createTaskSpy.mockReturnValue(TASK_MOCK);
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+
+  const handler = handlers.get('container-provider-registry:buildImage');
+  expect(handler).toBeDefined();
+
+  await handler(
+    {} as unknown as IpcMainInvokeEvent,
+    'containerBuildContextDirectory',
+    'relativeContainerfilePath',
+    'imageName',
+    'platform',
+    'selectedProvider',
+    0, // onDataCallbacksBuildImageId
+    55, // cancellableTokenId
+  );
+
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
+    title: 'Building image imageName',
+    action: {
+      name: 'Go to task >',
+      execute: expect.any(Function),
+    },
+  });
+
+  expect(TASK_MOCK.cancellable).toBeTruthy();
+  expect(TASK_MOCK.cancellationTokenSourceId).toBe(55);
 });
