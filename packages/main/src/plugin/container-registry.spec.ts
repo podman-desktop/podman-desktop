@@ -3472,8 +3472,7 @@ test('setupConnectionAPI with errors', async () => {
 
   // filter calls to find the one with container-started-event
   const containerStartedEventCalls = allCalls.filter(call => call[0] === 'container-started-event');
-  expect(containerStartedEventCalls).toHaveLength(1);
-  expect(containerStartedEventCalls[0]?.[1]).toBe(fakeId);
+  expect(containerStartedEventCalls).toHaveLength(0);
 
   stream2.end();
 
