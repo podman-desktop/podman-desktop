@@ -2,7 +2,7 @@ import React from 'react';
 
 function Banner(): JSX.Element {
   return (
-    <div className="w-full flex flex-row justify-center items-center py-4 bg-purple-700 overflow-hidden">
+    <div className="w-full flex flex-row justify-center items-center py-4 bg-purple-700 overflow-hidden px-5">
       <div className="bg-[#fcd34d] rounded-xl text-black px-3 py-1">NEW FEATURE</div>
       <div className="mx-3 relative text-white">
         We have a new <span className="font-bold text-lg">Podman AI Lab</span> extension!{' '}
