@@ -57,3 +57,11 @@ setTemplate(template);
     value: 'Disabled dropdown',
     disabled: true,
   }} />
+
+<Story
+  name="Multiple"
+  args={{
+    value: [],
+    label: 'select items',
+    multiple: true,
+  }} />
