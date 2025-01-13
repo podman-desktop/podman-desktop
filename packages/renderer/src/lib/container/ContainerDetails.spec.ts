@@ -55,13 +55,8 @@ const myContainer: ContainerInfo = {
 const deleteContainerMock = vi.fn();
 const getContributedMenusMock = vi.fn();
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn(), dispose: vi.fn() }),
-  };
-});
+vi.mock('@xterm/xterm');
+vi.mock('@xterm/addon-search');
 
 const getConfigurationValueMock = vi.fn().mockReturnValue(12);
 
