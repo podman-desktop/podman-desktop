@@ -1,67 +1,74 @@
 ---
 sidebar_position: 8
-title: Testcontainer with Podman
-description: Learn how to use Testcontainers with Podman and how to create basic tests using this techonology!
+title: Testcontainers with Podman
+description: Learn how to use Testcontainers with Podman and how to create basic tests using Testcontainers technology!
 keywords: [podman, containers, testcontainers]
 tags: [podman, containers, testcontainers, tests]
 ---
 
 ![plane](img/testcontainers.png)
 
-# What are Testcontainer
+# What are Testcontainers
 
-[Testcontainer](https://testcontainers.com/) is an open source library that allows you to test anything that you can create container of modules. Those modules are preconfigured dependencies such as Databses, various Cloud technologies, or Message Brookers.
+[Testcontainers](https://testcontainers.com/) is an open source library that allows you to test any containarized dependencies, such as databases, various cloud technologies, or message brokers. For ease of use the Testcontainers have many preconfigured dependencies called modules.
 
-Besides that, Testcontainer support various languages in which you can easily write your tests, such as Python, Go, Rust, Ruby, JavaScript, .NET, Java and others.
+Besides that, Testcontainers support various languages in which you can easily write your tests, such as Python, Go, Rust, Ruby, JavaScript, .NET, Java, and others.
 
 ## Common use cases with Testcontainer
 
-Thanks to container, you are able to get fresh, clean instance without any complex setup for use cases such as:
+Thanks to the container technology, you are able to get fresh, clean instance without any complex setup for use cases such as:
 
 - Data access layer integration tests
 - UI/Acceptance tests
 - Application integration tests
 
-# Setup Testcontainers with Podman
+## Setup Testcontainers with Podman
 
-First step is creating `.testcontainers.properities` file in your home directory for global congifuration, or in current directory as a local configuration. This file is the config file for your Testcontainers, in order to use Podman insted of Docker (works out of the box), you just need pass those line into the config file:
+Before we start, you need to have installed [Podman](https://podman.io/) and run it in socket listenning by running this line:
 
-```.testcontainers.properties
-testcontainers.container.runtime=podman
+```shell-session
+$ podman system service --time=0 &
 ```
 
-and exporting `DOCKER_HOST` env variable by running:
+1. Create a `.testcontainers.properties` file in your home directory for global configuration for your Testcontainers.
+2. Add the following line to the configuration file:
 
 - MacOS
 
-```shell-shession
-export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```.testcontainers.properties
+docker.host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
+docker.socket.override=/var/run/docker.sock
 ```
 
 - Linux:
 
-```shell-shession
-export DOCKER_HOST=unix://${XDG_RUNTIME_DIR}/podman/podman.sock
+```.testcontainers.properties
+docker.host=unix://${XDG_RUNTIME_DIR}/podman/podman.sock
 ```
 
-## Creating project
+> **_OPTIONAL:_** If you are running Podman in rootless mode, you have to disable Ryuk by adding this line to configuration file:
+>
+> ```.testcontainers.properties
+> ryuk.disabled=true
+> ```
 
-In this example I'm going to use Redis service and Redis module form Testcontainers. You can create project and installing all the dependencies by running those commands:
+## Creating a project
 
-- Initializing project
+This example uses the Redis service and Redis module from Testcontainers. You can create a project and install all the dependencies by following the procedure.
 
-```shell-shession
+1. Initialize a project.
+
+```shell-session
 $ npm init -y
 ```
 
-- Installing dependencies
+2. Installing dependencies.
 
-```shell-shession
+```shell-session
 $ npm install testcontainers vitest @testcontainers/redis redis --save-dev
 ```
 
-- Updating package.json file
+3. Update `package.json` file.
 
 ```package.json
 ...
@@ -71,7 +78,7 @@ $ npm install testcontainers vitest @testcontainers/redis redis --save-dev
 ...
 ```
 
-- Creating basic CRUD operations using Redis NodeJS library
+4. Create basic CRUD operations using the Redis Node.js library.
 
 ```index.ts
 import { createClient, RedisClientType } from 'redis';
@@ -113,31 +120,33 @@ export async function disconnectRedis() {
 }
 ```
 
-- Creating basic tests for CRUD operations
+5. Create basic tests for CRUD operations.
 
 ```index.spec.ts
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 import { connectRedis, deleteValue, disconnectRedis, getValue, setValue } from ".";
-import { RedisContainer } from "@testcontainers/redis";
+import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
 import { Wait } from "testcontainers";
 import { createClient } from "redis";
 
-beforeAll(() => {
-    new RedisContainer()
+let container: StartedRedisContainer;
+
+beforeAll(async () => {
+    container = await new RedisContainer()
         .withExposedPorts(6379)
         .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
         .start();
 
-    connectRedis(`redis://localhost:6379`);
+    await connectRedis(`redis://localhost:${container.getMappedPort(6379)}`);
 });
 
-afterAll(() => {
-    disconnectRedis();
+afterAll(async () => {
+    await disconnectRedis();
 });
 
 beforeEach(async () => {
     // Flushind DB and adding to Redis some values before each test
-    const client = createClient({ url:`redis://localhost:6379` });
+    const client = createClient({ url:`redis://localhost:${container.getMappedPort(6379)}` });
     await client.connect();
 
     await client.flushDb();
@@ -179,13 +188,13 @@ test("delete value on server", async () => {
 
 ## Running tests
 
-When runnig Testcontainers for a first time I hightly advice to run the tests in DEBUG mode using this command:
+When running Testcontainers for the first time, ensure that you run your tests in `DEBUG` mode by using this command:
 
-```shell-shession
+```shell-session
 $ DEBUG=testcontainers* npm test
 ```
 
-Then you should be able to see lines such as:
+Then, you should be able to see lines similar to the ones below:
 
 ```console
 testcontainers [DEBUG] Loading ".testcontainers.properties" file...
@@ -193,4 +202,8 @@ testcontainers [DEBUG] Loaded ".testcontainers.properties" file
 testcontainers [DEBUG] Found custom configuration: dockerHost: "unix:///run/user/1000//podman/podman.sock
 ```
 
-Those lines means that the config file was found by Testcontainers and that containers are using Podman engine instead of Docker.
+Those lines indicate that Testcontainers found the configuration file, and the containers are using the Podman engine instead of Docker.
+
+## Conclusion
+
+This tutorial provides a basic step-by-step walkthrough using the Testcontainers technology to run a [Redis](https://redis.io/) server with Podman. More examples can be found in the guides of [Testcontainers](https://testcontainers.com/guides/). If you encounter any problems, feel free to open an issue on Podman Desktop's [GitHub](https://github.com/podman-desktop/podman-desktop/issues).
