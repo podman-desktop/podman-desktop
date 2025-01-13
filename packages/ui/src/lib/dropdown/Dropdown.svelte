@@ -3,6 +3,8 @@ import { faCaretDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
+import Checkbox from '../checkbox/Checkbox.svelte';
+
 interface Option {
   value: unknown;
   label: string;
@@ -20,6 +22,8 @@ let {
   ariaInvalid = false,
   ariaLabel = '',
   children = undefined,
+  multiple = false,
+  label = '',
 }: {
   id?: string;
   name?: string;
@@ -31,23 +35,40 @@ let {
   ariaInvalid?: boolean | 'grammar' | 'spelling';
   ariaLabel?: string;
   children?: Snippet;
+  multiple?: boolean;
+  label?: string;
 } = $props();
 
 let opened: boolean = $state(false);
 let selectLabel: string = $state('');
+let selectLabelPlus: string | undefined = $state(undefined);
 let highlightIndex: number = $state(-1);
 let comp: HTMLElement;
 
 const pageStep: number = 10;
 
 onMount(() => {
-  if (!value && options?.length > 0) {
+  if (!multiple && !value && options?.length > 0) {
     value = options[0].value;
   }
 });
 
 $effect(() => {
-  selectLabel = options.find(o => o.value === value)?.label ?? (typeof value === 'string' ? (value as string) : '');
+  if (multiple && Array.isArray(value)) {
+    selectLabelPlus = undefined;
+    if (!value.length) {
+      selectLabel = label;
+    }
+    const firstValueLabel = options.find(o => Array.isArray(value) && o.value === value[0])?.label ?? '';
+    if (value.length >= 1) {
+      selectLabel = firstValueLabel;
+    }
+    if (value.length > 1) {
+      selectLabelPlus = `+${value.length - 1}`;
+    }
+  } else {
+    selectLabel = options.find(o => o.value === value)?.label ?? (typeof value === 'string' ? (value as string) : '');
+  }
 });
 
 function onKeyDown(e: KeyboardEvent): void {
@@ -131,15 +152,28 @@ function onEnter(i: number): void {
 }
 
 function onSelect(e: Event, newValue: unknown): void {
-  onChange(newValue);
-  value = newValue;
-  close();
-  e.preventDefault();
+  if (multiple) {
+    if (Array.isArray(value)) {
+      if (value.includes(newValue)) {
+        value = value.filter(v => v !== newValue);
+      } else {
+        value = [...value, newValue];
+      }
+    }
+    onChange(value);
+  } else {
+    onChange(newValue);
+    value = newValue;
+    close();
+    e.preventDefault();
+  }
 }
 
 function toggleOpen(e: Event): void {
   if (opened) {
-    close();
+    if (!multiple) {
+      close();
+    }
   } else {
     open();
   }
@@ -200,7 +234,12 @@ function onWindowClick(e: Event): void {
     name={name}
     onclick={toggleOpen}
     onkeydown={onKeyDown}>
-    <span class="grow">{selectLabel}</span>
+    <span class="grow">
+      {selectLabel}
+      {#if selectLabelPlus}
+        <span class="text-xs opacity-70">{selectLabelPlus}</span>
+      {/if}
+    </span>
     <div
       class:text-[var(--pd-input-field-stroke)]={!disabled}
       class:text-[var(--pd-input-field-disabled-text)]={!disabled}
@@ -213,19 +252,28 @@ function onWindowClick(e: Event): void {
     <div
       class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap">
       {#each options as option, i}
-        <button
-          onkeydown={onKeyDown}
-          onmouseenter={(): void => onEnter(i)}
-          onclick={(e): void => onSelect(e, option.value)}
-          class="flex flex-row w-full select-none px-2 py-1 items-center text-start"
-          class:autofocus={i === 0}
-          class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
-          class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
-          <div class="min-w-4 max-w-4">
-            {#if option.value === value}<Fa icon={faCheck} />{/if}
-          </div>
-          <div class="grow">{option.label}</div>
-        </button>
+        {#if multiple}
+          
+        <Checkbox
+          class={'px-2 py-1' + (highlightIndex === i ? ' bg-[var(--pd-dropdown-item-hover-bg)] text-[var(--pd-dropdown-item-hover-text)]' : '')}
+          on:click={(): void => onSelect({} as Event, option.value)}
+          checked={Array.isArray(value) && value.includes(option.value)}
+        >{option.label}</Checkbox>
+        {:else}
+          <button
+            onkeydown={onKeyDown}
+            onmouseenter={(): void => onEnter(i)}
+            onclick={(e): void => onSelect(e, option.value)}
+            class="flex flex-row w-full select-none px-2 py-1 items-center text-start"
+            class:autofocus={i === 0}
+            class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
+            class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
+            <div class="min-w-4 max-w-4">
+              {#if option.value === value}<Fa icon={faCheck} />{/if}
+            </div>
+            <div class="grow">{option.label}</div>
+          </button>
+        {/if}
       {/each}
     </div>
   {/if}
