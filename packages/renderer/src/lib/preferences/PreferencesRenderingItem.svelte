@@ -1,9 +1,10 @@
 <script lang="ts">
 import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
-import { Link } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
+import Badge from '/@/lib/ui/Badge.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
@@ -69,7 +70,7 @@ function openGitHubDiscussion(): void {
 }
 </script>
 
-<div class="flex flex-col px-2 py-2 w-full text-[color:var(--pd-invert-content-card-text)] space-y-2">
+<div class="flex flex-col px-2 py-2 w-full text-[color:var(--pd-invert-content-card-text)] space-y-4">
   <div class="flex flex-row justify-between">
     <div
       class="flex flex-col {recordUI.original.type === 'string' &&
@@ -77,10 +78,13 @@ function openGitHubDiscussion(): void {
       ? 'w-full'
       : ''}">
       <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
-        <div class="flex flex-row space-x-1 items-center">
-          <span>{recordUI.title}</span>
-          {#if record.experimental?.githubDiscussionLink !== undefined}
-            <Fa title="experimental" size="xs" icon={faFlask}/>
+        <div class="flex flex-row space-x-2 items-center">
+          <span class="font-semibold">{recordUI.title}</span>
+          {#if record.experimental !== undefined}
+            <Badge class="text-[8px] flex flex-row space-x-1 items-center" label="Experimental" >
+              <Fa title="experimental" size="xs" icon={faFlask}/>
+              <span>Experimental</span>
+            </Badge>
           {/if}
         </div>
         {#if showResetButton}
@@ -115,11 +119,12 @@ function openGitHubDiscussion(): void {
     {/if}
   </div>
   {#if record.experimental?.githubDiscussionLink !== undefined}
-    <Link aria-label="GitHub discussion link" on:click={openGitHubDiscussion} class="flex flex-row space-x-1 w-min items-center">
-      <span class="text-nowrap text-sm">
-        Join discussion on GitHub
-      </span>
-      <Fa icon={faArrowUpRightFromSquare}/>
-    </Link>
+    <Button
+      padding="px-3 py-1"
+      class="w-min"
+      title="Share feedback on GitHub discussion"
+      icon={faArrowUpRightFromSquare}
+      on:click={openGitHubDiscussion}
+    >Share feedback</Button>
   {/if}
 </div>

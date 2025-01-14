@@ -49,7 +49,7 @@ test('experimental record should have clickable GitHub link', async () => {
   });
 
   const link: HTMLElement = await vi.waitFor(() => {
-    const element = getByRole('link', { name: 'GitHub discussion link' });
+    const element = getByRole('button', { name: 'Share feedback' });
     expect(element).toBeInTheDocument();
     return element;
   });
