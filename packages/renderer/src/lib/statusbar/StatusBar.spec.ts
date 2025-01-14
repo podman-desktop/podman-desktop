@@ -16,13 +16,34 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import '@testing-library/jest-dom/vitest';
+
+import type { ProviderStatus } from '@podman-desktop/api';
 import { render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import StatusBar from '/@/lib/statusbar/StatusBar.svelte';
+import { providerInfos } from '/@/stores/providers';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { tasksInfo } from '/@/stores/tasks';
+import type { ProviderInfo } from '/@api/provider-info';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
+
+const providerMock1 = {
+  name: 'provider1',
+  containerConnections: [{}],
+  kubernetesConnections: [],
+  status: 'ready' as ProviderStatus,
+  images: {},
+} as unknown as ProviderInfo;
+
+const providerMock2 = {
+  name: 'provider2',
+  containerConnections: [],
+  kubernetesConnections: [{}],
+  status: 'ready' as ProviderStatus,
+  images: {},
+} as unknown as ProviderInfo;
 
 beforeEach(() => {
   (window.getConfigurationValue as unknown) = vi.fn();
@@ -39,14 +60,21 @@ beforeEach(() => {
       cancellable: false,
     },
   ]);
+
+  providerInfos.set([providerMock1, providerMock2]);
 });
 
-test('onMount should call getConfigurationValue', () => {
+test('onMount should call getConfigurationValue', async () => {
   render(StatusBar);
 
-  expect(window.getConfigurationValue).toHaveBeenCalledWith(
+  await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(2));
+
+  expect(window.getConfigurationValue).nthCalledWith(
+    1,
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
+
+  expect(window.getConfigurationValue).nthCalledWith(2, `statusbarProviders.showProviders`);
 });
 
 test('tasks should be visible when getConfigurationValue is true', async () => {
@@ -67,4 +95,26 @@ test('tasks should not be visible when getConfigurationValue is false', () => {
   const { queryByRole } = render(StatusBar);
   const status = queryByRole('status');
   expect(status).toBeNull();
+});
+
+test('providers should be visible when getConfigurationValue is true', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+  const { getByLabelText, queryByLabelText } = render(StatusBar);
+  await vi.waitFor(() => expect(getByLabelText('provider1')).toBeInTheDocument());
+
+  await vi.waitFor(() => {
+    const provider1 = queryByLabelText('provider1');
+    const provider2 = queryByLabelText('provider2');
+    expect(provider1).toBeInTheDocument();
+    expect(provider2).not.toBeInTheDocument();
+  });
+});
+
+test('providers should not be visible when getConfigurationValue is false', () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+
+  const { queryByLabelText } = render(StatusBar);
+  const provider1 = queryByLabelText('provider1');
+  expect(provider1).toBeNull();
 });

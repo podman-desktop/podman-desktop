@@ -31,7 +31,6 @@ export class StatusbarProvidersInit {
           description: 'Show providers in statusbar',
           type: 'boolean',
           default: import.meta.env.DEV ? true : false,
-          hidden: true,
         },
       },
     };
