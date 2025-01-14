@@ -177,6 +177,8 @@ describe.each([
       Object.defineProperty(global, 'window', {
         value: {
           getConfigurationValue: vi.fn(),
+          telemetryTrack: vi.fn(),
+          kubernetesRefreshContextState: vi.fn(),
         },
       });
       vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
@@ -300,14 +302,9 @@ test('Connecting for a context calls window.kubernetesRefreshContextState with c
 
   const button = within(context1).getByText('Connect');
 
-  const telemetryTrackMock = vi.fn();
-  (window as any).telemetryTrack = telemetryTrackMock;
-
-  const kubernetesRefreshContextStateMock = vi.fn();
-  (window as any).kubernetesRefreshContextState = kubernetesRefreshContextStateMock;
-  kubernetesRefreshContextStateMock.mockResolvedValue(undefined);
+  vi.mocked(window.kubernetesRefreshContextState).mockResolvedValue(undefined);
   await fireEvent.click(button);
-  expect(kubernetesRefreshContextStateMock).toHaveBeenCalledWith('context-name');
+  expect(window.kubernetesRefreshContextState).toHaveBeenCalledWith('context-name');
 });
 
 test('Connecting for a context sends telemetry', async () => {
@@ -319,12 +316,7 @@ test('Connecting for a context sends telemetry', async () => {
 
   const button = within(context2).getByText('Connect');
 
-  const telemetryTrackMock = vi.fn();
-  (window as any).telemetryTrack = telemetryTrackMock;
-
-  const kubernetesRefreshContextStateMock = vi.fn();
-  (window as any).kubernetesRefreshContextState = kubernetesRefreshContextStateMock;
-  kubernetesRefreshContextStateMock.mockResolvedValue(undefined);
+  vi.mocked(window.kubernetesRefreshContextState).mockResolvedValue(undefined);
   await fireEvent.click(button);
-  expect(telemetryTrackMock).toHaveBeenCalledWith('kubernetes.monitoring.start.non-current');
+  expect(window.telemetryTrack).toHaveBeenCalledWith('kubernetes.monitoring.start.non-current');
 });
