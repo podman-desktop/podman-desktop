@@ -24,9 +24,10 @@ import { Emitter } from './events/emitter.js';
 import type { ActivatedExtension, AnalyzedExtension } from './extension-loader.js';
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';
 import type { FilesystemMonitoring } from './filesystem-monitoring.js';
+import type { IDisposable } from './types/disposable.js';
 
 // In charge of watching the extension and reloading it when it changes
-export class ExtensionWatcher {
+export class ExtensionWatcher implements IDisposable {
   #watcherExtensions: Map<string, FileSystemWatcher>;
 
   #reloadExtensionTimeouts: Map<string, NodeJS.Timeout>;
@@ -109,7 +110,7 @@ export class ExtensionWatcher {
     this.#watcherExtensions.delete(extension.id);
   }
 
-  stop(): void {
+  dispose(): void {
     // dispose all watchers
     for (const watcher of this.#watcherExtensions.values()) {
       watcher.dispose();

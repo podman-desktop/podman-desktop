@@ -183,9 +183,9 @@ describe('untrack', () => {
   });
 });
 
-test('stop', async () => {
+test('dispose', async () => {
   await extensionWatcher.monitor(fakeAnalyzedExtension);
-  extensionWatcher.stop();
+  extensionWatcher.dispose();
 
   expect(fileSystemDisposeMock).toHaveBeenCalled();
 });
