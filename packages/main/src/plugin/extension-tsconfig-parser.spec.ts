@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { existsSync } from 'node:fs';
+import { sep } from 'node:path';
 
 import type { FileMatcher, TsConfigResult } from 'get-tsconfig';
 import { createFilesMatcher, getTsconfig } from 'get-tsconfig';
@@ -38,7 +39,7 @@ test('no tsconfig.json file means it returns undefined', async () => {
 
   const result = await extensionTypeScriptConfigParser.analyze();
 
-  expect(existsSync).toHaveBeenCalledWith(expect.stringContaining('fakePath/tsconfig.json'));
+  expect(existsSync).toHaveBeenCalledWith(expect.stringContaining(`fakePath${sep}tsconfig.json`));
   expect(vi.mocked(getTsconfig)).not.toHaveBeenCalled();
   expect(result).toBe(undefined);
 });
@@ -54,7 +55,7 @@ test('with a tsconfig.json file means it returns undefined', async () => {
   vi.mocked(createFilesMatcher).mockReturnValue(fakeFilesMatcher);
 
   const result = await extensionTypeScriptConfigParser.analyze();
-  expect(existsSync).toHaveBeenCalledWith(expect.stringContaining('fakePath/tsconfig.json'));
+  expect(existsSync).toHaveBeenCalledWith(expect.stringContaining(`fakePath${sep}tsconfig.json`));
 
   // check we called the getTsconfig function
   expect(vi.mocked(getTsconfig)).toHaveBeenCalled();
