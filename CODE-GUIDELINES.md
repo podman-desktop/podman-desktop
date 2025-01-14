@@ -40,7 +40,15 @@ test('...', () => {
 
 ### Mock complete modules, spy on parts of module for specific tests
 
-To reduce as much as possible the coverage of the test to the module you are testing, mock completely the imported modules, with `vi.mock('/path/to/module)`, and define mock implementation for each test with `vi.mocked(function).mock...()`.
+When testing a module, you have to decide for each imported module if you mock the entire module or if you spy on specific functions of the module
+for specific tests and keep the real implementation for the other functions.
+
+System modules (`node:fs`, etc) are most generally mocked, so you are sure that unit tests are executed in isolation of the system. For internal modules,
+it's up to you to decide if you want to mock them or not, depending on the coverage you want for the unit tests.
+
+#### Mock a complete module
+
+Mock completely an imported module with `vi.mock('/path/to/module)`, and define mock implementation for each test with `vi.mocked(function).mock...()`.
 
 Use `vi.resetAllMocks()` in the top-level `beforeEach` to reset all mocks to a no-op function returning `undefined` before to start each test.
 
@@ -84,23 +92,31 @@ test('file existence is not defined', () => {
 });
 ```
 
-When you want to mock only one or a small number of functions of a module (for example a function of the module you are testing) for a particular test, you can use `vi.spyOn(module, 'function')` to mock only `function` and keep the original implementation for the rest of the module.
+#### Spy on a function for a specifc test
+
+When you want to mock only one or a small number of functions of a module (for example a function of the module you are testing, or a function of an helper module from which you want to use real implementation for some functions) for a particular test, you can use `vi.spyOn(module, 'function')` to mock only `function` and keep the original implementation for the rest of the module.
 
 To be sure that the spied function is restored to its original implementation for the other tests, use `vi.mocked(function).mockRestore()` in the `afterEach` of the tests declaring this spy.
 
 ```ts
+// helpers.ts
+export function f1(): boolean {
+  return true;
+}
+
 // mymodule.ts
-class MyModuleToTest {
-  f1(): boolean {
-    return true;
-  }
+import { f1 } from './helpers.js';
+
+export class MyModuleToTest {
   f2(): boolean {
-    return this.f1();
+    return f1();
   }
 }
 
 // mymodule.spec.ts
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MyModuleToTest } from './mymodule.js';
+import * as helpers from './helpers.js';
 
 let myModuleToTest: MyModuleToTest;
 
@@ -110,17 +126,17 @@ beforeEach(() => {
 
 describe('f1 returns false', () => {
   beforeEach(() => {
-    vi.spyOn(myModuleToTest, 'f1').mockReturnValue(false);
+    vi.spyOn(helpers, 'f1').mockReturnValue(false);
   });
 
   afterEach(() => {
     // restore f1 to its original implementation
-    vi.mocked(myModuleToTest.f1).mockRestore();
+    vi.mocked(helpers.f1).mockRestore();
   });
 
   test('f2 returns false', () => {
     expect(myModuleToTest.f2()).toBeFalsy();
-    expect(myModuleToTest.f1).toHaveBeenCalledOnce();
+    expect(helpers.f1).toHaveBeenCalledOnce();
   });
 });
 
@@ -128,6 +144,6 @@ test('f2 returns true', () => {
   // use the original implementation of f1
   expect(myModuleToTest.f2()).toBeTruthy();
   // this won't work, as f1 is not spied for this test
-  // expect(myModuleToTest.f1).toHaveBeenCalledOnce();
+  // expect(helpers.f1).toHaveBeenCalledOnce();
 });
 ```
