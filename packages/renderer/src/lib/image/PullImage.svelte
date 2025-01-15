@@ -17,6 +17,12 @@ import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
+interface GroupItem {
+  values: string[];
+  group?: string;
+  sorted?: boolean;
+}
+
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
@@ -28,6 +34,7 @@ let shortnameImages: string[] = [];
 let podmanFQN = '';
 let usePodmanFQN = false;
 let isValidName = true;
+let values: GroupItem[] = [];
 
 export let imageToPull: string | undefined = undefined;
 
@@ -246,12 +253,12 @@ function checkIfTagExist(image: string, tags: string[]): void {
   isValidName = tags.some(t => t === tag);
 }
 
-async function searchFunction(value: string): Promise<{ values: string[]; group?: string; sorted?: boolean }[]> {
+async function searchFunction(value: string): Promise<void> {
   const result = (await searchImages(value)).toSorted((a: string, b: string) => {
     const dockerIoValue = `docker.io/${value}`;
     const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
     const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
-    if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
+    if (aStartsWithValue === bStartsWithValue) {
       return a.localeCompare(b);
     } else if (aStartsWithValue && !bStartsWithValue) {
       return -1;
@@ -259,7 +266,7 @@ async function searchFunction(value: string): Promise<{ values: string[]; group?
       return 1;
     }
   });
-  return [{ values: result, sorted: true }];
+  values = [{ values: result, sorted: true }];
 }
 </script>
 
@@ -284,6 +291,7 @@ async function searchFunction(value: string): Promise<{ values: string[]; group?
           id="imageName"
           name="imageName"
           placeholder="Image name"
+          values={values}
           onInputChange={searchFunction}
           onChange={async (s: string) => {
             validateImageName(s);

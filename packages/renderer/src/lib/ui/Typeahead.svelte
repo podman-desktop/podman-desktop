@@ -17,7 +17,8 @@ interface Props {
   name?: string;
   error?: boolean;
   className?: string;
-  onInputChange?: (s: string) => Promise<GroupItem[]>;
+  values?: GroupItem[];
+  onInputChange?: (s: string) => Promise<void>;
   onChange?: (s: string) => void;
   onEnter?: () => void;
 }
@@ -33,9 +34,10 @@ let {
   name,
   error = false,
   className,
-  onInputChange = async (_s: string) => [],
-  onChange = function (_s: string) {},
-  onEnter = function () {},
+  values = [],
+  onInputChange,
+  onChange,
+  onEnter,
 }: Props = $props();
 
 let input: HTMLInputElement;
@@ -56,12 +58,12 @@ function onItemSelected(s: string): void {
   userValue = s;
   input.focus();
   close();
-  onChange(s);
+  onChange?.(s);
 }
 
 function onInput(): void {
   userValue = value;
-  onChange(value);
+  onChange?.(value);
   clearTimeout(inputDelayTimeout);
   inputDelayTimeout = setTimeout(processInput, delay);
 }
@@ -87,7 +89,7 @@ function onKeyDown(e: KeyboardEvent): void {
       onEnterKey(e);
       break;
   }
-  onChange(value);
+  onChange?.(value);
 }
 
 function onUpKey(e: KeyboardEvent): void {
@@ -150,7 +152,7 @@ function onEnterKey(e: KeyboardEvent): void {
     e.stopPropagation();
   } else {
     close();
-    onEnter();
+    onEnter?.();
   }
 }
 
@@ -162,12 +164,14 @@ function makeVisible(): void {
   });
 }
 
+console.log(values.length);
+
 function processInput(): void {
   loading = true;
   items = [];
   itemHeadings = {};
-  onInputChange(value)
-    .then(result => {
+  onInputChange?.(value)
+    .then(() => {
       // if the component has been disabled in the meantime
       if (disabled) {
         return;
