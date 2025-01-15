@@ -20,14 +20,18 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
 import { render } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import StatusBar from '/@/lib/statusbar/StatusBar.svelte';
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { tasksInfo } from '/@/stores/tasks';
 import type { ProviderInfo } from '/@api/provider-info';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
+
+const callbacks = new Map<string, (arg: unknown) => void>();
 
 const providerMock1 = {
   name: 'provider1',
@@ -46,7 +50,10 @@ const providerMock2 = {
 } as unknown as ProviderInfo;
 
 beforeEach(() => {
-  (window.getConfigurationValue as unknown) = vi.fn();
+  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
+  onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
+    callbacks.set(message, callback);
+  });
 
   // reset stores
   statusBarEntries.set([]);
@@ -100,8 +107,8 @@ test('tasks should not be visible when getConfigurationValue is false', () => {
 test('providers should be visible when getConfigurationValue is true', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  const { getByLabelText, queryByLabelText } = render(StatusBar);
-  await vi.waitFor(() => expect(getByLabelText('provider1')).toBeInTheDocument());
+  const { queryByLabelText } = render(StatusBar);
+  await tick();
 
   await vi.waitFor(() => {
     const provider1 = queryByLabelText('provider1');
@@ -115,6 +122,50 @@ test('providers should not be visible when getConfigurationValue is false', () =
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
   const { queryByLabelText } = render(StatusBar);
+  const provider1 = queryByLabelText('provider1');
+  expect(provider1).toBeNull();
+});
+
+test('providers should show up when configuration changes from false to true', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  const { queryByLabelText } = render(StatusBar);
+  await tick();
+
+  const provider1 = queryByLabelText('provider1');
+  expect(provider1).toBeNull();
+
+  callbacks.get(`statusbarProviders.showProviders`)?.({
+    detail: { key: `statusbarProviders.showProviders`, value: true },
+  });
+
+  await tick();
+
+  await vi.waitFor(() => {
+    const provider1 = queryByLabelText('provider1');
+    const provider2 = queryByLabelText('provider2');
+    expect(provider1).toBeInTheDocument();
+    expect(provider2).not.toBeInTheDocument();
+  });
+});
+
+test('providers are hidden when configuration changes from true to false', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(false);
+  vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(true);
+  const { queryByLabelText } = render(StatusBar);
+
+  await vi.waitFor(() => {
+    const provider1 = queryByLabelText('provider1');
+    const provider2 = queryByLabelText('provider2');
+    expect(provider1).toBeInTheDocument();
+    expect(provider2).not.toBeInTheDocument();
+  });
+
+  callbacks.get(`statusbarProviders.showProviders`)?.({
+    detail: { key: `statusbarProviders.showProviders`, value: false },
+  });
+
+  await tick();
+
   const provider1 = queryByLabelText('provider1');
   expect(provider1).toBeNull();
 });

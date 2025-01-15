@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 
 import TaskIndicator from '/@/lib/statusbar/TaskIndicator.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
@@ -11,8 +11,6 @@ import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statu
 import ProviderWidget from './ProviderWidget.svelte';
 import StatusBarItem from './StatusBarItem.svelte';
 
-onDidChangeConfiguration.addEventListener(`statusbarProviders.showProviders`, onDidChangeConfigurationCallback);
-
 let leftEntries: StatusBarEntry[] = $state([]);
 let rightEntries: StatusBarEntry[] = $state([]);
 
@@ -22,10 +20,14 @@ let experimentalTaskStatusBar: boolean = $state(false);
 let experimentalProvidersStatusBar: boolean = $state(false);
 
 function onDidChangeConfigurationCallback(e: Event): void {
-  if ('detail' in e) {
+  if (!('detail' in e) || !e.detail || typeof e.detail !== 'object') {
+    return;
+  }
+  if ('key' in e.detail && 'value' in e.detail) {
     const detail = e.detail as { key: string; value: boolean };
     if (`statusbarProviders.showProviders` === detail?.key) {
       experimentalProvidersStatusBar = detail.value;
+      console.log('>>>> new value: ' + experimentalProvidersStatusBar);
     }
   }
 }
@@ -74,6 +76,12 @@ onMount(async () => {
 
   experimentalProvidersStatusBar =
     (await window.getConfigurationValue<boolean>('statusbarProviders.showProviders')) ?? false;
+
+  onDidChangeConfiguration.addEventListener(`statusbarProviders.showProviders`, onDidChangeConfigurationCallback);
+});
+
+onDestroy(() => {
+  onDidChangeConfiguration.removeEventListener(`statusbarProviders.showProviders`, onDidChangeConfigurationCallback);
 });
 </script>
 
