@@ -21,7 +21,7 @@ import { release } from 'node:os';
 import { shell } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ExtensionLoader } from '/@/plugin/extension-loader.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';

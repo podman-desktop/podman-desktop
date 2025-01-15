@@ -23,12 +23,12 @@ import type { IpcMain, IpcMainEvent } from 'electron';
 import { ipcMain } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { AnalyzedExtension, ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import type { Directories } from '../directories.js';
-import type { AnalyzedExtension, ExtensionLoader } from '../extension-loader.js';
 import type { ExtensionsCatalog } from '../extensions-catalog/extensions-catalog.js';
 import type { CatalogFetchableExtension } from '../extensions-catalog/extensions-catalog-api.js';
 import type { ImageRegistry } from '../image-registry.js';

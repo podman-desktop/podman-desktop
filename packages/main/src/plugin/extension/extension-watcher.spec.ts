@@ -20,9 +20,9 @@ import type { FileSystemWatcher } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { ActivatedExtension, AnalyzedExtension } from './extension-loader.js';
 import { ExtensionWatcher } from './extension-watcher.js';
-import type { FilesystemMonitoring } from './filesystem-monitoring.js';
 
 vi.mock('get-tsconfig');
 

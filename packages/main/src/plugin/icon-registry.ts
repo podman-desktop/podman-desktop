@@ -18,12 +18,12 @@
 
 import { join } from 'node:path';
 
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
 import type { FontDefinition } from '/@api/font-info.js';
 import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
 
 import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
-import type { AnalyzedExtension } from './extension-loader.js';
 
 export class IconRegistry {
   private icons: Map<string, IconDefinition>;

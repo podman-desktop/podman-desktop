@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionLoader } from '/@/plugin/extension-loader.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
 
 import { featured as featuredJSONFile } from '../../../../../featured.json';

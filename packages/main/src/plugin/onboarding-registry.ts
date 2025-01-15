@@ -19,11 +19,11 @@
 
 import * as path from 'node:path';
 
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
 import type { Onboarding, OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
 
 import { getBase64Image } from '../util.js';
 import type { Context } from './context/context.js';
-import type { AnalyzedExtension } from './extension-loader.js';
 import { Disposable } from './types/disposable.js';
 
 export class OnboardingRegistry {

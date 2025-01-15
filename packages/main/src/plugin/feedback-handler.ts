@@ -18,7 +18,7 @@
 
 import { shell } from 'electron';
 
-import type { ExtensionLoader } from '/@/plugin/extension-loader.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { SystemInfo } from '/@/plugin/util/sys-info.js';
 import { getSystemInfo } from '/@/plugin/util/sys-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';

@@ -19,12 +19,12 @@
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
 
-import type { Event } from './events/emitter.js';
-import { Emitter } from './events/emitter.js';
+import type { Event } from '../events/emitter.js';
+import { Emitter } from '../events/emitter.js';
+import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import type { IDisposable } from '../types/disposable.js';
 import type { ActivatedExtension, AnalyzedExtension } from './extension-loader.js';
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';
-import type { FilesystemMonitoring } from './filesystem-monitoring.js';
-import type { IDisposable } from './types/disposable.js';
 
 // In charge of watching the extension and reloading it when it changes
 export class ExtensionWatcher implements IDisposable {

@@ -21,7 +21,7 @@ import { app } from 'electron';
 import { coerce, satisfies } from 'semver';
 
 import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
-import type { ExtensionLoader } from '/@/plugin/extension-loader.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionsCatalog } from '/@/plugin/extensions-catalog/extensions-catalog.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';

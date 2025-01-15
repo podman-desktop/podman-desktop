@@ -18,6 +18,7 @@
 
 import type * as extensionApi from '@podman-desktop/api';
 
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
@@ -26,7 +27,6 @@ import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { AnalyzedExtension } from './extension-loader.js';
 import { Disposable } from './types/disposable.js';
 
 export class ColorRegistry {

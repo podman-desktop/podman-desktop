@@ -19,9 +19,10 @@
 import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ExtensionLoaderSettings } from '/@/plugin/extension/extension-loader-settings.js';
+
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
-import { ExtensionLoaderSettings } from './plugin/extension-loader-settings.js';
 
 const configurationRegistry = {
   getConfiguration: vi.fn(),

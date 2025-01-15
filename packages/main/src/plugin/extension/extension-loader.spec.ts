@@ -36,45 +36,45 @@ import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import { getBase64Image } from '../util.js';
-import type { ApiSenderType } from './api.js';
-import type { AuthenticationImpl } from './authentication.js';
-import type { CliToolRegistry } from './cli-tool-registry.js';
-import type { ColorRegistry } from './color-registry.js';
-import type { CommandRegistry } from './command-registry.js';
-import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { ContainerProviderRegistry } from './container-registry.js';
-import { Context } from './context/context.js';
-import type { CustomPickRegistry } from './custompick/custompick-registry.js';
-import type { DialogRegistry } from './dialog-registry.js';
-import type { Directories } from './directories.js';
+import { getBase64Image } from '../../util.js';
+import type { ApiSenderType } from '../api.js';
+import type { AuthenticationImpl } from '../authentication.js';
+import type { CliToolRegistry } from '../cli-tool-registry.js';
+import type { ColorRegistry } from '../color-registry.js';
+import type { CommandRegistry } from '../command-registry.js';
+import type { ConfigurationRegistry } from '../configuration-registry.js';
+import type { ContainerProviderRegistry } from '../container-registry.js';
+import { Context } from '../context/context.js';
+import type { CustomPickRegistry } from '../custompick/custompick-registry.js';
+import type { DialogRegistry } from '../dialog-registry.js';
+import type { Directories } from '../directories.js';
+import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import type { IconRegistry } from '../icon-registry.js';
+import type { ImageCheckerImpl } from '../image-checker.js';
+import type { ImageFilesRegistry } from '../image-files-registry.js';
+import type { ImageRegistry } from '../image-registry.js';
+import type { InputQuickPickRegistry } from '../input-quickpick/input-quickpick-registry.js';
+import type { KubernetesClient } from '../kubernetes/kubernetes-client.js';
+import type { MenuRegistry } from '../menu-registry.js';
+import type { MessageBox } from '../message-box.js';
+import type { OnboardingRegistry } from '../onboarding-registry.js';
+import type { ProviderRegistry } from '../provider-registry.js';
+import type { Proxy } from '../proxy.js';
+import type { ExtensionSecretStorage, SafeStorageRegistry } from '../safe-storage/safe-storage-registry.js';
+import type { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
+import type { NotificationRegistry } from '../tasks/notification-registry.js';
+import { type ProgressImpl, ProgressLocation } from '../tasks/progress-impl.js';
+import type { Telemetry } from '../telemetry/telemetry.js';
+import type { TrayMenuRegistry } from '../tray-menu-registry.js';
+import type { IDisposable } from '../types/disposable.js';
+import { Disposable } from '../types/disposable.js';
+import { Uri } from '../types/uri.js';
+import { Exec } from '../util/exec.js';
+import type { ViewRegistry } from '../view-registry.js';
 import type { ActivatedExtension, AnalyzedExtension, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
 import { ExtensionLoaderSettings } from './extension-loader-settings.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
-import type { FilesystemMonitoring } from './filesystem-monitoring.js';
-import type { IconRegistry } from './icon-registry.js';
-import type { ImageCheckerImpl } from './image-checker.js';
-import type { ImageFilesRegistry } from './image-files-registry.js';
-import type { ImageRegistry } from './image-registry.js';
-import type { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
-import type { KubernetesClient } from './kubernetes/kubernetes-client.js';
-import type { MenuRegistry } from './menu-registry.js';
-import type { MessageBox } from './message-box.js';
-import type { OnboardingRegistry } from './onboarding-registry.js';
-import type { ProviderRegistry } from './provider-registry.js';
-import type { Proxy } from './proxy.js';
-import type { ExtensionSecretStorage, SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
-import type { StatusBarRegistry } from './statusbar/statusbar-registry.js';
-import type { NotificationRegistry } from './tasks/notification-registry.js';
-import { type ProgressImpl, ProgressLocation } from './tasks/progress-impl.js';
-import type { Telemetry } from './telemetry/telemetry.js';
-import type { TrayMenuRegistry } from './tray-menu-registry.js';
-import type { IDisposable } from './types/disposable.js';
-import { Disposable } from './types/disposable.js';
-import { Uri } from './types/uri.js';
-import { Exec } from './util/exec.js';
-import type { ViewRegistry } from './view-registry.js';
 
 class TestExtensionLoader extends ExtensionLoader {
   public override async setupScanningDirectory(): Promise<void> {
@@ -274,7 +274,7 @@ vi.mock('electron', () => {
   };
 });
 
-vi.mock('../util.js', async () => {
+vi.mock('../../util.js', async () => {
   return {
     getBase64Image: vi.fn(),
   };

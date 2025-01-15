@@ -18,7 +18,8 @@
 
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import type { ExtensionLoader } from '../extension-loader.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+
 import type { ExtensionsCatalog } from '../extensions-catalog/extensions-catalog.js';
 import { Featured } from './featured.js';
 

@@ -24,6 +24,7 @@ import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
@@ -35,7 +36,6 @@ import type { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
 import type { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
-import { ExtensionLoader } from './extension-loader.js';
 import { PluginSystem } from './index.js';
 import type { MessageBox } from './message-box.js';
 import { TaskManager } from './tasks/task-manager.js';

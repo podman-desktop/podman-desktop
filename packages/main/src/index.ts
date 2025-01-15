@@ -24,12 +24,12 @@ import type { BrowserWindow } from 'electron';
 import { app, ipcMain, Menu, Tray } from 'electron';
 
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import type { Event } from './plugin/events/emitter.js';
 import { Emitter } from './plugin/events/emitter.js';
-import type { ExtensionLoader } from './plugin/extension-loader.js';
 import { PluginSystem } from './plugin/index.js';
 import { Deferred } from './plugin/util/deferred.js';
 import { ZoomLevelHandler } from './plugin/zoom-level-handler.js';

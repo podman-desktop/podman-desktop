@@ -46,6 +46,8 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 
 import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -143,8 +145,6 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
-import { ExtensionLoader } from './extension-loader.js';
-import { ExtensionWatcher } from './extension-watcher.js';
 import { ExtensionsCatalog } from './extensions-catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extensions-catalog/extensions-catalog-api.js';
 import { ExtensionsUpdater } from './extensions-updater/extensions-updater.js';
