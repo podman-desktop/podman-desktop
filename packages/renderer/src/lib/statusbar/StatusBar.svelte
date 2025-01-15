@@ -25,7 +25,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
   }
   if ('key' in e.detail && 'value' in e.detail) {
     const detail = e.detail as { key: string; value: boolean };
-    if (`statusbarProviders.showProviders` === detail.key) {
+    if ('statusbarProviders.showProviders' === detail.key) {
       experimentalProvidersStatusBar = detail.value;
     }
   }
@@ -76,11 +76,11 @@ onMount(async () => {
   experimentalProvidersStatusBar =
     (await window.getConfigurationValue<boolean>('statusbarProviders.showProviders')) ?? false;
 
-  onDidChangeConfiguration.addEventListener(`statusbarProviders.showProviders`, onDidChangeConfigurationCallback);
+  onDidChangeConfiguration.addEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });
 
 onDestroy(() => {
-  onDidChangeConfiguration.removeEventListener(`statusbarProviders.showProviders`, onDidChangeConfigurationCallback);
+  onDidChangeConfiguration.removeEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });
 </script>
 
