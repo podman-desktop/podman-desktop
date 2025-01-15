@@ -203,7 +203,7 @@
     "stream-json": "^1.9.1",
     "sudo-prompt": "^9.2.1",
     "tar": "^7.4.3",
-    "tar-fs": "^3.0.7",
+    "tar-fs": "^3.0.8",
     "tar-stream": "^3.1.7",
     "undici": "^7.2.1",
     "win-ca": "^3.5.1",
