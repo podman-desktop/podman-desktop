@@ -355,3 +355,14 @@ export async function fillTextbox(textbox: Locator, text: string): Promise<void>
     await playExpect(textbox).toHaveValue(text);
   });
 }
+
+export async function runComposeUpFromCLI(composeFilePath: string): Promise<void> {
+  return test.step('Run Compose up from CLI', async () => {
+    try {
+      // eslint-disable-next-line sonarjs/os-command
+      execSync(`podman compose -f ${composeFilePath} up -d`);
+    } catch (error) {
+      throw new Error(`Error running podman compose up from CLI: ${error}`);
+    }
+  });
+}

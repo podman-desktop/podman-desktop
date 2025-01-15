@@ -1,0 +1,11 @@
+services:
+  backend:
+    image: quay.io/podman-desktop-demo/podify-demo-backend:v1
+    ports:
+      - '6379:6379'
+  frontend:
+    image: quay.io/podman-desktop-demo/podify-demo-frontend:v1
+    ports:
+      - '5001:5001'
+    depends_on:
+      - backend
