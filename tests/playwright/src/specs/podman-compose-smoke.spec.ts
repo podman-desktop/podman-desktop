@@ -49,7 +49,7 @@ test.afterAll(async ({ page, runner }) => {
   }
 });
 
-test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
+test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
   test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
