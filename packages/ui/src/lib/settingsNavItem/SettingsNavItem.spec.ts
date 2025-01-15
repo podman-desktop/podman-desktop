@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import MyIcon from './IconTest.svelte';
 import SettingsNavItem from './SettingsNavItem.svelte';
@@ -134,4 +134,31 @@ test('svg icon should be visible', () => {
   });
   const svg = screen.getByRole('img', { hidden: true });
   expect(svg).toBeInTheDocument();
+});
+
+describe('icon position', () => {
+  test('default icon position should be left', () => {
+    const { getByRole } = render(SettingsNavItem, {
+      title: 'DummyTitle',
+      href: '/dummy/path',
+      selected: false,
+      icon: MyIcon,
+    });
+    const svg = getByRole('img', { hidden: true });
+    expect(svg).toBeInTheDocument();
+    expect(svg.parentElement).toHaveClass('flex-row');
+  });
+
+  test('icon position right should use reverse row', () => {
+    const { getByRole } = render(SettingsNavItem, {
+      title: 'DummyTitle',
+      href: '/dummy/path',
+      selected: false,
+      icon: MyIcon,
+      iconPosition: 'right',
+    });
+    const svg = getByRole('img', { hidden: true });
+    expect(svg).toBeInTheDocument();
+    expect(svg.parentElement).toHaveClass('flex-row-reverse');
+  });
 });

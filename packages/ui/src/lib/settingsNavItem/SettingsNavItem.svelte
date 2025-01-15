@@ -13,6 +13,7 @@ interface Props {
   child?: boolean;
   selected?: boolean;
   icon?: IconDefinition | Component;
+  iconPosition?: 'left' | 'right';
   onClick?: () => void;
 }
 
@@ -24,6 +25,7 @@ let {
   child = false,
   selected = false,
   icon = undefined,
+  iconPosition = 'left',
   onClick = (): void => {},
 }: Props = $props();
 
@@ -67,18 +69,20 @@ function click(): void {
     class:hover:text-[color:var(--pd-secondary-nav-text-hover)]={!selected}
     class:hover:bg-[var(--pd-secondary-nav-text-hover-bg)]={!selected}
     class:hover:border-[var(--pd-secondary-nav-text-hover-bg)]={!selected}>
-    <span class="group-hover:block flex flex-row items-center" class:capitalize={!child}>
+    <span
+      class="group-hover:block flex gap-x-4 items-center"
+      class:flex-row={iconPosition === 'left'}
+      class:flex-row-reverse={iconPosition === 'right'}
+      class:capitalize={!child}>
       {#if icon}
         {#if isFontAwesomeIcon(icon)}
-          <Fa class="mr-4" {icon} />
+          <Fa {icon} />
         {:else}
           {@const Icon = icon}
-          <div class="mr-4">
-            <Icon size="14" />
-          </div>
+          <Icon size="14" />
         {/if}
       {/if}
-      {title}
+      <span>{title}</span>
     </span>
     {#if section}
       <div class="px-2 relative w-4 h-4 text-[color:var(--pd-secondary-nav-expander)]">
