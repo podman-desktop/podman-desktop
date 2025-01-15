@@ -161,9 +161,9 @@ test('value of hidden select component is updated based on Dropdown value', asyn
   expect(input).toBeInTheDocument();
   input.focus();
 
-  let selectItem = screen.getByRole('combobox');
-  expect(selectItem).toBeInTheDocument();
-  expect(selectItem).toHaveValue('b');
+  let hiddenInput = screen.getByLabelText('hidden input');
+  expect(hiddenInput).toBeInTheDocument();
+  expect(hiddenInput).toHaveValue('b');
 
   // open dropdown (selects A)
   await userEvent.keyboard('[ArrowDown]');
@@ -173,7 +173,7 @@ test('value of hidden select component is updated based on Dropdown value', asyn
   // select A, closes dropdown and updates selection
   await userEvent.keyboard('[Enter]');
 
-  selectItem = screen.getByRole('combobox');
-  expect(selectItem).toBeInTheDocument();
-  expect(selectItem).toHaveValue('a');
+  hiddenInput = screen.getByLabelText('hidden input');
+  expect(hiddenInput).toBeInTheDocument();
+  expect(hiddenInput).toHaveValue('a');
 });
