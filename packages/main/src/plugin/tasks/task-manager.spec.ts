@@ -82,7 +82,7 @@ test('task manager init should register a configuration option', async () => {
             description: 'Replace the current task manager widget by the new one',
             default: false,
             experimental: {
-              githubDiscussionLink: expect.any(String),
+              githubDiscussionLink: expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions'),
             },
           },
         }),

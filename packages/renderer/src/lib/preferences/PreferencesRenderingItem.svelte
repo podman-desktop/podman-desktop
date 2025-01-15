@@ -63,10 +63,10 @@ function doResetToDefault() {
   resetToDefault = true;
 }
 
-function openGitHubDiscussion(): void {
+async function openGitHubDiscussion(): Promise<void> {
   if (!recordUI.experimental?.githubDiscussionLink) return;
 
-  window.openExternal(recordUI.experimental.githubDiscussionLink).catch(console.error);
+  return window.openExternal(recordUI.experimental.githubDiscussionLink);
 }
 </script>
 
@@ -120,7 +120,7 @@ function openGitHubDiscussion(): void {
         initialValue={getInitialValue(recordUI.original)} />
     {/if}
   </div>
-  {#if record.experimental?.githubDiscussionLink !== undefined}
+  {#if record.experimental?.githubDiscussionLink}
     <Button
       padding="px-3 py-1"
       class="w-min"
