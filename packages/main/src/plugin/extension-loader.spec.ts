@@ -50,6 +50,7 @@ import type { DialogRegistry } from './dialog-registry.js';
 import type { Directories } from './directories.js';
 import type { ActivatedExtension, AnalyzedExtension, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
+import { ExtensionLoaderSettings } from './extension-loader-settings.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 import type { FilesystemMonitoring } from './filesystem-monitoring.js';
 import type { IconRegistry } from './icon-registry.js';
@@ -321,6 +322,8 @@ beforeAll(() => {
   );
 });
 
+vi.mock('node:fs');
+
 beforeEach(() => {
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
   vi.clearAllMocks();
@@ -332,7 +335,6 @@ test('Should watch for files and load them at startup', async () => {
   // fake scanning property
   extensionLoader.setPluginsScanDirectory(fakeDirectory);
 
-  vi.mock('node:fs');
   // mock fs.watch
   const fsWatchMock = vi.spyOn(fs, 'watch');
   fsWatchMock.mockReturnValue({} as fs.FSWatcher);
@@ -2725,4 +2727,28 @@ test('reload extensions', async () => {
 
   // wait the notification is disposed
   await vi.waitFor(() => expect(fakeDisposableObject.dispose).toBeCalled(), { timeout: 5_000 });
+});
+
+describe('init', () => {
+  test('check configuration being registered', async () => {
+    await extensionLoader.init();
+    expect(configurationRegistry.registerConfigurations).toBeCalled();
+
+    // get the object being called
+    const call = vi.mocked(configurationRegistry.registerConfigurations).mock.calls[0];
+    expect(call).toBeDefined();
+
+    // check the developmentMode property is passed
+    const configurations = call?.[0];
+    expect(configurations).toBeDefined();
+    expect(configurations?.length).toBeGreaterThanOrEqual(3);
+    expect(configurations?.[2]?.id).toBe('preferences.extensions');
+    const property =
+      configurations?.[2]?.properties?.[
+        `${ExtensionLoaderSettings.SectionName}.${ExtensionLoaderSettings.DevelopmentMode}`
+      ];
+    expect(property).toBeDefined();
+    expect(property?.type).toBe('boolean');
+    expect(property?.default).toBeTruthy();
+  });
 });

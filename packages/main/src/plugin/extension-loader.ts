@@ -325,7 +325,25 @@ export class ExtensionLoader {
       },
     };
 
-    this.configurationRegistry.registerConfigurations([maxActivationTimeConfiguration, disabledExtensionConfiguration]);
+    const developmentModeExtensionConfiguration: IConfigurationNode = {
+      id: 'preferences.extensions',
+      title: 'Extensions',
+      type: 'object',
+      properties: {
+        [`${ExtensionLoaderSettings.SectionName}.${ExtensionLoaderSettings.DevelopmentMode}`]: {
+          description: 'Development Mode. If enabled, allow to develop extensions locally.',
+          type: 'boolean',
+          default: import.meta.env.DEV,
+          hidden: false,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([
+      maxActivationTimeConfiguration,
+      disabledExtensionConfiguration,
+      developmentModeExtensionConfiguration,
+    ]);
   }
 
   getDisabledExtensionIds(): string[] {

@@ -24,6 +24,7 @@ import { app, autoUpdater, BrowserWindow, ipcMain, nativeTheme, screen } from 'e
 import contextMenu from 'electron-context-menu';
 
 import { buildDevelopmentMenu } from './development-menu-builder.js';
+import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
@@ -32,6 +33,9 @@ import { isLinux, isMac, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
+
+// development mode for extensions
+let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(): Promise<BrowserWindow> {
   const INITIAL_APP_WIDTH = 1050;
@@ -108,6 +112,13 @@ async function createWindow(): Promise<BrowserWindow> {
   let configurationRegistry: ConfigurationRegistry;
   ipcMain.on('configuration-registry', (_, data) => {
     configurationRegistry = data;
+
+    // refresh the value of the development mode config property
+    const developmentModeTracker = new DevelopmentModeTracker(configurationRegistry);
+    developmentModeTracker.onDidChangeDevelopmentMode(enabled => {
+      isExtensionsDevelopmentModeEnabled = enabled;
+    });
+    developmentModeTracker.init();
 
     navigationItemsMenuBuilder = new NavigationItemsMenuBuilder(configurationRegistry);
 
@@ -188,7 +199,7 @@ async function createWindow(): Promise<BrowserWindow> {
     showInspectElement: import.meta.env.DEV,
     showServices: false,
     prepend: (_defaultActions, parameters) => {
-      return buildDevelopmentMenu(parameters, browserWindow, import.meta.env.DEV);
+      return buildDevelopmentMenu(parameters, browserWindow, isExtensionsDevelopmentModeEnabled);
     },
     append: (_defaultActions, parameters) => {
       return navigationItemsMenuBuilder?.buildNavigationMenu(parameters) ?? [];

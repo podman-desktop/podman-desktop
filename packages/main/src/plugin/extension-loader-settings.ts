@@ -22,4 +22,6 @@ export enum ExtensionLoaderSettings {
   SectionName = 'extensions',
   MaxActivationTime = 'maxActivationTime',
   Disabled = 'disabled',
+  DevelopmentMode = 'developmentMode',
+  DevelopmentExtensionsFolders = 'developmentExtensionsFolders',
 }
