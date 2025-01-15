@@ -39,6 +39,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const backendContainerName = 'backend-1';
 const frontendContainerName = 'frontend-1';
+const composeContainer = 'compose (compose)';
 const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
 const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
 
@@ -170,6 +171,9 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     const containersPage = await navigationBar.openContainers();
     await playExpect(containersPage.heading).toBeVisible();
 
+    await playExpect
+      .poll(async () => await containersPage.containerExists(composeContainer), { timeout: 120_000 })
+      .toBeTruthy();
     await playExpect
       .poll(async () => await containersPage.containerExists(backendContainerName), { timeout: 120_000 })
       .toBeTruthy();
