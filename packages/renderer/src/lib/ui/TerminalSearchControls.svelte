@@ -12,7 +12,7 @@ interface Props {
 
 let { terminal }: Props = $props();
 
-let searchAddon: SearchAddon;
+let searchAddon: SearchAddon | undefined;
 let searchTerm: string = $state('');
 
 let input: HTMLInputElement | undefined = $state();
@@ -33,13 +33,13 @@ function onKeyPressed(event: KeyboardEvent): void {
 }
 
 function onSearchNext(incremental = false): void {
-  searchAddon.findNext(searchTerm, {
+  searchAddon?.findNext(searchTerm, {
     incremental: incremental,
   });
 }
 
 function onSearchPrevious(incremental = false): void {
-  searchAddon.findPrevious(searchTerm, {
+  searchAddon?.findPrevious(searchTerm, {
     incremental: incremental,
   });
 }
@@ -50,7 +50,6 @@ function onSearch(event: Event): void {
 }
 
 function onKeyUp(e: KeyboardEvent): void {
-  console.log('onKeyUp', e);
   if (e.ctrlKey && e.key === 'f') {
     input?.focus();
   }
