@@ -54,6 +54,7 @@ test.beforeAll(async ({ runner, welcomePage }) => {
 });
 
 test.afterAll(async ({ page, runner }) => {
+  test.setTimeout(180_000);
   try {
     await deleteContainer(page, backendContainerName);
     await deleteContainer(page, frontendContainerName);
