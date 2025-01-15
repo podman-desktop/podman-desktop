@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
+import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import type { ExtensionsCatalog } from '/@/plugin/extensions-catalog/extensions-catalog.js';
 import type { Featured } from '/@/plugin/featured/featured.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
 import {

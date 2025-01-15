@@ -21,12 +21,12 @@ import { delay, http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
+import type { Certificates } from '/@/plugin/certificates.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+import type { Proxy } from '/@/plugin/proxy.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { Certificates } from '../certificates.js';
-import { Emitter } from '../events/emitter.js';
-import type { Proxy } from '../proxy.js';
 import { ExtensionsCatalog } from './extensions-catalog.js';
 
 let extensionsCatalog: ExtensionsCatalog;

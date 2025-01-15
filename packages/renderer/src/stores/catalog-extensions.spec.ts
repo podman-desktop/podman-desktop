@@ -22,7 +22,7 @@ import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { CatalogExtension } from '../../../main/src/plugin/extensions-catalog/extensions-catalog-api';
+import type { CatalogExtension } from '../../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import {
   catalogExtensionEventStore,
   catalogExtensionEventStoreInfo,

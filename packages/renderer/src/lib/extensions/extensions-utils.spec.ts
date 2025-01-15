@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-import type { CatalogExtension } from '../../../../main/src/plugin/extensions-catalog/extensions-catalog-api';
+import type { CatalogExtension } from '../../../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
 import { ExtensionsUtils } from './extensions-utils';
 

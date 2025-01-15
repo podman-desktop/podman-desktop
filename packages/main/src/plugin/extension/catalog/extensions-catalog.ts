@@ -20,15 +20,15 @@ import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
+import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
 import type {
   CatalogExtension,
   CatalogFetchableExtension,
-} from '/@/plugin/extensions-catalog/extensions-catalog-api.js';
+} from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
 
 /**

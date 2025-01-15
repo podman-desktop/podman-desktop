@@ -26,12 +26,12 @@ import { ipcMain } from 'electron';
 import * as tarFs from 'tar-fs';
 
 import type { Directories } from '/@/plugin/directories.js';
+import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension, ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import { DockerDesktopContribution, DockerDesktopInstaller } from '../docker-extension/docker-desktop-installer.js';
-import type { ExtensionsCatalog } from '../extensions-catalog/extensions-catalog.js';
 import type { ImageRegistry } from '../image-registry.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 

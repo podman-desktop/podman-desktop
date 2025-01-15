@@ -145,9 +145,9 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
-import { ExtensionsCatalog } from './extensions-catalog/extensions-catalog.js';
-import type { CatalogExtension } from './extensions-catalog/extensions-catalog-api.js';
-import { ExtensionsUpdater } from './extensions-updater/extensions-updater.js';
+import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
+import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
+import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
 import { FeedbackHandler } from './feedback-handler.js';

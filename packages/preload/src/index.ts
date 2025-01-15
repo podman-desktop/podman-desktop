@@ -100,7 +100,7 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { CatalogExtension } from '../../main/src/plugin/extensions-catalog/extensions-catalog-api';
+import type { CatalogExtension } from '../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
 import type {
   GenerateKubeResult,

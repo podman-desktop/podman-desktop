@@ -21,13 +21,12 @@ import { app } from 'electron';
 import { coerce, satisfies } from 'semver';
 
 import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
+import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import type { ExtensionsCatalog } from '/@/plugin/extensions-catalog/extensions-catalog.js';
+import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ExtensionUpdateInfo } from '/@api/extension-info.js';
-
-import { ExtensionsUpdaterSettings } from './extensions-updater-settings.js';
 
 export class ExtensionsUpdater {
   static readonly CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 12; // 12 hours

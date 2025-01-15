@@ -18,7 +18,7 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { CatalogExtension } from '../../../main/src/plugin/extensions-catalog/extensions-catalog-api';
+import type { CatalogExtension } from '../../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import { EventStore } from './event-store';
 
 const windowEvents: string[] = ['refresh-catalog'];

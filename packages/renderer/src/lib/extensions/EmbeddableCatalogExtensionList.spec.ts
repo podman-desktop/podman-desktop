@@ -25,7 +25,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
 
-import type { CatalogExtension } from '../../../../main/src/plugin/extensions-catalog/extensions-catalog-api';
+import type { CatalogExtension } from '../../../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import EmbeddableCatalogExtensionList from './EmbeddableCatalogExtensionList.svelte';
 
 beforeAll(() => {
