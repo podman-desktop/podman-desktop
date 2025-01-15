@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ExtensionLoaderSettings } from '/@/plugin/extension/extension-loader-settings.js';
+import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import { Emitter } from './plugin/events/emitter.js';

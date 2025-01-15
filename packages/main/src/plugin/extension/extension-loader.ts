@@ -33,6 +33,7 @@ import type { MenuRegistry } from '/@/plugin/menu-registry.js';
 import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
+import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
@@ -85,7 +86,6 @@ import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import type { Exec } from '../util/exec.js';
 import type { ViewRegistry } from '../view-registry.js';
-import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from './extension-loader-settings.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 
 /**

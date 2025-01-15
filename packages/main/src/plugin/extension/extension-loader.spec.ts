@@ -32,6 +32,7 @@ import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
+import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -73,7 +74,6 @@ import { Exec } from '../util/exec.js';
 import type { ViewRegistry } from '../view-registry.js';
 import type { ActivatedExtension, AnalyzedExtension, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
-import { ExtensionLoaderSettings } from './extension-loader-settings.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 
 class TestExtensionLoader extends ExtensionLoader {
