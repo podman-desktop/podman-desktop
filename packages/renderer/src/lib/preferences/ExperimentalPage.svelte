@@ -78,7 +78,7 @@ $effect(() => {
           on:checked={onCheckedAll}
           disabled={loading}
         >
-          <span class="text-xs">{'Enabled'}</span>
+          <span class="text-xs">Enabled</span>
         </SlideToggle>
       </div>
     </div>
