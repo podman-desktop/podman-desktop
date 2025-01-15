@@ -25,9 +25,8 @@ function onDidChangeConfigurationCallback(e: Event): void {
   }
   if ('key' in e.detail && 'value' in e.detail) {
     const detail = e.detail as { key: string; value: boolean };
-    if (`statusbarProviders.showProviders` === detail?.key) {
+    if (`statusbarProviders.showProviders` === detail.key) {
       experimentalProvidersStatusBar = detail.value;
-      console.log('>>>> new value: ' + experimentalProvidersStatusBar);
     }
   }
 }
