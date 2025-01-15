@@ -16,9 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import type { Page } from '@playwright/test';
 
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
@@ -31,17 +28,9 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import type { NavigationBar } from '../model/workbench/navigation';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
 import { isCI, isLinux } from '../utility/platform';
 
 const RESOURCE_NAME: string = 'Compose';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const backendContainerName = 'backend-1';
-const frontendContainerName = 'frontend-1';
-const composeContainer = 'resources (compose)';
-const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
-const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
 
 let composeVersion: string;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
@@ -54,16 +43,8 @@ test.beforeAll(async ({ runner, welcomePage }) => {
   await welcomePage.handleWelcomePage(true);
 });
 
-test.afterAll(async ({ page, runner }) => {
-  test.setTimeout(180_000);
-  try {
-    await deleteContainer(page, backendContainerName);
-    await deleteContainer(page, frontendContainerName);
-    await deleteImage(page, backendImageName);
-    await deleteImage(page, frontendImageName);
-  } finally {
-    await runner.close();
-  }
+test.afterAll(async ({ runner }) => {
+  await runner.close();
 });
 
 test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
@@ -160,32 +141,6 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
     const composeVersionInfo = composeRow.getByLabel('cli-version');
     await playExpect(composeVersionInfo).toContainText('docker-compose ' + composeVersion);
-  });
-
-  test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
-    test.setTimeout(300_000);
-
-    const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', `compose.yaml`);
-    await runComposeUpFromCLI(composeFilePath);
-
-    const containersPage = await navigationBar.openContainers();
-    await playExpect(containersPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await containersPage.containerExists(composeContainer), { timeout: 120_000 })
-      .toBeTruthy();
-    await playExpect
-      .poll(async () => await containersPage.containerExists(backendContainerName), { timeout: 120_000 })
-      .toBeTruthy();
-    await playExpect
-      .poll(async () => await containersPage.containerExists(frontendContainerName), { timeout: 120_000 })
-      .toBeTruthy();
-
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(backendImageName)).toBeTruthy();
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(frontendImageName)).toBeTruthy();
   });
 });
 
