@@ -4,7 +4,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
-import Badge from '/@/lib/ui/Badge.svelte';
+import Label from '/@/lib/ui/Label.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
@@ -81,10 +81,12 @@ function openGitHubDiscussion(): void {
         <div class="flex flex-row space-x-2 items-center">
           <span class="font-semibold">{recordUI.title}</span>
           {#if record.experimental !== undefined}
-            <Badge class="text-[8px] flex flex-row space-x-1 items-center" label="Experimental" >
-              <Fa title="experimental" size="xs" icon={faFlask}/>
-              <span>Experimental</span>
-            </Badge>
+            <Label>
+              <div class="flex flex-row space-x-1 items-center">
+                <Fa title="experimental" size="xs" icon={faFlask}/>
+                <span>Experimental</span>
+              </div>
+            </Label>
           {/if}
         </div>
         {#if showResetButton}

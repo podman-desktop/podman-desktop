@@ -1,19 +1,13 @@
 <script lang="ts">
-import { onMount, type Snippet } from 'svelte';
+import { onMount } from 'svelte';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
-interface Props {
-  color?: string | { light: string; dark: string };
-  label: string;
-  children?: Snippet;
-  class?: string;
-}
+export let color: string | { light: string; dark: string } = 'bg-[var(--pd-badge-gray)]';
+export let label: string = '';
 
-let { color = 'bg-[var(--pd-badge-gray)]', label = '', class: className, children }: Props = $props();
-
-let customStyle: string = $state('');
-let customClass: string = $state('');
+let customStyle: string = '';
+let customClass: string = '';
 
 onMount(async () => {
   const appearanceUtil = new AppearanceUtil();
@@ -32,10 +26,6 @@ onMount(async () => {
 });
 </script>
 
-<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded select-none {customClass} {className}" style={customStyle}>
-  {#if children}
-    {@render children()}
-  {:else}
-    {label}
-  {/if}
+<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded select-none {customClass} {$$props.class}" style={customStyle}>
+  {label}
 </div>
