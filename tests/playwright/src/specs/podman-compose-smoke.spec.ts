@@ -19,14 +19,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ResourceCliCardPage } from '../model/pages/resource-cli-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
+import { waitForPodmanMachineStartup } from '../utility/wait';
 
-const RESOURCE_NAME: string = 'Compose';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const backendContainerName = 'backend-1';
@@ -35,9 +31,10 @@ const composeContainer = 'resources (compose)';
 const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
 const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
 
-test.beforeAll(async ({ runner, welcomePage }) => {
+test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('podman-compose-e2e');
   await welcomePage.handleWelcomePage(true);
+  await waitForPodmanMachineStartup(page);
 });
 
 test.afterAll(async ({ page, runner }) => {
@@ -53,26 +50,7 @@ test.afterAll(async ({ page, runner }) => {
 });
 
 test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
-  let composeInstalled = false;
-
-  test('Check that Compose is available', async ({ page, navigationBar }) => {
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-    const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
-    const setupButton = composeBox.setupButton;
-    await playExpect(setupButton).toBeHidden();
-
-    const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
-    const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
-    const composeVersionInfo = composeRow.getByLabel('cli-version');
-    await playExpect(composeVersionInfo).toContainText('docker-compose');
-    composeInstalled = true;
-  });
-
   test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
-    test.skip(!composeInstalled, 'Compose is not available');
     test.setTimeout(300_000);
 
     const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', `compose.yaml`);
