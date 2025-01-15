@@ -203,8 +203,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 33.3.1
-        version: 33.3.1
+        specifier: 34.0.0
+        version: 34.0.0
       electron-builder:
         specifier: '25.1'
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8(dmg-builder@25.1.8))
@@ -543,8 +543,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 33.3.1
-        version: 33.3.1
+        specifier: 34.0.0
+        version: 34.0.0
       vitest:
         specifier: ^2.1.6
         version: 2.1.6(@types/node@22.9.1)(jiti@2.4.1)(jsdom@26.0.0)(msw@2.7.0(@types/node@22.9.1)(typescript@5.7.2))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0)
@@ -893,8 +893,8 @@ importers:
         specifier: ^20
         version: 20.17.6
       electron:
-        specifier: 33.3.1
-        version: 33.3.1
+        specifier: 34.0.0
+        version: 34.0.0
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -5932,8 +5932,8 @@ packages:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
     engines: {node: '>=18'}
 
-  electron@33.3.1:
-    resolution: {integrity: sha512-Z7l2bVgpdKxHQMI4i0CirBX2n+iCYKOx5mbzNM3BpOyFELwlobEXKmzCmEnwP+3EcNeIhUQyIEBFQxN06QgdIw==}
+  electron@34.0.0:
+    resolution: {integrity: sha512-fpaPb0lifoUJ6UJa4Lk8/0B2Ku/xDZWdc1Gkj67jbygTCrvSon0qquju6Ltx1Kz23GRqqlIHXiy9EvrjpY7/Wg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -17682,7 +17682,7 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.0.0
 
-  electron@33.3.1:
+  electron@34.0.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 20.17.13
