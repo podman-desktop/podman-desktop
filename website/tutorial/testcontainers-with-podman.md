@@ -30,26 +30,36 @@ Before we start, you need to have installed [Podman](https://podman.io/) and run
 $ podman system service --time=0 &
 ```
 
-1. Create a `.testcontainers.properties` file in your home directory for global configuration for your Testcontainers.
-2. Add the following line to the configuration file:
+Set Testcontainers runtime to Podman, for this you have two options:
 
-- MacOS
+- Enable Podman Desktop's Docker Compatibility by folowing this [guide](https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility).
 
-```.testcontainers.properties
-docker.host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
-docker.socket.override=/var/run/docker.sock
-```
+- Or create a `.testcontainers.properties` file in your home directory for global configuration for your Testcontainers and add the following line to the configuration file:
 
-- Linux:
+  - MacOS
 
-```.testcontainers.properties
-docker.host=unix://${XDG_RUNTIME_DIR}/podman/podman.sock
-```
+    ```.testcontainers.properties
+    docker.host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
+    ```
+
+    And run folowing line:
+
+    ```shell-session
+    $ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+    ```
+
+  - Linux:
+
+    ```.testcontainers.properties
+    docker.host=unix://${XDG_RUNTIME_DIR}/podman/podman.sock
+    ```
+
+  > **_NOTE:_** Every language supported by Testcontainers have different properties supported by `.testcontainers.properties` file.
 
 > **_OPTIONAL:_** If you are running Podman in rootless mode, you have to disable Ryuk by adding this line to configuration file:
 >
-> ```.testcontainers.properties
-> ryuk.disabled=true
+> ```shell-session
+> $ export TESTCONTAINERS_RYUK_DISABLED=true
 > ```
 
 ## Creating a project
@@ -58,133 +68,133 @@ This example uses the Redis service and Redis module from Testcontainers. You ca
 
 1. Initialize a project.
 
-```shell-session
-$ npm init -y
-```
+   ```shell-session
+   $ npm init -y
+   ```
 
 2. Installing dependencies.
 
-```shell-session
-$ npm install testcontainers vitest @testcontainers/redis redis --save-dev
-```
+   ```shell-session
+   $ npm install testcontainers vitest @testcontainers/redis redis --save-dev
+   ```
 
 3. Update `package.json` file.
 
-```package.json
-...
-  "scripts": {
-    "test": "vitest"
-  },
-...
-```
+   ```package.json
+   ...
+       "scripts": {
+       "test": "vitest"
+       },
+   ...
+   ```
 
 4. Create basic CRUD operations using the Redis Node.js library.
 
-```index.ts
-import { createClient, RedisClientType } from 'redis';
+   ```index.ts
+   import { createClient, RedisClientType } from 'redis';
 
-let redisClient: RedisClientType | undefined = undefined;
+   let redisClient: RedisClientType | undefined = undefined;
 
-export async function connectRedis(url: string) {
-    redisClient = createClient({ url });
-    await redisClient.connect();
-    return redisClient;
-}
+   export async function connectRedis(url: string) {
+       redisClient = createClient({ url });
+       await redisClient.connect();
+       return redisClient;
+   }
 
-export async function setValue(key: string, value: string): Promise<string | null> {
-    if (!redisClient) {
-        throw new Error('Redis client is not connected');
-    }
-    return await redisClient.set(key, value);
-}
+   export async function setValue(key: string, value: string): Promise<string | null> {
+       if (!redisClient) {
+           throw new Error('Redis client is not connected');
+       }
+       return await redisClient.set(key, value);
+   }
 
-export async function getValue(key: string): Promise<string | null> {
-    if (!redisClient) {
-        throw new Error('Redis client is not connected');
-    }
-    return redisClient.get(key);
-}
+   export async function getValue(key: string): Promise<string | null> {
+       if (!redisClient) {
+           throw new Error('Redis client is not connected');
+       }
+       return redisClient.get(key);
+   }
 
-export async function deleteValue(key: string[]): Promise<number> {
-    if (!redisClient) {
-        throw new Error('Redis client is not connected');
-    }
-    return await redisClient.del(key);
-}
+   export async function deleteValue(key: string[]): Promise<number> {
+       if (!redisClient) {
+           throw new Error('Redis client is not connected');
+       }
+       return await redisClient.del(key);
+   }
 
-export async function disconnectRedis() {
-    if (redisClient) {
-        await redisClient.quit();
-        redisClient = undefined;
-    }
-}
-```
+   export async function disconnectRedis() {
+       if (redisClient) {
+           await redisClient.quit();
+           redisClient = undefined;
+       }
+   }
+   ```
 
 5. Create basic tests for CRUD operations.
 
-```index.spec.ts
-import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
-import { connectRedis, deleteValue, disconnectRedis, getValue, setValue } from ".";
-import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
-import { Wait } from "testcontainers";
-import { createClient } from "redis";
+   ```index.spec.ts
+   import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
+   import { connectRedis, deleteValue, disconnectRedis, getValue, setValue } from ".";
+   import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
+   import { Wait } from "testcontainers";
+   import { createClient } from "redis";
 
-let container: StartedRedisContainer;
+   let container: StartedRedisContainer;
 
-beforeAll(async () => {
-    container = await new RedisContainer()
-        .withExposedPorts(6379)
-        .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
-        .start();
+   beforeAll(async () => {
+       container = await new RedisContainer()
+           .withExposedPorts(6379)
+           .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
+           .start();
 
-    await connectRedis(`redis://localhost:${container.getMappedPort(6379)}`);
-});
+       await connectRedis(`redis://localhost:${container.getMappedPort(6379)}`);
+   });
 
-afterAll(async () => {
-    await disconnectRedis();
-});
+   afterAll(async () => {
+       await disconnectRedis();
+   });
 
-beforeEach(async () => {
-    // Flushind DB and adding to Redis some values before each test
-    const client = createClient({ url:`redis://localhost:${container.getMappedPort(6379)}` });
-    await client.connect();
+   beforeEach(async () => {
+       // Flushind DB and adding to Redis some values before each test
+       const client = createClient({ url:`redis://localhost:${container.getMappedPort(6379)}` });
+       await client.connect();
 
-    await client.flushDb();
-    await client.set('preset-key', 'preset-value');
-    await client.set('preset-key1', 'preset-value1');
-    await client.quit();
-});
+       await client.flushDb();
+       await client.set('preset-key', 'preset-value');
+       await client.set('preset-key1', 'preset-value1');
+       await client.quit();
+   });
 
-test("set value on server", async () => {
-    // Set value
-    const ret = await setValue("key", "value");
-    expect(ret).toBe("OK");
+   test("set value on server", async () => {
+       // Set value
+       const ret = await setValue("key", "value");
+       expect(ret).toBe("OK");
 
-    // Update value
-    const ret1 = await setValue("key", "updated-value");
-    expect(ret1).toBe("OK");
-});
+       // Update value
+       const ret1 = await setValue("key", "updated-value");
+       expect(ret1).toBe("OK");
+   });
 
-test("get value from server", async () => {
-    // Get preset value
-    const value = await getValue("preset-key");
-    expect(value).toBe("preset-value");
+   test("get value from server", async () => {
+       // Get preset value
+       const value = await getValue("preset-key");
+       expect(value).toBe("preset-value");
 
-    // Get not existing value
-    const value1 = await getValue("key");
-    expect(value1).toBeNull();
-});
+       // Get not existing value
+       const value1 = await getValue("key");
+       expect(value1).toBeNull();
+   });
 
-test("delete value on server", async () => {
-    // Delete two records in a same time
-    const res = await deleteValue(["preset-key", "preset-key1"]);
-    expect(res).toBe(2);
+   test("delete value on server", async () => {
+       // Delete two records in a same time
+       const res = await deleteValue(["preset-key", "preset-key1"]);
+       expect(res).toBe(2);
 
-    // Delete not existing record
-    const res1 = await deleteValue(["key"]);
-    expect(res1).toBe(0);
-});
-```
+       // Delete not existing record
+       const res1 = await deleteValue(["key"]);
+       expect(res1).toBe(0);
+   });
+   ```
 
 ## Running tests
 
