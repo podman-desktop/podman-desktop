@@ -19,12 +19,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
+import { SearchAddon } from '@xterm/addon-search';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PodDetailsLogs from '/@/lib/pod/PodDetailsLogs.svelte';
 import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
 vi.mock('@xterm/xterm');
+vi.mock('@xterm/addon-search');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -92,4 +94,14 @@ test('No logs should display EmptyScreen', async () => {
     return getByText(`Log output of Pod ${PODMAN_POD.name}`);
   });
   expect(element).toBeDefined();
+});
+
+test('terminal used should have search enabled', async () => {
+  render(PodDetailsLogs, {
+    pod: PODMAN_POD,
+  });
+
+  await vi.waitFor(() => {
+    expect(SearchAddon).toHaveBeenCalled();
+  });
 });

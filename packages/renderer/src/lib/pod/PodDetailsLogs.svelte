@@ -105,5 +105,5 @@ onMount(async () => {
   class:invisible={noLogs === true}
   class:h-0={noLogs === true}
   class:h-full={noLogs === false}>
-  <TerminalWindow class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
+  <TerminalWindow search class="h-full" bind:terminal={logsTerminal} convertEol disableStdIn />
 </div>

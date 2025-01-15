@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@xterm/xterm', () => ({
   Terminal: mocks.TerminalMock,
 }));
+vi.mock('@xterm/addon-search');
 
 const listPodsMock = vi.fn();
 const listContainersMock = vi.fn();
