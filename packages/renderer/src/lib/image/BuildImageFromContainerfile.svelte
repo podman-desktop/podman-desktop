@@ -50,7 +50,10 @@ const contextDialogOptions: OpenDialogOptions = { title: 'Select Root Context', 
 
 $: platforms = containerBuildPlatform ? containerBuildPlatform.split(',') : [];
 $: hasInvalidFields =
-  !containerFilePath || !containerBuildContextDirectory || (platforms.length > 1 && !containerImageName);
+  !containerFilePath ||
+  !containerBuildContextDirectory ||
+  (platforms.length > 1 && !containerImageName) ||
+  platforms.length === 0;
 $: if (containerFilePath && !containerBuildContextDirectory) {
   // select the parent directory of the file as default
   // eslint-disable-next-line no-useless-escape
