@@ -24,7 +24,7 @@ import type { EventStoreInfo } from './event-store';
 
 export const allEventStoresInfo: Writable<EventStoreInfo[]> = writable([]);
 
-export function addStore(eventStoreInfo: EventStoreInfo) {
+export function addStore(eventStoreInfo: EventStoreInfo): void {
   const allEvents = get(allEventStoresInfo);
 
   // search if we have a matching store

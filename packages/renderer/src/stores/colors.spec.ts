@@ -28,7 +28,7 @@ import { colorsEventStore, colorsInfos } from './colors';
 
 const callbacks = new Map<string, any>();
 const eventEmitter = {
-  receive: (message: string, callback: any) => {
+  receive: (message: string, callback: any): void => {
     callbacks.set(message, callback);
   },
 };
@@ -36,7 +36,7 @@ const eventEmitter = {
 vi.mock('../lib/appearance/appearance-util', () => {
   return {
     AppearanceUtil: class {
-      getTheme = async () => 'light';
+      getTheme = async (): Promise<string> => 'light';
     },
   };
 });

@@ -61,7 +61,7 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
 
   let allWebviews: WebviewInfo[] = [];
 
-  const refresh = () => {
+  const refresh = (): void => {
     const newItems: NavigationRegistryEntry[] = [];
     allContribs.forEach(contrib => {
       const registry: NavigationRegistryEntry = {

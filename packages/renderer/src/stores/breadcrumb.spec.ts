@@ -22,7 +22,7 @@ import { expect, test } from 'vitest';
 
 import { currentPage, history, lastPage, lastSubmenuPages } from './breadcrumb';
 
-export function mockBreadcrumb() {
+export function mockBreadcrumb(): void {
   history.set([{ name: 'List', path: '/list' } as TinroBreadcrumb]);
   lastPage.set({ name: 'Previous', path: '/last' } as TinroBreadcrumb);
   currentPage.set({ name: 'Current', path: '/current' } as TinroBreadcrumb);

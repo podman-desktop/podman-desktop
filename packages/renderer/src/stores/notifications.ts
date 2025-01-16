@@ -53,6 +53,6 @@ export const notificationEventStore = new EventStore<NotificationCard[]>(
 );
 const notificationEventStoreInfo = notificationEventStore.setup();
 
-export const fetchNotifications = async () => {
+export const fetchNotifications = async (): Promise<void> => {
   await notificationEventStoreInfo.fetch();
 };

@@ -20,7 +20,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
-export async function fetchRegistries() {
+export async function fetchRegistries(): Promise<void> {
   const registries = await window.getImageRegistries();
   const suggestedRegistries = await window.getImageSuggestedRegistries();
 

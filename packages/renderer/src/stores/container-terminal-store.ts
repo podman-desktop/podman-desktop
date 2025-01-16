@@ -65,7 +65,7 @@ containersInfos.subscribe(containers => {
   });
 });
 
-export function registerTerminal(terminal: TerminalOfContainer) {
+export function registerTerminal(terminal: TerminalOfContainer): void {
   containerTerminals.update(terminals => {
     // remove old instance(s) of terminal if exists
     terminals = terminals.filter(

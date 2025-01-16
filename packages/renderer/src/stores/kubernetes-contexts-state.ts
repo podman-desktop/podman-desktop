@@ -99,7 +99,7 @@ export const kubernetesCurrentContextDeployments = readable<KubernetesObject[]>(
   window.events?.receive('kubernetes-current-context-deployments-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('deployments')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes deployments', err));
@@ -125,7 +125,7 @@ export const kubernetesCurrentContextServices = readable<KubernetesObject[]>([],
   window.events?.receive('kubernetes-current-context-services-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('services')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes services', err));
@@ -151,7 +151,7 @@ export const kubernetesCurrentContextNodes = readable<KubernetesObject[]>([], se
   window.events?.receive('kubernetes-current-context-nodes-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('nodes')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes nodes', err));
@@ -176,7 +176,7 @@ export const kubernetesCurrentContextPods = readable<KubernetesObject[]>([], set
   window.events?.receive('kubernetes-current-context-pods-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('pods')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes pods', err));
@@ -201,7 +201,7 @@ export const kubernetesCurrentContextPersistentVolumeClaims = readable<Kubernete
   window.events?.receive('kubernetes-current-context-persistentvolumeclaims-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('persistentvolumeclaims')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes persistentvolumeclaims', err));
@@ -227,7 +227,7 @@ export const kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([]
   window.events?.receive('kubernetes-current-context-ingresses-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('ingresses')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes ingresses', err));
@@ -253,7 +253,7 @@ export const kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([], s
   window.events?.receive('kubernetes-current-context-routes-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('routes')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes routes', err));
@@ -272,7 +272,7 @@ export const kubernetesCurrentContextConfigMaps = readable<KubernetesObject[]>([
   window.events?.receive('kubernetes-current-context-configmaps-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('configmaps')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes configmaps', err));
@@ -298,7 +298,7 @@ export const kubernetesCurrentContextSecrets = readable<KubernetesObject[]>([], 
   window.events?.receive('kubernetes-current-context-secrets-update', (value: unknown) => {
     set(value as KubernetesObject[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('secrets')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes secrets', err));
@@ -328,7 +328,7 @@ export const kubernetesCurrentContextEvents = readable<CoreV1Event[]>([], set =>
   window.events?.receive('kubernetes-current-context-events-update', (value: unknown) => {
     set(value as CoreV1Event[]);
   });
-  return () => {
+  return (): void => {
     window
       .kubernetesUnregisterGetCurrentContextResources('events')
       .catch((err: unknown) => console.log('Error unregistering Kubernetes events', err));
