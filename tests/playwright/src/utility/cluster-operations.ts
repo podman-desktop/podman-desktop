@@ -146,6 +146,7 @@ export async function resourceConnectionAction(
   resourceCard: ResourceConnectionCardPage,
   resourceConnectionAction: ResourceElementActions,
   expectedResourceState: ResourceElementState,
+  timeout: number = 50_000,
 ): Promise<void> {
   return test.step(`Performs "${resourceConnectionAction}" action, expects "${expectedResourceState}" state.`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -156,10 +157,10 @@ export async function resourceConnectionAction(
         name: ResourceElementActions.Stop,
         exact: true,
       });
-      await playExpect(stopButton).toBeEnabled({ timeout: 25_000 });
+      await playExpect(stopButton).toBeEnabled({ timeout: timeout });
     }
     await playExpect(resourceCard.resourceElementConnectionStatus).toHaveText(expectedResourceState, {
-      timeout: 50_000,
+      timeout: timeout,
     });
   });
 }
