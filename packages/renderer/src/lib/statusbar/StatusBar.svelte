@@ -16,6 +16,8 @@ let rightEntries: StatusBarEntry[] = $state([]);
 
 let containerProviders = $derived($providerInfos.filter(provider => provider.containerConnections.length > 0));
 
+let kubernetesProviders = $derived($providerInfos.filter(provider => provider.kubernetesConnections.length > 0));
+
 let experimentalTaskStatusBar: boolean = $state(false);
 let experimentalProvidersStatusBar: boolean = $state(false);
 
@@ -94,6 +96,9 @@ onDestroy(() => {
     {/each}
     {#if experimentalProvidersStatusBar}
       {#each containerProviders as entry}
+        <ProviderWidget entry={entry}/>
+      {/each}
+      {#each  kubernetesProviders as entry}
         <ProviderWidget entry={entry}/>
       {/each}
     {/if}

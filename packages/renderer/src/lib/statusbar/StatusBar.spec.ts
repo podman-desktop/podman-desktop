@@ -49,6 +49,14 @@ const providerMock2 = {
   images: {},
 } as unknown as ProviderInfo;
 
+const providerMock3 = {
+  name: 'provider2',
+  containerConnections: [],
+  kubernetesConnections: [],
+  status: 'ready' as ProviderStatus,
+  images: {},
+} as unknown as ProviderInfo;
+
 beforeEach(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
@@ -68,7 +76,7 @@ beforeEach(() => {
     },
   ]);
 
-  providerInfos.set([providerMock1, providerMock2]);
+  providerInfos.set([providerMock1, providerMock2, providerMock3]);
 });
 
 test('onMount should call getConfigurationValue', async () => {
@@ -113,8 +121,10 @@ test('providers should be visible when getConfigurationValue is true', async () 
   await vi.waitFor(() => {
     const provider1 = queryByLabelText('provider1');
     const provider2 = queryByLabelText('provider2');
+    const provider3 = queryByLabelText('provider3');
     expect(provider1).toBeInTheDocument();
-    expect(provider2).not.toBeInTheDocument();
+    expect(provider2).toBeInTheDocument();
+    expect(provider3).not.toBeInTheDocument();
   });
 });
 
@@ -123,7 +133,9 @@ test('providers should not be visible when getConfigurationValue is false', () =
 
   const { queryByLabelText } = render(StatusBar);
   const provider1 = queryByLabelText('provider1');
+  const provider2 = queryByLabelText('provider2');
   expect(provider1).toBeNull();
+  expect(provider2).toBeNull();
 });
 
 test('providers should show up when configuration changes from false to true', async () => {
@@ -132,7 +144,9 @@ test('providers should show up when configuration changes from false to true', a
   await tick();
 
   const provider1 = queryByLabelText('provider1');
+  const provider2 = queryByLabelText('provider2');
   expect(provider1).toBeNull();
+  expect(provider2).toBeNull();
 
   callbacks.get(`statusbarProviders.showProviders`)?.({
     detail: { key: `statusbarProviders.showProviders`, value: true },
@@ -143,8 +157,10 @@ test('providers should show up when configuration changes from false to true', a
   await vi.waitFor(() => {
     const provider1 = queryByLabelText('provider1');
     const provider2 = queryByLabelText('provider2');
+    const provider3 = queryByLabelText('provider3');
     expect(provider1).toBeInTheDocument();
-    expect(provider2).not.toBeInTheDocument();
+    expect(provider2).toBeInTheDocument();
+    expect(provider3).not.toBeInTheDocument();
   });
 });
 
@@ -156,8 +172,10 @@ test('providers are hidden when configuration changes from true to false', async
   await vi.waitFor(() => {
     const provider1 = queryByLabelText('provider1');
     const provider2 = queryByLabelText('provider2');
+    const provider3 = queryByLabelText('provider3');
     expect(provider1).toBeInTheDocument();
-    expect(provider2).not.toBeInTheDocument();
+    expect(provider2).toBeInTheDocument();
+    expect(provider3).not.toBeInTheDocument();
   });
 
   callbacks.get(`statusbarProviders.showProviders`)?.({
@@ -167,5 +185,7 @@ test('providers are hidden when configuration changes from true to false', async
   await tick();
 
   const provider1 = queryByLabelText('provider1');
+  const provider2 = queryByLabelText('provider2');
   expect(provider1).toBeNull();
+  expect(provider2).toBeNull();
 });
