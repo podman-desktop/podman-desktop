@@ -20,6 +20,7 @@
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
+import type { PullEvent } from '@podman-desktop/api';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
@@ -361,4 +362,28 @@ test('push image sends data event with error, "end" event when fails and set tas
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
   expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
+});
+
+test('Pull image creates a task', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  const handle = handlers.get('container-provider-registry:pullImage');
+  expect(handle).not.equal(undefined);
+  const defaultCallback = vi.fn();
+  let registeredCallback: (event: PullEvent) => void = defaultCallback;
+  vi.spyOn(ContainerProviderRegistry.prototype, 'pullImage').mockImplementation(
+    (_engine, _imageName, callback: (event: PullEvent) => void) => {
+      registeredCallback = callback;
+      return Promise.resolve();
+    },
+  );
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  expect(registeredCallback).not.equal(defaultCallback);
+  registeredCallback({ id: 'pullEvent1' } as PullEvent);
+  expect(createTaskSpy).toHaveBeenCalledOnce();
+  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Pulling registry.com/repo/image:latest`, action: undefined });
+  expect(webContents.send).toBeCalledWith('container-provider-registry:pullImage-onData', 1, {
+    id: 'pullEvent1',
+  } as PullEvent);
+  expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
 });

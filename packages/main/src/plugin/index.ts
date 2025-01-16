@@ -1109,8 +1109,27 @@ export class PluginSystem {
         imageName: string,
         callbackId: number,
         platform?: string,
-        taskAction?: TaskAction,
+        taskActionName?: string,
+        taskActionCallback?: () => void,
       ) => {
+        if (!providerContainerConnectionInfo || !imageName || !callbackId) {
+          return;
+        }
+
+        let taskAction: TaskAction | undefined;
+
+        if (
+          taskActionName &&
+          typeof taskActionName === 'string' &&
+          taskActionCallback &&
+          typeof taskActionCallback === 'function'
+        ) {
+          taskAction = {
+            name: taskActionName,
+            execute: taskActionCallback,
+          };
+        }
+
         const task = taskManager.createTask({
           title: `Pulling ${imageName}`,
           action: taskAction,
