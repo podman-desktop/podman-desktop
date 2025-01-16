@@ -98,7 +98,7 @@ onDestroy(() => {
       {#each containerProviders as entry}
         <ProviderWidget entry={entry}/>
       {/each}
-      {#each  kubernetesProviders as entry}
+      {#each kubernetesProviders as entry}
         <ProviderWidget entry={entry}/>
       {/each}
     {/if}
