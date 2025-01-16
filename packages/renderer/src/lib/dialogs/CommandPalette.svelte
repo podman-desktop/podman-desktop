@@ -48,7 +48,7 @@ onDestroy(() => {
 let selectedFilteredIndex = 0;
 let selectedIndex = 0;
 
-async function handleKeydown(e: KeyboardEvent) {
+async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
   if (e.key === 'F1') {
     // clear the input value
@@ -122,7 +122,7 @@ async function handleKeydown(e: KeyboardEvent) {
   }
 }
 
-async function executeCommand(index: number) {
+async function executeCommand(index: number): Promise<void> {
   // get command id
   const commandId = commandInfoItems[index].id;
   // execute the command
@@ -133,7 +133,7 @@ async function executeCommand(index: number) {
   }
 }
 
-function handleMousedown(e: MouseEvent) {
+function handleMousedown(e: MouseEvent): void {
   if (!display) {
     return;
   }
@@ -143,7 +143,7 @@ function handleMousedown(e: MouseEvent) {
   }
 }
 
-async function clickOnItem(index: number) {
+async function clickOnItem(index: number): Promise<void> {
   // hide the command palette
   display = false;
 
@@ -152,7 +152,7 @@ async function clickOnItem(index: number) {
   await executeCommand(selectedIndex);
 }
 
-async function onInputChange() {
+async function onInputChange(): Promise<void> {
   // in case of quick pick, filter the items
 
   selectedFilteredIndex = 0;
@@ -178,14 +178,14 @@ async function onInputChange() {
             aria-label="Command palette command input"
             type="text"
             bind:value={inputValue}
-            on:input={() => onInputChange()}
+            on:input={onInputChange}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-none" />
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
           {#each filteredCommandInfoItems as item, i}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
-                on:click={() => clickOnItem(i)}
+                on:click={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative my-0.5 mr-2 w-full {i === selectedFilteredIndex
                   ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">

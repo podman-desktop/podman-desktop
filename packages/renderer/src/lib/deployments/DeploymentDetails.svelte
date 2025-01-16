@@ -50,7 +50,7 @@ onMount(() => {
   });
 });
 
-async function loadDetails() {
+async function loadDetails(): Promise<void> {
   const getKubeDeployment = await window.kubernetesReadNamespacedDeployment(name, namespace);
   if (getKubeDeployment) {
     kubeDeployment = getKubeDeployment;
@@ -64,7 +64,7 @@ async function loadDetails() {
   <DetailsPage title={deployment.name} subtitle={deployment.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={DeploymentIcon} size={24} status={deployment.status} />
     <svelte:fragment slot="actions">
-      <DeploymentActions deployment={deployment} detailed={true} on:update={() => (deployment = deployment)} />
+      <DeploymentActions deployment={deployment} detailed={true} on:update={(): DeploymentUI => (deployment = deployment)} />
     </svelte:fragment>
     <svelte:fragment slot="tabs">
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />

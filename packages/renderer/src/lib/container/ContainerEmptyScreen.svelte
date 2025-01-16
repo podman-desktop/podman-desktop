@@ -52,7 +52,7 @@ function getCommandLine(stoppedOnly: boolean): string {
     return 'podman run quay.io/podman/hello';
   }
 }
-async function runContainer(commandLine: string) {
+async function runContainer(commandLine: string): Promise<void> {
   try {
     inProgress = true;
     if (selectedProviderConnection) {
@@ -84,7 +84,7 @@ async function runContainer(commandLine: string) {
   title={title}
   message={messageCommandLine}
   commandline={commandLine}
-  on:click={() => window.clipboardWriteText(commandLine)}>
+  on:click={(): Promise<void> => window.clipboardWriteText(commandLine)}>
   <div slot="upperContent" hidden={stoppedOnly}>
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2">{messageButton}</span>
     <div class="flex gap-2 justify-center p-3">
@@ -92,7 +92,7 @@ async function runContainer(commandLine: string) {
         title="Pull {helloImage} image and start container"
         type="primary"
         inProgress={inProgress}
-        on:click={() => runContainer(commandLine)}>Start your first container</Button>
+        on:click={(): Promise<void> => runContainer(commandLine)}>Start your first container</Button>
     </div>
     <h1 class="text-xl text-[var(--pd-details-empty-header)]">OR</h1>
   </div>

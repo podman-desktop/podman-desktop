@@ -28,9 +28,9 @@ import { suite, test, vi } from 'vitest';
 
 import { ContextKeyExpr, type ContextKeyExpression, implies, initContextKeysPlatform } from './contextKey.js';
 
-function createContext(ctx: any) {
+function createContext(ctx: any): { getValue: (key: string) => any } {
   return {
-    getValue: (key: string) => {
+    getValue: (key: string): any => {
       return ctx[key];
     },
   };

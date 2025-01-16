@@ -6,7 +6,7 @@ import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
 export let object: ConfigMapSecretUI;
 
-function openDetails() {
+function openDetails(): void {
   const configmapSecretUtils = new ConfigMapSecretUtils();
   if (configmapSecretUtils.isSecret(object)) {
     router.goto(
@@ -22,7 +22,7 @@ function openDetails() {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={() => openDetails()}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
   <div class="text-sm text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

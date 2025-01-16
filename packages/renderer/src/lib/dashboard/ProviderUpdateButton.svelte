@@ -13,7 +13,7 @@ let checksStatus: CheckStatus[] = [];
 
 let preflightChecksFailed = false;
 
-async function performUpdate(provider: ProviderInfo) {
+async function performUpdate(provider: ProviderInfo): Promise<void> {
   updateInProgress = true;
 
   checksStatus = [];
@@ -56,7 +56,7 @@ async function performUpdate(provider: ProviderInfo) {
     disabled={preflightChecksFailed}
     icon={faBoxOpen}
     padding="px-3 py-0.5"
-    on:click={() => performUpdate(provider)}>
+    on:click={(): Promise<void> => performUpdate(provider)}>
     Update to {provider.updateInfo.version}
   </Button>
 {/if}

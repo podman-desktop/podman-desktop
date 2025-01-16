@@ -13,8 +13,7 @@ let {
   name,
   value = $bindable(),
   disabled,
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  onChange = () => {},
+  onChange = (): void => {},
   options = [],
   class: className = '',
   ariaInvalid = false,

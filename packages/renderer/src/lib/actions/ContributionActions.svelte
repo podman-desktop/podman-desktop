@@ -109,7 +109,7 @@ async function executeContribution(menu: Menu): Promise<void> {
 {#each filteredContributions as menu}
   <ListItemButtonIcon
     title={menu.title}
-    onClick={() => executeContribution(menu)}
+    onClick={(): Promise<void> => executeContribution(menu)}
     menu={dropdownMenu}
     icon={getIcon(menu)}
     detailed={detailed}

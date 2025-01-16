@@ -22,8 +22,8 @@ let preflightChecks: CheckStatus[] = [];
           Could not find an installation. To start working with containers, {provider.name} needs to be detected/installed.
         </p>
         <div class="flex space-x-2 w-full lg:w-1/3 justify-center">
-          <ProviderDetectionChecksButton onDetectionChecks={checks => (detectionChecks = checks)} provider={provider} />
-          <ProviderInstallationButton onPreflightChecks={checks => (preflightChecks = checks)} provider={provider} />
+          <ProviderDetectionChecksButton onDetectionChecks={(checks): ProviderDetectionCheck[] => (detectionChecks = checks)} provider={provider} />
+          <ProviderInstallationButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
         </div>
       </div>
       {#if detectionChecks.length > 0}

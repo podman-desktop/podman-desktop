@@ -7,7 +7,7 @@ export let title = '';
 export let value: unknown;
 
 // describes an arc with the given radius, centered at an x,y position matching the radius
-function describeArc(radius: number, endAngle: number) {
+function describeArc(radius: number, endAngle: number): string {
   const angleInDegrees = endAngle >= 360 ? 359.9 : endAngle;
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
 

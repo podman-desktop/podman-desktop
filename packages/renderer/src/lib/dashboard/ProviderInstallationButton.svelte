@@ -14,7 +14,7 @@ let checksStatus: CheckStatus[] = [];
 
 let preflightChecksFailed = false;
 
-async function performInstallation(provider: ProviderInfo) {
+async function performInstallation(provider: ProviderInfo): Promise<void> {
   installInProgress = true;
   checksStatus = [];
   let checkSuccess = false;
@@ -55,7 +55,7 @@ async function performInstallation(provider: ProviderInfo) {
     inProgress={installInProgress}
     disabled={preflightChecksFailed}
     icon={faRocket}
-    on:click={() => performInstallation(provider)}>
+    on:click={(): Promise<void> => performInstallation(provider)}>
     Install
   </Button>
 {/if}

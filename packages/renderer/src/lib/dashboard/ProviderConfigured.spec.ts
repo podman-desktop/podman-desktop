@@ -37,13 +37,13 @@ beforeAll(() => {
   (window as any).startProvider = vi.fn();
 
   // mock that autostart is configured as true
-  (window.getConfigurationValue as unknown) = (_key: string) => {
+  (window.getConfigurationValue as unknown) = (_key: string): boolean => {
     return true;
   };
 
   // fake the window.events object
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

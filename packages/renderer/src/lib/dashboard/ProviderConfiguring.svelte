@@ -30,7 +30,7 @@ let logsTerminal;
 let resizeObserver: ResizeObserver;
 let termFit: FitAddon;
 
-async function refreshTerminal() {
+async function refreshTerminal(): Promise<void> {
   // missing element, return
   if (!logsXtermDiv) {
     console.log('missing xterm div, exiting...');
@@ -108,7 +108,7 @@ onDestroy(() => {
   </svelte:fragment>
   <svelte:fragment slot="update">
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
-      <ProviderUpdateButton onPreflightChecks={checks => (preflightChecks = checks)} provider={provider} />
+      <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
   </svelte:fragment>
 </ProviderCard>

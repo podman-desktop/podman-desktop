@@ -25,7 +25,7 @@ let runError: string | undefined = undefined;
 
 let preflightChecks: CheckStatus[] = [];
 
-async function runProvider() {
+async function runProvider(): Promise<void> {
   runError = undefined;
   runInProgress = true;
   try {
@@ -62,7 +62,7 @@ onMount(async () => {
         {/if} needs to be started.
       </p>
       <div class="w-1/3 flex justify-center">
-        <Button on:click={() => runProvider()}>
+        <Button on:click={runProvider}>
           Run {provider.name}
         </Button>
       </div>
@@ -89,7 +89,7 @@ onMount(async () => {
   </svelte:fragment>
   <svelte:fragment slot="update">
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
-      <ProviderUpdateButton onPreflightChecks={checks => (preflightChecks = checks)} provider={provider} />
+      <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
   </svelte:fragment>
 </ProviderCard>

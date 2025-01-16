@@ -33,7 +33,7 @@ let terminalParentDiv: HTMLDivElement;
 
 let logsTerminal: Terminal;
 
-function callback(name: string, data: string) {
+function callback(name: string, data: string): void {
   if (name === 'first-message') {
     noLogs = false;
     // clear on the first message
@@ -51,7 +51,7 @@ function callback(name: string, data: string) {
   }
 }
 
-async function fetchContainerLogs() {
+async function fetchContainerLogs(): Promise<void> {
   // grab logs of the container
   await window.logsContainer({ engineId: container.engineId, containerId: container.id, callback });
 }

@@ -187,7 +187,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Start Container"
-  onClick={() => startContainer()}
+  onClick={startContainer}
   hidden={container.state === 'RUNNING' || container.state === 'STOPPING'}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'STARTING'}
@@ -196,7 +196,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Stop Container"
-  onClick={() => stopContainer()}
+  onClick={stopContainer}
   hidden={!(container.state === 'RUNNING' || container.state === 'STOPPING')}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'STOPPING'}
@@ -204,7 +204,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Delete Container"
-  onClick={() => withConfirmation(deleteContainer, `delete container ${container.name}`)}
+  onClick={(): void => withConfirmation(deleteContainer, `delete container ${container.name}`)}
   icon={faTrash}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'DELETING'} />
@@ -214,13 +214,13 @@ if (dropdownMenu) {
   {#if !detailed}
     <ListItemButtonIcon
       title="Open Logs"
-      onClick={() => openLogs()}
+      onClick={openLogs}
       menu={dropdownMenu}
       detailed={false}
       icon={faAlignLeft} />
     <ListItemButtonIcon
       title="Generate Kube"
-      onClick={() => openGenerateKube()}
+      onClick={openGenerateKube}
       menu={dropdownMenu}
       hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
       detailed={detailed}
@@ -228,14 +228,14 @@ if (dropdownMenu) {
   {/if}
   <ListItemButtonIcon
     title="Deploy to Kubernetes"
-    onClick={() => deployToKubernetes()}
+    onClick={deployToKubernetes}
     menu={dropdownMenu}
     hidden={!(container.engineType === 'podman' && container.groupInfo.type === ContainerGroupInfoTypeUI.STANDALONE)}
     detailed={detailed}
     icon={faRocket} />
   <ListItemButtonIcon
     title="Open Browser"
-    onClick={() => openBrowser()}
+    onClick={openBrowser}
     menu={dropdownMenu}
     enabled={container.state === 'RUNNING' && container.hasPublicPort}
     hidden={dropdownMenu && container.state !== 'RUNNING'}
@@ -244,7 +244,7 @@ if (dropdownMenu) {
   {#if !detailed}
     <ListItemButtonIcon
       title="Open Terminal"
-      onClick={() => openTerminalContainer()}
+      onClick={openTerminalContainer}
       menu={dropdownMenu}
       hidden={container.state !== 'RUNNING'}
       detailed={false}
@@ -252,14 +252,14 @@ if (dropdownMenu) {
   {/if}
   <ListItemButtonIcon
     title="Restart Container"
-    onClick={() => restartContainer()}
+    onClick={restartContainer}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowsRotate} />
   <ListItemButtonIcon
     title="Export Container"
     tooltip="Exports container's filesystem contents as a tar archive and saves it on the local machine"
-    onClick={() => exportContainer()}
+    onClick={exportContainer}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />

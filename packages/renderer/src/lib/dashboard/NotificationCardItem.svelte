@@ -8,7 +8,7 @@ import Markdown from '../markdown/Markdown.svelte';
 
 export let notification: NotificationCard;
 
-async function removeNotification(id: number) {
+async function removeNotification(id: number): Promise<void> {
   await window.removeNotification(id);
 }
 </script>
@@ -38,7 +38,7 @@ async function removeNotification(id: number) {
     </div>
   {/if}
   <div class="absolute top-2 right-2 text-[var(--pd-content-card-carousel-card-header-text)]">
-    <button on:click={() => removeNotification(notification.id)} aria-label={`Delete notification ${notification.id}`}>
+    <button on:click={(): Promise<void> => removeNotification(notification.id)} aria-label={`Delete notification ${notification.id}`}>
       <Fa size="1x" icon={faXmark} />
     </button>
   </div>

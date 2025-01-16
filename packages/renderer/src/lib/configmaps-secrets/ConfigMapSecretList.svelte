@@ -64,7 +64,7 @@ onDestroy(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedConfigMapsSecrets() {
+async function deleteSelectedConfigMapsSecrets(): Promise<void> {
   const selectedConfigMapsSecrets = configmapsSecretsUI.filter(configmapsSecretsUI => configmapsSecretsUI.selected);
   if (selectedConfigMapsSecrets.length === 0) {
     return;
@@ -108,32 +108,32 @@ let statusColumn = new TableColumn<ConfigMapSecretUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: ConfigMapSecretColumnStatus,
-  comparator: (a, b) => a.status.localeCompare(b.status),
+  comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
 let nameColumn = new TableColumn<ConfigMapSecretUI>('Name', {
   width: '1.3fr',
   renderer: ConfigMapSecretColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let ageColumn = new TableColumn<ConfigMapSecretUI, Date | undefined>('Age', {
-  renderMapping: configmapSecret => configmapSecret.created,
+  renderMapping: (configmapSecret): Date | undefined => configmapSecret.created,
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.created).diff(moment(a.created)),
+  comparator: (a, b): number => moment(b.created).diff(moment(a.created)),
 });
 
 let keysColumn = new TableColumn<ConfigMapSecretUI, string>('Keys', {
-  renderMapping: config => config.keys.length.toString(),
+  renderMapping: (config): string => config.keys.length.toString(),
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.keys.length - b.keys.length,
+  comparator: (a, b): number => a.keys.length - b.keys.length,
 });
 
 let typeColumn = new TableColumn<ConfigMapSecretUI>('Type', {
   overflow: true,
   width: '2fr',
   renderer: ConfigMapSecretColumnType,
-  comparator: (a, b) => a.type.localeCompare(b.type),
+  comparator: (a, b): number => a.type.localeCompare(b.type),
 });
 
 const columns = [
@@ -145,7 +145,7 @@ const columns = [
   new TableColumn<ConfigMapSecretUI>('Actions', { align: 'right', renderer: ConfigMapSecretColumnActions }),
 ];
 
-const row = new TableRow<ConfigMapSecretUI>({ selectable: _configmapSecret => true });
+const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): boolean => true });
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="configmaps & secrets">
@@ -156,7 +156,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: _configmapSecret => tr
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() => deleteSelectedConfigMapsSecrets()}
+        on:click={deleteSelectedConfigMapsSecrets}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
@@ -176,7 +176,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: _configmapSecret => tr
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (configmapsSecretsUI = configmapsSecretsUI)}>
+      on:update={(): ConfigMapSecretUI[] => (configmapsSecretsUI = configmapsSecretsUI)}>
     </Table>
 
     {#if $kubernetesCurrentContextConfigMapsFiltered.length === 0 && $kubernetesCurrentContextSecretsFiltered.length === 0}

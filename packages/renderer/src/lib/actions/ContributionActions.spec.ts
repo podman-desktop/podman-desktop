@@ -31,7 +31,7 @@ beforeAll(() => {
 
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -119,7 +119,7 @@ test('Expect executeCommand to be called with sanitize object', async () => {
   render(ContributionActions, {
     args: [
       {
-        nonSerializable: () => {},
+        nonSerializable: (): void => {},
         serializable: 'hello',
       },
     ],
@@ -143,7 +143,7 @@ test('Expect executeCommand to be called with sanitize object nested', async () 
     args: [
       {
         parent: {
-          nonSerializable: () => {},
+          nonSerializable: (): void => {},
           serializable: 'hello',
         },
       },

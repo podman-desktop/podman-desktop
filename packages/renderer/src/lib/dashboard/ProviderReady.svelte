@@ -27,7 +27,7 @@ let preflightChecks: CheckStatus[] = [];
   </svelte:fragment>
   <svelte:fragment slot="update">
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
-      <ProviderUpdateButton onPreflightChecks={checks => (preflightChecks = checks)} provider={provider} />
+      <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
   </svelte:fragment>
 </ProviderCard>

@@ -37,7 +37,7 @@ $effect(() => {
   lastState = container.state;
 });
 
-async function restartTerminal() {
+async function restartTerminal(): Promise<void> {
   await executeShellIntoContainer();
   window.dispatchEvent(new Event('resize'));
 }
@@ -48,11 +48,11 @@ router.subscribe(route => {
 });
 
 // update terminal when receiving data
-function receiveDataCallback(data: Buffer) {
+function receiveDataCallback(data: Buffer): void {
   shellTerminal.write(data.toString());
 }
 
-function receiveEndCallback() {
+function receiveEndCallback(): void {
   // need to reopen a new terminal if container is running
   if (sendCallbackId && containerState === 'RUNNING') {
     window
@@ -68,7 +68,7 @@ function receiveEndCallback() {
 }
 
 // call exec command
-async function executeShellIntoContainer() {
+async function executeShellIntoContainer(): Promise<void> {
   if (container.state !== 'RUNNING') {
     return;
   }
@@ -92,7 +92,7 @@ async function executeShellIntoContainer() {
 }
 
 // refresh
-async function refreshTerminal() {
+async function refreshTerminal(): Promise<void> {
   // missing element, return
   if (!terminalXtermDiv) {
     return;

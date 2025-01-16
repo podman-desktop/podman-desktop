@@ -306,7 +306,7 @@ let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Stat
   align: 'center',
   width: '70px',
   renderer: ContainerColumnStatus,
-  comparator: (a, b) => {
+  comparator: (a, b): number => {
     const bStatus = ('status' in b ? b.status : 'state' in b ? b.state : '') ?? '';
     const aStatus = ('status' in a ? a.status : 'state' in a ? a.state : '') ?? '';
     return bStatus.localeCompare(aStatus);
@@ -316,18 +316,18 @@ let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Stat
 let nameColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Name', {
   width: '2fr',
   renderer: ContainerColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let envColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Environment', {
   renderer: ContainerColumnEnvironment,
-  comparator: (a, b) => (a.engineType ?? '').localeCompare(b.engineType ?? ''),
+  comparator: (a, b): number => (a.engineType ?? '').localeCompare(b.engineType ?? ''),
 });
 
 let imageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Image', {
   width: '3fr',
   renderer: ContainerColumnImage,
-  comparator: (a, b) => {
+  comparator: (a, b): number => {
     const aImage = 'image' in a ? a.image : '';
     const bImage = 'image' in b ? b.image : '';
     return aImage.localeCompare(bImage);
@@ -342,7 +342,7 @@ let ageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date | u
     }
     return undefined;
   },
-  comparator: (a, b) => {
+  comparator: (a, b): number => {
     const aTime = containerUtils.isContainerInfoUI(a) && a.state === 'RUNNING' ? (moment().diff(a.startedAt) ?? 0) : 0;
     const bTime = containerUtils.isContainerInfoUI(b) && b.state === 'RUNNING' ? (moment().diff(b.startedAt) ?? 0) : 0;
     return aTime - bTime;
@@ -364,8 +364,8 @@ const columns = [
 ];
 
 const row = new TableRow<ContainerGroupInfoUI | ContainerInfoUI>({
-  selectable: _container => true,
-  children: object => {
+  selectable: (_container): boolean => true,
+  children: (object): ContainerInfoUI[] => {
     if ('type' in object && object.type !== ContainerGroupInfoTypeUI.STANDALONE) {
       return object.containers;
     } else {
@@ -386,13 +386,13 @@ $: containersAndGroups = containerGroups.map(group =>
     {#if $containersInfos.length > 0}
       <Prune type="containers" engines={enginesList} />
     {/if}
-    <Button on:click={() => toggleCreateContainer()} icon={faPlusCircle} title="Create a container">Create</Button>
+    <Button on:click={toggleCreateContainer} icon={faPlusCircle} title="Create a container">Create</Button>
   </svelte:fragment>
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <div class="inline-flex space-x-2">
         <Button
-          on:click={() =>
+          on:click={(): void =>
             withBulkConfirmation(
               deleteSelectedContainers,
               `delete ${selectedItemsNumber} container${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -404,7 +404,7 @@ $: containersAndGroups = containerGroups.map(group =>
         </Button>
 
         <Button
-          on:click={() => createPodFromContainers()}
+          on:click={createPodFromContainers}
           title="Create Pod with {selectedItemsNumber} selected items"
           icon={SolidPodIcon}>
           Create Pod
@@ -415,11 +415,11 @@ $: containersAndGroups = containerGroups.map(group =>
   </svelte:fragment>
 
   <svelte:fragment slot="tabs">
-    <Button type="tab" on:click={() => resetRunningFilter()} selected={containerUtils.filterIsAll(searchTerm)}
+    <Button type="tab" on:click={resetRunningFilter} selected={containerUtils.filterIsAll(searchTerm)}
       >All</Button>
-    <Button type="tab" on:click={() => setRunningFilter()} selected={containerUtils.filterIsRunning(searchTerm)}
+    <Button type="tab" on:click={setRunningFilter} selected={containerUtils.filterIsRunning(searchTerm)}
       >Running</Button>
-    <Button type="tab" on:click={() => setStoppedFilter()} selected={containerUtils.filterIsStopped(searchTerm)}
+    <Button type="tab" on:click={setStoppedFilter} selected={containerUtils.filterIsStopped(searchTerm)}
       >Stopped</Button>
   </svelte:fragment>
 
@@ -432,7 +432,7 @@ $: containersAndGroups = containerGroups.map(group =>
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (containerGroups = [...containerGroups])}>
+      on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
     </Table>
 
     {#if providerConnections.length === 0}
@@ -442,7 +442,7 @@ $: containersAndGroups = containerGroups.map(group =>
         <FilteredEmptyScreen
           icon={ContainerIcon}
           kind="containers"
-          on:resetFilter={e => {
+          on:resetFilter={(e): void => {
             searchTerm = containerUtils.filterResetSearchTerm(searchTerm);
             e.preventDefault();
           }}
@@ -459,7 +459,7 @@ $: containersAndGroups = containerGroups.map(group =>
 {#if openChoiceModal}
   <Dialog
     title="Create a new container"
-    on:close={() => {
+    on:close={(): void => {
       openChoiceModal = false;
     }}>
     <div slot="content" class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
@@ -470,8 +470,8 @@ $: containersAndGroups = containerGroups.map(group =>
       </ul>
     </div>
     <svelte:fragment slot="buttons">
-      <Button type="primary" on:click={() => fromDockerfile()}>Containerfile or Dockerfile</Button>
-      <Button type="secondary" on:click={() => fromExistingImage()}>Existing image</Button>
+      <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
+      <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
     </svelte:fragment>
   </Dialog>
 {/if}

@@ -48,7 +48,7 @@ export async function initContextKeysPlatform(): Promise<void> {
 }
 
 /** allow register constant context keys that are known only after startup; requires running `substituteConstants` on the context key - https://github.com/microsoft/vscode/issues/174218#issuecomment-1437972127 */
-export function setConstant(key: string, value: boolean) {
+export function setConstant(key: string, value: boolean): void {
   if (CONSTANT_VALUES.get(key) !== undefined) {
     throw new Error('contextkey.setConstant(k, v) invoked with already set constant `k`');
   }
@@ -487,7 +487,7 @@ export class Parser {
           offset: number;
           lexeme: string;
         },
-  ) {
+  ): number {
     let parenBalance = 0;
     switch (followingToken.type) {
       case TokenType.LParen:
@@ -610,11 +610,11 @@ export class Parser {
   }
 
   // careful: this can throw if current token is the initial one (ie index = 0)
-  private _previous() {
+  private _previous(): Token {
     return this._tokens[this._current - 1];
   }
 
-  private _matchOne(token: TokenType) {
+  private _matchOne(token: TokenType): boolean {
     if (this._check(token)) {
       this._advance();
       return true;
@@ -623,14 +623,14 @@ export class Parser {
     return false;
   }
 
-  private _advance() {
+  private _advance(): Token {
     if (!this._isAtEnd()) {
       this._current++;
     }
     return this._previous();
   }
 
-  private _consume(type: TokenType, message: string) {
+  private _consume(type: TokenType, message: string): Token {
     if (this._check(type)) {
       return this._advance();
     }
@@ -638,7 +638,7 @@ export class Parser {
     throw this._errExpectedButGot(message, this._peek());
   }
 
-  private _errExpectedButGot(expected: string, got: Token, additionalInfo?: string) {
+  private _errExpectedButGot(expected: string, got: Token, additionalInfo?: string): Error {
     const message = `Expected: ${expected}\nReceived: '${Scanner.getLexeme(got)}'.`;
     const offset = got.offset;
     const lexeme = Scanner.getLexeme(got);
@@ -646,15 +646,15 @@ export class Parser {
     return Parser._parseError;
   }
 
-  private _check(type: TokenType) {
+  private _check(type: TokenType): boolean {
     return this._peek().type === type;
   }
 
-  private _peek() {
+  private _peek(): Token {
     return this._tokens[this._current];
   }
 
-  private _isAtEnd() {
+  private _isAtEnd(): boolean {
     return this._peek().type === TokenType.EOF;
   }
 }
@@ -2253,7 +2253,7 @@ function allElementsIncluded(p: ContextKeyExpression[], q: ContextKeyExpression[
   return pIndex === p.length;
 }
 
-function getTerminals(node: ContextKeyExpression) {
+function getTerminals(node: ContextKeyExpression): ContextKeyExpression[] {
   if (node.type === ContextKeyExprType.Or) {
     return node.expr;
   }

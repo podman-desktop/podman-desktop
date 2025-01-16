@@ -17,7 +17,7 @@ import type { DeploymentCondition, DeploymentUI } from './DeploymentUI';
 export let object: DeploymentUI;
 
 // Determine both the icon and color based on the deployment condition
-function getConditionAttributes(condition: DeploymentCondition) {
+function getConditionAttributes(condition: DeploymentCondition): { name: string; color: string; icon: IconDefinition } {
   const defaults = {
     name: condition.type,
     color: 'text-[var(--pd-status-unknown)]',

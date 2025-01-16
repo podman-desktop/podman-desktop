@@ -99,7 +99,7 @@ export type LexingError = {
   additionalInfo?: string;
 };
 
-function hintDidYouMean(...meant: string[]) {
+function hintDidYouMean(...meant: string[]): string | undefined {
   switch (meant.length) {
     case 1:
       return `Did you mean ${meant[0]}?`;
@@ -199,7 +199,7 @@ export class Scanner {
     return this._errors;
   }
 
-  reset(value: string) {
+  reset(value: string): Scanner {
     this._input = value;
 
     this._start = 0;
@@ -210,7 +210,7 @@ export class Scanner {
     return this;
   }
 
-  scan() {
+  scan(): Token[] {
     while (!this._isAtEnd()) {
       this._start = this._current;
 
@@ -223,7 +223,7 @@ export class Scanner {
     return Array.from(this._tokens);
   }
 
-  scanAtPosition(ch: number) {
+  scanAtPosition(ch: number): void {
     switch (ch) {
       case CharCode.OpenParen:
         this._addToken(TokenType.LParen);
@@ -275,7 +275,7 @@ export class Scanner {
     }
   }
 
-  _scanExclamationMark() {
+  _scanExclamationMark(): void {
     if (this._match(CharCode.Equals)) {
       const isTripleEq = this._match(CharCode.Equals); // eat last `=` if `!==`
       this._tokens.push({ type: TokenType.NotEq, offset: this._start, isTripleEq });
@@ -284,7 +284,7 @@ export class Scanner {
     }
   }
 
-  _scanEquals() {
+  _scanEquals(): void {
     if (this._match(CharCode.Equals)) {
       // support `==`
       const isTripleEq = this._match(CharCode.Equals); // eat last `=` if `===`
@@ -296,7 +296,7 @@ export class Scanner {
     }
   }
 
-  _scanAmpersand() {
+  _scanAmpersand(): void {
     if (this._match(CharCode.Ampersand)) {
       this._addToken(TokenType.And);
     } else {
@@ -304,7 +304,7 @@ export class Scanner {
     }
   }
 
-  _scanPipe() {
+  _scanPipe(): void {
     if (this._match(CharCode.Pipe)) {
       this._addToken(TokenType.Or);
     } else {
@@ -331,11 +331,11 @@ export class Scanner {
     return this._isAtEnd() ? CharCode.Null : this._input.charCodeAt(this._current);
   }
 
-  private _addToken(type: TokenTypeWithoutLexeme) {
+  private _addToken(type: TokenTypeWithoutLexeme): void {
     this._tokens.push({ type, offset: this._start });
   }
 
-  private _error(additional?: string) {
+  private _error(additional?: string): void {
     const offset = this._start;
     const lexeme = this._input.substring(this._start, this._current);
     const errToken: Token = { type: TokenType.Error, offset: this._start, lexeme };
@@ -345,7 +345,7 @@ export class Scanner {
 
   /* eslint-disable-next-line no-useless-escape, sonarjs/duplicates-in-character-class */
   private stringRe = /[a-zA-Z0-9_<>\-\./\\:\*\?\+\[\]\^,#@;"%\$\p{L}-]+/uy;
-  private _string() {
+  private _string(): void {
     this.stringRe.lastIndex = this._start;
     const match = this.stringRe.exec(this._input);
     if (match) {
@@ -361,7 +361,7 @@ export class Scanner {
   }
 
   // captures the lexeme without the leading and trailing '
-  private _quotedString() {
+  private _quotedString(): void {
     while (this._peek() !== CharCode.SingleQuote && !this._isAtEnd()) {
       this._advance();
     }
@@ -387,7 +387,7 @@ export class Scanner {
    *
    * Note that we want slashes within a regex to be escaped, e.g., /file:\\/\\/\\// should match `file:///`
    */
-  private _regex() {
+  private _regex(): void {
     let p = this._current;
 
     let inEscape = false;
@@ -430,7 +430,7 @@ export class Scanner {
     this._tokens.push({ type: TokenType.RegexStr, lexeme, offset: this._start });
   }
 
-  private _isAtEnd() {
+  private _isAtEnd(): boolean {
     return this._current >= this._input.length;
   }
 }

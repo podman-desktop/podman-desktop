@@ -20,7 +20,7 @@ let buttonOrder: number[];
 
 let display = false;
 
-const showMessageBoxCallback = (messageBoxParameter: unknown) => {
+const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
   currentId = options?.id || 0;
   title = options?.title || '';
@@ -80,18 +80,18 @@ onDestroy(() => {
   cleanup();
 });
 
-function cleanup() {
+function cleanup(): void {
   display = false;
   title = '';
   message = '';
 }
 
-async function clickButton(index?: number) {
+async function clickButton(index?: number): Promise<void> {
   await window.sendShowMessageBoxOnSelect(currentId, index);
   cleanup();
 }
 
-async function onClose() {
+async function onClose(): Promise<void> {
   await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
   cleanup();
 }
@@ -134,9 +134,9 @@ function getButtonType(b: boolean): ButtonType {
     <svelte:fragment slot="buttons">
       {#each buttonOrder as i}
         {#if i === cancelId}
-          <Button type="link" aria-label="Cancel" on:click={async () => await clickButton(i)}>Cancel</Button>
+          <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
         {:else}
-          <Button type={getButtonType(defaultId === i)} on:click={async () => await clickButton(i)}>{buttons[i]}</Button>
+          <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i]}</Button>
         {/if}
       {/each}
     </svelte:fragment>
