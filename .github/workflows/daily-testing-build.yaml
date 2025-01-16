@@ -141,7 +141,7 @@ jobs:
       - name: Run Build on Windows
         if: startsWith(matrix.os, 'windows')
         timeout-minutes: 40
-        run: pnpm compile:next --win portable
+        run: pnpm compile:next --win nsis portable
 
   release:
     needs: [tag, build]
