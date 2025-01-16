@@ -28,7 +28,7 @@ import { test } from 'vitest';
 
 import { Scanner, type Token, TokenType } from './scanner';
 
-function tokenTypeToStr(token: Token) {
+function tokenTypeToStr(token: Token): string {
   switch (token.type) {
     case TokenType.LParen:
       return '(';
@@ -75,7 +75,7 @@ function tokenTypeToStr(token: Token) {
   }
 }
 
-function scan(input: string) {
+function scan(input: string): { type: string; offset: number; lexeme?: string }[] {
   return new Scanner()
     .reset(input)
     .scan()

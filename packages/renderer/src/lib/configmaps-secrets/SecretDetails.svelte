@@ -46,7 +46,7 @@ onMount(() => {
   });
 });
 
-async function loadDetails() {
+async function loadDetails(): Promise<void> {
   const getKubeSecret = await window.kubernetesReadNamespacedSecret(secret.name, namespace);
   if (getKubeSecret) {
     kubeSecret = getKubeSecret;
@@ -60,7 +60,7 @@ async function loadDetails() {
   <DetailsPage title={secret.name} subtitle={secret.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={SecretIcon} size={24} status={secret.status} />
     <svelte:fragment slot="actions">
-      <ConfigMapSecretActions configMapSecret={secret} detailed={true} on:update={() => (secret = secret)} />
+      <ConfigMapSecretActions configMapSecret={secret} detailed={true} on:update={(): ConfigMapSecretUI => (secret = secret)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={secret.status} />

@@ -33,7 +33,7 @@ import type { ContainerGroupInfoUI, ContainerGroupPartInfoUI, ContainerInfoUI } 
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
 export class ContainerUtils {
-  getName(containerInfo: ContainerInfo) {
+  getName(containerInfo: ContainerInfo): string {
     // If the container has no name, return an empty string.
     if (containerInfo.Names.length === 0) {
       return '';
@@ -311,20 +311,20 @@ export class ContainerUtils {
     context.setValue('containerImageName', container.Image);
   }
 
-  filterResetRunning(f: string) {
+  filterResetRunning(f: string): string {
     return f
       .split(' ')
       .filter(part => !part.startsWith('is:running') && !part.startsWith('is:stopped'))
       .join(' ');
   }
 
-  filterSetRunning(f: string) {
+  filterSetRunning(f: string): string {
     const parts = f.split(' ').filter(part => !part.startsWith('is:running') && !part.startsWith('is:stopped'));
     parts.push('is:running');
     return parts.join(' ');
   }
 
-  filterSetStopped(f: string) {
+  filterSetStopped(f: string): string {
     const parts = f.split(' ').filter(part => !part.startsWith('is:running') && !part.startsWith('is:stopped'));
     parts.push('is:stopped');
     return parts.join(' ');

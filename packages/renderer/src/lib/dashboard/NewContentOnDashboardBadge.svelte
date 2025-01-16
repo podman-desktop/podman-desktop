@@ -54,7 +54,7 @@ function hasNewProvider(oldProvidersId: string[], newProvidersId: string[]): boo
   return false;
 }
 
-function onHide() {
+function onHide(): void {
   hasNewProviders = false;
   hasNewNotifications = false;
 }

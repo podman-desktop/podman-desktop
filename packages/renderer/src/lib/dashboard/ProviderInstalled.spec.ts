@@ -66,7 +66,7 @@ beforeAll(() => {
   (window as any).telemetryPage = vi.fn().mockResolvedValue(undefined);
   (window as any).initializeProvider = vi.fn().mockResolvedValue([]);
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

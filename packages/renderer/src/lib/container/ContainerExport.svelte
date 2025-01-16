@@ -40,7 +40,7 @@ onMount(() => {
   });
 });
 
-async function selectFolderPath() {
+async function selectFolderPath(): Promise<void> {
   if (!container) return;
 
   const result = await window.saveDialog({
@@ -63,7 +63,7 @@ async function selectFolderPath() {
   invalidFolder = false;
 }
 
-async function exportContainer() {
+async function exportContainer(): Promise<void> {
   if (!container) return;
 
   exportedError = '';
@@ -103,12 +103,12 @@ async function exportContainer() {
             id="input-export-container-name"
             aria-invalid={invalidFolder} />
           <Button
-            on:click={() => selectFolderPath()}
+            on:click={selectFolderPath}
             title="Open dialog to select the output file"
             aria-label="Select output file">Browse ...</Button>
         </div>
         <Button
-          on:click={() => exportContainer()}
+          on:click={exportContainer}
           class="w-full mt-5"
           icon={faDownload}
           inProgress={inProgress}

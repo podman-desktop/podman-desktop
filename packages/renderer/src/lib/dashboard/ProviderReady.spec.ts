@@ -29,7 +29,7 @@ import { verifyStatus } from './ProviderStatusTestHelper.spec';
 // fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

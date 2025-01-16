@@ -45,13 +45,13 @@ let installationOptionSelected = InitializeAndStartMode;
 $: initializationButtonVisible =
   provider.containerProviderConnectionInitialization || provider.kubernetesProviderConnectionInitialization;
 
-function showLastExecutionError() {
+function showLastExecutionError(): void {
   initializeError = initializationContext.error;
   logsTerminal?.write('Initialization failed. Please check the error below and try again' + '\r\n');
   logsTerminal?.write(initializeError + '\r');
 }
 
-async function initializeProvider() {
+async function initializeProvider(): Promise<void> {
   initializeError = undefined;
   logsTerminal.clear();
   initializeInProgress = true;
@@ -65,7 +65,7 @@ async function initializeProvider() {
   initializeInProgress = false;
 }
 
-async function refreshTerminal() {
+async function refreshTerminal(): Promise<void> {
   // missing element, return
   if (!logsXtermDiv) {
     console.log('missing xterm div, exiting...');
@@ -120,11 +120,11 @@ onDestroy(() => {
   resizeObserver?.unobserve(logsXtermDiv);
 });
 
-function updateOptionsMenu(visible: boolean) {
+function updateOptionsMenu(visible: boolean): void {
   installationOptionsMenuVisible = visible;
 }
 
-async function onInstallationClick() {
+async function onInstallationClick(): Promise<void> {
   initializeInProgress = true;
   initializationButtonVisible = false;
   initializationContext.mode = installationOptionSelected as InitializationMode;
@@ -149,7 +149,7 @@ async function onInstallationClick() {
           <button
             class="inline-block bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] text-[13px] text-[var(--pd-button-text)] pt-2 pr-3 pl-3 pb-2 w-[32px]"
             aria-label="Installation options menu"
-            on:click={() => updateOptionsMenu(!installationOptionsMenuVisible)}>
+            on:click={(): void => updateOptionsMenu(!installationOptionsMenuVisible)}>
             <i class="fas fa-caret-down"></i>
           </button>
         </div>
@@ -160,7 +160,7 @@ async function onInstallationClick() {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={() => {
+                on:click={(): void => {
                   installationOptionSelected = InitializeOnlyMode;
                   installationOptionsMenuVisible = false;
                 }}>
@@ -171,7 +171,7 @@ async function onInstallationClick() {
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"
-                on:click={() => {
+                on:click={(): void => {
                   installationOptionSelected = InitializeAndStartMode;
                   installationOptionsMenuVisible = false;
                 }}>
@@ -206,7 +206,7 @@ async function onInstallationClick() {
   </svelte:fragment>
   <svelte:fragment slot="update">
     {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
-      <ProviderUpdateButton onPreflightChecks={checks => (preflightChecks = checks)} provider={provider} />
+      <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
     {/if}
   </svelte:fragment>
 </ProviderCard>

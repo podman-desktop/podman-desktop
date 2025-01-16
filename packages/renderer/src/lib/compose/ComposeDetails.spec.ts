@@ -49,7 +49,7 @@ beforeAll(() => {
   onDidUpdateProviderStatusMock.mockImplementation(() => Promise.resolve());
 
   (window.events as unknown) = {
-    receive: (_channel: string, func: () => void) => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };

@@ -58,7 +58,7 @@ function handleError(errorMessage: string): void {
   onUpdate(compose);
 }
 
-async function startCompose() {
+async function startCompose(): Promise<void> {
   inProgress(true, 'STARTING');
   try {
     await window.startContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -68,7 +68,7 @@ async function startCompose() {
     inProgress(false);
   }
 }
-async function stopCompose() {
+async function stopCompose(): Promise<void> {
   inProgress(true, 'STOPPING');
   try {
     await window.stopContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -79,7 +79,7 @@ async function stopCompose() {
   }
 }
 
-async function deleteCompose() {
+async function deleteCompose(): Promise<void> {
   inProgress(true, 'DELETING');
   try {
     await window.deleteContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -90,7 +90,7 @@ async function deleteCompose() {
   }
 }
 
-async function restartCompose() {
+async function restartCompose(): Promise<void> {
   inProgress(true, 'RESTARTING');
   try {
     await window.restartContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -121,7 +121,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Start Compose"
-  onClick={() => startCompose()}
+  onClick={startCompose}
   hidden={compose.status === 'RUNNING' || compose.status === 'STOPPING'}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'STARTING'}
@@ -130,7 +130,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Stop Compose"
-  onClick={() => stopCompose()}
+  onClick={stopCompose}
   hidden={!(compose.status === 'RUNNING' || compose.status === 'STOPPING')}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'STOPPING'}
@@ -138,7 +138,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Delete Compose"
-  onClick={() => withConfirmation(deleteCompose, `delete compose ${compose.name}`)}
+  onClick={(): void => withConfirmation(deleteCompose, `delete compose ${compose.name}`)}
   icon={faTrash}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'DELETING'} />
@@ -148,21 +148,21 @@ if (dropdownMenu) {
   {#if !detailed}
     <ListItemButtonIcon
       title="Generate Kube"
-      onClick={() => openGenerateKube()}
+      onClick={openGenerateKube}
       menu={dropdownMenu}
       detailed={detailed}
       icon={faFileCode} />
   {/if}
   <ListItemButtonIcon
     title="Deploy to Kubernetes"
-    onClick={() => deployToKubernetes()}
+    onClick={deployToKubernetes}
     menu={dropdownMenu}
     hidden={compose.engineType !== 'podman'}
     detailed={detailed}
     icon={faRocket} />
   <ListItemButtonIcon
     title="Restart Compose"
-    onClick={() => restartCompose()}
+    onClick={restartCompose}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowsRotate} />

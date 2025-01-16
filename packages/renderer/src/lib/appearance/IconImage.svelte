@@ -8,7 +8,7 @@ let imgSrc: string | undefined = undefined;
 
 $: getImgSrc(image);
 
-function getImgSrc(image: string | { light: string; dark: string } | undefined) {
+function getImgSrc(image: string | { light: string; dark: string } | undefined): void {
   new AppearanceUtil()
     .getImage(image)
     .then(s => (imgSrc = s))

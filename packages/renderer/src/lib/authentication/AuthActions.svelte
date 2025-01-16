@@ -44,7 +44,7 @@ export function onButtonClick(e: MouseEvent): void {
     <DropdownMenu.Item
       title="Manage authentication"
       icon={faKey}
-      onClick={() => handleNavigation({ page: NavigationPage.AUTHENTICATION })} />
+      onClick={(): void => handleNavigation({ page: NavigationPage.AUTHENTICATION })} />
 
     {#each $authenticationProviders as provider}
       {@const sessionRequests = provider.sessionRequests ?? []}
@@ -52,7 +52,7 @@ export function onButtonClick(e: MouseEvent): void {
         {#each provider.accounts as account}
           <DropdownMenu.Item
             title="Sign out of {provider.displayName} ({account.label})"
-            onClick={() => window.requestAuthenticationProviderSignOut(provider.id, account.id)}
+            onClick={(): Promise<void> => window.requestAuthenticationProviderSignOut(provider.id, account.id)}
             icon={faSignOut} />
         {/each}
       {/if}
@@ -60,7 +60,7 @@ export function onButtonClick(e: MouseEvent): void {
       {#each sessionRequests as request}
         <DropdownMenu.Item
           title="Sign in with {provider.displayName} to use {request.extensionLabel}"
-          onClick={() => window.requestAuthenticationProviderSignIn(request.id)}
+          onClick={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}
           icon={faSignIn} />
       {/each}
     {/each}

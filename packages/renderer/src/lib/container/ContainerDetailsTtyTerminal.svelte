@@ -20,7 +20,7 @@ $: listenTerminalData(attachContainerTerminal, callbackId);
 
 // listenTerminalData only when attachContainerTerminal is bound from TerminalWindow component
 // and callbackId is defined
-function listenTerminalData(terminal: Terminal, cbId: number) {
+function listenTerminalData(terminal: Terminal, cbId: number): void {
   if (!attachContainerTerminal || !cbId) {
     return;
   }
@@ -37,16 +37,16 @@ function listenTerminalData(terminal: Terminal, cbId: number) {
 }
 
 // update terminal when receiving data
-function receiveDataCallback(data: Buffer) {
+function receiveDataCallback(data: Buffer): void {
   attachContainerTerminal?.write(data.toString());
 }
 
-function receiveEndCallback() {
+function receiveEndCallback(): void {
   closed = true;
 }
 
 // call exec command
-async function attachToContainer() {
+async function attachToContainer(): Promise<void> {
   if (container.state !== 'RUNNING') {
     return;
   }
