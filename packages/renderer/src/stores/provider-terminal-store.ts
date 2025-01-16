@@ -67,7 +67,7 @@ providerInfos.subscribe(providers => {
   });
 });
 
-export function registerTerminal(terminal: TerminalOfProvider) {
+export function registerTerminal(terminal: TerminalOfProvider): void {
   providerTerminals.update(terminals => {
     // remove old instance(s) of terminal if exists
     terminals = terminals.filter(

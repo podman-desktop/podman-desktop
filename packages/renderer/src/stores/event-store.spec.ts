@@ -24,7 +24,7 @@ import { EventStore, type EventStoreInfo } from './event-store';
 // first, path window object
 const callbacks = new Map<string, (arg?: unknown) => Promise<void>>();
 const eventEmitter = {
-  receive: (message: string, callback: (arg?: unknown) => Promise<void>) => {
+  receive: (message: string, callback: (arg?: unknown) => Promise<void>): void => {
     callbacks.set(message, callback);
   },
 };
