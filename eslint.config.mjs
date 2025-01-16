@@ -305,7 +305,6 @@ export default [
     rules: {
       '@typescript-eslint/no-empty-function': 'off',
       'no-undef': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
       'no-self-assign': 'off',
       'sonarjs/no-empty-function': 'off',
       'sonarjs/sonar-prefer-regexp-exec': 'off',
