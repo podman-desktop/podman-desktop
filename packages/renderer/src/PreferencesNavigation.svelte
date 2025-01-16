@@ -1,4 +1,5 @@
 <script lang="ts">
+import { faFlask } from '@fortawesome/free-solid-svg-icons';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
@@ -93,7 +94,13 @@ onMount(() => {
     {/each}
 
     {#if experimentalSection}
-      <SettingsNavItem title="Experimental" href="/preferences/experimental" selected={meta.url === '/preferences/experimental'} />
+      <SettingsNavItem
+        icon={faFlask}
+        iconPosition="right"
+        title="Experimental"
+        href="/preferences/experimental"
+        selected={meta.url === '/preferences/experimental'}
+      />
     {/if}
 
     <!-- Default configuration properties start -->
