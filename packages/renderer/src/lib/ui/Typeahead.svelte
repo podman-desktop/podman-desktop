@@ -86,7 +86,7 @@ $effect(() => {
     if (!sorted) {
       // default sorting if the values are not already sorted
       values = values.toSorted((a: string, b: string) => {
-        if ((a.startsWith(value) && b.startsWith(value)) || (!a.startsWith(value) && !b.startsWith(value))) {
+        if (a.startsWith(value) === b.startsWith(value)) {
           return a.localeCompare(b);
         } else if (a.startsWith(value) && !b.startsWith(value)) {
           return -1;
