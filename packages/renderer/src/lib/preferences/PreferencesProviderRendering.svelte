@@ -74,7 +74,7 @@ async function stopProvider(): Promise<void> {
 }
 
 async function startReceivingLogs(providerInternalId: string): Promise<void> {
-  const logHandler = (newContent: unknown[]) => {
+  const logHandler = (newContent: unknown[]): void => {
     writeToTerminal(logsTerminal, newContent, '\x1b[37m');
   };
   await window.startReceiveLogs(providerInternalId, logHandler, logHandler, logHandler);
@@ -110,7 +110,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           <!-- start is enabled only in stopped mode-->
           {#if providerInfo?.lifecycleMethods.includes('start')}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
-              <Button disabled={providerInfo.status !== 'stopped'} on:click={() => startProvider()} icon={faPlay}>
+              <Button disabled={providerInfo.status !== 'stopped'} on:click={startProvider} icon={faPlay}>
                 Start
               </Button>
             </div>
@@ -119,13 +119,13 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           <!-- stop is enabled only in started mode-->
           {#if providerInfo.lifecycleMethods.includes('stop')}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
-              <Button disabled={providerInfo.status !== 'started'} on:click={() => stopProvider()} icon={faStop}>
+              <Button disabled={providerInfo.status !== 'started'} on:click={stopProvider} icon={faStop}>
                 Stop
               </Button>
             </div>
           {/if}
           <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
-            <Button on:click={() => (showModalProviderInfo = providerInfo)} icon={faHistory}>Show Logs</Button>
+            <Button on:click={(): ProviderInfo | undefined => (showModalProviderInfo = providerInfo)} icon={faHistory}>Show Logs</Button>
           </div>
 
           {#if providerLifecycleError}
@@ -165,7 +165,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
 {#if showModalProviderInfo}
   {@const showModalProviderInfoInternalId = showModalProviderInfo.internalId}
   <Modal
-    on:close={async () => {
+    on:close={async (): Promise<void> => {
       await stopReceivingLogs(showModalProviderInfoInternalId);
       showModalProviderInfo = undefined;
     }}>
@@ -173,7 +173,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
       <div style="width:100%; height:100%; flexDirection: column;">
         <TerminalWindow
           bind:terminal={logsTerminal}
-          on:init={() => startReceivingLogs(showModalProviderInfoInternalId)} />
+          on:init={(): Promise<void> => startReceivingLogs(showModalProviderInfoInternalId)} />
       </div>
     </div>
   </Modal>

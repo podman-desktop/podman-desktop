@@ -8,8 +8,8 @@ import { checkNumericValueValid } from './NumberItemUtils';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number | undefined;
-export let onChange = (_id: string, _value: number) => {};
-export let invalidRecord = (_error: string) => {};
+export let onChange = (_id: string, _value: number): void => {};
+export let invalidRecord = (_error: string): void => {};
 
 let recordValue: string;
 $: recordValue = value?.toString() ?? '0';
@@ -23,7 +23,7 @@ onMount(() => {
   }
 });
 
-function onInput(event: Event) {
+function onInput(event: Event): void {
   const target = event.currentTarget as HTMLInputElement;
   // if last char is a dot, user is probably adding a decimal point
   if (target.value.endsWith('.')) {
@@ -49,7 +49,7 @@ function onInput(event: Event) {
   }
 }
 
-function onNumberInputKeyPress(event: KeyboardEvent) {
+function onNumberInputKeyPress(event: KeyboardEvent): void {
   if (event.key === '.' && (recordValue.length === 0 || recordValue.includes('.'))) {
     event.preventDefault();
   }
@@ -77,7 +77,7 @@ function assertNumericValueIsValid(value: number): boolean {
       class="w-full px-2 outline-none focus:outline-none text-[var(--pd-input-field-focused-text)] text-sm py-0.5"
       name={record.id}
       bind:value={recordValue}
-      on:keypress={event => onNumberInputKeyPress(event)}
+      on:keypress={onNumberInputKeyPress}
       on:input={onInput}
       aria-label={record.description} />
   </Tooltip>

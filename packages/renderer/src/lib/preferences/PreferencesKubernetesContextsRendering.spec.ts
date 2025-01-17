@@ -173,7 +173,7 @@ describe.each([
       health: true,
       resourcesCount: false,
     },
-    initMocks: () => {
+    initMocks: (): void => {
       Object.defineProperty(global, 'window', {
         value: {
           getConfigurationValue: vi.fn(),
@@ -202,7 +202,7 @@ describe.each([
       health: true,
       resourcesCount: true,
     },
-    initMocks: () => {
+    initMocks: (): void => {
       const state: Map<string, ContextGeneralState> = new Map();
       state.set('context-name', {
         reachable: true,
@@ -239,7 +239,7 @@ describe.each([
     expect(within(context1).queryByText('DEPLOYMENTS')).toBeInTheDocument();
 
     if (implemented.resourcesCount) {
-      const checkCount = (el: HTMLElement, label: string, count: number) => {
+      const checkCount = (el: HTMLElement, label: string, count: number): void => {
         const countEl = within(el).getByLabelText(label);
         expect(countEl).toBeInTheDocument();
         expect(within(countEl).queryByText(count)).toBeTruthy();

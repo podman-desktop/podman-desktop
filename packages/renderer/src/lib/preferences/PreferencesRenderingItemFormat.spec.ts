@@ -37,7 +37,7 @@ beforeAll(() => {
   (window as any).getConfigurationValue = vi.fn().mockResolvedValue(undefined);
 });
 
-async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any) {
+async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any): Promise<void> {
   render(PreferencesRenderingItemFormat, {
     record,
     initialValue: getInitialValue(record),

@@ -63,7 +63,7 @@ onMount(async () => {
   podmanDesktopVersion = await window.getPodmanDesktopVersion();
 });
 
-async function closeWelcome() {
+async function closeWelcome(): Promise<void> {
   showWelcome = false;
   if (showTelemetry) {
     await welcomeUtils.setTelemetry(telemetry);
@@ -71,7 +71,7 @@ async function closeWelcome() {
 }
 
 // Function to toggle provider selection
-function toggleOnboardingSelection(providerName: string) {
+function toggleOnboardingSelection(providerName: string): void {
   // Go through providers, find the provider name and toggle the selected value
   // then update providers
   onboardingProviders = onboardingProviders.map(provider => {
@@ -82,7 +82,7 @@ function toggleOnboardingSelection(providerName: string) {
   });
 }
 
-function startOnboardingQueue() {
+function startOnboardingQueue(): void {
   const selectedProviders = onboardingProviders.filter(provider => provider.selected);
   const extensionIds = selectedProviders.map(provider => provider.extension);
   const queryParams = new URLSearchParams({ ids: extensionIds.join(',') }).toString();
@@ -133,7 +133,7 @@ function startOnboardingQueue() {
                     title="{onboarding.displayName} checkbox"
                     name="{onboarding.displayName} checkbox"
                     bind:checked={onboarding.selected}
-                    on:click={() => toggleOnboardingSelection(onboarding.name)}
+                    on:click={(): void => toggleOnboardingSelection(onboarding.name)}
                     class="text-xl" />
                 </div>
               {/each}
@@ -159,7 +159,7 @@ function startOnboardingQueue() {
           <div class="w-2/5 text-[var(--pd-content-card-text)]">
             Help Red Hat improve Podman Desktop by allowing anonymous usage data to be collected.
             <Link
-              on:click={async () => {
+              on:click={async (): Promise<void> => {
                 await window.openExternal('https://developers.redhat.com/article/tool-data-collection');
               }}>Read our privacy statement</Link>
           </div>
@@ -182,20 +182,16 @@ function startOnboardingQueue() {
           we do not want the user to not be able to continue. -->
           <Button
             type="secondary"
-            on:click={async () => {
-              await closeWelcome();
-            }}>Skip</Button>
+            on:click={closeWelcome}>Skip</Button>
           <Button
             class="ml-2"
-            on:click={async () => {
+            on:click={async (): Promise<void> => {
               await closeWelcome();
               startOnboardingQueue();
             }}>Start onboarding</Button>
         {:else}
           <Button
-            on:click={async () => {
-              await closeWelcome();
-            }}>Skip</Button>
+            on:click={closeWelcome}>Skip</Button>
         {/if}
       </div>
     </div>

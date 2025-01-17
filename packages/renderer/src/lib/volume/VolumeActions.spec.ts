@@ -36,7 +36,7 @@ class VolumeInfoUIImpl {
     this.#status = initialStatus;
   }
 
-  get status() {
+  get status(): string {
     return this.#status;
   }
   set status(status: string) {

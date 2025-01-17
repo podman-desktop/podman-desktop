@@ -20,12 +20,12 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
 </script>
 
 {#if providerToBeInstalled}
-  <Modal on:close={() => closeCallback()}>
+  <Modal on:close={closeCallback}>
     <div class="inline-block w-full overflow-hidden text-left transition-all" aria-label="install provider">
       <div
         class="flex items-center justify-between px-5 py-4 mb-4 text-[var(--pd-modal-header-text)] bg-[var(--pd-modal-header-bg)]">
         <h1 class="text-md font-semibold">Create a new {providerToBeInstalled.displayName}</h1>
-        <CloseButton class="px-2 py-1" on:click={() => closeCallback()} />
+        <CloseButton class="px-2 py-1" on:click={closeCallback} />
       </div>
       <div class="overflow-y-auto px-4 pb-4 text-[var(--pd-modal-text)]">
         <div class="flex flex-col rounded-lg">
@@ -47,7 +47,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
                       <div class="flex flex-row mt-0.5">
                         <span class="mr-1">See:</span>
                         {#each preCheck.docLinks as link}
-                          <a href={link.url} target="_blank" class="mr-1" on:click={async e => await openLink(e, link.url)}
+                          <a href={link.url} target="_blank" class="mr-1" on:click={async (e): Promise<void> => await openLink(e, link.url)}
                             >{link.title}</a>
                         {/each}
                       </div>
@@ -63,10 +63,10 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
             Be sure that your system fulfills all the requirements above before proceeding
           </div>
           <div class="flex flex-row justify-end w-full pt-2">
-            <Button type="link" class="mr-3" on:click={() => closeCallback()}>Cancel</Button>
+            <Button type="link" class="mr-3" on:click={closeCallback}>Cancel</Button>
             <Button
               aria-label="Next"
-              on:click={() => doCreateNew(providerToBeInstalled.provider, providerToBeInstalled.displayName)}
+              on:click={(): void => doCreateNew(providerToBeInstalled.provider, providerToBeInstalled.displayName)}
               >Retry</Button>
           </div>
         </div>

@@ -42,7 +42,7 @@ async function showTaskManager(): Promise<void> {
   await window.executeCommand('show-task-manager');
 }
 
-async function update(cliTool: CliToolInfo) {
+async function update(cliTool: CliToolInfo): Promise<void> {
   newVersion = cliTool.newVersion;
   if (!newVersion) {
     // user has to select the version to update to
@@ -71,7 +71,7 @@ async function update(cliTool: CliToolInfo) {
   }
 }
 
-async function install(cliTool: CliToolInfo) {
+async function install(cliTool: CliToolInfo): Promise<void> {
   // user has to select the version to install
   let versionToInstall;
   try {
@@ -100,7 +100,7 @@ async function install(cliTool: CliToolInfo) {
   }
 }
 
-async function uninstall(cliTool: CliToolInfo) {
+async function uninstall(cliTool: CliToolInfo): Promise<void> {
   const result = await window.showMessageBox({
     title: 'Uninstall',
     message: `Uninstall ${cliTool.displayName} ${cliTool.version} ?`,
@@ -128,12 +128,12 @@ async function uninstall(cliTool: CliToolInfo) {
 
 function getLoggerHandler(_cliToolId: string): ConnectionCallback {
   return {
-    log: () => {},
-    warn: () => {},
-    error: _args => {
+    log: (): void => {},
+    warn: (): void => {},
+    error: (_args): void => {
       showError = true;
     },
-    onEnd: () => {},
+    onEnd: (): void => {},
   };
 }
 </script>
@@ -172,7 +172,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
             <div class="p-0.5 rounded-lg bg-[var(--pd-invert-content-bg)] w-fit">
               <LoadingIconButton
                 action="install"
-                clickAction={async () => {
+                clickAction={async (): Promise<void> => {
                   if (cliTool.canInstall) {
                     await install(cliTool);
                   }
@@ -188,7 +188,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
             <div class="p-0.5 rounded-lg bg-[var(--pd-invert-content-bg)] w-fit">
               <LoadingIconButton
                 action="update"
-                clickAction={async () => {
+                clickAction={async (): Promise<void> => {
                   if (cliTool.canUpdate) {
                     await update(cliTool);
                   }
@@ -208,7 +208,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
             <div class="p-0.5 rounded-lg bg-[var(--pd-invert-content-bg)] w-fit">
               <LoadingIconButton
                 action="uninstall"
-                clickAction={async () => {
+                clickAction={async (): Promise<void> => {
                   if (cliTool.canInstall) {
                     await uninstall(cliTool);
                   }
@@ -252,7 +252,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                 type="link"
                 class="underline"
                 padding="p-0"
-                on:click={async () => {
+                on:click={async (): Promise<void> => {
                   if (cliTool.canUpdate) {
                     await update(cliTool);
                   }
@@ -277,7 +277,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                 type="link"
                 class="underline"
                 padding="p-0"
-                on:click={async () => {
+                on:click={async (): Promise<void> => {
                   if (cliTool.canInstall) {
                     await install(cliTool);
                   }

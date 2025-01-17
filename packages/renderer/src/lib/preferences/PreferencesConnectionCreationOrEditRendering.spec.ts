@@ -25,7 +25,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import { eventCollect } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
@@ -71,8 +71,8 @@ beforeAll(() => {
     value: () => {
       return {
         matches: false,
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       };
     },
   });
@@ -80,7 +80,7 @@ beforeAll(() => {
 
 function mockCallback(
   callback: (keyLogger: (key: symbol, eventName: LoggerEventName, args: string[]) => void) => Promise<void>,
-) {
+): Mock<any> {
   return vi.fn().mockImplementation(async function (
     _id: string,
     _params: unknown,

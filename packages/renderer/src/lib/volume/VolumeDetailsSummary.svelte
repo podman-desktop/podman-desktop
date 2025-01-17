@@ -12,7 +12,7 @@ import type { VolumeInfoUI } from './VolumeInfoUI';
 export let volume: VolumeInfoUI;
 const createdTime: Date = new Date(volume.created);
 
-function openContainer(containerID: string) {
+function openContainer(containerID: string): void {
   handleNavigation({
     page: NavigationPage.CONTAINER_LOGS,
     parameters: {
@@ -73,7 +73,7 @@ function openContainer(containerID: string) {
     {#each volume.containersUsage as container}
       <tr>
         <DetailsCell>
-          <Link on:click={() => openContainer(container.id)}
+          <Link on:click={(): void => openContainer(container.id)}
             >{container.names.map(name => (name.startsWith('/') ? name.slice(1) : name)).join(' ')}</Link>
         </DetailsCell>
         <DetailsCell>{container.id}</DetailsCell>

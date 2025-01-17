@@ -262,7 +262,7 @@ function updateContainerStatus(
   containerConnectionStatus = containerConnectionStatus;
 }
 
-function addConnectionToRestartingQueue(connection: IConnectionRestart) {
+function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
   restartingQueue.push(connection);
 }
 
@@ -270,7 +270,7 @@ async function startConnectionProvider(
   provider: ProviderInfo,
   containerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
   loggerHandlerKey: symbol,
-) {
+): Promise<void> {
   await window.startProviderConnectionLifecycle(
     provider.internalId,
     containerConnectionInfo,
@@ -279,13 +279,13 @@ async function startConnectionProvider(
   );
 }
 
-async function doCreateNew(provider: ProviderInfo, displayName: string) {
+async function doCreateNew(provider: ProviderInfo, displayName: string): Promise<void> {
   displayInstallModal = false;
   if (provider.status === 'not-installed') {
     providerInstallationInProgress.set(provider.name, true);
     providerInstallationInProgress = providerInstallationInProgress;
     providerToBeInstalled = { provider, displayName };
-    doExecuteAfterInstallation = () => router.goto(`/preferences/provider/${provider.internalId}`);
+    doExecuteAfterInstallation = (): void => router.goto(`/preferences/provider/${provider.internalId}`);
     await performInstallation(provider);
   } else {
     await window.telemetryTrack('createNewProviderConnectionPageRequested', {
@@ -296,7 +296,7 @@ async function doCreateNew(provider: ProviderInfo, displayName: string) {
   }
 }
 
-async function performInstallation(provider: ProviderInfo) {
+async function performInstallation(provider: ProviderInfo): Promise<void> {
   const checksStatus: CheckStatus[] = [];
   let checkSuccess = false;
   let currentCheck: CheckStatus;
@@ -334,7 +334,7 @@ async function performInstallation(provider: ProviderInfo) {
   providerInstallationInProgress = providerInstallationInProgress;
 }
 
-function hideInstallModal() {
+function hideInstallModal(): void {
   displayInstallModal = false;
 }
 
@@ -349,7 +349,7 @@ function isOnboardingEnabled(provider: ProviderInfo, globalContext: ContextUI): 
   return !!isEnabled;
 }
 
-function hasAnyConfiguration(provider: ProviderInfo) {
+function hasAnyConfiguration(provider: ProviderInfo): boolean {
   return (
     properties
       .filter(
@@ -403,7 +403,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                 <Button
                   aria-label="Setup {provider.name}"
                   title="Setup {provider.name}"
-                  on:click={() => router.goto(`/preferences/onboarding/${provider.extensionId}`)}>
+                  on:click={(): void => router.goto(`/preferences/onboarding/${provider.extensionId}`)}>
                   Setup ...
                 </Button>
               {:else}
@@ -426,7 +426,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                       <Button
                         aria-label="Create new {providerDisplayName}"
                         inProgress={providerInstallationInProgress.get(provider.name)}
-                        on:click={() => doCreateNew(provider, providerDisplayName)}>
+                        on:click={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
                         {buttonTitle} ...
                       </Button>
                     </Tooltip>
@@ -435,7 +435,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                     <Button
                       aria-label="Setup {provider.name}"
                       title="Setup {provider.name}"
-                      on:click={() => {
+                      on:click={(): void => {
                         if (isOnboardingEnabled(provider, globalContext)) {
                           router.goto(`/preferences/onboarding/${provider.extensionId}`);
                         } else {
@@ -466,7 +466,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                   <button
                     aria-label="{provider.name} details"
                     type="button"
-                    on:click={() =>
+                    on:click={(): void =>
                       router.goto(
                         `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
                           container.name,
@@ -540,7 +540,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                 <span slot="advanced-actions" class:hidden={providers.length === 0}>
                   <Tooltip bottom tip="More Options">
                     <DropdownMenu>
-                      <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={() => {router.goto(
+                      <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => {router.goto(
                         `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
                           container.name,
                         ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/terminal`);}}/>
@@ -564,7 +564,7 @@ function hasAnyConfiguration(provider: ProviderInfo) {
                   <button
                     aria-label="{provider.name} details"
                     type="button"
-                    on:click={() =>
+                    on:click={(): void =>
                       router.goto(
                         `/preferences/kubernetes-connection/${provider.internalId}/${Buffer.from(
                           kubeConnection.endpoint.apiURL,

@@ -9,9 +9,9 @@ import FloatNumberItem from './FloatNumberItem.svelte';
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number;
 export let description: string | undefined = undefined;
-export let onSave = (_recordId: string, _value: number) => {};
-export let onChange = (_recordId: string, _value: number) => {};
-export let onCancel = (_recordId: string, _originalValue: number) => {};
+export let onSave = (_recordId: string, _value: number): void => {};
+export let onChange = (_recordId: string, _value: number): void => {};
+export let onCancel = (_recordId: string, _originalValue: number): void => {};
 
 let editingInProgress = false;
 let editedValue: number;
@@ -20,13 +20,13 @@ let disableSaveButton: boolean;
 $: disableSaveButton = !editingInProgress;
 let originalValue: number;
 
-function invalidRecord(_error: string) {
+function invalidRecord(_error: string): void {
   if (_error) {
     disableSaveButton = true;
   }
 }
 
-function onChangeInput(_: string, _value: number) {
+function onChangeInput(_: string, _value: number): void {
   editedValue = _value;
   disableSaveButton = false;
   if (record.id) {
@@ -34,7 +34,7 @@ function onChangeInput(_: string, _value: number) {
   }
 }
 
-function onSwitchToInProgress(e: MouseEvent) {
+function onSwitchToInProgress(e: MouseEvent): void {
   e.preventDefault();
   // we set the originalValue to keep a record of the initial value
   // if the updating is cancelled, we can reset to it
@@ -42,7 +42,7 @@ function onSwitchToInProgress(e: MouseEvent) {
   editingInProgress = true;
 }
 
-function onSaveClick(e: MouseEvent) {
+function onSaveClick(e: MouseEvent): void {
   e.preventDefault();
   editingInProgress = false;
   if (record.id) {
@@ -50,7 +50,7 @@ function onSaveClick(e: MouseEvent) {
   }
 }
 
-function onCancelClick(e: MouseEvent) {
+function onCancelClick(e: MouseEvent): void {
   e.preventDefault();
   // we set the value to the initial one - the value that was set when the edit mode was enabled
   editedValue = originalValue;

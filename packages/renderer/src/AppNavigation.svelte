@@ -94,7 +94,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
   <div class="grow"></div>
 
   <div bind:this={outsideWindow}>
-    <NavItem href="/accounts" tooltip="" bind:meta={meta} onClick={event => authActions?.onButtonClick(event)}>
+    <NavItem href="/accounts" tooltip="" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)}>
       <Tooltip bottomRight tip="Accounts">
         <div class="flex flex-col items-center w-full h-full">
           <AccountIcon size={iconSize} />

@@ -21,7 +21,7 @@ let webviewInfo: WebviewInfo | undefined;
 
 $: webviewInfo = get(webviews).find(webview => webview.id === id);
 
-const notifyNewWebwievState = () => {
+const notifyNewWebwievState = (): void => {
   if (webviewInfo) {
     window
       .makeDefaultWebviewVisible(webviewInfo.id)
@@ -34,7 +34,7 @@ $: webviewInfo && notifyNewWebwievState();
 let webviewElement: HTMLElement | undefined;
 
 // function to notify webview when messages are coming
-const postMessageToWebview = (webviewEvent: unknown) => {
+const postMessageToWebview = (webviewEvent: unknown): void => {
   const webviewEventTyped = webviewEvent as { id: string; message: unknown };
   if (
     id === webviewEventTyped.id &&
@@ -49,7 +49,7 @@ const postMessageToWebview = (webviewEvent: unknown) => {
 // call postMessageToWebview when receiving messages from the main process
 const webviewPostMessageDisposable = window.events?.receive('webview-post-message', postMessageToWebview);
 
-const updateHtmlOfWebview = (webviewEvent: unknown) => {
+const updateHtmlOfWebview = (webviewEvent: unknown): void => {
   const webviewEventTyped = webviewEvent as { id: string; html: string };
   if (
     id === webviewEventTyped.id &&

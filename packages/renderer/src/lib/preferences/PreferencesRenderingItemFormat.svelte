@@ -31,10 +31,10 @@ let {
   record,
   initialValue,
   givenValue,
-  setRecordValue = () => {},
-  invalidRecord = () => {},
-  validRecord = () => {},
-  updateResetButtonVisibility = () => {},
+  setRecordValue = (): void => {},
+  invalidRecord = (): void => {},
+  validRecord = (): void => {},
+  updateResetButtonVisibility = (): void => {},
   resetToDefault = false,
   enableAutoSave = false,
   enableSlider = false,
@@ -55,7 +55,7 @@ let callbackId: string | undefined = undefined;
 onMount(() => {
   if (record.id && record.scope === 'DEFAULT') {
     callbackId = record.id;
-    callBack = () => {
+    callBack = (): void => {
       getInitialValue(record)
         .then(v => {
           // v may be `false` which is a valid value for boolean types
@@ -102,7 +102,7 @@ $effect(() => {
   }
 });
 
-async function update(record: IConfigurationPropertyRecordedSchema) {
+async function update(record: IConfigurationPropertyRecordedSchema): Promise<void> {
   // save the value
   if (record.id && isEqual(currentRecord, record)) {
     try {
@@ -115,7 +115,7 @@ async function update(record: IConfigurationPropertyRecordedSchema) {
   }
 }
 
-function isEqual(first: IConfigurationPropertyRecordedSchema, second: IConfigurationPropertyRecordedSchema) {
+function isEqual(first: IConfigurationPropertyRecordedSchema, second: IConfigurationPropertyRecordedSchema): boolean {
   return JSON.stringify(first) === JSON.stringify(second);
 }
 

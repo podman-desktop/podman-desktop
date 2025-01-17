@@ -153,7 +153,7 @@ onDestroy(() => {
   }
 });
 
-async function loadConnectionParams() {
+async function loadConnectionParams(): Promise<void> {
   configurationKeys = properties
     .filter(property =>
       Array.isArray(property.scope) ? property.scope.find(s => s === propertyScope) : property.scope === propertyScope,
@@ -202,11 +202,11 @@ async function loadConnectionParams() {
   }
 }
 
-function handleInvalidComponent() {
+function handleInvalidComponent(): void {
   isValid = false;
 }
 
-async function handleValidComponent() {
+async function handleValidComponent(): Promise<void> {
   isValid = true;
 
   // it can happen (at least in tests) that some fields are not set yet (NumberItem will wait 500ms before to change value)
@@ -243,7 +243,7 @@ async function handleValidComponent() {
   }
 }
 
-function internalSetConfigurationValue(id: string, modified: boolean, value: string | boolean | number) {
+function internalSetConfigurationValue(id: string, modified: boolean, value: string | boolean | number): void {
   const item = configurationValues.get(id);
   if (item) {
     // if the value has already been modified by the user and this is not an explicit user modification we do not update the value
@@ -259,7 +259,7 @@ function internalSetConfigurationValue(id: string, modified: boolean, value: str
   configurationValues = configurationValues;
 }
 
-function setConfigurationValue(id: string, value: string | boolean | number) {
+function setConfigurationValue(id: string, value: string | boolean | number): void {
   internalSetConfigurationValue(id, true, value);
 }
 
@@ -285,23 +285,23 @@ let loggerHandlerKey: symbol | undefined = undefined;
 
 function getLoggerHandler(): ConnectionCallback {
   return {
-    log: args => {
+    log: (args): void => {
       writeToTerminal(logsTerminal, args, '\x1b[37m');
     },
-    warn: args => {
+    warn: (args): void => {
       writeToTerminal(logsTerminal, args, '\x1b[33m');
     },
-    error: args => {
+    error: (args): void => {
       operationFailed = true;
       writeToTerminal(logsTerminal, args, '\x1b[1;31m');
     },
-    onEnd: () => {
+    onEnd: (): void => {
       ended().catch((err: unknown) => console.error('Error closing terminal', err));
     },
   };
 }
 
-async function ended() {
+async function ended(): Promise<void> {
   inProgress = false;
   tokenId = undefined;
   if (!operationCancelled && !operationFailed) {
@@ -311,7 +311,7 @@ async function ended() {
   updateStore();
 }
 
-async function cleanup() {
+async function cleanup(): Promise<void> {
   // clear
   if (loggerHandlerKey) {
     clearCreateTask(loggerHandlerKey);
@@ -329,7 +329,7 @@ async function cleanup() {
 }
 
 // store the key
-function updateStore() {
+function updateStore(): void {
   operationConnectionsInfo.update(map => {
     if (taskId && loggerHandlerKey) {
       map.set(taskId, {
@@ -349,7 +349,7 @@ function updateStore() {
   });
 }
 
-async function handleOnSubmit(e: SubmitEvent) {
+async function handleOnSubmit(e: SubmitEvent): Promise<void> {
   errorMessage = undefined;
   if (e.target instanceof HTMLFormElement) {
     const formData = new FormData(e.target);
@@ -414,7 +414,7 @@ async function handleOnSubmit(e: SubmitEvent) {
   }
 }
 
-async function cancelCreation() {
+async function cancelCreation(): Promise<void> {
   if (tokenId) {
     await window.cancelToken(tokenId);
     operationCancelled = true;
@@ -429,11 +429,11 @@ async function cancelCreation() {
   );
 }
 
-async function closePanel() {
+async function closePanel(): Promise<void> {
   await cleanup();
 }
 
-async function closePage() {
+async function closePage(): Promise<void> {
   router.goto('/preferences/resources');
   await window.telemetryTrack(
     connectionInfo ? 'updateProviderConnectionPageUserClosed' : 'createNewProviderConnectionPageUserClosed',
@@ -474,7 +474,7 @@ function getConnectionResourceConfigurationNumberValue(
     <EmptyScreen icon={faCubes} title={operationLabel} message="Successful operation">
       <Button
         class="py-3"
-        on:click={async () => {
+        on:click={async (): Promise<void> => {
           await cleanup();
           router.goto('/preferences/resources');
         }}>
@@ -495,7 +495,7 @@ function getConnectionResourceConfigurationNumberValue(
                 <button
                   aria-label="Show Logs"
                   class="text-xs mr-3 hover:underline"
-                  on:click={() => (showLogs = !showLogs)}
+                  on:click={(): boolean => (showLogs = !showLogs)}
                   >Show Logs <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
                   ></button>
                 <button
@@ -566,7 +566,7 @@ function getConnectionResourceConfigurationNumberValue(
                 {#if !hideCloseButton}
                   <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
                 {/if}
-                <Button disabled={!isValid} inProgress={inProgress} on:click={() => formEl.requestSubmit()}
+                <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl.requestSubmit()}
                   >{buttonLabel}</Button>
               </div>
             </div>

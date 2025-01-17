@@ -27,7 +27,7 @@ onMount(() => {
   titleName = name;
 });
 
-function executeAction() {
+function executeAction(): void {
   // perform action
   action();
 
@@ -55,7 +55,7 @@ function executeAction() {
 </script>
 
 <button
-  on:click={() => executeAction()}
+  on:click={executeAction}
   aria-label={name}
   title={titleName}
   class="h-[32px] w-[45px] cursor-pointer {name === 'Close'

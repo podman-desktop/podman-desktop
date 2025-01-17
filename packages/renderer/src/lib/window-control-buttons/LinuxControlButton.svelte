@@ -26,7 +26,7 @@ onMount(() => {
 </script>
 
 <button
-  on:click={() => action()}
+  on:click={action}
   title={titleName}
   aria-label={name}
   class="h-[25px] w-[25px] cursor-pointer text-[var(--pd-titlebar-text)] hover:rounded-full hover:bg-[var(--pd-titlebar-hover-bg)] flex place-items-center justify-center">

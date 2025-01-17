@@ -53,7 +53,7 @@ onMount(async () => {
   }
 });
 
-async function handleSetContext(contextName: string) {
+async function handleSetContext(contextName: string): Promise<void> {
   $kubernetesContexts = clearKubeUIContextErrors($kubernetesContexts);
   try {
     await window.kubernetesSetContext(contextName);
@@ -64,7 +64,7 @@ async function handleSetContext(contextName: string) {
   }
 }
 
-async function handleDeleteContext(contextName: string) {
+async function handleDeleteContext(contextName: string): Promise<void> {
   if (currentContextName === contextName) {
     const result = await window.showMessageBox({
       title: 'Delete Context',
@@ -133,7 +133,7 @@ async function connect(contextName: string): Promise<void> {
       hidden={$kubernetesContexts.length > 0}>
       <Button
         class="py-3"
-        on:click={() => {
+        on:click={(): void => {
           router.goto('/preferences/resources');
         }}>
         Go to Resources
@@ -172,9 +172,9 @@ async function connect(contextName: string): Promise<void> {
               <ListItemButtonIcon
                 title="Set as Current Context"
                 icon={faRightToBracket}
-                onClick={() => handleSetContext(context.name)}></ListItemButtonIcon>
+                onClick={(): Promise<void> => handleSetContext(context.name)}></ListItemButtonIcon>
             {/if}
-            <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={() => handleDeleteContext(context.name)}
+            <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
             ></ListItemButtonIcon>
           </div>
           {#if context.error}
@@ -225,7 +225,7 @@ async function connect(contextName: string): Promise<void> {
                     {/if}                    
                   </div>
                   {#if !$kubernetesContextsState.get(context.name)}
-                    <div><Button on:click={() => connect(context.name)}>Connect</Button></div>
+                    <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
                   {/if}
                 </div>
               {/if}
