@@ -86,6 +86,7 @@ import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import type { Exec } from '../util/exec.js';
 import type { ViewRegistry } from '../view-registry.js';
+import type { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 
 /**
@@ -195,6 +196,7 @@ export class ExtensionLoader {
     private safeStorageRegistry: SafeStorageRegistry,
     private certificates: Certificates,
     private extensionWatcher: ExtensionWatcher,
+    private extensionDevelopmentFolder: ExtensionDevelopmentFolders,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -448,6 +450,9 @@ export class ExtensionLoader {
       analyzedExtensions.push(...analyzedPluginsDirectoryExtensions);
     }
 
+    // load all extensions from developer mode
+    await this.loadDevelopmentFolderExtensions(analyzedExtensions);
+
     // now we have all extensions, we can load them
     await this.loadExtensions(analyzedExtensions);
 
@@ -457,6 +462,19 @@ export class ExtensionLoader {
         console.error('error while reloading extension', error);
       });
     });
+  }
+
+  protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
+    for (const folder of this.extensionDevelopmentFolder.getDevelopmentFolders()) {
+      if (fs.existsSync(folder.path)) {
+        const analyzedExtension = await this.analyzeExtension(folder.path, false);
+        if (!analyzedExtension.error) {
+          analyzedExtensions.push(analyzedExtension);
+        } else {
+          console.error(`Error while analyzing extension ${folder.path}`, analyzedExtension.error);
+        }
+      }
+    }
   }
 
   async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtension> {
