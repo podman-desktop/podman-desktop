@@ -79,6 +79,7 @@ import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
+import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
@@ -148,6 +149,7 @@ import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
+import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
@@ -667,6 +669,8 @@ export class PluginSystem {
     );
 
     const extensionWatcher = new ExtensionWatcher(fileSystemMonitoring);
+    const extensionDevelopmentFolders = new ExtensionDevelopmentFolders(configurationRegistry, apiSender);
+    extensionDevelopmentFolders.init();
 
     this.extensionLoader = new ExtensionLoader(
       commandRegistry,
@@ -705,8 +709,10 @@ export class PluginSystem {
       safeStorageRegistry,
       certificates,
       extensionWatcher,
+      extensionDevelopmentFolders,
     );
     await this.extensionLoader.init();
+    extensionDevelopmentFolders.setExtensionLoader(this.extensionLoader);
 
     const feedback = new FeedbackHandler(this.extensionLoader);
 
@@ -2887,6 +2893,27 @@ export class PluginSystem {
     this.ipcHandle('path:relative', async (_listener, from: string, to: string): Promise<string> => {
       return path.relative(from, to);
     });
+
+    this.ipcHandle(
+      'extension-development-folders:getDevelopmentFolders',
+      async (): Promise<ExtensionDevelopmentFolderInfo[]> => {
+        return extensionDevelopmentFolders.getDevelopmentFolders();
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development-folders:addDevelopmentFolder',
+      async (_listener: unknown, path: string): Promise<void> => {
+        return extensionDevelopmentFolders.addDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'extension-development-folders:removeDevelopmentFolder',
+      async (_listener: unknown, path: string): Promise<void> => {
+        return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
 
     const dockerDesktopInstallation = new DockerDesktopInstallation(
       apiSender,
