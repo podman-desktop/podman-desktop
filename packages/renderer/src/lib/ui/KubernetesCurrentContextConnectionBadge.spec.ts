@@ -53,7 +53,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.subscribeMock.mockImplementation(listener => {
     listener(mocks.getCurrentKubeContextState());
-    return { unsubscribe: () => {} };
+    return { unsubscribe: (): void => {} };
   });
 
   (window as any).events = mocks.eventsMocks;

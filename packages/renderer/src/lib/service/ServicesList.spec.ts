@@ -29,6 +29,7 @@ import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesCurrentContextServices } from '/@/stores/kubernetes-contexts-state';
+import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import ServicesList from './ServicesList.svelte';
 
@@ -41,12 +42,9 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  (window as any).kubernetesGetContextsGeneralState = () => Promise.resolve(new Map());
-  (window as any).kubernetesGetCurrentContextGeneralState = () => Promise.resolve({});
-  (window as any).window.kubernetesUnregisterGetCurrentContextResources = () => Promise.resolve(undefined);
-  (window as any).kubernetesDeleteService = vi.fn();
-  vi.mocked(window.kubernetesDeleteService);
-  (window as any).getConfigurationValue = vi.fn();
+  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
+  vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 });
 

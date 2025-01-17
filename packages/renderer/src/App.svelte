@@ -119,7 +119,7 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
       <CustomPick />
       <CommandPalette />
       <MessageBox />
-      <AppNavigation meta={meta} exitSettingsCallback={() => router.goto(nonSettingsPage)} />
+      <AppNavigation meta={meta} exitSettingsCallback={(): void => router.goto(nonSettingsPage)} />
       {#if meta.url.startsWith('/preferences')}
         <PreferencesNavigation meta={meta} />
       {/if}

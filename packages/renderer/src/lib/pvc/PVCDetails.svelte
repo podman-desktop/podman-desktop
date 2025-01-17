@@ -42,7 +42,7 @@ onMount(() => {
   });
 });
 
-async function loadDetails() {
+async function loadDetails(): Promise<void> {
   const getKubePVC = await window.kubernetesReadNamespacedPersistentVolumeClaim(pvc.name, namespace);
   if (getKubePVC) {
     kubePVC = getKubePVC;
@@ -56,7 +56,7 @@ async function loadDetails() {
   <DetailsPage title={pvc.name} subtitle={pvc.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={PVCIcon} size={24} status={pvc.status} />
     <svelte:fragment slot="actions">
-      <PVCActions pvc={pvc} detailed={true} on:update={() => (pvc = pvc)} />
+      <PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI => (pvc = pvc)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={pvc.status} />

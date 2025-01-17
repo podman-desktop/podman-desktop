@@ -48,7 +48,7 @@ const pushImageMock = vi.fn();
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -155,11 +155,11 @@ type CallbackType = (name: string, data?: string) => void;
 describe('Expect Push Image dialog', () => {
   let callback: CallbackType | undefined;
   const closeCallback = vi.fn();
-  function button(name: 'Cancel' | 'Push image' | 'Done') {
+  function button(name: 'Cancel' | 'Push image' | 'Done'): HTMLElement | null {
     return screen.queryByRole('button', { name });
   }
 
-  function terminal() {
+  function terminal(): HTMLElement | null {
     return screen.queryByRole('term');
   }
 
@@ -173,7 +173,7 @@ describe('Expect Push Image dialog', () => {
       | 'EndAfterError'
       | 'End',
     authConfig = true,
-  ) {
+  ): Promise<void> {
     hasAuthMock.mockResolvedValue(authConfig);
     vi.mocked(window.getImageInspect).mockResolvedValue(fakedImageInspect);
     pushImageMock.mockImplementation((_imageId, _imageTag, cb) => {

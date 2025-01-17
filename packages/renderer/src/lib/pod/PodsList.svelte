@@ -89,7 +89,7 @@ onMount(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
-async function deleteSelectedPods() {
+async function deleteSelectedPods(): Promise<void> {
   const selectedPods = pods.filter(pod => pod.selected);
   if (selectedPods.length === 0) {
     return;
@@ -123,23 +123,23 @@ let statusColumn = new TableColumn<PodInfoUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: PodColumnStatus,
-  comparator: (a, b) => b.status.localeCompare(a.status),
+  comparator: (a, b): number => b.status.localeCompare(a.status),
 });
 
 let nameColumn = new TableColumn<PodInfoUI>('Name', {
   width: '2fr',
   renderer: PodColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let envColumn = new TableColumn<PodInfoUI>('Environment', {
   renderer: PodColumnEnvironment,
-  comparator: (a, b) => a.kind.localeCompare(b.kind),
+  comparator: (a, b): number => a.kind.localeCompare(b.kind),
 });
 
 let containersColumn = new TableColumn<PodInfoUI>('Containers', {
   renderer: PodColumnContainers,
-  comparator: (a, b) => a.containers.length - b.containers.length,
+  comparator: (a, b): number => a.containers.length - b.containers.length,
   initialOrder: 'descending',
   overflow: true,
 });
@@ -160,7 +160,7 @@ const columns = [
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),
 ];
 
-const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
+const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="pods">
@@ -176,7 +176,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedPods,
             `delete ${selectedItemsNumber} pod${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -194,7 +194,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
   <svelte:fragment slot="tabs">
     <Button
       type="tab"
-      on:click={() => {
+      on:click={(): void => {
         searchTerm = searchTerm
           .split(' ')
           .filter(pattern => pattern !== 'is:running' && pattern !== 'is:stopped')
@@ -203,7 +203,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
       selected={!searchTerm.includes('is:stopped') && !searchTerm.includes('is:running')}>All</Button>
     <Button
       type="tab"
-      on:click={() => {
+      on:click={(): void => {
         let temp = searchTerm
           .trim()
           .split(' ')
@@ -215,7 +215,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
       selected={searchTerm.includes('is:running')}>Running</Button>
     <Button
       type="tab"
-      on:click={() => {
+      on:click={(): void => {
         let temp = searchTerm
           .trim()
           .split(' ')
@@ -236,7 +236,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (pods = pods)}>
+      on:update={(): PodInfoUI[] => (pods = pods)}>
     </Table>
 
     {#if $filtered.length === 0 && providerConnections.length === 0}
@@ -247,7 +247,7 @@ const row = new TableRow<PodInfoUI>({ selectable: _pod => true });
           icon={PodIcon}
           kind="pods"
           bind:searchTerm={searchTerm}
-          on:resetFilter={e => {
+          on:resetFilter={(e): void => {
             searchTerm = podUtils.filterResetSearchTerm(searchTerm);
             e.preventDefault();
           }} />

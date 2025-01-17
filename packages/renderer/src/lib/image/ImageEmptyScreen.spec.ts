@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 // set up a valid provider connection for pull image
-function setup() {
+function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
     name: 'test',

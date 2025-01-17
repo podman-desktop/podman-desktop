@@ -11,7 +11,7 @@ export let showEmptyScreen: boolean = true;
 export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
-async function fetchCatalog() {
+async function fetchCatalog(): Promise<void> {
   try {
     await window.refreshCatalogExtensions();
   } catch (error) {
@@ -30,7 +30,7 @@ async function fetchCatalog() {
     <div class="mb-4 flex flex-row">
       <div class="flex items-center text-[var(--pd-content-header)]">{title}</div>
       <div class="flex-1 text-right">
-        <Button type="link" on:click={() => fetchCatalog()}>Refresh the catalog</Button>
+        <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
       </div>
     </div>
   {:else if showEmptyScreen}
@@ -39,7 +39,7 @@ async function fetchCatalog() {
       message="No extensions from the catalog. It seems that the internet connection was not available to download the catalog."
       icon={faPuzzlePiece}>
       <div class="flex gap-2 justify-center">
-        <Button type="link" on:click={() => fetchCatalog()}>Refresh the catalog</Button>
+        <Button type="link" on:click={fetchCatalog}>Refresh the catalog</Button>
       </div>
     </EmptyScreen>
   {/if}

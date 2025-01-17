@@ -68,11 +68,11 @@ onDestroy(() => {
   configurationPropertiesUnsubscribe?.();
 });
 
-function handleOnboarding() {
+function handleOnboarding(): void {
   router.goto(`/preferences/onboarding/${extension.id}`);
 }
 
-function handleProperties() {
+function handleProperties(): void {
   router.goto(`/preferences/default/preferences.${extension.id}`);
 }
 </script>
@@ -83,7 +83,7 @@ function handleProperties() {
   type="primary"
   class="m-auto {!isOnboardingEnabled ? 'cursor-not-allowed' : ''}"
   disabled={!isOnboardingEnabled}
-  on:click={() => handleOnboarding()}>
+  on:click={handleOnboarding}>
   <Fa size="1x" icon={faGear} />
 </Button>
 
@@ -93,6 +93,6 @@ function handleProperties() {
   type="secondary"
   class="m-auto {!hasAnyConfiguration ? 'cursor-not-allowed' : ''}"
   disabled={!hasAnyConfiguration}
-  on:click={() => handleProperties()}>
+  on:click={handleProperties}>
   <Fa size="1x" icon={faFilePen} />
 </Button>

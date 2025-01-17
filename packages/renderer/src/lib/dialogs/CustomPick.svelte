@@ -30,7 +30,7 @@ onMount(() => {
   window.events?.receive('showCustomPick:add', showCustomPickCallback);
 });
 
-function showCustomPickCallback(customQuickPickParameter: unknown) {
+function showCustomPickCallback(customQuickPickParameter: unknown): void {
   const options: CustomPickOptions | undefined = customQuickPickParameter as CustomPickOptions;
   id = options?.id ?? 0;
   title = options?.title ?? '';
@@ -59,7 +59,7 @@ function handleSelection(
     currentTarget: EventTarget & HTMLDivElement;
   },
   item: CustomPickItem,
-) {
+): void {
   if (
     e.target instanceof HTMLButtonElement &&
     (e.target.ariaLabel === 'Less detail' || e.target.ariaLabel === 'Show more')
@@ -77,12 +77,12 @@ function handleSelection(
   items = items;
 }
 
-async function cancel() {
+async function cancel(): Promise<void> {
   await window.closeCustomPick(id);
   display = false;
 }
 
-async function next() {
+async function next(): Promise<void> {
   const indexes = [];
   for (let i = 0; i < items.length; i++) {
     if (items[i].selected) {
@@ -94,12 +94,12 @@ async function next() {
   display = false;
 }
 
-function setSectionVisibility(index: number, show: boolean) {
+function setSectionVisibility(index: number, show: boolean): void {
   itemSectionHiddenStatus.set(index, show);
   itemSectionHiddenStatus = itemSectionHiddenStatus;
 }
 
-function dragMe(node: HTMLElement) {
+function dragMe(node: HTMLElement): void {
   if (usePopperForDetails) {
     let moving = false;
     let left = 0;
@@ -173,7 +173,7 @@ function dragMe(node: HTMLElement) {
                   class:group={!usePopperForDetails && !itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j)}
                   class:w-[300px]={colsPerRow === 2}
                   class:w-[250px]={colsPerRow === 3}
-                  on:mousedown={e => handleSelection(e, innerItem)}>
+                  on:mousedown={(e): void => handleSelection(e, innerItem)}>
                   {#if innerItem.selected}
                     <div class="relative">
                       <div class="absolute right-0 m-3 text-xl text-[var(--pd-invert-content-info-icon)]">
@@ -209,7 +209,7 @@ function dragMe(node: HTMLElement) {
                           type="link"
                           aria-label="Show more"
                           icon={faAngleDown}
-                          on:click={() => setSectionVisibility((i / colsPerRow) * colsPerRow + j, false)}>
+                          on:click={(): void => setSectionVisibility((i / colsPerRow) * colsPerRow + j, false)}>
                           Show details
                         </Button>
                       </div>
@@ -220,7 +220,7 @@ function dragMe(node: HTMLElement) {
                       role="button"
                       tabindex={0}
                       class:relative={usePopperForDetails}
-                      on:mousedown={e => {
+                      on:mousedown={(e): void => {
                         if (usePopperForDetails || itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j)) {
                           e.stopPropagation();
                         }
@@ -240,7 +240,7 @@ function dragMe(node: HTMLElement) {
                         {#if usePopperForDetails}
                           <div class="relative">
                             <div class="absolute right-0 mr-2 text-xl">
-                              <button on:click={() => setSectionVisibility((i / colsPerRow) * colsPerRow + j, true)}>
+                              <button on:click={(): void => setSectionVisibility((i / colsPerRow) * colsPerRow + j, true)}>
                                 <Fa size="0.9x" icon={faXmark} />
                               </button>
                             </div>
@@ -280,7 +280,7 @@ function dragMe(node: HTMLElement) {
                               type="link"
                               aria-label="Less detail"
                               icon={faAngleUp}
-                              on:click={() => setSectionVisibility((i / colsPerRow) * colsPerRow + j, true)}>
+                              on:click={(): void => setSectionVisibility((i / colsPerRow) * colsPerRow + j, true)}>
                               Less details
                             </Button>
                           </div>
@@ -296,8 +296,8 @@ function dragMe(node: HTMLElement) {
       {/each}
 
       <div class="px-5 py-5 mt-2 flex flex-row w-full justify-end space-x-5">
-        <Button type="link" aria-label="Cancel" on:click={() => cancel()}>Cancel</Button>
-        <Button aria-label="Next" disabled={!items.find(item => item.selected)} on:click={() => next()}>Ok</Button>
+        <Button type="link" aria-label="Cancel" on:click={cancel}>Cancel</Button>
+        <Button aria-label="Next" disabled={!items.find(item => item.selected)} on:click={next}>Ok</Button>
       </div>
     </div>
   </div>

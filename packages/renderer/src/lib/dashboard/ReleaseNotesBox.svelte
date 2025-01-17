@@ -19,23 +19,23 @@ const receiveShowReleaseNotes = window.events?.receive('show-release-notes', () 
   showBanner = true;
 });
 
-async function openReleaseNotes() {
+async function openReleaseNotes(): Promise<void> {
   if (!notesURL) return;
   await window.openExternal(notesURL);
 }
 
-async function updatePodmanDesktop() {
+async function updatePodmanDesktop(): Promise<void> {
   await window.updatePodmanDesktop();
 }
 
-async function getInfoFromNotes() {
+async function getInfoFromNotes(): Promise<void> {
   const releaseNotes = await window.podmanDesktopGetReleaseNotes();
   notesInfo = releaseNotes.notes;
   notesAvailable = notesInfo !== undefined;
   notesURL = releaseNotes.notesURL;
 }
 
-async function onClose() {
+async function onClose(): Promise<void> {
   await window.updateConfigurationValue(`releaseNotesBanner.show`, currentVersion);
   showBanner = false;
 }

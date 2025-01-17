@@ -32,7 +32,7 @@ $: {
 const colourizedContainerName = new Map<string, string>();
 
 // Callback for logs which will output the logs to the terminal
-function callback(name: string, data: string) {
+function callback(name: string, data: string): void {
   if (name === 'first-message') {
     noLogs = false;
   } else if (name === 'data') {
@@ -61,7 +61,7 @@ async function fetchComposeLogs(): Promise<void> {
   // in order to add padding to each output / make it look nice.
   const promises = compose.containers.map(container => {
     // Set a customer callback that will add the container name and padding
-    const logsCallback = (name: string, data: string) => {
+    const logsCallback = (name: string, data: string): void => {
       const padding = ' '.repeat(maxNameLength - container.name.length);
       const colouredName = colourizedContainerName.get(container.name);
 

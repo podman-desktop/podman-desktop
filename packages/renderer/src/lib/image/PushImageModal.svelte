@@ -29,7 +29,7 @@ onMount(async () => {
   }
 });
 
-async function pushImage(imageTag: string) {
+async function pushImage(imageTag: string): Promise<void> {
   gotErrorDuringPush = false;
   initTerminal = true;
   await tick();
@@ -43,11 +43,11 @@ async function pushImage(imageTag: string) {
 
 let gotErrorDuringPush = false;
 
-async function pushImageFinished() {
+async function pushImageFinished(): Promise<void> {
   closeCallback();
   router.goto('/images');
 }
-function callback(name: string, data: string) {
+function callback(name: string, data: string): void {
   if (name === 'first-message') {
     // clear on the first message
     logsPush?.clear();
@@ -77,9 +77,7 @@ $: window
 
 <Dialog
   title="Push image"
-  on:close={() => {
-    closeCallback();
-  }}>
+  on:close={closeCallback}>
   <div slot="content" class="flex flex-col text-sm leading-5 space-y-5">
     <div class="pb-4">
       <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
@@ -103,7 +101,7 @@ $: window
       and to click to go to the registries page -->
       {#if !isAuthenticatedForThisImage}
         <p class="text-[var(--pd-state-warning)] pt-1">
-          No registry with push permissions found. <Link on:click={() => router.goto('/preferences/registries')}
+          No registry with push permissions found. <Link on:click={(): void => router.goto('/preferences/registries')}
             >Add a registry now.</Link>
         </p>{/if}
     </div>
@@ -115,21 +113,21 @@ $: window
 
   <svelte:fragment slot="buttons">
     {#if !pushInProgress && !pushFinished}
-      <Button class="w-auto" type="secondary" on:click={() => closeCallback()}>Cancel</Button>
+      <Button class="w-auto" type="secondary" on:click={closeCallback}>Cancel</Button>
     {/if}
     {#if !pushFinished}
       <Button
         class="w-auto"
         icon={faCircleArrowUp}
         disabled={!isAuthenticatedForThisImage}
-        on:click={async () => {
+        on:click={async (): Promise<void> => {
           await pushImage(selectedImageTag);
         }}
         bind:inProgress={pushInProgress}>
         Push image
       </Button>
     {:else}
-      <Button on:click={() => pushImageFinished()} class="w-auto">Done</Button>
+      <Button on:click={pushImageFinished} class="w-auto">Done</Button>
     {/if}
   </svelte:fragment>
 </Dialog>

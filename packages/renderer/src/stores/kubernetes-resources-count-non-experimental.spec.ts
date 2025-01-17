@@ -25,7 +25,7 @@ import { kubernetesResourcesCount, kubernetesResourcesCountStore } from './kuber
 
 const callbacks = new Map<string, () => Promise<void>>();
 const eventEmitter = {
-  receive: (message: string, callback: () => Promise<void>) => {
+  receive: (message: string, callback: () => Promise<void>): void => {
     callbacks.set(message, callback);
   },
 };

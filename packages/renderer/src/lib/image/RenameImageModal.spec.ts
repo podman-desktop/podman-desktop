@@ -44,7 +44,7 @@ const imageInfo: ImageInfoUI = {
   labels: {},
   icon: undefined,
 };
-const closeCallback = () => {};
+const closeCallback = (): void => {};
 
 beforeAll(() => {
   Object.defineProperty(window, 'tagImage', { value: vi.fn() });

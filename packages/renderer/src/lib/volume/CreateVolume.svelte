@@ -32,7 +32,7 @@ onMount(async () => {
 let createVolumeInProgress = false;
 onDestroy(() => {});
 
-async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo) {
+async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
   createVolumeInProgress = true;
   try {
     await window.createVolume(providerConnectionInfo, { Name: volumeName });
@@ -42,7 +42,7 @@ async function createVolume(providerConnectionInfo: ProviderContainerConnectionI
   }
 }
 
-function end() {
+function end(): void {
   // redirect to the volumes page
   router.goto('/volumes');
 }
@@ -89,7 +89,7 @@ export let volumeName = '';
       {#if !createVolumeFinished && selectedProvider}
         {@const connection = selectedProvider}
         <Button
-          on:click={() => createVolume(connection)}
+          on:click={(): Promise<void> => createVolume(connection)}
           disabled={createVolumeInProgress}
           class="w-full"
           inProgress={createVolumeInProgress}
@@ -99,7 +99,7 @@ export let volumeName = '';
       {/if}
 
       {#if createVolumeFinished}
-        <Button on:click={() => end()} class="w-full">Done</Button>
+        <Button on:click={end} class="w-full">Done</Button>
       {/if}
     </div>
   </div>

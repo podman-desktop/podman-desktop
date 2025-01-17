@@ -33,7 +33,7 @@ const route = createRouteObject({
   },
 });
 
-function processMetaBreadcrumbs(breadcrumbs?: Array<TinroBreadcrumb>) {
+function processMetaBreadcrumbs(breadcrumbs?: Array<TinroBreadcrumb>): void {
   if (breadcrumbs) {
     const curPage = breadcrumbs[breadcrumbs.length - 1];
     if (!curPage) return;

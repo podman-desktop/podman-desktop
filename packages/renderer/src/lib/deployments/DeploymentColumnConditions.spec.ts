@@ -22,9 +22,9 @@ import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import DeploymentColumnConditions from './DeploymentColumnConditions.svelte';
-import type { DeploymentCondition } from './DeploymentUI';
+import type { DeploymentCondition, DeploymentUI } from './DeploymentUI';
 
-function createDeploymentUI(conditions: DeploymentCondition[]) {
+function createDeploymentUI(conditions: DeploymentCondition[]): DeploymentUI {
   return {
     uid: '123',
     name: 'my-deployment',

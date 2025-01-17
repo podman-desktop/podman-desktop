@@ -57,7 +57,7 @@ onDestroy(() => {
   }
 });
 
-async function runImage(imageInfo: ImageInfoUI) {
+async function runImage(imageInfo: ImageInfoUI): Promise<void> {
   runImageInfo.set(imageInfo);
   router.goto('/image/run/basic');
 }
@@ -93,17 +93,17 @@ async function onError(error: string): Promise<void> {
   });
 }
 
-function saveImage() {
+function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
 </script>
 
-<ListItemButtonIcon title="Run Image" onClick={() => runImage(image)} detailed={detailed} icon={faPlay} />
+<ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
 
 <ListItemButtonIcon
   title="Delete Image"
-  onClick={() => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`)}
+  onClick={(): void => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`)}
   detailed={detailed}
   icon={faTrash}
   enabled={image.status === 'UNUSED'} />
@@ -111,19 +111,19 @@ function saveImage() {
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
 <ActionsWrapper
   dropdownMenu={dropdownMenu}
-  onBeforeToggle={() => {
+  onBeforeToggle={(): void => {
     globalContext?.setValue('selectedImageId', image.id);
   }}>
   <ListItemButtonIcon
     title="Push Image"
-    onClick={() => pushImage(image)}
+    onClick={(): Promise<void> => pushImage(image)}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowUp} />
 
   <ListItemButtonIcon
     title="Edit Image"
-    onClick={() => renameImage(image)}
+    onClick={(): Promise<void> => renameImage(image)}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faEdit} />
@@ -131,7 +131,7 @@ function saveImage() {
   {#if !detailed}
     <ListItemButtonIcon
       title="Show History"
-      onClick={() => showLayersImage()}
+      onClick={showLayersImage}
       menu={dropdownMenu}
       detailed={detailed}
       icon={faLayerGroup} />
@@ -139,7 +139,7 @@ function saveImage() {
   <ListItemButtonIcon
     title="Save Image"
     tooltip="Save image to a local directory"
-    onClick={() => saveImage()}
+    onClick={saveImage}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />

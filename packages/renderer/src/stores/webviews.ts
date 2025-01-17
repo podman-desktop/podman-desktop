@@ -60,6 +60,6 @@ export const webviewsEventStore = new EventStore<WebviewInfo[]>(
 );
 const webviewsEventStoreInfo = webviewsEventStore.setup();
 
-export const fetchWebviews = async () => {
+export const fetchWebviews = async (): Promise<void> => {
   await webviewsEventStoreInfo.fetch();
 };

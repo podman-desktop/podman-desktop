@@ -17,12 +17,12 @@ $: runningTasks = $tasksInfo.filter(task => task.state === 'running');
 $: completedTasks = $tasksInfo.filter(task => task.state !== 'running');
 
 // hide the task manager
-function hide() {
+function hide(): void {
   showTaskManager = false;
 }
 
 // If we hit ESC while the menu is open, close it
-function handleEscape({ key }: KeyboardEvent) {
+function handleEscape({ key }: KeyboardEvent): void {
   // if the task manager is not open, do not check any keys
   if (!showTaskManager) {
     return;
@@ -69,7 +69,7 @@ function onWindowClick(e: MouseEvent): void {
           <div class="text-xs uppercase ml-2">tasks</div>
           <div class="flex-1"></div>
           <button
-            on:click={() => hide()}
+            on:click={hide}
             title="Hide (Escape)"
             class="cursor-pointer hover:bg-[var(--pd-invert-content-card-bg)] p-1 ml-1">
             <Fa icon={faChevronDown} size="0.9x" />
@@ -108,7 +108,7 @@ function onWindowClick(e: MouseEvent): void {
       {#if completedTasks.length > 0}
         <div class="flex flex-row w-full">
           <div class="p-2 flex flex-row space-x-2 w-full">
-            <Button on:click={() => clearNotifications()}>Clear</Button>
+            <Button on:click={clearNotifications}>Clear</Button>
             <!--<Button>View task history</Button>-->
           </div>
         </div>

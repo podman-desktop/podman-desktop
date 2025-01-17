@@ -53,6 +53,6 @@ export const onboardingEventStore = new EventStore<OnboardingInfo[]>(
 );
 const onboardingEventStoreInfo = onboardingEventStore.setup();
 
-export const fetchOnboarding = async () => {
+export const fetchOnboarding = async (): Promise<void> => {
   await onboardingEventStoreInfo.fetch();
 };

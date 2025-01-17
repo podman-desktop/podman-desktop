@@ -72,11 +72,11 @@ const kubernetesConnection: ProviderKubernetesConnectionInfo = {
   lifecycleMethods: ['start', 'stop', 'delete'],
 };
 
-const updateConnectionStatus = () => {
+const updateConnectionStatus = (): void => {
   //nothing
 };
 
-const addConnectionToRestartingQueue = () => {
+const addConnectionToRestartingQueue = (): void => {
   //nothing
 };
 

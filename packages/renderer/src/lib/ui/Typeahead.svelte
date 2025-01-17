@@ -14,8 +14,8 @@ export let name: string | undefined = undefined;
 export let error: boolean = false;
 
 export let searchFunction: SearchFunction = async (_s: string) => [];
-export let onChange = function (_s: string) {};
-export let onEnter = function () {};
+export let onChange = function (_s: string): void {};
+export let onEnter = function (): void {};
 
 let input: HTMLInputElement;
 let list: HTMLDivElement;
@@ -238,8 +238,8 @@ function onWindowClick(e: Event): void {
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}
         class="p-1 text-start w-full cursor-pointer"
-        on:click={() => onItemSelected(item)}
-        on:pointerenter={() => {
+        on:click={(): void => onItemSelected(item)}
+        on:pointerenter={(): void => {
           highlightIndex = i;
         }}>{item}</button>
     {/each}

@@ -62,7 +62,7 @@ class ConfigurationChangeEvent extends CustomEvent<IConfigurationChangeEvent> {
   }
 }
 
-export function setupConfigurationChange() {
+export function setupConfigurationChange(): void {
   // be notified when a specific property is being changed
   window.events?.receive('onDidChangeConfiguration', (data: unknown) => {
     onDidChangeConfiguration.dispatchEvent(new ConfigurationChangeEvent(data as IConfigurationChangeEvent));

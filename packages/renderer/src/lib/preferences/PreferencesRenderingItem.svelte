@@ -50,7 +50,7 @@ $effect(() => {
   resetToDefault = false;
 });
 
-function updateResetButtonVisibility(recordValue: unknown) {
+function updateResetButtonVisibility(recordValue: unknown): void {
   showResetButton =
     recordUI.original.default !== undefined && recordValue !== undefined && recordValue !== recordUI.original.default;
   // when the reset button is shown we reset the value of resetToDefault
@@ -59,7 +59,7 @@ function updateResetButtonVisibility(recordValue: unknown) {
   }
 }
 
-function doResetToDefault() {
+function doResetToDefault(): void {
   resetToDefault = true;
 }
 

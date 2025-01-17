@@ -58,7 +58,7 @@ const filteredCatalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
   },
 );
 
-function closeModal() {
+function closeModal(): void {
   installManualImageModal = false;
 }
 
@@ -70,7 +70,7 @@ let installManualImageModal: boolean = false;
 <NavPage bind:searchTerm={searchTerm} title="extensions">
   <svelte:fragment slot="additional-actions">
     <Button
-      on:click={() => {
+      on:click={(): void => {
         installManualImageModal = true;
       }}
       icon={faCloudDownload}
@@ -94,13 +94,13 @@ let installManualImageModal: boolean = false;
   <svelte:fragment slot="tabs">
     <Button
       type="tab"
-      on:click={() => {
+      on:click={(): void => {
         screen = 'installed';
       }}
       selected={screen === 'installed'}>Installed</Button>
     <Button
       type="tab"
-      on:click={() => {
+      on:click={(): void => {
         screen = 'catalog';
       }}
       selected={screen === 'catalog'}>Catalog</Button>
@@ -113,7 +113,7 @@ let installManualImageModal: boolean = false;
           icon={ExtensionIcon}
           kind="extensions"
           searchTerm={searchTerm}
-          on:resetFilter={() => (searchTerm = '')} />
+          on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <InstalledExtensionList extensionInfos={$filteredInstalledExtensions} />
     {:else}
@@ -122,7 +122,7 @@ let installManualImageModal: boolean = false;
           icon={ExtensionIcon}
           kind="extensions"
           searchTerm={searchTerm}
-          on:resetFilter={() => (searchTerm = '')} />
+          on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={$filteredCatalogExtensions} />
     {/if}
@@ -131,7 +131,5 @@ let installManualImageModal: boolean = false;
 
 {#if installManualImageModal}
   <InstallManuallyExtensionModal
-    closeCallback={() => {
-      closeModal();
-    }} />
+    closeCallback={closeModal} />
 {/if}

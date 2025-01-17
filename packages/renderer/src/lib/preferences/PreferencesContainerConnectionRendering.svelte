@@ -98,7 +98,7 @@ async function startContainerProvider(
   provider: ProviderInfo,
   containerConnectionInfo: ProviderContainerConnectionInfo,
   loggerHandlerKey: symbol,
-) {
+): Promise<void> {
   await window.startProviderConnectionLifecycle(
     provider.internalId,
     containerConnectionInfo,
@@ -130,11 +130,11 @@ function updateConnectionStatus(
   connectionStatus = connectionStatus;
 }
 
-function addConnectionToRestartingQueue(container: IConnectionRestart) {
+function addConnectionToRestartingQueue(container: IConnectionRestart): void {
   loggerHandlerKey = container.loggerHandlerKey;
 }
 
-function setNoLogs() {
+function setNoLogs(): void {
   noLog = false;
 }
 </script>

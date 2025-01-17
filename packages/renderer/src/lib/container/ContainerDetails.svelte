@@ -73,7 +73,7 @@ onMount(() => {
     <svelte:fragment slot="subtitle">
       <Link
         aria-label="Image Details"
-        on:click={() => {
+        on:click={(): void => {
           if (container.imageHref) {
             router.goto(container.imageHref);
           }
@@ -87,7 +87,7 @@ onMount(() => {
           <div>&nbsp;</div>
         {/if}
       </div>
-      <ContainerActions container={container} detailed={true} on:update={() => (container = container)} />
+      <ContainerActions container={container} detailed={true} on:update={(): ContainerInfoUI => (container = container)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={container.state} />

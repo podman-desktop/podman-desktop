@@ -244,7 +244,7 @@ async function getPort(portDescriptor: string): Promise<number | undefined> {
   }
 }
 
-async function startContainer() {
+async function startContainer(): Promise<void> {
   createError = undefined;
   // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
@@ -427,7 +427,7 @@ function addPortsFromRange(
   portBindings: { [key: string]: unknown },
   containerRange: string,
   hostRange: string,
-) {
+): void {
   const containerRangeValues = getStartEndRange(containerRange);
   if (!containerRangeValues) {
     throw new Error(`range ${containerRange} is not valid. Must be in format <port>-<port> (e.g 8080-8085)`);
@@ -461,7 +461,12 @@ function addPortsFromRange(
   }
 }
 
-function getStartEndRange(range: string) {
+function getStartEndRange(range: string):
+  | {
+      startRange: number;
+      endRange: number;
+    }
+  | undefined {
   if (range.endsWith('/tcp') || range.endsWith('/udp')) {
     range = range.substring(0, range.length - 4);
   }
@@ -482,23 +487,23 @@ function getStartEndRange(range: string) {
   };
 }
 
-function addEnvVariable() {
+function addEnvVariable(): void {
   environmentVariables = [...environmentVariables, { key: '', value: '' }];
 }
 
-function deleteEnvVariable(index: number) {
+function deleteEnvVariable(index: number): void {
   environmentVariables = environmentVariables.filter((_, i) => i !== index);
 }
 
-function addEnvFile() {
+function addEnvFile(): void {
   environmentFiles = [...environmentFiles, ''];
 }
 
-function deleteEnvFile(index: number) {
+function deleteEnvFile(index: number): void {
   environmentFiles = environmentFiles.filter((_, i) => i !== index);
 }
 
-function addHostContainerPorts() {
+function addHostContainerPorts(): void {
   hostContainerPortMappings = [
     ...hostContainerPortMappings,
     {
@@ -511,68 +516,68 @@ function addHostContainerPorts() {
   ];
 }
 
-async function deleteHostContainerPorts(index: number) {
+async function deleteHostContainerPorts(index: number): Promise<void> {
   hostContainerPortMappings = hostContainerPortMappings.filter((_, i) => i !== index);
   await assertAllPortAreValid();
 }
 
-function addVolumeMount() {
+function addVolumeMount(): void {
   volumeMounts = [...volumeMounts, { source: '', target: '' }];
 }
 
-function deleteVolumeMount(index: number) {
+function deleteVolumeMount(index: number): void {
   volumeMounts = volumeMounts.filter((_, i) => i !== index);
 }
 
-function deleteSecurityOpt(index: number) {
+function deleteSecurityOpt(index: number): void {
   securityOpts = securityOpts.filter((_, i) => i !== index);
 }
 
-function addSecurityOpt() {
+function addSecurityOpt(): void {
   securityOpts = [...securityOpts, ''];
 }
 
-function addCapAdd() {
+function addCapAdd(): void {
   capAdds = [...capAdds, ''];
 }
-function addCapDrop() {
+function addCapDrop(): void {
   capDrops = [...capDrops, ''];
 }
 
-function deleteCapAdd(index: number) {
+function deleteCapAdd(index: number): void {
   capAdds = capAdds.filter((_, i) => i !== index);
 }
 
-function deleteCappDrop(index: number) {
+function deleteCappDrop(index: number): void {
   capDrops = capDrops.filter((_, i) => i !== index);
 }
 
-function addDnsServer() {
+function addDnsServer(): void {
   dnsServers = [...dnsServers, ''];
 }
 
-function deleteDnsServer(index: number) {
+function deleteDnsServer(index: number): void {
   dnsServers = dnsServers.filter((_, i) => i !== index);
 }
 
-function addExtraHost() {
+function addExtraHost(): void {
   extraHosts = [...extraHosts, { host: '', ip: '' }];
 }
 
-function deleteExtraHost(index: number) {
+function deleteExtraHost(index: number): void {
   extraHosts = extraHosts.filter((_, i) => i !== index);
 }
 
-function addDevice() {
+function addDevice(): void {
   devices = [...devices, { host: '', container: '', read: false, write: false, mknod: false }];
 }
 
-function deleteDevice(index: number) {
+function deleteDevice(index: number): void {
   devices = devices.filter((_, i) => i !== index);
 }
 
 // called when user change the container's name
-function checkContainerName(event: Event) {
+function checkContainerName(event: Event): void {
   const containerValue = event.target instanceof Input ? event.target.value : '';
 
   // ok, now check if we already have a matching container: same name and same engine ID
@@ -590,21 +595,21 @@ function checkContainerName(event: Event) {
   }
 }
 
-function onContainerPortMappingInput(event: Event, index: number) {
+function onContainerPortMappingInput(event: Event, index: number): void {
   onPortInput(event, containerPortMapping[index], () => {
     containerPortMapping = containerPortMapping;
     assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
   });
 }
 
-function onHostContainerPortMappingInput(event: Event, index: number) {
+function onHostContainerPortMappingInput(event: Event, index: number): void {
   onPortInput(event, hostContainerPortMappings[index].hostPort, () => {
     hostContainerPortMappings = hostContainerPortMappings;
     assertAllPortAreValid().catch((err: unknown) => console.error('Error checking all ports valid', err));
   });
 }
 
-function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void) {
+function onPortInput(event: Event, portInfo: PortInfo, updateUI: () => void): void {
   // clear the timeout so if there was an old call to areAllPortsFree pending is deleted. We will create a new one soon
   clearTimeout(onPortInputTimeout);
   const target = event.currentTarget as HTMLInputElement;
@@ -672,7 +677,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalContainerName"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
               <Input
-                on:input={event => checkContainerName(event)}
+                on:input={checkContainerName}
                 bind:value={containerName}
                 name="modalContainerName"
                 id="modalContainerName"
@@ -703,7 +708,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === volumeMounts.length - 1}
-                    on:click={() => deleteVolumeMount(index)}
+                    on:click={(): void => deleteVolumeMount(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -725,7 +730,7 @@ const envDialogOptions: OpenDialogOptions = {
                     >Local port for {port}:</span>
                   <Input
                     bind:value={containerPortMapping[index].port}
-                    on:input={event => onContainerPortMappingInput(event, index)}
+                    on:input={(event): void => onContainerPortMappingInput(event, index)}
                     placeholder="Enter value for port {port}"
                     error={containerPortMapping[index].error}
                     class="ml-2 w-full"
@@ -745,7 +750,7 @@ const envDialogOptions: OpenDialogOptions = {
                 <div class="flex flex-row justify-center w-full py-1">
                   <Input
                     bind:value={hostContainerPortMapping.hostPort.port}
-                    on:input={event => onHostContainerPortMappingInput(event, index)}
+                    on:input={(event): void => onHostContainerPortMappingInput(event, index)}
                     aria-label="host port"
                     placeholder="Host Port"
                     error={hostContainerPortMapping.hostPort.error}
@@ -755,7 +760,7 @@ const envDialogOptions: OpenDialogOptions = {
                     aria-label="container port"
                     placeholder="Container Port"
                     class="ml-2" />
-                  <Button type="link" on:click={async () => await deleteHostContainerPorts(index)} icon={faMinusCircle} />
+                  <Button type="link" on:click={async (): Promise<void> => await deleteHostContainerPorts(index)} icon={faMinusCircle} />
                 </div>
               {/each}
               <label
@@ -774,7 +779,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === environmentVariables.length - 1}
-                    on:click={() => deleteEnvVariable(index)}
+                    on:click={(): void => deleteEnvVariable(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -801,7 +806,7 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === environmentFiles.length - 1}
                     aria-label="Delete env file at index {index}"
-                    on:click={() => deleteEnvFile(index)}
+                    on:click={(): void => deleteEnvFile(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -905,7 +910,7 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === devices.length - 1}
                     aria-label="Delete device at index {index}"
-                    on:click={() => deleteDevice(index)}
+                    on:click={(): void => deleteDevice(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -951,7 +956,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === securityOpts.length - 1}
-                    on:click={() => deleteSecurityOpt(index)}
+                    on:click={(): void => deleteSecurityOpt(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -978,7 +983,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === capAdds.length - 1}
-                    on:click={() => deleteCapAdd(index)}
+                    on:click={(): void => deleteCapAdd(index)}
                     icon={faMinusCircle} />
                   <Button type="link" hidden={index < capAdds.length - 1} on:click={addCapAdd} icon={faPlusCircle} />
                 </div>
@@ -995,7 +1000,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === capDrops.length - 1}
-                    on:click={() => deleteCappDrop(index)}
+                    on:click={(): void => deleteCappDrop(index)}
                     icon={faMinusCircle} />
                   <Button type="link" hidden={index < capDrops.length - 1} on:click={addCapDrop} icon={faPlusCircle} />
                 </div>
@@ -1036,7 +1041,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === dnsServers.length - 1}
-                    on:click={() => deleteDnsServer(index)}
+                    on:click={(): void => deleteDnsServer(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -1059,7 +1064,7 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button
                     type="link"
                     hidden={index === extraHosts.length - 1}
-                    on:click={() => deleteExtraHost(index)}
+                    on:click={(): void => deleteExtraHost(index)}
                     icon={faMinusCircle} />
                   <Button
                     type="link"
@@ -1127,7 +1132,7 @@ const envDialogOptions: OpenDialogOptions = {
 
         <div class="pt-2 border-[var(--pd-content-divider)] border-t-2"></div>
         <Button
-          on:click={() => startContainer()}
+          on:click={startContainer}
           class="w-full"
           icon={faPlay}
           aria-label="Start Container"

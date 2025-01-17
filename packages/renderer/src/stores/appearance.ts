@@ -41,7 +41,7 @@ configurationProperties.subscribe(() => {
   }
 });
 
-function updateIsDark(appearance: string) {
+function updateIsDark(appearance: string): void {
   if (appearance === AppearanceSettings.SystemEnumValue) {
     // need to read the system default theme using the window.matchMedia
     isDark.set(window.matchMedia('(prefers-color-scheme: dark)').matches);

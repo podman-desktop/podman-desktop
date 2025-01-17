@@ -63,7 +63,7 @@ beforeAll(() => {
   getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
 
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

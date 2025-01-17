@@ -61,7 +61,7 @@ let hiddenItems: string[] = [];
 
 let values: NavigationRegistryEntry[] = [];
 let initialized = false;
-const init = () => {
+const init = (): void => {
   values.push(createNavigationContainerEntry());
   values.push(createNavigationPodEntry());
   values.push(createNavigationImageEntry());
@@ -72,7 +72,7 @@ const init = () => {
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
-function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]) {
+function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: DisplayItem[]): void {
   if (navigationRegistryEntry.items && navigationRegistryEntry.type === 'group') {
     navigationRegistryEntry.items.forEach(item => {
       collecItem(item, items);
@@ -118,7 +118,7 @@ export const fetchNavigationRegistries = async (): Promise<void> => {
   await navigationRegistryEventStoreInfo.fetch();
 };
 
-function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry) {
+function hideSingleItem(navigationRegistryEntry: NavigationRegistryEntry): void {
   if (hiddenItems?.includes(navigationRegistryEntry.name)) {
     navigationRegistryEntry.hidden = true;
   } else {

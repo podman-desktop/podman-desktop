@@ -33,7 +33,7 @@ let {
   hidden = false,
   disabledWhen = '',
   enabled = true,
-  onClick = () => {},
+  onClick = (): void => {},
   menu = false,
   detailed = false,
   inProgress = false,
@@ -67,7 +67,7 @@ $effect(() => {
   }
 });
 
-function computeEnabled() {
+function computeEnabled(): void {
   // Deserialize the `when` property
   const whenDeserialized = ContextKeyExpr.deserialize(disabledWhen);
   // if there is some error when evaluating the when expression, we use the default value enabled = true
@@ -97,7 +97,7 @@ const buttonClass =
 const buttonDisabledClass =
   'text-[var(--pd-action-button-disabled-text)] font-medium rounded-full inline-flex items-center px-2 py-2 text-center';
 
-function handleClick() {
+function handleClick(): void {
   if (enabled && !inProgress) {
     onClick();
   }

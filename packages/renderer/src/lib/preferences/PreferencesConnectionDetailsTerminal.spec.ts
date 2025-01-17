@@ -65,8 +65,8 @@ beforeEach(() => {
     },
     matchMedia: {
       value: () => ({
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       }),
     },
   });

@@ -47,7 +47,7 @@ async function onClick(action?: ItemAction): Promise<void> {
         tooltip={item.tooltip}
         icon={item.icon}
         enabled={item.enabled}
-        onClick={() => onClick(item.action)}
+        onClick={(): Promise<void> => onClick(item.action)}
       />
       {/each}
     </HelpMenu>

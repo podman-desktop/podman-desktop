@@ -18,7 +18,7 @@ onMount(() => {
 });
 
 // show/hide if the parent doesn't override
-async function onShowHide() {
+async function onShowHide(): Promise<void> {
   if (dispatch('toggleShowHide', { cancelable: true })) {
     passwordHidden = !passwordHidden;
     element.type = passwordHidden ? 'password' : 'text';

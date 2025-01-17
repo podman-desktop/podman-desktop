@@ -31,7 +31,7 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -44,8 +44,8 @@ beforeAll(() => {
     value: () => {
       return {
         matches: false,
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       };
     },
   });

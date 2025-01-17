@@ -25,7 +25,7 @@ let firstIteration = true;
 let cpuUsage: string;
 let memoryUsage: string;
 
-export async function updateStatistics(containerStats: ContainerStatsInfo) {
+export async function updateStatistics(containerStats: ContainerStatsInfo): Promise<void> {
   // we need enough data to compute the CPU usage
   if (firstIteration) {
     firstIteration = false;

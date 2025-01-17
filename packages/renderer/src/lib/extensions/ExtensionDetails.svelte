@@ -76,13 +76,13 @@ $: extension = derived(
       {#if $extension.state === 'failed'}
         <Button
           type="tab"
-          on:click={() => {
+          on:click={(): void => {
             screen = 'README';
           }}
           selected={screen === 'README'}>Readme</Button>
         <Button
           type="tab"
-          on:click={() => {
+          on:click={(): void => {
             screen = 'ERROR';
           }}
           selected={screen === 'ERROR'}>Error</Button>

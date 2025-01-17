@@ -131,12 +131,12 @@ function getLoggerHandler(
   containerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
 ): ConnectionCallback {
   return {
-    log: () => {},
-    warn: () => {},
-    error: args => {
+    log: (): void => {},
+    warn: (): void => {},
+    error: (args): void => {
       updateConnectionStatus(provider, containerConnectionInfo, undefined, args);
     },
-    onEnd: () => {},
+    onEnd: (): void => {},
   };
 }
 </script>
@@ -152,7 +152,7 @@ function getLoggerHandler(
         {#if connection.lifecycleMethods.includes('start')}
           <div class="ml-2">
             <LoadingIconButton
-              clickAction={() => startConnectionProvider(provider, connection)}
+              clickAction={(): Promise<void> => startConnectionProvider(provider, connection)}
               action="start"
               icon={faPlay}
               state={connectionStatus}
@@ -161,7 +161,7 @@ function getLoggerHandler(
         {/if}
         {#if connection.lifecycleMethods.includes('start') && connection.lifecycleMethods.includes('stop')}
           <LoadingIconButton
-            clickAction={() => restartConnectionProvider(provider, connection)}
+            clickAction={(): Promise<void> => restartConnectionProvider(provider, connection)}
             action="restart"
             icon={faRotateRight}
             state={connectionStatus}
@@ -169,7 +169,7 @@ function getLoggerHandler(
         {/if}
         {#if connection.lifecycleMethods.includes('stop')}
           <LoadingIconButton
-            clickAction={() => stopConnectionProvider(provider, connection)}
+            clickAction={(): Promise<void> => stopConnectionProvider(provider, connection)}
             action="stop"
             icon={faStop}
             state={connectionStatus}
@@ -177,7 +177,7 @@ function getLoggerHandler(
         {/if}
         {#if connection.lifecycleMethods.includes('edit')}
           <LoadingIconButton
-            clickAction={() => editConnectionProvider(provider, connection)}
+            clickAction={(): Promise<void> => editConnectionProvider(provider, connection)}
             action="edit"
             icon={faEdit}
             state={connectionStatus}
@@ -185,7 +185,7 @@ function getLoggerHandler(
         {/if}
         {#if connection.lifecycleMethods.includes('delete')}
           <LoadingIconButton
-            clickAction={() => deleteConnectionProvider(provider, connection)}
+            clickAction={(): Promise<void> => deleteConnectionProvider(provider, connection)}
             action="delete"
             icon={faTrash}
             state={connectionStatus}

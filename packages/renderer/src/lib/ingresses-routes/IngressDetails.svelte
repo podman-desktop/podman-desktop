@@ -44,7 +44,7 @@ onMount(() => {
   });
 });
 
-async function loadIngressDetails() {
+async function loadIngressDetails(): Promise<void> {
   const getKubeService = await window.kubernetesReadNamespacedIngress(ingressUI.name, namespace);
   if (getKubeService) {
     kubeService = getKubeService;
@@ -58,7 +58,7 @@ async function loadIngressDetails() {
   <DetailsPage title={ingressUI.name} subtitle={ingressUI.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={IngressRouteIcon} size={24} status={ingressUI.status} />
     <svelte:fragment slot="actions">
-      <IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={() => (ingressUI = ingressUI)} />
+      <IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={(): IngressUI => (ingressUI = ingressUI)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={ingressUI.status} />

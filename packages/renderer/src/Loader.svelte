@@ -30,7 +30,7 @@ onMount(async () => {
     console.error('Unable to check if system is ready', error);
   }
 
-  const checkRemoteStarted = async () => {
+  const checkRemoteStarted = async (): Promise<void> => {
     const extensionsStarted = await window.extensionSystemIsExtensionsStarted();
     if (extensionsStarted) {
       window.dispatchEvent(new CustomEvent('extensions-already-started', {}));
@@ -57,7 +57,7 @@ onDestroy(() => {
 
 // receive events from main process to install a new extension
 window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
-  const action = async () => {
+  const action = async (): Promise<void> => {
     const redirectPage = `/extensions/details/${extensionId}`;
     // need to open the extension page
     await tick();

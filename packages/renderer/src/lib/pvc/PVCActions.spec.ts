@@ -54,7 +54,7 @@ beforeEach(() => {
   Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'kubernetesDeletePersistentVolumeClaim', { value: deleteMock });
   (window.events as unknown) = {
-    receive: (_channel: string, func: () => void) => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };

@@ -17,20 +17,20 @@ let { tasks, selectedItemsNumber = $bindable() }: Props = $props();
 const nameColumn = new TableColumn<TaskInfoUI, string>('Name', {
   width: '3fr',
   renderer: TableSimpleColumn,
-  renderMapping: task => task.name,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  renderMapping: (task): string => task.name,
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 const progressColumn = new TableColumn<TaskInfoUI>('Progress', {
   width: '3fr',
   renderer: TaskManagerTableProgressColumn,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 const ageColumn = new TableColumn<TaskInfoUI, Date>('Age', {
-  renderMapping: task => moment(task.started).toDate(),
+  renderMapping: (task): Date => moment(task.started).toDate(),
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.started).diff(moment(a.started)),
+  comparator: (a, b): number => moment(b.started).diff(moment(a.started)),
 });
 
 const actionsColumn = new TableColumn<TaskInfoUI>('Actions', {
@@ -43,7 +43,7 @@ const actionsColumn = new TableColumn<TaskInfoUI>('Actions', {
 const columns = [nameColumn, progressColumn, ageColumn, actionsColumn];
 
 const row = new TableRow<TaskInfoUI>({
-  selectable: task => task.state === 'completed',
+  selectable: (task): boolean => task.state === 'completed',
   disabledText: 'Task is still running',
 });
 </script>

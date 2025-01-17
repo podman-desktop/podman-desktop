@@ -10,26 +10,26 @@ export let object: ImageInfoUI;
 
 let pushImageModal = false;
 let pushImageModalImageInfo: ImageInfoUI | undefined = undefined;
-function handlePushImageModal(imageInfo: ImageInfoUI) {
+function handlePushImageModal(imageInfo: ImageInfoUI): void {
   pushImageModalImageInfo = imageInfo;
   pushImageModal = true;
 }
 
 let renameImageModal = false;
 let renameImageModalImageInfo: ImageInfoUI | undefined = undefined;
-function handleRenameImageModal(imageInfo: ImageInfoUI) {
+function handleRenameImageModal(imageInfo: ImageInfoUI): void {
   renameImageModalImageInfo = imageInfo;
   renameImageModal = true;
 }
 
 let pushManifestModal = false;
 let pushManifestModalInfo: ImageInfoUI | undefined = undefined;
-function handlePushManifestModal(imageInfo: ImageInfoUI) {
+function handlePushManifestModal(imageInfo: ImageInfoUI): void {
   pushManifestModalInfo = imageInfo;
   pushManifestModal = true;
 }
 
-function closeModals() {
+function closeModals(): void {
   pushImageModal = false;
   renameImageModal = false;
   pushManifestModal = false;
@@ -44,9 +44,7 @@ function closeModals() {
   {#if pushManifestModal && pushManifestModalInfo}
     <PushManifestModal
       manifestInfoToPush={pushManifestModalInfo}
-      closeCallback={() => {
-        closeModals();
-      }} />
+      closeCallback={closeModals} />
   {/if}
 {:else}
   <ImageActions
@@ -59,15 +57,11 @@ function closeModals() {
   {#if pushImageModal && pushImageModalImageInfo}
     <PushImageModal
       imageInfoToPush={pushImageModalImageInfo}
-      closeCallback={() => {
-        closeModals();
-      }} />
+      closeCallback={closeModals} />
   {/if}
   {#if renameImageModal && renameImageModalImageInfo}
     <RenameImageModal
       imageInfoToRename={renameImageModalImageInfo}
-      closeCallback={() => {
-        closeModals();
-      }} />
+      closeCallback={closeModals} />
   {/if}
 {/if}

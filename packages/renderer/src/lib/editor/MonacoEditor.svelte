@@ -20,7 +20,7 @@ export let readOnly = true;
 
 const dispatch = createEventDispatcher<{ contentChange: string }>();
 
-async function updateTheme(isDarkTheme: boolean) {
+async function updateTheme(isDarkTheme: boolean): Promise<void> {
   Monaco = await import('monaco-editor');
   // check if we're in light or dark mode and get the terminal background color
   const appearanceUtil = new AppearanceUtil();
@@ -45,13 +45,13 @@ onMount(async () => {
   });
 
   self.MonacoEnvironment = {
-    getWorker: function (_moduleId: unknown, label: string) {
+    getWorker: function (_moduleId: unknown, label: string): Worker {
       if (label === 'json') {
         return new jsonWorker();
       }
       return new editorWorker();
     },
-    createTrustedTypesPolicy: () => undefined,
+    createTrustedTypesPolicy: (): undefined | monaco.ITrustedTypePolicy => undefined,
   };
 
   Monaco = await import('monaco-editor');

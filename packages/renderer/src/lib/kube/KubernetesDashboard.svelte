@@ -76,7 +76,7 @@ async function openKubernetesDocumentation(): Promise<void> {
       <!-- Details - collapsible -->
       <div class="flex flex-1 flex-col">
         <div class="flex flex-row w-full px-5 pb-2">
-          <button onclick={() => (expandedDetails = !expandedDetails)}>
+          <button onclick={(): boolean => (expandedDetails = !expandedDetails)}>
             <div class="flex flex-row space-x-2 items-center text-[var(--pd-content-card-header-text)]">
               <div class="flex w-full" role="region" aria-label="header">
                 <h1 class="text-xl font-bold capitalize text-[var(--pd-content-header)]">
@@ -129,7 +129,7 @@ async function openKubernetesDocumentation(): Promise<void> {
               <!-- Articles and blog posts - collapsible -->
               <div class="flex flex-1 flex-col pt-2">
                 <div>
-                  <button onclick={() => (expandedGuide = !expandedGuide)}>
+                  <button onclick={(): boolean => (expandedGuide = !expandedGuide)}>
                     <div class="flex flex-row space-x-2 items-center text-[var(--pd-content-card-header-text)]">
                       {#if expandedGuide}
                         <i class="fas fa-chevron-down"></i>

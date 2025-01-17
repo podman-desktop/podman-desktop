@@ -40,7 +40,7 @@ async function onError(error: string): Promise<void> {
 
 <ListItemButtonIcon
   title="Delete Manifest"
-  onClick={() => withConfirmation(deleteManifest, `delete manifest ${manifest.name}`)}
+  onClick={(): void => withConfirmation(deleteManifest, `delete manifest ${manifest.name}`)}
   detailed={detailed}
   icon={faTrash}
   enabled={manifest.status === 'UNUSED'} />
@@ -49,7 +49,7 @@ async function onError(error: string): Promise<void> {
 <ActionsWrapper dropdownMenu={dropdownMenu}>
   <ListItemButtonIcon
     title="Push Manifest"
-    onClick={() => pushManifest()}
+    onClick={pushManifest}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowUp} />

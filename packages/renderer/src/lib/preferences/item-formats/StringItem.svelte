@@ -5,11 +5,11 @@ import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/s
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string | undefined;
-export let onChange = async (_id: string, _value: string) => {};
+export let onChange = async (_id: string, _value: string): Promise<void> => {};
 
 let invalidEntry = false;
 
-function onInput(event: Event) {
+function onInput(event: Event): void {
   const target = event.target as HTMLInputElement;
   if (record.id && target.value !== value)
     onChange(record.id, target.value).catch((_: unknown) => (invalidEntry = true));

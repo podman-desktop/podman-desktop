@@ -42,7 +42,7 @@ onMount(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedServices() {
+async function deleteSelectedServices(): Promise<void> {
   const selectedServices = services.filter(service => service.selected);
   if (selectedServices.length === 0) {
     return;
@@ -72,38 +72,38 @@ let statusColumn = new TableColumn<ServiceUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: ServiceColumnStatus,
-  comparator: (a, b) => a.status.localeCompare(b.status),
+  comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
 let nameColumn = new TableColumn<ServiceUI>('Name', {
   width: '1.3fr',
   renderer: ServiceColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let typeColumn = new TableColumn<ServiceUI>('Type', {
   renderer: ServiceColumnType,
   overflow: true,
-  comparator: (a, b) => a.type.localeCompare(b.type),
+  comparator: (a, b): number => a.type.localeCompare(b.type),
 });
 
 let clusterIPColumn = new TableColumn<ServiceUI, string>('Cluster IP', {
-  renderMapping: service => service.clusterIP,
+  renderMapping: (service): string => service.clusterIP,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.clusterIP.localeCompare(b.clusterIP),
+  comparator: (a, b): number => a.clusterIP.localeCompare(b.clusterIP),
 });
 
 let portsColumn = new TableColumn<ServiceUI, string>('Ports', {
   width: '2fr',
-  renderMapping: service => service.ports,
+  renderMapping: (service): string => service.ports,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.ports.localeCompare(b.ports),
+  comparator: (a, b): number => a.ports.localeCompare(b.ports),
 });
 
 let ageColumn = new TableColumn<ServiceUI, Date | undefined>('Age', {
-  renderMapping: service => service.created,
+  renderMapping: (service): Date | undefined => service.created,
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.created).diff(moment(a.created)),
+  comparator: (a, b): number => moment(b.created).diff(moment(a.created)),
 });
 
 const columns = [
@@ -116,7 +116,7 @@ const columns = [
   new TableColumn<ServiceUI>('Actions', { align: 'right', renderer: ServiceColumnActions }),
 ];
 
-const row = new TableRow<ServiceUI>({ selectable: _service => true });
+const row = new TableRow<ServiceUI>({ selectable: (_service): boolean => true });
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="services">
@@ -127,7 +127,7 @@ const row = new TableRow<ServiceUI>({ selectable: _service => true });
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedServices,
             `delete ${selectedItemsNumber} service${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -151,7 +151,7 @@ const row = new TableRow<ServiceUI>({ selectable: _service => true });
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (services = services)}>
+      on:update={(): ServiceUI[] => (services = services)}>
     </Table>
 
     {#if $kubernetesCurrentContextServicesFiltered.length === 0}

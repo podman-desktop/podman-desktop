@@ -11,7 +11,7 @@ let pingResult = '';
 let pingInProgress = false;
 let pingError = '';
 
-async function pingConnection() {
+async function pingConnection(): Promise<void> {
   const start = performance.now();
   pingInProgress = true;
   pingError = '';
@@ -32,7 +32,7 @@ async function pingConnection() {
 
 <div class="flex flex-row items-center">
   <div class="w-36">
-    <Button bind:inProgress={pingInProgress} class="my-1 w-full" on:click={() => pingConnection()} icon={faSignal}>
+    <Button bind:inProgress={pingInProgress} class="my-1 w-full" on:click={pingConnection} icon={faSignal}>
       Ping
     </Button>
   </div>

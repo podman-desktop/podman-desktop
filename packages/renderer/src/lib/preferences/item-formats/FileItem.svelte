@@ -7,7 +7,7 @@ import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/s
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string = '';
-export let onChange = async (_id: string, _value: string) => {};
+export let onChange = async (_id: string, _value: string): Promise<void> => {};
 
 let invalidEntry = false;
 let dialogOptions: OpenDialogOptions = {

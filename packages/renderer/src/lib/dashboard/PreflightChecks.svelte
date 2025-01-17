@@ -38,7 +38,7 @@ async function openLink(url: string): Promise<void> {
           {#if preCheck.docLinks}
             See:
             {#each preCheck.docLinks as link}
-              <Link aria-label="precheck-link" on:click={async () => await openLink(link.url)}>{link.title}</Link>
+              <Link aria-label="precheck-link" on:click={async (): Promise<void> => await openLink(link.url)}>{link.title}</Link>
             {/each}
           {/if}
         {/if}

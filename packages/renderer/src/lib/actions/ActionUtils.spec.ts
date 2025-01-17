@@ -29,11 +29,11 @@ test('Object with single non serializable property', async () => {
 });
 
 test('Array with single non serializable property', async () => {
-  expect(removeNonSerializableProperties([() => {}])).toStrictEqual([]);
+  expect(removeNonSerializableProperties([(): void => {}])).toStrictEqual([]);
 });
 
 test('Array with single non serializable and serializable property', async () => {
-  expect(removeNonSerializableProperties([() => {}, 'dummy'])).toStrictEqual(['dummy']);
+  expect(removeNonSerializableProperties([(): void => {}, 'dummy'])).toStrictEqual(['dummy']);
 });
 
 test('Object with properties nested in object', async () => {
@@ -56,7 +56,7 @@ test('Object with properties nested in array', async () => {
     removeNonSerializableProperties({
       parent: [
         {
-          nonSerializable: () => {},
+          nonSerializable: (): void => {},
           serializable: 'dummy',
         },
       ],
@@ -75,7 +75,7 @@ test('Object with single non serializable property nested in array', async () =>
     removeNonSerializableProperties({
       parent: [
         {
-          nonSerializable: () => {},
+          nonSerializable: (): void => {},
           serializable: 'dummy',
         },
       ],

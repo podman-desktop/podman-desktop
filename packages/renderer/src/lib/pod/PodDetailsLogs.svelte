@@ -37,7 +37,7 @@ pod.containers.forEach((container, index) => {
 });
 
 // Callback for logs which will output the logs to the terminal
-function callback(name: string, data: string) {
+function callback(name: string, data: string): void {
   if (name === 'first-message') {
     noLogs = false;
   } else if (name === 'data') {
@@ -52,7 +52,7 @@ function callback(name: string, data: string) {
 }
 
 // Fetches the logs for each container in the pod and outputs to the terminal
-async function fetchPodLogs() {
+async function fetchPodLogs(): Promise<void> {
   // Go through each name of pod.containers array and determine
   // how much spacing is required for each name to be printed.
   let maxNameLength = 0;
@@ -70,7 +70,7 @@ async function fetchPodLogs() {
   // NOTE: Podman API returns 'Names' despite being a singular name for the container.
   for (let container of pod.containers) {
     // Set a customer callback that will add the container name and padding
-    const logsCallback = (name: string, data: string) => {
+    const logsCallback = (name: string, data: string): void => {
       const padding = ' '.repeat(maxNameLength - container.Names.length);
       const colouredName = colourizedContainerName.get(container.Names);
 

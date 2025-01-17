@@ -37,7 +37,7 @@ function validateImageName(event: Event): void {
   inputfieldError = 'Invalid input';
 }
 
-async function installExtension() {
+async function installExtension(): Promise<void> {
   inputfieldError = undefined;
   logs = [];
 
@@ -76,7 +76,7 @@ async function installExtension() {
   installInProgress = false;
 }
 
-async function handleKeydown(e: KeyboardEvent) {
+async function handleKeydown(e: KeyboardEvent): Promise<void> {
   if (e.key === 'Enter') {
     e.preventDefault();
     if (progressPercent === 100) {
@@ -92,9 +92,7 @@ async function handleKeydown(e: KeyboardEvent) {
 
 <Dialog
   title="Install Custom Extension"
-  on:close={() => {
-    closeCallback();
-  }}>
+  on:close={closeCallback}>
   <div slot="content" class="flex flex-col leading-5 space-y-5">
     <div>
       <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">OCI Image:</label>
@@ -105,7 +103,7 @@ async function handleKeydown(e: KeyboardEvent) {
             name="imageName"
             id="imageName"
             placeholder="Enter OCI image name of the extension (e.g. quay.io/namespace/my-image)"
-            on:input={event => validateImageName(event)}
+            on:input={validateImageName}
             disabled={installInProgress}
             error={inputfieldError}
             aria-invalid={inputfieldError !== ''}
@@ -135,18 +133,16 @@ async function handleKeydown(e: KeyboardEvent) {
   <svelte:fragment slot="buttons">
     <Button
       type="link"
-      on:click={() => {
-        closeCallback();
-      }}>Cancel</Button>
+      on:click={closeCallback}>Cancel</Button>
     {#if installInProgress || progressPercent !== 100}
       <Button
         icon={faCloudDownload}
         disabled={inputfieldError !== undefined}
-        on:click={() => installExtension()}
+        on:click={installExtension}
         inProgress={installInProgress}>Install</Button>
     {/if}
     {#if !installInProgress && progressPercent === 100}
-      <Button on:click={() => closeCallback()}>Done</Button>
+      <Button on:click={closeCallback}>Done</Button>
     {/if}
   </svelte:fragment>
 </Dialog>

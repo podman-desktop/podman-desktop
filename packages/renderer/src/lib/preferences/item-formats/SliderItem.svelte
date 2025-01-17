@@ -4,9 +4,9 @@ import { uncertainStringToNumber } from '../Util';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number;
-export let onChange = async (_id: string, _value: number) => {};
+export let onChange = async (_id: string, _value: number): Promise<void> => {};
 
-async function onInput(event: Event) {
+async function onInput(event: Event): Promise<void> {
   const target = event.currentTarget as HTMLInputElement;
   const _value = uncertainStringToNumber(target.value);
   if (record.id && _value !== value) await onChange(record.id, _value);

@@ -65,7 +65,7 @@ function matchValue(text: string, searchValue: string): boolean {
   return text.toLowerCase().indexOf(searchValue.toLowerCase()) >= 0;
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function updateSearchValue(event: any) {
+function updateSearchValue(event: any): void {
   clearTimeout(updateSearchValueTimeout);
   updateSearchValueTimeout = setTimeout(() => (searchValue = event.target.value), 500);
 }
@@ -73,7 +73,7 @@ function updateSearchValue(event: any) {
 
 <Route path="/" breadcrumb={key}>
   <SettingsPage title="Preferences">
-    <SearchInput slot="header" title="preferences" class="mt-4" on:input={e => updateSearchValue(e)} />
+    <SearchInput slot="header" title="preferences" class="mt-4" on:input={updateSearchValue} />
     <div class="flex flex-col space-y-5 text-[var(--pd-content-header)]">
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>

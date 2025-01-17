@@ -33,7 +33,7 @@ onMount(async () => {
   selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 });
 
-async function addArchivesToLoad() {
+async function addArchivesToLoad(): Promise<void> {
   const archives = await window.openDialog({
     title: 'Select Tar Archive(s) containing Image(s) to load',
     selectors: ['multiSelections', 'openFile'],
@@ -46,11 +46,11 @@ async function addArchivesToLoad() {
   archivesToLoad = [...archivesToLoad, ...archives];
 }
 
-function deleteImagesTarArchiveToLoad(index: number) {
+function deleteImagesTarArchiveToLoad(index: number): void {
   archivesToLoad = archivesToLoad.filter((_, i) => i !== index);
 }
 
-async function loadImages() {
+async function loadImages(): Promise<void> {
   loadError = '';
 
   if (!selectedProvider) {
@@ -108,13 +108,13 @@ async function loadImages() {
     {#each archivesToLoad as archiveToLoad, index}
       <div class="flex flex-row justify-center w-full py-1">
         <Input bind:value={archiveToLoad} aria-label="archive path" readonly={true} />
-        <Button type="link" on:click={() => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} />
+        <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} />
       </div>
     {/each}
 
     <div class="pt-5">
       <Button
-        on:click={() => loadImages()}
+        on:click={loadImages}
         inProgress={inProgress}
         class="w-full"
         icon={faPlay}
