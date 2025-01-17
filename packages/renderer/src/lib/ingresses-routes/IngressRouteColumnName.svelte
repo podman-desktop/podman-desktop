@@ -7,7 +7,7 @@ import type { RouteUI } from './RouteUI';
 
 export let object: IngressUI | RouteUI;
 
-function openDetails() {
+function openDetails(): void {
   const ingressRouteUtils = new IngressRouteUtils();
   if (ingressRouteUtils.isIngress(object)) {
     router.goto(`/kubernetes/ingressesRoutes/ingress/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);
@@ -17,7 +17,7 @@ function openDetails() {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={() => openDetails()}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

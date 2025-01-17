@@ -20,7 +20,7 @@ $: recommendedRegistriesToInstall = registriesFilteredByIds.filter(registry =>
   registry.errors.some(registryMatchingError => imageError?.includes(registryMatchingError)),
 );
 
-function goToAuthPage() {
+function goToAuthPage(): void {
   handleNavigation({
     page: NavigationPage.AUTHENTICATION,
   });
@@ -40,7 +40,7 @@ function goToAuthPage() {
     </p>
 
     {#if registry.isInstalled}
-      <Button on:click={() => goToAuthPage()}>Sign in...</Button>
+      <Button on:click={goToAuthPage}>Sign in...</Button>
     {/if}
   </div>
 {/each}

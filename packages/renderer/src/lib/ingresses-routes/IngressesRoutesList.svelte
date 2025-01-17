@@ -67,7 +67,7 @@ onDestroy(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedIngressesRoutes() {
+async function deleteSelectedIngressesRoutes(): Promise<void> {
   const selectedIngressesRoutes = ingressesRoutesUI.filter(ingressesRoutesUI => ingressesRoutesUI.selected);
   if (selectedIngressesRoutes.length === 0) {
     return;
@@ -105,24 +105,24 @@ let statusColumn = new TableColumn<IngressUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: IngressRouteColumnStatus,
-  comparator: (a, b) => a.status.localeCompare(b.status),
+  comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
 let nameColumn = new TableColumn<IngressUI | RouteUI>('Name', {
   renderer: IngressRouteColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let pathColumn = new TableColumn<IngressUI | RouteUI>('Host/Path', {
   width: '1.5fr',
   renderer: IngressRouteColumnHostPath,
-  comparator: (a, b) => compareHostPath(a, b),
+  comparator: (a, b): number => compareHostPath(a, b),
 });
 
 let ageColumn = new TableColumn<IngressUI | RouteUI, Date | undefined>('Age', {
-  renderMapping: ingressRoute => ingressRoute.created,
+  renderMapping: (ingressRoute): Date | undefined => ingressRoute.created,
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.created).diff(moment(a.created)),
+  comparator: (a, b): number => moment(b.created).diff(moment(a.created)),
 });
 
 function compareHostPath(object1: IngressUI | RouteUI, object2: IngressUI | RouteUI): number {
@@ -134,7 +134,7 @@ function compareHostPath(object1: IngressUI | RouteUI, object2: IngressUI | Rout
 let backendColumn = new TableColumn<IngressUI | RouteUI>('Backend', {
   width: '1.5fr',
   renderer: IngressRouteColumnBackend,
-  comparator: (a, b) => compareBackend(a, b),
+  comparator: (a, b): number => compareBackend(a, b),
 });
 
 function compareBackend(object1: IngressUI | RouteUI, object2: IngressUI | RouteUI): number {
@@ -152,7 +152,7 @@ const columns = [
   new TableColumn<IngressUI | RouteUI>('Actions', { align: 'right', renderer: IngressRouteColumnActions }),
 ];
 
-const row = new TableRow<IngressUI | RouteUI>({ selectable: _ingressRoute => true });
+const row = new TableRow<IngressUI | RouteUI>({ selectable: (_ingressRoute): boolean => true });
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="ingresses & routes">
@@ -163,7 +163,7 @@ const row = new TableRow<IngressUI | RouteUI>({ selectable: _ingressRoute => tru
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedIngressesRoutes,
             `delete ${selectedItemsNumber} Ingress${selectedItemsNumber > 1 ? 'es' : ''} / Route${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -187,7 +187,7 @@ const row = new TableRow<IngressUI | RouteUI>({ selectable: _ingressRoute => tru
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (ingressesRoutesUI = ingressesRoutesUI)}>
+      on:update={(): (IngressUI | RouteUI)[] => (ingressesRoutesUI = ingressesRoutesUI)}>
     </Table>
 
     {#if $kubernetesCurrentContextIngressesFiltered.length === 0 && $kubernetesCurrentContextRoutesFiltered.length === 0}

@@ -30,6 +30,6 @@ async function deleteIngressRoute(): Promise<void> {
 
 <ListItemButtonIcon
   title={`Delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'Ingress' : 'Route'}`}
-  onClick={() => deleteIngressRoute()}
+  onClick={deleteIngressRoute}
   detailed={detailed}
   icon={faTrash} />

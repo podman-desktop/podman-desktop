@@ -5,7 +5,7 @@ import { EmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn }
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import PortForwardIcon from '/@/lib/kubernetes-port-forward/PortForwardIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
+import type { ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import PodNameColumn from './PortForwardNameColumn.svelte';
 
@@ -22,17 +22,17 @@ const columns = [
   new TableColumn<ForwardConfig, string>('Type', {
     align: 'left',
     renderer: TableSimpleColumn,
-    renderMapping: config => config.kind,
+    renderMapping: (config): WorkloadKind => config.kind,
   }),
   new TableColumn<ForwardConfig, string>('Local Port', {
     align: 'left',
     renderer: TableSimpleColumn,
-    renderMapping: config => String(config.forward.localPort),
+    renderMapping: (config): string => String(config.forward.localPort),
   }),
   new TableColumn<ForwardConfig, string>('Remote Port', {
     align: 'left',
     renderer: TableSimpleColumn,
-    renderMapping: config => String(config.forward.remotePort),
+    renderMapping: (config): string => String(config.forward.remotePort),
   }),
   new TableColumn<ForwardConfig>('Actions', {
     align: 'right',

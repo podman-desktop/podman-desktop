@@ -79,7 +79,7 @@ function newButtonId(): string {
  * if the command execution fails the button goes in error mode - its color becomes red and a toggle to see all logs is displayed
  * @param buttonId button id
  */
-export async function executeButtonCommand(buttonId: string) {
+export async function executeButtonCommand(buttonId: string): Promise<void> {
   const button = buttons.get(buttonId);
   if (button && !button.disabled) {
     // hide its expandable error log section if visible and reset button css
@@ -118,7 +118,7 @@ function createHtmlErrorContent(reason: string): string {
  * enable the button
  * @param id button id
  */
-function enableButton(id: string) {
+function enableButton(id: string): void {
   updateButtonState(id, false);
 }
 
@@ -126,7 +126,7 @@ function enableButton(id: string) {
  * disable the button
  * @param id button id
  */
-function disableButton(id: string) {
+function disableButton(id: string): void {
   updateButtonState(id, true);
 }
 
@@ -135,7 +135,7 @@ function disableButton(id: string) {
  * @param id button id
  * @param disabled if the button has to be disabled
  */
-function updateButtonState(id: string, disabled: boolean) {
+function updateButtonState(id: string, disabled: boolean): void {
   const button = buttons.get(id);
   if (button) {
     button.disabled = disabled;
@@ -151,7 +151,7 @@ function updateButtonState(id: string, disabled: boolean) {
  * @param id button id
  * @param error the error log data to show in the expandable section
  */
-function enableErrorMode(id: string, error: string) {
+function enableErrorMode(id: string, error: string): void {
   //updates the style applied to the button
   toggleButtonMode(id, true);
   // update its content with the error received
@@ -164,14 +164,14 @@ function enableErrorMode(id: string, error: string) {
  * it disable the error mode so the button is reset to its normal state (purple color, hide expandable section)
  * @param id button id
  */
-function disableErrorMode(id: string) {
+function disableErrorMode(id: string): void {
   //updates the style applied to the button
   toggleButtonMode(id, false);
   // hide the error log section
   hideExpandableToggleByRef(id);
 }
 
-function toggleButtonMode(id: string, isErrorMode: boolean) {
+function toggleButtonMode(id: string, isErrorMode: boolean): void {
   const button = buttons.get(id);
   if (button) {
     const buttonElement = document.getElementById(id);
@@ -196,7 +196,7 @@ function toggleButtonMode(id: string, isErrorMode: boolean) {
  * @param this compile context used by the micromark directive
  * @param command the command to be associated to the new button, so when its clicked it start the command execution
  */
-export function createUIButton(this: CompileContext, command: Command) {
+export function createUIButton(this: CompileContext, command: Command): void {
   const buttonId = createButton(command);
   this.tag(
     `<button 

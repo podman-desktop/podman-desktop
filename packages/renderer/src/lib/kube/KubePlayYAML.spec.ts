@@ -83,7 +83,7 @@ const playKubeMock = vi.fn();
 // fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
-    receive: (_channel: string, func: () => void) => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
@@ -101,7 +101,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'playKube', { value: playKubeMock });
 });
 
-function setup() {
+function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
     name: 'test',

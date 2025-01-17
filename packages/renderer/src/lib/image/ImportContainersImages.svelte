@@ -33,7 +33,7 @@ onMount(async () => {
   selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 });
 
-async function addContainersToImport() {
+async function addContainersToImport(): Promise<void> {
   const images = await window.openDialog({
     title: 'Select Containers Images to import',
     selectors: ['multiSelections', 'openFile'],
@@ -60,17 +60,17 @@ async function addContainersToImport() {
   containersToImport = [...containersToImport, ...imagesInfo];
 }
 
-function onHostContainerPortMappingInput(event: Event, index: number) {
+function onHostContainerPortMappingInput(event: Event, index: number): void {
   const target = event.currentTarget as HTMLInputElement;
   containersToImport[index].nameWhenImporting = target.value;
   containersToImport = containersToImport;
 }
 
-function deleteContainerToImport(index: number) {
+function deleteContainerToImport(index: number): void {
   containersToImport = containersToImport.filter((_, i) => i !== index);
 }
 
-async function importContainers() {
+async function importContainers(): Promise<void> {
   importError = '';
 
   if (!selectedProvider) {
@@ -134,17 +134,17 @@ async function importContainers() {
         <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly={true} />
         <Input
           bind:value={containerToImport.nameWhenImporting}
-          on:input={event => onHostContainerPortMappingInput(event, index)}
+          on:input={(event): void => onHostContainerPortMappingInput(event, index)}
           aria-label="container importing name"
           placeholder="Image Name when Importing (e.g. quay.io/namespace/my-image-name)"
           class="ml-2" />
-        <Button type="link" on:click={() => deleteContainerToImport(index)} icon={faMinusCircle} />
+        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} />
       </div>
     {/each}
 
     <div class="pt-5">
       <Button
-        on:click={() => importContainers()}
+        on:click={importContainers}
         inProgress={inProgress}
         class="w-full"
         icon={faPlay}

@@ -11,7 +11,7 @@ const dispatch = createEventDispatcher();
 export let layers: ImageFilesystemLayerUI[];
 let currentLayerId: string | undefined;
 
-function onLayerSelected(layer: ImageFilesystemLayerUI) {
+function onLayerSelected(layer: ImageFilesystemLayerUI): void {
   currentLayerId = layer.id;
   dispatch('selected', layer);
 }
@@ -37,7 +37,7 @@ function getSizesText(layer: ImageFilesystemLayerUI): string {
 {#each layers as layer}
   {@const sizesText = getSizesText(layer)}
   <button
-    on:click={() => onLayerSelected(layer)}
+    on:click={(): void => onLayerSelected(layer)}
     role="row"
     aria-label={layer.id}
     class="rounded-lg mb-4 p-4 flex flex-col w-full text-left hover:bg-[var(--pd-content-card-hover-bg)]"

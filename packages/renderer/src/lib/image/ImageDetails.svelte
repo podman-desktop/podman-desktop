@@ -46,16 +46,16 @@ let allImages: ImageInfo[];
 const imageUtils = new ImageUtils();
 
 let pushImageModal = false;
-function handlePushImageModal() {
+function handlePushImageModal(): void {
   pushImageModal = true;
 }
 
 let renameImageModal = false;
-function handleRenameImageModal() {
+function handleRenameImageModal(): void {
   renameImageModal = true;
 }
 
-function closeModals() {
+function closeModals(): void {
   pushImageModal = false;
   renameImageModal = false;
 }
@@ -71,7 +71,7 @@ let filesProvidersUnsubscribe: Unsubscriber;
 let viewsUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 
-function updateImage() {
+function updateImage(): void {
   if (!allImages) {
     return;
   }
@@ -150,7 +150,7 @@ onDestroy(() => {
       detailed={true}
       dropdownMenu={false}
       groupContributions={true}
-      on:update={() => (image = image)} />
+      on:update={(): ImageInfoUI | undefined => (image = image)} />
     <svelte:fragment slot="tabs">
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="History" selected={isTabSelected($router.path, 'history')} url={getTabUrl($router.path, 'history')} />
@@ -184,16 +184,12 @@ onDestroy(() => {
   {#if pushImageModal}
     <PushImageModal
       imageInfoToPush={image}
-      closeCallback={() => {
-        closeModals();
-      }} />
+      closeCallback={closeModals} />
   {/if}
   {#if renameImageModal}
     <RenameImageModal
       imageInfoToRename={image}
       detailed={true}
-      closeCallback={() => {
-        closeModals();
-      }} />
+      closeCallback={closeModals} />
   {/if}
 {/if}

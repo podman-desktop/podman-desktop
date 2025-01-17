@@ -21,7 +21,7 @@ $: if (originalContent === '' && content !== '') {
 }
 
 // Handle the content change from the MonacoEditor / store it for us to use for applying to the cluster.
-function handleContentChange(event: CustomEvent<string>) {
+function handleContentChange(event: CustomEvent<string>): void {
   // If the content has changes (event.detail passed the content) vs the originalContent, then we have changes
   // and set changesDetected to true.
   changesDetected = event.detail !== originalContent;
@@ -34,13 +34,13 @@ function handleContentChange(event: CustomEvent<string>) {
 
 // Function that will update content with originalContent
 // when 'revertChanges' button is pressed.
-async function revertChanges() {
+async function revertChanges(): Promise<void> {
   content = originalContent;
   changesDetected = false;
   key++; // Increment the key to force re-render
 }
 
-async function applyToCluster() {
+async function applyToCluster(): Promise<void> {
   // Get the current context name
   let contextName = await window.kubernetesGetCurrentContextName();
   if (!contextName) {

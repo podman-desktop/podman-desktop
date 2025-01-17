@@ -27,7 +27,7 @@ async function openGuide(guide: Guide): Promise<void> {
     <p class="line-clamp-4 px-4 pt-4 text-[var(--pd-content-card-carousel-card-text)]">{guide.description}</p>
   </div>
   <div class="flex justify-center items-end flex-1 pt-4">
-    <Button class="justify-self-center self-end" on:click={() => openGuide(guide)} title="Get started"
+    <Button class="justify-self-center self-end" on:click={(): Promise<void> => openGuide(guide)} title="Get started"
       >Get started</Button>
   </div>
 </div>

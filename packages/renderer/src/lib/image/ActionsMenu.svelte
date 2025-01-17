@@ -5,7 +5,7 @@ import FlatMenu from '../ui/FlatMenu.svelte';
 
 export let dropdownMenu = false;
 export let dropdownMenuAsMenuActionItem = false;
-export let onBeforeToggle = () => {};
+export let onBeforeToggle = (): void => {};
 </script>
 
 {#if dropdownMenu}

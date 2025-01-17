@@ -31,7 +31,7 @@ import type { Directive } from 'micromark-extension-directive';
  * @this {import('micromark-util-types').CompileContext}
  * @type {import('micromark-extension-directive').Handle}
  */
-export function link(d: Directive) {
+export function link(d: Directive): boolean {
   // Make sure it's not part of a text directive
   if (d.type !== 'textDirective') {
     return false;

@@ -6,7 +6,7 @@ import type { ImageInfoUI } from './ImageInfoUI';
 
 export let object: ImageInfoUI;
 
-function openDetails(image: ImageInfoUI) {
+function openDetails(image: ImageInfoUI): void {
   if (image.isManifest) {
     router.goto(`/manifests/${image.id}/${image.engineId}/${image.base64RepoTag}/summary`);
   } else {
@@ -15,7 +15,7 @@ function openDetails(image: ImageInfoUI) {
 }
 </script>
 
-<button class="flex flex-col max-w-full" on:click={() => openDetails(object)}>
+<button class="flex flex-col max-w-full" on:click={(): void => openDetails(object)}>
   <div class="flex flex-row gap-1 items-center max-w-full">
     <div class="text-[var(--pd-table-body-text-highlight)] overflow-hidden text-ellipsis">
       {object.name}
