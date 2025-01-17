@@ -32,6 +32,7 @@ import {
   kubernetesCurrentContextPersistentVolumeClaims,
   kubernetesCurrentContextPersistentVolumeClaimsFiltered,
 } from '/@/stores/kubernetes-contexts-state';
+import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import PVCList from './PVCList.svelte';
 
@@ -45,12 +46,9 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
   (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-  (window as any).kubernetesGetContextsGeneralState = () => Promise.resolve(new Map());
-  (window as any).kubernetesGetCurrentContextGeneralState = () => Promise.resolve({});
-  (window as any).window.kubernetesUnregisterGetCurrentContextResources = () => Promise.resolve(undefined);
-  (window as any).kubernetesDeletePersistentVolumeClaim = vi.fn();
-  vi.mocked(window.kubernetesDeletePersistentVolumeClaim);
-  (window as any).getConfigurationValue = vi.fn();
+  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
+  vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 });
 

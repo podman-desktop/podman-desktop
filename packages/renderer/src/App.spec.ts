@@ -150,7 +150,7 @@ test('opens submenu when a `submenu` menu is opened', async () => {
       link: '/tosubmenu',
       tooltip: 'With submenu',
       type: 'submenu',
-      get counter() {
+      get counter(): number {
         return 0;
       },
       items: [{} as NavigationRegistryEntry],
