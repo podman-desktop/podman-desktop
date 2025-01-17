@@ -24,7 +24,9 @@ import {
   checkClusterResources,
   createKindCluster,
   deleteCluster,
+  deleteClusterFromDetails,
   resourceConnectionAction,
+  resourceConnectionActionDetails,
 } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { ensureCliInstalled } from '../utility/operations';
@@ -115,7 +117,7 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
       );
     });
 
-    test('Kind cluster operatioms - RESTART', async ({ page }) => {
+    test('Kind cluster operations - RESTART', async ({ page }) => {
       await resourceConnectionAction(
         page,
         kindResourceCard,
@@ -126,6 +128,54 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
 
     test('Kind cluster operations - DELETE', async ({ page }) => {
       await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    });
+  });
+  test.describe('Kind cluster operations - Details', () => {
+    test.skip(
+      !!process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux',
+      'Tests suite should not run on Linux platform',
+    );
+    test('Create a Kind cluster', async ({ page }) => {
+      test.setTimeout(CLUSTER_CREATION_TIMEOUT);
+      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+        await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, { useIngressController: false });
+      } else {
+        await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+      }
+    });
+
+    test('Kind cluster operations details - STOP', async ({ page }) => {
+      await resourceConnectionActionDetails(
+        page,
+        kindResourceCard,
+        CLUSTER_NAME,
+        ResourceElementActions.Stop,
+        ResourceElementState.Off,
+      );
+    });
+
+    test('Kind cluster operations details - START', async ({ page }) => {
+      await resourceConnectionActionDetails(
+        page,
+        kindResourceCard,
+        CLUSTER_NAME,
+        ResourceElementActions.Start,
+        ResourceElementState.Running,
+      );
+    });
+
+    test('Kind cluster operations details - RESTART', async ({ page }) => {
+      await resourceConnectionActionDetails(
+        page,
+        kindResourceCard,
+        CLUSTER_NAME,
+        ResourceElementActions.Restart,
+        ResourceElementState.Running,
+      );
+    });
+
+    test('Kind cluster operations details - DELETE', async ({ page }) => {
+      await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
     });
   });
 });

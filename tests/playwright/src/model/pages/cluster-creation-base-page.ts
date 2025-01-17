@@ -50,7 +50,7 @@ export abstract class CreateClusterBasePage extends BasePage {
     return test.step('Create cluster', async () => {
       await Promise.race([
         (async (): Promise<void> => {
-          await playExpect(this.clusterCreationButton).toBeVisible();
+          await playExpect(this.clusterCreationButton).toBeEnabled();
           await this.clusterCreationButton.click();
           await this.logsButton.scrollIntoViewIfNeeded();
           await this.logsButton.click();
