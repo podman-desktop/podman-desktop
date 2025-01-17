@@ -68,6 +68,38 @@ let pageStep = 10;
 let userValue: string = '';
 let loading: boolean = $state(false);
 
+$effect(() => {
+  if (disabled) {
+    return;
+  }
+  let headings: { [index: number]: string[] } = {};
+  let currentItems: string[] = [];
+  for (let { values, group, sorted } of groupValues) {
+    if (group) {
+      if (headings[currentItems.length]) {
+        headings[currentItems.length].push(group);
+      } else {
+        headings[currentItems.length] = [group];
+      }
+    }
+
+    if (!sorted) {
+      // default sorting if the values are not already sorted
+      values = values.toSorted((a: string, b: string) => {
+        if ((a.startsWith(value) && b.startsWith(value)) || (!a.startsWith(value) && !b.startsWith(value))) {
+          return a.localeCompare(b);
+        } else if (a.startsWith(value) && !b.startsWith(value)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+    currentItems = currentItems.concat(values);
+  }
+  items = currentItems;
+  itemHeadings = headings;
+});
 function onItemSelected(s: string): void {
   value = s;
   userValue = s;
@@ -178,7 +210,6 @@ function makeVisible(): void {
     inline: 'start',
   });
 }
-
 
 function processInput(): void {
   loading = true;
