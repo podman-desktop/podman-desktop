@@ -10,13 +10,13 @@ export let extension: CombinedExtensionInfoUI;
 
 export let displayIcon: boolean = true;
 
-function openDetailsExtension() {
+function openDetailsExtension(): void {
   router.goto(`/extensions/details/${encodeURIComponent(extension.id)}/`);
 }
 </script>
 
 <Tooltip top tip="{extension.name} extension details">
-  <button aria-label="{extension.name} extension details" type="button" on:click={() => openDetailsExtension()}>
+  <button aria-label="{extension.name} extension details" type="button" on:click={openDetailsExtension}>
     <div class="flex flex-row items-center text-[var(--pd-content-header)]">
       {#if displayIcon}
         <Fa icon={faArrowUpRightFromSquare} />

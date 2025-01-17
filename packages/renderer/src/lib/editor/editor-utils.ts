@@ -34,6 +34,6 @@ export const ansi256Colours = [
 
 // Function that takes the container name and ANSI colour and encapsulates the name in the colour,
 // making sure that we reset the colour back to white after the name.
-export function colourizedANSIContainerName(name: string, colour: string) {
+export function colourizedANSIContainerName(name: string, colour: string): string {
   return `${colour}${name}\u001b[0m`;
 }

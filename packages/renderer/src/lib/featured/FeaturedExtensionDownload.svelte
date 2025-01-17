@@ -20,7 +20,7 @@ let errorInstall = '';
 
 let percentage = '0%';
 
-async function installExtension() {
+async function installExtension(): Promise<void> {
   oninstall(extension.id);
   errorInstall = '';
   console.log('User asked to install the extension with the following properties', extension);
@@ -72,7 +72,7 @@ async function installExtension() {
 
 <button
   aria-label="Install {extension.id} Extension"
-  on:click={() => installExtension()}
+  on:click={installExtension}
   hidden={!extension.fetchable}
   title="Install {extension.displayName} v{extension.fetchVersion} Extension"
   class="border-2 relative rounded border-[var(--pd-button-secondary)] text-[var(--pd-button-secondary)] hover:text-[var(--pd-button-text)] hover:bg-[var(--pd-button-secondary-hover)] hover:border-[var(--pd-button-secondary-hover)] w-10 p-2 text-center cursor-pointer flex flex-row justify-center">

@@ -32,7 +32,7 @@ const extensionInstallFromImageMock = vi.fn();
 beforeAll(() => {
   (window as any).extensionInstallFromImage = extensionInstallFromImageMock;
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

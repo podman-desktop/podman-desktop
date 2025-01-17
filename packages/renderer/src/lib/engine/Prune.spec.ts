@@ -79,7 +79,7 @@ describe('images', () => {
 
   const IMAGE_BUTTONS = [CANCEL_BUTTON, ALL_UNUSED_IMAGES, ALL_UNTAGGED_IMAGES];
 
-  const imageRender = () => {
+  const imageRender = (): void => {
     render(Prune, {
       type: 'images',
       engines: [

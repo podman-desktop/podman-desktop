@@ -30,7 +30,7 @@ let hasFeedback = $derived(
     (contactInformation && contactInformation.trim().length > 4),
 );
 
-let { onCloseForm = () => {}, contentChange }: Props = $props();
+let { onCloseForm = (): void => {}, contentChange }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
 
@@ -70,7 +70,7 @@ async function openGitHub(): Promise<void> {
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
       >How was your experience with Podman Desktop?</label>
     <div class="flex space-x-4">
-      <button aria-label="very-sad-smiley" onclick={() => selectSmiley(1)}>
+      <button aria-label="very-sad-smiley" onclick={(): void => selectSmiley(1)}>
         <Fa
           size="1.5x"
           class="cursor-pointer {smileyRating === 1
@@ -78,7 +78,7 @@ async function openGitHub(): Promise<void> {
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faFrown} />
       </button>
-      <button aria-label="sad-smiley" onclick={() => selectSmiley(2)}>
+      <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
         <Fa
           size="1.5x"
           class="cursor-pointer {smileyRating === 2
@@ -86,7 +86,7 @@ async function openGitHub(): Promise<void> {
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faMeh} />
       </button>
-      <button aria-label="happy-smiley" onclick={() => selectSmiley(3)}>
+      <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
         <Fa
           size="1.5x"
           class="cursor-pointer {smileyRating === 3
@@ -94,7 +94,7 @@ async function openGitHub(): Promise<void> {
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faSmile} />
       </button>
-      <button aria-label="very-happy-smiley" onclick={() => selectSmiley(4)}>
+      <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
         <Fa
           size="1.5x"
           class="cursor-pointer {smileyRating === 4
@@ -146,7 +146,7 @@ async function openGitHub(): Promise<void> {
     {/if}
   </svelte:fragment>
   <svelte:fragment slot="buttons">
-    <Button disabled={smileyRating === 0 || (smileyRating === 1 && !hasFeedback)} on:click={() => sendFeedback()}
+    <Button disabled={smileyRating === 0 || (smileyRating === 1 && !hasFeedback)} on:click={sendFeedback}
     >Send feedback</Button>
   </svelte:fragment>
 </FeedbackForm>

@@ -11,7 +11,7 @@ export let catalogExtensionUI: CatalogExtensionInfoUI;
 export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 
-function openExtensionDetails() {
+function openExtensionDetails(): void {
   ondetails(catalogExtensionUI.id);
   router.goto(`/extensions/details/${catalogExtensionUI.id}/`);
 }
@@ -75,7 +75,7 @@ function openExtensionDetails() {
           type="link"
           icon={faArrowUpRightFromSquare}
           aria-label="{catalogExtensionUI.displayName} details"
-          on:click={() => openExtensionDetails()}>More details</Button>
+          on:click={openExtensionDetails}>More details</Button>
       </div>
     </div>
   </div>

@@ -60,7 +60,7 @@ const notFetchableFeaturedExtension: IFeaturedExtension = {
   installed: false,
 };
 
-function assertPrimary(component: HTMLElement) {
+function assertPrimary(component: HTMLElement): void {
   expect(component).toBeDefined();
   expect(component).toHaveClass('bg-[var(--pd-card-bg)]');
   expect(component).toHaveClass('border-[var(--pd-card-bg)]');
@@ -68,7 +68,7 @@ function assertPrimary(component: HTMLElement) {
   expect(component).not.toHaveClass('border-[var(--pd-invert-content-card-bg)]');
 }
 
-function assertSecondary(component: HTMLElement) {
+function assertSecondary(component: HTMLElement): void {
   expect(component).toBeDefined();
   expect(component).not.toHaveClass('bg-[var(--pd-card-bg)]');
   expect(component).not.toHaveClass('border-[var(--pd-card-bg)]');

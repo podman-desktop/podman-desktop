@@ -41,7 +41,7 @@ suite('HelpActions component', () => {
     vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
-        dispose: () => {},
+        dispose: (): void => {},
       };
     });
     resizeObserverMock.mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() });
@@ -57,7 +57,7 @@ suite('HelpActions component', () => {
     vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
-        dispose: () => {},
+        dispose: (): void => {},
       };
     });
     const ha = render(HelpActions);
@@ -104,7 +104,7 @@ suite('HelpActions component', () => {
     vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
-        dispose: () => {},
+        dispose: (): void => {},
       };
     });
     const ha = render(HelpActions);
