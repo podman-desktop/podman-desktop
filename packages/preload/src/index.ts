@@ -57,6 +57,7 @@ import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
+import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
 import type { HistoryInfo } from '/@api/history-info';
@@ -2382,6 +2383,21 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('pathRelative', async (from: string, to: string): Promise<string> => {
     return ipcInvoke('path:relative', from, to);
+  });
+
+  contextBridge.exposeInMainWorld(
+    'listExtensionDevelopmentFolders',
+    async (): Promise<ExtensionDevelopmentFolderInfo[]> => {
+      return ipcInvoke('extension-development-folders:getDevelopmentFolders');
+    },
+  );
+
+  contextBridge.exposeInMainWorld('untrackExtensionFolder', async (path: string): Promise<void> => {
+    return ipcInvoke('extension-development-folders:removeDevelopmentFolder', path);
+  });
+
+  contextBridge.exposeInMainWorld('trackExtensionFolder', async (path: string): Promise<void> => {
+    return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
   });
 }
 

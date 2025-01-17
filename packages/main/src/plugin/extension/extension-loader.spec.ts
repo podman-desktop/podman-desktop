@@ -72,6 +72,7 @@ import { Disposable } from '../types/disposable.js';
 import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
 import type { ViewRegistry } from '../view-registry.js';
+import type { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import type { ActivatedExtension, AnalyzedExtension, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
@@ -118,6 +119,10 @@ class TestExtensionLoader extends ExtensionLoader {
 
   override reloadExtension(extension: AnalyzedExtension, removable: boolean): Promise<void> {
     return super.reloadExtension(extension, removable);
+  }
+
+  override loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
+    return super.loadDevelopmentFolderExtensions(analyzedExtensions);
   }
 }
 
@@ -266,6 +271,10 @@ const extensionWatcher = {
   reloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
+const extensionDevelopmentFolder = {
+  getDevelopmentFolders: vi.fn(),
+} as unknown as ExtensionDevelopmentFolders;
+
 vi.mock('electron', () => {
   return {
     app: {
@@ -319,6 +328,7 @@ beforeAll(() => {
     safeStorageRegistry,
     certificates,
     extensionWatcher,
+    extensionDevelopmentFolder,
   );
 });
 
@@ -2750,5 +2760,45 @@ describe('init', () => {
     expect(property).toBeDefined();
     expect(property?.type).toBe('boolean');
     expect(property?.default).toBeTruthy();
+  });
+});
+
+describe('loadDevelopmentFolderExtensions', () => {
+  test('check loading', async () => {
+    vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([
+      { path: 'foo' },
+      { path: 'bar' },
+      { path: 'baz' },
+    ]);
+
+    // spy console.error
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+
+    // 1st is non existing
+    vi.mocked(fs.existsSync).mockReturnValueOnce(false);
+    // 2nd exists
+    vi.mocked(fs.existsSync).mockReturnValueOnce(true);
+    // 3rd exists
+    vi.mocked(fs.existsSync).mockReturnValueOnce(true);
+
+    const analyzeExtensionSpy = vi.spyOn(extensionLoader, 'analyzeExtension');
+    // bar is working
+    const barAnalyzedExtension = {} as AnalyzedExtension;
+    analyzeExtensionSpy.mockResolvedValueOnce(barAnalyzedExtension);
+    // baz has error
+    const bazAnalyzedExtension = { error: 'dummy error' } as AnalyzedExtension;
+    analyzeExtensionSpy.mockResolvedValueOnce(bazAnalyzedExtension);
+
+    const analyzedExtensions: AnalyzedExtension[] = [];
+    await extensionLoader.loadDevelopmentFolderExtensions(analyzedExtensions);
+
+    // check only bar has been added
+    expect(analyzedExtensions.length).toBe(1);
+    expect(analyzedExtensions[0]).toBe(barAnalyzedExtension);
+
+    // expect we got a console error for baz
+    expect(consoleErrorSpy).toBeCalledWith('Error while analyzing extension baz', bazAnalyzedExtension.error);
+
+    consoleErrorSpy.mockRestore();
   });
 });
