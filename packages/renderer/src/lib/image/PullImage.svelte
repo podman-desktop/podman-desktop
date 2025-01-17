@@ -13,6 +13,7 @@ import type { PullEvent } from '/@api/pull-event';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
+import type { GroupItem } from '../ui/Typeahead';
 import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
@@ -28,6 +29,7 @@ let shortnameImages: string[] = [];
 let podmanFQN = '';
 let usePodmanFQN = false;
 let isValidName = true;
+let values: GroupItem[] = [];
 
 export let imageToPull: string | undefined = undefined;
 
@@ -245,6 +247,22 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
   isValidName = tags.some(t => t === tag);
 }
+
+async function searchFunction(value: string): Promise<void> {
+  const result = (await searchImages(value)).toSorted((a: string, b: string) => {
+    const dockerIoValue = `docker.io/${value}`;
+    const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
+    const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+    if (aStartsWithValue === bStartsWithValue) {
+      return a.localeCompare(b);
+    } else if (aStartsWithValue && !bStartsWithValue) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+  values = [{ values: result, sorted: true }];
+}
 </script>
 
 <EngineFormPage
@@ -268,7 +286,8 @@ function checkIfTagExist(image: string, tags: string[]): void {
           id="imageName"
           name="imageName"
           placeholder="Image name"
-          searchFunction={searchImages}
+          groupValues={values}
+          onInputChange={searchFunction}
           onChange={async (s: string) => {
             validateImageName(s);
             await resolveShortname();

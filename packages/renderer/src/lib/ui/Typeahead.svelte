@@ -1,51 +1,101 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-type SearchFunction = (s: string) => Promise<string[]>;
+import type { GroupItem } from './Typeahead';
 
-// the text displayed when no option is selected
-export let placeholder: string | undefined = undefined;
-export let required: boolean = false;
-export let delay: number = 200;
-export let disabled: boolean = false;
-export let initialFocus: boolean = false;
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let error: boolean = false;
+interface Props {
+  placeholder?: string;
+  required?: boolean;
+  delay?: number;
+  disabled?: boolean;
+  initialFocus?: boolean;
+  id?: string;
+  name?: string;
+  error?: boolean;
+  className?: string;
+  groupValues?: GroupItem[];
+  onInputChange?: (s: string) => Promise<void>;
+  onChange?: (s: string) => void;
+  onEnter?: () => void;
+}
 
-export let searchFunction: SearchFunction = async (_s: string) => [];
-export let onChange = function (_s: string) {};
-export let onEnter = function () {};
+// the placeholder text displayed when no option is selected
+let {
+  placeholder,
+  required = false,
+  delay = 200,
+  disabled = false,
+  initialFocus = false,
+  id,
+  name,
+  error = false,
+  className,
+  groupValues = [],
+  onInputChange,
+  onChange,
+  onEnter,
+}: Props = $props();
 
 let input: HTMLInputElement;
-let list: HTMLDivElement;
-let scrollElements: HTMLElement[] = [];
-let value: string;
-let items: string[] = [];
+let list = $state<HTMLDivElement>();
+let scrollElements: HTMLElement[] = $state([]);
+let value: string = $state('');
+let items: string[] = $state([]);
+let itemHeadings: { [index: number]: string[] } = $state({});
 let inputDelayTimeout: NodeJS.Timeout;
-let opened: boolean = false;
-let highlightIndex: number = -1;
+let opened: boolean = $state(false);
+let highlightIndex: number = $state(-1);
 let pageStep = 10;
 let userValue: string = '';
-let loading: boolean = false;
+let loading: boolean = $state(false);
 
+$effect(() => {
+  if (disabled) {
+    return;
+  }
+  let headings: { [index: number]: string[] } = {};
+  let currentItems: string[] = [];
+  for (let { values, group, sorted } of groupValues) {
+    if (group) {
+      if (headings[currentItems.length]) {
+        headings[currentItems.length].push(group);
+      } else {
+        headings[currentItems.length] = [group];
+      }
+    }
+    if (!sorted) {
+      // default sorting if the values are not already sorted
+      values = values.toSorted((a: string, b: string) => {
+        if (a.startsWith(userValue) === b.startsWith(userValue)) {
+          return a.localeCompare(b);
+        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+    currentItems = currentItems.concat(values);
+  }
+  items = currentItems;
+  itemHeadings = headings;
+});
 function onItemSelected(s: string): void {
   value = s;
   userValue = s;
   input.focus();
   close();
-  onChange(s);
+  onChange?.(s);
 }
 
 function onInput(): void {
   userValue = value;
-  onChange(value);
+  onChange?.(value);
   clearTimeout(inputDelayTimeout);
   inputDelayTimeout = setTimeout(processInput, delay);
 }
 
 function onKeyDown(e: KeyboardEvent): void {
-  onChange(value);
   switch (e.key) {
     case 'ArrowDown':
       onDownKey(e);
@@ -66,6 +116,7 @@ function onKeyDown(e: KeyboardEvent): void {
       onEnterKey(e);
       break;
   }
+  onChange?.(value);
 }
 
 function onUpKey(e: KeyboardEvent): void {
@@ -128,7 +179,7 @@ function onEnterKey(e: KeyboardEvent): void {
     e.stopPropagation();
   } else {
     close();
-    onEnter();
+    onEnter?.();
   }
 }
 
@@ -142,29 +193,12 @@ function makeVisible(): void {
 
 function processInput(): void {
   loading = true;
-  searchFunction(value)
-    .then(result => {
-      // if the component has been disabled in the meantime
-      if (disabled) {
-        return;
-      }
-      items = result.toSorted((a: string, b: string) => {
-        const dockerIoValue = `docker.io/${value}`;
-        const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
-        const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
-        if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
-          return a.localeCompare(b);
-        } else if (aStartsWithValue && !bStartsWithValue) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
+  onInputChange?.(value)
+    .then(() => {
       highlightIndex = -1;
       open();
     })
     .catch(() => {
-      // We do not display the error
       items = [];
     })
     .finally(() => {
@@ -195,7 +229,7 @@ function onWindowClick(e: Event): void {
 
 <svelte:window on:click={onWindowClick} />
 <div
-  class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {$$props.class ||
+  class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {className ??
     ''}"
   class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
   class:focus-within:bg-[var(--pd-input-field-focused-bg)]={!disabled}
@@ -221,8 +255,8 @@ function onWindowClick(e: Event): void {
     disabled={disabled}
     id={id}
     name={name}
-    on:input={onInput}
-    on:keydown={onKeyDown}
+    oninput={onInput}
+    onkeydown={onKeyDown}
     use:requestFocus />
   {#if loading}
     <Spinner size="1em" />
@@ -234,12 +268,17 @@ function onWindowClick(e: Event): void {
     bind:this={list}
     class="max-h-80 overflow-auto bg-[var(--pd-content-card-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px]">
     {#each items as item, i}
+      {#if itemHeadings[i]}
+        {#each itemHeadings[i] as heading}
+          <button class='p-[2px] text-[var(--pd-button-disabled-text)] w-full text-start' disabled>{heading}</button>
+        {/each}
+      {/if}
       <button
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}
         class="p-1 text-start w-full cursor-pointer"
-        on:click={() => onItemSelected(item)}
-        on:pointerenter={() => {
+        onclick={() => onItemSelected(item)}
+        onpointerenter={() => {
           highlightIndex = i;
         }}>{item}</button>
     {/each}
