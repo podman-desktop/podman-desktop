@@ -63,7 +63,7 @@ $effect(() => {
     <div class="ml-2 flex flex-row bg-[var(--pd-invert-content-card-bg)] rounded-md px-2 pt-2">
       <div class="flex flex-col w-full text-[color:var(--pd-invert-content-card-text)]">
         <div>
-          <span>Enable all experimental features</span>
+          <span class="font-semibold">Enable all experimental features</span>
         </div>
         <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">
           <Markdown markdown="Enable the section to turn on **all experimental features** and give feedback to developers. Or select individual features to try bellow." />
