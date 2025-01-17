@@ -1,4 +1,5 @@
 <script lang="ts">
+import { faFlask } from '@fortawesome/free-solid-svg-icons';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
@@ -22,6 +23,8 @@ let { meta }: Props = $props();
 let dockerCompatibilityEnabled = $state(false);
 let configProperties: Map<string, NavItem[]> = $state(new Map<string, NavItem[]>());
 let sectionExpanded: { [key: string]: boolean } = $state({});
+
+let experimentalSection: boolean = $state(false);
 
 function updateDockerCompatibility(): void {
   window
@@ -47,6 +50,9 @@ onMount(() => {
   return configurationProperties.subscribe(value => {
     // update compatibility
     updateDockerCompatibility();
+
+    // check for experimental configuration
+    experimentalSection = value.some(configuration => !!configuration.experimental);
 
     // update config properties
     configProperties = value.reduce((map, current) => {
@@ -86,6 +92,16 @@ onMount(() => {
         <SettingsNavItem title={navItem.title} href={navItem.href} selected={meta.url === navItem.href} />
       {/if}
     {/each}
+
+    {#if experimentalSection}
+      <SettingsNavItem
+        icon={faFlask}
+        iconPosition="right"
+        title="Experimental"
+        href="/preferences/experimental"
+        selected={meta.url === '/preferences/experimental'}
+      />
+    {/if}
 
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}

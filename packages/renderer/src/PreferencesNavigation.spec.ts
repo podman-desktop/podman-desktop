@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import { tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '../../main/src/plugin/configuration-registry';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';
 
@@ -190,5 +191,31 @@ test('Test rendering of the compatibility docker page does change if config chan
   await vi.waitFor(() => {
     const dockerCompatLink = screen.queryByRole('link', { name: 'Docker Compatibility' });
     expect(dockerCompatLink).not.toBeNull();
+  });
+});
+
+const EXPERIMENTAL_CONFIG: IConfigurationPropertyRecordedSchema = {
+  experimental: {
+    githubDiscussionLink: '',
+  },
+  id: 'dummy-config',
+  title: 'Dummy Config',
+  default: false,
+  parentId: 'preferences.potatoes',
+  type: 'boolean',
+  scope: 'DEFAULT',
+};
+
+test('experimental configuration should be visible if one property has experimental property', async () => {
+  configurationProperties.set([EXPERIMENTAL_CONFIG]);
+  const { getByLabelText } = render(PreferencesNavigation, {
+    meta: {
+      url: '/',
+    } as unknown as TinroRouteMeta,
+  });
+
+  await vi.waitFor(() => {
+    const experimental = getByLabelText('Experimental');
+    expect(experimental).toBeDefined();
   });
 });
