@@ -411,6 +411,7 @@ const config = {
           { to: '/features', label: 'Features', position: 'left' },
           { to: '/downloads', label: 'Downloads', position: 'left' },
           { to: '/extend', label: 'Extend', position: 'left' },
+          { to: '/community', label: 'Community', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/tutorial', label: 'Tutorials', position: 'left' },
           {
