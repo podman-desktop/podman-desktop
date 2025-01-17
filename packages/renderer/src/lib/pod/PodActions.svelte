@@ -230,7 +230,7 @@ if (dropdownMenu) {
         {#each openingUrls as url}
           <ListItemButtonIcon
             title="Open {extractPort(url)}"
-            onClick={(): Promsie<void> => window.openExternal(url)}
+            onClick={(): Promise<void> => window.openExternal(url)}
             menu={!dropdownMenu}
             enabled={pod.status === 'RUNNING'}
             hidden={dropdownMenu}
