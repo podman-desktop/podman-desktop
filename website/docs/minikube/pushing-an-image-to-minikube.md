@@ -2,8 +2,8 @@
 sidebar_position: 10
 title: Pushing an image
 description: Pushing an image to your Minikube cluster
-keywords: [podman desktop, podman, containers, images, migrating, kubernetes]
-tags: [migrating-to-kubernetes, images]
+keywords: [podman desktop, podman, containers, images, pushing an image, kubernetes]
+tags: [pushing-an-image, minikube]
 ---
 
 # Pushing an image to your local Minikube-powered Kubernetes cluster
@@ -19,26 +19,26 @@ With Podman Desktop, you can push an image to your local Minikube-powered Kubern
 
 #### Procedure
 
-1. Open **Podman Desktop dashboard > <Icon icon="fa-solid fa-cloud" size="lg" /> Images**.
-1. **<Icon icon="fa-solid fa-search" size="lg" /> Search images**: `<your_image>:<your_tag>`.
-1. Click **<Icon icon="fa-solid fa-ellipsis-v" size="lg" /> > <Icon icon="fa-solid fa-ellipsis-v" size="lg" /> Push image to Minikube cluster**.
-1. If you created many Minikube clusters, select your Minikube cluster from the list.
+1. Go to **Images** from the left navigation pane.
+1. Click the **overflow menu** icon corresponding to the image you want to push and select **Push image to minikube cluster**. A successful operation notification opens.
+   ![pushing an image to Minikube](img/push-image-to-minikube.png)
+1. Click **OK**.
 
 #### Verification
 
-Minikube enables you to list loaded images, using:
+Minikube enables you to list loaded images:
 
 ```command
 $ minikube image list
 ```
 
-You can also create a Pod that uses the loaded image:
+You can also create a pod that uses the loaded image:
 
 1. Create a `verify_my_image.yaml` Kubernetes YAML file on your workstation.
    Replace the placeholders:
 
-   - Pod `name` and container `name` value must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.
-   - Container `image` value is the image you pushed.
+   - Pod `name` and container `name` values must consist of lowercase alphanumeric characters, '-', or '.', and must start and end with an alphanumeric character.
+   - Container `image` value is the image you pushed. You can click the name of the image to check its name and tag.
 
    ```yaml
    apiVersion: v1
@@ -52,11 +52,12 @@ You can also create a Pod that uses the loaded image:
          imagePullPolicy: Never
    ```
 
-1. Open **<Icon icon="fa-solid fa-cubes" size="lg" /> Pods > Play Kubernetes YAML**.
-   1. **Kubernetes YAML file**: select your `verify_my_image.yaml` file.
-   1. **Select Runtime**: **Using a Kubernetes cluster**.
-   1. Click **Play**.
-   1. Click **Done**
-1. Open **<Icon icon="fa-solid fa-cubes" size="lg" /> Pods**.
-1. **<Icon icon="fa-solid fa-search" size="lg" /> Search pods**: `<verify-my-image>`.
-1. The pod **Status** is **Running**.
+1. Go to **Pods** from the left navigation pane.
+1. Click **Play Kubernetes YAML** and provide the following details:
+   - **Kubernetes YAML file**: select your `verify_my_image.yaml` file.
+   - Set **Runtime** to **Kubernetes cluster**.
+1. Click **Play**.
+   ![play a Kubernetes YAML](img/create-pod-from-kube-yaml.png)
+1. Click **Done**.
+1. View the created pod `verify-my-image` on the same page. The pod **STATUS** is **RUNNING**.
+   ![play a Kubernetes YAML](img/verify-my-image-pod-running.png)

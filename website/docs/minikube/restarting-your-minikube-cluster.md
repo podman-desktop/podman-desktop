@@ -2,8 +2,8 @@
 sidebar_position: 6
 title: Restarting a cluster
 description: Restarting your local Minikube-powered Kubernetes cluster.
-keywords: [podman desktop, podman, containers, migrating, kubernetes, minikube]
-tags: [migrating-to-kubernetes, minikube]
+keywords: [podman desktop, podman, containers, restarting, kubernetes, minikube]
+tags: [restarting-a-cluster, minikube]
 ---
 
 # Restarting your local Minikube-powered Kubernetes cluster
@@ -12,16 +12,25 @@ With Podman Desktop, you can restart your local Minikube-powered Kubernetes clus
 
 #### Procedure
 
-1. Open **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
-1. Find the Minikube cluster to restart.
-1. Click <Icon icon="fa-solid fa-repeat" size="lg" />.
+Perform one of the following steps:
+
+- Restart using the **Settings** page
+
+  1. Open **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
+  1. Find the Minikube cluster to restart.
+  1. Click the **Restart** icon.
+     ![restart using the settings page](img/restart-using-the-settings-page.png)
+
+- Restart using the **Containers** page:
+  1. Open **Containers** from the left navigation pane.
+  1. Click the **overflow menu** icon corresponding to the Minikube cluster container and select **Restart Container**.
+     ![restart using the Containers page](img/restart-using-the-containers-page.png)
 
 #### Verification
 
-1. Open **Containers**.
-1. Find the Minikube cluster that restarted.
-1. The cluster **Age** is consistent with the restart time.
-1. Open **Pods**.
+1. Open **Containers** from the left navigation pane.
+1. Find the Minikube cluster that restarted. The cluster **Age** is consistent with the restart time.
+1. Open **Pods** from the left navigation pane.
 1. Find the pods that are running on your Minikube cluster.
 
 #### Workaround

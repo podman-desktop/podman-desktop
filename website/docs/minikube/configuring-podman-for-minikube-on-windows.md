@@ -3,7 +3,7 @@ sidebar_position: 3
 title: Configuring Podman
 description: Configuring Podman for Minikube on Windows Subsystem for Linux (WSL).
 keywords: [podman desktop, podman, containers, migrating, kubernetes, minikube]
-tags: [migrating-to-kubernetes, minikube]
+tags: [configuring-podman-for-minikube, minikube]
 ---
 
 # Configuring Podman for Minikube on Windows Subsystem for Linux (WSL)
