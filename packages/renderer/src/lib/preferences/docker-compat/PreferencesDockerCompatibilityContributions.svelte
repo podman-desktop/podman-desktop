@@ -208,7 +208,7 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
                   ariaLabel="dropdown for property {property.id}"
                   disabled={property.enumItems.length === 0}
                   bind:value={property.selectedValue}
-                  onChange={(val: unknown) => onChangeProperty(property, val)}
+                  onChange={(val: unknown): Promise<void> => onChangeProperty(property, val)}
                   options={property.enumItems}>
                 </Dropdown>
               {/if}

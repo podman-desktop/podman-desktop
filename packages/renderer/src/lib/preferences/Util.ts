@@ -61,7 +61,7 @@ export function writeToTerminal(xterm: Terminal, data: unknown, colorPrefix: str
   }
 }
 
-function writeArrayToTerminal(xterm: Terminal, data: unknown[], colorPrefix: string) {
+function writeArrayToTerminal(xterm: Terminal, data: unknown[], colorPrefix: string): void {
   for (const content of data) {
     if (Array.isArray(content)) {
       writeArrayToTerminal(xterm, content, colorPrefix);

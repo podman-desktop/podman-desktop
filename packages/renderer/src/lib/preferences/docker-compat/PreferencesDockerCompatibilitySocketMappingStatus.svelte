@@ -88,7 +88,7 @@ onMount(async () => {
         <button
           aria-label="{connectionInfo.provider.name} details"
           type="button"
-          onclick={() => router.goto(connectionInfo.link)}>
+          onclick={(): void => router.goto(connectionInfo.link)}>
           <Fa icon={faArrowUpRightFromSquare} />
         </button>
       </Tooltip>

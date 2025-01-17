@@ -53,11 +53,9 @@ vi.mock('/@/stores/kubernetes-contexts-state', async () => {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  (window as any).kubernetesGetContextsGeneralState = () => Promise.resolve(new Map());
-  (window as any).kubernetesGetCurrentContextGeneralState = () => Promise.resolve({});
-  (window as any).kubernetesDeleteIngress = vi.fn();
-  vi.mocked(window.kubernetesDeleteIngress);
-  (window as any).getConfigurationValue = vi.fn();
+
+  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 });
 

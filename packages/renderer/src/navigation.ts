@@ -34,7 +34,7 @@ type InferredNavigationRequest<T extends NavigationPage> = T extends NavigationP
  */
 export type NavigationHint = 'root' | 'details' | 'tab';
 
-export const handleNavigation = (request: InferredNavigationRequest<NavigationPage>) => {
+export const handleNavigation = (request: InferredNavigationRequest<NavigationPage>): void => {
   // eslint-disable-next-line sonarjs/max-switch-cases
   switch (request.page) {
     case NavigationPage.DASHBOARD:
