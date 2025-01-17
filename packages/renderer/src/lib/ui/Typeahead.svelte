@@ -1,11 +1,7 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-interface GroupItem {
-  values: string[];
-  group?: string;
-  sorted?: boolean;
-}
+import type { GroupItem } from './Typeahead';
 
 interface Props {
   placeholder?: string;
@@ -82,13 +78,12 @@ $effect(() => {
         headings[currentItems.length] = [group];
       }
     }
-
     if (!sorted) {
       // default sorting if the values are not already sorted
       values = values.toSorted((a: string, b: string) => {
-        if (a.startsWith(value) === b.startsWith(value)) {
+        if (a.startsWith(userValue) === b.startsWith(userValue)) {
           return a.localeCompare(b);
-        } else if (a.startsWith(value) && !b.startsWith(value)) {
+        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
           return -1;
         } else {
           return 1;

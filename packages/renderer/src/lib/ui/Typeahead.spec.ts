@@ -22,6 +22,7 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { GroupItem } from './Typeahead';
 import Typeahead from './Typeahead.svelte';
 
 window.HTMLElement.prototype.scrollIntoView = function (): void {};
@@ -114,6 +115,7 @@ test('should list the result after the delay, and display spinner during loading
   await tick();
   assertIsListVisible(true);
 
+  await tick();
   const list = screen.getByRole('row');
   const items = within(list).getAllByRole('button');
   expect(items.length).toBe(3);
@@ -218,7 +220,7 @@ test('should navigate in list with keys', async () => {
   await tick();
 
   await new Promise(resolve => setTimeout(resolve, 11));
-
+  await tick();
   let list = screen.getByRole('row');
   let items = within(list).getAllByRole('button');
   expect(items.length).toBe(15);
@@ -314,7 +316,7 @@ test('should show error border', async () => {
 });
 
 test('should include heading based on given order and searchFunctions order', async () => {
-  let values;
+  let groupValues: GroupItem[] = [];
   const searchFunction = async (s: string) => {
     await new Promise(resolve => setTimeout(resolve, 100));
     const result1 = { values: [s + '11', s + '12', s + '13', s + '14'], group: 'searchFunction1 results' };
@@ -328,19 +330,23 @@ test('should include heading based on given order and searchFunctions order', as
     await new Promise(resolve => setTimeout(resolve, 100));
     const result4 = { values: [s + '41', s + '42', s + '43', s + '44'] };
 
-    values = [result1, result2, result3, result4];
+    groupValues = [result1, result2, result3, result4];
   };
 
-  render(Typeahead, {
+  const { rerender } = render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
-    groupValues: values,
+    groupValues: groupValues,
     delay: 10,
   });
 
   const input = screen.getByRole('textbox');
 
   await userEvent.type(input, 'test');
+  await waitFor(() => expect(groupValues.length > 0).toBeTruthy());
+  await rerender({ groupValues: groupValues });
+
+  await tick();
 
   await waitFor(() => {
     const list = screen.getByRole('row');
