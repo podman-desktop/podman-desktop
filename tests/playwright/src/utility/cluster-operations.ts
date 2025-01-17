@@ -24,6 +24,7 @@ import { ContainerState, ResourceElementState } from '../model/core/states';
 import type { KindClusterOptions } from '../model/core/types';
 import { CreateKindClusterPage } from '../model/pages/create-kind-cluster-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
+import { ResourceDetailsPage } from '../model/pages/resource-details-page';
 import { ResourcesPage } from '../model/pages/resources-page';
 import { VolumesPage } from '../model/pages/volumes-page';
 import { NavigationBar } from '../model/workbench/navigation';
@@ -83,6 +84,7 @@ export async function deleteCluster(
   resourceName: string = 'kind',
   containerName: string = 'kind-cluster-control-plane',
   clusterName: string = 'kind-cluster',
+  timeout: number = 30_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceName} cluster`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -99,27 +101,13 @@ export async function deleteCluster(
 
     await resourceCard.performConnectionAction(ResourceElementActions.Stop);
     await playExpect(resourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
-      timeout: 50_000,
+      timeout: timeout,
     });
     await resourceCard.performConnectionAction(ResourceElementActions.Delete);
     await playExpect(resourceCard.markdownContent).toBeVisible({
-      timeout: 50_000,
+      timeout: timeout,
     });
-    const containersPage = await navigationBar.openContainers();
-    await playExpect(containersPage.heading).toBeVisible();
-    await playExpect
-      .poll(async () => containersPage.containerExists(containerName), {
-        timeout: 10_000,
-      })
-      .toBeFalsy();
-
-    const volumePage = await navigationBar.openVolumes();
-    await playExpect(volumePage.heading).toBeVisible();
-    await playExpect
-      .poll(async () => await volumePage.waitForVolumeDelete(volumeName), {
-        timeout: 20_000,
-      })
-      .toBeTruthy();
+    await validateClusterResourcesDeletion(page, clusterName, containerName, volumeName);
   });
 }
 
@@ -146,7 +134,7 @@ export async function resourceConnectionAction(
   resourceCard: ResourceConnectionCardPage,
   resourceConnectionAction: ResourceElementActions,
   expectedResourceState: ResourceElementState,
-  timeout: number = 50_000,
+  timeout: number = 30_000,
 ): Promise<void> {
   return test.step(`Performs "${resourceConnectionAction}" action, expects "${expectedResourceState}" state.`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -162,5 +150,103 @@ export async function resourceConnectionAction(
     await playExpect(resourceCard.resourceElementConnectionStatus).toHaveText(expectedResourceState, {
       timeout: timeout,
     });
+  });
+}
+
+export async function resourceConnectionActionDetails(
+  page: Page,
+  resourceCard: ResourceConnectionCardPage,
+  resourceName: string,
+  resourceConnectionAction: ResourceElementActions,
+  expectedResourceState: ResourceElementState,
+  timeout: number = 30_000,
+): Promise<void> {
+  return test.step(`Performs a connection action '${resourceConnectionAction}' on the resource from the details page, verifies the expected resource state '${expectedResourceState}'`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const resourceDetailsPage = new ResourceDetailsPage(page, resourceName);
+
+    try {
+      await playExpect(resourceDetailsPage.heading).toBeVisible();
+    } catch {
+      const settingsBar = await navigationBar.openSettings();
+      const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+      await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+      await playExpect(resourceCard.resourceElementDetailsButton).toBeEnabled();
+      await resourceCard.resourceElementDetailsButton.click();
+    }
+
+    await resourceDetailsPage.performConnectionActionDetails(resourceConnectionAction);
+    if (resourceConnectionAction === ResourceElementActions.Restart) {
+      const stopButton = resourceDetailsPage.controlActions.getByRole('button', {
+        name: ResourceElementActions.Stop,
+        exact: true,
+      });
+      await playExpect(stopButton).toBeEnabled({ timeout: timeout });
+    }
+    await playExpect(resourceDetailsPage.resourceStatus).toHaveText(expectedResourceState, {
+      timeout: timeout,
+    });
+  });
+}
+
+export async function deleteClusterFromDetails(
+  page: Page,
+  resourceName: string = 'kind',
+  containerName: string = 'kind-cluster-control-plane',
+  clusterName: string = 'kind-cluster',
+  timeout: number = 30_000,
+): Promise<void> {
+  return test.step(`Deletes the '${clusterName}' cluster from the details page`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const volumeName = await getVolumeNameForContainer(page, containerName);
+
+    const settingsBar = await navigationBar.openSettings();
+    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+    const resourceCard = new ResourceConnectionCardPage(page, resourceName, clusterName);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+    if (!(await resourceCard.doesResourceElementExist())) {
+      console.log(`Cluster [${clusterName}] not present, skipping deletion.`);
+      return;
+    }
+    await playExpect(resourceCard.resourceElementDetailsButton).toBeEnabled();
+    await resourceCard.resourceElementDetailsButton.click();
+
+    const resourceDetails = new ResourceDetailsPage(page, clusterName);
+    await playExpect(resourceDetails.heading).toBeVisible();
+    await resourceDetails.performConnectionActionDetails(ResourceElementActions.Stop);
+    await playExpect(resourceDetails.resourceStatus).toHaveText(ResourceElementState.Off, {
+      timeout: timeout,
+    });
+    await resourceDetails.performConnectionActionDetails(ResourceElementActions.Delete);
+
+    await validateClusterResourcesDeletion(page, clusterName, containerName, volumeName);
+  });
+}
+
+export async function validateClusterResourcesDeletion(
+  page: Page,
+  clusterName: string,
+  containerName: string,
+  volumeName: string,
+  timeout: number = 20_000,
+): Promise<void> {
+  return test.step(`Validates that resources associated with the deleted '${clusterName}' cluster are removed`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const containersPage = await navigationBar.openContainers();
+
+    await playExpect(containersPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => containersPage.containerExists(containerName), {
+        timeout: timeout,
+      })
+      .toBeFalsy();
+
+    const volumePage = await navigationBar.openVolumes();
+    await playExpect(volumePage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await volumePage.waitForVolumeDelete(volumeName), {
+        timeout: timeout,
+      })
+      .toBeTruthy();
   });
 }
