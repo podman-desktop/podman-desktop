@@ -35,13 +35,13 @@ beforeEach(() => {
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValueOnce({}) });
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
   (window.events as unknown) = {
-    receive: (_channel: string, func: () => void) => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
 });
 
-const waitForInitialization = async () => {
+const waitForInitialization = async (): Promise<void> => {
   // wait store are populated
   while (get(extensionBannerInfos).length === 0) {
     await new Promise(resolve => setTimeout(resolve, 200));

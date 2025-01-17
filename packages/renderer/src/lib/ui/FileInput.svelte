@@ -12,7 +12,7 @@ export let readonly: boolean = false;
 export let required: boolean = false;
 export let onChange: (value: string) => void = () => {};
 
-async function openDialog() {
+async function openDialog(): Promise<void> {
   const result = await window.openDialog(options);
   if (result?.[0]) {
     value = result[0];

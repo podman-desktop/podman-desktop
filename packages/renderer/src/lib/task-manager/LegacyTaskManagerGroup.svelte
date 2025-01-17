@@ -12,7 +12,7 @@ export let title: string;
 export let lineColor: string;
 
 // check if the item is the last one
-let lastItem = (a: unknown[], i: number) => i === a.length - 1;
+let lastItem = (a: unknown[], i: number): boolean => i === a.length - 1;
 </script>
 
 <!-- Display a title and then the list of the tasks -->

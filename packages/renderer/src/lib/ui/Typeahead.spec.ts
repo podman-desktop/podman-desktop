@@ -24,7 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import Typeahead from './Typeahead.svelte';
 
-window.HTMLElement.prototype.scrollIntoView = function () {};
+window.HTMLElement.prototype.scrollIntoView = function (): void {};
 
 function assertIsListVisible(visible: boolean): void {
   // eslint-disable-next-line sonarjs/no-selector-parameter
@@ -84,7 +84,7 @@ test('initial focus is set with option', async () => {
 });
 
 test('should list the result after the delay, and display spinner during loading', async () => {
-  const searchFunction = async (s: string) => {
+  const searchFunction = async (s: string): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 100));
     return [s + '01', s + '02', s + '03'];
   };
@@ -118,7 +118,7 @@ test('should list the result after the delay, and display spinner during loading
 });
 
 test('should list items started with search term on top', async () => {
-  const searchFunction = async (s: string) => {
+  const searchFunction = async (s: string): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 100));
     return ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'];
   };
@@ -144,7 +144,7 @@ test('should list items started with search term on top', async () => {
 });
 
 test('should list items started with docker.io + search term on top', async () => {
-  const searchFunction = async () => {
+  const searchFunction = async (): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 100));
     return ['docker.io/aimage', 'docker.io/bimage', 'docker.io/cimage'];
   };
@@ -169,7 +169,7 @@ test('should list items started with docker.io + search term on top', async () =
 });
 
 test('should navigate in list with keys', async () => {
-  const searchFunction = async (s: string) => {
+  const searchFunction = async (s: string): Promise<string[]> => {
     const result: string[] = [];
     for (let i = 1; i <= 15; i++) {
       result.push(s + `${i}`.padStart(2, '0'));

@@ -25,12 +25,12 @@ import { describe, expect, test } from 'vitest';
 import type { CheckUI, ProviderUI } from './ProviderResultPage';
 import ProviderResultPage from './ProviderResultPage.svelte';
 
-function checkResultDisplayed(result: CheckUI) {
+function checkResultDisplayed(result: CheckUI): void {
   const res = screen.getByRole('row', { name: result.check.name + ' Reported by ' + result.provider.label });
   expect(res).toBeInTheDocument();
 }
 
-function checkResultNotDisplayed(result: CheckUI) {
+function checkResultNotDisplayed(result: CheckUI): void {
   const res = screen.queryByRole('row', { name: result.check.name + ' Reported by ' + result.provider.label });
   expect(res).not.toBeInTheDocument();
 }
@@ -121,7 +121,7 @@ describe('test ProviderResultPage', async () => {
   });
 
   test('all providers are displayed as running', async () => {
-    const checkProviderRunning = (text: string) => {
+    const checkProviderRunning = (text: string): void => {
       const providerEntry = screen.getByRole('row', { name: text });
       expect(providerEntry).toBeInTheDocument();
       const cb = within(providerEntry).queryByRole('checkbox');
@@ -146,7 +146,7 @@ describe('test ProviderResultPage', async () => {
   });
 
   test('all providers are displayed as successful', () => {
-    const checkProviderSuccess = (text: string) => {
+    const checkProviderSuccess = (text: string): void => {
       const providerEntry = screen.getByRole('row', { name: text });
       expect(providerEntry).toBeInTheDocument();
       const cb = within(providerEntry).queryByRole('checkbox');

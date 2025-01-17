@@ -29,7 +29,7 @@ let openDetails = false;
       class="underline outline-none"
       title="Open Details"
       aria-label="Open Details"
-      on:click={() => (openDetails = true)}>
+      on:click={(): boolean => (openDetails = true)}>
       {eventStoreInfo.name}
     </button>
   </div>
@@ -39,7 +39,7 @@ let openDetails = false;
       bind:inProgress={fetchInProgress}
       class="my-1"
       aria-label="Refresh"
-      on:click={() => fetch()}
+      on:click={fetch}
       icon={faRefresh}>
       Refresh
     </Button>
@@ -53,7 +53,7 @@ let openDetails = false;
 
   {#if openDetails}
     <TroubleshootingPageStoreDetails
-      closeCallback={() => {
+      closeCallback={(): void => {
         openDetails = false;
       }}
       eventStoreInfo={eventStoreInfo} />

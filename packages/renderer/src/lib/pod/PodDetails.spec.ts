@@ -140,7 +140,7 @@ test('Expect redirect to logs', async () => {
   const subscribeSpy = vi.spyOn(router, 'subscribe');
   subscribeSpy.mockImplementation(listener => {
     listener({ path: '/pods/podman/myPod/engine0/' } as unknown as TinroRoute);
-    return () => {};
+    return (): void => {};
   });
   listPodsMock.mockResolvedValue([myPod]);
   kubernetesListPodsMock.mockResolvedValue([]);

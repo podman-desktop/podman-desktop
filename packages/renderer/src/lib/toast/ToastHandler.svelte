@@ -21,7 +21,7 @@ import { onDestroy, onMount } from 'svelte';
 let callback: (object: { type: string; message: string }) => void;
 
 onMount(() => {
-  callback = (object: { type: string; message: string }) => {
+  callback = (object: { type: string; message: string }): void => {
     let theme: {
       [x: string]: string;
     } = {};
@@ -60,7 +60,7 @@ onMount(() => {
 });
 
 onDestroy(() => {
-  callback = () => {};
+  callback = (): void => {};
 });
 </script>
 

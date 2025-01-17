@@ -79,7 +79,7 @@ export class PodUtils {
     return pod.kind === 'kubernetes';
   }
 
-  calculateNewPodName(existedPods?: PodInfo[]) {
+  calculateNewPodName(existedPods?: PodInfo[]): string {
     const proposedPodName = 'my-pod';
 
     if (!existedPods) {
@@ -110,7 +110,7 @@ export class PodUtils {
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-export function ensureRestrictedSecurityContext(body: any) {
+export function ensureRestrictedSecurityContext(body: any): void {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   body.spec?.containers?.forEach((container: any) => {
     if (!container.securityContext) {

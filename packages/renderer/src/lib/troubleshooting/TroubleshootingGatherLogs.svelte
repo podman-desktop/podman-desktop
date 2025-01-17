@@ -8,7 +8,7 @@ import { Uri } from '../uri/Uri';
 let logs: string[] = [];
 
 // Save files as a zip file (we first ask the user for the dialog, and then save the files to the filepath)
-async function saveLogsAsZip() {
+async function saveLogsAsZip(): Promise<void> {
   const defaultUri = await window.troubleshootingGenerateLogFileUri('podman-desktop', 'zip');
   const filePath = await window.saveDialog({ title: 'Save Logs as .zip', defaultUri });
   if (filePath) {
@@ -27,7 +27,7 @@ async function saveLogsAsZip() {
   <div class="mt-4">Bundle all available logs into a .zip</div>
   <div class="mt-4">
     <Button
-      on:click={async () => {
+      on:click={async (): Promise<void> => {
         await saveLogsAsZip();
       }}
       title="Collect logs for must gather tool"

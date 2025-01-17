@@ -45,7 +45,7 @@ onMount(() => {
   });
 });
 
-async function loadDetails() {
+async function loadDetails(): Promise<void> {
   const getKubeNode = await window.kubernetesReadNode(name);
   if (getKubeNode) {
     kubeNode = getKubeNode;

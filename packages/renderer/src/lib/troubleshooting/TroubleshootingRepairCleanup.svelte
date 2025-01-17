@@ -27,7 +27,7 @@ async function openCleanupDialog(): Promise<void> {
   }
 }
 
-async function cleanup() {
+async function cleanup(): Promise<void> {
   try {
     cleanupInProgress = true;
     cleanupFailures = [];
@@ -57,7 +57,7 @@ async function cleanup() {
   <div class="flex flex-1 justify-end">
     <Button
       type="danger"
-      on:click={() => openCleanupDialog()}
+      on:click={openCleanupDialog}
       inProgress={cleanupInProgress}
       aria-label="Cleanup"
       icon={faBroom}>Cleanup / Purge data</Button>

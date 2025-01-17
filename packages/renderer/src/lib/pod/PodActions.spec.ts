@@ -49,7 +49,7 @@ class Pod {
   set status(status: string) {
     this.#status = status;
   }
-  get status() {
+  get status(): string {
     return this.#status;
   }
 }

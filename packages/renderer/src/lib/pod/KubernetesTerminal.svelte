@@ -59,7 +59,7 @@ onDestroy(() => {
   shellTerminal.dispose();
 });
 
-function reconnect() {
+function reconnect(): void {
   window
     .kubernetesExec(
       podName,
@@ -84,7 +84,7 @@ function reconnect() {
     .catch((err: unknown) => console.error(`Error executing pod ${podName} container ${containerName}`, err));
 }
 
-async function initializeNewTerminal(container: HTMLElement) {
+async function initializeNewTerminal(container: HTMLElement): Promise<void> {
   if (!terminalXtermDiv) {
     return;
   }
@@ -127,7 +127,7 @@ async function initializeNewTerminal(container: HTMLElement) {
   shellTerminal.open(container);
 
   window.addEventListener('resize', () => {
-    const resizeAsync = async () => {
+    const resizeAsync = async (): Promise<void> => {
       //resize all opened terminals
       if (curRouterPath.endsWith('/k8s-terminal')) {
         fitAddon.fit();
@@ -151,7 +151,7 @@ function getSavedTerminalState(podName: string, containerName: string): State | 
   return state ? (state as unknown as State) : undefined;
 }
 
-function saveTerminalState(podName: string, containerName: string, state: State) {
+function saveTerminalState(podName: string, containerName: string, state: State): void {
   terminalStates.update(states => {
     states.set(`${podName}-${containerName}`, state);
     return states;

@@ -13,7 +13,7 @@ const { title, bulkOperationTitle }: Props = $props();
 
 let bulkDeleteInProgress: boolean = $state(false);
 
-async function deleteSelectedTasks() {
+async function deleteSelectedTasks(): Promise<void> {
   const selectedTasks = $filtered.filter(task => task.selected);
   if (selectedTasks.length === 0) {
     return;

@@ -20,7 +20,7 @@ function hoverCursor(entry: StatusBarEntry): string {
   return entry.enabled && typeof entry.command === 'string' ? 'hover:cursor-pointer' : '';
 }
 
-async function executeCommand(entry: StatusBarEntry) {
+async function executeCommand(entry: StatusBarEntry): Promise<void> {
   if (typeof entry.command === 'undefined') {
     return;
   }
@@ -34,7 +34,7 @@ async function executeCommand(entry: StatusBarEntry) {
 </script>
 
 <button
-  on:click={async () => {
+  on:click={async (): Promise<void> => {
     await executeCommand(entry);
   }}
   class="{opacity(entry)} px-1 py-px flex h-full items-center {hoverBackground(entry)} {hoverCursor(
