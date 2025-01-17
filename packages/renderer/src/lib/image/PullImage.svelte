@@ -291,7 +291,7 @@ async function searchFunction(value: string): Promise<void> {
           id="imageName"
           name="imageName"
           placeholder="Image name"
-          values={values}
+          groupValues={values}
           onInputChange={searchFunction}
           onChange={async (s: string) => {
             validateImageName(s);

@@ -17,7 +17,7 @@ interface Props {
   name?: string;
   error?: boolean;
   className?: string;
-  values?: GroupItem[];
+  groupValues?: GroupItem[];
   onInputChange?: (s: string) => Promise<void>;
   onChange?: (s: string) => void;
   onEnter?: () => void;
@@ -34,7 +34,7 @@ let {
   name,
   error = false,
   className,
-  values = [],
+  groupValues = [],
   onInputChange,
   onChange,
   onEnter,
@@ -53,6 +53,38 @@ let pageStep = 10;
 let userValue: string = '';
 let loading: boolean = $state(false);
 
+$effect(() => {
+  if (disabled) {
+    return;
+  }
+  let headings: { [index: number]: string[] } = {};
+  let currentItems: string[] = [];
+  for (let { values, group, sorted } of groupValues) {
+    if (group) {
+      if (headings[currentItems.length]) {
+        headings[currentItems.length].push(group);
+      } else {
+        headings[currentItems.length] = [group];
+      }
+    }
+
+    if (!sorted) {
+      // default sorting if the values are not already sorted
+      values = values.toSorted((a: string, b: string) => {
+        if ((a.startsWith(value) && b.startsWith(value)) || (!a.startsWith(value) && !b.startsWith(value))) {
+          return a.localeCompare(b);
+        } else if (a.startsWith(value) && !b.startsWith(value)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+    currentItems = currentItems.concat(values);
+  }
+  items = currentItems;
+  itemHeadings = headings;
+});
 function onItemSelected(s: string): void {
   value = s;
   userValue = s;
@@ -164,48 +196,15 @@ function makeVisible(): void {
   });
 }
 
-console.log(values.length);
-
 function processInput(): void {
   loading = true;
-  items = [];
-  itemHeadings = {};
   onInputChange?.(value)
     .then(() => {
-      // if the component has been disabled in the meantime
-      if (disabled) {
-        return;
-      }
-      for (let { values, group, sorted } of result) {
-        if (group) {
-          if (itemHeadings[items.length]) {
-            itemHeadings[items.length].push(group);
-          } else {
-            itemHeadings[items.length] = [group];
-          }
-        }
-
-        if (!sorted) {
-          // default sorting if the values are not already sorted
-          values = values.toSorted((a: string, b: string) => {
-            if ((a.startsWith(value) && b.startsWith(value)) || (!a.startsWith(value) && !b.startsWith(value))) {
-              return a.localeCompare(b);
-            } else if (a.startsWith(value) && !b.startsWith(value)) {
-              return -1;
-            } else {
-              return 1;
-            }
-          });
-        }
-
-        items = items.concat(values);
-      }
       highlightIndex = -1;
       open();
     })
     .catch(() => {
       items = [];
-      itemHeadings = {};
     })
     .finally(() => {
       loading = false;
