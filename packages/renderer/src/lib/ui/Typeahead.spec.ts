@@ -84,13 +84,15 @@ test('initial focus is set with option', async () => {
 });
 
 test('should list the result after the delay, and display spinner during loading', async () => {
+  let values;
   const searchFunction = async (s: string) => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    return [{ values: [s + '01', s + '02', s + '03'] }];
+    values = [{ values: [s + '01', s + '02', s + '03'] }];
   };
   render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
+    groupValues: values,
     delay: 10,
   });
 
@@ -118,13 +120,15 @@ test('should list the result after the delay, and display spinner during loading
 });
 
 test('should list items started with search term on top', async () => {
+  let values;
   const searchFunction = async (s: string) => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    return [{ values: ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'] }];
+    values = [{ values: ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'] }];
   };
   render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
+    groupValues: values,
     delay: 10,
   });
 
@@ -144,16 +148,18 @@ test('should list items started with search term on top', async () => {
 });
 
 test('should navigate in list with keys', async () => {
+  let values;
   const searchFunction = async (s: string) => {
     const result: string[] = [];
     for (let i = 1; i <= 15; i++) {
       result.push(s + `${i}`.padStart(2, '0'));
     }
-    return [{ values: result }];
+    values = [{ values: result }];
   };
   render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
+    groupValues: values,
     delay: 10,
   });
   const input = screen.getByRole('textbox');
@@ -256,6 +262,7 @@ test('should show error border', async () => {
 });
 
 test('should include heading based on given order and searchFunctions order', async () => {
+  let values;
   const searchFunction = async (s: string) => {
     await new Promise(resolve => setTimeout(resolve, 100));
     const result1 = { values: [s + '11', s + '12', s + '13', s + '14'], group: 'searchFunction1 results' };
@@ -269,12 +276,13 @@ test('should include heading based on given order and searchFunctions order', as
     await new Promise(resolve => setTimeout(resolve, 100));
     const result4 = { values: [s + '41', s + '42', s + '43', s + '44'] };
 
-    return [result1, result2, result3, result4];
+    values = [result1, result2, result3, result4];
   };
 
   render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
+    groupValues: values,
     delay: 10,
   });
 
