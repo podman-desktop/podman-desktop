@@ -13,15 +13,10 @@ import type { PullEvent } from '/@api/pull-event';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
+import type { GroupItem } from '../ui/Typeahead';
 import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
-
-interface GroupItem {
-  values: string[];
-  group?: string;
-  sorted?: boolean;
-}
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
