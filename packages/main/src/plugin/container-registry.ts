@@ -109,6 +109,9 @@ export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<JSONEvent>();
   readonly onEvent: Event<JSONEvent> = this._onEvent.event;
 
+  private readonly _onApiAttached = new Emitter<string>();
+  readonly onApiAttached: Event<string> = this._onApiAttached.event;
+
   // delay in ms before retrying to connect to the provider when /events connection fails
   protected retryDelayEvents: number = 5000;
 
@@ -300,6 +303,11 @@ export class ContainerProviderRegistry {
 
     this.handleEvents(internalProvider.api, errorHandler);
     this.apiSender.send('provider-change', {});
+    this._onApiAttached.fire(internalProvider.id);
+  }
+
+  isApiAttached(id: string): boolean {
+    return !!this.internalProviders.get(id)?.api;
   }
 
   registerContainerConnection(

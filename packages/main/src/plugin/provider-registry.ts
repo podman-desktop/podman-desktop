@@ -1006,22 +1006,28 @@ export class ProviderRegistry {
       await lifecycle.start(context, logHandler);
     } finally {
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
-        const event = {
-          providerId: provider.id,
-          connection: {
-            displayName: providerConnectionInfo.displayName,
-            name: providerConnectionInfo.name,
-            type: providerConnectionInfo.type,
-            endpoint: providerConnectionInfo.endpoint,
-            status: (): ProviderConnectionStatus => {
-              return 'started';
+        const sendEvents = (status: ProviderConnectionStatus): void => {
+          const event = {
+            providerId: provider.id,
+            connection: {
+              displayName: providerConnectionInfo.displayName,
+              name: providerConnectionInfo.name,
+              type: providerConnectionInfo.type,
+              endpoint: providerConnectionInfo.endpoint,
+              status: (): ProviderConnectionStatus => {
+                return status;
+              },
             },
-          },
-          status: 'started' as ProviderConnectionStatus,
+            status: status as ProviderConnectionStatus,
+          };
+          this._onBeforeDidUpdateContainerConnection.fire(event);
+          this._onDidUpdateContainerConnection.fire(event);
+          this._onAfterDidUpdateContainerConnection.fire(event);
         };
-        this._onBeforeDidUpdateContainerConnection.fire(event);
-        this._onDidUpdateContainerConnection.fire(event);
-        this._onAfterDidUpdateContainerConnection.fire(event);
+        sendEvents('starting');
+        this.onProviderConnectionApiAttached(`${provider.id}.${providerConnectionInfo.name}`, () =>
+          sendEvents('started'),
+        );
       } else {
         this._onDidUpdateKubernetesConnection.fire({
           providerId: provider.id,
@@ -1036,6 +1042,20 @@ export class ProviderRegistry {
         });
       }
     }
+  }
+
+  // call callback after api is attached to the connection
+  public onProviderConnectionApiAttached(providerId: string, callback: () => void): void {
+    if (this.containerRegistry.isApiAttached(providerId)) {
+      callback();
+      return;
+    }
+    const disposable = this.containerRegistry.onApiAttached((id: string) => {
+      if (id === providerId) {
+        callback();
+        disposable.dispose();
+      }
+    });
   }
 
   async editProviderConnection(
