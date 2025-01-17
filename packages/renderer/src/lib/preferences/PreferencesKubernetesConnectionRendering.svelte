@@ -98,7 +98,7 @@ async function startConnectionProvider(
   provider: ProviderInfo,
   connectionInfo: ProviderKubernetesConnectionInfo,
   loggerHandlerKey: symbol,
-) {
+): Promise<void> {
   await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
 }
 
@@ -126,11 +126,11 @@ function updateConnectionStatus(
   connectionStatus = connectionStatus;
 }
 
-function addConnectionToRestartingQueue(connection: IConnectionRestart) {
+function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
   loggerHandlerKey = connection.loggerHandlerKey;
 }
 
-function setNoLogs() {
+function setNoLogs(): void {
   noLog = false;
 }
 </script>

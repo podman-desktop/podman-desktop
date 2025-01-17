@@ -5,8 +5,8 @@ import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/s
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number | undefined;
-export let onChange = (_id: string, _value: number) => {};
-export let invalidRecord = (_error: string) => {};
+export let onChange = (_id: string, _value: number): void => {};
+export let invalidRecord = (_error: string): void => {};
 
 let valueUpdateTimeout: NodeJS.Timeout;
 
@@ -16,7 +16,7 @@ let error: string | undefined = undefined;
 
 $: recordValue = value ?? 0;
 
-function onValidation(newValue: number, validationError?: string) {
+function onValidation(newValue: number, validationError?: string): void {
   if (validationError) {
     invalidRecord(validationError);
   }

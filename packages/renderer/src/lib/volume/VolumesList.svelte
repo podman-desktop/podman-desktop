@@ -95,7 +95,7 @@ onDestroy(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedVolumes() {
+async function deleteSelectedVolumes(): Promise<void> {
   const selectedVolumes = volumes.filter(volume => volume.selected);
 
   if (selectedVolumes.length === 0) {
@@ -121,7 +121,7 @@ async function deleteSelectedVolumes() {
 
 let refreshTimeouts: NodeJS.Timeout[] = [];
 const SECOND = 1000;
-function refreshAge() {
+function refreshAge(): void {
   for (const volumeInfo of volumes) {
     volumeInfo.age = volumeUtils.refreshAge(volumeInfo);
   }
@@ -166,7 +166,7 @@ function computeInterval(): number {
 }
 
 let fetchDataInProgress = false;
-async function fetchUsageData() {
+async function fetchUsageData(): Promise<void> {
   fetchDataInProgress = true;
   try {
     await fetchVolumesWithData();
@@ -186,31 +186,31 @@ let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: VolumeColumnStatus,
-  comparator: (a, b) => b.status.localeCompare(a.status),
+  comparator: (a, b): number => b.status.localeCompare(a.status),
 });
 
 let nameColumn = new TableColumn<VolumeInfoUI>('Name', {
   width: '3fr',
   renderer: VolumeColumnName,
-  comparator: (a, b) => a.shortName.localeCompare(b.shortName),
+  comparator: (a, b): number => a.shortName.localeCompare(b.shortName),
 });
 
 let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
   renderer: VolumeColumnEnvironment,
-  comparator: (a, b) => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
 let ageColumn = new TableColumn<VolumeInfoUI, string>('Age', {
-  renderMapping: object => object.age,
+  renderMapping: (object): string => object.age,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => moment().diff(a.created) - moment().diff(b.created),
+  comparator: (a, b): number => moment().diff(a.created) - moment().diff(b.created),
 });
 
 let sizeColumn = new TableColumn<VolumeInfoUI, string>('Size', {
   align: 'right',
-  renderMapping: object => object.humanSize,
+  renderMapping: (object): string => object.humanSize,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.size - b.size,
+  comparator: (a, b): number => a.size - b.size,
   initialOrder: 'descending',
 });
 
@@ -224,7 +224,7 @@ const columns = [
 ];
 
 const row = new TableRow<VolumeInfoUI>({
-  selectable: volume => volume.status === 'UNUSED',
+  selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
 });
 </script>
@@ -236,13 +236,13 @@ const row = new TableRow<VolumeInfoUI>({
 
       <Button
         inProgress={fetchDataInProgress}
-        on:click={() => fetchUsageData()}
+        on:click={fetchUsageData}
         title="Gather sizes for volumes. It can take a while..."
         icon={faPieChart}
         aria-label="Gather volume sizes">Gather volume sizes</Button>
     {/if}
     {#if providerConnections.length > 0}
-      <Button on:click={() => gotoCreateVolume()} icon={faPlusCircle} title="Create a volume" aria-label="Create"
+      <Button on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
         >Create</Button>
     {/if}
   </svelte:fragment>
@@ -250,7 +250,7 @@ const row = new TableRow<VolumeInfoUI>({
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedVolumes,
             `delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -271,7 +271,7 @@ const row = new TableRow<VolumeInfoUI>({
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (volumes = volumes)}>
+      on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
     </Table>
 
     {#if providerConnections.length === 0}

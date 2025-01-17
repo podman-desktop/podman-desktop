@@ -23,7 +23,7 @@ onMount(async () => {
   proxyState = await window.getProxyState();
 });
 
-async function updateProxySettings() {
+async function updateProxySettings(): Promise<void> {
   await window.setProxyState(proxyState);
   if (proxyState !== ProxyState.PROXY_SYSTEM) {
     await window.updateProxySettings({ httpProxy, httpsProxy, noProxy });
@@ -52,7 +52,7 @@ async function updateProxySettings() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function validate(event: any) {
+function validate(event: any): void {
   if (event.target.id === 'httpProxy' || event.target.id === 'httpsProxy') {
     const error = validateProxyAddress(event.target.value);
     if (event.target.id === 'httpProxy') {
@@ -94,7 +94,7 @@ function validate(event: any) {
           bind:value={httpProxy}
           placeholder="URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)"
           required
-          on:input={event => validate(event)} />
+          on:input={validate} />
         {#if httpProxyError}
           <ErrorMessage error={httpProxyError} />
         {/if}
@@ -112,7 +112,7 @@ function validate(event: any) {
           bind:value={httpsProxy}
           placeholder="URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)"
           required
-          on:input={event => validate(event)} />
+          on:input={validate} />
         {#if httpsProxyError}
           <ErrorMessage error={httpsProxyError} />
         {/if}

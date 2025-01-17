@@ -106,7 +106,7 @@ suite('CLI Tool Prefernces page shows', () => {
   const cliTools = [cliToolInfoItem1, cliToolInfoItem2, cliToolInfoItem3, cliToolInfoItem4];
   let cliToolRows: HTMLElement[] = [];
 
-  function validatePropertyPresentation(labelName: string, getExpectedContent: (info: CliToolInfo) => string) {
+  function validatePropertyPresentation(labelName: string, getExpectedContent: (info: CliToolInfo) => string): void {
     cliTools.forEach((tool, index) => {
       const nameElement = within(cliToolRows[index]).getByLabelText(labelName);
       expect(nameElement.textContent?.trim()).equals(getExpectedContent(tool));

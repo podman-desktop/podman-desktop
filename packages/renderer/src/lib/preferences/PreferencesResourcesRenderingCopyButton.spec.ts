@@ -66,10 +66,8 @@ describe('Linux', () => {
   });
 });
 
-async function waitRender(socketPath: string) {
-  const result = render(PreferencesResourcesRenderingCopyButton, { path: socketPath });
+async function waitRender(socketPath: string): Promise<void> {
+  render(PreferencesResourcesRenderingCopyButton, { path: socketPath });
   await tick();
   await tick();
-
-  return result;
 }

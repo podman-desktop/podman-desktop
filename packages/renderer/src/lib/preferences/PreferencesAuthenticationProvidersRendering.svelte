@@ -91,7 +91,7 @@ import SettingsPage from './SettingsPage.svelte';
                           <button
                             aria-label="Sign out of {account.label}"
                             class="pl-2 hover:cursor-pointer"
-                            on:click={() => window.requestAuthenticationProviderSignOut(provider.id, account.id)}>
+                            on:click={(): Promise<void> => window.requestAuthenticationProviderSignOut(provider.id, account.id)}>
                             <Fa class="h-3 w-3 text-md mr-2" icon={faRightFromBracket} />
                           </button>
                         </Tooltip>
@@ -111,7 +111,7 @@ import SettingsPage from './SettingsPage.svelte';
                 <Button
                   aria-label="Sign in"
                   class="pl-2 mr-4 hover:cursor-pointer hover:text-white text-white"
-                  on:click={() => window.requestAuthenticationProviderSignIn(request.id)}>
+                  on:click={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}>
                   <div class="flex flex-row items-center">
                     <Fa class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />Sign in
                   </div>
@@ -124,7 +124,7 @@ import SettingsPage from './SettingsPage.svelte';
                 {#each sessionRequests as request}
                   <DropdownMenu.Item
                     title="Sign in to use {request.extensionLabel}"
-                    onClick={() => window.requestAuthenticationProviderSignIn(request.id)}
+                    onClick={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}
                     icon={faArrowRightToBracket} />
                 {/each}
               </DropdownMenu>

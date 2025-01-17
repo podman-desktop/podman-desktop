@@ -7,16 +7,16 @@ import EditableItem from './EditableItem.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number | undefined = undefined;
-export let onSave = (_recordId: string, _value: number) => {};
+export let onSave = (_recordId: string, _value: number): void => {};
 
 let recordValue: DisplayConfigurationValue | undefined;
 $: recordValue = getDisplayConfigurationValue(record, value);
 
-function onChangeInput(_recordId: string, _value: number) {
+function onChangeInput(_recordId: string, _value: number): void {
   innerOnSave(_recordId, _value);
 }
 
-function onCancel(_recordId: string, originalValue: number) {
+function onCancel(_recordId: string, originalValue: number): void {
   innerOnSave(_recordId, originalValue);
 }
 
@@ -74,7 +74,7 @@ function normalizeDiskAndMemoryConfigurationKey(
   return configurationKey;
 }
 
-function innerOnSave(_recordId: string, _value: number) {
+function innerOnSave(_recordId: string, _value: number): void {
   // convert value to byte to be saved
   const displayConfigurationValue = getDisplayConfigurationValue(record, value);
   if (displayConfigurationValue) {

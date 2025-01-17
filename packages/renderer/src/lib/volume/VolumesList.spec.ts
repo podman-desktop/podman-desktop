@@ -51,7 +51,7 @@ beforeAll(() => {
   (window as any).getProviderInfos = getProviderInfosMock;
 
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

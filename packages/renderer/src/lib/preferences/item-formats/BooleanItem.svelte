@@ -4,10 +4,10 @@ import SlideToggle from '../../ui/SlideToggle.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let checked = false;
-export let onChange = async (_id: string, _value: boolean) => {};
+export let onChange = async (_id: string, _value: boolean): Promise<void> => {};
 let invalidEntry = false;
 
-function onChecked(state: boolean) {
+function onChecked(state: boolean): void {
   invalidEntry = false;
   if (record.id && state !== checked) {
     onChange(record.id, state).catch((_: unknown) => (invalidEntry = true));
@@ -20,7 +20,7 @@ function onChecked(state: boolean) {
   name={record.id}
   left
   bind:checked={checked}
-  on:checked={event => onChecked(event.detail)}
+  on:checked={(event): void => onChecked(event.detail)}
   readonly={!!record.readonly}
   disabled={!!record.readonly}
   aria-invalid={invalidEntry}
