@@ -62,7 +62,7 @@ export class ImageUtils {
     return this.humanizeAge(imageInfoUi.createdAt);
   }
 
-  getName(repoTag: string) {
+  getName(repoTag: string): string {
     const indexTag = repoTag.lastIndexOf(':');
     if (indexTag > 0) {
       return repoTag.slice(0, indexTag);
@@ -71,7 +71,7 @@ export class ImageUtils {
     }
   }
 
-  getTag(repoTag: string) {
+  getTag(repoTag: string): string {
     const indexTag = repoTag.lastIndexOf(':');
     if (indexTag > 0) {
       return repoTag.slice(indexTag + 1);
@@ -88,7 +88,7 @@ export class ImageUtils {
     return containerInfo.engineName;
   }
 
-  getBase64EncodedName(name: string) {
+  getBase64EncodedName(name: string): string {
     return Buffer.from(name, 'binary').toString('base64');
   }
 
@@ -240,7 +240,7 @@ export class ImageUtils {
     context.setValue('imageLabelKeys', image.Labels ? Object.keys(image.Labels) : []);
   }
 
-  deleteImage(image: ImageInfoUI) {
+  deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
   }

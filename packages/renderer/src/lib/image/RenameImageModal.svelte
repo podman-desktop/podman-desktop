@@ -46,7 +46,7 @@ function validateImageTag(event: Event): void {
   }
 }
 
-async function renameImage(imageName: string, imageTag: string) {
+async function renameImage(imageName: string, imageTag: string): Promise<void> {
   let currentImageNameTag: string;
   let shouldDelete: boolean;
   if (imageInfoToRename.name === '<none>') {
@@ -76,9 +76,7 @@ async function renameImage(imageName: string, imageTag: string) {
 
 <Dialog
   title="Edit Image"
-  on:close={() => {
-    closeCallback();
-  }}>
+  on:close={closeCallback}>
   <div slot="content" class="w-full">
     <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Name</label>
     <Input
@@ -86,7 +84,7 @@ async function renameImage(imageName: string, imageTag: string) {
       name="imageName"
       id="imageName"
       placeholder="Enter image name (e.g. quay.io/namespace/my-image-name)"
-      on:input={event => validateImageName(event)}
+      on:input={validateImageName}
       aria-invalid={imageNameErrorMessage !== ''}
       aria-label="imageName"
       required />
@@ -100,7 +98,7 @@ async function renameImage(imageName: string, imageTag: string) {
       name="imageTag"
       id="imageTag"
       placeholder="Enter image tag (e.g. latest)"
-      on:input={event => validateImageTag(event)}
+      on:input={validateImageTag}
       aria-invalid={imageTagErrorMessage !== ''}
       aria-label="imageTag"
       required />
@@ -112,13 +110,11 @@ async function renameImage(imageName: string, imageTag: string) {
     <Button
       class="pcol-start-3"
       type="link"
-      on:click={() => {
-        closeCallback();
-      }}>Cancel</Button>
+      on:click={closeCallback}>Cancel</Button>
     <Button
       class="col-start-4"
       disabled={disableSave(imageName, imageTag)}
-      on:click={async () => {
+      on:click={async (): Promise<void> => {
         await renameImage(imageName, imageTag);
       }}>Save</Button>
   </svelte:fragment>

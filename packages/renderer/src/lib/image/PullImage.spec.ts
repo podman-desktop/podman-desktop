@@ -40,7 +40,7 @@ const listImageTagsInRegistryMock = vi.fn();
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -57,8 +57,8 @@ beforeAll(() => {
     value: () => {
       return {
         matches: false,
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       };
     },
   });
@@ -72,7 +72,7 @@ beforeEach(() => {
 const buttonText = 'Pull image';
 
 // the pull image page expects to have a valid provider connection, so let's mock one
-function setup() {
+function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
     name: 'test',

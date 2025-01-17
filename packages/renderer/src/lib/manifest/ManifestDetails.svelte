@@ -35,7 +35,7 @@ const imageUtils = new ImageUtils();
 // We use updateImage from "Image" since it will still contain details
 // regarding the manifest (example: tags, size, etc.) even if the size is less than 5KB, it's still
 // useful to provide that information.
-function updateImage() {
+function updateImage(): void {
   if (!allImages) {
     return;
   }

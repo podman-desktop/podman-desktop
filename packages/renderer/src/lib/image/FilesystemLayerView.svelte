@@ -16,7 +16,7 @@ $: label = tree.name;
 $: children = tree?.children;
 $: file = tree?.data;
 $: colorClass = getColor(tree);
-function getColor(tree: FilesystemNode<ImageFile>) {
+function getColor(tree: FilesystemNode<ImageFile>): string {
   if (tree.hidden) {
     return 'text-[var(--pd-files-hidden)]';
   }
@@ -38,7 +38,7 @@ function getColor(tree: FilesystemNode<ImageFile>) {
   return '';
 }
 $: expanded = expansionState.get(label) ?? false;
-const toggleExpansion = () => {
+const toggleExpansion = (): void => {
   expanded = !expanded;
   expansionState.set(label, expanded);
 };

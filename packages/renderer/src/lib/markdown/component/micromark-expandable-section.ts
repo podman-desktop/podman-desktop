@@ -66,7 +66,7 @@ function newExpandableId(): string {
  * @param this compile context used by the micromark directive
  * @param expandable the expandable section property to create the new expandable section ui element
  */
-export function createExpandableSection(this: CompileContext, expandable: ExpandableSectionProps) {
+export function createExpandableSection(this: CompileContext, expandable: ExpandableSectionProps): void {
   // create the expandable element from the data received
   const expandableElement = createExpandableSectionElement(expandable);
 
@@ -99,7 +99,7 @@ export function createExpandableSection(this: CompileContext, expandable: Expand
  * it gets triggered when the toggle is clicked and the expandable section needs to be expanded/collapsed
  * @param id expandable section id
  */
-export function executeExpandableToggle(id: string) {
+export function executeExpandableToggle(id: string): void {
   const expandable = expandables.get(id);
   if (expandable) {
     // update expanded state
@@ -113,7 +113,7 @@ export function executeExpandableToggle(id: string) {
  * it updates the UI with the new expandable section state
  * @param expandable expandable section
  */
-function toggleExpandableSection(expandable: ExpandableSection) {
+function toggleExpandableSection(expandable: ExpandableSection): void {
   // retrieve info about the toggle (open/close icon + text) by looking at its expanded state
   const toggleState = expandable.content.expanded ? expandable.toggleExpandedState : expandable.toggleCollapsedState;
 
@@ -135,7 +135,7 @@ function toggleExpandableSection(expandable: ExpandableSection) {
  * show the expandable section toggle
  * @param ref id of the element that created the expandable section
  */
-export function showExpandableToggleByRef(ref: string) {
+export function showExpandableToggleByRef(ref: string): void {
   updateExpandableToggleVisibility(ref, true);
 }
 
@@ -143,7 +143,7 @@ export function showExpandableToggleByRef(ref: string) {
  * hide the expandable section toggle
  * @param ref id of the element that created the expandable section
  */
-export function hideExpandableToggleByRef(ref: string) {
+export function hideExpandableToggleByRef(ref: string): void {
   updateExpandableToggleVisibility(ref, false);
 }
 
@@ -152,7 +152,7 @@ export function hideExpandableToggleByRef(ref: string) {
  * @param ref id of the element that created the expandable section
  * @param show if the toggle must be visible or hidden
  */
-function updateExpandableToggleVisibility(ref: string, show: boolean) {
+function updateExpandableToggleVisibility(ref: string, show: boolean): void {
   for (const expandable of expandables.values()) {
     if (expandable.ref === ref) {
       expandable.showToggle = show;
@@ -171,7 +171,7 @@ function updateExpandableToggleVisibility(ref: string, show: boolean) {
  * @param ref id of the element that created the expandable section
  * @param html html to render inside the expandable section
  */
-export function updateExpandableSectionHtmlContentByRef(ref: string, html: string) {
+export function updateExpandableSectionHtmlContentByRef(ref: string, html: string): void {
   for (const expandable of expandables.values()) {
     if (expandable.ref === ref) {
       expandable.content.html = html;

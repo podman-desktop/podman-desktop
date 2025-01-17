@@ -98,7 +98,7 @@ onMount(async () => {
   advancedCards = ADVANCED_CARDS;
 });
 
-function handleCard(card: { detail: { mode: 'add' | 'remove'; value: string } }) {
+function handleCard(card: { detail: { mode: 'add' | 'remove'; value: string } }): void {
   if (card.detail.mode === 'add') {
     // add card.detail.value from the array platformsArray
     platformsArray.push(card.detail.value);
@@ -111,7 +111,7 @@ function handleCard(card: { detail: { mode: 'add' | 'remove'; value: string } })
   platforms = platformsArray.join(',');
 }
 
-function addCard(item: { value: string }) {
+function addCard(item: { value: string }): void {
   // create a new card and make it checked
   const card = {
     title: item.value,
@@ -136,7 +136,7 @@ function addCard(item: { value: string }) {
         badge={card.badge}
         value={card.value}
         icon={card.icon}
-        on:card={item => handleCard(item)} />
+        on:card={handleCard} />
     {/each}
   </div>
 
@@ -144,7 +144,7 @@ function addCard(item: { value: string }) {
     <button
       aria-label="Show more options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
-      on:click={() => (showMoreOptions = !showMoreOptions)}>
+      on:click={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Fa icon={faChevronRight} class=" mr-2 " />
       More Options...
     </button>
@@ -159,7 +159,7 @@ function addCard(item: { value: string }) {
             badge={card.badge}
             value={card.value}
             icon={card.icon}
-            on:card={item => handleCard(item)} />
+            on:card={handleCard} />
         {/each}
         <BuildImageFromContainerfileCard
           title="New platform"
@@ -168,13 +168,13 @@ function addCard(item: { value: string }) {
           badge=""
           value=""
           additionalItem={true}
-          on:addcard={item => addCard(item.detail)} />
+          on:addcard={(item): void => addCard(item.detail)} />
       </div>
     </div>
     <button
       aria-label="Show less options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
-      on:click={() => (showMoreOptions = !showMoreOptions)}>
+      on:click={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Fa icon={faChevronCircleDown} class=" mr-2 transform rotate-90" />
       Less Options...
     </button>

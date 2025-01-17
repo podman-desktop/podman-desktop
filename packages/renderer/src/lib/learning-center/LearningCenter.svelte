@@ -16,7 +16,7 @@ onMount(async () => {
 
 <div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
   <div>
-    <button on:click={() => (expanded = !expanded)} class="">
+    <button on:click={(): boolean => (expanded = !expanded)} class="">
       <div class="flex flex-row space-x-2 items-center text-[var(--pd-content-card-header-text)]">
         {#if expanded}
           <i class="fas fa-chevron-down"></i>

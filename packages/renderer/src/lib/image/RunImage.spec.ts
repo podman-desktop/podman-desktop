@@ -39,7 +39,7 @@ const originalConsoleDebug = console.debug;
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -62,14 +62,13 @@ afterEach(() => {
   console.error = originalConsoleDebug;
 });
 
-async function waitRender() {
-  const result = render(RunImage);
+async function waitRender(): Promise<void> {
+  render(RunImage);
   await tick();
   await tick();
-  return result;
 }
 
-async function createRunImage(entrypoint?: string | string[], cmd?: string[]) {
+async function createRunImage(entrypoint?: string | string[], cmd?: string[]): Promise<void> {
   runImageInfo.set({
     age: '',
     base64RepoTag: '',

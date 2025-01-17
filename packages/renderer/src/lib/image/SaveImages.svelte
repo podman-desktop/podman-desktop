@@ -29,7 +29,7 @@ onMount(async () => {
   singleItemMode = imagesToSave.length === 1;
 });
 
-async function selectOutputPath() {
+async function selectOutputPath(): Promise<void> {
   const engines = imagesToSave.map(img => img.engineId);
   const filtered = imagesToSave.filter((img, index) => !engines.includes(img.engineId, index + 1));
   if (filtered.length === 1) {
@@ -39,7 +39,7 @@ async function selectOutputPath() {
   }
 }
 
-async function selectTargetFilePath() {
+async function selectTargetFilePath(): Promise<void> {
   let targetFile = 'images.tar';
   if (singleItemMode) {
     let lastSlashPos = imagesToSave[0].name.lastIndexOf('/') + 1;
@@ -68,7 +68,7 @@ async function selectTargetFilePath() {
   invalidOutputPath = false;
 }
 
-async function selectOutputDirectoryPath() {
+async function selectOutputDirectoryPath(): Promise<void> {
   const result = await window.openDialog({
     title: `Select the directory to save the ${singleItemMode ? 'image' : 'images'}`,
     selectors: ['openDirectory'],
@@ -84,11 +84,11 @@ async function selectOutputDirectoryPath() {
   invalidOutputPath = false;
 }
 
-function deleteImageToSave(index: number) {
+function deleteImageToSave(index: number): void {
   imagesToSave = imagesToSave.filter((_, i) => i !== index);
 }
 
-async function saveImages() {
+async function saveImages(): Promise<void> {
   saveError = '';
   inProgress = true;
 
@@ -137,7 +137,7 @@ async function saveImages() {
           id="input-output-directory"
           aria-invalid={invalidOutputPath} />
         <Button
-          on:click={() => selectOutputPath()}
+          on:click={selectOutputPath}
           title="Open dialog to select the output folder"
           aria-label="Select output folder">Browse ...</Button>
       </div>
@@ -156,7 +156,7 @@ async function saveImages() {
             <Button
               type="link"
               aria-label="Delete image {imageDisplayName}"
-              on:click={() => deleteImageToSave(index)}
+              on:click={(): void => deleteImageToSave(index)}
               icon={faMinusCircle} />
           </div>
         {/each}
@@ -164,7 +164,7 @@ async function saveImages() {
 
       <div class="pt-5 w-full">
         <Button
-          on:click={() => saveImages()}
+          on:click={saveImages}
           inProgress={inProgress}
           class="w-full"
           icon={faPlay}

@@ -75,11 +75,11 @@ type BuildOutput = BuildOutputItem[];
 let buildArgs: { key: string; value: string }[] = [{ key: '', value: '' }];
 let formattedBuildArgs: Record<string, string> = {};
 
-function addBuildArg() {
+function addBuildArg(): void {
   buildArgs = [...buildArgs, { key: '', value: '' }];
 }
 
-function deleteBuildArg(index: number) {
+function deleteBuildArg(index: number): void {
   // Only one item in the list, clear the content
   if (buildArgs.length === 1) {
     buildArgs[index].key = '';
@@ -285,7 +285,7 @@ onDestroy(() => {
   }
 });
 
-async function abortBuild() {
+async function abortBuild(): Promise<void> {
   if (cancellableTokenId) {
     await window.cancelToken(cancellableTokenId);
     cancellableTokenId = undefined;
@@ -362,7 +362,7 @@ async function abortBuild() {
           <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="flex-grow" required />
           <Input bind:value={buildArg.value} placeholder="Value" class="flex-grow" required />
           <Button
-            on:click={() => deleteBuildArg(index)}
+            on:click={(): void => deleteBuildArg(index)}
             icon={faMinusCircle}
             disabled={buildArgs.length === 1 && buildArg.key === '' && buildArg.value === ''}
             aria-label="Delete build argument" />
@@ -382,13 +382,13 @@ async function abortBuild() {
 
     <div class="w-full flex flex-row space-x-4">
       {#if !buildImageInfo?.buildRunning}
-        <Button on:click={() => buildContainerImage()} disabled={hasInvalidFields} class="w-full" icon={faCube}>
+        <Button on:click={buildContainerImage} disabled={hasInvalidFields} class="w-full" icon={faCube}>
           Build
         </Button>
       {/if}
 
       {#if buildFinished}
-        <Button on:click={() => cleanupBuild()} class="w-full">Done</Button>
+        <Button on:click={cleanupBuild} class="w-full">Done</Button>
       {/if}
     </div>
 
@@ -397,7 +397,7 @@ async function abortBuild() {
     <TerminalWindow bind:terminal={logsTerminal} />
     <div class="w-full">
       {#if buildImageInfo?.buildRunning}
-        <Button on:click={() => abortBuild()} class="w-full">Cancel</Button>
+        <Button on:click={abortBuild} class="w-full">Cancel</Button>
       {/if}
     </div>
   </div>

@@ -48,7 +48,7 @@ export function createSpinner(ownerId: string): string {
  * generate the new spinner id
  * @returns spinner id
  */
-function newSpinnerId() {
+function newSpinnerId(): string {
   // update spinner number and create a new id
   ++spinnerCount;
   return `micromark-spinner-${spinnerCount}`;
@@ -58,7 +58,7 @@ function newSpinnerId() {
  * make the spinner visible
  * @param ownerId id of the element which the spinner belong to
  */
-export function enableSpinner(ownerId: string) {
+export function enableSpinner(ownerId: string): void {
   toggleElementSpinner(ownerId, true);
 }
 
@@ -66,7 +66,7 @@ export function enableSpinner(ownerId: string) {
  * hide the spinner
  * @param ownerId id of the element which the spinner belong to
  */
-export function disableSpinner(ownerId: string) {
+export function disableSpinner(ownerId: string): void {
   toggleElementSpinner(ownerId, false);
 }
 
@@ -75,7 +75,7 @@ export function disableSpinner(ownerId: string) {
  * @param ownerId id of the element which the spinner belong to
  * @param enabled if must be visible
  */
-function toggleElementSpinner(ownerId: string, enabled: boolean) {
+function toggleElementSpinner(ownerId: string, enabled: boolean): void {
   const spinner = spinners.get(ownerId);
   if (spinner) {
     const spinnerElement = document.getElementById(spinner.id);
@@ -91,7 +91,7 @@ function toggleElementSpinner(ownerId: string, enabled: boolean) {
  * @param id id of the new spinner
  * @returns the spinner icon
  */
-function generateSpinnerIcon(id: string) {
+function generateSpinnerIcon(id: string): string {
   return `
         <i id='${id}' class='flex justify-center items-center mr-2' style='display: none;'>
             <svg width='1em' height='1em' viewBox='0 0 100 100'>

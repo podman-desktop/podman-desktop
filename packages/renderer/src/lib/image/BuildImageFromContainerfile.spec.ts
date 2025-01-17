@@ -44,7 +44,7 @@ vi.mock('@xterm/xterm', () => {
 beforeAll(() => {
   (window.events as unknown) = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };
@@ -78,7 +78,7 @@ async function waitRender(): Promise<void> {
 }
 
 // the build image page expects to have a valid provider connection, so let's mock one
-function setup() {
+function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
     name: 'test',

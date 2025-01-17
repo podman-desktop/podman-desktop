@@ -14,7 +14,7 @@ const firstImageName = 'quay.io/podman/hello';
 const commandLine = `podman pull ${firstImageName}`;
 let pullInProgress = false;
 
-async function pullFirstImage() {
+async function pullFirstImage(): Promise<void> {
   if (!selectedProviderConnection) {
     await window.showMessageBox({
       title: `Error while pulling image`,
@@ -42,7 +42,7 @@ async function pullFirstImage() {
   title="No images"
   message="Pull a first image using the following command line:"
   commandline={commandLine}
-  on:click={() => window.clipboardWriteText(commandLine)}>
+  on:click={(): Promise<void> => window.clipboardWriteText(commandLine)}>
   <div slot="upperContent">
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2"
       >Pull a first image by clicking on this button:</span>
@@ -51,7 +51,7 @@ async function pullFirstImage() {
         title="Pull {firstImageName} image"
         type="primary"
         inProgress={pullInProgress}
-        on:click={() => pullFirstImage()}>Pull your first image</Button>
+        on:click={pullFirstImage}>Pull your first image</Button>
     </div>
     <h1 class="text-xl text-[var(--pd-details-empty-header)]">OR</h1>
   </div>

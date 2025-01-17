@@ -56,7 +56,7 @@ const imageUtils = new ImageUtils();
 let globalContext: ContextUI;
 let viewContributions: ViewInfoUI[] = [];
 
-function updateImages(globalContext: ContextUI) {
+function updateImages(globalContext: ContextUI): void {
   const computedImages = storeImages
     .map((imageInfo: ImageInfo) =>
       imageUtils.getImagesInfoUI(imageInfo, storeContainers, globalContext, viewContributions, storeImages),
@@ -189,7 +189,7 @@ function loadImages(): void {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedImages() {
+async function deleteSelectedImages(): Promise<void> {
   const selectedImages = images.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
@@ -209,7 +209,7 @@ async function deleteSelectedImages() {
 }
 
 // save the items selected in the list
-async function saveSelectedImages() {
+async function saveSelectedImages(): Promise<void> {
   const selectedImages = images.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
@@ -221,7 +221,7 @@ async function saveSelectedImages() {
 
 let refreshTimeouts: NodeJS.Timeout[] = [];
 const SECOND = 1000;
-function refreshAge() {
+function refreshAge(): void {
   for (const imageInfo of images) {
     imageInfo.age = imageUtils.refreshAge(imageInfo);
   }
@@ -272,31 +272,31 @@ let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: ImageColumnStatus,
-  comparator: (a, b) => b.status.localeCompare(a.status),
+  comparator: (a, b): number => b.status.localeCompare(a.status),
 });
 
 let nameColumn = new TableColumn<ImageInfoUI>('Name', {
   width: '4fr',
   renderer: ImageColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let envColumn = new TableColumn<ImageInfoUI>('Environment', {
   renderer: ImageColumnEnvironment,
-  comparator: (a, b) => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
 let ageColumn = new TableColumn<ImageInfoUI, string>('Age', {
-  renderMapping: image => image.age,
+  renderMapping: (image): string => image.age,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => moment().diff(moment.unix(a.createdAt)) - moment().diff(moment.unix(b.createdAt)),
+  comparator: (a, b): number => moment().diff(moment.unix(a.createdAt)) - moment().diff(moment.unix(b.createdAt)),
 });
 
 let sizeColumn = new TableColumn<ImageInfoUI, string>('Size', {
   align: 'right',
-  renderMapping: image => image.humanSize,
+  renderMapping: (image): string => image.humanSize,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => b.size - a.size,
+  comparator: (a, b): number => b.size - a.size,
 });
 
 const columns = [
@@ -315,9 +315,9 @@ const columns = [
 
 const row = new TableRow<ImageInfoUI>({
   // If it is a manifest, it is not selectable (no delete functionality yet)
-  selectable: image => image.status === 'UNUSED' && !image.isManifest,
+  selectable: (image): boolean => image.status === 'UNUSED' && !image.isManifest,
   disabledText: 'Image is used by a container',
-  children: image => {
+  children: (image): ImageInfoUI[] => {
     return image.children ?? [];
   },
 });
@@ -329,27 +329,27 @@ const row = new TableRow<ImageInfoUI>({
       <Prune type="images" engines={enginesList} />
     {/if}
     <Button
-      on:click={() => loadImages()}
+      on:click={loadImages}
       title="Load Images From Tar Archives"
       icon={faUpload}
       aria-label="Load Images">
       Load
     </Button>
     <Button
-      on:click={() => importImage()}
+      on:click={importImage}
       title="Import Containers From Filesystem"
       icon={faArrowCircleDown}
       aria-label="Import Image">
       Import
     </Button>
-    <Button on:click={() => gotoPullImage()} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
-    <Button on:click={() => gotoBuildImage()} title="Build Image From Containerfile" icon={faCube}>Build</Button>
+    <Button on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
+    <Button on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
   </svelte:fragment>
 
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedImages,
             `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -358,7 +358,7 @@ const row = new TableRow<ImageInfoUI>({
         bind:inProgress={bulkDeleteInProgress}
         icon={faTrash} />
       <Button
-        on:click={() => saveSelectedImages()}
+        on:click={saveSelectedImages}
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
@@ -375,7 +375,7 @@ const row = new TableRow<ImageInfoUI>({
       columns={columns}
       row={row}
       defaultSortColumn="Age"
-      on:update={() => (images = images)}>
+      on:update={(): ImageInfoUI[] => (images = images)}>
     </Table>
 
     {#if providerConnections.length === 0}

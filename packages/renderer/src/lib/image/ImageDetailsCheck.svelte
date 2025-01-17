@@ -43,7 +43,7 @@ onDestroy(async () => {
   await handleAbort();
 });
 
-async function callProviders(_providers: readonly ImageCheckerInfo[]) {
+async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<void> {
   providers = _providers.map(p => ({
     info: p,
     state: 'running',
@@ -114,7 +114,7 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]) {
   });
 }
 
-async function handleAbort() {
+async function handleAbort(): Promise<void> {
   if (cancellableTokenId !== 0 && remainingProviders > 0) {
     await window.cancelToken(cancellableTokenId);
     providers = providers.map(p => {
@@ -146,7 +146,7 @@ async function handleAbort() {
     </div>
     {#if remainingProviders > 0}
       <div class="mr-4">
-        <Button on:click={async () => await handleAbort()}>Cancel</Button>
+        <Button on:click={handleAbort}>Cancel</Button>
       </div>
     {/if}
   </div>

@@ -63,7 +63,7 @@ const kubeFileDialogOptions: OpenDialogOptions = {
   ],
 };
 
-function removeEmptyOrNull(obj: object) {
+function removeEmptyOrNull(obj: object): object {
   Object.keys(obj).forEach(k => {
     const val = obj[k as keyof typeof obj];
     (val && typeof val === 'object' && removeEmptyOrNull(val)) ||
@@ -203,7 +203,7 @@ function goBackToPodsPage(): void {
           aria-pressed={userChoice === 'podman' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'podman'}
-          on:click={() => {
+          on:click={(): void => {
             userChoice = 'podman';
           }}>
           <div class="flex flex-row align-middle items-center">
@@ -250,7 +250,7 @@ function goBackToPodsPage(): void {
           aria-pressed={userChoice === 'kubernetes' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'kubernetes'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'kubernetes'}
-          on:click={() => {
+          on:click={(): void => {
             userChoice = 'kubernetes';
           }}>
           <div class="flex flex-row align-middle items-center">
@@ -312,7 +312,7 @@ function goBackToPodsPage(): void {
 
       {#if !runFinished}
         <Button
-          on:click={() => playKubeFile()}
+          on:click={playKubeFile}
           disabled={hasInvalidFields || runStarted}
           class="w-full"
           bind:inProgress={runStarted}
@@ -354,7 +354,7 @@ function goBackToPodsPage(): void {
       {/if}
 
       {#if runFinished}
-        <Button on:click={() => goBackToPodsPage()} class="w-full">Done</Button>
+        <Button on:click={goBackToPodsPage} class="w-full">Done</Button>
       {/if}
     </div>
   </EngineFormPage>

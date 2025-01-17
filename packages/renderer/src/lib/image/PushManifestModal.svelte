@@ -17,7 +17,7 @@ let pushFinished = false;
 let initTerminal = false;
 let logsPush: Terminal;
 
-async function pushManifest() {
+async function pushManifest(): Promise<void> {
   initTerminal = true;
   await tick();
   window.dispatchEvent(new Event('resize'));
@@ -37,7 +37,7 @@ async function pushManifest() {
   }
 }
 
-async function pushManifestFinished() {
+async function pushManifestFinished(): Promise<void> {
   closeCallback();
   router.goto('/images');
 }
@@ -45,7 +45,7 @@ async function pushManifestFinished() {
 
 <Dialog
   title="Push manifest"
-  on:close={() => {
+  on:close={(): void => {
     closeCallback();
     logsPush?.dispose();
   }}>
@@ -66,20 +66,18 @@ async function pushManifestFinished() {
 
   <svelte:fragment slot="buttons">
     {#if !pushInProgress && !pushFinished}
-      <Button class="w-auto" type="secondary" on:click={() => closeCallback()}>Cancel</Button>
+      <Button class="w-auto" type="secondary" on:click={closeCallback}>Cancel</Button>
     {/if}
     {#if !pushFinished}
       <Button
         class="w-auto"
         icon={faCircleArrowUp}
-        on:click={async () => {
-          await pushManifest();
-        }}
+        on:click={pushManifest}
         bind:inProgress={pushInProgress}>
         Push manifest
       </Button>
     {:else}
-      <Button on:click={() => pushManifestFinished()} class="w-auto">Done</Button>
+      <Button on:click={pushManifestFinished} class="w-auto">Done</Button>
     {/if}
   </svelte:fragment>
 </Dialog>

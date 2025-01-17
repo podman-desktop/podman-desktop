@@ -22,7 +22,7 @@ onMount(() => {
 {#if short}
   <button
     class="text-xs underline decoration-dashed"
-    on:click={() => {
+    on:click={(): void => {
       moreDisplayed = !moreDisplayed;
     }}>{moreDisplayed ? 'show less' : 'show more'}</button>
 {/if}

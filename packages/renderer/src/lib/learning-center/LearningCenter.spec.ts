@@ -27,7 +27,10 @@ import learningCenter from '../../../../main/src/plugin/learning-center/guides.j
 import LearningCenter from './LearningCenter.svelte';
 
 vi.mock('../ui/animations', () => ({
-  fadeSlide: () => ({
+  fadeSlide: (): {
+    delay: number;
+    duration: number;
+  } => ({
     delay: 0,
     duration: 0,
   }),

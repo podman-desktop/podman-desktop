@@ -14,20 +14,20 @@ import Markdown from '../markdown/Markdown.svelte';
 
 const kubernetesExternalDocs = 'https://podman-desktop.io/docs/kubernetes';
 
-async function createNew(provider: ProviderInfo) {
+async function createNew(provider: ProviderInfo): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.createNew', {
     provider: provider.id,
   });
   router.goto(`/preferences/provider/${provider.internalId}`);
 }
 
-async function oninstall(extensionId: string) {
+async function oninstall(extensionId: string): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.installExtension', {
     extension: extensionId,
   });
 }
 
-async function ondetails(extensionId: string) {
+async function ondetails(extensionId: string): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.showExtensionDetails', {
     extension: extensionId,
   });
@@ -69,7 +69,7 @@ async function ondetails(extensionId: string) {
         <div class="flex justify-center">
         <Button
           type="primary"
-          on:click={() => createNew(provider)}
+          on:click={(): Promise<void> => createNew(provider)}
           class="flex items-center"
           aria-label={label}
         >
@@ -91,7 +91,7 @@ async function ondetails(extensionId: string) {
       showInstalled={false} />
 
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-     Want to learn more about Kubernetes on Podman Desktop? <Link on:click={() => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
+     Want to learn more about Kubernetes on Podman Desktop? <Link on:click={(): Promise<void> => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
     </div>
   </div>
 </div>

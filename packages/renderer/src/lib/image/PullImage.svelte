@@ -63,7 +63,7 @@ async function resolveShortname(): Promise<void> {
   }
 }
 
-function callback(event: PullEvent) {
+function callback(event: PullEvent): void {
   let lineIndexToWrite;
   if (event.status && event.id) {
     const lineNumber = lineNumberPerId.get(event.id);
@@ -104,7 +104,7 @@ function callback(event: PullEvent) {
   }
 }
 
-async function pullImage() {
+async function pullImage(): Promise<void> {
   if (!selectedProviderConnection) {
     pullError = 'No current provider connection';
     return;
@@ -142,11 +142,11 @@ async function pullImage() {
   }
 }
 
-async function pullImageFinished() {
+async function pullImageFinished(): Promise<void> {
   router.goto('/images');
 }
 
-async function gotoManageRegistries() {
+async function gotoManageRegistries(): Promise<void> {
   router.goto('/preferences/registries');
 }
 
@@ -256,7 +256,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
   </svelte:fragment>
 
   <svelte:fragment slot="actions">
-    <Button on:click={() => gotoManageRegistries()} icon={faCog}>Manage registries</Button>
+    <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
   </svelte:fragment>
 
   <div slot="content" class="space-y-6">
@@ -269,7 +269,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
           name="imageName"
           placeholder="Image name"
           searchFunction={searchImages}
-          onChange={async (s: string) => {
+          onChange={async (s: string): Promise<void> => {
             validateImageName(s);
             await resolveShortname();
             await searchLatestTag();
@@ -323,12 +323,12 @@ function checkIfTagExist(image: string, tags: string[]): void {
           <Button
             icon={faArrowCircleDown}
             bind:disabled={imageNameIsInvalid}
-            on:click={() => pullImage()}
+            on:click={pullImage}
             bind:inProgress={pullInProgress}>
             Pull image
           </Button>
         {:else}
-          <Button on:click={() => pullImageFinished()}>Done</Button>
+          <Button on:click={pullImageFinished}>Done</Button>
         {/if}
         {#if pullError}
           <ErrorMessage error={pullError} />
