@@ -10,13 +10,13 @@ tags: [podman, containers, testcontainers, tests]
 
 # What are Testcontainers
 
-[Testcontainers](https://testcontainers.com/) is an open source library that allows you to test any containarized dependencies, such as databases, various cloud technologies, or message brokers. For ease of use the Testcontainers have many preconfigured dependencies called modules.
+[Testcontainers](https://testcontainers.com/) is an open source library that allows you to test any containerized dependencies, such as databases, various cloud technologies, or message brokers. For ease of use, Testcontainers has many preconfigured dependencies called modules.
 
-Besides that, Testcontainers support various languages in which you can easily write your tests, such as Python, Go, Rust, Ruby, JavaScript, .NET, Java, and others.
+Besides that, Testcontainers supports various languages in which you can easily write your tests, such as Python, Go, Rust, Ruby, JavaScript, .NET, Java, and others.
 
-## Common use cases with Testcontainer
+## Common use cases with Testcontainers
 
-Thanks to the container technology, you are able to get fresh, clean instance without any complex setup for use cases such as:
+Thanks to the container technology, you can obtain fresh, clean instances without any complex setup for use cases such as:
 
 - Data access layer integration tests
 - UI/Acceptance tests
@@ -24,17 +24,17 @@ Thanks to the container technology, you are able to get fresh, clean instance wi
 
 ## Setup Testcontainers with Podman
 
-Before we start, you need to have installed [Podman](https://podman.io/) and run it in socket listenning by running this line:
+Before we start, you need to have installed [Podman](https://podman.io/) and run it in socket listening:
 
 ```shell-session
 $ podman system service --time=0 &
 ```
 
-Set Testcontainers runtime to Podman, for this you have two options:
+Set Testcontainers runtime to Podman by using one of the following options:
 
-- Enable Podman Desktop's Docker Compatibility by folowing this [guide](https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility).
+- Enable the [Docker Compatibility](https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility) feature.
 
-- Or create a `.testcontainers.properties` file in your home directory for global configuration for your Testcontainers and add the following line to the configuration file:
+- Create a `.testcontainers.properties` file in your home directory for global configuration of your Testcontainers and add the following line to the configuration file:
 
   - MacOS
 
@@ -42,7 +42,7 @@ Set Testcontainers runtime to Podman, for this you have two options:
     docker.host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
     ```
 
-    And run folowing line:
+    Run the following command after configuration:
 
     ```shell-session
     $ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
@@ -54,9 +54,13 @@ Set Testcontainers runtime to Podman, for this you have two options:
     docker.host=unix://${XDG_RUNTIME_DIR}/podman/podman.sock
     ```
 
-  > **_NOTE:_** Every language supported by Testcontainers have different properties supported by `.testcontainers.properties` file.
+    :::note
 
-> **_OPTIONAL:_** If you are running Podman in rootless mode, you have to disable Ryuk by adding this line to configuration file:
+    Every language supported by Testcontainers has different properties supported by the .testcontainers.properties file.
+
+    :::
+
+> **_OPTIONAL:_** If you are running Podman in rootless mode, you must disable Ryuk by adding this line to the configuration file:
 >
 > ```shell-session
 > $ export TESTCONTAINERS_RYUK_DISABLED=true
