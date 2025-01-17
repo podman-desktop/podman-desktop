@@ -95,4 +95,4 @@ async function prune(type: string, selectedItemLabel: string): Promise<void> {
 }
 </script>
 
-<Button on:click={() => openPruneDialog()} title="Remove unused {type}" icon={faTrash}>Prune</Button>
+<Button on:click={openPruneDialog} title="Remove unused {type}" icon={faTrash}>Prune</Button>

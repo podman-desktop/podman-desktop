@@ -7,7 +7,7 @@ let dropDownElement: HTMLElement;
 
 const STATUS_BAR_HEIGHT = 24;
 
-function updateMenuLocation() {
+function updateMenuLocation(): void {
   dropDownElement.style.top = `${window.innerHeight - dropDownHeight - STATUS_BAR_HEIGHT}px`;
   dropDownElement.style.left = `${window.innerWidth - dropDownWidth - 1}px`;
 }
