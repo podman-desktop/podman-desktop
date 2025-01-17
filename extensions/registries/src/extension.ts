@@ -19,7 +19,7 @@ import * as extensionApi from '@podman-desktop/api';
 
 import dockerIoImage from './images/docker.io.png';
 import gcrIoImage from './images/gcr.io.png';
-import ghcrIoImage from './images/ghcr.io.png';
+import ghcrIoImage from './images/ghcr.io.svg';
 import quayIoImage from './images/quay.io.png';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -59,6 +59,7 @@ const defaultRegistries: extensionApi.RegistrySuggestedProvider[] = [
     name: 'GitHub',
     url: 'ghcr.io',
     icon: ghcrIoImage,
+    iconMime: 'image/svg+xml',
   },
   {
     name: 'Google Container Registry',
@@ -69,5 +70,5 @@ const defaultRegistries: extensionApi.RegistrySuggestedProvider[] = [
 
 // Remove data:image/png;base64,
 export function stripImagePrefix(imageContent: string): string {
-  return imageContent.replace(/^data:image\/\w+;base64,/, '');
+  return imageContent.replace(/^data:image\/[^;]+;base64,/, '');
 }

@@ -230,6 +230,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry) {
   await window.unregisterImageRegistry(registry);
   setPasswordForRegistryVisible(registry, false);
 }
+
+function decodeSVG(dataUri: string): string {
+  const prefix = 'data:image/svg+xml,';
+  if (dataUri.startsWith(prefix)) {
+    dataUri = dataUri.slice(prefix.length);
+  }
+  return decodeURIComponent(dataUri);
+}
 </script>
 
 <SettingsPage title="Registries">
@@ -264,7 +272,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry) {
                 <div class="flex items-center">
                   <!-- Only show if a "suggested" registry icon has been added -->
                   {#if registry.icon}
-                    <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    {#if registry.iconMime === 'image/svg+xml'}
+                      <div class="registryIcon">
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        {@html decodeSVG(registry.icon)}
+                      </div>
+                    {:else}
+                      <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    {/if}
                   {/if}
                   {#if registry.name}
                     <span class="ml-2">
@@ -390,7 +405,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry) {
               <div class="flex w-full h-full">
                 <div class="flex items-center">
                   {#if registry.icon}
-                    <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    {#if registry.iconMime === 'image/svg+xml'}
+                      <div class="registryIcon">
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        {@html decodeSVG(registry.icon)}
+                      </div>
+                    {:else}
+                      <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    {/if}
                   {/if}
                   <!-- By default, just show the name, but if we go to add it, show the full URL including https -->
                   <span class="ml-2">
@@ -497,3 +519,9 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry) {
     </svelte:fragment>
   </Dialog>
 {/if}
+
+<style>
+  :global(.registryIcon > svg > path) {
+    fill: var(--pd-global-nav-icon);
+  }
+</style>

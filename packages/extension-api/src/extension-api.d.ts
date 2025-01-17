@@ -1081,8 +1081,9 @@ declare module '@podman-desktop/api' {
     name: string;
     url: string;
 
-    // Optional base64 PNG image (for transparency / non vector icons)
+    // Optional base64 or url encoded (svg) image
     icon?: string;
+    iconMime?: string; // 'image/svg+xml' or 'image/png'
   }
 
   export interface Registry extends RegistryCreateOptions {
