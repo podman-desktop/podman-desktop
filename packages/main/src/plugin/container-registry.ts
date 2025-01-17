@@ -129,6 +129,7 @@ export class ContainerProviderRegistry {
 
   protected containerProviders: Map<string, containerDesktopAPI.ContainerProviderConnection> = new Map();
   protected internalProviders: Map<string, InternalContainerProvider> = new Map();
+  protected initializedConnectionAPI: Map<string, boolean> = new Map();
 
   // map of streams per container id
   protected streamsPerContainerId: Map<string, NodeJS.ReadWriteStream> = new Map();
@@ -140,13 +141,15 @@ export class ContainerProviderRegistry {
       .get<boolean>(LibpodApiSettings.ForImageList, false);
   }
 
-  handleEvents(api: Dockerode, errorCallback: (error: Error) => void): void {
+  handleEvents(api: Dockerode, errorCallback: (error: Error) => void, reconnectedCallabck: () => void): void {
     let nbEvents = 0;
     const startDate = performance.now();
     const eventEmitter = new EventEmitter();
 
     eventEmitter.on('event', (jsonEvent: JSONEvent) => {
       nbEvents++;
+      // Got event - reconnected
+      reconnectedCallabck();
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
       if (jsonEvent.status !== 'health_status') {
@@ -283,12 +286,26 @@ export class ContainerProviderRegistry {
       internalProvider.libpodApi = internalProvider.api as unknown as LibPod;
     }
 
+    const reconnectedHandler = (): void => {
+      // When connected successfully, set blocking flag to false
+      this.initializedConnectionAPI.set(containerProviderConnection.endpoint.socketPath, false);
+    };
+
     // in case of errors reported during handling events like the connection is aborted, etc.
     // we need to reconnect the provider
     const errorHandler = (error: Error): void => {
+      // if is the timeout running dont start other for events
+      // connect ENOENT \.\pipe\machine_name at PipeConnectWrap.afterConnect [as oncomplete]
+      if (this.initializedConnectionAPI.get(containerProviderConnection.endpoint.socketPath)) {
+        return;
+      }
+
       console.warn('Error when handling events', error, 'Will reconnect in 5s', error);
       internalProvider.api = undefined;
       internalProvider.libpodApi = undefined;
+
+      // Set flag to stop showing duplicated error messages
+      this.initializedConnectionAPI.set(containerProviderConnection.endpoint.socketPath, true);
 
       // ok we had some errors so we need to reconnect the provider
       // delay the reconnection to avoid too many reconnections
@@ -298,7 +315,7 @@ export class ContainerProviderRegistry {
       }, this.retryDelayEvents);
     };
 
-    this.handleEvents(internalProvider.api, errorHandler);
+    this.handleEvents(internalProvider.api, errorHandler, reconnectedHandler);
     this.apiSender.send('provider-change', {});
   }
 
