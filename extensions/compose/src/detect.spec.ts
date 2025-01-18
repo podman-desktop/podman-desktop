@@ -213,6 +213,11 @@ describe('Check default socket path', async () => {
   });
 });
 
+type HttpGet = (
+  options: http.RequestOptions | string | URL,
+  callback?: (res: http.IncomingMessage) => void,
+) => http.ClientRequest;
+
 describe('Check docker socket', async () => {
   test('is alive', async () => {
     const socketPathMock = vitest.spyOn(detect, 'getSocketPath');
@@ -226,13 +231,13 @@ describe('Check docker socket', async () => {
       };
     });
 
-    const spyGet = vi.spyOn(http, 'get') as MockInstance;
+    const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();
     const myRequest = clientRequestEmitter as http.ClientRequest;
 
-    spyGet.mockImplementation((_url, callback: (res: http.IncomingMessage) => void) => {
+    spyGet.mockImplementation((_url, callback?: (res: http.IncomingMessage) => void) => {
       const emitter = new EventEmitter();
-      callback(emitter as http.IncomingMessage);
+      callback?.(emitter as http.IncomingMessage);
 
       // mock fake data
       emitter.emit('data', 'foo');
@@ -259,9 +264,7 @@ describe('Check docker socket', async () => {
       };
     });
 
-    const spyGet: MockInstance<{
-      (options: string, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
-    }> = vi.spyOn(http, 'get');
+    const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();
     const myRequest = clientRequestEmitter as http.ClientRequest;
 
@@ -291,14 +294,14 @@ describe('Check docker socket', async () => {
       };
     });
 
-    const spyGet = vi.spyOn(http, 'get') as MockInstance;
+    const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();
     const myRequest = clientRequestEmitter as http.ClientRequest;
     const spyOnce = vi.spyOn(clientRequestEmitter, 'once');
 
-    spyGet.mockImplementation((_url, callback: (res: http.IncomingMessage) => void) => {
+    spyGet.mockImplementation((_url, callback?: (res: http.IncomingMessage) => void) => {
       const emitter = new EventEmitter();
-      callback(emitter as http.IncomingMessage);
+      callback?.(emitter as http.IncomingMessage);
 
       // send an error
       setTimeout(() => {
