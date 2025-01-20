@@ -49,8 +49,8 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.CONTAINER:
       router.goto(`/containers/${request.parameters.id}/`);
       break;
-    case NavigationPage.CONTAINER_CREATE_EXISITNG_IMAGE:
-      router.goto(`/containers/0/create-container-existing-image`);
+    case NavigationPage.EXISITNG_IMAGE_CREATE_CONTAINER:
+      router.goto(`/containers/0/existing-image-create-container`);
       break;
     case NavigationPage.CONTAINER_LOGS:
       router.goto(`/containers/${request.parameters.id}/logs`);

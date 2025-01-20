@@ -156,7 +156,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
           <ContainerList searchTerm={meta.query.filter || ''} />
         </Route>
         <Route path="/containers/:id/*" let:meta firstmatch>
-          <Route path="/create-container-existing-image" breadcrumb="Select image" >
+          <Route path="/existing-image-create-container" breadcrumb="Select image" >
             <CreateContainerFromExisitingImage />
           </Route>
           <Route path="/export" breadcrumb="Export Container">
