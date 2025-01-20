@@ -1,10 +1,10 @@
 <script lang="ts">
+import { Carousel } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 
 import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
-import Carousel from '../carousel/Carousel.svelte';
 import { fadeSlide } from '../ui/animations';
 import GuideCard from './GuideCard.svelte';
 
@@ -12,7 +12,7 @@ let guides: Guide[] = $state([]);
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);
 
-const listener: EventListener = (obj: any) => {
+const listener: EventListener = (obj: object) => {
   if ('detail' in obj) {
     const detail = obj.detail as { key: string; value: boolean };
     if (CONFIGURATION_KEY === detail?.key) {
@@ -60,7 +60,7 @@ async function toggle(): Promise<void> {
     <div role="region" class="mt-5">
       <div transition:fadeSlide={{ duration: 250 }}>
         <Carousel cards={guides} let:card>
-          <GuideCard guide={card} />
+          <GuideCard guide={card as Guide} />
         </Carousel>
       </div>
     </div>
