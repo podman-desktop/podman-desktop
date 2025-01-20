@@ -47,7 +47,7 @@
     "@docusaurus/types": "^3.7.0",
     "autoprefixer": "^10.4.20",
     "markdownlint": "^0.37.4",
-    "markdownlint-cli2": "^0.17.1",
+    "markdownlint-cli2": "^0.17.2",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
