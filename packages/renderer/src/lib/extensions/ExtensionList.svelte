@@ -11,6 +11,7 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
+import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { ExtensionsUtils } from './extensions-utils';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
 
@@ -66,7 +67,7 @@ function closeModal(): void {
   installManualImageModal = false;
 }
 
-let screen: 'installed' | 'catalog' = 'installed';
+let screen: 'installed' | 'catalog' | 'development' = 'installed';
 
 let installManualImageModal: boolean = false;
 </script>
@@ -108,7 +109,13 @@ let installManualImageModal: boolean = false;
         screen = 'catalog';
       }}
       selected={screen === 'catalog'}>Catalog</Button>
-  {/snippet}
+      <Button
+      type="tab"
+      on:click={(): void => {
+        screen = 'development';
+      }}
+      selected={screen === 'development'}>Local Extensions</Button>
+ {/snippet}
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
@@ -121,7 +128,7 @@ let installManualImageModal: boolean = false;
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <InstalledExtensionList extensionInfos={$filteredInstalledExtensions} />
-    {:else}
+    {:else if screen === 'catalog'}
       {#if searchTerm && $filteredCatalogExtensions.length === 0}
         <FilteredEmptyScreen
           icon={ExtensionIcon}
@@ -130,6 +137,8 @@ let installManualImageModal: boolean = false;
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={$filteredCatalogExtensions} />
+    {:else if screen === 'development'}
+      <DevelopmentExtensionList />
     {/if}
   </div>
   {/snippet}
