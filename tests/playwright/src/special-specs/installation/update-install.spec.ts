@@ -87,7 +87,7 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     await extensionCatalog.install(60000);
 
     await extensionsPage.openInstalledTab();
-    await playExpect.poll(async () => await extensionsPage.extensionIsInstalled('minikube extension')).toBeTruthy();
+    await playExpect.poll(async () => await extensionsPage.extensionIsInstalled('minikube')).toBeTruthy();
   });
 
   test('Update can be initiated', async () => {
