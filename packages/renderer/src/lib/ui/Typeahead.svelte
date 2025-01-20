@@ -1,8 +1,6 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-type SearchFunction = (s: string) => Promise<string[]>;
-
 interface Props {
   placeholder?: string;
   required?: boolean;
@@ -12,7 +10,9 @@ interface Props {
   id?: string;
   name?: string;
   error?: boolean;
-  searchFunction?: SearchFunction;
+  resultItems?: string[];
+  sorted?: boolean;
+  onInputChange?: (s: string) => Promise<void>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
   class?: string;
@@ -27,9 +27,11 @@ let {
   id,
   name,
   error = false,
-  searchFunction = async (_s: string): Promise<string[]> => [],
-  onChange = function (_s: string): void {},
-  onEnter = function (): void {},
+  resultItems = [],
+  sorted = false,
+  onInputChange,
+  onChange,
+  onEnter,
   class: className,
 }: Props = $props();
 
@@ -38,7 +40,19 @@ let input: HTMLInputElement | undefined = $state();
 let list: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
-let items: string[] = $state([]);
+let items: string[] = $derived(
+  sorted
+    ? resultItems
+    : resultItems.toSorted((a: string, b: string) => {
+        if (a.startsWith(userValue) === b.startsWith(userValue)) {
+          return a.localeCompare(b);
+        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }),
+);
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
 let pageStep: number = $state(10);
@@ -50,18 +64,17 @@ function onItemSelected(s: string): void {
   userValue = s;
   input?.focus();
   close();
-  onChange(s);
+  onChange?.(s);
 }
 
 function onInput(): void {
   userValue = value;
-  onChange(value);
+  onChange?.(value);
   clearTimeout(inputDelayTimeout);
   inputDelayTimeout = setTimeout(processInput, delay);
 }
 
 function onKeyDown(e: KeyboardEvent): void {
-  onChange(value);
   switch (e.key) {
     case 'ArrowDown':
       onDownKey(e);
@@ -82,6 +95,7 @@ function onKeyDown(e: KeyboardEvent): void {
       onEnterKey(e);
       break;
   }
+  onChange?.(value);
 }
 
 function onUpKey(e: KeyboardEvent): void {
@@ -144,7 +158,7 @@ function onEnterKey(e: KeyboardEvent): void {
     e.stopPropagation();
   } else {
     close();
-    onEnter();
+    onEnter?.();
   }
 }
 
@@ -158,30 +172,13 @@ function makeVisible(): void {
 
 function processInput(): void {
   loading = true;
-  searchFunction(value)
-    .then(result => {
-      // if the component has been disabled in the meantime
-      if (disabled) {
-        return;
-      }
-      items = result.toSorted((a: string, b: string) => {
-        const dockerIoValue = `docker.io/${value}`;
-        const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
-        const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
-        if ((aStartsWithValue && bStartsWithValue) || (!aStartsWithValue && !bStartsWithValue)) {
-          return a.localeCompare(b);
-        } else if (aStartsWithValue && !bStartsWithValue) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
+  onInputChange?.(value)
+    .then(() => {
       highlightIndex = -1;
       open();
     })
     .catch(() => {
       // We do not display the error
-      items = [];
     })
     .finally(() => {
       loading = false;

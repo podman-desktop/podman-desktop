@@ -84,13 +84,15 @@ test('initial focus is set with option', async () => {
 });
 
 test('should list the result after the delay, and display spinner during loading', async () => {
-  const searchFunction = async (s: string): Promise<string[]> => {
+  let searchResult: string[] = [];
+  const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    return [s + '01', s + '02', s + '03'];
+    searchResult = [s + '01', s + '02', s + '03'];
   };
-  render(Typeahead, {
+  const { rerender } = render(Typeahead, {
     initialFocus: true,
-    searchFunction,
+    onInputChange: searchFunction,
+    resultItems: searchResult,
     delay: 10,
   });
 
@@ -107,6 +109,9 @@ test('should list the result after the delay, and display spinner during loading
 
   await new Promise(resolve => setTimeout(resolve, 100));
   expect(screen.queryByRole('progressbar')).toBeNull();
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
+  await tick();
   assertIsListVisible(true);
 
   const list = screen.getByRole('row');
@@ -118,19 +123,24 @@ test('should list the result after the delay, and display spinner during loading
 });
 
 test('should list items started with search term on top', async () => {
-  const searchFunction = async (s: string): Promise<string[]> => {
+  let searchResult: string[] = [];
+  const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    return ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'];
+    searchResult = ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'];
   };
-  render(Typeahead, {
+  const { rerender } = render(Typeahead, {
     initialFocus: true,
-    searchFunction,
+    onInputChange: searchFunction,
+    resultItems: searchResult,
     delay: 10,
   });
 
   const input = screen.getByRole('textbox');
 
   await userEvent.type(input, 'aze');
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
+  await tick();
 
   await waitFor(() => {
     const list = screen.getByRole('row');
@@ -143,46 +153,27 @@ test('should list items started with search term on top', async () => {
   });
 });
 
-test('should list items started with docker.io + search term on top', async () => {
-  const searchFunction = async (): Promise<string[]> => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return ['docker.io/aimage', 'docker.io/bimage', 'docker.io/cimage'];
-  };
-  render(Typeahead, {
-    initialFocus: true,
-    searchFunction,
-    delay: 10,
-  });
-
-  const input = screen.getByRole('textbox');
-
-  await userEvent.type(input, 'cimage');
-
-  await waitFor(() => {
-    const list = screen.getByRole('row');
-    const items = within(list).getAllByRole('button');
-    expect(items.length).toBe(3);
-    expect(items[0].textContent).toBe('docker.io/cimage');
-    expect(items[1].textContent).toBe('docker.io/aimage');
-    expect(items[2].textContent).toBe('docker.io/bimage');
-  });
-});
-
 test('should navigate in list with keys', async () => {
-  const searchFunction = async (s: string): Promise<string[]> => {
+  let searchResult: string[] = [];
+  const searchFunction = async (s: string): Promise<void> => {
     const result: string[] = [];
     for (let i = 1; i <= 15; i++) {
       result.push(s + `${i}`.padStart(2, '0'));
     }
-    return result;
+    searchResult = result;
   };
-  render(Typeahead, {
+  const { rerender } = render(Typeahead, {
     initialFocus: true,
-    searchFunction,
+    onInputChange: searchFunction,
+    resultItems: searchResult,
     delay: 10,
   });
   const input = screen.getByRole('textbox');
   await userEvent.type(input, 'term');
+
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
+  await tick();
 
   await new Promise(resolve => setTimeout(resolve, 11));
 

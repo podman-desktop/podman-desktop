@@ -28,6 +28,7 @@ let shortnameImages: string[] = [];
 let podmanFQN = '';
 let usePodmanFQN = false;
 let isValidName = true;
+let searchResult: string[] = [];
 
 export let imageToPull: string | undefined = undefined;
 
@@ -159,7 +160,7 @@ onMount(() => {
 let imageNameInvalid: string | undefined = undefined;
 let imageNameIsInvalid = imageToPull === undefined || imageToPull.trim() === '';
 function validateImageName(image: string): void {
-  if (imageToPull && (image === undefined || image.trim() === '')) {
+  if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
     imageNameInvalid = 'Please enter a value';
   } else {
@@ -245,6 +246,25 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
   isValidName = tags.some(t => t === tag);
 }
+
+async function searchFunction(value: string): Promise<void> {
+  try {
+    searchResult = (await searchImages(value)).toSorted((a: string, b: string) => {
+      const dockerIoValue = `docker.io/${value}`;
+      const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
+      const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+      if (aStartsWithValue === bStartsWithValue) {
+        return a.localeCompare(b);
+      } else if (aStartsWithValue && !bStartsWithValue) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+  } catch (error: unknown) {
+    searchResult = [];
+  }
+}
 </script>
 
 <EngineFormPage
@@ -268,7 +288,9 @@ function checkIfTagExist(image: string, tags: string[]): void {
           id="imageName"
           name="imageName"
           placeholder="Image name"
-          searchFunction={searchImages}
+          onInputChange={searchFunction}
+          resultItems={searchResult}
+          sorted
           onChange={async (s: string): Promise<void> => {
             validateImageName(s);
             await resolveShortname();
