@@ -19,7 +19,7 @@ import SecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
 import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
-import CreateContainerFromExisitingImage from './lib/container/CreateContainerFromExisitingImage.svelte';
+import CreateContainerFromExisitingImage from './lib/container/CreateContainerFromExistingImage.svelte';
 import ContextKey from './lib/context/ContextKey.svelte';
 import CronJobDetails from './lib/cronjob/CronJobDetails.svelte';
 import CronJobList from './lib/cronjob/CronJobList.svelte';
@@ -155,10 +155,11 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
         <Route path="/containers" breadcrumb="Containers" navigationHint="root">
           <ContainerList searchTerm={meta.query.filter || ''} />
         </Route>
-        <Route path="/create-container-existing-image" breadcrumb="Select image" >
-          <CreateContainerFromExisitingImage />
-        </Route>
         <Route path="/containers/:id/*" let:meta firstmatch>
+          <Route path="/create-container-existing-image" breadcrumb="Select image" >
+            {console.log('create container')}
+            <CreateContainerFromExisitingImage />
+          </Route>
           <Route path="/export" breadcrumb="Export Container">
             <ContainerExport containerID={meta.params.id} />
           </Route>
