@@ -474,6 +474,8 @@ describe('container connections', () => {
     expect(pullImagebutton).toBeEnabled();
     pullImagebutton.click();
 
-    expect(window.pullImage).toHaveBeenCalledWith(connectionTarget, 'test1', expect.any(Function));
+    await vi.waitFor(() => {
+      expect(window.pullImage).toHaveBeenCalledWith(connectionTarget, 'test1', expect.any(Function));
+    });
   });
 });
