@@ -270,7 +270,9 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
 async function buildContainerFromImage(): Promise<void> {
   const localImages = (await window.listImages()).filter(
-    image => (image.RepoTags?.filter(repoTag => repoTag.includes(imageToPull)) ?? []).length > 0,
+    image =>
+      (image.RepoTags?.filter(repoTag => repoTag.includes(podmanFQN && usePodmanFQN ? podmanFQN : imageToPull)) ?? [])
+        .length > 0,
   );
   if (localImages.length > 0) {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
