@@ -20,10 +20,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
@@ -64,48 +64,40 @@ beforeAll(() => {
   });
 });
 
+const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
+  name: 'test',
+  displayName: 'test',
+  status: 'started',
+  endpoint: {
+    socketPath: '',
+  },
+  type: 'podman',
+};
+
+const PROVIDER_INFO_MOCK: ProviderInfo = {
+  id: 'test',
+  internalId: 'id',
+  name: '',
+  containerConnections: [CONTAINER_CONNECTION_MOCK],
+  kubernetesConnections: [],
+  status: 'started',
+  containerProviderConnectionCreation: false,
+  containerProviderConnectionInitialization: false,
+  kubernetesProviderConnectionCreation: false,
+  kubernetesProviderConnectionInitialization: false,
+} as unknown as ProviderInfo;
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+
+  providerInfos.set([PROVIDER_INFO_MOCK]);
 });
 
 const buttonText = 'Pull image';
 
-// the pull image page expects to have a valid provider connection, so let's mock one
-function setup(): void {
-  const pStatus: ProviderStatus = 'started';
-  const pInfo: ProviderContainerConnectionInfo = {
-    name: 'test',
-    displayName: 'test',
-    status: 'started',
-    endpoint: {
-      socketPath: '',
-    },
-    type: 'podman',
-  };
-  const providerInfo = {
-    id: 'test',
-    internalId: 'id',
-    name: '',
-    containerConnections: [pInfo],
-    kubernetesConnections: undefined,
-    status: pStatus,
-    containerProviderConnectionCreation: false,
-    containerProviderConnectionInitialization: false,
-    kubernetesProviderConnectionCreation: false,
-    kubernetesProviderConnectionInitialization: false,
-    links: undefined,
-    detectionChecks: undefined,
-    warnings: undefined,
-    images: undefined,
-    installationSupport: undefined,
-  } as unknown as ProviderInfo;
-  providerInfos.set([providerInfo]);
-}
-
 describe('PullImage', () => {
   test('Expect that textbox is available and button is displayed', async () => {
-    setup();
     render(PullImage);
 
     const entry = screen.getByPlaceholderText('Image name');
@@ -116,7 +108,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that whitespace does not enable button', async () => {
-    setup();
     render(PullImage, { imageToPull: '   ' });
 
     const button = screen.getByRole('button', { name: buttonText });
@@ -125,7 +116,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that valid entry enables button', async () => {
-    setup();
     render(PullImage, { imageToPull: 'some-valid-image' });
 
     const button = screen.getByRole('button', { name: buttonText });
@@ -134,7 +124,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that valid entry enables button after user input', async () => {
-    setup();
     render(PullImage);
 
     const button = screen.getByRole('button', { name: buttonText });
@@ -149,7 +138,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that action is displayed', async () => {
-    setup();
     render(PullImage);
 
     const regButton = 'Manage registries';
@@ -159,7 +147,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that pull image is reporting an error', async () => {
-    setup();
     render(PullImage, { imageToPull: 'image-does-not-exist' });
 
     // first call to pull image throw an error
@@ -175,7 +162,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that focus is in `Image to Pull` field after page is opened', async () => {
-    setup();
     render(PullImage);
 
     const pullImageInput = screen.getByRole('textbox', { name: 'Image to Pull' });
@@ -183,7 +169,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that you can type an image name and hit Enter', async () => {
-    setup();
     render(PullImage);
 
     // first call to pull image throw an error
@@ -200,7 +185,6 @@ describe('PullImage', () => {
   // pull image with error and then pull image with success
   // error message should not be displayed anymore
   test('Expect that pull image is reporting an error only if invalid', async () => {
-    setup();
     const renderResult = render(PullImage, { imageToPull: 'image-does-not-exist' });
 
     // first call to pull image throw an error
@@ -229,8 +213,6 @@ describe('PullImage', () => {
   });
 
   test('Expect that pull image is suggesting an extension in case of matching error', async () => {
-    setup();
-
     // add registries as recommended
     recommendedRegistries.set([
       {
@@ -269,7 +251,6 @@ describe('PullImage', () => {
 
 test('Expect if no docker.io shortname to use Podman FQN', async () => {
   resolveShortnameImageMock.mockResolvedValue(['someregistry/test1']);
-  setup();
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
@@ -290,7 +271,6 @@ test('Expect if no docker.io shortname to use Podman FQN', async () => {
 
 test('Expect if no docker.io shortname but checkbox not checked to use docker hub', async () => {
   resolveShortnameImageMock.mockResolvedValue(['someregistry/test1']);
-  setup();
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
@@ -309,7 +289,6 @@ test('Expect if no docker.io shortname but checkbox not checked to use docker hu
 
 test('Expect if docker.io shortname exists to not use Podman FQN', async () => {
   resolveShortnameImageMock.mockResolvedValue(['someregistry/test1', 'docker.io/test1']);
-  setup();
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
@@ -328,7 +307,6 @@ test('Expect if docker.io shortname exists to not use Podman FQN', async () => {
 });
 
 test('Expect not to check not shortname images', async () => {
-  setup();
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
@@ -339,7 +317,6 @@ test('Expect not to check not shortname images', async () => {
 });
 
 test('Expect latest tag warning is displayed when the image does not have latest tag', async () => {
-  setup();
   render(PullImage);
 
   listImageTagsInRegistryMock.mockResolvedValue(['other']);
@@ -352,7 +329,6 @@ test('Expect latest tag warning is displayed when the image does not have latest
 });
 
 test('Expect latest tag warning is not displayed when the image has latest tag', async () => {
-  setup();
   render(PullImage);
 
   listImageTagsInRegistryMock.mockResolvedValue(['latest', 'other']);
@@ -364,7 +340,6 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
 });
 
 test('input component should not raise an error when the input is valid', async () => {
-  setup();
   const pullImage = render(PullImage);
 
   listImageTagsInRegistryMock.mockResolvedValue(['latest', 'other']);
@@ -378,7 +353,6 @@ test('input component should not raise an error when the input is valid', async 
 });
 
 test('input component should raise an error when the input is not valid', async () => {
-  setup();
   const pullImage = render(PullImage);
 
   listImageTagsInRegistryMock.mockResolvedValue({});
@@ -392,7 +366,6 @@ test('input component should raise an error when the input is not valid', async 
 });
 
 test('input component should raise an error when the input is not valid - error', async () => {
-  setup();
   const pullImage = render(PullImage);
 
   listImageTagsInRegistryMock.mockImplementation(() => {
@@ -405,4 +378,52 @@ test('input component should raise an error when the input is not valid - error'
   expect(parentInput).toHaveClass('border-b-[var(--pd-input-field-stroke-error)]');
   expect(parentInput).toHaveClass('focus-within:border-[var(--pd-input-field-stroke-error)]');
   expect(parentInput).not.toHaveClass('hover:border-b-[var(--pd-input-field-hover-stroke)]');
+});
+
+describe('container connections', () => {
+  // create a dummy multi connection provider
+  const MULTI_CONNECTIONS: ProviderInfo = {
+    ...PROVIDER_INFO_MOCK,
+    containerConnections: Array.from({ length: 5 }).map((_, index) => ({
+      ...CONTAINER_CONNECTION_MOCK,
+      name: `connection-${index}`,
+      displayName: `Connection ${index}`,
+    })),
+  };
+
+  test('single container connection should not display the container engine dropdown', async () => {
+    // ensure we only have one container connections in the store
+    const providers = get(providerInfos);
+    const containerConnections = providers.map(provider => provider.containerConnections).flat();
+
+    expect(containerConnections).toHaveLength(1);
+
+    const { queryByRole } = render(PullImage);
+    const dropdown = queryByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeNull();
+  });
+
+  test('multiple container connection should display a dropdown', async () => {
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    const { getByRole } = render(PullImage);
+    const dropdown = getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+  });
+
+  test('providerInfos update should be reactive', async () => {
+    // default should only have one connection
+    const { queryByRole } = render(PullImage);
+    const dropdown = queryByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeNull();
+
+    // let's update to multiple connection
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    // expect dropdown to appear
+    await vi.waitFor(() => {
+      const dropdown = queryByRole('button', { name: 'Container Engine' });
+      expect(dropdown).toBeEnabled();
+    });
+  });
 });
