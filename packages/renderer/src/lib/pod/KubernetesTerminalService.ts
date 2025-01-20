@@ -32,7 +32,7 @@ export class TerminalService {
     });
   }
 
-  protected invalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]) {
+  protected invalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]): void {
     podsInfos.forEach((pod: PodInfo) => {
       pod.Containers.forEach((container: PodContainerInfo) => {
         if (container.Status !== 'running') {
@@ -42,7 +42,7 @@ export class TerminalService {
     });
   }
 
-  protected invalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]) {
+  protected invalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]): void {
     const activePods = new Set(
       podsInfos.flatMap((pod: PodInfo) =>
         pod.Containers.map((container: PodContainerInfo) => this.toKey(pod.Name, container.Names)),
@@ -56,7 +56,7 @@ export class TerminalService {
     }
   }
 
-  ensureTerminalExists(podName: string, containerName: string) {
+  ensureTerminalExists(podName: string, containerName: string): void {
     if (!this.terminalCache.has(this.toKey(podName, containerName))) {
       this.terminalCache.set(this.toKey(podName, containerName), {
         component: KubernetesTerminal,
@@ -65,22 +65,23 @@ export class TerminalService {
     }
   }
 
-  getTerminal(podName: string, containerName: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getTerminal(podName: string, containerName: string): any {
     return this.terminalCache.get(this.toKey(podName, containerName));
   }
 
-  hasTerminal(podName: string, containerName: string) {
+  hasTerminal(podName: string, containerName: string): boolean {
     return this.terminalCache.has(this.toKey(podName, containerName));
   }
 
-  protected invalidateTerminalComponentState(podAndContainerName: string) {
+  protected invalidateTerminalComponentState(podAndContainerName: string): void {
     terminalStates.update(states => {
       states.delete(podAndContainerName);
       return states;
     });
   }
 
-  protected toKey(podName: string, containerName: string) {
+  protected toKey(podName: string, containerName: string): string {
     return `${podName}-${containerName}`;
   }
 }

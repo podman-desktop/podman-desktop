@@ -32,6 +32,7 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
+import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ProviderInfo } from '/@api/provider-info';
 
 import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
@@ -269,8 +270,8 @@ const ocppod: PodInfo = {
 
 // fake the window.events object
 beforeAll(() => {
-  (window as any).kubernetesGetContextsGeneralState = () => Promise.resolve(new Map());
-  (window as any).kubernetesGetCurrentContextGeneralState = () => Promise.resolve({});
+  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
+  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
   (window as any).getProviderInfos = getProvidersInfoMock;
   (window as any).listPods = listPodsMock;
   (window as any).listContainers = listContainersMock.mockResolvedValue([]);
@@ -284,7 +285,7 @@ beforeAll(() => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
   (window.events as unknown) = {
-    receive: (_channel: string, func: any) => {
+    receive: (_channel: string, func: any): void => {
       func();
     },
   };

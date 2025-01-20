@@ -12,7 +12,7 @@ interface Props {
   onpop?: () => void;
 }
 
-let { toastId, taskInfo, onpop = () => {} }: Props = $props();
+let { toastId, taskInfo, onpop = (): void => {} }: Props = $props();
 
 const closeAction = (): void => {
   toast.pop(toastId);

@@ -27,9 +27,9 @@ let {
   id,
   name,
   error = false,
-  searchFunction = async (_s: string) => [],
-  onChange = function (_s: string) {},
-  onEnter = function () {},
+  searchFunction = async (_s: string): Promise<string[]> => [],
+  onChange = function (_s: string): void {},
+  onEnter = function (): void {},
   class: className,
 }: Props = $props();
 
@@ -253,8 +253,8 @@ function onWindowClick(e: Event): void {
         bind:this={scrollElements[i]}
         class:bg-[var(--pd-content-card-hover-bg)]={i === highlightIndex}
         class="p-1 text-start w-full cursor-pointer"
-        onclick={() => onItemSelected(item)}
-        onpointerenter={() => {
+        onclick={(): void => onItemSelected(item)}
+        onpointerenter={(): void => {
           highlightIndex = i;
         }}>{item}</button>
     {/each}

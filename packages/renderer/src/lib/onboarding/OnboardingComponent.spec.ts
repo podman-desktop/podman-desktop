@@ -80,8 +80,8 @@ beforeAll(() => {
     value: () => {
       return {
         matches: false,
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       };
     },
   });

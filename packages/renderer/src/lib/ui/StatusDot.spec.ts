@@ -23,8 +23,8 @@ import { expect, test } from 'vitest';
 
 import StatusDot from './StatusDot.svelte';
 
-const renderStatusDot = (containerStatus: string) => {
-  return render(StatusDot, { name: 'foobar', status: containerStatus });
+const renderStatusDot = (containerStatus: string): void => {
+  render(StatusDot, { name: 'foobar', status: containerStatus });
 };
 
 test('Expect the dot to have the correct color for running status', () => {

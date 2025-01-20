@@ -8,7 +8,7 @@ interface Props {
   onReset?: (term: string) => void;
 }
 
-let { searchTerm = $bindable(), onReset = () => {} }: Props = $props();
+let { searchTerm = $bindable(), onReset = (): void => {} }: Props = $props();
 
 function resetFilter(e: Event): void {
   searchTerm = '';

@@ -69,7 +69,7 @@ onMount(() => {
           <div>&nbsp;</div>
         {/if}
       </div>
-      <PodActions pod={pod} detailed={true} on:update={() => (pod = pod)} />
+      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => (pod = pod)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={pod.status} />

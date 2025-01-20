@@ -50,12 +50,12 @@ async function cancelTask(): Promise<void> {
   }
 }
 
-async function closeCompleted(task: TaskInfo | NotificationTaskInfo) {
+async function closeCompleted(task: TaskInfo | NotificationTaskInfo): Promise<void> {
   // needs to delete the task from the svelte store
   return removeTask(task.id);
 }
 
-async function doExecuteAction(task: TaskInfo) {
+async function doExecuteAction(task: TaskInfo): Promise<void> {
   await window.executeTask(task.id);
 }
 </script>
@@ -87,7 +87,7 @@ async function doExecuteAction(task: TaskInfo) {
       <div class="flex flex-col flex-grow items-end">
         <!-- if completed task, display a close icon-->
         {#if task.state === 'completed'}
-          <button title="Clear notification" class="text-[var(--pd-modal-text)]" on:click={() => closeCompleted(task)}
+          <button title="Clear notification" class="text-[var(--pd-modal-text)]" on:click={(): Promise<void> => closeCompleted(task)}
             ><Fa size="0.75x" icon={faClose} /></button>
         {/if}
       </div>
@@ -123,7 +123,7 @@ async function doExecuteAction(task: TaskInfo) {
         <div class="flex flex-1 flex-col w-full items-end text-[var(--pd-button-secondary)] text-xs">
           <button
             class="text-[var(--pd-button-secondary)] cursor-pointer"
-            on:click={async () => await doExecuteAction(task)}
+            on:click={async (): Promise<void> => await doExecuteAction(task)}
             aria-label="action button">{task.action}</button>
         </div>
       </div>
@@ -132,7 +132,7 @@ async function doExecuteAction(task: TaskInfo) {
     <!-- if failed task, display the error-->
     {#if task.status === 'failure'}
       <div class="flex flex-col w-full items-end">
-        <button on:click={() => (showError = !showError)} class="text-[var(--pd-button-secondary)] text-xs">
+        <button on:click={(): boolean => (showError = !showError)} class="text-[var(--pd-button-secondary)] text-xs">
           View Error
           {#if showError}
             <i class="fas fa-chevron-up"></i>

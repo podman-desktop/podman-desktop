@@ -81,7 +81,7 @@ const imageInfo = {
 const podInfo = { engineId: imageInfo.engineId, Id: 'Id' };
 const podCreateCommand = `podman run -dt --pod new:myFirstPod ${helloImage}`;
 
-function testComponent(name: string, fn: () => Promise<unknown>) {
+function testComponent(name: string, fn: () => Promise<unknown>): void {
   test(name, () => {
     vi.mocked(window.listImages).mockResolvedValue([imageInfo]);
     render(PodEmptyScreen);

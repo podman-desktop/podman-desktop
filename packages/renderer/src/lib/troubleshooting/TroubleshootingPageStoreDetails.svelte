@@ -23,7 +23,7 @@ async function fetch(): Promise<void> {
 }
 </script>
 
-<Dialog title="Details of {eventStoreInfo.name}" on:close={() => closeCallback()}>
+<Dialog title="Details of {eventStoreInfo.name}" on:close={closeCallback}>
   <svelte:component this={eventStoreInfo.iconComponent} slot="icon" size="20" />
 
   <div slot="content" class="inline-block w-full overflow-hidden overflow-y-auto text-left transition-all">
@@ -34,7 +34,7 @@ async function fetch(): Promise<void> {
         <div class="mx-2 flex flex-row items-center">
           Size: <div role="status" aria-label="size">{eventStoreInfo.size}</div>
           <div class="mx-2">
-            <Button class="my-1" bind:inProgress={fetchInProgress} on:click={() => fetch()} icon={faRefresh}
+            <Button class="my-1" bind:inProgress={fetchInProgress} on:click={fetch} icon={faRefresh}
               >Refresh</Button>
           </div>
         </div>
@@ -50,7 +50,7 @@ async function fetch(): Promise<void> {
                 class="my-1"
                 bind:inProgress={fetchInProgress}
                 title="Clear events"
-                on:click={() => eventStoreInfo.clearEvents()}
+                on:click={eventStoreInfo.clearEvents}
                 icon={faTrash}>Clear</Button>
             {/if}
           </div>
@@ -93,7 +93,7 @@ async function fetch(): Promise<void> {
     </div>
   </div>
   <svelte:fragment slot="buttons">
-    <Button aria-label="Cancel" class="mr-3" type="link" on:click={() => closeCallback()}>Cancel</Button>
-    <Button aria-label="OK" on:click={() => closeCallback()}>OK</Button>
+    <Button aria-label="Cancel" class="mr-3" type="link" on:click={closeCallback}>Cancel</Button>
+    <Button aria-label="OK" on:click={closeCallback}>OK</Button>
   </svelte:fragment>
 </Dialog>

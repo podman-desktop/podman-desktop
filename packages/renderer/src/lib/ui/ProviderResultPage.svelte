@@ -116,32 +116,32 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
           disabled={countBySeverity.critical === 0}
           icon={faExclamationCircle}
           iconClass="text-[var(--pd-state-error)]"
-          on:click={event => onSeverityClicked('critical', event.detail)}
+          on:click={(event): void => onSeverityClicked('critical', event.detail)}
           >Critical ({countBySeverity.critical})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.high === 0}
           icon={faExclamationTriangle}
           iconClass="text-[var(--pd-state-warning)]"
-          on:click={event => onSeverityClicked('high', event.detail)}>High ({countBySeverity.high})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('high', event.detail)}>High ({countBySeverity.high})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.medium === 0}
           icon={faExclamationTriangle}
           iconClass="text-[var(--pd-severity-medium)]"
-          on:click={event => onSeverityClicked('medium', event.detail)}>Medium ({countBySeverity.medium})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('medium', event.detail)}>Medium ({countBySeverity.medium})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.low === 0}
           icon={faCircleMinus}
           iconClass="text-[var(--pd-severity-low)]"
-          on:click={event => onSeverityClicked('low', event.detail)}>Low ({countBySeverity.low})</ToggleButton>
+          on:click={(event): void => onSeverityClicked('low', event.detail)}>Low ({countBySeverity.low})</ToggleButton>
         <ToggleButton
           selected={true}
           disabled={countBySeverity.success === 0}
           icon={faCheckSquare}
           iconClass="text-[var(--pd-state-success)]"
-          on:click={event => onSeverityClicked('success', event.detail)}
+          on:click={(event): void => onSeverityClicked('success', event.detail)}
           >Passed ({countBySeverity.success})</ToggleButton>
       </ToggleButtonGroup>
     </div>
@@ -168,7 +168,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
             {#if provider.state === 'success'}
               <SlideToggle
                 id={provider.info.id}
-                on:checked={event => onProviderChecked(provider.info.id, event.detail)}
+                on:checked={(event): void => onProviderChecked(provider.info.id, event.detail)}
                 checked={selectedProviders.get(provider.info.id) ?? true} />
             {/if}
           </div>

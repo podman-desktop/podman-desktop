@@ -26,7 +26,7 @@ import { TerminalService } from '/@/lib/pod/KubernetesTerminalService';
 let terminalService: TestableKubernetesTerminalService;
 
 class TestableKubernetesTerminalService extends TerminalService {
-  public testInvalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]) {
+  public testInvalidateCacheRecordOnStatusUpdate(podsInfos: PodInfo[]): void {
     return this.invalidateCacheRecordOnStatusUpdate(podsInfos);
   }
 
@@ -34,11 +34,11 @@ class TestableKubernetesTerminalService extends TerminalService {
     return super.toKey(podName, containerName);
   }
 
-  public testInvalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]) {
+  public testInvalidateCacheRecordOnPodRemove(podsInfos: PodInfo[]): void {
     return this.invalidateCacheRecordOnPodRemove(podsInfos);
   }
 
-  public testTerminalCache() {
+  public testTerminalCache(): Map<unknown, unknown> {
     return this.terminalCache;
   }
 }

@@ -6,7 +6,7 @@ import Fa from 'svelte-fa';
 export let clipboardData: string;
 export let title: string;
 
-async function copyTextToClipboard() {
+async function copyTextToClipboard(): Promise<void> {
   await window.clipboardWriteText(clipboardData);
 }
 </script>
@@ -17,7 +17,7 @@ async function copyTextToClipboard() {
       title="Copy To Clipboard"
       class="ml-5 {$$props.class || ''}"
       aria-label="Copy To Clipboard"
-      on:click={async () => copyTextToClipboard()}>
+      on:click={copyTextToClipboard}>
       <Fa icon={faPaste} />
     </button>
   </Tooltip>

@@ -46,7 +46,7 @@ export async function updateOnboardingStepStatus(
   onboarding: OnboardingInfo,
   step: OnboardingStep,
   status: OnboardingStatus,
-) {
+): Promise<void> {
   step.status = status;
   await window.updateStepState(status, onboarding.extension, step.id);
   // if the completed step is the last one, we mark the onboarding as completed
@@ -126,7 +126,7 @@ export function normalizeOnboardingWhenClause(when: string, extension: string): 
 /*
  *   it clean the context of all onboardings in the list
  */
-export async function cleanSetup(onboardings: OnboardingInfo[], globalContext: ContextUI) {
+export async function cleanSetup(onboardings: OnboardingInfo[], globalContext: ContextUI): Promise<void> {
   // reset onboarding on backend
   await window.resetOnboarding(onboardings.map(onboarding => onboarding.extension));
   // clean ui context
@@ -171,7 +171,7 @@ export function replaceContextKeyPlaceHoldersByRegex(
   context?: ContextUI,
   prefix?: string,
   replacement?: string,
-) {
+): string {
   const matches = [...value.matchAll(regex)];
   for (const match of matches) {
     value = getStringWithContextKeyReplaced(value, match, context, prefix, replacement);
@@ -190,7 +190,7 @@ function getStringWithContextKeyReplaced(
   context?: ContextUI,
   prefix?: string,
   replacement?: string,
-) {
+): string {
   if (matchArray.length > 1) {
     let replacementUnknown: unknown = replacement;
     if (replacement === undefined && context) {

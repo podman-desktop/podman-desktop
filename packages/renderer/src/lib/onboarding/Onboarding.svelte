@@ -126,7 +126,7 @@ onDestroy(() => {
   }
 });
 
-async function setActiveStep() {
+async function setActiveStep(): Promise<void> {
   if (onboardings.length === 0) {
     console.error(`Unable to retrieve the onboarding workflow`);
     return;
@@ -196,7 +196,7 @@ function evaluateWhen(when: string | undefined, extension: string): boolean {
   return false;
 }
 
-async function doExecuteCommand(command: string) {
+async function doExecuteCommand(command: string): Promise<void> {
   inProgressCommandExecution(command, 'starting');
   try {
     await window.executeCommand(command);
@@ -207,7 +207,11 @@ async function doExecuteCommand(command: string) {
   inProgressCommandExecution(command, 'successful');
 }
 
-function inProgressCommandExecution(command: string, state: 'starting' | 'failed' | 'successful', value?: unknown) {
+function inProgressCommandExecution(
+  command: string,
+  state: 'starting' | 'failed' | 'successful',
+  value?: unknown,
+): void {
   setExecuting(state === 'starting');
   if (state !== 'starting' && command && !executedCommands.includes(command)) {
     executedCommands.push(command);
@@ -225,7 +229,7 @@ function inProgressCommandExecution(command: string, state: 'starting' | 'failed
  * N.B: If the step depends on the value of a context item, the step will not be updated.
  *      if you need to verify that a step is completed by looking at some context values use `assertStepCompleted`
  */
-async function assertStepCompletedAfterCommandExecution() {
+async function assertStepCompletedAfterCommandExecution(): Promise<void> {
   if (isStepCompleted(activeStep, executedCommands)) {
     await updateOnboardingStep();
   }
@@ -236,17 +240,17 @@ async function assertStepCompletedAfterCommandExecution() {
  * been satisfied.
  * Most probably it is only called when the context is updated.
  */
-async function assertStepCompleted() {
+async function assertStepCompleted(): Promise<void> {
   if (isStepCompleted(activeStep, executedCommands, globalContext)) {
     await updateOnboardingStep();
   }
 }
 
-function setExecuting(isExecuting: boolean) {
+function setExecuting(isExecuting: boolean): void {
   executing = isExecuting;
 }
 
-function next() {
+function next(): void {
   const isCompleted = !activeStep.step.completionEvents || activeStep.step.completionEvents.length === 0;
   if (isCompleted) {
     updateOnboardingStep().catch((err: unknown) => console.warn(String(err)));
@@ -256,18 +260,18 @@ function next() {
 /*
  * it update the status of the step in the backend and calculate which is the new active step to display
  */
-async function updateOnboardingStep() {
+async function updateOnboardingStep(): Promise<void> {
   await updateOnboardingStepStatus(activeStep.onboarding, activeStep.step, STATUS_COMPLETED);
   // reset executeCommands list
   executedCommands = [];
   await setActiveStep();
 }
 
-function setDisplayCancelSetup(display: boolean) {
+function setDisplayCancelSetup(display: boolean): void {
   displayCancelSetup = display;
 }
 
-async function cancelSetup() {
+async function cancelSetup(): Promise<void> {
   // TODO: it cancels all running commands
   // it redirect the user to the dashboard
   await cleanSetup(onboardings, globalContext);
@@ -275,19 +279,19 @@ async function cancelSetup() {
   router.goto($lastPage.path);
 }
 
-async function restartSetup() {
+async function restartSetup(): Promise<void> {
   await cleanSetup(onboardings, globalContext);
   await setActiveStep();
 }
 
 // If the user hits escape, prompt them to exit the onboarding
-function handleEscape({ key }: KeyboardEvent) {
+function handleEscape({ key }: KeyboardEvent): void {
   if (key === 'Escape') {
     setDisplayCancelSetup(true);
   }
 }
 
-async function skipCurrentOnboarding() {
+async function skipCurrentOnboarding(): Promise<void> {
   if (activeStep) {
     // Find the current onboarding based on the activeStep's extension
     const currentOnboarding = onboardings.find(o => o.extension === activeStep.onboarding.extension);
@@ -359,7 +363,7 @@ $: globalOnboarding = global;
             {/if}
             <button
               class="flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)] mt-1"
-              on:click={() => setDisplayCancelSetup(true)}>
+              on:click={(): void => setDisplayCancelSetup(true)}>
               <span class="mr-1">Skip this entire setup</span>
               <Fa icon={faForward} size="0.8x" />
             </button>
@@ -388,7 +392,7 @@ $: globalOnboarding = global;
                 {#if onboarding.extension === activeStep?.onboarding?.extension}
                   <button
                     class="mt-1 flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)]"
-                    on:click={() => skipCurrentOnboarding()}>
+                    on:click={skipCurrentOnboarding}>
                     <span class="mr-1">Skip</span>
                     <Fa icon={faForward} size="0.8x" />
                   </button>
@@ -442,7 +446,7 @@ $: globalOnboarding = global;
 
         {#if activeStep.step.state === 'failed'}
           <div class="mx-auto mt-4">
-            <Button on:click={() => restartSetup()}>Try again</Button>
+            <Button on:click={restartSetup}>Try again</Button>
           </div>
         {/if}
 
@@ -475,7 +479,7 @@ $: globalOnboarding = global;
           </div>
         {:else}
           <div class="mt-10 mx-auto text-sm min-h-[120px]" aria-label="Exit Info Message">
-            <Link on:click={() => setDisplayCancelSetup(true)}>Exit</Link> the setup. You can try again later.
+            <Link on:click={(): void => setDisplayCancelSetup(true)}>Exit</Link> the setup. You can try again later.
           </div>
         {/if}
         <div
@@ -488,13 +492,13 @@ $: globalOnboarding = global;
             type="primary"
             aria-label="Next Step"
             disabled={activeStep.step.state === 'failed'}
-            on:click={() => next()}>Next</Button>
+            on:click={next}>Next</Button>
           {#if activeStep.step.state !== 'completed'}
             <Button
               type="secondary"
               aria-label="Cancel Setup"
               class="mr-2 opacity-100"
-              on:click={() => setDisplayCancelSetup(true)}>Cancel</Button>
+              on:click={(): void => setDisplayCancelSetup(true)}>Cancel</Button>
           {/if}
         </div>
       {/if}
@@ -518,8 +522,8 @@ $: globalOnboarding = global;
       </div>
 
       <div class="px-5 py-5 mt-2 flex flex-row w-full justify-end space-x-5">
-        <Button type="secondary" aria-label="Cancel" on:click={() => setDisplayCancelSetup(false)}>Cancel</Button>
-        <Button type="primary" class="mr-2" on:click={() => cancelSetup()}>Ok</Button>
+        <Button type="secondary" aria-label="Cancel" on:click={(): void => setDisplayCancelSetup(false)}>Cancel</Button>
+        <Button type="primary" class="mr-2" on:click={cancelSetup}>Ok</Button>
       </div>
     </div>
   </div>

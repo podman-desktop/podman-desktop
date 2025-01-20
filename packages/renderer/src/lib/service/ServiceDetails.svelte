@@ -48,7 +48,7 @@ onMount(() => {
   });
 });
 
-async function loadDetails() {
+async function loadDetails(): Promise<void> {
   const getKubeService = await window.kubernetesReadNamespacedService(name, namespace);
   if (getKubeService) {
     kubeService = getKubeService;
@@ -62,7 +62,7 @@ async function loadDetails() {
   <DetailsPage title={service.name} subtitle={service.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={ServiceIcon} size={24} status={service.status} />
     <svelte:fragment slot="actions">
-      <ServiceActions service={service} detailed={true} on:update={() => (service = service)} />
+      <ServiceActions service={service} detailed={true} on:update={(): ServiceUI | undefined => (service = service)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={service.status} />

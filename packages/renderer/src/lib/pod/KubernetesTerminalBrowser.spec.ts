@@ -41,7 +41,7 @@ vi.mock('@xterm/addon-serialize');
 
 // dummy event emitter
 const eventEmitter = {
-  receive: () => {},
+  receive: (): void => {},
 };
 
 beforeAll(() => {

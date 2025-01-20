@@ -45,7 +45,7 @@ onMount(() => {
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
-async function deleteSelectedPVCs() {
+async function deleteSelectedPVCs(): Promise<void> {
   const selectedPVCs = pvcs.filter(pvc => pvc.selected);
   if (selectedPVCs.length === 0) {
     return;
@@ -75,36 +75,36 @@ let statusColumn = new TableColumn<PVCUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: PVCColumnStatus,
-  comparator: (a, b) => a.status.localeCompare(b.status),
+  comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
 let nameColumn = new TableColumn<PVCUI>('Name', {
   renderer: PVCColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let storageClassColumn = new TableColumn<PVCUI, string>('Storage', {
-  renderMapping: pvc => pvc.storageClass,
+  renderMapping: (pvc): string => pvc.storageClass,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.storageClass.localeCompare(b.storageClass),
+  comparator: (a, b): number => a.storageClass.localeCompare(b.storageClass),
 });
 
 let accessModesColumn = new TableColumn<PVCUI>('Mode', {
   renderer: PvcColumnMode,
   overflow: true,
-  comparator: (a, b) => a.accessModes.join().localeCompare(b.accessModes.join()),
+  comparator: (a, b): number => a.accessModes.join().localeCompare(b.accessModes.join()),
 });
 
 let sizeColumn = new TableColumn<PVCUI, string>('Size', {
-  renderMapping: pvc => pvc.size,
+  renderMapping: (pvc): string => pvc.size,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.size.localeCompare(b.size),
+  comparator: (a, b): number => a.size.localeCompare(b.size),
 });
 
 let ageColumn = new TableColumn<PVCUI, Date | undefined>('Age', {
-  renderMapping: pvc => pvc.created,
+  renderMapping: (pvc): Date | undefined => pvc.created,
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.created).diff(moment(a.created)),
+  comparator: (a, b): number => moment(b.created).diff(moment(a.created)),
 });
 
 const columns = [
@@ -117,7 +117,7 @@ const columns = [
   new TableColumn<PVCUI>('Actions', { align: 'right', renderer: PVCColumnActions }),
 ];
 
-const row = new TableRow<PVCUI>({ selectable: _pvc => true });
+const row = new TableRow<PVCUI>({ selectable: (_pvc): boolean => true });
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="persistent volume claims">
@@ -128,7 +128,7 @@ const row = new TableRow<PVCUI>({ selectable: _pvc => true });
   <svelte:fragment slot="bottom-additional-actions">
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={() =>
+        on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedPVCs,
             `delete ${selectedItemsNumber} PVC${selectedItemsNumber > 1 ? 's' : ''}`,
@@ -152,7 +152,7 @@ const row = new TableRow<PVCUI>({ selectable: _pvc => true });
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (pvcs = pvcs)}>
+      on:update={(): PVCUI[] => (pvcs = pvcs)}>
     </Table>
 
     {#if $kubernetesCurrentContextPersistentVolumeClaimsFiltered.length === 0}

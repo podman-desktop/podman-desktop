@@ -125,7 +125,7 @@ test('Expect in-section selection styling', async () => {
 test('Expect that having an onClick handler overrides href and works', async () => {
   const tooltip = 'Settings';
   let clicked = false;
-  const onClick = () => {
+  const onClick = (): void => {
     clicked = true;
   };
   renderIt(tooltip, '/test', { url: '/test' }, onClick);

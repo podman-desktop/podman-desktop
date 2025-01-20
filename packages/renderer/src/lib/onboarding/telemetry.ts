@@ -55,13 +55,13 @@ export class OnboardingTelemetrySession {
     this.previousStepId = '';
   }
 
-  restart() {
+  restart(): void {
     this.onboardingStartTime = performance.now();
     this.stepStartTime = performance.now();
     this.previousStepIndex = -1;
   }
 
-  startStep(i: number, id: string, title: string) {
+  startStep(i: number, id: string, title: string): void {
     if (id === this.previousStepId) {
       return;
     }
@@ -73,11 +73,11 @@ export class OnboardingTelemetrySession {
     this.data = telemetryAddStep(this.data, i, id, title);
   }
 
-  setStepError(i: number, id: string, error: Error) {
+  setStepError(i: number, id: string, error: Error): void {
     this.data = telemetrySetStepError(this.data, i, id, error);
   }
 
-  send(extensionName: string, skipped: boolean) {
+  send(extensionName: string, skipped: boolean): void {
     this.savePreviousDuration();
     this.data.extension = extensionName;
     this.data.skipped = skipped;
@@ -87,7 +87,7 @@ export class OnboardingTelemetrySession {
       .catch((err: unknown) => console.error(`Error sending onboarding telemetry`, err));
   }
 
-  private savePreviousDuration() {
+  private savePreviousDuration(): void {
     const endTime = performance.now();
     try {
       const duration = Math.round(endTime - this.stepStartTime);
@@ -141,7 +141,7 @@ function telemetrySetStepError(
   return data;
 }
 
-function telemetryToSend(data: OnboardingTelemetryData) {
+function telemetryToSend(data: OnboardingTelemetryData): OnboardingTelemetryData {
   if (data.skipped) {
     data.skipAtStep = data.steps[data.steps.length - 1].id;
   }

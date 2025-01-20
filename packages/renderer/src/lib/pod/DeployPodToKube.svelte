@@ -106,7 +106,7 @@ onMount(async () => {
   });
 });
 
-async function openOpenshiftConsole() {
+async function openOpenshiftConsole(): Promise<void> {
   // build link to openOpenshiftConsole
   if (createdPod?.metadata?.name) {
     const linkToOpen = `${openshiftConsoleURL}/k8s/ns/${currentNamespace}/pods/${createdPod.metadata.name}`;
@@ -114,7 +114,7 @@ async function openOpenshiftConsole() {
   }
 }
 
-async function updatePod() {
+async function updatePod(): Promise<void> {
   if (!createdPod?.metadata?.name || !createdPod?.metadata?.namespace) {
     return;
   }
@@ -149,11 +149,11 @@ function openPodDetails(): void {
   );
 }
 
-async function openRoute(route: V1Route) {
+async function openRoute(route: V1Route): Promise<void> {
   await window.openExternal(`https://${route.spec.host}`);
 }
 
-async function deployToKube() {
+async function deployToKube(): Promise<void> {
   deployStarted = true;
   deployFinished = false;
   deployError = '';
@@ -387,7 +387,7 @@ $: {
 
 $: bodyPod && updateKubeResult();
 
-function updateKubeResult() {
+function updateKubeResult(): void {
   kubeDetails = jsYaml.dump(bodyPod, { noArrayIndent: true, quotingType: '"', lineWidth: -1 });
 }
 </script>
@@ -442,7 +442,7 @@ function updateKubeResult() {
         title="Use Restricted Security Context"
         required>
         Update Kubernetes manifest to respect the Pod security <Link
-          on:click={() =>
+          on:click={(): Promise<void> =>
             window.openExternal('https://kubernetes.io/docs/concepts/security/pod-security-standards#restricted')}
           >restricted profile</Link
         >.</Checkbox>
@@ -547,7 +547,7 @@ function updateKubeResult() {
     {#if !deployStarted}
       <div class="pt-4">
         <Button
-          on:click={() => deployToKube()}
+          on:click={deployToKube}
           class="w-full"
           aria-label="Deploy"
           icon={faRocket}
@@ -567,7 +567,7 @@ function updateKubeResult() {
                 class="text-sm"
                 aria-label="Open in OpenShift Console"
                 icon={faExternalLink}
-                on:click={async () => await openOpenshiftConsole()}>Open in OpenShift console</Link>
+                on:click={openOpenshiftConsole}>Open in OpenShift console</Link>
             </div>
           {/if}
         </div>
@@ -610,7 +610,7 @@ function updateKubeResult() {
               {#each createdRoutes as createdRoute}
                 <li class="pt-2">
                   Port {createdRoute.spec.port?.targetPort} is reachable with route
-                  <Link on:click={async () => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>
+                  <Link on:click={async (): Promise<void> => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>
                 </li>
               {/each}
             </ul>
@@ -626,9 +626,9 @@ function updateKubeResult() {
 
     {#if deployFinished}
       <div class="pt-4 flex flex-row space-x-2 justify-end">
-        <Button on:click={() => goBackToHistory()} aria-label="Done">Done</Button>
+        <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
         <Button
-          on:click={() => openPodDetails()}
+          on:click={openPodDetails}
           disabled={!createdPod?.metadata?.name || !defaultContextName}
           aria-label="Open Pod">Open Pod</Button>
       </div>

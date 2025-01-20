@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faCircle, faEye, faLock, faSitemap, faTh } from '@fortawesome/free-solid-svg-icons';
+import { faCircle, faEye, faLock, faSitemap, faTh, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
 import Label from '../ui/Label.svelte';
@@ -10,7 +10,7 @@ export let object: PVCUI;
 // Determine the icon and color based on the access mode, with comments explaining each icon choice
 // Many = multiple access points, so should be green
 // Once = exclusive write access, so should be yellow (like a traffic light) similar to the lock icons used which are also yellow
-function getModeAttributes(mode: string) {
+function getModeAttributes(mode: string): { color: string; icon: IconDefinition } {
   switch (mode) {
     case 'ReadOnlyMany':
       // faEye: Symbolizes visibility, suitable for ReadOnlyMany where the volume can be read by many

@@ -12,7 +12,7 @@ interface Props {
   command?: () => void;
 }
 
-let { entry, command = () => router.goto('/preferences/resources') }: Props = $props();
+let { entry, command = (): void => router.goto('/preferences/resources') }: Props = $props();
 
 let tooltipText = $derived.by(() => {
   let tooltip = '';

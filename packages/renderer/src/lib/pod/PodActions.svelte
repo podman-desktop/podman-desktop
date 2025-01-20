@@ -42,7 +42,7 @@ $: openingKubernetesUrls = new Map();
 
 const portRegexp = RegExp(/:(\d+)/);
 
-function extractPort(urlString: string) {
+function extractPort(urlString: string): number | undefined {
   const match = portRegexp.exec(urlString);
   return match ? parseInt(match[1], 10) : undefined;
 }
@@ -98,7 +98,7 @@ function handleError(errorMessage: string): void {
   onUpdate(pod);
 }
 
-async function startPod() {
+async function startPod(): Promise<void> {
   inProgress(true, 'STARTING');
   try {
     await window.startPod(pod.engineId, pod.id);
@@ -109,7 +109,7 @@ async function startPod() {
   }
 }
 
-async function restartPod() {
+async function restartPod(): Promise<void> {
   inProgress(false, 'RESTARTING');
   try {
     if (pod.kind === 'podman') {
@@ -124,7 +124,7 @@ async function restartPod() {
   }
 }
 
-async function stopPod() {
+async function stopPod(): Promise<void> {
   inProgress(false, 'STOPPING');
   try {
     await window.stopPod(pod.engineId, pod.id);
@@ -170,7 +170,7 @@ if (dropdownMenu) {
 {#if pod.kind === 'podman'}
   <ListItemButtonIcon
     title="Start Pod"
-    onClick={() => startPod()}
+    onClick={startPod}
     hidden={pod.status === 'RUNNING' || pod.status === 'STOPPING'}
     detailed={detailed}
     inProgress={pod.actionInProgress && pod.status === 'STARTING'}
@@ -178,7 +178,7 @@ if (dropdownMenu) {
     iconOffset="pl-[0.15rem]" />
   <ListItemButtonIcon
     title="Stop Pod"
-    onClick={() => stopPod()}
+    onClick={stopPod}
     hidden={!(pod.status === 'RUNNING' || pod.status === 'STOPPING')}
     detailed={detailed}
     inProgress={pod.actionInProgress && pod.status === 'STOPPING'}
@@ -186,7 +186,7 @@ if (dropdownMenu) {
 {/if}
 <ListItemButtonIcon
   title="Delete Pod"
-  onClick={() => withConfirmation(deletePod, `delete pod ${pod.name}`)}
+  onClick={(): void => withConfirmation(deletePod, `delete pod ${pod.name}`)}
   icon={faTrash}
   detailed={detailed}
   inProgress={pod.actionInProgress && pod.status === 'DELETING'} />
@@ -197,14 +197,14 @@ if (dropdownMenu) {
     {#if !detailed}
       <ListItemButtonIcon
         title="Generate Kube"
-        onClick={() => openGenerateKube()}
+        onClick={openGenerateKube}
         menu={dropdownMenu}
         detailed={detailed}
         icon={faFileCode} />
     {/if}
     <ListItemButtonIcon
       title="Deploy to Kubernetes"
-      onClick={() => deployToKubernetes()}
+      onClick={deployToKubernetes}
       menu={dropdownMenu}
       detailed={detailed}
       icon={faRocket} />
@@ -219,7 +219,7 @@ if (dropdownMenu) {
     {:else if openingUrls.length === 1}
       <ListItemButtonIcon
         title="Open {extractPort(openingUrls[0])}"
-        onClick={() => window.openExternal(openingUrls[0])}
+        onClick={(): Promise<void> => window.openExternal(openingUrls[0])}
         menu={dropdownMenu}
         enabled={pod.status === 'RUNNING'}
         hidden={dropdownMenu}
@@ -230,7 +230,7 @@ if (dropdownMenu) {
         {#each openingUrls as url}
           <ListItemButtonIcon
             title="Open {extractPort(url)}"
-            onClick={() => window.openExternal(url)}
+            onClick={(): Promsie<void> => window.openExternal(url)}
             menu={!dropdownMenu}
             enabled={pod.status === 'RUNNING'}
             hidden={dropdownMenu}
@@ -242,7 +242,7 @@ if (dropdownMenu) {
   {/if}
   <ListItemButtonIcon
     title="Restart Pod"
-    onClick={() => restartPod()}
+    onClick={restartPod}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowsRotate} />
@@ -258,7 +258,7 @@ if (dropdownMenu) {
     {:else if openingKubernetesUrls.size === 1}
       <ListItemButtonIcon
         title="Open {[...openingKubernetesUrls][0][0]}"
-        onClick={() => window.openExternal([...openingKubernetesUrls][0][1])}
+        onClick={(): Promise<void> => window.openExternal([...openingKubernetesUrls][0][1])}
         menu={dropdownMenu}
         enabled={pod.status === 'RUNNING'}
         hidden={dropdownMenu}
@@ -273,7 +273,7 @@ if (dropdownMenu) {
         {#each Array.from(openingKubernetesUrls) as [routeName, routeHost]}
           <ListItemButtonIcon
             title="Open {routeName}"
-            onClick={() => window.openExternal(routeHost)}
+            onClick={(): Promise<void> => window.openExternal(routeHost)}
             menu={!dropdownMenu}
             enabled={pod.status === 'RUNNING'}
             hidden={dropdownMenu}

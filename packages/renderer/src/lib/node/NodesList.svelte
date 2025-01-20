@@ -42,43 +42,43 @@ let statusColumn = new TableColumn<NodeUI>('Status', {
   align: 'center',
   width: '70px',
   renderer: NodeColumnStatus,
-  comparator: (a, b) => a.status.localeCompare(b.status),
+  comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
 let nameColumn = new TableColumn<NodeUI>('Name', {
   renderer: NodeColumnName,
-  comparator: (a, b) => a.name.localeCompare(b.name),
+  comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
 let rolesColumn = new TableColumn<NodeUI>('Roles', {
   renderer: NodeColumnRoles,
   overflow: true,
-  comparator: (a, b) => a.role.localeCompare(b.role),
+  comparator: (a, b): number => a.role.localeCompare(b.role),
 });
 
 let ageColumn = new TableColumn<NodeUI, Date | undefined>('Age', {
-  renderMapping: node => node.created,
+  renderMapping: (node): Date | undefined => node.created,
   renderer: TableDurationColumn,
-  comparator: (a, b) => moment(b.created).diff(moment(a.created)),
+  comparator: (a, b): number => moment(b.created).diff(moment(a.created)),
 });
 
 let versionColumn = new TableColumn<NodeUI, string>('Version', {
-  renderMapping: node => node.version,
+  renderMapping: (node): string => node.version,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.version.localeCompare(b.version),
+  comparator: (a, b): number => a.version.localeCompare(b.version),
 });
 
 let osImageColumn = new TableColumn<NodeUI, string>('OS', {
   width: '1.5fr',
-  renderMapping: node => node.osImage,
+  renderMapping: (node): string => node.osImage,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.osImage.localeCompare(b.osImage),
+  comparator: (a, b): number => a.osImage.localeCompare(b.osImage),
 });
 
 let kernelVersionColumn = new TableColumn<NodeUI, string>('Kernel', {
-  renderMapping: node => node.kernelVersion,
+  renderMapping: (node): string => node.kernelVersion,
   renderer: TableSimpleColumn,
-  comparator: (a, b) => a.kernelVersion.localeCompare(b.kernelVersion),
+  comparator: (a, b): number => a.kernelVersion.localeCompare(b.kernelVersion),
 });
 
 const columns = [statusColumn, nameColumn, rolesColumn, versionColumn, osImageColumn, kernelVersionColumn, ageColumn];
@@ -105,7 +105,7 @@ const row = new TableRow<NodeUI>({});
       columns={columns}
       row={row}
       defaultSortColumn="Name"
-      on:update={() => (nodes = nodes)}>
+      on:update={(): NodeUI[] => (nodes = nodes)}>
     </Table>
 
     {#if $kubernetesCurrentContextNodesFiltered.length === 0}

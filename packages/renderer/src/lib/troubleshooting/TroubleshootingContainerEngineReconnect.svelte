@@ -6,7 +6,7 @@ let reconnectInProgress = false;
 let reconnectError = '';
 let reconnectResult = '';
 
-async function reconnectContainerProviders() {
+async function reconnectContainerProviders(): Promise<void> {
   const start = performance.now();
   reconnectInProgress = true;
   reconnectError = '';
@@ -29,7 +29,7 @@ async function reconnectContainerProviders() {
     class="my-1"
     bind:inProgress={reconnectInProgress}
     title="Re-establish connection to the container engine sockets"
-    on:click={() => reconnectContainerProviders()}
+    on:click={reconnectContainerProviders}
     icon={faPlug}>
     Reconnect providers
   </Button>

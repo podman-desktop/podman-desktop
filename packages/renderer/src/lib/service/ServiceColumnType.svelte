@@ -1,5 +1,11 @@
 <script lang="ts">
-import { faBalanceScale, faNetworkWired, faPlug, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBalanceScale,
+  faNetworkWired,
+  faPlug,
+  faQuestionCircle,
+  type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 import { Fa } from 'svelte-fa';
 
 import Label from '../ui/Label.svelte';
@@ -8,7 +14,7 @@ import type { ServiceUI } from './ServiceUI';
 export let object: ServiceUI;
 
 // Determine both the icon and color based on the service type
-function getTypeAttributes(type: string) {
+function getTypeAttributes(type: string): { color: string; icon: IconDefinition } {
   switch (type) {
     case 'ClusterIP':
       // faNetworkWired: Represents internal network connections, suitable for ClusterIP

@@ -34,7 +34,7 @@ async function toggleTaskManager(): Promise<void> {
   await window.executeCommand('show-task-manager');
 }
 
-async function cancelTask() {
+async function cancelTask(): Promise<void> {
   if (cancellableToken) {
     await window.cancelToken(cancellableToken);
   }

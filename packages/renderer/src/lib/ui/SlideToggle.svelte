@@ -13,7 +13,7 @@ $: enabled = !readonly && !disabled;
 
 const dispatch = createEventDispatcher();
 
-function onInput() {
+function onInput(): void {
   dispatch('checked', !checked);
 }
 </script>

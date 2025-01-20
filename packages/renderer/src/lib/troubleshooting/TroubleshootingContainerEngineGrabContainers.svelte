@@ -10,7 +10,7 @@ let listContainersResult = '';
 let listInProgress = false;
 let listError = '';
 
-async function grabContainers() {
+async function grabContainers(): Promise<void> {
   const start = performance.now();
   listInProgress = true;
   listError = '';
@@ -31,7 +31,7 @@ async function grabContainers() {
 
 <div class="flex flex-row items-center">
   <div class="w-36">
-    <Button bind:inProgress={listInProgress} class="my-1 w-full" on:click={() => grabContainers()} icon={faSignal}>
+    <Button bind:inProgress={listInProgress} class="my-1 w-full" on:click={grabContainers} icon={faSignal}>
       Check containers
     </Button>
   </div>
