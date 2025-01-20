@@ -55,7 +55,7 @@ test('expect terminal constructor to have been called on mount', async () => {
 test('expect terminal constructor to reflect props', async () => {
   render(TerminalWindow, {
     terminal: writable() as unknown as Terminal,
-    disableStdin: true,
+    disableStdIn: true,
     convertEol: true,
     screenReaderMode: true,
   });
