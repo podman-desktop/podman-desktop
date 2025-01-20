@@ -321,10 +321,13 @@ function checkIfTagExist(image: string, tags: string[]): void {
           <Dropdown
             id="providerChoice"
             name="providerChoice"
-            bind:value={selectedProviderConnection}
+            onChange={(value) => {
+              selectedProviderConnection = providerConnections.find((connection) => connection.endpoint.socketPath === value);
+            }}
+            value={selectedProviderConnection?.endpoint?.socketPath}
             options={providerConnections.map(providerConnection => ({
               label: providerConnection.name,
-              value: providerConnection,
+              value: providerConnection.endpoint.socketPath,
             }))}>
           </Dropdown>
         </div>
