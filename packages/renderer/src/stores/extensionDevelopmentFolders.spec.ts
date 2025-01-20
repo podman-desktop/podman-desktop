@@ -46,8 +46,7 @@ beforeEach(() => {
     return eventEmitter(channel, args);
   });
 
-  const spyAddEventListener = vi.spyOn(window, 'addEventListener');
-  spyAddEventListener.mockImplementation((event, callback) => {
+  vi.spyOn(window, 'addEventListener').mockImplementation((event, callback) => {
     callbacks.set(event, callback as () => void);
   });
 });
