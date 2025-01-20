@@ -17,6 +17,7 @@ import SecretDetails from './lib/configmaps-secrets/SecretDetails.svelte';
 import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
+import CreateContainerFromExisitingImage from './lib/container/CreateContainerFromExistingImage.svelte';
 import ContextKey from './lib/context/ContextKey.svelte';
 import DashboardPage from './lib/dashboard/DashboardPage.svelte';
 import DeploymentDetails from './lib/deployments/DeploymentDetails.svelte';
@@ -145,6 +146,9 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
           <ContainerList searchTerm={meta.query.filter || ''} />
         </Route>
         <Route path="/containers/:id/*" let:meta firstmatch>
+          <Route path="/existing-image-create-container" breadcrumb="Select image" >
+            <CreateContainerFromExisitingImage />
+          </Route>
           <Route path="/export" breadcrumb="Export Container">
             <ContainerExport containerID={meta.params.id} />
           </Route>
