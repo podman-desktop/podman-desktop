@@ -58,6 +58,6 @@ export const extensionDevelopmentFoldersEventStore = new EventStore<ExtensionDev
 );
 const extensionDevelopmentFoldersEventStoreInfo = extensionDevelopmentFoldersEventStore.setup();
 
-export const fetchExtensionDevelopmentFolders = async () => {
+export const fetchExtensionDevelopmentFolders = async (): Promise<void> => {
   await extensionDevelopmentFoldersEventStoreInfo.fetch();
 };
