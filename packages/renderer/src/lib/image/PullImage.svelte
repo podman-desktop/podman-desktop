@@ -261,6 +261,11 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
   isValidName = tags.some(t => t === tag);
 }
+
+function onSelectProvider(value: unknown): void {
+  if (!value || typeof value !== 'string') return;
+  selectedProviderConnection = providerConnections.find(connection => connection.endpoint.socketPath === value);
+}
 </script>
 
 <EngineFormPage
@@ -321,9 +326,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
           <Dropdown
             id="providerChoice"
             name="providerChoice"
-            onChange={(value) => {
-              selectedProviderConnection = providerConnections.find((connection) => connection.endpoint.socketPath === value);
-            }}
+            onChange={onSelectProvider}
             value={selectedProviderConnection?.endpoint?.socketPath}
             options={providerConnections.map(providerConnection => ({
               label: providerConnection.name,
