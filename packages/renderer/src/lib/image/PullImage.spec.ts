@@ -426,4 +426,54 @@ describe('container connections', () => {
       expect(dropdown).toBeEnabled();
     });
   });
+
+  test('default provider when multiple should be the first one', async () => {
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    const { getByRole } = render(PullImage);
+    const dropdown = getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+    // default to the first one
+    expect(dropdown).toHaveTextContent(MULTI_CONNECTIONS.containerConnections[0].name);
+  });
+
+  test('selecting a provider should update the dropdown button', async () => {
+    // set multiple connections
+    const connectionTarget = MULTI_CONNECTIONS.containerConnections[3];
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    // render
+    const { getByRole, getAllByRole } = render(PullImage);
+    const dropdown = getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+
+    // open the dropdown
+    dropdown.click();
+
+    // get the connection we want
+    const connection3 = await vi.waitFor(() => {
+      const buttons = getAllByRole('button');
+      const target = buttons.find(button => button.textContent?.trim() === connectionTarget.name);
+      if (!target) throw new Error('cannot found connection');
+      return target;
+    });
+
+    // select it
+    connection3.click();
+    await vi.waitFor(() => {
+      expect(dropdown).toHaveTextContent(connectionTarget.name);
+    });
+
+    // type into the textbox
+    const textbox = getByRole('textbox', { name: 'Image to Pull' });
+    await userEvent.click(textbox); // focus
+    await userEvent.paste('test1'); // paste
+
+    // get the pull button
+    const pullImagebutton = getByRole('button', { name: 'Pull image' });
+    expect(pullImagebutton).toBeEnabled();
+    pullImagebutton.click();
+
+    expect(window.pullImage).toHaveBeenCalledWith(connectionTarget, 'test1', expect.any(Function));
+  });
 });
