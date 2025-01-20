@@ -16,13 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test } from 'vitest';
 
 import { ContextResourceRegistry } from './context-resource-registry.js';
 
-test('ContextResourceRegistry', () => {
-  const registry = new ContextResourceRegistry<string>();
+let registry: ContextResourceRegistry<string>;
 
+beforeEach(() => {
+  registry = new ContextResourceRegistry<string>();
+});
+
+test('ContextResourceRegistry', () => {
   registry.set('context1', 'resource1', 'value1');
   expect(registry.get('context1', 'resource1')).toEqual('value1');
 
@@ -37,6 +41,24 @@ test('ContextResourceRegistry', () => {
       contextName: 'context1',
       resourceName: 'resource2',
       value: 'value2',
+    },
+  ]);
+});
+
+test('getForResource', () => {
+  registry.set('context1', 'resource1', 'value1');
+  registry.set('context1', 'resource2', 'value2');
+  registry.set('context2', 'resource1', 'value3');
+
+  const result = registry.getForResource('resource1');
+  expect(result).toEqual([
+    {
+      context: 'context1',
+      item: 'value1',
+    },
+    {
+      context: 'context2',
+      item: 'value3',
     },
   ]);
 });

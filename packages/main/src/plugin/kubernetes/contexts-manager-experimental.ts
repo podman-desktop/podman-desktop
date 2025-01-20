@@ -20,6 +20,7 @@ import type { KubeConfig, KubernetesObject, ObjectCache } from '@kubernetes/clie
 
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
+import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 
 import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
@@ -202,6 +203,15 @@ export class ContextsManagerExperimental {
       resourceName: informer.resourceName,
       count: informer.value.list().length,
     }));
+  }
+
+  getResources(resourceName: string): KubernetesContextResources[] {
+    return this.#objectCaches.getForResource(resourceName).map(({ context, item }) => {
+      return {
+        contextName: context,
+        items: item.list(),
+      };
+    });
   }
 
   getContextsGeneralState(): Map<string, ContextGeneralState> {

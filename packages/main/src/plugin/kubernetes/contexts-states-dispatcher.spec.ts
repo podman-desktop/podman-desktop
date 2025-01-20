@@ -20,21 +20,21 @@ import { expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContextHealthState } from './context-health-checker.js';
-import type { ContextResourcePermission } from './context-permissions-checker.js';
+import type { ContextPermissionResult, ContextResourcePermission } from './context-permissions-checker.js';
+import type { DispatcherEvent } from './contexts-dispatcher.js';
 import type { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 
 test('ContextsStatesDispatcher should call updateHealthStates when onContextHealthStateChange event is fired', () => {
-  const onContextHealthStateChangeMock = vi.fn();
-  const onContextPermissionResultMock = vi.fn();
   const manager: ContextsManagerExperimental = {
-    onContextHealthStateChange: onContextHealthStateChangeMock,
-    onContextPermissionResult: onContextPermissionResultMock,
+    onContextHealthStateChange: vi.fn(),
+    onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
+    onResourceUpdated: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -46,7 +46,7 @@ test('ContextsStatesDispatcher should call updateHealthStates when onContextHeal
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  onContextHealthStateChangeMock.mockImplementation(f => f());
+  vi.mocked(manager.onContextHealthStateChange).mockImplementation(f => f({} as ContextHealthState));
   vi.mocked(manager.getHealthCheckersStates).mockReturnValue(new Map<string, ContextHealthState>());
   dispatcher.init();
   expect(updateHealthStatesSpy).toHaveBeenCalled();
@@ -54,15 +54,14 @@ test('ContextsStatesDispatcher should call updateHealthStates when onContextHeal
 });
 
 test('ContextsStatesDispatcher should call updatePermissions when onContextPermissionResult event is fired', () => {
-  const onContextHealthStateChangeMock = vi.fn();
-  const onContextPermissionResultMock = vi.fn();
   const manager: ContextsManagerExperimental = {
-    onContextHealthStateChange: onContextHealthStateChangeMock,
-    onContextPermissionResult: onContextPermissionResultMock,
+    onContextHealthStateChange: vi.fn(),
+    onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
+    onResourceUpdated: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -75,21 +74,21 @@ test('ContextsStatesDispatcher should call updatePermissions when onContextPermi
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  onContextPermissionResultMock.mockImplementation(f => f());
+  vi.mocked(manager.onContextPermissionResult).mockImplementation(f => f({} as ContextPermissionResult));
   dispatcher.init();
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).toHaveBeenCalled();
 });
 
 test('ContextsStatesDispatcher should call updateHealthStates and updatePermissions when onContextDelete event is fired', () => {
-  const onContextDeleteMock = vi.fn();
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),
     onContextPermissionResult: vi.fn(),
-    onContextDelete: onContextDeleteMock,
+    onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
+    onResourceUpdated: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -103,7 +102,7 @@ test('ContextsStatesDispatcher should call updateHealthStates and updatePermissi
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  onContextDeleteMock.mockImplementation(f => f());
+  vi.mocked(manager.onContextDelete).mockImplementation(f => f({} as DispatcherEvent));
   dispatcher.init();
   expect(updateHealthStatesSpy).toHaveBeenCalled();
   expect(updatePermissionsSpy).toHaveBeenCalled();
@@ -117,9 +116,8 @@ test('getContextsHealths should return the values of the map returned by manager
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
   } as unknown as ContextsManagerExperimental;
-  const sendMock = vi.fn();
   const apiSender: ApiSenderType = {
-    send: sendMock,
+    send: vi.fn(),
   } as unknown as ApiSenderType;
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   const context1State = {
@@ -149,14 +147,13 @@ test('updateHealthStates should call apiSender.send with kubernetes-contexts-hea
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
   } as unknown as ContextsManagerExperimental;
-  const sendMock = vi.fn();
   const apiSender: ApiSenderType = {
-    send: sendMock,
+    send: vi.fn(),
   } as unknown as ApiSenderType;
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   vi.spyOn(dispatcher, 'getContextsHealths').mockReturnValue([]);
   dispatcher.updateHealthStates();
-  expect(sendMock).toHaveBeenCalledWith('kubernetes-contexts-healths');
+  expect(apiSender.send).toHaveBeenCalledWith('kubernetes-contexts-healths');
 });
 
 test('getContextsPermissions should return the values as an array', () => {
@@ -259,4 +256,14 @@ test('updateResourcesCount should call apiSender.send with kubernetes-resources-
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   dispatcher.updateResourcesCount();
   expect(vi.mocked(apiSender.send)).toHaveBeenCalledWith('kubernetes-resources-count');
+});
+
+test('updateResource should call apiSender.send with kubernetes-`resource-name`', () => {
+  const manager: ContextsManagerExperimental = {} as ContextsManagerExperimental;
+  const apiSender: ApiSenderType = {
+    send: vi.fn(),
+  } as unknown as ApiSenderType;
+  const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
+  dispatcher.updateResource('resource1');
+  expect(vi.mocked(apiSender.send)).toHaveBeenCalledWith('kubernetes-resource1');
 });

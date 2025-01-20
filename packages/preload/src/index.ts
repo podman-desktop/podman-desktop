@@ -73,6 +73,7 @@ import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states';
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
+import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
@@ -1886,6 +1887,13 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('kubernetesGetResourcesCount', async (): Promise<ResourceCount[]> => {
     return ipcInvoke('kubernetes:getResourcesCount');
   });
+
+  contextBridge.exposeInMainWorld(
+    'kubernetesGetResources',
+    async (resourceName: string): Promise<KubernetesContextResources[]> => {
+      return ipcInvoke('kubernetes:getResources', resourceName);
+    },
+  );
 
   contextBridge.exposeInMainWorld('kubernetesGetClusters', async (): Promise<Cluster[]> => {
     return ipcInvoke('kubernetes-client:getClusters');

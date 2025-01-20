@@ -376,6 +376,29 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
         },
       ]);
     });
+
+    test('getResources', async () => {
+      const listMock = vi.fn();
+      startMock.mockReturnValue({
+        list: listMock,
+        get: vi.fn(),
+      } as ObjectCache<KubernetesObject>);
+      listMock.mockReturnValueOnce([{ metadata: { name: 'obj1' } }]);
+      listMock.mockReturnValueOnce([{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }]);
+      await manager.update(kc);
+      const resources = manager.getResources('resource1');
+      console.log('==> ', resources);
+      expect(resources).toEqual([
+        {
+          contextName: 'context1',
+          items: [{ metadata: { name: 'obj1' } }],
+        },
+        {
+          contextName: 'context2',
+          items: [{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }],
+        },
+      ]);
+    });
   });
 });
 
