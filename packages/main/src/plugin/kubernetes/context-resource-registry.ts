@@ -47,12 +47,12 @@ export class ContextResourceRegistry<T> {
     });
   }
 
-  getForResource(resourceName: string): { context: string; item: T }[] {
-    const result: { context: string; item: T }[] = [];
-    for (const [context, contextResources] of this.#registry.entries()) {
-      const item = contextResources.get(resourceName);
-      if (item) {
-        result.push({ context, item });
+  getForResource(resourceName: string): Details<T>[] {
+    const result: Details<T>[] = [];
+    for (const [contextName, contextResources] of this.#registry.entries()) {
+      const value = contextResources.get(resourceName);
+      if (value) {
+        result.push({ contextName, value, resourceName });
       }
     }
     return result;

@@ -53,12 +53,14 @@ test('getForResource', () => {
   const result = registry.getForResource('resource1');
   expect(result).toEqual([
     {
-      context: 'context1',
-      item: 'value1',
+      contextName: 'context1',
+      resourceName: 'resource1',
+      value: 'value1',
     },
     {
-      context: 'context2',
-      item: 'value3',
+      contextName: 'context2',
+      resourceName: 'resource1',
+      value: 'value3',
     },
   ]);
 });

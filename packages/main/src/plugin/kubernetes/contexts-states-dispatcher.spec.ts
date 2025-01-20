@@ -265,5 +265,5 @@ test('updateResource should call apiSender.send with kubernetes-`resource-name`'
   } as unknown as ApiSenderType;
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   dispatcher.updateResource('resource1');
-  expect(vi.mocked(apiSender.send)).toHaveBeenCalledWith('kubernetes-resource1');
+  expect(vi.mocked(apiSender.send)).toHaveBeenCalledWith('kubernetes-update-resource1');
 });

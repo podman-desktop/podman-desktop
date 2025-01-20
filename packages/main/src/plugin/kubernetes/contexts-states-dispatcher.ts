@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObject } from '@kubernetes/client-node';
-
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
+import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContextHealthState } from './context-health-checker.js';
@@ -85,10 +84,10 @@ export class ContextsStatesDispatcher {
   }
 
   updateResource(resourceName: string): void {
-    this.apiSender.send(`kubernetes-${resourceName}`);
+    this.apiSender.send(`kubernetes-update-${resourceName}`);
   }
 
-  getResources(resourceName: string): { contextName: string; items: readonly KubernetesObject[] }[] {
+  getResources(resourceName: string): KubernetesContextResources[] {
     return this.manager.getResources(resourceName);
   }
 }
