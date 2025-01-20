@@ -1,8 +1,9 @@
 <script lang="ts">
-import { faArrowCircleDown, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
-import { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
+import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { Button, Checkbox, Dropdown, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
+import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { lastPage } from '/@/stores/breadcrumb';
@@ -13,11 +14,18 @@ import type { PullEvent } from '/@api/pull-event';
 
 import { providerInfos } from '../../stores/providers';
 import { ImageUtils } from '../image/image-utils';
+import RecommendedRegistry from '../image/RecommendedRegistry.svelte';
 import ImageIcon from '../images/ImageIcon.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
+
+interface GroupItem {
+  values: string[];
+  group?: string;
+  sorted?: boolean;
+}
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
@@ -28,8 +36,12 @@ let logsPull: Terminal;
 let pullError = '';
 let pullInProgress = false;
 let pullFinished = false;
+let shortnameImages: string[] = [];
+let podmanFQN = '';
+let usePodmanFQN = false;
 let isValidName = true;
 let matchingLocalImages: string[] = [];
+let values: GroupItem[] = [];
 
 let imageToPull: string = '';
 
@@ -42,6 +54,28 @@ let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
 
 const lineNumberPerId = new Map<string, number>();
 let lineIndex = 0;
+
+async function resolveShortname(): Promise<void> {
+  if (!selectedProviderConnection || selectedProviderConnection.type !== 'podman') {
+    return;
+  }
+  if (imageToPull && !imageToPull.includes('/')) {
+    shortnameImages = (await window.resolveShortnameImage(selectedProviderConnection, imageToPull)) ?? [];
+    // not a shortname
+  } else {
+    podmanFQN = '';
+    shortnameImages = [];
+    usePodmanFQN = false;
+  }
+  // checks if there is no FQN that is from dokcer hub
+  if (!shortnameImages.find(name => name.includes('docker.io'))) {
+    podmanFQN = shortnameImages[0];
+  } else {
+    podmanFQN = '';
+    shortnameImages = [];
+    usePodmanFQN = false;
+  }
+}
 
 function callback(event: PullEvent) {
   let lineIndexToWrite;
@@ -105,14 +139,25 @@ async function pullImage() {
 
   pullInProgress = true;
   try {
-    await window.pullImage(selectedProviderConnection, imageToPull.trim(), callback);
+    if (podmanFQN) {
+      usePodmanFQN
+        ? await window.pullImage(selectedProviderConnection, podmanFQN.trim(), callback)
+        : await window.pullImage(selectedProviderConnection, `docker.io/${imageToPull.trim()}`, callback);
+    } else {
+      await window.pullImage(selectedProviderConnection, imageToPull.trim(), callback);
+    }
     pullInProgress = false;
     pullFinished = true;
-  } catch (error: any) {
-    const errorMessage = error.message ? error.message : error;
+  } catch (error: unknown) {
+    const errorMessage =
+      error && typeof error === 'object' && 'message' in error && error.message ? error.message : error;
     pullError = `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
     pullInProgress = false;
   }
+}
+
+async function gotoManageRegistries() {
+  router.goto('/preferences/registries');
 }
 
 onMount(() => {
@@ -124,7 +169,7 @@ onMount(() => {
 let imageNameInvalid: string | undefined = undefined;
 let imageNameIsInvalid = imageToPull === undefined || imageToPull.trim() === '';
 function validateImageName(image: string): void {
-  if (imageToPull && (image === undefined || image.trim() === '')) {
+  if ((imageToPull === '' && image.trim() === '') || (imageToPull && (image === undefined || image.trim() === ''))) {
     imageNameIsInvalid = true;
     imageNameInvalid = 'Please enter a value';
   } else {
@@ -227,7 +272,6 @@ async function buildContainerFromImage(): Promise<void> {
   const localImages = (await window.listImages()).filter(
     image => (image.RepoTags?.filter(repoTag => repoTag.includes(imageToPull)) ?? []).length > 0,
   );
-  console.log(localImages);
   if (localImages.length > 0) {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
     if (chosenImage.length > 0) {
@@ -236,27 +280,77 @@ async function buildContainerFromImage(): Promise<void> {
     }
   }
 }
+
+async function searchFunction(value: string): Promise<void> {
+  const localImagesValues = await searchLocalImages(value);
+  const remoteImagesValues = (await searchImages(value)).toSorted((a: string, b: string) => {
+    const dockerIoValue = `docker.io/${value}`;
+    const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
+    const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+    if (aStartsWithValue === bStartsWithValue) {
+      return a.localeCompare(b);
+    } else if (aStartsWithValue && !bStartsWithValue) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+
+  values = [
+    { values: localImagesValues, group: 'Local Images' },
+    { values: remoteImagesValues, group: 'Registry Images', sorted: true },
+  ];
+}
+
+async function onEnterOperation(): Promise<void> {
+  if (imageToPull === '') {
+    return;
+  }
+  if (!matchingLocalImages.includes(imageToPull)) {
+    await pullImage();
+  } else {
+    await buildContainerFromImage();
+  }
+}
 </script>
 
 <EngineFormPage title="Select an image">
   <svelte:fragment slot="icon">
     <ImageIcon />
   </svelte:fragment>
+  <svelte:fragment slot="actions">
+    <Button on:click={() => gotoManageRegistries()} icon={faCog}>Manage registries</Button>
+  </svelte:fragment>
   <div slot="content" class="space-y-2 flex flex-col">
-    <Typeahead
-      id="imageName"
-      name="imageName"
-      placeholder="Select am exisiting image"
-      searchFunctions={[searchLocalImages, searchImages]}
-      headings={['Local Images', 'Registry Images']}
-      onChange={async (s: string) => {
-        validateImageName(s);
-        await searchLatestTag();
-      }}
-      disabled={pullFinished || pullInProgress}
-      error={!isValidName}
-      required
-      initialFocus />
+    <div class="flex flex-col">
+      <Typeahead
+        id="imageName"
+        name="imageName"
+        placeholder="Select an exisiting image"
+        onInputChange={searchFunction}
+        groupValues={values}
+        onChange={async (s: string) => {
+          validateImageName(s);
+          await resolveShortname();
+          await searchLatestTag();
+        }}
+        onEnter={onEnterOperation}
+        disabled={pullFinished || pullInProgress}
+        error={!isValidName}
+        required
+        initialFocus />
+      {#if selectedProviderConnection?.type === 'podman' && podmanFQN && !matchingLocalImages.includes(podmanFQN)}
+        <div class="absolute mt-2 ml-[-18px] self-start">
+          <Tooltip tip="Shortname images will be pulled from Docker Hub" topRight>
+            <Fa id="shortname-warning" size="1.1x" class="text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
+          </Tooltip>
+        </div>
+      {/if}
+    </div>
+    {#if selectedProviderConnection?.type === 'podman' && podmanFQN  && !matchingLocalImages.includes(podmanFQN)}
+        <Checkbox class="pt-2" bind:checked={usePodmanFQN} title="Use Podman FQN" disabled={podmanFQN === ''}
+          >Use Podman FQN for shortname image</Checkbox>
+      {/if}
     {#if imageNameInvalid}
       <ErrorMessage error={imageNameInvalid} />
     {/if}
@@ -294,17 +388,18 @@ async function buildContainerFromImage(): Promise<void> {
               bind:disabled={imageNameIsInvalid}
               on:click={() => pullImage()}
               bind:inProgress={pullInProgress}>
-              Pull image {console.log('pull image ' + imageToPull)}
+              Pull Image {console.log('pull image ' + imageToPull)}
             </Button>
           {:else}
-            <Button class="w-full" on:click={() => buildContainerFromImage()}>Select image</Button>
+            <Button class="w-full" on:click={() => buildContainerFromImage()} bind:disabled={imageNameIsInvalid}>Select Image</Button>
           {/if}
         {:else}
-          <Button icon={faCircleCheck} class="w-full" on:click={() => buildContainerFromImage()}>Select image {console.log('select image ' + imageToPull)}</Button>
+          <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={() => buildContainerFromImage()}>Select Image</Button>
         {/if}
         {#if pullError}
           <ErrorMessage error={pullError} />
         {/if}
+        <RecommendedRegistry bind:imageError={pullError} imageName={imageToPull} />
       </div>
     </footer>
     <TerminalWindow bind:terminal={logsPull} />
