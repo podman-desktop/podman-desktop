@@ -18,6 +18,9 @@
 
 import type { Locator } from '@playwright/test';
 
+import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
+import { ExtensionsPage } from '/@/model/pages/extensions-page';
+
 import type { StatusBar } from '../../model/workbench/status-bar';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
@@ -67,6 +70,24 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     await playExpect(sBar.updateButtonTitle).toHaveText(await sBar.versionButton.innerText());
     await sBar.updateButtonTitle.click();
     await handleConfirmationDialog(page, 'Update Available now', false, '', 'Cancel');
+  });
+
+  test('Install Minikube extension through Extensions Catalog', async ({ page, navigationBar }) => {
+    test.setTimeout(90000);
+    await navigationBar.openExtensions();
+    const extensionType = 'minikube';
+
+    const extensionsPage = new ExtensionsPage(page);
+
+    await extensionsPage.openCatalogTab();
+    const extensionCatalog = new ExtensionCatalogCardPage(page, extensionType);
+    await playExpect(extensionCatalog.parent).toBeVisible();
+
+    await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeFalsy();
+    await extensionCatalog.install(60000);
+
+    await extensionsPage.openInstalledTab();
+    await playExpect.poll(async () => await extensionsPage.extensionIsInstalled('minikube extension')).toBeTruthy();
   });
 
   test('Update can be initiated', async () => {
