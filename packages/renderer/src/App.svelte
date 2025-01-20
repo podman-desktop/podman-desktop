@@ -151,7 +151,6 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
         </Route>
         <Route path="/containers/:id/*" let:meta firstmatch>
           <Route path="/create-container-existing-image" breadcrumb="Select image" >
-            {console.log('create container')}
             <CreateContainerFromExisitingImage />
           </Route>
           <Route path="/export" breadcrumb="Export Container">

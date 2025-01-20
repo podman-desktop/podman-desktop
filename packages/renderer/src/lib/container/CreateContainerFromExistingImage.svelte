@@ -388,7 +388,7 @@ async function onEnterOperation(): Promise<void> {
               bind:disabled={imageNameIsInvalid}
               on:click={() => pullImage()}
               bind:inProgress={pullInProgress}>
-              Pull Image {console.log('pull image ' + imageToPull)}
+              Pull Image
             </Button>
           {:else}
             <Button class="w-full" on:click={() => buildContainerFromImage()} bind:disabled={imageNameIsInvalid}>Select Image</Button>
