@@ -23,7 +23,8 @@ import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { IDisposable } from '../types/disposable.js';
-import type { ActivatedExtension, AnalyzedExtension } from './extension-loader.js';
+import type { AnalyzedExtension } from './extension-analyzer.js';
+import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';
 
 // In charge of watching the extension and reloading it when it changes

@@ -22,7 +22,7 @@ import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
 import type { ApiSenderType } from '../api.js';
-import type { ExtensionLoader } from './extension-loader.js';
+import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 
 // Handle the registration / track of all development folders used when developing extensions
 export class ExtensionDevelopmentFolders {
@@ -34,7 +34,7 @@ export class ExtensionDevelopmentFolders {
 
   #developmentFolders: string[] = [];
 
-  #extensionLoader: ExtensionLoader | undefined;
+  #extensionAnalyzer: ExtensionAnalyzer;
 
   // event that will be fired
   #onDidUpdateDevelopmentFolders: Emitter<ExtensionDevelopmentFolderInfo[]> = new Emitter<
@@ -42,13 +42,18 @@ export class ExtensionDevelopmentFolders {
   >();
   onDidUpdateDevelopmentFolders = this.#onDidUpdateDevelopmentFolders.event;
 
-  constructor(configurationRegistry: ConfigurationRegistry, apiSender: ApiSenderType) {
-    this.#configurationRegistry = configurationRegistry;
-    this.#apiSender = apiSender;
-  }
+  // event that will be fired when an extension needs to be loaded
+  #onRequestLoadExension: Emitter<AnalyzedExtension> = new Emitter<AnalyzedExtension>();
+  onNeedToLoadExension = this.#onRequestLoadExension.event;
 
-  setExtensionLoader(extensionLoader: ExtensionLoader): void {
-    this.#extensionLoader = extensionLoader;
+  constructor(
+    configurationRegistry: ConfigurationRegistry,
+    extensionAnalyzer: ExtensionAnalyzer,
+    apiSender: ApiSenderType,
+  ) {
+    this.#configurationRegistry = configurationRegistry;
+    this.#extensionAnalyzer = extensionAnalyzer;
+    this.#apiSender = apiSender;
   }
 
   protected refreshFolders(): void {
@@ -107,18 +112,13 @@ export class ExtensionDevelopmentFolders {
   }
 
   async addDevelopmentFolder(path: string): Promise<void> {
-    // check we have extension loader
-    if (!this.#extensionLoader) {
-      throw new Error('No extension loader available');
-    }
-
     // check the path is not already in the list
     if (this.#developmentFolders.includes(path)) {
       throw new Error(`Path ${path} already exist in the list`);
     }
 
     // before adding the path, check it's a valid extension path
-    const analyzedExtension = await this.#extensionLoader.analyzeExtension(path, false);
+    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension(path, false);
     // if there is an error, abort
     if (analyzedExtension.error) {
       throw new Error(analyzedExtension.error);
@@ -130,8 +130,8 @@ export class ExtensionDevelopmentFolders {
     await this.saveToConfiguration();
     this.#onDidUpdateDevelopmentFolders.fire(this.getDevelopmentFolders());
 
-    // start the extension
-    await this.#extensionLoader.loadExtension(analyzedExtension);
+    // ask to load the extension
+    this.#onRequestLoadExension.fire(analyzedExtension);
   }
 
   async removeDevelopmentFolder(path: string): Promise<void> {

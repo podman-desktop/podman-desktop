@@ -18,7 +18,7 @@
 
 import { join } from 'node:path';
 
-import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { FontDefinition } from '/@api/font-info.js';
 import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
 

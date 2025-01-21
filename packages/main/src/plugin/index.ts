@@ -150,6 +150,7 @@ import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
+import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
@@ -669,8 +670,14 @@ export class PluginSystem {
       onboardingRegistry,
     );
 
+    const extensionAnalyzer = new ExtensionAnalyzer();
+
     const extensionWatcher = new ExtensionWatcher(fileSystemMonitoring);
-    const extensionDevelopmentFolders = new ExtensionDevelopmentFolders(configurationRegistry, apiSender);
+    const extensionDevelopmentFolders = new ExtensionDevelopmentFolders(
+      configurationRegistry,
+      extensionAnalyzer,
+      apiSender,
+    );
     extensionDevelopmentFolders.init();
 
     this.extensionLoader = new ExtensionLoader(
@@ -711,9 +718,9 @@ export class PluginSystem {
       certificates,
       extensionWatcher,
       extensionDevelopmentFolders,
+      extensionAnalyzer,
     );
     await this.extensionLoader.init();
-    extensionDevelopmentFolders.setExtensionLoader(this.extensionLoader);
 
     const feedback = new FeedbackHandler(this.extensionLoader);
 

@@ -24,7 +24,7 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
 import type { ConfigurationRegistry, IConfigurationChangeEvent } from '/@/plugin/configuration-registry.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
-import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import type { ColorDefinition } from '/@api/color-info.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';

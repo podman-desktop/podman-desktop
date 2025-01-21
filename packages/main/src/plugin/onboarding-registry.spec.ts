@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
-import type { AnalyzedExtension } from '/@/plugin/extension/extension-loader.js';
+import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { OnboardingState } from '/@api/onboarding.js';
 
 import type { ApiSenderType } from './api.js';

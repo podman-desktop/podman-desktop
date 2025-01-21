@@ -21,7 +21,8 @@ import type { FileMatcher } from 'get-tsconfig';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { ActivatedExtension, AnalyzedExtension } from './extension-loader.js';
+import type { AnalyzedExtension } from './extension-analyzer.js';
+import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionWatcher } from './extension-watcher.js';
 
 vi.mock('get-tsconfig');

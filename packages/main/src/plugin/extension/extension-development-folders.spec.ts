@@ -22,8 +22,8 @@ import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-developm
 
 import type { ApiSenderType } from '../api.js';
 import type { ConfigurationRegistry } from '../configuration-registry.js';
+import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
-import type { AnalyzedExtension, ExtensionLoader } from './extension-loader.js';
 
 const configurationRegistry = {
   registerConfigurations: vi.fn(),
@@ -36,10 +36,9 @@ const apiSender = {
   send: vi.fn(),
 } as unknown as ApiSenderType;
 
-const extensionLoader = {
+const extensionAnalyzer = {
   analyzeExtension: vi.fn(),
-  loadExtension: vi.fn(),
-} as unknown as ExtensionLoader;
+} as unknown as ExtensionAnalyzer;
 
 class TestExtensionDevelopmentFolders extends ExtensionDevelopmentFolders {
   override refreshFolders(): void {
@@ -56,7 +55,11 @@ beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();
 
-  extensionDevelopmentFolders = new TestExtensionDevelopmentFolders(configurationRegistry, apiSender);
+  extensionDevelopmentFolders = new TestExtensionDevelopmentFolders(
+    configurationRegistry,
+    extensionAnalyzer,
+    apiSender,
+  );
 });
 
 test('init', async () => {
@@ -213,20 +216,11 @@ test('removeDevelopmentFolder', async () => {
 });
 
 describe('addDevelopmentFolder', () => {
-  test('no extension loader', async () => {
-    await expect(extensionDevelopmentFolders.addDevelopmentFolder('foo')).rejects.toThrow(
-      'No extension loader available',
-    );
-  });
-
   test('check path already exists', async () => {
     // mock config with 2 values
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
       get: vi.fn(() => ['foo', 'bar']),
     } as unknown as Configuration);
-
-    // set loader
-    extensionDevelopmentFolders.setExtensionLoader(extensionLoader);
 
     // init the values
     extensionDevelopmentFolders.init();
@@ -237,22 +231,16 @@ describe('addDevelopmentFolder', () => {
   });
 
   test('check error analyzing the extension', async () => {
-    vi.mocked(extensionLoader.analyzeExtension).mockResolvedValue({
+    vi.mocked(extensionAnalyzer.analyzeExtension).mockResolvedValue({
       error: 'foo analyze extension',
     } as AnalyzedExtension);
-
-    // set loader
-    extensionDevelopmentFolders.setExtensionLoader(extensionLoader);
 
     await expect(extensionDevelopmentFolders.addDevelopmentFolder('foo')).rejects.toThrow('foo analyze extension');
   });
 
   test('check working extension', async () => {
     const analyzedExtension = { path: 'foo' } as AnalyzedExtension;
-    vi.mocked(extensionLoader.analyzeExtension).mockResolvedValue(analyzedExtension);
-
-    // set loader
-    extensionDevelopmentFolders.setExtensionLoader(extensionLoader);
+    vi.mocked(extensionAnalyzer.analyzeExtension).mockResolvedValue(analyzedExtension);
 
     // mock saveToConfiguration method
     const saveToConfigurationSpy = vi.spyOn(extensionDevelopmentFolders, 'saveToConfiguration');
@@ -260,6 +248,9 @@ describe('addDevelopmentFolder', () => {
 
     const callbackOnDidUpdateDevelopmentFolders = vi.fn();
     extensionDevelopmentFolders.onDidUpdateDevelopmentFolders(callbackOnDidUpdateDevelopmentFolders);
+
+    const callbackOnNeedToLoadExension = vi.fn();
+    extensionDevelopmentFolders.onNeedToLoadExension(callbackOnNeedToLoadExension);
 
     await extensionDevelopmentFolders.addDevelopmentFolder('foo');
 
@@ -269,7 +260,7 @@ describe('addDevelopmentFolder', () => {
     // expect callback to be called with foo
     expect(callbackOnDidUpdateDevelopmentFolders).toBeCalledWith([{ path: 'foo' }]);
 
-    // expect to have called the loadExtension
-    expect(extensionLoader.loadExtension).toBeCalledWith(analyzedExtension);
+    // expect to have called the onNeedToLoadExension
+    expect(callbackOnNeedToLoadExension).toBeCalledWith(analyzedExtension);
   });
 });

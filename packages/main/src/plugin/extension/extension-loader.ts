@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { readFile, realpath } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
@@ -80,47 +79,14 @@ import type { ProgressImpl } from '../tasks/progress-impl.js';
 import { ProgressLocation } from '../tasks/progress-impl.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import type { TrayMenuRegistry } from '../tray-menu-registry.js';
-import type { IDisposable } from '../types/disposable.js';
 import { Disposable } from '../types/disposable.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import type { Exec } from '../util/exec.js';
 import type { ViewRegistry } from '../view-registry.js';
+import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import type { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
-
-/**
- * Handle the loading of an extension
- */
-
-export interface AnalyzedExtension {
-  id: string;
-  name: string;
-  // root folder (where is package.json)
-  path: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  manifest: any;
-  // main entry
-  mainPath?: string;
-  api: typeof containerDesktopAPI;
-  removable: boolean;
-
-  readme: string;
-
-  update?: {
-    version: string;
-    ociUri: string;
-  };
-
-  missingDependencies?: string[];
-  circularDependencies?: string[];
-
-  error?: string;
-
-  readonly subscriptions: { dispose(): unknown }[];
-
-  dispose(): void;
-}
 
 export interface ActivatedExtension {
   id: string;
@@ -138,11 +104,18 @@ export interface RequireCacheDict {
   [key: string]: NodeModule | undefined;
 }
 
+export interface AnalyzedExtensionWithApi extends AnalyzedExtension {
+  api: typeof containerDesktopAPI;
+}
+
+/**
+ * Handle the loading of an extension
+ */
 export class ExtensionLoader {
   private moduleLoader: ModuleLoader;
 
   protected activatedExtensions = new Map<string, ActivatedExtension>();
-  protected analyzedExtensions = new Map<string, AnalyzedExtension>();
+  protected analyzedExtensions = new Map<string, AnalyzedExtensionWithApi>();
   private reloadInProgressExtensions = new Map<string, boolean>();
   protected extensionState = new Map<string, string>();
   protected extensionStateErrors = new Map<string, unknown>();
@@ -197,11 +170,13 @@ export class ExtensionLoader {
     private certificates: Certificates,
     private extensionWatcher: ExtensionWatcher,
     private extensionDevelopmentFolder: ExtensionDevelopmentFolders,
+    private extensionAnalyzer: ExtensionAnalyzer,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
     this.extensionsStorageDirectory = directories.getExtensionsStorageDirectory();
     this.moduleLoader = new ModuleLoader(require('node:module'), this.analyzedExtensions);
+    this.extensionDevelopmentFolder.onNeedToLoadExension(extension => this.loadExtension(extension));
   }
 
   mapError(err: unknown): ExtensionError | undefined {
@@ -477,64 +452,6 @@ export class ExtensionLoader {
     }
   }
 
-  async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtension> {
-    const resolvedExtensionPath = await realpath(extensionPath);
-    // do nothing if there is no package.json file
-    let error = undefined;
-    if (!fs.existsSync(path.resolve(resolvedExtensionPath, 'package.json'))) {
-      error = `Ignoring extension ${resolvedExtensionPath} without package.json file`;
-      console.warn(error);
-      const analyzedExtension: AnalyzedExtension = {
-        id: '<unknown>',
-        name: '<unknown>',
-        path: resolvedExtensionPath,
-        manifest: undefined,
-        readme: '',
-        api: <typeof containerDesktopAPI>{},
-        removable,
-        subscriptions: [],
-        dispose(): void {},
-        error,
-      };
-      return analyzedExtension;
-    }
-
-    // log error if the manifest is missing required entries
-    const manifest = await this.loadManifest(resolvedExtensionPath);
-    if (!manifest.name || !manifest.displayName || !manifest.version || !manifest.publisher || !manifest.description) {
-      error = `Extension ${resolvedExtensionPath} missing required manifest entry in package.json (name, displayName, version, publisher, description)`;
-      console.warn(error);
-    }
-
-    // create api object
-    const disposables: Disposable[] = [];
-    const api = this.createApi(resolvedExtensionPath, manifest, disposables);
-
-    // is there a README.md file in the extension folder ?
-    let readme = '';
-    if (fs.existsSync(path.resolve(resolvedExtensionPath, 'README.md'))) {
-      readme = await readFile(path.resolve(resolvedExtensionPath, 'README.md'), 'utf8');
-    }
-
-    const analyzedExtension: AnalyzedExtension = {
-      id: `${manifest.publisher}.${manifest.name}`,
-      name: manifest.name,
-      manifest,
-      path: resolvedExtensionPath,
-      mainPath: manifest.main ? path.resolve(resolvedExtensionPath, manifest.main) : undefined,
-      readme,
-      api,
-      removable,
-      subscriptions: disposables,
-      dispose(): void {
-        disposables.forEach(disposable => disposable.dispose());
-      },
-      error,
-    };
-
-    return analyzedExtension;
-  }
-
   // check if all dependencies are available
   // if not, set the missingDependencies property
   searchForMissingDependencies(analyzedExtensions: AnalyzedExtension[]): void {
@@ -786,7 +703,12 @@ export class ExtensionLoader {
     }
 
     extension.subscriptions.push(this.notificationRegistry.registerExtension(extension.id));
-    this.analyzedExtensions.set(extension.id, extension);
+
+    if (!extension.api) {
+      extension.api = this.createApi(extension);
+    }
+    const extensionWithApi = extension as AnalyzedExtensionWithApi;
+    this.analyzedExtensions.set(extension.id, extensionWithApi);
     this.extensionState.delete(extension.id);
     this.extensionStateErrors.delete(extension.id);
 
@@ -830,8 +752,22 @@ export class ExtensionLoader {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createApi(extensionPath: string, extManifest: any, disposables: IDisposable[]): typeof containerDesktopAPI {
+  async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtensionWithApi> {
+    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable);
+
+    const api = this.createApi(analyzedExtension);
+
+    return {
+      ...analyzedExtension,
+      api,
+    };
+  }
+
+  createApi(analyzedExtension: AnalyzedExtension): typeof containerDesktopAPI {
+    const extensionPath = analyzedExtension.path;
+    const extManifest = analyzedExtension.manifest;
+    const disposables = analyzedExtension.subscriptions;
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const instance = this;
     const extensionInfo = {
@@ -1592,20 +1528,6 @@ export class ExtensionLoader {
     }
 
     return undefined;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async loadManifest(extensionPath: string): Promise<any> {
-    const manifestPath = path.join(extensionPath, 'package.json');
-    return new Promise((resolve, reject) => {
-      fs.readFile(manifestPath, 'utf8', (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(JSON.parse(data));
-        }
-      });
-    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
