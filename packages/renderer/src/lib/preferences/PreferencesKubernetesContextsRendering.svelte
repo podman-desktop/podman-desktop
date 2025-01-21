@@ -20,8 +20,8 @@ interface KubeContextWithStates extends KubeContext {
   isReachable: boolean;
   isKnown: boolean;
   isBeingChecked: boolean;
-  podsCount: number | undefined;
-  deploymentsCount: number | undefined;
+  podsCount?: number;
+  deploymentsCount?: number;
 }
 
 const currentContextName = $derived($kubernetesContexts.find(c => c.currentContext)?.name);
