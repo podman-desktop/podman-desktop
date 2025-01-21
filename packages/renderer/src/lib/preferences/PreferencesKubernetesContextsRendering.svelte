@@ -6,7 +6,9 @@ import { router } from 'tinro';
 
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
 import { kubernetesContextsCheckingStateDelayed, kubernetesContextsState } from '/@/stores/kubernetes-contexts-state';
+import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
+import type { SelectedResourceName } from '/@api/kubernetes-contexts-states';
 
 import { kubernetesContexts } from '../../stores/kubernetes-contexts';
 import { clearKubeUIContextErrors, setKubeUIContextError } from '../kube/KubeContextUI';
@@ -18,6 +20,8 @@ interface KubeContextWithStates extends KubeContext {
   isReachable: boolean;
   isKnown: boolean;
   isBeingChecked: boolean;
+  podsCount: number | undefined;
+  deploymentsCount: number | undefined;
 }
 
 const currentContextName = $derived($kubernetesContexts.find(c => c.currentContext)?.name);
@@ -31,6 +35,8 @@ const kubernetesContextsWithStates: KubeContextWithStates[] = $derived(
     isReachable: isContextReachable(kubeContext.name, experimentalStates),
     isKnown: isContextKnown(kubeContext.name, experimentalStates),
     isBeingChecked: isContextBeingChecked(kubeContext.name, experimentalStates),
+    podsCount: getResourcesCount(kubeContext.name, 'pods', experimentalStates),
+    deploymentsCount: getResourcesCount(kubeContext.name, 'deployments', experimentalStates),
   })),
 );
 
@@ -109,6 +115,19 @@ function isContextBeingChecked(contextName: string, experimental: boolean): bool
     );
   }
   return !!$kubernetesContextsCheckingStateDelayed?.get(contextName);
+}
+
+function getResourcesCount(
+  contextName: string,
+  resourceName: SelectedResourceName,
+  experimental: boolean,
+): number | undefined {
+  if (experimental) {
+    return $kubernetesResourcesCount.find(
+      resourcesCount => resourcesCount.contextName === contextName && resourcesCount.resourceName === resourceName,
+    )?.count;
+  }
+  return $kubernetesContextsState.get(contextName)?.resources[resourceName];
 }
 
 async function connect(contextName: string): Promise<void> {
@@ -197,7 +216,7 @@ async function connect(contextName: string): Promise<void> {
                   <div class="text-center">
                     <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]">PODS</div>
                     <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" aria-label="Context Pods Count">
-                      {$kubernetesContextsState.get(context.name)?.resources.pods}
+                      {context.podsCount}
                     </div>
                   </div>
                   <div class="text-center">
@@ -205,7 +224,7 @@ async function connect(contextName: string): Promise<void> {
                     <div
                       class="text-[16px] text-[var(--pd-invert-content-card-text)]"
                       aria-label="Context Deployments Count">
-                      {$kubernetesContextsState.get(context.name)?.resources.deployments}
+                      {context.deploymentsCount}
                     </div>
                   </div>
                 </div>

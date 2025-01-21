@@ -25,6 +25,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubernetesContextsState from '/@/stores/kubernetes-contexts-state';
+import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
@@ -171,7 +172,7 @@ describe.each([
     name: 'experimental states',
     implemented: {
       health: true,
-      resourcesCount: false,
+      resourcesCount: true,
     },
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
@@ -181,6 +182,18 @@ describe.each([
           kubernetesRefreshContextState: vi.fn(),
         },
       });
+      kubernetesResourcesCount.set([
+        {
+          contextName: 'context-name',
+          resourceName: 'pods',
+          count: 1,
+        },
+        {
+          contextName: 'context-name',
+          resourceName: 'deployments',
+          count: 2,
+        },
+      ]);
       vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
       kubernetesContextsHealths.set([
         {
