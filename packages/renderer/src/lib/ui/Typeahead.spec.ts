@@ -93,6 +93,7 @@ test('should list the result after the delay, and display spinner during loading
     initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
+    sort: true,
     delay: 10,
   });
 
@@ -132,6 +133,7 @@ test('should list items started with search term on top', async () => {
     initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
+    sort: true,
     delay: 10,
   });
 
@@ -166,6 +168,7 @@ test('should navigate in list with keys', async () => {
     initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
+    sort: true,
     delay: 10,
   });
   const input = screen.getByRole('textbox');

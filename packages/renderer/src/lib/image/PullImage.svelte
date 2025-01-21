@@ -290,7 +290,6 @@ async function searchFunction(value: string): Promise<void> {
           placeholder="Image name"
           onInputChange={searchFunction}
           resultItems={searchResult}
-          sorted
           onChange={async (s: string): Promise<void> => {
             validateImageName(s);
             await resolveShortname();

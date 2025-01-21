@@ -11,7 +11,7 @@ interface Props {
   name?: string;
   error?: boolean;
   resultItems?: string[];
-  sorted?: boolean;
+  sort?: boolean;
   onInputChange?: (s: string) => Promise<void>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
@@ -28,7 +28,7 @@ let {
   name,
   error = false,
   resultItems = [],
-  sorted = false,
+  sort = false,
   onInputChange,
   onChange,
   onEnter,
@@ -41,9 +41,8 @@ let list: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
 let items: string[] = $derived(
-  sorted
-    ? resultItems
-    : resultItems.toSorted((a: string, b: string) => {
+  sort
+    ? resultItems.toSorted((a: string, b: string) => {
         if (a.startsWith(userValue) === b.startsWith(userValue)) {
           return a.localeCompare(b);
         } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
@@ -51,7 +50,8 @@ let items: string[] = $derived(
         } else {
           return 1;
         }
-      }),
+      })
+    : resultItems,
 );
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
