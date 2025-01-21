@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import ErrorMessage from './alert/ErrorMessage.svelte';
 import type { ButtonType } from './button/Button';
 import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
+import Expandable from './button/Expandable.svelte';
 import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
@@ -57,6 +58,7 @@ export {
   DropdownMenu,
   EmptyScreen,
   ErrorMessage,
+  Expandable,
   FilteredEmptyScreen,
   FormPage,
   Input,
