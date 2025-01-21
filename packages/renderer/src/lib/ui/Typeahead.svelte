@@ -12,7 +12,7 @@ interface Props {
   id?: string;
   name?: string;
   error?: boolean;
-  resultItems?: string[];
+  resultItems?: GroupItem[];
   onInputChange?: (s: string) => Promise<void>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
@@ -70,7 +70,7 @@ $effect(() => {
   }
   let headings: { [index: number]: string[] } = {};
   let currentItems: string[] = [];
-  for (let { values, group, sorted } of groupValues) {
+  for (let { values, group, sorted } of resultItems) {
     if (group) {
       if (headings[currentItems.length]) {
         headings[currentItems.length].push(group);

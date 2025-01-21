@@ -85,10 +85,10 @@ test('initial focus is set with option', async () => {
 });
 
 test('should list the result after the delay, and display spinner during loading', async () => {
-  let searchResult: string[] = [];
+  let searchResult: GroupItem[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    searchResult = [s + '01', s + '02', s + '03'];
+    searchResult = [{ values: [s + '01', s + '02', s + '03'] }];
   };
   const { rerender } = render(Typeahead, {
     initialFocus: true,
@@ -128,7 +128,7 @@ test('should list items started with search term on top if no compare function i
   let searchResult: string[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    searchResult = ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'];
+    searchResult = [{ values: ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'] }];
   };
   const { rerender } = render(Typeahead, {
     initialFocus: true,
@@ -198,13 +198,13 @@ test('should list items in order based on compare function if provided', async (
 });
 
 test('should navigate in list with keys', async () => {
-  let searchResult: string[] = [];
+  let searchResult: GroupItem[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     const result: string[] = [];
     for (let i = 1; i <= 15; i++) {
       result.push(s + `${i}`.padStart(2, '0'));
     }
-    searchResult = result;
+    searchResult = [{ values: result }];
   };
   const { rerender } = render(Typeahead, {
     initialFocus: true,
@@ -214,10 +214,8 @@ test('should navigate in list with keys', async () => {
   });
   const input = screen.getByRole('textbox');
   await userEvent.type(input, 'term');
-
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
-  await tick();
 
   await new Promise(resolve => setTimeout(resolve, 11));
   await tick();
@@ -316,8 +314,8 @@ test('should show error border', async () => {
 });
 
 test('should include heading based on given order and searchFunctions order', async () => {
-  let groupValues: GroupItem[] = [];
-  const searchFunction = async (s: string) => {
+  let searchResult: GroupItem[] = [];
+  const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
     const result1 = { values: [s + '11', s + '12', s + '13', s + '14'], group: 'searchFunction1 results' };
 
@@ -330,21 +328,21 @@ test('should include heading based on given order and searchFunctions order', as
     await new Promise(resolve => setTimeout(resolve, 100));
     const result4 = { values: [s + '41', s + '42', s + '43', s + '44'] };
 
-    groupValues = [result1, result2, result3, result4];
+    searchResult = [result1, result2, result3, result4];
   };
 
   const { rerender } = render(Typeahead, {
     initialFocus: true,
     onInputChange: searchFunction,
-    groupValues: groupValues,
+    resultItems: searchResult,
     delay: 10,
   });
 
   const input = screen.getByRole('textbox');
 
   await userEvent.type(input, 'test');
-  await waitFor(() => expect(groupValues.length > 0).toBeTruthy());
-  await rerender({ groupValues: groupValues });
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
 
   await tick();
 
