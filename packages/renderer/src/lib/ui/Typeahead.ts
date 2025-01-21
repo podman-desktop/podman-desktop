@@ -19,5 +19,4 @@
 export interface GroupItem {
   values: string[];
   group?: string;
-  sorted?: boolean;
 }

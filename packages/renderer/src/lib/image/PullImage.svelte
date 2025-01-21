@@ -262,10 +262,7 @@ async function searchFunction(value: string): Promise<void> {
         return 1;
       }
     });
-    searchResult = [
-      { values: ['1', '3', '4', '2'], sorted: false, group: 'group1' },
-      { values: result, sorted: true, group: 'group2' },
-    ];
+    searchResult = [{ values: result }];
   } catch (error: unknown) {
     searchResult = [];
   }

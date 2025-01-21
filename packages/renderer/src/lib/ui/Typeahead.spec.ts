@@ -115,7 +115,6 @@ test('should list the result after the delay, and display spinner during loading
   await tick();
   assertIsListVisible(true);
 
-  await tick();
   const list = screen.getByRole('row');
   const items = within(list).getAllByRole('button');
   expect(items.length).toBe(3);
@@ -214,11 +213,13 @@ test('should navigate in list with keys', async () => {
   });
   const input = screen.getByRole('textbox');
   await userEvent.type(input, 'term');
+
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
+  await tick();
 
   await new Promise(resolve => setTimeout(resolve, 11));
-  await tick();
+
   let list = screen.getByRole('row');
   let items = within(list).getAllByRole('button');
   expect(items.length).toBe(15);

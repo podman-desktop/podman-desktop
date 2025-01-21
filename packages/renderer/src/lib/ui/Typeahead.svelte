@@ -20,7 +20,6 @@ interface Props {
   compare?: (a: string, b: string) => number;
 }
 
-// the placeholder text displayed when no option is selected
 let {
   placeholder,
   required = false,
@@ -38,8 +37,9 @@ let {
   compare,
 }: Props = $props();
 
-let input: HTMLInputElement;
-let list = $state<HTMLDivElement>();
+let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
+let input: HTMLInputElement | undefined = $state();
+let list: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
 let items: string[] = $derived(
@@ -57,7 +57,6 @@ let items: string[] = $derived(
   ),
 );
 let itemHeadings: { [index: number]: string[] } = $state({});
-let inputDelayTimeout: NodeJS.Timeout;
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
 let pageStep = 10;
@@ -70,25 +69,13 @@ $effect(() => {
   }
   let headings: { [index: number]: string[] } = {};
   let currentItems: string[] = [];
-  for (let { values, group, sorted } of resultItems) {
+  for (let { values, group } of resultItems) {
     if (group) {
       if (headings[currentItems.length]) {
         headings[currentItems.length].push(group);
       } else {
         headings[currentItems.length] = [group];
       }
-    }
-    if (!sorted) {
-      // default sorting if the values are not already sorted
-      values = values.toSorted((a: string, b: string) => {
-        if (a.startsWith(userValue) === b.startsWith(userValue)) {
-          return a.localeCompare(b);
-        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
     }
     currentItems = currentItems.concat(values);
   }
