@@ -36,7 +36,7 @@ beforeEach(() => {
   extensionAnalyzer = new ExtensionAnalyzer();
 });
 
-describe('analyze extension and main', async () => {
+describe('analyze extension and main', () => {
   test('check for extension with main entry', async () => {
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
