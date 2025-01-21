@@ -205,8 +205,8 @@ export class ContextsManagerExperimental {
     }));
   }
 
-  getResources(resourceName: string): KubernetesContextResources[] {
-    return this.#objectCaches.getForResource(resourceName).map(({ contextName, value }) => {
+  getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
+    return this.#objectCaches.getForContextsAndResource(contextNames, resourceName).map(({ contextName, value }) => {
       return {
         contextName,
         items: value.list(),

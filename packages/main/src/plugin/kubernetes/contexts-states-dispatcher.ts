@@ -87,7 +87,7 @@ export class ContextsStatesDispatcher {
     this.apiSender.send(`kubernetes-update-${resourceName}`);
   }
 
-  getResources(resourceName: string): KubernetesContextResources[] {
-    return this.manager.getResources(resourceName);
+  getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
+    return this.manager.getResources(contextNames, resourceName);
   }
 }

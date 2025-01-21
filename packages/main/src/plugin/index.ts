@@ -2624,8 +2624,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'kubernetes:getResources',
-      async (_listener, resourceName: string): Promise<KubernetesContextResources[]> => {
-        return kubernetesClient.getResources(resourceName);
+      async (_listener, contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {
+        return kubernetesClient.getResources(contextNames, resourceName);
       },
     );
 

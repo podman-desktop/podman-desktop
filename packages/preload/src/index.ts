@@ -1890,8 +1890,8 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld(
     'kubernetesGetResources',
-    async (resourceName: string): Promise<KubernetesContextResources[]> => {
-      return ipcInvoke('kubernetes:getResources', resourceName);
+    async (contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {
+      return ipcInvoke('kubernetes:getResources', contextNames, resourceName);
     },
   );
 

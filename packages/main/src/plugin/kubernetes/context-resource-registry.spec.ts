@@ -45,13 +45,25 @@ test('ContextResourceRegistry', () => {
   ]);
 });
 
-test('getForResource', () => {
+test('getForContextsAndResource', () => {
   registry.set('context1', 'resource1', 'value1');
   registry.set('context1', 'resource2', 'value2');
   registry.set('context2', 'resource1', 'value3');
 
-  const result = registry.getForResource('resource1');
-  expect(result).toEqual([
+  const resultNoContext = registry.getForContextsAndResource([], 'resource1');
+  expect(resultNoContext).toEqual([]);
+
+  const resultOneContext = registry.getForContextsAndResource(['context1'], 'resource1');
+  expect(resultOneContext).toEqual([
+    {
+      contextName: 'context1',
+      resourceName: 'resource1',
+      value: 'value1',
+    },
+  ]);
+
+  const resultAllContexts = registry.getForContextsAndResource(['context1', 'context2'], 'resource1');
+  expect(resultAllContexts).toEqual([
     {
       contextName: 'context1',
       resourceName: 'resource1',

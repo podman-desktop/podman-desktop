@@ -1695,12 +1695,12 @@ export class KubernetesClient {
     return this.contextsStatesDispatcher.getResourcesCount();
   }
 
-  public getResources(resourceName: string): KubernetesContextResources[] {
+  public getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
     if (!this.contextsStatesDispatcher) {
       throw new Error(
         `contextsStatesDispatcher is undefined when getting ${resourceName}. This should not happen in Kubernetes experimental`,
       );
     }
-    return this.contextsStatesDispatcher.getResources(resourceName);
+    return this.contextsStatesDispatcher.getResources(contextNames, resourceName);
   }
 }

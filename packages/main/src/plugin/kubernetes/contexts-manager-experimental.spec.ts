@@ -386,8 +386,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
       listMock.mockReturnValueOnce([{ metadata: { name: 'obj1' } }]);
       listMock.mockReturnValueOnce([{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }]);
       await manager.update(kc);
-      const resources = manager.getResources('resource1');
-      console.log('==> ', resources);
+      const resources = manager.getResources(['context1', 'context2'], 'resource1');
       expect(resources).toEqual([
         {
           contextName: 'context1',
