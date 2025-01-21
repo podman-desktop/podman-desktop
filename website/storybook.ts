@@ -186,10 +186,6 @@ export default async function storybookIntegration(_context: LoadContext, opts: 
         recursive: true,
         force: true,
       });
-      fs.cpSync(join(options.storybookStatic, 'sb-preview'), join(buildFolder, 'sb-preview'), {
-        recursive: true,
-        force: true,
-      });
       fs.cpSync(join(options.storybookStatic, 'iframe.html'), join(buildFolder, 'storybook-iframe.html'), {
         force: true,
       });
