@@ -23,8 +23,7 @@ export interface IDisposable {
 export class Disposable implements IDisposable {
   private disposable: undefined | (() => void);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static from(...disposables: { dispose(): any }[]): Disposable {
+  static from(...disposables: { dispose(): unknown }[]): Disposable {
     return new Disposable(() => {
       if (disposables) {
         for (const disposable of disposables) {

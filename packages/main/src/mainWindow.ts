@@ -148,7 +148,6 @@ async function createWindow(): Promise<BrowserWindow> {
 
   // receive the message because an update is in progress and we need to quit the app
   let quitAfterUpdate = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   autoUpdater.on('before-quit-for-update', () => {
     quitAfterUpdate = true;
   });

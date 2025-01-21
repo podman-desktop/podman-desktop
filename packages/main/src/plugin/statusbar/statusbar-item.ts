@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,8 +40,7 @@ export class StatusBarItemImpl implements StatusBarItem {
   private _highlight = false;
 
   private _command: string | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _commandArgs: any[] | undefined;
+  private _commandArgs: unknown[] | undefined;
 
   private registry: StatusBarRegistry;
 
@@ -114,13 +113,11 @@ export class StatusBarItemImpl implements StatusBarItem {
     this.update();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public get commandArgs(): any[] | undefined {
+  public get commandArgs(): unknown[] | undefined {
     return this._commandArgs;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public set commandArgs(commandArgs: any[] | undefined) {
+  public set commandArgs(commandArgs: unknown[] | undefined) {
     this._commandArgs = commandArgs;
     this.update();
   }

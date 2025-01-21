@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ApiSenderType } from './api.js';
 import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
@@ -62,8 +63,7 @@ export class MessageBox {
 
   private callbacksMessageBox = new Map<number, Deferred<MessageBoxReturnValue>>();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(private apiSender: any) {}
+  constructor(private apiSender: ApiSenderType) {}
 
   async showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
     // keep track of this request
