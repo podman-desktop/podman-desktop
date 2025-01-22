@@ -719,8 +719,8 @@ importers:
         version: 4.0.3(svelte@5.19.1)
     devDependencies:
       '@sveltejs/package':
-        specifier: ^2.3.7
-        version: 2.3.7(svelte@5.19.1)(typescript@5.6.3)
+        specifier: ^2.3.9
+        version: 2.3.9(svelte@5.19.1)(typescript@5.6.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: 5.0.3
         version: 5.0.3(svelte@5.19.1)(vite@6.0.11(@types/node@22.9.1)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
@@ -833,8 +833,8 @@ importers:
         specifier: ^8.5.0
         version: 8.5.0(storybook@8.5.0(prettier@3.4.2))
       '@sveltejs/package':
-        specifier: ^2.3.7
-        version: 2.3.7(svelte@5.19.1)(typescript@5.6.3)
+        specifier: ^2.3.9
+        version: 2.3.9(svelte@5.19.1)(typescript@5.6.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: 5.0.3
         version: 5.0.3(svelte@5.19.1)(vite@6.0.11(@types/node@22.9.1)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
@@ -3633,8 +3633,8 @@ packages:
     peerDependencies:
       storybook: ^8.2.0 || ^8.3.0-0 || ^8.4.0-0 || ^8.5.0-0 || ^8.6.0-0
 
-  '@sveltejs/package@2.3.7':
-    resolution: {integrity: sha512-LYgUkde5GUYqOpXbcoCGUpEH4Ctl3Wj4u4CVZBl56dEeLW5fGHE037ZL1qlK0Ky+QD5uUfwONSeGwIOIighFMQ==}
+  '@sveltejs/package@2.3.9':
+    resolution: {integrity: sha512-POIiQknGmcGCcM7ZbFG7cjsJ51GndFOY3PTXa8XFzZ+C/GJfx/JufvVXiWcXVsteP74FeXSSgcC+b5sIayXXKw==}
     engines: {node: ^16.14 || >=18}
     hasBin: true
     peerDependencies:
@@ -4931,6 +4931,10 @@ packages:
 
   chokidar@4.0.1:
     resolution: {integrity: sha512-n8enUVCED/KVRQlab1hr3MVpcVMvxtZjmEa956u+4YijlmQED223XMSYj2tLuKvr4jcCTzNNMpQDUer72MMmzA==}
+    engines: {node: '>= 14.16.0'}
+
+  chokidar@4.0.3:
+    resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
     engines: {node: '>= 14.16.0'}
 
   chownr@1.1.4:
@@ -9567,6 +9571,10 @@ packages:
     resolution: {integrity: sha512-yDMz9g+VaZkqBYS/ozoBJwaBhTbZo3UNYQHNRw1D3UFQB8oHB4uS/tAODO+ZLjGWmUbKnIlOWO+aaIiAxrUWHA==}
     engines: {node: '>= 14.16.0'}
 
+  readdirp@4.1.1:
+    resolution: {integrity: sha512-h80JrZu/MHUZCyHu5ciuoI0+WxsCxzxJTILn6Fs8rxSnFPh+UVHYfeIxK1nVGugMqkfC4vJcBOYbkfkwYK0+gw==}
+    engines: {node: '>= 14.18.0'}
+
   reading-time@1.5.0:
     resolution: {integrity: sha512-onYyVhBNr4CmAxFsKS7bz+uTLRakypIe4R+5A824vBSkQy/hB3fZepoVEf8OVAxzLvK+H/jm9TzpI3ETSm64Kg==}
 
@@ -10392,12 +10400,6 @@ packages:
 
   svelte-steps@2.4.1:
     resolution: {integrity: sha512-2Xq2lLcGJf3PaEY46f1w5s+/O+tLl4U2V+Z+sCeoUm/kEPFXeZP/aFr2JVKwdzSlXCT+raz75xqXtnZrPWJ0zA==}
-
-  svelte2tsx@0.7.26:
-    resolution: {integrity: sha512-cBGGZ3Hejuh9gYICQcGKg1zyYhrzZR04iTUdP5pD+CIbjoZiyzS4cpCi4IHh0PA2Vf6cFuwVRmDs9wnOfJotJA==}
-    peerDependencies:
-      svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
-      typescript: ^4.9.4 || ^5.0.0
 
   svelte2tsx@0.7.34:
     resolution: {integrity: sha512-WTMhpNhFf8/h3SMtR5dkdSy2qfveomkhYei/QW9gSPccb0/b82tjHvLop6vT303ZkGswU/da1s6XvrLgthQPCw==}
@@ -14926,14 +14928,14 @@ snapshots:
     dependencies:
       storybook: 8.5.0(prettier@3.4.2)
 
-  '@sveltejs/package@2.3.7(svelte@5.19.1)(typescript@5.6.3)':
+  '@sveltejs/package@2.3.9(svelte@5.19.1)(typescript@5.6.3)':
     dependencies:
-      chokidar: 4.0.1
+      chokidar: 4.0.3
       kleur: 4.1.5
       sade: 1.8.1
       semver: 7.6.3
       svelte: 5.19.1
-      svelte2tsx: 0.7.26(svelte@5.19.1)(typescript@5.6.3)
+      svelte2tsx: 0.7.34(svelte@5.19.1)(typescript@5.6.3)
     transitivePeerDependencies:
       - typescript
 
@@ -16628,6 +16630,10 @@ snapshots:
   chokidar@4.0.1:
     dependencies:
       readdirp: 4.0.2
+
+  chokidar@4.0.3:
+    dependencies:
+      readdirp: 4.1.1
 
   chownr@1.1.4: {}
 
@@ -22222,6 +22228,8 @@ snapshots:
 
   readdirp@4.0.2: {}
 
+  readdirp@4.1.1: {}
+
   reading-time@1.5.0: {}
 
   recast@0.23.9:
@@ -23217,13 +23225,6 @@ snapshots:
       typescript: 5.6.3
 
   svelte-steps@2.4.1: {}
-
-  svelte2tsx@0.7.26(svelte@5.19.1)(typescript@5.6.3):
-    dependencies:
-      dedent-js: 1.0.1
-      pascal-case: 3.1.2
-      svelte: 5.19.1
-      typescript: 5.6.3
 
   svelte2tsx@0.7.34(svelte@5.19.1)(typescript@5.6.3):
     dependencies:
