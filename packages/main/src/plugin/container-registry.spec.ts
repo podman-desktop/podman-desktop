@@ -423,6 +423,7 @@ vi.mock('node:fs', async () => {
 vi.mock('node:stream/promises', async () => {
   return {
     pipeline: vi.fn(),
+    readFile: vi.fn(),
   };
 });
 
@@ -5943,5 +5944,68 @@ describe('prune images', () => {
 
     // check we called the api
     expect(dockerProvider.api?.pruneImages).toBeCalledWith({ filters: { dangling: { false: false } } });
+  });
+});
+
+describe('kube play', () => {
+  const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
+    name: 'podman',
+    id: 'podman1',
+    api: {
+      version: vi.fn(),
+    } as unknown as Dockerode,
+    libpodApi: {
+      playKube: vi.fn(),
+    } as unknown as LibPod,
+    connection: {
+      type: 'podman',
+      name: 'podman',
+      displayName: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status: vi.fn(),
+    },
+  };
+
+  const PODMAN_523_VERSION: Dockerode.DockerVersion = {
+    Version: '5.2.3',
+    ApiVersion: '1.41',
+  } as unknown as Dockerode.DockerVersion;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  test('non-supported version should throw an error', async () => {
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_523_VERSION);
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(async () => {
+      await containerRegistry.playKube(
+        'dummy-file',
+        {
+          name: PODMAN_PROVIDER.name,
+          endpoint: PODMAN_PROVIDER.connection.endpoint,
+        } as unknown as ProviderContainerConnectionInfo,
+        {
+          build: true,
+        },
+      );
+    }).rejects.toThrowError('kube play build is not supported on podman: Podman 5.3 and above support this feature');
+  });
+
+  test('build option false should use playKube with YAML file', async () => {
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube('dummy-file', {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
   });
 });

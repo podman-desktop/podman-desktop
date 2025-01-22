@@ -31,6 +31,7 @@ import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import { loadAll } from 'js-yaml';
 import moment from 'moment';
+import { coerce, gtr } from 'semver';
 import StreamValues from 'stream-json/streamers/StreamValues.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
@@ -2435,6 +2436,21 @@ export class ContainerProviderRegistry {
     }
   }
 
+  protected async isTarPlayBuildSupported(internalProvider: InternalContainerProvider): Promise<boolean> {
+    if (!internalProvider.api || !internalProvider.libpodApi) {
+      throw new Error('No provider with a running engine');
+    }
+
+    const version = await internalProvider.api.version();
+    console.log('[container-registry] isTarPlayBuildSupported', version);
+
+    // let's nicely format it
+    const coerced = coerce(version.Version);
+    if (!coerced) throw new Error(`api version cannot be coerced ${version.Version}`);
+
+    return gtr(coerced.version, '5.3');
+  }
+
   async playKube(
     kubernetesYamlFilePath: string,
     selectedProvider: ProviderContainerConnectionInfo,
@@ -2453,6 +2469,13 @@ export class ContainerProviderRegistry {
       if (!options?.build) {
         return provider.libpodApi.playKube(kubernetesYamlFilePath);
       }
+
+      // ensure build support is true, otherwise let's throw a nice user friendly error
+      const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
+      if (!buildSupported)
+        throw new Error(
+          `kube play build is not supported on ${provider.connection.name}: Podman 5.3 and above support this feature`,
+        );
 
       const content = await readFile(kubernetesYamlFilePath, 'utf8');
       const resources = loadAll(content);
