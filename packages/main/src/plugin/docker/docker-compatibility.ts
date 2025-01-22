@@ -53,6 +53,9 @@ export class DockerCompatibility {
           description: 'Enable the section for Docker compatibility.',
           type: 'boolean',
           default: false,
+          experimental: {
+            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10769',
+          },
         },
       },
     };
