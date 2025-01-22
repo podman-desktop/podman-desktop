@@ -3905,6 +3905,7 @@ declare module '@podman-desktop/api' {
      * @param options optional options for listing information
      * @returns A promise resolving to an array of engine information.
      *
+     * @remarks only return the {@link ContainerEngineInfo} of **running** connection
      * @example
      * // Example 1: List all engine information when no specific provider is provided.
      * const infos = await listInfos();
