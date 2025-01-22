@@ -20,7 +20,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.6",
-    "@testing-library/user-event": "^14.6.0",
+    "@testing-library/user-event": "^14.6.1",
     "@tsconfig/svelte": "^5.0.4",
     "@types/js-yaml": "^4.0.9",
     "@types/validator": "^13.12.2",
