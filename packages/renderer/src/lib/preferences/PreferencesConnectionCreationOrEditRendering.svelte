@@ -35,63 +35,74 @@ import {
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 import { calcHalfCpuCores, getInitialValue, isPropertyValidInContext, writeToTerminal } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInfo: ProviderInfo;
-export let propertyScope: string;
-export let callback: (
-  param: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any,
-  handlerKey: symbol,
-  collect: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
-  tokenId: number | undefined,
-  taskId: number | undefined,
-) => Promise<void>;
-export let taskId: number | undefined = undefined;
-export let disableEmptyScreen = false;
-export let hideCloseButton = false;
-export let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | undefined = undefined;
-export let inProgress = false;
+interface Props {
+  properties: IConfigurationPropertyRecordedSchema[];
+  providerInfo: ProviderInfo;
+  propertyScope: string;
+  callback(
+    param: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    handlerKey: symbol,
+    collect: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
+    tokenId: number | undefined,
+    taskId: number | undefined,
+  ): Promise<void>;
+  taskId?: number;
+  disableEmptyScreen?: boolean;
+  hideCloseButton?: boolean;
+  connectionInfo?: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
+  inProgress?: boolean;
+  pageIsLoading?: boolean;
+}
 
-$: configurationValues = new Map<string, { modified: boolean; value: string | boolean | number }>();
-let operationStarted = false;
-let operationSuccessful = false;
-let operationCancelled = false;
+let {
+  properties = [],
+  providerInfo,
+  propertyScope,
+  callback,
+  taskId = undefined,
+  disableEmptyScreen = false,
+  hideCloseButton = false,
+  connectionInfo = undefined,
+  inProgress = $bindable(false),
+  pageIsLoading = true,
+}: Props = $props();
+
+let configurationValues = $state(new Map<string, { modified: boolean; value: string | boolean | number }>());
+let operationStarted = $state(false);
+let operationSuccessful = $state(false);
+let operationCancelled = $state(false);
+let showLogs = $state(false);
+let tokenId: number | undefined = $state();
+// get only ContainerProviderConnectionFactory scope fields that are starting by the provider id
+let configurationKeys: IConfigurationPropertyRecordedSchema[] = $state([]);
+let isValid = $state(true);
+let errorMessage: string | undefined = $state();
+let formEl: HTMLFormElement | undefined = $state();
+let connectionAuditResult: AuditResult | undefined = $state();
+let logsTerminal: Terminal | undefined = $state();
+
 let operationFailed = false;
-export let pageIsLoading = true;
-let showLogs = false;
-let tokenId: number | undefined;
-
 let osMemory: string;
 let osCpu: string;
 let osFreeDisk: string;
-
-// get only ContainerProviderConnectionFactory scope fields that are starting by the provider id
-let configurationKeys: IConfigurationPropertyRecordedSchema[] = [];
-
-let isValid = true;
-let errorMessage: string | undefined = undefined;
-
-let formEl: HTMLFormElement;
-
 let globalContext: ContextUI;
-
-let connectionAuditResult: AuditResult | undefined;
-$: connectionAuditResult = undefined;
-
 let contextsUnsubscribe: Unsubscriber;
-
 const buttonLabel = connectionInfo ? 'Update' : 'Create';
 const operationLabel = connectionInfo ? 'Update' : 'Creation';
+let loggerHandlerKey: symbol | undefined = undefined;
 
 // reconnect the logger handler
-$: if (logsTerminal && loggerHandlerKey) {
-  try {
-    reconnectUI(loggerHandlerKey, getLoggerHandler());
-  } catch (error) {
-    console.error('error while reconnecting', error);
+$effect(() => {
+  if (logsTerminal && loggerHandlerKey) {
+    try {
+      reconnectUI(loggerHandlerKey, getLoggerHandler());
+    } catch (error) {
+      console.error('error while reconnecting', error);
+    }
   }
-}
+});
 
 onMount(async () => {
   osMemory = await window.getOsMemory();
@@ -280,20 +291,17 @@ async function getConfigurationValue(configurationKey: IConfigurationPropertyRec
   }
 }
 
-let logsTerminal: Terminal;
-let loggerHandlerKey: symbol | undefined = undefined;
-
 function getLoggerHandler(): ConnectionCallback {
   return {
     log: (args): void => {
-      writeToTerminal(logsTerminal, args, '\x1b[37m');
+      if (logsTerminal) writeToTerminal(logsTerminal, args, '\x1b[37m');
     },
     warn: (args): void => {
-      writeToTerminal(logsTerminal, args, '\x1b[33m');
+      if (logsTerminal) writeToTerminal(logsTerminal, args, '\x1b[33m');
     },
     error: (args): void => {
       operationFailed = true;
-      writeToTerminal(logsTerminal, args, '\x1b[1;31m');
+      if (logsTerminal) writeToTerminal(logsTerminal, args, '\x1b[1;31m');
     },
     onEnd: (): void => {
       ended().catch((err: unknown) => console.error('Error closing terminal', err));
@@ -467,6 +475,13 @@ function getConnectionResourceConfigurationNumberValue(
   }
   return undefined;
 }
+
+function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitEvent) => Promise<void> {
+  return async (e: SubmitEvent) => {
+    e.preventDefault();
+    await handler(e);
+  };
+}
 </script>
 
 <div class="flex flex-col w-full h-full overflow-hidden">
@@ -495,18 +510,18 @@ function getConnectionResourceConfigurationNumberValue(
                 <button
                   aria-label="Show Logs"
                   class="text-xs mr-3 hover:underline"
-                  on:click={(): boolean => (showLogs = !showLogs)}
+                  onclick={(): boolean => (showLogs = !showLogs)}
                   >Show Logs <i class="fas {showLogs ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i
                   ></button>
                 <button
                   aria-label="Cancel {operationLabel.toLowerCase()}"
                   class="text-xs {errorMessage ? 'mr-3' : ''} hover:underline {tokenId ? '' : 'hidden'}"
                   disabled={!tokenId}
-                  on:click={cancelCreation}>Cancel</button>
+                  onclick={cancelCreation}>Cancel</button>
                 <button
                   class="text-xs hover:underline {inProgress ? 'hidden' : ''}"
                   aria-label="Close panel"
-                  on:click={closePanel}>Close</button>
+                  onclick={closePanel}>Close</button>
               </div>
             </div>
             <div id="log" class="pt-2 h-80 {showLogs ? '' : 'hidden'}">
@@ -529,7 +544,7 @@ function getConnectionResourceConfigurationNumberValue(
           <form
             novalidate
             class="p-2 space-y-7 h-fit"
-            on:submit|preventDefault={handleOnSubmit}
+            onsubmit={preventDefault(handleOnSubmit)}
             bind:this={formEl}
             aria-label="Properties Information">
             {#each configurationKeys as configurationKey}
@@ -566,7 +581,7 @@ function getConnectionResourceConfigurationNumberValue(
                 {#if !hideCloseButton}
                   <Button type="link" aria-label="Close page" on:click={closePage}>Close</Button>
                 {/if}
-                <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl.requestSubmit()}
+                <Button disabled={!isValid} inProgress={inProgress} on:click={(): void => formEl?.requestSubmit()}
                   >{buttonLabel}</Button>
               </div>
             </div>
