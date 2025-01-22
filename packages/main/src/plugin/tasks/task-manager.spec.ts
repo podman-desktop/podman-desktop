@@ -87,6 +87,18 @@ test('task manager init should register a configuration option', async () => {
           },
         }),
       }),
+      expect.objectContaining({
+        properties: expect.objectContaining({
+          'tasks.StatusBar': {
+            type: 'boolean',
+            description: 'Show running tasks in the status bar',
+            default: false,
+            experimental: {
+              githubDiscussionLink: expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions'),
+            },
+          },
+        }),
+      }),
     ]),
   );
 });
