@@ -14,6 +14,13 @@
     "configuration": {
       "title": "Kind",
       "properties": {
+        "kind.cluster.creation.configFile": {
+          "type": "string",
+          "format": "file",
+          "default": "",
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "Custom path to Kind config file (Default is blank)"
+        },
         "kind.cluster.creation.name": {
           "type": "string",
           "default": "kind-cluster",

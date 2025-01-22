@@ -80,6 +80,14 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
+  const configFile = items['kind.cluster.creation.configFile'];
+  if (configFile) {
+    records.push({
+      type: 'warning',
+      record: 'By specifying a config file, all other options will be ignored.',
+    });
+  }
+
   const providerSocket = extensionApi.provider
     .getContainerConnections()
     .find(connection => connection.connection.type === provider);
@@ -107,6 +115,12 @@ export async function createCluster(
   logger?: extensionApi.Logger,
   token?: CancellationToken,
 ): Promise<void> {
+  // grab config file
+  let configFile;
+  if (params['kind.cluster.creation.configFile']) {
+    configFile = params['kind.cluster.creation.configFile'];
+  }
+
   let clusterName = 'kind';
   if (params['kind.cluster.creation.name']) {
     clusterName = params['kind.cluster.creation.name'];
@@ -162,6 +176,7 @@ export async function createCluster(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const telemetryOptions: Record<string, any> = {
+    configFile,
     provider,
     httpHostPort,
     httpsHostPort,
@@ -171,7 +186,11 @@ export async function createCluster(
   // now execute the command to create the cluster
   const startTime = performance.now();
   try {
-    await extensionApi.process.exec(kindCli, ['create', 'cluster', '--config', tmpFilePath], { env, logger, token });
+    await extensionApi.process.exec(kindCli, ['create', 'cluster', '--config', configFile ?? tmpFilePath], {
+      env,
+      logger,
+      token,
+    });
     if (ingressController) {
       logger?.log('Creating ingress controller resources');
       await setupIngressController(clusterName);
