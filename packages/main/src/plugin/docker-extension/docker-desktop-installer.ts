@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { cp, readFile } from 'node:fs/promises';
+import { cp, readFile, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
@@ -56,10 +56,15 @@ export class DockerDesktopInstaller {
     sourceFolderPath: string,
     destFolderPath: string,
     reportLog: (message: string) => void,
+    catalogExtensionId?: string,
   ): Promise<void> {
     // ok now, we need to copy files that we're interested in by looking at the metadata.json file
     const metadataFile = await readFile(`${sourceFolderPath}/metadata.json`, 'utf8');
     const metadata = JSON.parse(metadataFile);
+    if (catalogExtensionId) {
+      metadata.extensionId = catalogExtensionId;
+      await writeFile(`${sourceFolderPath}/metadata.json`, JSON.stringify(metadata), 'utf8');
+    }
 
     // files or folder to grab
     const files: string[] = [];

@@ -60,6 +60,7 @@ async function installExtension(): Promise<void> {
         installInProgress = false;
         errorInstall = error;
       },
+      extension.id,
     );
     logs = [...logs, '☑️ installation finished !'];
     percentage = '100%';
