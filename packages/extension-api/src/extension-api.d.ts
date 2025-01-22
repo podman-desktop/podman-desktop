@@ -402,7 +402,7 @@ declare module '@podman-desktop/api' {
      */
     vmTypeDisplayName?: string;
     // the remote may be different from the client version
-    version?(): string;
+    version?(): string | undefined;
   }
 
   export interface PodCreatePortOptions {

@@ -860,7 +860,7 @@ export async function registerProviderFor(
     },
     vmType: machineInfo.vmType,
     vmTypeDisplayName: getProviderLabel(machineInfo.vmType),
-    version: () => podmanServerVersions.get(machineInfo.name) ?? 'unknown',
+    version: () => podmanServerVersions.get(machineInfo.name),
   };
 
   // Since Podman 4.5, machines are using the same path for all sockets of machines
