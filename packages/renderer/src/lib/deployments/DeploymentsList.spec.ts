@@ -26,18 +26,12 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { kubernetesCurrentContextDeployments } from '/@/stores/kubernetes-contexts-state';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import DeploymentsList from './DeploymentsList.svelte';
-
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -54,7 +48,7 @@ async function waitRender(customProperties: object): Promise<void> {
 }
 
 test('Expect deployment empty screen', async () => {
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([]);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([]);
   render(DeploymentsList);
   const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
   expect(noDeployments).toBeInTheDocument();
@@ -74,7 +68,7 @@ test('Expect deployments list', async () => {
       template: {},
     },
   };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([deployment]);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([deployment]);
 
   // wait while store is populated
   while (get(kubernetesCurrentContextDeployments).length === 0) {
@@ -83,7 +77,7 @@ test('Expect deployments list', async () => {
 
   await waitRender({});
 
-  const deploymentName = screen.getByRole('cell', { name: 'my-deployment test-namespace' });
+  const deploymentName = screen.getByRole('cell', { name: 'my-deployment-1 test-namespace' });
   expect(deploymentName).toBeInTheDocument();
 });
 
@@ -101,7 +95,7 @@ test('Expect correct column overflow', async () => {
       template: {},
     },
   };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([deployment]);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([deployment]);
 
   // wait while store is populated
   while (get(kubernetesCurrentContextDeployments).length === 0) {
@@ -141,7 +135,7 @@ test('Expect filter empty screen', async () => {
     },
   };
 
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([deployment]);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([deployment]);
 
   // wait while store is populated
   while (get(kubernetesCurrentContextDeployments).length === 0) {
@@ -169,7 +163,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
       template: {},
     },
   };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([deployment]);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue([deployment]);
 
   await vi.waitFor(() => get(kubernetesCurrentContextDeployments).length > 0);
 
@@ -180,7 +174,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
