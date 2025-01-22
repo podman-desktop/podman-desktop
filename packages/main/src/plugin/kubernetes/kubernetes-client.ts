@@ -193,8 +193,7 @@ export class KubernetesClient {
 
   private kubeConfigWatcher: containerDesktopAPI.FileSystemWatcher | undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private kubeWatcher: any | undefined;
+  private kubeWatcher: AbortController | undefined;
 
   private apiGroups = new Array<V1APIGroup>();
 
@@ -503,10 +502,8 @@ export class KubernetesClient {
         const projects = await ctx
           .makeApiClient(CustomObjectsApi)
           .listClusterCustomObject({ group: OPENSHIFT_PROJECT_API_GROUP, version: 'v1', plural: 'projects' });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((projects?.body as any)?.items.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          namespace = (projects?.body as any)?.items[0].metadata?.name;
+        if (projects?.body?.items.length > 0) {
+          namespace = projects?.body?.items[0].metadata?.name;
         }
       }
     } catch (err) {
@@ -1034,8 +1031,7 @@ export class KubernetesClient {
       if (tag.tag === 'tag:yaml.org,2002:int') {
         const newTag = { ...tag };
         newTag.test = /^(0[0-7][0-7][0-7])$/;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        newTag.resolve = (str: any): number => parseInt(str, 8);
+        newTag.resolve = (str: string): number => parseInt(str, 8);
         tags.unshift(newTag);
         break;
       }
@@ -1044,7 +1040,6 @@ export class KubernetesClient {
   }
 
   // load yaml file and extract manifests
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async loadManifestsFromFile(file: string): Promise<KubernetesObject[]> {
     // throw exception if file does not exist
     if (!fs.existsSync(file)) {
@@ -1082,8 +1077,7 @@ export class KubernetesClient {
    * @param manifests the list of Kubernetes resources to create
    * @param namespace the namespace to use for any resources that don't include one
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async createResources(context: string, manifests: any[], namespace?: string): Promise<void> {
+  async createResources(context: string, manifests: unknown[], namespace?: string): Promise<void> {
     await this.syncResources(context, manifests, 'create', namespace);
   }
 
@@ -1169,7 +1163,7 @@ export class KubernetesClient {
    */
   async syncResources(
     context: string,
-    manifests: KubernetesObject[],
+    manifests: unknown[],
     action: 'create' | 'apply',
     namespace?: string,
   ): Promise<KubernetesObject[]> {
@@ -1185,8 +1179,9 @@ export class KubernetesClient {
       const ctx = new KubeConfig();
       ctx.loadFromFile(this.kubeconfigPath);
       ctx.currentContext = context;
-
-      const validSpecs = manifests.filter(s => s?.kind) as KubernetesObjectWithKind[];
+      const validSpecs = manifests.filter(
+        s => !!s && typeof s === 'object' && 'kind' in s,
+      ) as KubernetesObjectWithKind[];
 
       const client = ctx.makeApiClient(KubernetesObjectApi);
       const created: KubernetesObject[] = [];
@@ -1204,8 +1199,7 @@ export class KubernetesClient {
         try {
           // try to get the resource, if it does not exist an error will be thrown and we will
           // end up in the catch block
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await client.read(spec as any);
+          await client.read(spec);
           // we got the resource, so it exists: patch it
           //
           // Note that this could fail if the spec refers to a custom resource. For custom resources

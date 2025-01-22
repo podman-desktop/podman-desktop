@@ -560,7 +560,7 @@ export class PluginSystem {
       }
     });
 
-    statusBarRegistry.setEntry('help', false, -1, undefined, 'Help', 'fa fa-question-circle', true, 'help', undefined);
+    statusBarRegistry.setEntry('help', false, -1, undefined, 'Help', 'fa fa-question-circle', true, 'help');
 
     statusBarRegistry.setEntry(
       'troubleshooting',
@@ -571,7 +571,6 @@ export class PluginSystem {
       'fa fa-lightbulb',
       true,
       'troubleshooting',
-      undefined,
     );
 
     statusBarRegistry.setEntry(
@@ -583,7 +582,6 @@ export class PluginSystem {
       'fa fa-comment',
       true,
       'feedback',
-      undefined,
     );
 
     // Init update logic
@@ -2487,7 +2485,6 @@ export class PluginSystem {
       },
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.ipcHandle(
       'kubernetes-client:createResourcesFromFile',
       async (_listener, context: string, file: string, namespace: string): Promise<void> => {

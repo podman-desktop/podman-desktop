@@ -42,8 +42,7 @@ export function ensureURL(urlstring: string | undefined): string | undefined {
   return undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function asURL(url: any): URL {
+function asURL(url: unknown): URL {
   if (url instanceof URL) {
     return url;
   } else if (typeof url === 'string') {

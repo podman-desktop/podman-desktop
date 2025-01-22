@@ -28,8 +28,7 @@ export interface StatusBarEntry {
   inactiveIconClass?: string;
   enabled: boolean;
   command?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commandArgs?: any[];
+  commandArgs?: unknown[];
   highlight?: boolean;
 }
 
@@ -61,8 +60,7 @@ export class StatusBarRegistry implements IDisposable {
     iconClass: string | { active: string; inactive: string } | undefined,
     enabled: boolean,
     command: string | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    commandArgs: any[] | undefined,
+    commandArgs?: unknown[],
     highlight?: boolean,
   ): void {
     const existingEntry = this.entries.get(entryId);

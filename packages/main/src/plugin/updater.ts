@@ -139,7 +139,6 @@ export class Updater {
       undefined,
       true,
       'version',
-      undefined,
     );
   }
 

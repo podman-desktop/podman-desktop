@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 export class Deferred<T> {
-  resolve: (value: T | PromiseLike<T>) => void = () => {
+  resolve: (value: T | Promise<T>) => void = () => {
     return;
   };
   reject: (err?: unknown) => void = () => {
