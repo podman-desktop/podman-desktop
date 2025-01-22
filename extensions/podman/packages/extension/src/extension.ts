@@ -76,6 +76,8 @@ let defaultMachineMonitor = true;
 
 // current status of machines
 export const podmanMachinesStatuses = new Map<string, extensionApi.ProviderConnectionStatus>();
+
+const podmanServerVersions = new Map<string, string>();
 let podmanProviderStatus: extensionApi.ProviderConnectionStatus = 'started';
 const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
@@ -277,6 +279,13 @@ async function doUpdateMachines(
 
     const previousStatus = podmanMachinesStatuses.get(machine.Name);
     if (previousStatus !== status) {
+      if (status === 'started') {
+        await updatePodmanServer({
+          name: machine.Name,
+          vmType: machine.VMType,
+        });
+      }
+
       // notify status change
       listeners.forEach(listener => listener(machine.Name, status));
       podmanMachinesStatuses.set(machine.Name, status);
@@ -768,6 +777,28 @@ function prettyMachineName(machineName: string): string {
   return name;
 }
 
+async function updatePodmanServer(machineInfo: { name: string; vmType?: string }, force = false): Promise<void> {
+  // do not check if we already have
+  if (podmanServerVersions.has(machineInfo.name) && !force) return;
+
+  let serverVersion: string | undefined;
+  try {
+    const { stdout } = await execPodman(
+      ['--connection', machineInfo.name, 'version', '--format=json'],
+      machineInfo.vmType,
+    );
+    const parsed = JSON.parse(stdout);
+    serverVersion = parsed['Server']['Version'];
+  } catch (err: unknown) {
+    console.error(`Something went wrong while trying to get machine ${machineInfo.name} version`, err);
+  }
+
+  if (!serverVersion) return;
+
+  // update the version
+  podmanServerVersions.set(machineInfo.name, serverVersion);
+}
+
 export async function registerProviderFor(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
@@ -836,6 +867,7 @@ export async function registerProviderFor(
     },
     vmType: machineInfo.vmType,
     vmTypeDisplayName: getProviderLabel(machineInfo.vmType),
+    version: () => podmanServerVersions.get(machineInfo.name) ?? 'unknown',
   };
 
   // Since Podman 4.5, machines are using the same path for all sockets of machines
