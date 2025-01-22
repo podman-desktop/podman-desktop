@@ -102,7 +102,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.[TestDockerCompatibility.ENABLED_FULL_KEY]?.hidden).toBeFalsy();
   expect(
     configurationNode?.properties?.[TestDockerCompatibility.ENABLED_FULL_KEY]?.experimental?.githubDiscussionLink,
-  ).toBe(expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions/'));
+  ).toStrictEqual(expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions/'));
 });
 
 describe('getTypeFromServerInfo', async () => {
