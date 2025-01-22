@@ -216,7 +216,7 @@ async function connect(contextName: string): Promise<void> {
                   <div class="text-center">
                     <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]">PODS</div>
                     <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" aria-label="Context Pods Count">
-                      {context.podsCount}
+                      {#if context.podsCount !== undefined}{context.podsCount}{/if}
                     </div>
                   </div>
                   <div class="text-center">
@@ -224,7 +224,7 @@ async function connect(contextName: string): Promise<void> {
                     <div
                       class="text-[16px] text-[var(--pd-invert-content-card-text)]"
                       aria-label="Context Deployments Count">
-                      {context.deploymentsCount}
+                      {#if context.deploymentsCount !== undefined}{context.deploymentsCount}{/if}
                     </div>
                   </div>
                 </div>

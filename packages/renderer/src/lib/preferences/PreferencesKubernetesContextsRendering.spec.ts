@@ -173,6 +173,7 @@ describe.each([
     implemented: {
       health: true,
       resourcesCount: true,
+      undefinedCounts: true,
     },
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
@@ -206,6 +207,11 @@ describe.each([
           reachable: false,
           checking: false,
         },
+        {
+          contextName: 'context-name3',
+          reachable: true,
+          checking: false,
+        },
       ]);
     },
   },
@@ -214,6 +220,7 @@ describe.each([
     implemented: {
       health: true,
       resourcesCount: true,
+      undefinedCounts: false,
     },
     initMocks: (): void => {
       const state: Map<string, ContextGeneralState> = new Map();
@@ -243,6 +250,7 @@ describe.each([
     render(PreferencesKubernetesContextsRendering, {});
     const context1 = screen.getAllByRole('row')[0];
     const context2 = screen.getAllByRole('row')[1];
+    const context3 = screen.getAllByRole('row')[2];
     if (implemented.health) {
       await vi.waitFor(() => {
         expect(within(context1).queryByText('REACHABLE')).toBeInTheDocument();
@@ -271,6 +279,18 @@ describe.each([
     expect(podsCountContext2).not.toBeInTheDocument();
     const deploymentsCountContext2 = within(context2).queryByLabelText('Context Deployments Count');
     expect(deploymentsCountContext2).not.toBeInTheDocument();
+
+    if (implemented.undefinedCounts) {
+      const checkNoCount = (el: HTMLElement, label: string): void => {
+        const countEl = within(el).getByLabelText(label);
+        expect(countEl).toBeInTheDocument();
+        expect(countEl).toBeEmptyDOMElement();
+      };
+      expect(within(context3).queryByText('PODS')).toBeInTheDocument();
+      expect(within(context3).queryByText('DEPLOYMENTS')).toBeInTheDocument();
+      checkNoCount(context3, 'Context Pods Count');
+      checkNoCount(context3, 'Context Deployments Count');
+    }
   });
 });
 
