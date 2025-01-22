@@ -84,6 +84,23 @@ test('expect cluster to be created', async () => {
   expect(extensionApi.kubernetes.createResources).not.toBeCalled();
 });
 
+test('expect cluster to be created using config file', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+  expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+});
+
 test('expect cluster to be created with ingress', async () => {
   (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
   const logger = {
@@ -162,6 +179,16 @@ test('check that consilience check returns no warning messages', async () => {
 
 test('check that consilience check returns warning message when image has no sha256 digest', async () => {
   const checks = await connectionAuditor('docker', { 'kind.cluster.creation.controlPlaneImage': 'image:tag' });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('warning');
+});
+
+test('check that consilience check returns warning message when config file is specified', async () => {
+  const checks = await connectionAuditor('docker', { 'kind.cluster.creation.configFile': '/path' });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
