@@ -141,3 +141,48 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.kubernetesDeleteDeployment).toHaveBeenCalled());
 });
+
+test('deployemnts list is updated when kubernetesCurrentContextDeploymentsFiltered changes', async () => {
+  const deployment1: V1Deployment = {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: {
+      name: 'my-deployment-1',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      replicas: 2,
+      selector: {},
+      template: {},
+    },
+  };
+  const deployment2: V1Deployment = {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: {
+      name: 'my-deployment-2',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      replicas: 2,
+      selector: {},
+      template: {},
+    },
+  };
+  const filtered = writable<KubernetesObject[]>([deployment1, deployment2]);
+  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = filtered;
+
+  const component = render(DeploymentsList);
+  const deploymentName1 = screen.getByRole('cell', { name: 'my-deployment-1 test-namespace' });
+  expect(deploymentName1).toBeInTheDocument();
+  const deploymentName2 = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
+  expect(deploymentName2).toBeInTheDocument();
+
+  filtered.set([deployment2]);
+  await component.rerender({});
+
+  const deploymentName1after = screen.queryByRole('cell', { name: 'my-deployment-1 test-namespace' });
+  expect(deploymentName1after).not.toBeInTheDocument();
+  const deploymentName2after = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
+  expect(deploymentName2after).toBeInTheDocument();
+});
