@@ -50,18 +50,52 @@ Restart=always
 
 ## Exploring Quadlet with Podman Desktop
 
-Since on non-linux platform Podman runs in virtual machines (WSL, hyperV, etc.) we cannot just use the file explorer,
-we will be using a dedicated extension called Podman Quadlet in Podman Desktop to [list](#list-quadlets), [generate](#generate-quadlets) and [edit Quadlets](#edit-quadlets) on the available machines.
+Since on non-linux platform Podman runs in virtual machines (WSL, hyperV, etc.) we cannot just use the file explorer.
+
+We will be using a dedicated extension called Podman Quadlet in Podman Desktop to [list](#list-quadlets), [generate](#generate-quadlets) and [edit Quadlets](#edit-quadlets) on the available machines.
 
 If you already have the latest version of Podman Desktop you can <a href="podman-desktop:extension/podman-desktop.quadlet">**click here to install the Podman Quadlet extension**</a>
 
-### List Quadlets 📖
+This extension introduced some useful feature to interact with the Quadlets,
+
+- It integrates [Podlet](#podlet),
+- It adds a dedicated page to list all Quadlets file across your podman machines
+- It allows to delete, start or stop a specific Quadlet
+
+### Podlet
+
+Internally, the Podman Quadlet extension uses [Podlet](https://github.com/containers/podlet) to generate Quadlets from existing object.
+
+<details>
+  <summary>Install <code>Podlet</code> with Podman Desktop</summary>
+
+Once the Podman Quadlet extension installed in Podman Desktop, you may go `Settings > CLI Tools` to found Podlet
+
+<ThemedImage
+alt="Feedback Form"
+sources={{
+    light: require('./img/podman-quadlet/cli-podlet-light.png').default,
+    dark: require('./img/podman-quadlet/cli-podlet-dark.png').default,
+  }}
+/>
+<br/><br/>
+Click on **Install** to start the installation.
+<br/>
+:::note
+
+You may need to select which version to install, we recommend to use the latest available.
+
+:::
+
+</details>
+
+### List Quadlets :clipboard:
 
 On the Podman Quadlet page, you can **Refresh** to let the extension fetch the quadlets on each machine.
 
 :::note
 
-Since the Quadlets are files in the machines we cannot detect changes.
+Since the Quadlets are files in the machines we cannot detect changes automatically.
 
 :::
 
@@ -73,13 +107,81 @@ sources={{
   }}
 />
 
-### Generate Quadlets
+### Generate Quadlets :hammer:
 
-Through the extension, you can generate quadlets
+:::info
 
-### Edit Quadlets
+To be able to generate Quadlets you need to install Podlet, thankfully Podman Desktop let you
+
+:::
+
+Let's generate a quadlet from an existing container! If you don't have any container running, you may start a nginx container with the following command
+
+```shell
+podman run --name nginx-demo -d -p 80:8080 nginx
+```
+
+Inside Podman Desktop, in the containers page, you may see your nginx container.
+Let's generate a Quadlet using `Actions > Generate Quadlet`
+
+<ThemedImage
+alt="Feedback Form"
+sources={{
+    light: require('./img/podman-quadlet/generate-quadlet-action-light.png').default,
+    dark: require('./img/podman-quadlet/generate-quadlet-action-dark.png').default,
+  }}
+/>
+<br/><br/>
+
+:::note
+
+There are known issue with certain containers, currently only container created through the podman CLI can generate a Quadlet.
+
+Learn more on [Podlet repository (issue #134)](https://github.com/containers/podlet/issues/134)
+
+:::
+
+You will be redirected to the Quadlet generate form. You may see a few elements
+
+- The Container engine you are using
+- The Quadlet Type you are trying to generate
+- The resource you selected, here the `nginx-demo` container.
+
+<ThemedImage
+alt="Feedback Form"
+sources={{
+    light: require('./img/podman-quadlet/generate-form-options-light.png').default,
+    dark: require('./img/podman-quadlet/generate-form-options-dark.png').default,
+  }}
+/>
+<br/><br/>
+
+Click on **Generate**.
+
+### Edit Quadlets :pen:
+
+When opening a Quadlet details page, we may access 3 tabs
+
+- `Generated` result of the podman systemd generate (readonly)
+- `Source` Quadlet file used to generate the systemd service (editable)
+- `Logs` More in the [dedicated section](#quadlet-logs-scroll)
 
 You can edit a listed Quadlet and update its specification.
+
+### Quadlet logs :scroll:
+
+Since Quadlet are used to generate systemd service, we would need to use journactl to be able to access the logs, this is often a complicated task...
+
+Thankfully the extension do it for us! When opening the details of a Quadlet, you may go to the logs tab, to see what is happening.
+
+<ThemedImage
+alt="Feedback Form"
+sources={{
+    light: require('./img/podman-quadlet/quadlet-details-logs-light.png').default,
+    dark: require('./img/podman-quadlet/quadlet-details-logs-dark.png').default,
+  }}
+/>
+<br/><br/>
 
 [^1]: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html#description
 
