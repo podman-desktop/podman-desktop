@@ -70,8 +70,7 @@ async function registerProvider(
 ): Promise<void> {
   const disposable = provider.setKubernetesProviderConnectionFactory(
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      create: (params: { [key: string]: any }, logger?: Logger, token?: CancellationToken) => {
+      create: (params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken) => {
         if (kindPath) {
           return createCluster(params, kindPath, telemetryLogger, logger, token);
         }

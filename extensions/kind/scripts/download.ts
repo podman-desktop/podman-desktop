@@ -20,7 +20,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Octokit } from '@octokit/rest';
-import type { OctokitOptions } from '@octokit/core/dist-types/types';
+import type { OctokitOptions, ReposGetContentResponseData, OctokitResponse } from '@octokit/core/dist-types/types';
 
 const CONTOUR_ORG = 'projectcontour';
 const CONTOUR_REPO = 'contour';
@@ -46,7 +46,7 @@ async function download(tagVersion: string, repoPath: string, fileName: string):
   console.log(
     `Downloading Contour manifests from https://github.com/${CONTOUR_ORG}/${CONTOUR_REPO}/${CONTOUR_DEPLOY_PATH}/${CONTOUR_DEPLOY_FILE} version ${tagVersion}`,
   );
-  const manifests = await octokit.rest.repos.getContent({
+  const manifests: OctokitResponse<ReposGetContentResponseData> = await octokit.rest.repos.getContent({
     owner: CONTOUR_ORG,
     repo: CONTOUR_REPO,
     path: repoPath + '/' + fileName,
@@ -57,13 +57,10 @@ async function download(tagVersion: string, repoPath: string, fileName: string):
   });
   let buffer;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((manifests.data as any).encoding && (manifests.data as any).encoding === 'base64') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buffer = Buffer.from((manifests.data as any).content, 'base64');
+  if (manifests.data.encoding && manifests.data.encoding === 'base64') {
+    buffer = Buffer.from(manifests.data.content, 'base64');
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buffer = Buffer.from((manifests.data as any).content);
+    buffer = Buffer.from(manifests.data.content);
   }
 
   fs.writeFileSync(destFile, buffer);
@@ -71,7 +68,6 @@ async function download(tagVersion: string, repoPath: string, fileName: string):
 }
 
 // grab the manifests from the given URL
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // download the file from the given URL and store the content in destFile
 // particular contour file should be manually added to the repo once downloaded
 // run download script on demand using `pnpm --cwd extensions/kind/ run install:contour`

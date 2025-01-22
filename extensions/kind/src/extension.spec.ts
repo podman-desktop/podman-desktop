@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as fs from 'node:fs';
 
 import type * as extensionApi from '@podman-desktop/api';
@@ -107,7 +105,7 @@ beforeEach(() => {
   } as unknown as extensionApi.Provider);
 
   const createProviderMock = vi.fn();
-  (podmanDesktopApi.provider as any).createProvider = createProviderMock;
+  podmanDesktopApi.provider.createProvider = createProviderMock;
   createProviderMock.mockImplementation(() => ({ setKubernetesProviderConnectionFactory: vi.fn() }));
 
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
@@ -116,14 +114,16 @@ beforeEach(() => {
 
 test('check we received notifications ', async () => {
   const onDidUpdateContainerConnectionMock = vi.fn();
-  (podmanDesktopApi.provider as any).onDidUpdateContainerConnection = onDidUpdateContainerConnectionMock;
+  vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(
+    onDidUpdateContainerConnectionMock,
+  );
 
   const listContainersMock = vi.fn();
-  (podmanDesktopApi.containerEngine as any).listContainers = listContainersMock;
+  podmanDesktopApi.containerEngine.listContainers = listContainersMock;
   listContainersMock.mockResolvedValue([]);
 
   let callbackCalled = false;
-  onDidUpdateContainerConnectionMock.mockImplementation((callback: any) => {
+  onDidUpdateContainerConnectionMock.mockImplementation((callback: () => void) => {
     callback();
     callbackCalled = true;
   });
@@ -269,18 +269,18 @@ test('Ensuring a progress task is created when calling kind.image.move command',
     {};
 
   const registerCommandMock = vi.fn();
-  (podmanDesktopApi.commands as any).registerCommand = registerCommandMock;
+  podmanDesktopApi.commands.registerCommand = registerCommandMock;
 
   registerCommandMock.mockImplementation((command: string, callback: (image: { image: string }) => Promise<void>) => {
     commandRegistry[command] = callback;
   });
 
   const createProviderMock = vi.fn();
-  (podmanDesktopApi.provider as any).createProvider = createProviderMock;
+  podmanDesktopApi.provider.createProvider = createProviderMock;
   createProviderMock.mockImplementation(() => ({ setKubernetesProviderConnectionFactory: vi.fn() }));
 
   const listContainersMock = vi.fn();
-  (podmanDesktopApi.containerEngine as any).listContainers = listContainersMock;
+  podmanDesktopApi.containerEngine.listContainers = listContainersMock;
   listContainersMock.mockResolvedValue([]);
 
   const withProgressMock = vi
@@ -288,10 +288,10 @@ test('Ensuring a progress task is created when calling kind.image.move command',
     .mockImplementation(() =>
       extension.moveImage({ report: vi.fn() }, { id: 'id', image: 'hello:world', engineId: '1' }),
     );
-  (podmanDesktopApi.window as any).withProgress = withProgressMock;
+  podmanDesktopApi.window.withProgress = withProgressMock;
 
   const contextSetValueMock = vi.fn();
-  (podmanDesktopApi.context as any).setValue = contextSetValueMock;
+  podmanDesktopApi.context.setValue = contextSetValueMock;
   vi.spyOn(podmanDesktopApi.cli, 'createCliTool').mockReturnValue({
     registerUpdate: vi.fn(),
     registerInstaller: vi.fn(),

@@ -23,6 +23,7 @@ import type { AuditRecord, AuditRequestItems, AuditResult, CancellationToken } f
 import * as extensionApi from '@podman-desktop/api';
 // @ts-expect-error ignore type error https://github.com/janl/mustache.js/issues/797
 import mustache from 'mustache';
+import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
@@ -44,15 +45,16 @@ export function getKindClusterConfig(
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getTags(tags: any[]): any[] {
+function getTags(tags: Tags): Tags {
   for (const tag of tags) {
-    if (tag.tag === 'tag:yaml.org,2002:int') {
-      const newTag = { ...tag };
-      newTag.test = /^(0[0-7][0-7][0-7])$/;
-      newTag.resolve = (str: string): number => parseInt(str, 8);
-      tags.unshift(newTag);
-      break;
+    if (typeof tag === 'object' && 'tag' in tag) {
+      if (tag.tag === 'tag:yaml.org,2002:int') {
+        const newTag = { ...tag };
+        newTag.test = /^(0[0-7][0-7][0-7])$/;
+        newTag.resolve = (str: string): number => parseInt(str, 8);
+        tags.unshift(newTag);
+        break;
+      }
     }
   }
   return tags;
@@ -108,8 +110,7 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
 }
 
 export async function createCluster(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params: { [key: string]: any },
+  params: { [key: string]: unknown },
   kindCli: string,
   telemetryLogger: extensionApi.TelemetryLogger,
   logger?: extensionApi.Logger,
@@ -117,19 +118,19 @@ export async function createCluster(
 ): Promise<void> {
   // grab config file
   let configFile;
-  if (params['kind.cluster.creation.configFile']) {
-    configFile = params['kind.cluster.creation.configFile'];
+  if (params['kind.cluster.creation.configFile'] && typeof params['kind.cluster.creation.configFile'] === 'string') {
+    configFile = String(params['kind.cluster.creation.configFile']);
   }
 
   let clusterName = 'kind';
-  if (params['kind.cluster.creation.name']) {
-    clusterName = params['kind.cluster.creation.name'];
+  if (params['kind.cluster.creation.name'] && typeof params['kind.cluster.creation.name'] === 'string') {
+    clusterName = String(params['kind.cluster.creation.name']);
   }
 
   // grab provider
   let provider = 'docker';
   if (params['kind.cluster.creation.provider']) {
-    provider = params['kind.cluster.creation.provider'];
+    provider = String(params['kind.cluster.creation.provider']);
   }
 
   const env = { ...process.env } as { [key: string]: string };
@@ -140,24 +141,30 @@ export async function createCluster(
 
   // grab http host port
   let httpHostPort = 9090;
-  if (params['kind.cluster.creation.http.port']) {
-    httpHostPort = params['kind.cluster.creation.http.port'];
+  if (params['kind.cluster.creation.http.port'] && typeof params['kind.cluster.creation.http.port'] === 'number') {
+    httpHostPort = Number(params['kind.cluster.creation.http.port']);
   }
 
   // grab https host port
   let httpsHostPort = 9443;
-  if (params['kind.cluster.creation.https.port']) {
-    httpsHostPort = params['kind.cluster.creation.https.port'];
+  if (params['kind.cluster.creation.https.port'] && typeof params['kind.cluster.creation.https.port'] === 'number') {
+    httpsHostPort = Number(params['kind.cluster.creation.https.port']);
   }
 
   let ingressController = false;
-
+  // The params['kind.cluster.creation.ingress'] can be only "on" or "undefined"
   if (params['kind.cluster.creation.ingress']) {
-    ingressController = params['kind.cluster.creation.ingress'];
+    ingressController = Boolean(params['kind.cluster.creation.ingress']);
   }
 
   // grab custom kind node image if defined
-  const controlPlaneImage = params['kind.cluster.creation.controlPlaneImage'];
+  let controlPlaneImage = undefined;
+  if (
+    params['kind.cluster.creation.controlPlaneImage'] &&
+    typeof params['kind.cluster.creation.controlPlaneImage'] === 'string'
+  ) {
+    controlPlaneImage = String(params['kind.cluster.creation.controlPlaneImage']);
+  }
 
   // create the config file
   const kindClusterConfig = getKindClusterConfig(clusterName, httpHostPort, httpsHostPort, controlPlaneImage);
@@ -174,8 +181,7 @@ export async function createCluster(
   // update PATH to include kind
   env.PATH = getKindPath() ?? '';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const telemetryOptions: Record<string, any> = {
+  const telemetryOptions: Record<string, unknown> = {
     configFile,
     provider,
     httpHostPort,
