@@ -137,7 +137,7 @@ for (const { extensionName, extensionType } of extentionTypes) {
 
         test('Extension is active and there are not errors', async () => {
           const extensionsPage = await navigationBar.openExtensions();
-          const extensionHeading = extensionType === OPENSHIFT_SANDBOX ? 'Red Hat OpenShift Sandbox' : extensionType;
+          const extensionHeading = extensionType === OPENSHIFT_SANDBOX ? 'Developer Sandbox' : extensionType;
           const extensionPage = await extensionsPage.openExtensionDetails(
             extensionName,
             extensionLabel,
