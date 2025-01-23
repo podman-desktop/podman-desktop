@@ -43,6 +43,9 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.description).toBe(
     'Show providers in the status bar',
   );
+  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.experimental?.githubDiscussionLink).toBe(
+    'https://github.com/podman-desktop/podman-desktop/discussions/10802',
+  );
 });
 
 test('False should be default if not in dev env', () => {
