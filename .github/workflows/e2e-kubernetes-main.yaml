@@ -38,6 +38,13 @@ on:
         description: 'Podman Desktop repo branch'
         type: string
         required: true
+      kind_provider: 
+        description: 'Kind cluster provider type'
+        type: choice
+        options:
+        - docker
+        - podman 
+        required: true
 
 jobs:
   e2e-tests:
@@ -52,6 +59,12 @@ jobs:
 
       - uses: actions/checkout@v4
         if: github.event_name == 'push'
+
+      - name: Set the default provider type variable
+        env:
+          DEFAULT_KIND_PROVIDER: 'docker'
+        run: |
+          echo "KIND_PROVIDER=${{ github.event.inputs.kind_provider || env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
 
       - name: Update podman
         run: |
@@ -106,6 +119,7 @@ jobs:
           PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
           TEST_PODMAN_MACHINE: 'true'
           SKIP_KIND_INSTALL: 'true'
+          KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
         run: |
           echo "Compiling the Podman Desktop in production mode"

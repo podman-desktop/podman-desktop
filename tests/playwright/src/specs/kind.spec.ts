@@ -42,6 +42,7 @@ let resourcesPage: ResourcesPage;
 let kindResourceCard: ResourceConnectionCardPage;
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
+const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('kind-e2e');
@@ -87,14 +88,13 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
       });
     });
   test.describe('Kind cluster validation tests', () => {
-    test.skip(
-      !!process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux',
-      'Tests suite should not run on Linux platform',
-    );
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, { useIngressController: false });
+        await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+          providerType: providerTypeGHA,
+          useIngressController: false,
+        });
       } else {
         await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
       }
@@ -131,14 +131,13 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   });
   test.describe('Kind cluster operations - Details', () => {
-    test.skip(
-      !!process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux',
-      'Tests suite should not run on Linux platform',
-    );
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, { useIngressController: false });
+        await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+          providerType: providerTypeGHA,
+          useIngressController: false,
+        });
       } else {
         await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
       }

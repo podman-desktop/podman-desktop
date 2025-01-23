@@ -26,7 +26,7 @@ import { CreateClusterBasePage } from './cluster-creation-base-page';
 export class CreateKindClusterPage extends CreateClusterBasePage {
   readonly clusterNameField: Locator;
   readonly controllerCheckbox: Locator;
-  readonly providerTypeCombobox: Locator;
+  readonly providerTypeDropdown: Locator;
   readonly httpPort: Locator;
   readonly httpsPort: Locator;
   readonly containerImage: Locator;
@@ -40,7 +40,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
         name: 'Setup an ingress controller',
       })
       .locator('..');
-    this.providerTypeCombobox = this.clusterPropertiesInformation.getByLabel('Provider Type');
+    this.providerTypeDropdown = this.clusterPropertiesInformation.getByLabel('Provider Type');
     this.httpPort = this.clusterPropertiesInformation.getByLabel('HTTP Port');
     this.httpsPort = this.clusterPropertiesInformation.getByLabel('HTTPS Port');
     this.containerImage = this.clusterPropertiesInformation.getByPlaceholder('Leave empty for using latest.');
@@ -49,7 +49,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   public async createClusterDefault(clusterName: string = 'kind-cluster', timeout?: number): Promise<void> {
     return test.step('Create default cluster', async () => {
       await fillTextbox(this.clusterNameField, clusterName);
-      await playExpect(this.providerTypeCombobox).toContainText('podman');
+      await playExpect(this.providerTypeDropdown).toHaveText('podman');
       await playExpect(this.httpPort).toHaveValue('9090');
       await playExpect(this.httpsPort).toHaveValue('9443');
       await playExpect(this.controllerCheckbox).toBeChecked();
@@ -67,21 +67,27 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
       await fillTextbox(this.clusterNameField, clusterName);
 
       if (providerType) {
-        await playExpect(this.providerTypeCombobox).toBeVisible();
-        const providerTypeOptions = await this.providerTypeCombobox.locator('option').allInnerTexts();
-        if (providerTypeOptions.includes(providerType)) {
-          await this.providerTypeCombobox.selectOption({ value: providerType });
-          await playExpect(this.providerTypeCombobox).toHaveValue(providerType);
-        } else {
+        try {
+          await playExpect(this.providerTypeDropdown).toBeVisible();
+          await this.providerTypeDropdown.click();
+          const providerTypeOptions = this.clusterPropertiesInformation.getByLabel('Provider Type Options');
+          await playExpect(providerTypeOptions).toBeVisible();
+          const providerTypeButton = providerTypeOptions.getByRole('button', { name: providerType, exact: true });
+          await playExpect(providerTypeButton).toBeEnabled();
+          await providerTypeButton.click();
+          await playExpect(this.providerTypeDropdown).toHaveText(providerType);
+        } catch {
           throw new Error(`${providerType} doesn't exist`);
         }
       }
 
       if (httpPort) {
         await fillTextbox(this.httpPort, httpPort);
+        await playExpect(this.httpPort).toHaveText(httpPort);
       }
       if (httpsPort) {
         await fillTextbox(this.httpsPort, httpsPort);
+        await playExpect(this.httpsPort).toHaveText(httpsPort);
       }
 
       await playExpect(this.controllerCheckbox).toBeEnabled();
@@ -95,6 +101,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
 
       if (containerImage) {
         await fillTextbox(this.containerImage, containerImage);
+        await playExpect(this.containerImage).toHaveText(containerImage);
       }
       await this.createCluster(timeout);
     });
