@@ -443,7 +443,7 @@ describe('container connections', () => {
     providerInfos.set([MULTI_CONNECTIONS]);
 
     // render
-    const { getByRole, getAllByRole } = render(PullImage);
+    const { getByRole } = render(PullImage);
     const dropdown = getByRole('button', { name: 'Container Engine' });
     expect(dropdown).toBeEnabled();
 
@@ -452,10 +452,9 @@ describe('container connections', () => {
 
     // get the connection we want
     const connection3 = await vi.waitFor(() => {
-      const buttons = getAllByRole('button');
-      const target = buttons.find(button => button.textContent?.trim() === connectionTarget.name);
-      if (!target) throw new Error('cannot found connection');
-      return target;
+      const button = getByRole('button', { name: connectionTarget.name });
+      expect(button).toBeDefined();
+      return button;
     });
 
     // select it
