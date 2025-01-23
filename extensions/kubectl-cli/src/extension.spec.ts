@@ -407,7 +407,7 @@ describe('postActivate', () => {
       tag: 'v1.1.0',
       id: -1,
     } as KubectlGithubReleaseArtifactMetadata);
-    // mock return value bellow current
+    // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
         {
@@ -467,7 +467,7 @@ describe('postActivate', () => {
           });
         }),
     );
-    // mock return value bellow current
+    // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
         {
@@ -523,7 +523,7 @@ describe('postActivate', () => {
       tag: 'v1.1.0',
       id: -1,
     } as KubectlGithubReleaseArtifactMetadata);
-    // mock return value bellow current
+    // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
         {
@@ -585,7 +585,7 @@ describe('postActivate', () => {
           });
         }),
     );
-    // mock return value bellow current
+    // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
         {
@@ -644,7 +644,7 @@ describe('postActivate', () => {
           });
         }),
     );
-    // mock return value bellow current
+    // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
         {
