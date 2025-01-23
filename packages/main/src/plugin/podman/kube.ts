@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,14 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
+import { loadAll } from 'js-yaml';
+import type { Pack } from 'tar-fs';
+import tar from 'tar-fs';
 
 /**
  * This function is a re-implementation of the imageNamePrefix on the podman repository
@@ -37,4 +45,117 @@ export function getImageNamePrefix(content: string): string {
     prefix = split[0];
   }
   return prefix;
+}
+
+export class KubePlayContext {
+  #initialized: boolean = false;
+  #file: string | undefined;
+  // context directory
+  #context: string;
+
+  // raw YAML content
+  #content: string | undefined;
+  // contexts
+  #buildContexts: Map<string, string>;
+
+  protected constructor(options: {
+    file?: string;
+    content?: string;
+    context: string;
+  }) {
+    if (!options.file && !options.content) throw new Error('either a file or raw content must be provided');
+
+    this.#file = options.file;
+    this.#content = options.content;
+    this.#context = options.context;
+
+    this.#buildContexts = new Map();
+  }
+
+  static fromContent(content: string, context: string): KubePlayContext {
+    return new KubePlayContext({
+      content: content,
+      context: context,
+    });
+  }
+
+  static fromFile(file: string, context?: string): KubePlayContext {
+    return new KubePlayContext({
+      file: file,
+      context: context ?? path.dirname(file),
+    });
+  }
+
+  protected analyze(): void {
+    if (!this.#content) throw new Error('KubePlayContext: error while analysing content: content cannot be undefined');
+    const resources: unknown[] = loadAll(this.#content);
+
+    // for each resource
+    for (const resource of resources) {
+      // ensure resource is valid object
+      if (!resource || typeof resource !== 'object') throw new Error(`invalid resource`);
+
+      // ensure kind property exists
+      if (!('kind' in resource) || typeof resource.kind !== 'string')
+        throw new Error(`invalid kubernetes resource: missing kind field`);
+
+      // ignore non-pod resource
+      if (resource.kind.toLowerCase() !== 'pod') continue;
+
+      // ensure containers exists on pod resource
+      if (!('spec' in resource) || !resource.spec || typeof resource.spec !== 'object')
+        throw new Error(`invalid kubernetes resource: pod missing spec field`);
+      if (
+        !('containers' in resource.spec) ||
+        typeof resource.spec.containers !== 'object' ||
+        !Array.isArray(resource.spec.containers)
+      )
+        throw new Error(`invalid kubernetes resource: pod missing spec field`);
+
+      for (const container of resource.spec.containers) {
+        if (!('image' in container || typeof container.image !== 'string'))
+          throw new Error(`invalid kubernetes resource in: pod has a container without defined image`);
+
+        const image: string = container.image;
+        const buildDirectory = path.join(this.#context, getImageNamePrefix(image));
+
+        // search for containerfile in the build directory
+        const containerfile: string | undefined = ['Containerfile', 'Dockerfile'].find(file =>
+          existsSync(path.join(buildDirectory, file)),
+        );
+        if (!containerfile) continue;
+
+        this.#buildContexts.set(image, buildDirectory);
+      }
+    }
+  }
+
+  build(): NodeJS.ReadableStream {
+    if (!this.#initialized) throw new Error('KubePlayContext must be initialized');
+    if (!this.#content) throw new Error('content is undefined');
+    const content = this.#content;
+
+    return tar.pack(this.#context, {
+      finalize: false,
+      entries: Array.from(this.#buildContexts.keys()),
+      finish(stream: Pack): void {
+        stream.entry({ name: `play.yaml` }, content);
+        stream.finalize();
+      },
+    }) as unknown as NodeJS.ReadableStream;
+  }
+
+  async init(): Promise<void> {
+    if (this.#file) {
+      this.#content = await readFile(this.#file, 'utf8');
+    }
+
+    this.analyze();
+    this.#initialized = true;
+  }
+
+  getBuildContexts(): string[] {
+    if (!this.#initialized) throw new Error('KubePlayContext must be initialized');
+    return Array.from(this.#buildContexts.values());
+  }
 }

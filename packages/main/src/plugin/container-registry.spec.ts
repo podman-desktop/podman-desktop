@@ -37,6 +37,7 @@ import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
+import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ContainerCreateOptions } from '/@api/container-info.js';
@@ -428,6 +429,7 @@ vi.mock('node:stream/promises', async () => {
 });
 
 vi.mock('node:fs/promises');
+vi.mock('/@/plugin/podman/kube.js');
 
 beforeEach(() => {
   vi.mocked(apiSender.receive).mockClear();
@@ -5973,6 +5975,11 @@ describe('kube play', () => {
     ApiVersion: '1.41',
   } as unknown as Dockerode.DockerVersion;
 
+  const PODMAN_531_VERSION: Dockerode.DockerVersion = {
+    Version: '5.3.1',
+    ApiVersion: '1.41',
+  } as unknown as Dockerode.DockerVersion;
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -5998,6 +6005,21 @@ describe('kube play', () => {
   });
 
   test('build option false should use playKube with YAML file', async () => {
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube('dummy-file', {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+  });
+
+  test('KubePlayContext returning zero build contexts should play kube with file', async () => {
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 

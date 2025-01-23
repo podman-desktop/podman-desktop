@@ -842,27 +842,27 @@ export class LibpodDockerode {
       };
 
       // if we don't build - we should send Content-Type application/yaml
-      if (!options?.build) {
-        // patch the modem to not send x-tar header as content-type
-        const originalBuildRequest = this.modem.buildRequest;
-        this.modem.buildRequest = function (
-          options: RequestOptions,
-          context: DialOptions,
-          data?: string | Buffer | NodeJS.ReadableStream,
-          callback?: DockerModem.RequestCallback,
-        ): void {
-          // in case of kube play, docker-modem will send the header application/tar while it's basically the content of the file so it should be application/yaml
-          if (context && typeof context === 'object' && 'path' in context) {
-            if (String(context.path).includes('/libpod/play/kube')) {
-              if (options && typeof options === 'object' && 'headers' in options) {
-                options.headers = { 'Content-Type': 'application/yaml' };
-              }
+      // application/tar is not supported
+      const contentType = options?.build ? 'application/x-tar' : 'application/yaml';
+
+      // patch the modem to not send x-tar header as content-type
+      const originalBuildRequest = this.modem.buildRequest;
+      this.modem.buildRequest = function (
+        options: RequestOptions,
+        context: DialOptions,
+        data?: string | Buffer | NodeJS.ReadableStream,
+        callback?: DockerModem.RequestCallback,
+      ): void {
+        // in case of kube play, docker-modem will send the header application/tar while it's basically the content of the file so it should be application/yaml
+        if (context && typeof context === 'object' && 'path' in context) {
+          if (String(context.path).includes('/libpod/play/kube')) {
+            if (options && typeof options === 'object' && 'headers' in options) {
+              options.headers = { 'Content-Type': contentType };
             }
           }
-
-          originalBuildRequest.call(this, options, context, data, callback);
-        };
-      }
+        }
+        originalBuildRequest.call(this, options, context, data, callback);
+      };
 
       return new Promise((resolve, reject) => {
         this.modem.dial(optsf, (err: unknown, data: unknown) => {
