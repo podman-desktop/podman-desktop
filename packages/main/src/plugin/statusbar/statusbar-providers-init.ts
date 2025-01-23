@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ export class StatusbarProvidersInit {
   init(): void {
     const statusbarProvidersConfiguration: IConfigurationNode = {
       id: `preferences.experimental.statusbarProviders`,
-      title: 'Experimental (Statusbar Providers)',
+      title: 'Experimental (Status Bar Providers)',
       type: 'object',
       properties: {
         [`statusbarProviders.showProviders`]: {
-          description: 'Show providers in statusbar',
+          description: 'Show providers in the status bar',
           type: 'boolean',
           default: import.meta.env.DEV ? true : false,
         },
