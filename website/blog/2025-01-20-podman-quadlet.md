@@ -60,7 +60,8 @@ This extension introduced some useful feature to interact with the Quadlets,
 
 - It integrates [Podlet](#podlet),
 - It adds a dedicated page to list all Quadlets file across your podman machines
-- It allows to delete, start or stop a specific Quadlet
+- It allows to delete, edit, start or stop a specific Quadlet
+- It provides logs from journalctl
 
 ### Podlet
 
@@ -69,8 +70,9 @@ Internally, the Podman Quadlet extension uses [Podlet](https://github.com/contai
 <details>
   <summary>Install <code>Podlet</code> with Podman Desktop</summary>
 
-Once the Podman Quadlet extension installed in Podman Desktop, you may go `Settings > CLI Tools` to found Podlet
+Once the Podman Quadlet extension installed in Podman Desktop, go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools**. to found Podlet
 
+<br/>
 <ThemedImage
 alt="Feedback Form"
 sources={{
@@ -84,6 +86,13 @@ Click on **Install** to start the installation.
 :::note
 
 You may need to select which version to install, we recommend to use the latest available.
+
+:::
+
+:::tip
+
+You can install Podlet yourself from they [GitHub release](https://github.com/containers/podlet/releases) page,
+at startup the extension will detect system-wide podlet executable and use it.
 
 :::
 
@@ -170,7 +179,7 @@ You can edit a listed Quadlet and update its specification.
 
 ### Quadlet logs :scroll:
 
-Since Quadlet are used to generate systemd service, we would need to use journactl to be able to access the logs, this is often a complicated task...
+Since Quadlet are used to generate systemd service, we would need to use [journactl](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html) to be able to access the logs, this is often a complicated task...
 
 Thankfully the extension do it for us! When opening the details of a Quadlet, you may go to the logs tab, to see what is happening.
 
@@ -182,6 +191,12 @@ sources={{
   }}
 />
 <br/><br/>
+
+## Conclusion
+
+TODO conclusion
+
+I
 
 [^1]: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html#description
 
