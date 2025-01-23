@@ -8,6 +8,8 @@ import Layout from '@theme/Layout';
 import type { SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
 
+import { sendGoatCounterEvent } from '../index';
+
 async function grabfilenameforMac(
   setDownloadData: React.Dispatch<SetStateAction<{ version: string; binary: string; flatpak: string }>>,
 ): Promise<void> {
@@ -61,7 +63,10 @@ export function LinuxDownloads(): JSX.Element {
           <div className="pt-8">
             <Link
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
-              to={downloadData.flatpak}>
+              to={downloadData.flatpak}
+              onClick={() => {
+                sendGoatCounterEvent('download-linux');
+              }}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </Link>
@@ -73,7 +78,10 @@ export function LinuxDownloads(): JSX.Element {
             <div>Other Linux downloads:</div>
             <Link
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-              to={downloadData.binary}>
+              to={downloadData.binary}
+              onClick={() => {
+                sendGoatCounterEvent('download-linux');
+              }}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               AMD64 binary (tar.gz)
             </Link>

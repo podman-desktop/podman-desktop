@@ -8,6 +8,8 @@ import Layout from '@theme/Layout';
 import type { SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
 
+import { sendGoatCounterEvent } from '../index';
+
 async function grabfilenameforWindows(
   setDownloadData: React.Dispatch<
     SetStateAction<{
@@ -116,7 +118,10 @@ export function WindowsDownloads(): JSX.Element {
           <div className="pt-8">
             <Link
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
-              to={downloadData.setupX64}>
+              to={downloadData.setupX64}
+              onClick={() => {
+                sendGoatCounterEvent('download-windows');
+              }}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </Link>
@@ -132,13 +137,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
-                  to={downloadData.setupX64}>
+                  to={downloadData.setupX64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </Link>
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
-                  to={downloadData.setupArm64}>
+                  to={downloadData.setupArm64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </Link>
@@ -150,13 +161,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
-                  to={downloadData.binaryX64}>
+                  to={downloadData.binaryX64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </Link>
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
-                  to={downloadData.binaryArm64}>
+                  to={downloadData.binaryArm64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </Link>
@@ -168,13 +185,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                  to={downloadData.airgapsetupX64}>
+                  to={downloadData.airgapsetupX64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </Link>
                 <Link
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                  to={downloadData.airgapsetupArm64}>
+                  to={downloadData.airgapsetupArm64}
+                  onClick={() => {
+                    sendGoatCounterEvent('download-windows');
+                  }}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </Link>
