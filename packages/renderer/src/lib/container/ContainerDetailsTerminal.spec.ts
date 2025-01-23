@@ -241,7 +241,7 @@ test('terminal active/ restarts connection after restarting a container', async 
 
   await renderObject.rerender({ container: container, screenReaderMode: true });
 
-  await tick();
-
-  expect(shellInContainerMock).toHaveBeenCalledTimes(2);
+  await vi.waitFor(() => {
+    expect(shellInContainerMock).toHaveBeenCalledTimes(2);
+  });
 });
