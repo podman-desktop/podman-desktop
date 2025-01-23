@@ -52,7 +52,7 @@ const executeAction = async (): Promise<void> => {
     {/if}
 
     <div class="flex flex-grow flex-col items-end">
-      <CloseButton on:click={closeAction} />
+      <CloseButton class="text-[var(--pd-modal-text)]" on:click={closeAction} />
     </div>
   </div>
   <div class="flex flex-row items-center italic line-clamp-4">
