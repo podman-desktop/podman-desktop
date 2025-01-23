@@ -21,7 +21,7 @@ However, for smaller-scale use cases such as on a single-node server or during d
 
 What’s a more lightweight solution for running autonomous applications with multiple interacting containers?
 
-In this guide, we'll delve into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
+In this guide, we'll dive into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
 
 <!-- truncate -->
 
@@ -88,6 +88,17 @@ sources={{
     dark: require('./img/podman-quadlet/podman-quadlet-home-dark.png').default,
   }}
 />
+<br/><br/>
+
+In Podman Desktop, you can see the difference between containers managed by a Quadlet with a dedicated icon.
+
+<ThemedImage
+alt="Container Quadlet Icon"
+sources={{
+    light: require('./img/podman-quadlet/container-icon-quadlet-light.png').default,
+    dark: require('./img/podman-quadlet/container-icon-quadlet-dark.png').default,
+  }}
+/>
 
 ### Generate Quadlets :hammer:
 
@@ -107,7 +118,7 @@ sources={{
 Alternatively, you can download Podlet manually from its [GitHub release](https://github.com/containers/podlet/releases).
 The extension will detect the executable automatically.
 
-#### Example: Generating a Quadlet
+#### Example: Generating a Container Quadlet
 
 1. Start a container using Podman:
 
@@ -144,6 +155,19 @@ sources={{
 
 Click **Generate** to finalize the Quadlet.
 
+<ThemedImage
+alt="Quadlet Generate Form"
+sources={{
+light: require('./img/podman-quadlet/generate-form-edit-light.png').default,
+dark: require('./img/podman-quadlet/generate-form-edit-dark.png').default,
+}}
+/>
+<br/><br/>
+
+Once generated, you will be able to **edit** the Quadlet generated, if you are happy with it, you can click **Load into machine**.
+
+Congrats 🎉 you created your first Quadlet!
+
 ### Editing Quadlets :pen:
 
 The Quadlet details page provides three tabs:
@@ -153,6 +177,13 @@ The Quadlet details page provides three tabs:
 - **Logs**: Monitor logs for the service using journalctl.
 
 You can make changes to the Quadlet’s source file and apply updates as needed.
+<ThemedImage
+alt="Quadlet Details Source"
+sources={{
+  light: require('./img/podman-quadlet/quadlet-details-source-light.png').default,
+  dark: require('./img/podman-quadlet/quadlet-details-source-dark.png').default,
+  }}
+/>
 
 ### Viewing Quadlet Logs :scroll:
 
@@ -169,6 +200,7 @@ sources={{
 ## Conclusion
 
 Podman Quadlets provide a powerful way to manage containers declaratively with systemd, bridging the gap between lightweight container management and full orchestration tools like Kubernetes.
+
 With the Podman Quadlet extension in Podman Desktop, users gain a convenient interface to manage Quadlets visually, reducing complexity and saving time.
 
 Try it today and streamline your container workflows!
