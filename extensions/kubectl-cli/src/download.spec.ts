@@ -115,8 +115,11 @@ test('pick the 6th option option in the quickpickmenu and expect it to return th
   });
   const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  showQuickPickMock.mockResolvedValue({ id: 129616500, label: 'Kubernetes v1.27.8', tag: 'v1.27.8' } as any);
+  showQuickPickMock.mockResolvedValue({
+    id: 129616500,
+    label: 'Kubernetes v1.27.8',
+    tag: 'v1.27.8',
+  } as KubectlGithubReleaseArtifactMetadata);
 
   // Expect the test to return the first release from the list (as the function simply returns the first one)
   const kubectlDownload = new KubectlDownload(extensionContext, kubectlGitHubReleasesMock, os);

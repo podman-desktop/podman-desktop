@@ -15,7 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -202,9 +201,11 @@ test('kubectl CLI tool not registered when version cannot be extracted from obje
   const wrongJsonStdout = {
     clientVersion: {
       ...jsonStdout.clientVersion,
+      gitVersion: jsonStdout.clientVersion.gitVersion || undefined,
     },
   };
-  delete (wrongJsonStdout.clientVersion as any).gitVersion;
+
+  delete wrongJsonStdout.clientVersion.gitVersion;
   vi.mocked(extensionApi.process.exec).mockResolvedValue({
     stderr: '',
     stdout: JSON.stringify(wrongJsonStdout),
