@@ -210,7 +210,7 @@ function onWindowClick(e: Event): void {
 
   {#if opened}
     <div
-      class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap">
+      class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap" aria-label={ariaLabel + ' Options'}>
       {#each options as option, i}
         <button
           onkeydown={onKeyDown}
