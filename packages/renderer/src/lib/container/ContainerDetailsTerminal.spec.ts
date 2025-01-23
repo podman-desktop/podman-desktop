@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,18 @@ beforeEach(() => {
   containerTerminals.set([]);
 });
 
+async function waitForContent(container: HTMLElement, textContent: string): Promise<void> {
+  return vi.waitFor(
+    () => {
+      const lines = container.querySelector('div[aria-live="assertive"]');
+      expect(lines).toHaveTextContent(textContent);
+    },
+    {
+      timeout: 2000, // default is 1000 let's double that
+    },
+  );
+}
+
 test('expect being able to reconnect ', async () => {
   const container: ContainerInfoUI = {
     id: 'myContainer',
@@ -91,14 +103,8 @@ test('expect being able to reconnect ', async () => {
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
 
-  // wait 1s
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  // search a div having aria-live="assertive" attribute
-  const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
-
   // check the content
-  expect(terminalLinesLiveRegion).toHaveTextContent('hello world');
+  await waitForContent(renderObject.container, 'hello world');
 
   // should be no terminal being stored
   const terminals = get(containerTerminals);
@@ -117,13 +123,8 @@ test('expect being able to reconnect ', async () => {
   // wait shellInContainerMock is called
   await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(2));
 
-  // wait 1s that everything is done
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  const terminalLinesLiveRegion2 = renderObject.container.querySelector('div[aria-live="assertive"]');
-
   // check the content
-  expect(terminalLinesLiveRegion2).toHaveTextContent('hello world');
+  await waitForContent(renderObject.container, 'hello world');
 
   // creating a new terminal requires new shellInContainer call
   expect(shellInContainerMock).toHaveBeenCalledTimes(2);
@@ -165,14 +166,8 @@ test('terminal active/ restarts connection after stopping and starting a contain
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
 
-  // wait 1s
-  await waitFor(() => renderObject.container.querySelector('div[aria-live="assertive"]'));
-
-  // search a div having aria-live="assertive" attribute
-  const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
-
   // check the content
-  await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
+  await waitForContent(renderObject.container, 'hello world');
 
   container.state = 'EXITED';
 
@@ -233,14 +228,8 @@ test('terminal active/ restarts connection after restarting a container', async 
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
 
-  // wait 1s
-  await waitFor(() => renderObject.container.querySelector('div[aria-live="assertive"]'));
-
-  // search a div having aria-live="assertive" attribute
-  const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
-
   // check the content
-  await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
+  await waitForContent(renderObject.container, 'hello world');
 
   container.state = 'RESTARTING';
 
