@@ -28,7 +28,7 @@ if (!pages[title]) {
       </p>
     </div>
   </div>
-  <div class="h-full overflow-hidden hover:overflow-y-auto" style="margin-bottom:auto">
+  <div class="h-full overflow-y-auto" style="margin-bottom:auto">
     {#each items ?? [] as item}
       <SettingsNavItem title={item.tooltip} href={item.link} selected={meta.url.startsWith(item.link)} onClick={(): string => pages[title] = item.link}
       ></SettingsNavItem>

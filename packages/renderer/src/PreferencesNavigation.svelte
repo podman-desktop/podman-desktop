@@ -86,7 +86,7 @@ onMount(() => {
       </p>
     </div>
   </div>
-  <div class="h-full overflow-hidden hover:overflow-y-auto" style="margin-bottom:auto">
+  <div class="h-full overflow-y-auto" style="margin-bottom:auto">
     {#each [{ title: 'Resources', href: '/preferences/resources', visible: true }, { title: 'Proxy', href: '/preferences/proxies', visible: true }, { title: 'Docker Compatibility', href: '/preferences/docker-compatibility', visible: dockerCompatibilityEnabled }, { title: 'Registries', href: '/preferences/registries', visible: true }, { title: 'Authentication', href: '/preferences/authentication-providers', visible: true }, { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true }, { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true }] as navItem}
       {#if navItem.visible}
         <SettingsNavItem title={navItem.title} href={navItem.href} selected={meta.url === navItem.href} />
