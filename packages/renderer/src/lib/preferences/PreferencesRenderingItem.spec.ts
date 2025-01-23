@@ -92,7 +92,7 @@ test('props title full should use full record id', async () => {
   });
 
   await vi.waitFor(() => {
-    const element = getByText('Hello world foo Bar');
+    const element = getByText('Hello Foo Bar');
     expect(element).toBeDefined();
     expect(element).toHaveClass('font-semibold');
   });
