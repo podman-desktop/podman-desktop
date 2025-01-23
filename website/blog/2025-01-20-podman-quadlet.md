@@ -16,26 +16,34 @@ import TabItem from '@theme/TabItem';
 
 ![banner](img/ai-lab-first-app/banner.png)
 
-## Running Containers Under Systemd: Podman Quadlets
-
 Containers are typically deployed in Kubernetes clusters.
-But at a smaller scale, on a single-node server, or for development purposes, Kubernetes will be overkill.
-What’s the recommended way to run a fully autonomous application with several interacting containers in these cases?
+However, for smaller-scale use cases such as on a single-node server or during development, Kubernetes can be overkill.
 
-The answer is [systemd](https://systemd.io/). It can orchestrate containers as is an already running process manager, and containers are just child processes.
-It’s a perfect fit for running containerized workloads without human intervention.
+What’s a more lightweight solution for running autonomous applications with multiple interacting containers?
 
-## What is a Quadlet?
+In this guide, we'll delve into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
 
-Since version 4.4, Podman supports building, and starting containers (and pulling image, creating volume, pods, etc.) via systemd[^1].
+<!-- truncate -->
 
-These files called `Quadlets` are read during boot (and when systemctl daemon-reload is run) and generate corresponding regular systemd service unit files.
+## What Are Podman Quadlets?
 
-### Just show me the code :eyes:
+Podman Quadlets allow you to manage containers declaratively using systemd.
+Since version 4.4, Podman can create, start, and manage containers (including pulling images, creating volumes, and managing pods) through systemd.
 
-Podman read in a set of directories[^2] files with a specific extension such as `*.container`, `*.pod`, `*.image` etc.
+Quadlets are simplified configuration files—recognized by their specific extensions,
+such as `*.container`, `*.pod`, or `*.image` that systemd processes during startup or when you reload the daemon (systemctl daemon-reload).
 
-Bellow is an example of a nginx container Quadlet, it will start during boot.
+Quadlets generate the equivalent systemd unit files, streamlining the container management process.
+
+### Why Use Quadlets?
+
+- **Declarative Configuration**: Similar to Compose or Kubernetes manifests, Quadlets allow you to declare what you want to run, simplifying the workload setup.
+- **Tight System Integration**: Quadlets align with Podman’s philosophy of integrating seamlessly with Linux, leveraging systemd’s process management capabilities.
+- **Ease of Automation**: Quadlets make it simple to configure containers to start at boot, restart on failure, and more.
+
+### Example: A Quadlet File for Nginx
+
+Below is an example of an `nginx.container` Quadlet file, which starts an nginx container at boot:
 
 ```editorconfig title="~/.config/containers/systemd/nginx.container"
 # nginx.container
@@ -48,68 +56,33 @@ PublishPort=80:8080
 Restart=always
 ```
 
-## Exploring Quadlet with Podman Desktop
+This configuration ensures the container restarts automatically if stopped, and exposes port 8080.
 
-Since on non-linux platform Podman runs in virtual machines (WSL, hyperV, etc.) we cannot just use the file explorer.
+---
 
-We will be using a dedicated extension called Podman Quadlet in Podman Desktop to [list](#list-quadlets), [generate](#generate-quadlets) and [edit Quadlets](#edit-quadlets) on the available machines.
+## Using the Podman Quadlet Extension in Podman Desktop
 
-If you already have the latest version of Podman Desktop you can <a href="podman-desktop:extension/podman-desktop.quadlet">**click here to install the Podman Quadlet extension**</a>
+Managing Quadlets directly on non-Linux platforms can be challenging due to virtualized environments (e.g., WSL or Hyper-V).
+Fortunately, the Podman Desktop extension Podman Quadlet simplifies this process, enabling you to list, generate, and edit Quadlets visually.
 
-This extension introduced some useful feature to interact with the Quadlets,
+### Key Features of the Extension
 
-- It integrates [Podlet](#podlet),
-- It adds a dedicated page to list all Quadlets file across your podman machines
-- It allows to delete, edit, start or stop a specific Quadlet
-- It provides logs from journalctl
+- **Integration with Podlet**: Generates Quadlets from existing Podman objects.
+- **Quadlet Management UI**: Provides a dedicated interface to list, edit, delete, start, and stop Quadlets.
+- **Logs Viewer**: Fetches and displays systemd logs using journalctl for troubleshooting.
 
-### Podlet
+### Installation
 
-Internally, the Podman Quadlet extension uses [Podlet](https://github.com/containers/podlet) to generate Quadlets from existing object.
+If you already have the latest version of Podman Desktop, you can <a href="podman-desktop:extension/podman-desktop.quadlet">**click here to install the Podman Quadlet extension**</a>.
 
-<details>
-  <summary>Install <code>Podlet</code> with Podman Desktop</summary>
+Alternatively, navigate to the Extensions page within Podman Desktop to install it
 
-Once the Podman Quadlet extension installed in Podman Desktop, go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools**. to found Podlet
+### Listing Quadlets :clipboard:
 
-<br/>
-<ThemedImage
-alt="Feedback Form"
-sources={{
-    light: require('./img/podman-quadlet/cli-podlet-light.png').default,
-    dark: require('./img/podman-quadlet/cli-podlet-dark.png').default,
-  }}
-/>
-<br/><br/>
-Click on **Install** to start the installation.
-<br/>
-:::note
-
-You may need to select which version to install, we recommend to use the latest available.
-
-:::
-
-:::tip
-
-You can install Podlet yourself from they [GitHub release](https://github.com/containers/podlet/releases) page,
-at startup the extension will detect system-wide podlet executable and use it.
-
-:::
-
-</details>
-
-### List Quadlets :clipboard:
-
-On the Podman Quadlet page, you can **Refresh** to let the extension fetch the quadlets on each machine.
-
-:::note
-
-Since the Quadlets are files in the machines we cannot detect changes automatically.
-
-:::
+On the Podman Quadlet page, you can view all the Quadlets available across your Podman machines. To update the list, click **Refresh**.
 
 <ThemedImage
-alt="Feedback Form"
+alt="Quadlets List"
 sources={{
     light: require('./img/podman-quadlet/podman-quadlet-home-light.png').default,
     dark: require('./img/podman-quadlet/podman-quadlet-home-dark.png').default,
@@ -118,23 +91,35 @@ sources={{
 
 ### Generate Quadlets :hammer:
 
-:::info
+To generate a Quadlet from an existing container, you’ll need to install [Podlet](https://github.com/containers/podlet). The extension simplifies this process:
 
-To be able to generate Quadlets you need to install Podlet, thankfully Podman Desktop let you
+1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools** and install Podlet using the Podman Quadlet extension.
 
-:::
+<ThemedImage
+alt="Podlet Installation"
+sources={{
+    light: require('./img/podman-quadlet/cli-podlet-light.png').default,
+    dark: require('./img/podman-quadlet/cli-podlet-dark.png').default,
+  }}
+/>
+<br/><br/>
 
-Let's generate a quadlet from an existing container! If you don't have any container running, you may start a nginx container with the following command
+Alternatively, you can download Podlet manually from its [GitHub release](https://github.com/containers/podlet/releases).
+The extension will detect the executable automatically.
+
+#### Example: Generating a Quadlet
+
+1. Start a container using Podman:
 
 ```shell
 podman run --name nginx-demo -d -p 80:8080 nginx
 ```
 
-Inside Podman Desktop, in the containers page, you may see your nginx container.
-Let's generate a Quadlet using `Actions > Generate Quadlet`
+2. In Podman Desktop, find your container on the Containers page.
+3. Use the action menu (**Actions > Generate Quadlet**) to create a Quadlet.
 
 <ThemedImage
-alt="Feedback Form"
+alt="Container actions"
 sources={{
     light: require('./img/podman-quadlet/generate-quadlet-action-light.png').default,
     dark: require('./img/podman-quadlet/generate-quadlet-action-dark.png').default,
@@ -142,22 +127,14 @@ sources={{
 />
 <br/><br/>
 
-:::note
+The generate form includes:
 
-There are known issue with certain containers, currently only container created through the podman CLI can generate a Quadlet.
-
-Learn more on [Podlet repository (issue #134)](https://github.com/containers/podlet/issues/134)
-
-:::
-
-You will be redirected to the Quadlet generate form. You may see a few elements
-
-- The Container engine you are using
-- The Quadlet Type you are trying to generate
-- The resource you selected, here the `nginx-demo` container.
+- The container engine being used
+- The Quadlet type (e.g., `*.container`)
+- The resource (e.g., `nginx-demo`)
 
 <ThemedImage
-alt="Feedback Form"
+alt="Quadlet Generate Form"
 sources={{
     light: require('./img/podman-quadlet/generate-form-options-light.png').default,
     dark: require('./img/podman-quadlet/generate-form-options-dark.png').default,
@@ -165,39 +142,33 @@ sources={{
 />
 <br/><br/>
 
-Click on **Generate**.
+Click **Generate** to finalize the Quadlet.
 
-### Edit Quadlets :pen:
+### Editing Quadlets :pen:
 
-When opening a Quadlet details page, we may access 3 tabs
+The Quadlet details page provides three tabs:
 
-- `Generated` result of the podman systemd generate (readonly)
-- `Source` Quadlet file used to generate the systemd service (editable)
-- `Logs` More in the [dedicated section](#quadlet-logs-scroll)
+- **Generated**: View the systemd unit generated by Podman (read-only).
+- **Source**: Edit the Quadlet file directly.
+- **Logs**: Monitor logs for the service using journalctl.
 
-You can edit a listed Quadlet and update its specification.
+You can make changes to the Quadlet’s source file and apply updates as needed.
 
-### Quadlet logs :scroll:
+### Viewing Quadlet Logs :scroll:
 
-Since Quadlet are used to generate systemd service, we would need to use [journactl](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html) to be able to access the logs, this is often a complicated task...
-
-Thankfully the extension do it for us! When opening the details of a Quadlet, you may go to the logs tab, to see what is happening.
+Since a Quadlet's corresponding resource is managed by systemd we can access corresponding unit's logs using journalctl.
 
 <ThemedImage
-alt="Feedback Form"
+alt="Quadlet Details Logs"
 sources={{
     light: require('./img/podman-quadlet/quadlet-details-logs-light.png').default,
     dark: require('./img/podman-quadlet/quadlet-details-logs-dark.png').default,
   }}
 />
-<br/><br/>
 
 ## Conclusion
 
-TODO conclusion
+Podman Quadlets provide a powerful way to manage containers declaratively with systemd, bridging the gap between lightweight container management and full orchestration tools like Kubernetes.
+With the Podman Quadlet extension in Podman Desktop, users gain a convenient interface to manage Quadlets visually, reducing complexity and saving time.
 
-I
-
-[^1]: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html#description
-
-[^2]: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html#podman-rootless-unit-search-path
+Try it today and streamline your container workflows!
