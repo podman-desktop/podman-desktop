@@ -26,7 +26,7 @@ import { CreateClusterBasePage } from './cluster-creation-base-page';
 export class CreateKindClusterPage extends CreateClusterBasePage {
   readonly clusterNameField: Locator;
   readonly controllerCheckbox: Locator;
-  readonly providerTypeDropdown: Locator;
+  readonly providerType: Locator;
   readonly httpPort: Locator;
   readonly httpsPort: Locator;
   readonly containerImage: Locator;
@@ -40,7 +40,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
         name: 'Setup an ingress controller',
       })
       .locator('..');
-    this.providerTypeDropdown = this.clusterPropertiesInformation.getByLabel('Provider Type');
+    this.providerType = this.clusterPropertiesInformation.getByLabel('Provider Type');
     this.httpPort = this.clusterPropertiesInformation.getByLabel('HTTP Port');
     this.httpsPort = this.clusterPropertiesInformation.getByLabel('HTTPS Port');
     this.containerImage = this.clusterPropertiesInformation.getByPlaceholder('Leave empty for using latest.');
@@ -49,7 +49,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   public async createClusterDefault(clusterName: string = 'kind-cluster', timeout?: number): Promise<void> {
     return test.step('Create default cluster', async () => {
       await fillTextbox(this.clusterNameField, clusterName);
-      await playExpect(this.providerTypeDropdown).toHaveText('podman');
+      await playExpect(this.providerType).toHaveText('podman');
       await playExpect(this.httpPort).toHaveValue('9090');
       await playExpect(this.httpsPort).toHaveValue('9443');
       await playExpect(this.controllerCheckbox).toBeChecked();
@@ -68,16 +68,19 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
 
       if (providerType) {
         try {
-          await playExpect(this.providerTypeDropdown).toBeVisible();
-          await this.providerTypeDropdown.click();
-          const providerTypeOptions = this.clusterPropertiesInformation.getByLabel('Provider Type Options');
-          await playExpect(providerTypeOptions).toBeVisible();
-          const providerTypeButton = providerTypeOptions.getByRole('button', { name: providerType, exact: true });
-          await playExpect(providerTypeButton).toBeEnabled();
-          await providerTypeButton.click();
-          await playExpect(this.providerTypeDropdown).toHaveText(providerType);
+          await playExpect(this.providerType).toBeVisible();
+          if (providerType !== 'podman') {
+            await this.providerType.click();
+            const providerTypeButton = this.clusterPropertiesInformation.getByRole('button', {
+              name: providerType,
+              exact: true,
+            });
+            await playExpect(providerTypeButton).toBeEnabled();
+            await providerTypeButton.click();
+          }
+          await playExpect(this.providerType).toHaveText(providerType);
         } catch {
-          throw new Error(`${providerType} doesn't exist`);
+          throw new Error(`Provider type '${providerType}' doesn't exist`);
         }
       }
 
