@@ -13,9 +13,10 @@ import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.sve
 
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
+  title?: 'full' | 'short';
 }
 
-const { record }: Props = $props();
+const { record, title = 'short' }: Props = $props();
 let showResetButton = $state(false);
 let resetToDefault = $state(false);
 
@@ -27,8 +28,21 @@ function startCase(str: string): string {
 }
 const recordUI = $derived.by(() => {
   const id = record.id;
+
+  // split id
+  const split: string[] = id?.split('.') ?? [''];
+
   // take string after the last dot
-  const key = id?.substring(id?.lastIndexOf('.') + 1) ?? '';
+  let key: string;
+  switch (title) {
+    case 'full':
+      key = split.join(' ');
+      break;
+    case 'short':
+      key = split[split.length - 1];
+      break;
+  }
+  // const key = id?.substring(id?.lastIndexOf('.') + 1) ?? '';
 
   // define bread crumb as first part before the last dot
   const breadCrumb = id?.substring(0, id?.lastIndexOf('.')) ?? '';

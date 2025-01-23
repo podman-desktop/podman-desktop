@@ -26,7 +26,7 @@ import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingIte
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 
 const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
-  id: 'record',
+  id: 'hello.world.fooBar',
   title: 'Hello',
   parentId: 'parent.record',
   description: 'record-description',
@@ -70,5 +70,30 @@ test('experimental record should have flask icon', async () => {
     const elements = queryAllByRole('img', { hidden: true });
     expect(elements.length).toBeGreaterThan(0);
     expect(elements.find(element => element.textContent === 'experimental')).toBeDefined();
+  });
+});
+
+test('record should have short title by default', async () => {
+  const { getByText } = render(PreferencesRenderingItem, {
+    record: EXPERIMENTAL_RECORD,
+  });
+
+  await vi.waitFor(() => {
+    const element = getByText('Foo Bar');
+    expect(element).toBeDefined();
+    expect(element).toHaveClass('font-semibold');
+  });
+});
+
+test('props title full should use full record id', async () => {
+  const { getByText } = render(PreferencesRenderingItem, {
+    record: EXPERIMENTAL_RECORD,
+    title: 'full',
+  });
+
+  await vi.waitFor(() => {
+    const element = getByText('Hello world foo Bar');
+    expect(element).toBeDefined();
+    expect(element).toHaveClass('font-semibold');
   });
 });

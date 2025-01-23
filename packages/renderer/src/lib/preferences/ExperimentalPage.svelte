@@ -86,7 +86,7 @@ $effect(() => {
     {#each experimental as configItem}
       <div>
         <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2">
-          <PreferencesRenderingItem record={configItem} />
+          <PreferencesRenderingItem title="full" record={configItem} />
         </div>
       </div>
     {/each}
