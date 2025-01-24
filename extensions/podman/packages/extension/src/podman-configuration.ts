@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,11 @@ import * as path from 'node:path';
 
 import type { ProxySettings } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
+import { Mutex } from 'async-mutex';
 import * as toml from 'smol-toml';
 
 const configurationRosetta = 'setting.rosetta';
+const mutex = new Mutex();
 
 /**
  * Manages access to the containers.conf configuration file used to configure Podman
@@ -37,7 +39,9 @@ export class PodmanConfiguration {
 
     // we receive an update for the current proxy settings
     extensionApi.proxy.onDidUpdateProxy(async (proxySettings: ProxySettings) => {
-      await this.updateProxySettings(proxySettings);
+      await mutex.runExclusive(async () => {
+        await this.updateProxySettings(proxySettings);
+      });
     });
 
     // in case of proxy being enabled or disabled we need to update the containers.conf file
@@ -45,9 +49,13 @@ export class PodmanConfiguration {
       // eslint-disable-next-line sonarjs/no-selector-parameter
       if (enabled) {
         const updatedProxySettings = extensionApi.proxy.getProxySettings();
-        await this.updateProxySettings(updatedProxySettings);
+        await mutex.runExclusive(async () => {
+          await this.updateProxySettings(updatedProxySettings);
+        });
       } else {
-        await this.updateProxySettings(undefined);
+        await mutex.runExclusive(async () => {
+          await this.updateProxySettings(undefined);
+        });
       }
     });
 
