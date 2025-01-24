@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { cp, readFile } from 'node:fs/promises';
+import { cp, readFile, writeFile } from 'node:fs/promises';
 
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -227,4 +227,57 @@ describe('Check setupContribution', async () => {
     // expect log with binary found
     expect(sendLog).toHaveBeenCalledWith(expect.stringContaining('Compose binary found at'));
   });
+});
+
+test('Expect catalogExtensionId to be added to metadata file if not undefined', async () => {
+  const metadataJson = {
+    name: 'My Extension',
+    icon: 'icon.png',
+    ui: {
+      myApp: {
+        title: 'myApp',
+        root: '/ui',
+        src: 'index.html',
+        backend: {
+          socket: 'plugin.sock',
+        },
+      },
+    },
+    vm: {
+      composefile: 'docker-compose.yaml',
+    },
+    host: {
+      binaries: [
+        {
+          darwin: [
+            {
+              path: '/host/darwin',
+            },
+          ],
+          linux: [
+            {
+              path: '/host/linux',
+            },
+          ],
+          windows: [
+            {
+              path: '/host/windows',
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  // mock readFile
+  vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(metadataJson));
+
+  const reportLog: (message: string) => void = vi.fn();
+
+  await dockerDesktopInstaller.extractExtensionFiles('/tmp/source', '/tmp/dest', reportLog, 'extensionId1');
+
+  expect(vi.mocked(writeFile)).toBeCalledWith('/tmp/source/metadata.json', expect.any(String), 'utf8');
+  const { extensionId, ...updatedMetadataJson } = JSON.parse(vi.mocked(writeFile).mock.calls?.[0]?.[1] as string);
+  expect(JSON.stringify(updatedMetadataJson)).toEqual(JSON.stringify(metadataJson));
+  expect(extensionId).toEqual('extensionId1');
 });
