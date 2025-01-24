@@ -2440,7 +2440,6 @@ export class ContainerProviderRegistry {
     }
 
     const version = await internalProvider.api.version();
-    console.log('[container-registry] isTarPlayBuildSupported', version);
 
     // let's nicely format it
     const coerced = coerce(version.Version);
@@ -2462,8 +2461,6 @@ export class ContainerProviderRegistry {
       if (!provider?.libpodApi) {
         throw new Error('No provider with a running engine');
       }
-
-      console.log('[container-registry] playKube with', options);
 
       // if we don't build, we use the file directory
       if (!options?.build) {

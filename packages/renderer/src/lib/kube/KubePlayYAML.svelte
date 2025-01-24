@@ -195,7 +195,7 @@ function goBackToPodsPage(): void {
           class="w-full p-2" />
       </div>
 
-      <Checkbox class="mx-1 my-auto" bind:checked={kubeBuild} >
+      <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
         <div>Enable build</div>
       </Checkbox>
 
