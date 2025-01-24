@@ -183,7 +183,12 @@ async function updateClusters(
           }
           env.PATH = getKindPath() ?? '';
           if (kindPath) {
-            await extensionApi.process.exec(kindPath, ['delete', 'cluster', '--name', cluster.name], { env, logger });
+            const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
+            await extensionApi.process.exec(
+              kindPath,
+              ['delete', 'cluster', '--name', cluster.name, '--kubeconfig', kubeConfigPath],
+              { env, logger },
+            );
           }
         },
       };

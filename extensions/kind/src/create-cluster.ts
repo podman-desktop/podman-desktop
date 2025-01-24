@@ -183,14 +183,19 @@ export async function createCluster(
     ingressController,
   };
 
+  const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
   // now execute the command to create the cluster
   const startTime = performance.now();
   try {
-    await extensionApi.process.exec(kindCli, ['create', 'cluster', '--config', configFile ?? tmpFilePath], {
-      env,
-      logger,
-      token,
-    });
+    await extensionApi.process.exec(
+      kindCli,
+      ['create', 'cluster', '--config', configFile ?? tmpFilePath, '--kubeconfig', kubeConfigPath],
+      {
+        env,
+        logger,
+        token,
+      },
+    );
     if (ingressController) {
       logger?.log('Creating ingress controller resources');
       await setupIngressController(clusterName);
