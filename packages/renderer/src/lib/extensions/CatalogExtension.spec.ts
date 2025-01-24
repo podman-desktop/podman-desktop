@@ -113,6 +113,7 @@ test('Expect to see featured and fetch button', async () => {
     'myLink',
     expect.any(Function),
     expect.any(Function),
+    'myId',
   );
 });
 
