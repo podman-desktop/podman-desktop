@@ -21,7 +21,7 @@ However, for smaller-scale use cases such as on a single-node server or during d
 
 What’s a more lightweight solution for running autonomous applications with multiple interacting containers?
 
-In this guide, we'll dive into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
+In this blog, we'll dive into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
 
 <!-- truncate -->
 
@@ -31,7 +31,7 @@ Podman Quadlets allow you to manage containers declaratively using systemd.
 Since version 4.4, Podman can create, start, and manage containers (including pulling images, creating volumes, and managing pods) through systemd.
 
 Quadlets are simplified configuration files—recognized by their specific extensions,
-such as `*.container`, `*.pod`, or `*.image` that systemd processes during startup or when you reload the daemon (systemctl daemon-reload).
+such as `*.container`, `*.pod`, or `*.image` that are processes during startup or when you reload the daemon using the `systemctl daemon-reload` command.
 
 Quadlets generate the equivalent systemd unit files, streamlining the container management process.
 
@@ -57,8 +57,6 @@ Restart=always
 ```
 
 This configuration ensures the container restarts automatically if stopped, and exposes port 8080.
-
----
 
 ## Using the Podman Quadlet Extension in Podman Desktop
 
@@ -90,7 +88,7 @@ sources={{
 />
 <br/><br/>
 
-In Podman Desktop, you can see the difference between containers managed by a Quadlet with a dedicated icon.
+In Podman Desktop, you can see that a dedicated icon is used for the containers managed by a Quadlet.
 
 <ThemedImage
 alt="Container Quadlet Icon"
@@ -102,9 +100,12 @@ sources={{
 
 ### Generate Quadlets :hammer:
 
-To generate a Quadlet from an existing container, you’ll need to install [Podlet](https://github.com/containers/podlet). The extension simplifies this process:
+To generate a Quadlet from an existing container, you’ll need to install [Podlet](https://github.com/containers/podlet). The extension simplifies installation.
 
-1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools** and install Podlet using the Podman Quadlet extension.
+Use one of the following ways to install Podlet:
+
+- Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools** and install Podlet using the Podman Quadlet extension.
+- Download Podlet manually from its [GitHub release page](https://github.com/containers/podlet/releases).
 
 <ThemedImage
 alt="Podlet Installation"
@@ -113,12 +114,8 @@ sources={{
     dark: require('./img/podman-quadlet/cli-podlet-dark.png').default,
   }}
 />
-<br/><br/>
 
-Alternatively, you can download Podlet manually from its [GitHub release](https://github.com/containers/podlet/releases).
-The extension will detect the executable automatically.
-
-#### Example: Generating a Container Quadlet
+#### Example: Generate a Container Quadlet
 
 1. Start a container using Podman:
 
@@ -127,7 +124,7 @@ podman run --name nginx-demo -d -p 80:8080 nginx
 ```
 
 2. In Podman Desktop, find your container on the Containers page.
-3. Use the action menu (**Actions > Generate Quadlet**) to create a Quadlet.
+3. Click the **overflow menu** icon and select **Generate Quadlet**.
 
 <ThemedImage
 alt="Container actions"
@@ -138,11 +135,7 @@ sources={{
 />
 <br/><br/>
 
-The generate form includes:
-
-- The container engine being used
-- The Quadlet type (e.g., `*.container`)
-- The resource (e.g., `nginx-demo`)
+4. Click **Generate** to finalize the Quadlet.
 
 <ThemedImage
 alt="Quadlet Generate Form"
@@ -153,22 +146,21 @@ sources={{
 />
 <br/><br/>
 
-Click **Generate** to finalize the Quadlet.
+5. Optional: Edit the Quadlet configuration details.
+6. Click **Load into machine**
 
 <ThemedImage
 alt="Quadlet Generate Form"
 sources={{
-light: require('./img/podman-quadlet/generate-form-edit-light.png').default,
-dark: require('./img/podman-quadlet/generate-form-edit-dark.png').default,
-}}
+    light: require('./img/podman-quadlet/generate-form-edit-light.png').default,
+    dark: require('./img/podman-quadlet/generate-form-edit-dark.png').default,
+  }}
 />
 <br/><br/>
 
-Once generated, you will be able to **edit** the Quadlet generated, if you are happy with it, you can click **Load into machine**.
-
 Congrats 🎉 you created your first Quadlet!
 
-### Editing Quadlets :pen:
+### Edit Quadlets :pen:
 
 The Quadlet details page provides three tabs:
 
@@ -177,15 +169,16 @@ The Quadlet details page provides three tabs:
 - **Logs**: Monitor logs for the service using journalctl.
 
 You can make changes to the Quadlet’s source file and apply updates as needed.
+
 <ThemedImage
 alt="Quadlet Details Source"
 sources={{
-  light: require('./img/podman-quadlet/quadlet-details-source-light.png').default,
-  dark: require('./img/podman-quadlet/quadlet-details-source-dark.png').default,
+    light: require('./img/podman-quadlet/quadlet-details-source-light.png').default,
+    dark: require('./img/podman-quadlet/quadlet-details-source-dark.png').default,
   }}
 />
 
-### Viewing Quadlet Logs :scroll:
+### View Quadlet Logs :scroll:
 
 Since a Quadlet's corresponding resource is managed by systemd we can access corresponding unit's logs using journalctl.
 
