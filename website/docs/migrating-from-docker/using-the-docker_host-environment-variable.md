@@ -25,7 +25,7 @@ Alternatively, you can add a `podman` context by using the `docker context creat
 
 - For example, set the value of the context in this pattern on a macOS machine:
 
-  `docker context create podman --docker "host=unix://$HOME.local/share/containers/podman/machine/podman.sock"`
+  `docker context create podman --docker "host=unix://${HOME}/.local/share/containers/podman/machine/podman.sock"`
 
   Where, the path specified after the `unix://` scheme denotes the `DOCKER_HOST` value.
 
