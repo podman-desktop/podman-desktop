@@ -1,4 +1,5 @@
 # Podman Desktop - A graphical tool for developing on containers and Kubernetes
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9966/badge)](https://www.bestpractices.dev/projects/9966)
 
 <p align="center">
   <img alt="Podman Desktop" src="/website/static/img/features/manage-containers.webp">
