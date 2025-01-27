@@ -134,7 +134,7 @@ onMount(async () => {
       tokenId = value.tokenId;
       existingFormData = value.formData;
     }
-    dataToConfigurationValues();
+    restoreConfigurationValues();
   }
 
   if (taskId === undefined) {
@@ -294,7 +294,7 @@ async function getConfigurationValue(configurationKey: IConfigurationPropertyRec
   }
 }
 
-function dataToConfigurationValues(): void {
+function restoreConfigurationValues(): void {
   if (!existingFormData) {
     return;
   }
