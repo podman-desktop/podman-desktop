@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ beforeEach(() => {
 test('Verify basic page', async () => {
   // mock no kubernetes resources
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
+  vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([]);
@@ -84,6 +85,7 @@ test('Verify documentation link works', async () => {
 test('Verify basic page with cluster', async () => {
   // mock no kubernetes resources
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
+  vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([]);
@@ -112,7 +114,7 @@ test('Verify basic page with cluster', async () => {
 
   const metrics = screen.getByText('Metrics');
   expect(metrics).toBeInTheDocument();
-  expect(metrics.nextElementSibling?.childElementCount).toBe(6);
+  expect(metrics.nextElementSibling?.childElementCount).toBe(7);
 
   const guides = screen.getByText('Explore articles and blog posts');
   expect(guides).toBeInTheDocument();

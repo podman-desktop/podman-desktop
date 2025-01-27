@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import { createNavigationKubernetesDeploymentsEntry } from './kubernetes/navigat
 import { createNavigationKubernetesIngressesRoutesEntry } from './kubernetes/navigation-registry-k8s-ingresses-routes.svelte';
 import { createNavigationKubernetesNodesEntry } from './kubernetes/navigation-registry-k8s-nodes.svelte';
 import { createNavigationKubernetesPersistentVolumeEntry } from './kubernetes/navigation-registry-k8s-persistent-volume.svelte';
+import { createNavigationKubernetesPodsEntry } from './kubernetes/navigation-registry-k8s-pods.svelte';
 import { createNavigationKubernetesServicesEntry } from './kubernetes/navigation-registry-k8s-services.svelte';
 import type { NavigationRegistryEntry } from './navigation-registry';
 
@@ -42,6 +43,7 @@ export function createNavigationKubernetesGroup(): NavigationRegistryEntry {
   newItems.push(createNavigationKubernetesDashboardEntry());
   newItems.push(createNavigationKubernetesNodesEntry());
   newItems.push(createNavigationKubernetesDeploymentsEntry());
+  newItems.push(createNavigationKubernetesPodsEntry());
   newItems.push(createNavigationKubernetesServicesEntry());
   newItems.push(createNavigationKubernetesIngressesRoutesEntry());
   newItems.push(createNavigationKubernetesPersistentVolumeEntry());
