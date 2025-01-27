@@ -317,9 +317,6 @@ function restoreConfigurationValues(): void {
   }
 }
 
-let logsTerminal: Terminal;
-let loggerHandlerKey: symbol | undefined = undefined;
-
 function getLoggerHandler(): ConnectionCallback {
   return {
     log: (args): void => {
