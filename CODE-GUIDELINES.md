@@ -92,11 +92,11 @@ test('file existence is not defined', () => {
 });
 ```
 
-#### Spy on a function for a specifc test
+#### Spy on a function for a specific test
 
 When you want to mock only one or a small number of functions of a module (for example a function of the module you are testing, or a function of an helper module from which you want to use real implementation for some functions) for a particular test, you can use `vi.spyOn(module, 'function')` to mock only `function` and keep the original implementation for the rest of the module.
 
-To be sure that the spied function is restored to its original implementation for the other tests, use `vi.mocked(function).mockRestore()` in the `afterEach` of the tests declaring this spy.
+To be sure that the spied function is restored to its original implementation for the other tests, use `vi.restoreAllMocks()` in the top-level `beforeEach`.
 
 ```ts
 // helpers.ts
@@ -114,7 +114,7 @@ export class MyModuleToTest {
 }
 
 // mymodule.spec.ts
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MyModuleToTest } from './mymodule.js';
 import * as helpers from './helpers.js';
 
@@ -122,16 +122,14 @@ let myModuleToTest: MyModuleToTest;
 
 beforeEach(() => {
   myModuleToTest = new MyModuleToTest();
+
+  // restore f1 to its original implementation
+  vi.restoreAllMocks();
 });
 
 describe('f1 returns false', () => {
   beforeEach(() => {
     vi.spyOn(helpers, 'f1').mockReturnValue(false);
-  });
-
-  afterEach(() => {
-    // restore f1 to its original implementation
-    vi.mocked(helpers.f1).mockRestore();
   });
 
   test('f2 returns false', () => {
