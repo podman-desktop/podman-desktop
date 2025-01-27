@@ -1,4 +1,6 @@
 <script lang="ts">
+import { router } from 'tinro';
+
 import type { PodUI } from './PodUI';
 
 let {
@@ -6,9 +8,13 @@ let {
 }: {
   object: PodUI;
 } = $props();
+
+function openDetails(): void {
+  router.goto(`/kubernetes/pods/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);
+}
 </script>
 
-<div class="flex flex-col max-w-full">
+<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>
@@ -17,4 +23,4 @@ let {
       <div class="font-extra-light text-[var(--pd-table-body-text)]">{object.namespace}</div>
     {/if}
   </div>
-</div>
+</button>

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { fireEvent } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { router } from 'tinro';
+import { expect, test, vi } from 'vitest';
 
 import PodColumnName from './PodColumnName.svelte';
 import type { PodUI } from './PodUI';
@@ -43,4 +45,37 @@ test('Expect simple column styling', async () => {
   const id = screen.getByText(pod.namespace);
   expect(id).toBeInTheDocument();
   expect(id).toHaveClass('text-[var(--pd-table-body-text)]');
+});
+
+test('Expect clicking works', async () => {
+  render(PodColumnName, { object: pod });
+
+  const text = screen.getByText(pod.name);
+  expect(text).toBeInTheDocument();
+
+  // test click
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+
+  fireEvent.click(text);
+
+  expect(routerGotoSpy).toBeCalledWith('/kubernetes/pods/my-pod/default/summary');
+});
+
+test('Expect Kubernetes pod information', async () => {
+  const pod: PodUI = {
+    name: 'my-pod',
+    status: '',
+    selected: false,
+    containers: [],
+    node: 'node1',
+    namespace: 'customnamespace',
+  };
+
+  render(PodColumnName, { object: pod });
+
+  const name = screen.getByText('my-pod');
+  expect(name).toBeInTheDocument();
+
+  const namespace = screen.getByText('customnamespace');
+  expect(namespace).toBeInTheDocument();
 });

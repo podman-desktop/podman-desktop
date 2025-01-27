@@ -43,6 +43,7 @@ import IngressesRoutesList from './lib/ingresses-routes/IngressesRoutesList.svel
 import RouteDetails from './lib/ingresses-routes/RouteDetails.svelte';
 import KubePlayYAML from './lib/kube/KubePlayYAML.svelte';
 import KubernetesDashboard from './lib/kube/KubernetesDashboard.svelte';
+import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
 import KubePodsList from './lib/kube/pods/PodsList.svelte';
 import PortForwardingList from './lib/kubernetes-port-forward/PortForwardingList.svelte';
 import ManifestDetails from './lib/manifest/ManifestDetails.svelte';
@@ -260,6 +261,13 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
           </Route>
           <Route path="/kubernetes/pods" breadcrumb="Pods" navigationHint="root">
             <KubePodsList />
+          </Route>
+          <Route
+            path="/kubernetes/pods/:name/:namespace/*"
+            breadcrumb="Pod Details"
+            let:meta
+            navigationHint="details">
+            <KubePodDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route path="/kubernetes/persistentvolumeclaims" breadcrumb="Persistent Volume Claims" navigationHint="root">
             <PVCList />
