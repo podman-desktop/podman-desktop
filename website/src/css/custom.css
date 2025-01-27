@@ -206,3 +206,7 @@ li.footer__item a svg {
   display: flex;
   align-items: center;
 }
+
+.footer a {
+  color: var(--ifm-link-color);
+}

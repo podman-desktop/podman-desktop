@@ -477,7 +477,15 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} ${title} - Apache License 2.0 License`,
+        copyright: `<div class="flex flex-col items-center divide-y-4 divide-none">
+        <div class="w-80"><img class="dark:hidden" alt="Cloud Native Computing Foundation" src="/img/cncf-logo.svg"><img class="hidden dark:inline" alt="Cloud Native Computing Foundation" src="/img/cncf-logo-dark.svg"></div>
+        <div>We are a <a href="https://cncf.io/">Cloud Native Computing Foundation</a> sandbox project.</div>
+        <div class="text-sm">
+        © Copyright ${title} Contributors ${new Date().getFullYear()}. © ${new Date().getFullYear()} The Linux Foundation. All rights reserved.
+        </div>
+        <div class="text-xs">The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our <a href="https://www.linuxfoundation.org/trademark-usage/"> Trademark Usage</a> page.
+        </div>
+      `,
       },
       prism: {
         theme: lightCodeTheme,
