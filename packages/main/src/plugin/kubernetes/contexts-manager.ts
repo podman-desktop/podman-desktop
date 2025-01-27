@@ -26,6 +26,7 @@ import type {
   ListPromise,
   V1ConfigMap,
   V1ConfigMapList,
+  V1CronJob,
   V1Deployment,
   V1DeploymentList,
   V1Ingress,
@@ -258,6 +259,9 @@ export class ContextsManager {
       case 'secrets':
         informer = this.createSecretInformer(this.kubeConfig, ns, context);
         break;
+      case 'cronjobs':
+        informer = this.createCronJobInformer(this.kubeConfig, ns, context);
+        break;
       case 'events':
         informer = this.createEventInformer(this.kubeConfig, ns, context);
         break;
@@ -469,6 +473,52 @@ export class ContextsManager {
             (state.resources.configmaps = state.resources.configmaps.filter(
               d => d.metadata?.uid !== obj.metadata?.uid,
             )),
+        });
+      },
+    });
+  }
+
+  public createCronJobInformer(kc: KubeConfig, namespace: string, context: KubeContext): CancellableInformer {
+    const customObjectsApi = kc.makeApiClient(CustomObjectsApi);
+    const listFn = (): Promise<KubernetesListObject<V1CronJob>> =>
+      customObjectsApi.listNamespacedCustomObject({
+        group: 'batch',
+        version: 'v1',
+        namespace,
+        plural: 'cronjobs',
+      }) as Promise<KubernetesListObject<V1CronJob>>;
+    const path = `/apis/batch/v1/namespaces/${namespace}/cronjobs`;
+    let timer: NodeJS.Timeout | undefined;
+    let connectionDelay: NodeJS.Timeout | undefined;
+    this.setConnectionTimers('cronjobs', timer, connectionDelay);
+    return this.createInformer<V1CronJob>(kc, context, path, listFn, {
+      resource: 'cronjobs',
+      timer: timer,
+      backoff: this.getBackoffForContext(context.name),
+      connectionDelay: connectionDelay,
+      onAdd: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { cronjobs: true },
+          update: state => state.resources.cronjobs.push(obj),
+        });
+      },
+      onUpdate: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { cronjobs: true },
+          update: state => {
+            state.resources.cronjobs = state.resources.cronjobs.filter(o => o.metadata?.uid !== obj.metadata?.uid);
+            state.resources.cronjobs.push(obj);
+          },
+        });
+      },
+      onDelete: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { cronjobs: true },
+          update: state =>
+            (state.resources.cronjobs = state.resources.cronjobs.filter(d => d.metadata?.uid !== obj.metadata?.uid)),
         });
       },
     });

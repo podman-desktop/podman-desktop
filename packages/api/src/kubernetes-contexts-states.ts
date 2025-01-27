@@ -37,6 +37,7 @@ export const secondaryResources = [
   'nodes',
   'persistentvolumeclaims',
   'events',
+  'cronjobs',
 ] as const;
 
 export type SecondaryResourceName = (typeof secondaryResources)[number];

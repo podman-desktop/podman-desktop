@@ -21,7 +21,6 @@ import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 
-import * as clientNode from '@kubernetes/client-node';
 import {
   type AppsV1Api,
   BatchV1Api,
@@ -30,6 +29,7 @@ import {
   KubeConfig,
   type KubernetesObject,
   type V1ConfigMap,
+  type V1CronJob,
   type V1Deployment,
   type V1Ingress,
   type V1Job,
@@ -42,6 +42,7 @@ import {
   type V1Status,
   type Watch,
 } from '@kubernetes/client-node';
+import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
@@ -2407,4 +2408,46 @@ describe('port forward', () => {
 
     expect(serviceMock.deleteForward).toHaveBeenCalledWith(DUMMY_FORWARD_CONFIG);
   });
+});
+
+test('Expect deleteCronJob to not be called if there is no active connection', async () => {
+  const client = createTestClient('default');
+  const deleteCronJobMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
+  makeApiClientMock.mockReturnValue({
+    deleteNamespacedCronJob: deleteCronJobMock,
+  });
+
+  await client.deleteCronJob('name');
+  expect(deleteCronJobMock).not.toBeCalled();
+});
+
+test('Expect deleteCronJob to be called if there IS an active connection', async () => {
+  const client = createTestClient('default');
+  const deleteCronJobMock = vi.fn();
+  makeApiClientMock.mockReturnValue({
+    deleteNamespacedCronJob: deleteCronJobMock,
+  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
+  await client.deleteCronJob('name');
+  expect(deleteCronJobMock).toBeCalled();
+});
+
+test('Expect readNamespacedCronJob to return the cronjob', async () => {
+  const client = createTestClient('default');
+  const v1CronJob: V1CronJob = {
+    apiVersion: 'batch/v1',
+    kind: 'CronJob',
+    metadata: {
+      name: 'foobar',
+    },
+  };
+  makeApiClientMock.mockReturnValue({
+    readNamespacedCronJob: () => Promise.resolve(v1CronJob),
+  });
+
+  // We expect to get the correct cronjob back (name = foobar)
+  const cronjob = await client.readNamespacedCronJob('foobar', 'default');
+  expect(cronjob).toBeDefined();
+  expect(cronjob?.metadata?.name).toEqual('foobar');
 });

@@ -33,6 +33,7 @@ import type {
   V1APIResource,
   V1ConfigMap,
   V1ContainerState,
+  V1CronJob,
   V1Deployment,
   V1Ingress,
   V1NamespaceList,
@@ -747,6 +748,24 @@ export class KubernetesClient {
     }
   }
 
+  async deleteCronJob(name: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      const namespace = this.getCurrentNamespace();
+      // Delete only if there is a valid connection
+      const connected = await this.checkConnection();
+      if (namespace && connected) {
+        const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
+        await k8sApi.deleteNamespacedCronJob({ name, namespace });
+      }
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw this.wrapK8sClientError(error);
+    } finally {
+      this.telemetry.track('kubernetesDeleteCronJob', telemetryOptions);
+    }
+  }
+
   async deleteSecret(name: string): Promise<void> {
     let telemetryOptions = {};
     try {
@@ -975,6 +994,20 @@ export class KubernetesClient {
       return res;
     } catch (error) {
       this.telemetry.track('kubernetesReadNamespacedSecret.error', error);
+      throw this.wrapK8sClientError(error);
+    }
+  }
+
+  async readNamespacedCronJob(name: string, namespace: string): Promise<V1CronJob | undefined> {
+    const k8sApi = this.kubeConfig.makeApiClient(BatchV1Api);
+    try {
+      const res = await k8sApi.readNamespacedCronJob({ name, namespace });
+      if (res?.metadata?.managedFields) {
+        delete res.metadata.managedFields;
+      }
+      return res;
+    } catch (error) {
+      this.telemetry.track('kubernetesReadNamespacedCronJob.error', error);
       throw this.wrapK8sClientError(error);
     }
   }
