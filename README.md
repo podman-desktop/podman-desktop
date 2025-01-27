@@ -1,4 +1,6 @@
 # Podman Desktop - A graphical tool for developing on containers and Kubernetes
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/podman-desktop/podman-desktop)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9966/badge)](https://www.bestpractices.dev/projects/9966)
 
 <p align="center">
