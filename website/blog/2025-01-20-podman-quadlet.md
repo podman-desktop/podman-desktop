@@ -21,7 +21,7 @@ However, for smaller-scale use cases such as on a single-node server or during d
 
 What’s a more lightweight solution for running autonomous applications with multiple interacting containers?
 
-In this blog, we'll dive into what Quadlets are, their benefits, and how to utilize them within Podman Desktop.
+In this blog, we'll dive into what Quadlets are, their benefits, and how to use them within Podman Desktop.
 
 <!-- truncate -->
 
