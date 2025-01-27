@@ -1107,12 +1107,12 @@ export class PluginSystem {
       async (
         providerContainerConnectionInfo: ProviderContainerConnectionInfo,
         imageName: string,
-        callbackId: number,
+        callback: (event: PullEvent) => void,
         platform?: string,
         taskActionName?: string,
         taskActionCallback?: () => void,
       ) => {
-        if (!providerContainerConnectionInfo || !imageName || !callbackId) {
+        if (!providerContainerConnectionInfo || !imageName || !callback || typeof callback !== 'function') {
           return;
         }
 
@@ -1136,14 +1136,7 @@ export class PluginSystem {
         });
 
         return containerProviderRegistry
-          .pullImage(
-            providerContainerConnectionInfo,
-            imageName,
-            (event: PullEvent) => {
-              this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
-            },
-            platform,
-          )
+          .pullImage(providerContainerConnectionInfo, imageName, callback, platform)
           .then(result => {
             task.status = 'success';
             return result;
@@ -1167,7 +1160,9 @@ export class PluginSystem {
           'pullImage',
           providerContainerConnectionInfo,
           imageName,
-          callbackId,
+          (event: PullEvent) => {
+            this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
+          },
           platform,
         );
       },
