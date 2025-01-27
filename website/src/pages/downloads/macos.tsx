@@ -1,14 +1,12 @@
-import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { faApple } from '@fortawesome/free-brands-svg-icons';
 import { faBeer, faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
+import { TelemetryLink } from '@site/src/components/TelemetryLink';
 import Layout from '@theme/Layout';
 import type { SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
-
-import { sendGoatCounterEvent } from '../index';
 
 async function grabfilenameforMac(
   setDownloadData: React.Dispatch<
@@ -117,61 +115,61 @@ export function MacOSDownloads(): JSX.Element {
         <div className="flex flex-col align-middle items-center">
           <h3 className="mt-0">Podman Desktop for macOS</h3>
           <div className="pt-8">
-            <Link
+            <TelemetryLink
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               to={downloadData.universal}
-              onClick={() => {
-                sendGoatCounterEvent('download-mac');
-              }}>
-              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-              Download Now
-            </Link>
+              eventTitle="download-mac">
+              <span>
+                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                Download Now
+              </span>
+            </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
               Universal *.dmg, version {downloadData.version}
             </caption>
           </div>
           <div className="mt-4">
             <div>Other macOS downloads:</div>
-            <Link
+            <TelemetryLink
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               to={downloadData.x64}
-              onClick={() => {
-                sendGoatCounterEvent('download-mac');
-              }}>
-              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-              Intel
-            </Link>
-            <Link
+              eventTitle="download-mac">
+              <span>
+                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                Intel
+              </span>
+            </TelemetryLink>
+            <TelemetryLink
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 text-md font-semibold"
               to={downloadData.arm64}
-              onClick={() => {
-                sendGoatCounterEvent('download-mac');
-              }}>
-              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-              Apple silicon
-            </Link>
+              eventTitle="download-mac">
+              <span>
+                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                Apple silicon
+              </span>
+            </TelemetryLink>
           </div>
           <div className="pt-2 pb-4 flex flex-col">
             <div className="">Installer for restricted environments:</div>
             <div className="flex flex-row justify-center">
-              <Link
+              <TelemetryLink
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                 to={downloadData.airgapsetupX64}
-                onClick={() => {
-                  sendGoatCounterEvent('download-mac');
-                }}>
-                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                Intel
-              </Link>
-              <Link
+                eventTitle="download-mac">
+                <span>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  Intel
+                </span>
+              </TelemetryLink>
+              <TelemetryLink
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                 to={downloadData.airgapsetupArm64}
-                onClick={() => {
-                  sendGoatCounterEvent('download-mac');
-                }}>
-                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                Apple silicon
-              </Link>
+                eventTitle="download-mac">
+                <span>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  Apple silicon
+                </span>
+              </TelemetryLink>
             </div>
           </div>
 
