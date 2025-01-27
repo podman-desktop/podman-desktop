@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import DevelopersFeedback from './feedbackForms/DevelopersFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
@@ -43,10 +43,57 @@ beforeAll(() => {
   };
 });
 
-test('Expect developers feedback form to be rendered by default', async () => {
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+test('Expect developers feedback form to be rendered by default', () => {
+  render(SendFeedback);
+
+  expect(DevelopersFeedback).toHaveBeenCalledOnce();
+  expect(GitHubIssueFeedback).not.toHaveBeenCalled();
+});
+
+test('Expect confirmation dialog to be displayed if content changed', async () => {
   render(SendFeedback, {});
 
-  expect(vi.mocked(DevelopersFeedback)).toBeCalled();
+  expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
+    onCloseForm: expect.any(Function),
+    contentChange: expect.any(Function),
+  });
+
+  const { onCloseForm, contentChange } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+
+  // 1. simulate content change
+  contentChange(true);
+
+  // 2. close
+  onCloseForm(true);
+
+  // expect confirm dialog
+  expect(window.showMessageBox).toHaveBeenCalledWith({
+    title: 'Close Feedback form',
+    message: 'Do you want to close the Feedback form?\nClosing will erase your input.',
+    type: 'warning',
+    buttons: ['Yes', 'No'],
+  });
+});
+
+test('Expect no confirmation dialog to be displayed if content has not changed', async () => {
+  render(SendFeedback, {});
+
+  expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
+    onCloseForm: expect.any(Function),
+    contentChange: expect.any(Function),
+  });
+
+  const { onCloseForm } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+
+  // 2. close
+  onCloseForm(true);
+
+  // expect no confirm dialog
+  expect(window.showMessageBox).not.toHaveBeenCalled();
 });
 
 test('Expect GitHubIssue feedback form to be rendered if category is not developers', async () => {

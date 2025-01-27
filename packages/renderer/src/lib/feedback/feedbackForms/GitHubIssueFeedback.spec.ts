@@ -57,6 +57,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
   title: HTMLInputElement;
   description: HTMLTextAreaElement;
   preview: HTMLButtonElement;
+  cancel: HTMLButtonElement;
   includeSystemInfo?: HTMLElement;
   includeExtensionInfo?: HTMLElement;
 } & RenderResult<Component<ComponentProps<typeof GitHubIssueFeedback>>> {
@@ -73,6 +74,10 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
   const preview = getByRole('button', { name: 'Preview on GitHub' });
   expect(preview).toBeInstanceOf(HTMLButtonElement);
 
+  // button
+  const cancel = getByRole('button', { name: 'Cancel' });
+  expect(cancel).toBeInstanceOf(HTMLButtonElement);
+
   // checkbox
   const includeSystemInfo = queryByTitle('Include system information') ?? undefined;
 
@@ -82,6 +87,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
     title: title as HTMLInputElement,
     description: description as HTMLTextAreaElement,
     preview: preview as HTMLButtonElement,
+    cancel: cancel as HTMLButtonElement,
     includeSystemInfo,
     includeExtensionInfo,
     getByRole,
@@ -291,4 +297,20 @@ describe('includeExtensionInfo', () => {
       }),
     );
   });
+});
+
+test('Expect close confirmation to be true if cancel clicked', async () => {
+  const closeMock = vi.fn();
+  const { cancel } = renderGitHubIssueFeedback({
+    category: 'bug',
+    onCloseForm: closeMock,
+    contentChange: vi.fn(),
+  });
+
+  // click on a cancel
+  await userEvent.click(cancel);
+
+  // expect close to have been call with confirmation=true
+  expect(closeMock).toHaveBeenCalledOnce();
+  expect(closeMock).toHaveBeenCalledWith(true);
 });
