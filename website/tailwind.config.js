@@ -2,7 +2,7 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 const rootTailWindConfig = require('../tailwind.config.cjs');
 
 module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  content: ['./docusaurus.config.js', './src/**/*.{js,jsx,ts,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
