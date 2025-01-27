@@ -41,10 +41,10 @@ Please don't include any private/sensitive information in your issue!
 ## Providing Extensions
 
 Some of the best features of Podman Desktop aren't even in this repository!
-We've created an API so that the capabilities of Podman Desktop can be expanded
+Podman Desktop provides a set of API that expands its capabilities
 by installing [extensions](https://podman-desktop.io/extensions).
 
-Extensions can add support for new container engines, command line tools,
+Extensions add support for new container engines, command line tools,
 Kubernetes providers, or add elements to the UI like actions, badges, or views.
 You can create your own extension and contribute it to the catalog for
 others to use.
