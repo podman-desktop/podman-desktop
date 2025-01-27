@@ -1,15 +1,17 @@
 import Link from '@docusaurus/Link';
+import type { ReactNode } from 'react';
 
 type TelemetryLinkProps = {
   to: string;
+  eventPath: string;
   eventTitle: string;
   className: string;
-  children?: JSX.Element;
+  children?: ReactNode[];
 };
 
-const sendGoatCounterEvent = (title: string): void => {
+const sendGoatCounterEvent = (path: string, title: string): void => {
   window.goatcounter.count({
-    // path is set by default
+    path: path,
     title: title,
     event: true,
   });
@@ -21,7 +23,7 @@ export const TelemetryLink = (props: TelemetryLinkProps): JSX.Element => {
       className={props.className}
       to={props.to}
       onClick={() => {
-        sendGoatCounterEvent(props.eventTitle);
+        sendGoatCounterEvent(props.eventPath, props.eventTitle);
       }}>
       {props.children}
     </Link>

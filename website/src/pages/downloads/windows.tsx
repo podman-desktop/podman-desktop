@@ -117,12 +117,11 @@ export function WindowsDownloads(): JSX.Element {
           <div className="pt-8">
             <TelemetryLink
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
-              to={downloadData.setupX64}
-              eventTitle="download-windows">
-              <span>
-                <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                Download Now
-              </span>
+              eventPath="/download"
+              eventTitle="download-windows"
+              to={downloadData.setupX64}>
+              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+              Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
               Windows installer x64, version {downloadData.version}
@@ -136,21 +135,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
-                  to={downloadData.setupX64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    x64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.setupX64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  x64
                 </TelemetryLink>
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
-                  to={downloadData.setupArm64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    arm64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.setupArm64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  arm64
                 </TelemetryLink>
               </div>
             </div>
@@ -160,21 +157,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
-                  to={downloadData.binaryX64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    x64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.binaryX64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  x64
                 </TelemetryLink>
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
-                  to={downloadData.binaryArm64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    arm64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.binaryArm64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  arm64
                 </TelemetryLink>
               </div>
             </div>
@@ -184,21 +179,19 @@ export function WindowsDownloads(): JSX.Element {
               <div className="flex flex-row justify-center">
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                  to={downloadData.airgapsetupX64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    x64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.airgapsetupX64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  x64
                 </TelemetryLink>
                 <TelemetryLink
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                  to={downloadData.airgapsetupArm64}
-                  eventTitle="download-windows">
-                  <span>
-                    <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
-                    arm64
-                  </span>
+                  eventPath="/download"
+                  eventTitle="download-windows"
+                  to={downloadData.airgapsetupArm64}>
+                  <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+                  arm64
                 </TelemetryLink>
               </div>
             </div>
