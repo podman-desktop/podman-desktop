@@ -139,6 +139,8 @@ export class KubePlayContext {
       finalize: false,
       entries: Array.from(this.#buildContexts.keys()),
       finish(stream: Pack): void {
+        // inside the tar we need a play.yaml file as per spec
+        // https://docs.podman.io/en/latest/_static/api.html#tag/containers/operation/PlayKubeLibpod
         stream.entry({ name: `play.yaml` }, content);
         stream.finalize();
       },

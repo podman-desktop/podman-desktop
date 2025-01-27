@@ -19,12 +19,15 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+import type { Pack, PackOptions } from 'tar-fs';
+import tar from 'tar-fs';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getImageNamePrefix, KubePlayContext } from '/@/plugin/podman/kube.js';
 
 vi.mock('node:fs');
 vi.mock('node:fs/promises');
+vi.mock('tar-fs');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -157,5 +160,44 @@ describe('KubePlayContext', () => {
     expect(contexts).toHaveLength(2);
     expect(contexts[0]).toStrictEqual(path.join('foo-bar', 'foo'));
     expect(contexts[1]).toStrictEqual(path.join('foo-bar', 'bar'));
+  });
+
+  test('build should pack existing contexts', async () => {
+    // mock only two time
+    vi.mocked(existsSync).mockReturnValueOnce(true);
+    vi.mocked(existsSync).mockReturnValueOnce(true);
+
+    const kube = KubePlayContext.fromContent(PLAY_MULTI_YAML, 'foo-bar');
+    await kube.init();
+
+    kube.build();
+
+    // 1. tar.pack should have been called properly
+    expect(tar.pack).toHaveBeenCalledWith('foo-bar', {
+      finalize: false,
+      entries: ['foo', 'bar'],
+      finish: expect.any(Function),
+    });
+
+    // 2. the finish callback should add the play.yaml as per spec
+    // https://docs.podman.io/en/latest/_static/api.html#tag/containers/operation/PlayKubeLibpod
+    const { finish } = vi.mocked(tar.pack).mock.calls[0]?.[1] as PackOptions;
+    const streamMock: Pack = {
+      entry: vi.fn(),
+      finalize: vi.fn(),
+    } as unknown as Pack;
+
+    // calling the finish with a mock to ensure expected behavior
+    finish?.(streamMock);
+
+    // ensure entry is added
+    expect(streamMock.entry).toHaveBeenCalledWith(
+      {
+        name: 'play.yaml',
+      },
+      PLAY_MULTI_YAML,
+    );
+    // ensure finalize is called
+    expect(streamMock.finalize).toHaveBeenCalledOnce();
   });
 });

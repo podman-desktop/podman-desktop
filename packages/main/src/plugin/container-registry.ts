@@ -2477,9 +2477,6 @@ export class ContainerProviderRegistry {
       const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
       await kubePlay.init();
 
-      const contexts = kubePlay.getBuildContexts();
-      console.log('[container-registry] playKube contexts', contexts);
-
       // if we have no context let's just use the the yaml
       if (kubePlay.getBuildContexts().length === 0) {
         return provider.libpodApi.playKube(kubernetesYamlFilePath);
