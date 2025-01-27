@@ -5,12 +5,12 @@ import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import type { FeedbackCategory, GitHubIssue } from '/@api/feedback';
 
 interface Props {
-  close: (confirm: boolean) => void;
+  onCloseForm: (confirm: boolean) => void;
   category: FeedbackCategory;
   contentChange: (e: boolean) => void;
 }
 
-let { close = (): void => {}, category = 'bug', contentChange }: Props = $props();
+let { onCloseForm, category = 'bug', contentChange }: Props = $props();
 
 let issueTitle = $state('');
 let issueDescription = $state('');
@@ -43,7 +43,7 @@ let existingIssuesLink = $state(
 $effect(() => contentChange(Boolean(issueTitle || issueDescription)));
 
 async function openGitHubIssues(): Promise<void> {
-  close(false);
+  onCloseForm(false);
   await window.openExternal(existingIssuesLink);
 }
 
@@ -57,7 +57,7 @@ async function previewOnGitHub(): Promise<void> {
   };
   try {
     await window.previewOnGitHub(issueProperties);
-    close(false);
+    onCloseForm(false);
   } catch (error: unknown) {
     console.error('There was a problem with preview on GitHub', error);
   }
@@ -113,7 +113,7 @@ async function previewOnGitHub(): Promise<void> {
     {/if}
   </svelte:fragment>
   <svelte:fragment slot="buttons">
-    <Button class="underline" type="link" aria-label="Cancel" on:click={(): void => close(true)}>Cancel</Button>
+    <Button class="underline" type="link" aria-label="Cancel" on:click={(): void => onCloseForm(true)}>Cancel</Button>
     <Button aria-label="Preview on GitHub" on:click={previewOnGitHub} disabled={!issueTitle || !issueDescription}>Preview on GitHub</Button>
   </svelte:fragment>
 </FeedbackForm>

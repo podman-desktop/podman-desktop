@@ -58,17 +58,17 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
   render(SendFeedback, {});
 
   expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
-    close: expect.any(Function),
+    onCloseForm: expect.any(Function),
     contentChange: expect.any(Function),
   });
 
-  const { close, contentChange } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+  const { onCloseForm, contentChange } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
 
   // 1. simulate content change
   contentChange(true);
 
   // 2. close
-  close(true);
+  onCloseForm(true);
 
   // expect confirm dialog
   expect(window.showMessageBox).toHaveBeenCalledWith({
@@ -83,14 +83,14 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
   render(SendFeedback, {});
 
   expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
-    close: expect.any(Function),
+    onCloseForm: expect.any(Function),
     contentChange: expect.any(Function),
   });
 
-  const { close } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+  const { onCloseForm } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
 
   // 2. close
-  close(true);
+  onCloseForm(true);
 
   // expect no confirm dialog
   expect(window.showMessageBox).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
   await fireEvent.click(bugCategory);
   // click on a smiley
   expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(1, expect.anything(), {
-    close: expect.any(Function),
+    onCloseForm: expect.any(Function),
     category: 'bug',
     contentChange: expect.any(Function),
   });
@@ -122,7 +122,7 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
   const featureCategory = screen.getByRole('button', { name: /Feature/ });
   await fireEvent.click(featureCategory);
   expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(2, expect.anything(), {
-    close: expect.any(Function),
+    onCloseForm: expect.any(Function),
     category: 'feature',
     contentChange: expect.any(Function),
   });

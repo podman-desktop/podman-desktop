@@ -70,11 +70,11 @@ function handleUpdate(e: boolean): void {
     </div>
 
     {#if category === 'developers'}
-      <DevelopersFeedback close={hideModal} contentChange={handleUpdate}/>
+      <DevelopersFeedback onCloseForm={hideModal} contentChange={handleUpdate}/>
     {:else if category === 'bug'}
-      <GitHubIssueFeedback close={hideModal} category="bug" contentChange={handleUpdate}/>
+      <GitHubIssueFeedback onCloseForm={hideModal} category="bug" contentChange={handleUpdate}/>
     {:else if category === 'feature'}
-      <GitHubIssueFeedback close={hideModal} category="feature" contentChange={handleUpdate}/>
+      <GitHubIssueFeedback onCloseForm={hideModal} category="feature" contentChange={handleUpdate}/>
     {/if}
   </Modal>
 </div>

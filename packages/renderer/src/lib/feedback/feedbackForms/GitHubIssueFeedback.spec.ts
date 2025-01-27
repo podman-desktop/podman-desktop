@@ -99,7 +99,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
 test('Expect feedback form to to be GitHub issue feedback form', async () => {
   const { title, description, includeSystemInfo } = renderGitHubIssueFeedback({
     category: 'bug',
-    close: vi.fn(),
+    onCloseForm: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -111,7 +111,7 @@ test('Expect feedback form to to be GitHub issue feedback form', async () => {
 test('Expect Preview on GitHub button to be disabled if there is no title or description', async () => {
   const { title, description, preview } = renderGitHubIssueFeedback({
     category: 'bug',
-    close: vi.fn(),
+    onCloseForm: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -144,7 +144,7 @@ test.each([
 ])('$category should have specific placeholders', async ({ category, placeholders }) => {
   const { title, description } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    close: vi.fn(),
+    onCloseForm: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -164,7 +164,7 @@ test.each([
 ])('$category should have specific issues link', async ({ category, link }) => {
   const { getByLabelText } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    close: vi.fn(),
+    onCloseForm: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -178,7 +178,7 @@ test.each([
 test.each(['bug', 'feature'])('Expect %s to be included in previewOnGitHub call', async category => {
   const { preview, title, description } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    close: vi.fn(),
+    onCloseForm: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -205,7 +205,7 @@ describe('includeSystemInfo', () => {
   test('should not be visible on category feature', async () => {
     const { includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'feature',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeSystemInfo).toBeUndefined();
@@ -214,7 +214,7 @@ describe('includeSystemInfo', () => {
   test('should be visible on category bug and enabled by default', async () => {
     const { includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeSystemInfo).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe('includeSystemInfo', () => {
   test('uncheck the Include system information should set includeSystemInfo to false', async () => {
     const { preview, title, description, includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
 
@@ -254,7 +254,7 @@ describe('includeExtensionInfo', () => {
   test('should not be visible on category feature', async () => {
     const { includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'feature',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeExtensionInfo).toBeUndefined();
@@ -263,7 +263,7 @@ describe('includeExtensionInfo', () => {
   test('should be visible on category bug and enabled by default', async () => {
     const { includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeExtensionInfo).toBeInTheDocument();
@@ -275,7 +275,7 @@ describe('includeExtensionInfo', () => {
   test('uncheck the Include system information should set includeSystemInfo to false', async () => {
     const { preview, title, description, includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      close: vi.fn(),
+      onCloseForm: vi.fn(),
       contentChange: vi.fn(),
     });
 
@@ -303,7 +303,7 @@ test('Expect close confirmation to be true if cancel clicked', async () => {
   const closeMock = vi.fn();
   const { cancel } = renderGitHubIssueFeedback({
     category: 'bug',
-    close: closeMock,
+    onCloseForm: closeMock,
     contentChange: vi.fn(),
   });
 
