@@ -10,6 +10,7 @@ that we follow.
 ## Topics
 
 - [Reporting Issues](#reporting-issues)
+- [Providing Extensions](#providing-extensions)
 - [Working On Issues](#working-on-issues)
 - [Contributing](#contributing)
 - [Continuous Integration](#continuous-integration)
@@ -36,6 +37,19 @@ to remove the extra stuff that doesn't really relate to the issue itself.
 The easier it is for us to reproduce it, the faster it'll be fixed!
 
 Please don't include any private/sensitive information in your issue!
+
+## Providing Extensions
+
+Some of the best features of Podman Desktop aren't even in this repository!
+We've created an API so that the capabilities of Podman Desktop can be expanded
+by installing [extensions](https://podman-desktop.io/extensions).
+
+Extensions can add support for new container engines, command line tools,
+Kubernetes providers, or add elements to the UI like actions, badges, or views.
+You can create your own extension and contribute it to the catalog for
+others to use.
+
+See the [extension documentation](https://podman-desktop.io/docs/extensions) on our website for more information.
 
 ## Working On Issues
 
@@ -408,12 +422,6 @@ If you're unsure where to add code (renderer, UI, extensions, plugins) see the b
 - `node_modules`: Location for Node.JS packages / dependencies.
 
 > **_NOTE:_** Each `extension` folder is a separately packaged module. If there are any issues with loading, make sure your module is packaged correctly.
-
-### Extensions
-
-Podman Desktop is modularized into extensions for each 'Provider'. You can also create and add your own extension.
-
-See our [extensions documentation](https://podman-desktop.io/docs/extensions) on our website for more information.
 
 ### UI colors
 
