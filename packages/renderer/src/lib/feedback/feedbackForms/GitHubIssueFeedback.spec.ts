@@ -57,6 +57,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
   title: HTMLInputElement;
   description: HTMLTextAreaElement;
   preview: HTMLButtonElement;
+  cancel: HTMLButtonElement;
   includeSystemInfo?: HTMLElement;
   includeExtensionInfo?: HTMLElement;
 } & RenderResult<Component<ComponentProps<typeof GitHubIssueFeedback>>> {
@@ -73,6 +74,10 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
   const preview = getByRole('button', { name: 'Preview on GitHub' });
   expect(preview).toBeInstanceOf(HTMLButtonElement);
 
+  // button
+  const cancel = getByRole('button', { name: 'Cancel' });
+  expect(cancel).toBeInstanceOf(HTMLButtonElement);
+
   // checkbox
   const includeSystemInfo = queryByTitle('Include system information') ?? undefined;
 
@@ -82,6 +87,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
     title: title as HTMLInputElement,
     description: description as HTMLTextAreaElement,
     preview: preview as HTMLButtonElement,
+    cancel: cancel as HTMLButtonElement,
     includeSystemInfo,
     includeExtensionInfo,
     getByRole,
@@ -93,7 +99,7 @@ function renderGitHubIssueFeedback(props: ComponentProps<typeof GitHubIssueFeedb
 test('Expect feedback form to to be GitHub issue feedback form', async () => {
   const { title, description, includeSystemInfo } = renderGitHubIssueFeedback({
     category: 'bug',
-    onCloseForm: vi.fn(),
+    close: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -105,7 +111,7 @@ test('Expect feedback form to to be GitHub issue feedback form', async () => {
 test('Expect Preview on GitHub button to be disabled if there is no title or description', async () => {
   const { title, description, preview } = renderGitHubIssueFeedback({
     category: 'bug',
-    onCloseForm: vi.fn(),
+    close: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -138,7 +144,7 @@ test.each([
 ])('$category should have specific placeholders', async ({ category, placeholders }) => {
   const { title, description } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    onCloseForm: vi.fn(),
+    close: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -158,7 +164,7 @@ test.each([
 ])('$category should have specific issues link', async ({ category, link }) => {
   const { getByLabelText } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    onCloseForm: vi.fn(),
+    close: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -172,7 +178,7 @@ test.each([
 test.each(['bug', 'feature'])('Expect %s to be included in previewOnGitHub call', async category => {
   const { preview, title, description } = renderGitHubIssueFeedback({
     category: category as FeedbackCategory,
-    onCloseForm: vi.fn(),
+    close: vi.fn(),
     contentChange: vi.fn(),
   });
 
@@ -199,7 +205,7 @@ describe('includeSystemInfo', () => {
   test('should not be visible on category feature', async () => {
     const { includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'feature',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeSystemInfo).toBeUndefined();
@@ -208,7 +214,7 @@ describe('includeSystemInfo', () => {
   test('should be visible on category bug and enabled by default', async () => {
     const { includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeSystemInfo).toBeInTheDocument();
@@ -220,7 +226,7 @@ describe('includeSystemInfo', () => {
   test('uncheck the Include system information should set includeSystemInfo to false', async () => {
     const { preview, title, description, includeSystemInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
 
@@ -248,7 +254,7 @@ describe('includeExtensionInfo', () => {
   test('should not be visible on category feature', async () => {
     const { includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'feature',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeExtensionInfo).toBeUndefined();
@@ -257,7 +263,7 @@ describe('includeExtensionInfo', () => {
   test('should be visible on category bug and enabled by default', async () => {
     const { includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
     expect(includeExtensionInfo).toBeInTheDocument();
@@ -269,7 +275,7 @@ describe('includeExtensionInfo', () => {
   test('uncheck the Include system information should set includeSystemInfo to false', async () => {
     const { preview, title, description, includeExtensionInfo } = renderGitHubIssueFeedback({
       category: 'bug',
-      onCloseForm: vi.fn(),
+      close: vi.fn(),
       contentChange: vi.fn(),
     });
 
@@ -291,4 +297,20 @@ describe('includeExtensionInfo', () => {
       }),
     );
   });
+});
+
+test('Expect close confirmation to be true if cancel clicked', async () => {
+  const closeMock = vi.fn();
+  const { cancel } = renderGitHubIssueFeedback({
+    category: 'bug',
+    close: closeMock,
+    contentChange: vi.fn(),
+  });
+
+  // click on a cancel
+  await userEvent.click(cancel);
+
+  // expect close to have been call with confirmation=true
+  expect(closeMock).toHaveBeenCalledOnce();
+  expect(closeMock).toHaveBeenCalledWith(true);
 });

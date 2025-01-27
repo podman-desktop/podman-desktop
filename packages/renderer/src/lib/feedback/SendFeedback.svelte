@@ -27,10 +27,12 @@ function closeModal(): void {
   category = DEFAULT_CATEGORY;
 }
 
-async function hideModal(): Promise<void> {
+async function hideModal(confirm = true): Promise<void> {
   // If all of the form fields are empty/ in default state dont show the dialog
-  if (!hasContent) {
+  if (!hasContent || !confirm) {
     closeModal();
+    // reset
+    hasContent = false;
     return;
   }
 
@@ -54,11 +56,10 @@ function handleUpdate(e: boolean): void {
 
 {#if displayModal}
 <div class='z-40'>
-  <Modal name="Share your feedback" on:close={hideModal}>
+  <Modal name="Share your feedback" on:close={(): Promise<void> => hideModal()}>
     <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
       <h1 class="grow text-lg font-bold capitalize">Share your feedback</h1>
-
-      <CloseButton on:click={hideModal} />
+      <CloseButton on:click={(): Promise<void> => hideModal()} />
     </div>
 
     <div class="relative text-[var(--pd-modal-text)] px-10 pt-4">
@@ -69,11 +70,11 @@ function handleUpdate(e: boolean): void {
     </div>
 
     {#if category === 'developers'}
-      <DevelopersFeedback onCloseForm={hideModal} contentChange={handleUpdate}/>
+      <DevelopersFeedback close={hideModal} contentChange={handleUpdate}/>
     {:else if category === 'bug'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category="bug" contentChange={handleUpdate}/>
+      <GitHubIssueFeedback close={hideModal} category="bug" contentChange={handleUpdate}/>
     {:else if category === 'feature'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category="feature" contentChange={handleUpdate}/>
+      <GitHubIssueFeedback close={hideModal} category="feature" contentChange={handleUpdate}/>
     {/if}
   </Modal>
 </div>

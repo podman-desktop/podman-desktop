@@ -17,7 +17,7 @@ import type { FeedbackProperties } from '/@api/feedback';
 import WarningMessage from '../../ui/WarningMessage.svelte';
 
 interface Props {
-  onCloseForm?: () => void;
+  close: (confirmation: boolean) => void;
   contentChange: (e: boolean) => void;
 }
 
@@ -30,7 +30,7 @@ let hasFeedback = $derived(
     (contactInformation && contactInformation.trim().length > 4),
 );
 
-let { onCloseForm = (): void => {}, contentChange }: Props = $props();
+let { close, contentChange }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
 
@@ -52,14 +52,23 @@ async function sendFeedback(): Promise<void> {
     properties.contact = contactInformation;
   }
 
-  // send
+  // 1. send the feedback
   await window.sendFeedback(properties);
-  // close the form
-  onCloseForm();
+
+  // 2. close the form without confirmation
+  close(false);
+
+  // 3. Display confirmation dialog
+  await window.showMessageBox({
+    title: 'Thanks for your feedback',
+    message: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
+    type: 'info',
+    buttons: ['OK'],
+  });
 }
 
 async function openGitHub(): Promise<void> {
-  onCloseForm();
+  close(false);
   await window.telemetryTrack('feedback.openGitHub');
   await window.openExternal('https://github.com/containers/podman-desktop');
 }
