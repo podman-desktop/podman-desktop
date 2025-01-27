@@ -14,7 +14,7 @@ import ThemedImage from '@theme/ThemedImage';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-![banner](img/ai-lab-first-app/banner.png)
+![banner](img/podman-quadlet/banner.png)
 
 Containers are typically deployed in Kubernetes clusters.
 However, for smaller-scale use cases such as on a single-node server or during development, Kubernetes can be overkill.
