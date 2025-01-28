@@ -5,7 +5,6 @@ slug: podman-quadlet
 authors: [axel7083]
 tags: [podman-desktop, extension, podman, quadlet, systemd]
 hide_table_of_contents: false
-image: /img/blog/podman-desktop-release-1.15/banner.png
 ---
 
 import ReactPlayer from 'react-player'
