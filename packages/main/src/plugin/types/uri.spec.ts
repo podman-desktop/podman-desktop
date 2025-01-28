@@ -55,8 +55,7 @@ test('joinPath without path', () => {
   const uri = Uri.parse('https://podman-desktop.io');
 
   // delete path for the error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delete (uri as any)._path;
+  uri['_path'] = '';
 
   expect(() => Uri.joinPath(uri, 'foo')).toThrowError('cannot call joinPath on Uri without a path');
 });
