@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import type { Readable } from 'node:stream';
 
@@ -27,8 +27,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import * as util from '../../util.js';
 import type { Proxy } from '../proxy.js';
 import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Mock sudo-prompt exec to resolve everytime.
 vi.mock('sudo-prompt', async () => {
@@ -69,7 +67,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -82,7 +80,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const { stdout } = await exec.exec(command, args);
 
@@ -97,7 +95,7 @@ describe('exec', () => {
     const args = ['Hello, World!'];
     const cwd = '/tmp';
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -110,7 +108,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const { stdout } = await exec.exec(command, args, { cwd });
 
@@ -124,7 +122,7 @@ describe('exec', () => {
   test('should reject with an error when the command execution returns non-zero exit code', async () => {
     const command = 'nonexistent-command';
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('');
       }
@@ -137,7 +135,7 @@ describe('exec', () => {
           cb(1);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
     const execResult = exec.exec(command);
     await expect(execResult).rejects.toThrowError(/Command execution failed with exit code 1/);
     await expect(execResult).rejects.toThrowError(Error);
@@ -153,7 +151,7 @@ describe('exec', () => {
       };
     });
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('');
       }
@@ -167,7 +165,7 @@ describe('exec', () => {
           cb(error);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
     const execResult = exec.exec(command);
     await expect(execResult).rejects.toThrowError(/Failed to execute command: Error message/);
     await expect(execResult).rejects.toThrowError(Error);
@@ -206,7 +204,7 @@ describe('exec', () => {
     const result = exec.exec(command, args, options);
     await expect(result).rejects.toThrowError(/Execution cancelled/);
     await expect(result).rejects.toThrowError(Error);
-    expect((childProcessMock as any).kill).toHaveBeenCalled();
+    expect((childProcessMock as unknown as ChildProcess).kill).toHaveBeenCalled();
     expect(options.logger.error).toHaveBeenCalledWith('Execution cancelled');
     expect(setEncodingMock).toBeCalledWith('utf8');
   });
@@ -237,7 +235,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -250,7 +248,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const httpProxy = {
       isEnabled: vi.fn().mockReturnValue(true),
@@ -274,7 +272,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -287,7 +285,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const httpsProxy = {
       isEnabled: vi.fn().mockReturnValue(true),
@@ -311,7 +309,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -324,7 +322,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const noProxy = {
       isEnabled: vi.fn().mockReturnValue(true),
@@ -348,7 +346,7 @@ describe('exec', () => {
 
     (util.isMac as Mock).mockReturnValue(true);
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -361,7 +359,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const { stdout } = await exec.exec(command, args, { isAdmin: true });
 
@@ -384,7 +382,7 @@ describe('exec', () => {
 
     (util.isLinux as Mock).mockReturnValue(true);
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -397,7 +395,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     const { stdout } = await exec.exec(command, args, { isAdmin: true });
 
@@ -417,7 +415,7 @@ describe('exec', () => {
 
     (util.isLinux as Mock).mockReturnValue(true);
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -430,7 +428,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     // emulate flatpak environment
     const { stdout } = await exec.exec(command, args, { env: { FLATPAK_ID: 'true' }, isAdmin: true });
@@ -454,7 +452,7 @@ describe('exec', () => {
       callback(undefined);
     });
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -467,7 +465,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     await exec.exec(command, args, { isAdmin: true });
 
@@ -480,14 +478,20 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
     (util.isWindows as Mock).mockReturnValue(true);
-    let options: any;
+    let options:
+      | {
+          env?: { [p: string]: string };
+        }
+      | undefined;
 
-    (sudo.exec as Mock).mockImplementation((_command, _options, callback) => {
-      callback(undefined);
-      options = _options;
+    vi.mocked(sudo.exec).mockImplementation((_command, _options, callback) => {
+      callback?.();
+      if (typeof _options === 'object' && 'env' in _options) {
+        options = _options;
+      }
     });
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -500,7 +504,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     await exec.exec(command, args, { isAdmin: true, env: { 'MY(VAR': 'myvalue' } });
 
@@ -508,8 +512,8 @@ describe('exec', () => {
     expect(spawnMock).not.toHaveBeenCalled();
     expect(sudo.exec).toBeCalledWith('echo Hello, World!', expect.anything(), expect.anything());
     expect(options).toBeDefined();
-    expect(options.env).toBeDefined();
-    expect(options.env['MY(VAR']).not.toBeDefined();
+    expect(options?.env).toBeDefined();
+    expect(options?.env?.['MY(VAR']).not.toBeDefined();
   });
 
   test('should run the command and set specific encoding', async () => {
@@ -518,7 +522,7 @@ describe('exec', () => {
 
     (util.isLinux as Mock).mockReturnValue(true);
 
-    const on: any = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('Hello, World!');
       }
@@ -531,7 +535,7 @@ describe('exec', () => {
           cb(0);
         }
       }),
-    } as any);
+    } as unknown as ChildProcess);
 
     // emulate flatpak environment
     const { stdout } = await exec.exec(command, args, {
