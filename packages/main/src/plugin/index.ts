@@ -81,7 +81,7 @@ import type { ContributionInfo } from '/@api/contribution-info.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { GitHubIssue } from '/@api/feedback.js';
+import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
@@ -2680,7 +2680,7 @@ export class PluginSystem {
       return kubernetesClient.refreshContextState(context);
     });
 
-    this.ipcHandle('feedback:send', async (_listener, feedbackProperties: unknown): Promise<void> => {
+    this.ipcHandle('feedback:send', async (_listener, feedbackProperties: FeedbackProperties): Promise<void> => {
       return telemetry.sendFeedback(feedbackProperties);
     });
 
@@ -2700,9 +2700,12 @@ export class PluginSystem {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.ipcHandle('telemetry:track', async (_listener, event: string, eventProperties?: any): Promise<void> => {
-      return telemetry.track(event, eventProperties);
-    });
+    this.ipcHandle(
+      'telemetry:track',
+      async (_listener, event: string, eventProperties?: FeedbackProperties): Promise<void> => {
+        return telemetry.track(event, eventProperties);
+      },
+    );
 
     this.ipcHandle('telemetry:page', async (_listener, name: string): Promise<void> => {
       return telemetry.track(PAGE_EVENT_TYPE, { name: name });

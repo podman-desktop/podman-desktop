@@ -25,11 +25,14 @@ import type {
   TelemetrySender,
   TelemetryTrustedValue,
 } from '@podman-desktop/api';
+import type { EventProperties } from '@segment/analytics-core';
 import { Analytics, type UserTraits } from '@segment/analytics-node';
 import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
 import * as osLocale from 'os-locale';
+
+import type { FeedbackProperties } from '/@api/feedback.js';
 
 import { default as telemetry } from '../../../../../telemetry.json';
 import { stoppedExtensions } from '../../util.js';
@@ -76,7 +79,7 @@ export class Telemetry {
 
   private telemetryConfigured = false;
 
-  private pendingItems: { eventName: string; properties: unknown }[] = [];
+  private pendingItems: { eventName: string; properties?: unknown }[] = [];
 
   protected lastTimeEvents: Map<string, number>;
 
@@ -261,13 +264,15 @@ export class Telemetry {
     this.telemetryInitialized = true;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async internalTrack(event: EventType, eventProperties?: any): Promise<void> {
+  protected async internalTrack(event: EventType, eventProperties?: unknown): Promise<void> {
     const anonymousId = await this.identity.getUserId();
 
     const context = await this.getContext();
-    if (!eventProperties) {
-      eventProperties = {};
+    let properties: EventProperties;
+    if (!!eventProperties && typeof eventProperties === 'object') {
+      properties = eventProperties;
+    } else {
+      properties = {};
     }
 
     const integrations = {
@@ -275,17 +280,21 @@ export class Telemetry {
     };
 
     if (event === PAGE_EVENT_TYPE) {
-      const name = eventProperties?.name;
+      const name: string | undefined = typeof properties['name'] === 'string' ? properties['name'] : undefined;
 
       this.analytics?.page({ anonymousId, name, context, integrations });
     } else {
-      const properties = {
-        app_name: app.getName(),
-        app_version: app.getVersion(),
-        ...eventProperties,
-      };
-
-      this.analytics?.track({ anonymousId, event, context, properties, integrations });
+      this.analytics?.track({
+        anonymousId,
+        event,
+        context,
+        properties: {
+          app_name: app.getName(),
+          app_version: app.getVersion(),
+          ...properties,
+        },
+        integrations,
+      });
     }
   }
 
@@ -333,8 +342,7 @@ export class Telemetry {
     return dropIt;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  track(event: EventType, eventProperties?: any): void {
+  track(event: EventType, eventProperties?: unknown): void {
     // skip event ?
     if (this.shouldDropEvent(event)) {
       return;
@@ -351,7 +359,7 @@ export class Telemetry {
     });
   }
 
-  async sendFeedback(feedbackProperties: unknown): Promise<void> {
+  async sendFeedback(feedbackProperties: FeedbackProperties): Promise<void> {
     if (!this.telemetryConfigured) {
       await this.initTelemetry();
     }

@@ -2206,8 +2206,7 @@ export function initExposure(): void {
     return ipcInvoke('feedback:GitHubPreview', feedback);
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  contextBridge.exposeInMainWorld('telemetryTrack', async (event: string, eventProperties?: any): Promise<void> => {
+  contextBridge.exposeInMainWorld('telemetryTrack', async (event: string, eventProperties?: unknown): Promise<void> => {
     return ipcInvoke('telemetry:track', event, eventProperties);
   });
 
