@@ -34,6 +34,7 @@ export interface ExtensionBanner {
       end: string;
     };
   };
+  when?: string;
 }
 
 export interface RecommendedRegistryExtensionDetails {

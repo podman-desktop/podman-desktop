@@ -17,36 +17,15 @@
  ***********************************************************************/
 
 import { render, screen } from '@testing-library/svelte';
-import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
 import { extensionBannerInfos } from '/@/stores/extensionBanners';
+import { providerInfos } from '/@/stores/providers';
+import type { ProviderInfo } from '/@api/provider-info';
 
 import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
 import type { ExtensionBanner } from '../../../../main/src/plugin/recommendations/recommendations-api';
-
-const getExtensionBannersMock = vi.fn();
-
-// fake the window.events object
-beforeEach(() => {
-  vi.resetAllMocks();
-  Object.defineProperty(window, 'getExtensionBanners', { value: getExtensionBannersMock });
-  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValueOnce({}) });
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-});
-
-const waitForInitialization = async (): Promise<void> => {
-  // wait store are populated
-  while (get(extensionBannerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-};
 
 test('multiple banners should be rendered', async () => {
   const banners: ExtensionBanner[] = Array.from({ length: 10 }, (_, i) => ({
@@ -58,12 +37,10 @@ test('multiple banners should be rendered', async () => {
     thumbnail: 'data:image/png;base64-thumbnail',
   }));
 
-  getExtensionBannersMock.mockResolvedValue(banners);
+  extensionBannerInfos.set(banners);
 
   // ask to update the featured Extensions store
   window.dispatchEvent(new CustomEvent('system-ready'));
-
-  await waitForInitialization();
 
   render(ExtensionBanners);
 
@@ -71,4 +48,43 @@ test('multiple banners should be rendered', async () => {
     const text = screen.getByText(banner.title);
     expect(text).toBeDefined();
   }
+});
+
+test('only banners with when condition evaluated to true should be rendered', async () => {
+  const banner1 = {
+    extensionId: `dummy.id-when-visible-1`,
+    title: 'Visible',
+    featured: {} as unknown as FeaturedExtension,
+    description: 'dummy description',
+    icon: 'data:image/png;base64-icon',
+    thumbnail: 'data:image/png;base64-thumbnail',
+    when: `provider.podman.status === 'ready'`,
+  };
+
+  const banner2 = {
+    extensionId: `dummy.id-when-invisible-1`,
+    title: 'Invisible',
+    featured: {} as unknown as FeaturedExtension,
+    description: 'dummy description',
+    icon: 'data:image/png;base64-icon',
+    thumbnail: 'data:image/png;base64-thumbnail',
+    when: `provider.kubectl.status === 'ready'`,
+  };
+
+  const providerInfo = {
+    internalId: '0',
+    id: 'podman',
+    status: 'ready',
+  };
+
+  providerInfos.set([providerInfo as unknown as ProviderInfo]);
+  extensionBannerInfos.set([banner1, banner2]);
+
+  // ask to update the featured Extensions store
+  window.dispatchEvent(new CustomEvent('system-ready'));
+
+  render(ExtensionBanners);
+
+  expect(screen.getByText(banner1.title)).toBeDefined();
+  expect(screen.queryByText(banner2.title)).toBeNull();
 });
