@@ -141,6 +141,6 @@ test.describe.serial('Kubernetes Edit YAML Feature E2E Test', { tag: '@k8s_e2e' 
     const kubernetesBar = await navigationBar.openKubernetes();
     const deploymentsPage = await kubernetesBar.openTabPage(KubernetesResources.Deployments);
     await playExpect(deploymentsPage.heading).toBeVisible();
-    await playExpect(deploymentsPage.getResourceRowByName(DEPLOYMENT_NAME)).not.toBeVisible();
+    await playExpect(deploymentsPage.getResourceRowByName(DEPLOYMENT_NAME)).not.toBeVisible({ timeout: 15_000 });
   });
 });

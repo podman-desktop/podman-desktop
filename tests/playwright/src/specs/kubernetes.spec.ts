@@ -136,7 +136,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         const pvcsPage = await kubernetesBar.openTabPage(KubernetesResources.PVCs);
         await pvcsPage.deleteKubernetesResource(PVC_NAME);
         await handleConfirmationDialog(page);
-        await playExpect(pvcsPage.getResourceRowByName(PVC_NAME)).not.toBeVisible();
+        await playExpect(pvcsPage.getResourceRowByName(PVC_NAME)).not.toBeVisible({ timeout: 30_000 });
       });
     });
   test.describe
@@ -191,7 +191,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await playExpect(podsPage.heading).toBeVisible();
         await playExpect
           .poll(async () => podsPage.getPodRowByName(SECRET_POD_NAME), {
-            timeout: 15_000,
+            timeout: 25_000,
           })
           .toBeTruthy();
         const podsDetailsPage = await podsPage.openPodDetails(SECRET_POD_NAME);

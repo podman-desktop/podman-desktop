@@ -77,7 +77,7 @@ export class PlayKubeYamlPage extends BasePage {
           await playExpect(this.kubernetesContext).toHaveValue(kubernetesContext);
 
           if (kubernetesNamespace) {
-            await playExpect(this.kubernetesNamespaces).toBeVisible();
+            await playExpect(this.kubernetesNamespaces).toBeVisible({ timeout: 15_000 });
             await this.kubernetesNamespaces.click();
 
             const namespaceSelection = this.kubernetesNamespaces

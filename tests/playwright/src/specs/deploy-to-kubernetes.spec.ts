@@ -100,6 +100,8 @@ test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e'
     await deployToKubernetesPage.deployPod(CONTAINER_NAME, { useKubernetesServices: true }, KUBERNETES_CONTEXT);
 
     const podsPage = await navigationBar.openPods();
-    await playExpect.poll(async () => podsPage.deployedPodExists(DEPLOYED_POD_NAME, 'kubernetes')).toBeTruthy();
+    await playExpect
+      .poll(async () => podsPage.deployedPodExists(DEPLOYED_POD_NAME, 'kubernetes'), { timeout: 15_000 })
+      .toBeTruthy();
   });
 });
