@@ -147,7 +147,7 @@ export class Runner {
   }
 
   public async startTracing(): Promise<void> {
-    await this.getPage().context().tracing.start({ screenshots: true, snapshots: true, sources: true });
+    await this.getPage().context().tracing.start({ screenshots: false, snapshots: true, sources: true });
   }
 
   public async stopTracing(): Promise<void> {
