@@ -23,6 +23,7 @@ import { readable } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
+import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubernetesContextsState from '/@/stores/kubernetes-contexts-state';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
@@ -70,6 +71,17 @@ const mockContext3: KubeContext = {
   },
 };
 
+const mockContext4: KubeContext = {
+  name: 'context-name4',
+  cluster: 'cluster-name4',
+  user: 'user-name4',
+  namespace: 'namespace-name4',
+  clusterInfo: {
+    name: 'cluster-name4',
+    server: 'https://server-name4',
+  },
+};
+
 const kubernetesGetCurrentContextNameMock = vi.fn();
 
 const showMessageBoxMock = vi.fn();
@@ -83,7 +95,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  kubernetesContexts.set([mockContext1, mockContext2, mockContext3]);
+  kubernetesContexts.set([mockContext1, mockContext2, mockContext3, mockContext4]);
   vi.clearAllMocks();
 });
 
@@ -174,6 +186,7 @@ describe.each([
       health: true,
       resourcesCount: true,
       undefinedCounts: true,
+      permissions: true,
     },
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
@@ -212,6 +225,43 @@ describe.each([
           reachable: true,
           checking: false,
         },
+        {
+          contextName: 'context-name4',
+          reachable: true,
+          checking: false,
+        },
+      ]);
+      kubernetesContextsPermissions.set([
+        {
+          contextName: 'context-name',
+          resourceName: 'pods',
+          permitted: true,
+        },
+        {
+          contextName: 'context-name',
+          resourceName: 'deployments',
+          permitted: true,
+        },
+        {
+          contextName: 'context-name3',
+          resourceName: 'pods',
+          permitted: true,
+        },
+        {
+          contextName: 'context-name3',
+          resourceName: 'deployments',
+          permitted: true,
+        },
+        {
+          contextName: 'context-name4',
+          resourceName: 'pods',
+          permitted: false,
+        },
+        {
+          contextName: 'context-name4',
+          resourceName: 'deployments',
+          permitted: false,
+        },
       ]);
     },
   },
@@ -221,6 +271,7 @@ describe.each([
       health: true,
       resourcesCount: true,
       undefinedCounts: false,
+      permissions: false,
     },
     initMocks: (): void => {
       const state: Map<string, ContextGeneralState> = new Map();
@@ -251,6 +302,7 @@ describe.each([
     const context1 = screen.getAllByRole('row')[0];
     const context2 = screen.getAllByRole('row')[1];
     const context3 = screen.getAllByRole('row')[2];
+    const context4 = screen.getAllByRole('row')[3];
     if (implemented.health) {
       await vi.waitFor(() => {
         expect(within(context1).queryByText('REACHABLE')).toBeInTheDocument();
@@ -284,12 +336,24 @@ describe.each([
       const checkNoCount = (el: HTMLElement, label: string): void => {
         const countEl = within(el).getByLabelText(label);
         expect(countEl).toBeInTheDocument();
-        expect(countEl).toBeEmptyDOMElement();
+        expect(countEl).toHaveTextContent('');
       };
       expect(within(context3).queryByText('PODS')).toBeInTheDocument();
       expect(within(context3).queryByText('DEPLOYMENTS')).toBeInTheDocument();
       checkNoCount(context3, 'Context Pods Count');
       checkNoCount(context3, 'Context Deployments Count');
+    }
+
+    if (implemented.permissions) {
+      const checkNotPermitted = (el: HTMLElement, label: string): void => {
+        const countEl = within(el).getByLabelText(label);
+        expect(countEl).toBeInTheDocument();
+        expect(countEl).toHaveTextContent('-');
+      };
+      expect(within(context4).queryByText('PODS')).toBeInTheDocument();
+      expect(within(context4).queryByText('DEPLOYMENTS')).toBeInTheDocument();
+      checkNotPermitted(context4, 'Context Pods Count');
+      checkNotPermitted(context4, 'Context Deployments Count');
     }
   });
 });

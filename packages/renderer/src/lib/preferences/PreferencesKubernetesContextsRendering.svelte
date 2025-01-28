@@ -1,10 +1,13 @@
 <script lang="ts">
+import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, EmptyScreen, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
+import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContextsCheckingStateDelayed, kubernetesContextsState } from '/@/stores/kubernetes-contexts-state';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
@@ -22,6 +25,9 @@ interface KubeContextWithStates extends KubeContext {
   isBeingChecked: boolean;
   podsCount?: number;
   deploymentsCount?: number;
+  podsPermitted: boolean;
+  deploymentsPermitted: boolean;
+  notPermittedHelp?: string;
 }
 
 const currentContextName = $derived($kubernetesContexts.find(c => c.currentContext)?.name);
@@ -30,14 +36,21 @@ let kubeconfigFilePath: string = $state('');
 let experimentalStates: boolean = $state(false);
 
 const kubernetesContextsWithStates: KubeContextWithStates[] = $derived(
-  $kubernetesContexts.map(kubeContext => ({
-    ...kubeContext,
-    isReachable: isContextReachable(kubeContext.name, experimentalStates),
-    isKnown: isContextKnown(kubeContext.name, experimentalStates),
-    isBeingChecked: isContextBeingChecked(kubeContext.name, experimentalStates),
-    podsCount: getResourcesCount(kubeContext.name, 'pods', experimentalStates),
-    deploymentsCount: getResourcesCount(kubeContext.name, 'deployments', experimentalStates),
-  })),
+  $kubernetesContexts
+    .map(kubeContext => ({
+      ...kubeContext,
+      isReachable: isContextReachable(kubeContext.name, experimentalStates),
+      isKnown: isContextKnown(kubeContext.name, experimentalStates),
+      isBeingChecked: isContextBeingChecked(kubeContext.name, experimentalStates),
+      podsCount: getResourcesCount(kubeContext.name, 'pods', experimentalStates),
+      deploymentsCount: getResourcesCount(kubeContext.name, 'deployments', experimentalStates),
+      podsPermitted: getResourcePermitted(kubeContext.name, 'pods', experimentalStates),
+      deploymentsPermitted: getResourcePermitted(kubeContext.name, 'deployments', experimentalStates),
+    }))
+    .map(kubeContext => ({
+      ...kubeContext,
+      notPermittedHelp: getNotPermittedHelp(kubeContext.podsPermitted, kubeContext.deploymentsPermitted),
+    })),
 );
 
 onMount(async () => {
@@ -130,6 +143,33 @@ function getResourcesCount(
   return $kubernetesContextsState.get(contextName)?.resources[resourceName];
 }
 
+function getResourcePermitted(contextName: string, resourceName: SelectedResourceName, experimental: boolean): boolean {
+  if (experimental) {
+    const permission = $kubernetesContextsPermissions.find(
+      permissions => permissions.contextName === contextName && permissions.resourceName === resourceName,
+    );
+    if (!permission) {
+      return false;
+    }
+    return permission.permitted;
+  }
+  return true;
+}
+
+function getNotPermittedHelp(podsPermitted: boolean, deploymentsPermitted: boolean): string {
+  const notPermitted = [];
+  if (!podsPermitted) {
+    notPermitted.push('Pods');
+  }
+  if (!deploymentsPermitted) {
+    notPermitted.push('Deployments');
+  }
+  if (!notPermitted.length) {
+    return '';
+  }
+  return notPermitted.join(' and ') + ' are not accessible';
+}
+
 async function connect(contextName: string): Promise<void> {
   await window.telemetryTrack('kubernetes.monitoring.start.non-current');
   $kubernetesContexts = clearKubeUIContextErrors($kubernetesContexts, contextName);
@@ -214,20 +254,28 @@ async function connect(contextName: string): Promise<void> {
                 </div>
                 <div class="flex flex-row gap-4 mt-4">
                   <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]">PODS</div>
-                    <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" aria-label="Context Pods Count">
-                      {#if context.podsCount !== undefined}{context.podsCount}{/if}
+                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted}>PODS</div>
+                    <div class="text-[16px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.podsPermitted} aria-label="Context Pods Count">
+                      {#if context.podsPermitted}
+                        {#if context.podsCount !== undefined}{context.podsCount}{/if}
+                      {:else}-{/if}
                     </div>
                   </div>
                   <div class="text-center">
-                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]">DEPLOYMENTS</div>
+                    <div class="font-bold text-[9px] text-[var(--pd-invert-content-card-text)]" class:opacity-60={!context.deploymentsPermitted}>DEPLOYMENTS</div>
                     <div
                       class="text-[16px] text-[var(--pd-invert-content-card-text)]"
+                      class:opacity-60={!context.deploymentsPermitted}
                       aria-label="Context Deployments Count">
-                      {#if context.deploymentsCount !== undefined}{context.deploymentsCount}{/if}
+                      {#if context.deploymentsPermitted}
+                        {#if context.deploymentsCount !== undefined}{context.deploymentsCount}{/if}
+                      {:else}-{/if}
                     </div>
                   </div>
                 </div>
+                {#if !context.podsPermitted || !context.deploymentsPermitted}
+                  <Tooltip tip={context.notPermittedHelp}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip>
+                {/if}
               {:else}
                 <div class="flex flex-col space-y-2">
                   <div class="flex flex-row pt-2">
