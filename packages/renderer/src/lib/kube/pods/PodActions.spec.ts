@@ -31,9 +31,6 @@ const updateMock = vi.fn();
 const restartMock = vi.fn();
 const deleteMock = vi.fn();
 const showMessageBoxMock = vi.fn();
-const kubernetesGetCurrentNamespaceMock = vi.fn();
-const kubernetesReadNamespacedPodMock = vi.fn();
-const openExternalMock = vi.fn();
 
 class PodUIImpl {
   #status: string;
@@ -64,22 +61,18 @@ class ResizeObserver {
 
 beforeAll(() => {
   Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
-  Object.defineProperty(window, 'kubernetesGetCurrentNamespace', { value: kubernetesGetCurrentNamespaceMock });
-  Object.defineProperty(window, 'kubernetesReadNamespacedPod', { value: kubernetesReadNamespacedPodMock });
-  Object.defineProperty(window, 'restartKubernetesPod', { value: restartMock });
-  Object.defineProperty(window, 'kubernetesDeletePod', { value: deleteMock });
-  Object.defineProperty(window, 'kubernetesListRoutes', { value: vi.fn() });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
-  Object.defineProperty(window, 'openExternal', { value: openExternalMock });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.kubernetesListRoutes).mockResolvedValue([]);
-
-  kubernetesGetCurrentNamespaceMock.mockResolvedValue('ns');
-  kubernetesReadNamespacedPodMock.mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
+  vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
+  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('ns');
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
+  vi.mocked(window.restartKubernetesPod).mockImplementation(restartMock);
+  vi.mocked(window.kubernetesDeletePod).mockImplementation(deleteMock);
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
 });
 
 test('Check deleting pod', async () => {
@@ -122,14 +115,16 @@ test('Expect kubernetes route to be displayed', async () => {
     { metadata: { labels: { app: 'foo' }, name: routeName }, spec: { host: routeHost } } as unknown as V1Route,
   ]);
 
+  pod.status = 'RUNNING';
   render(PodActions, { pod: pod });
 
   const openRouteButton = await screen.findByRole('button', { name: `Open ${routeName}` });
   expect(openRouteButton).toBeVisible();
+  expect(openRouteButton).toBeEnabled();
 
   await fireEvent.click(openRouteButton);
 
-  expect(openExternalMock).toHaveBeenCalledWith(`http://${routeHost}`);
+  expect(window.openExternal).toHaveBeenCalledWith(`http://${routeHost}`);
 });
 
 test('Expect kubernetes route to be displayed but disabled', async () => {

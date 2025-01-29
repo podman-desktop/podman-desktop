@@ -17,44 +17,35 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
-import { createNavigationKubernetesDeploymentsEntry } from './navigation-registry-k8s-deployments.svelte';
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  Object.defineProperty(window, 'kubernetesRegisterGetCurrentContextResources', {
-    value: kubernetesRegisterGetCurrentContextResourcesMock,
-  });
-});
-
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
+import { createNavigationKubernetesPodsEntry } from './navigation-registry-k8s-pods.svelte';
 
 test('createNavigationKubernetesDeploymentsEntry', async () => {
-  const nodes: KubernetesObject[] = [
+  const pods: KubernetesObject[] = [
     {
       apiVersion: 'v1',
-      kind: 'Node',
+      kind: 'Pod',
       metadata: {
-        name: 'node1',
+        name: 'pod1',
       },
     },
     {
       apiVersion: 'v1',
-      kind: 'Node',
+      kind: 'Pod',
       metadata: {
-        name: 'node2',
+        name: 'pod2',
       },
     },
   ];
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue(nodes);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue(pods);
 
-  const entry = createNavigationKubernetesDeploymentsEntry();
+  const entry = createNavigationKubernetesPodsEntry();
 
   expect(entry).toBeDefined();
-  expect(entry.name).toBe('Deployments');
-  expect(entry.link).toBe('/kubernetes/deployments');
-  expect(entry.tooltip).toBe('Deployments');
+  expect(entry.name).toBe('Pods');
+  expect(entry.link).toBe('/kubernetes/pods');
+  expect(entry.tooltip).toBe('Pods');
   await vi.waitFor(() => {
     expect(entry.counter).toBe(2);
   });
