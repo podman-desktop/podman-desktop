@@ -1,12 +1,10 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * docusaurus uses Infima for CSS but here we load tailwind with
+ * 'important' configuration so default style will be Tailwind css
  */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
 
 /* manrope variable font */
 @font-face {

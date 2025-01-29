@@ -359,8 +359,8 @@ async function abortBuild(): Promise<void> {
         >Build arguments</label>
       {#each buildArgs as buildArg, index}
         <div class="flex flex-row items-center space-x-2 mb-2">
-          <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="flex-grow" required />
-          <Input bind:value={buildArg.value} placeholder="Value" class="flex-grow" required />
+          <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="grow" required />
+          <Input bind:value={buildArg.value} placeholder="Value" class="grow" required />
           <Button
             on:click={(): void => deleteBuildArg(index)}
             icon={faMinusCircle}

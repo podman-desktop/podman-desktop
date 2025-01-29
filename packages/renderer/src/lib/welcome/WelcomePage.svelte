@@ -95,18 +95,18 @@ function startOnboardingQueue(): void {
     class="flex flex-col flex-auto fixed top-0 left-0 right-0 bottom-0 bg-[var(--pd-content-card-bg)] bg-no-repeat z-50"
     style="background-image: url({bgImage}); background-position: 50% -175%; background-size: 100% 75%">
     <!-- Header -->
-    <div class="flex flex-row flex-none backdrop-blur p-6 mt-10">
+    <div class="flex flex-row flex-none backdrop-blur-sm p-6 mt-10">
       <div class="flex flex-auto text-lg font-bold">Get started with Podman Desktop</div>
     </div>
 
     <!-- Body -->
-    <div class="flex flex-col justify-center content-center flex-auto backdrop-blur p-2 overflow-y-auto">
+    <div class="flex flex-col justify-center content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
       <div class="flex justify-center p-2"><DesktopIcon /></div>
       <div class="flex justify-center text-lg font-bold p-2">
         <span class="mr-2">🎉</span>Welcome to Podman Desktop v{podmanDesktopVersion} !
       </div>
       <div class="flex flex-row justify-center">
-        <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded">
+        <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
           {#if onboardingProviders && onboardingProviders.length > 0}
             <div class="flex justify-center text-sm text-[var(--pd-content-card-text)] pb-2">
               <div>Choose the extensions to include:</div>

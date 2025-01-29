@@ -51,7 +51,7 @@ const executeAction = async (): Promise<void> => {
       <span class="ml-1">{taskInfo.progress}%</span>
     {/if}
 
-    <div class="flex flex-grow flex-col items-end">
+    <div class="flex grow flex-col items-end">
       <CloseButton class="text-[var(--pd-modal-text)]" on:click={closeAction} />
     </div>
   </div>

@@ -55,7 +55,7 @@ function rotateRight(): void {
     <Fa class="w-8 h-8" icon={faChevronLeft} color="black" />
   </button>
 
-  <div id="carousel-cards-{containerId}" class="flex flex-grow gap-3 overflow-hidden">
+  <div id="carousel-cards-{containerId}" class="flex grow gap-3 overflow-hidden">
     {#each visibleCards as card}
       <slot card={card} />
     {/each}

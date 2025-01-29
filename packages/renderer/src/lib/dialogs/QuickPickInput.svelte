@@ -293,11 +293,11 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     <div class="flex justify-center items-center mt-1">
       <div
         bind:this={outerDiv}
-        class="w-[700px] {mode === 'InputBox' ? 'h-fit' : ''} shadow-sm p-2 rounded shadow-[var(--pd-input-field-stroke)] text-sm overflow-hidden">
+        class="w-[700px] {mode === 'InputBox' ? 'h-fit' : ''} shadow-xs p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-sm overflow-hidden">
         {#if title}
           <div
             aria-label="title"
-            class="w-full bg-[var(--pd-input-field-focused-bg)] rounded-sm text-[var(--pd-input-select-hover-text)] text-center max-w-[700px] truncate cursor-default">
+            class="w-full bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-input-select-hover-text)] text-center max-w-[700px] truncate cursor-default">
             {title}
           </div>
         {/if}
@@ -309,7 +309,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
               bind:value={inputValue}
               class="px-1 w-full h-20 text-[var(--pd-input-select-hover-text)] border {validationError
                 ? 'border-[var(--pd-input-field-stroke-error)]'
-                : 'bg-[var(--pd-input-field-focused-bg)] border-[var(--pd-input-field-focused-bg)]'} focus:outline-none"
+                : 'bg-[var(--pd-input-field-focused-bg)] border-[var(--pd-input-field-focused-bg)]'} focus:outline-hidden"
               placeholder={placeHolder}></textarea>
           {:else}
             <input
@@ -319,7 +319,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
               bind:value={inputValue}
               class="px-1 w-full text-[var(--pd-input-select-hover-text)] border {validationError
                 ? 'border-[var(--pd-input-field-stroke-error)]'
-                : 'bg-[var(--pd-input-field-focused-bg)] border-[var(--pd-input-field-focused-bg)]'} focus:outline-none"
+                : 'bg-[var(--pd-input-field-focused-bg)] border-[var(--pd-input-field-focused-bg)]'} focus:outline-hidden"
               placeholder={placeHolder} />
           {/if}
           {#if quickPickCanPickMany}

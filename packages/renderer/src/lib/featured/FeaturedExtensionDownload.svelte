@@ -76,7 +76,7 @@ async function installExtension(): Promise<void> {
   on:click={installExtension}
   hidden={!extension.fetchable}
   title="Install {extension.displayName} v{extension.fetchVersion} Extension"
-  class="border-2 relative rounded border-[var(--pd-button-secondary)] text-[var(--pd-button-secondary)] hover:text-[var(--pd-button-text)] hover:bg-[var(--pd-button-secondary-hover)] hover:border-[var(--pd-button-secondary-hover)] w-10 p-2 text-center cursor-pointer flex flex-row justify-center">
+  class="border-2 relative rounded-sm border-[var(--pd-button-secondary)] text-[var(--pd-button-secondary)] hover:text-[var(--pd-button-text)] hover:bg-[var(--pd-button-secondary-hover)] hover:border-[var(--pd-button-secondary-hover)] w-10 p-2 text-center cursor-pointer flex flex-row justify-center">
   <LoadingIcon
     icon={faDownload}
     iconSize="1x"

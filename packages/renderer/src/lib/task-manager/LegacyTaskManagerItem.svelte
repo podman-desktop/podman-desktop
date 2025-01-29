@@ -68,7 +68,7 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
     <Fa size="0.875x" icon={icon} />
     </div>
     {#if task.state !== 'completed' && task.cancellable}
-      <div class="items-end flex flex-grow">
+      <div class="items-end flex grow">
         <Tooltip tip="Cancel the task" topRight>
           <button class="cursor-pointer" on:click={cancelTask} aria-label="Cancel task {task.name}">
             <Fa size="0.875x" icon={faTimesCircle} />
@@ -84,7 +84,7 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
         {task.name}
       </div>
 
-      <div class="flex flex-col flex-grow items-end">
+      <div class="flex flex-col grow items-end">
         <!-- if completed task, display a close icon-->
         {#if task.state === 'completed'}
           <button title="Clear notification" class="text-[var(--pd-modal-text)]" on:click={(): Promise<void> => closeCompleted(task)}

@@ -188,7 +188,7 @@ function toggleChildren(name: string | undefined): void {
   <!-- Table header -->
   <div role="rowgroup">
     <div
-      class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-[2]"
+      class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
       role="row">
       <div class="whitespace-nowrap justify-self-start" role="columnheader"></div>
       {#if row.info.selectable}

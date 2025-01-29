@@ -62,7 +62,7 @@ let copyTextDivElement: HTMLDivElement;
     {/if}
     {#if commandline}
       <div
-        class="flex flex-row bg-[var(--pd-details-empty-cmdline-bg)] items-center justify-between rounded-sm p-3 mt-4">
+        class="flex flex-row bg-[var(--pd-details-empty-cmdline-bg)] items-center justify-between rounded-xs p-3 mt-4">
         <div
           class="font-mono text-[var(--pd-details-empty-cmdline-text)]"
           bind:this={copyTextDivElement}

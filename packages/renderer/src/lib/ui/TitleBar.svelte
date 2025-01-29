@@ -15,7 +15,7 @@ onMount(async () => {
 
 <header
   id="navbar"
-  class="bg-[var(--pd-titlebar-bg)] body-font z-[999] relative {platform === 'win32'
+  class="bg-[var(--pd-titlebar-bg)] body-font z-999 relative {platform === 'win32'
     ? 'min-h-[32px]'
     : 'min-h-[38px]'} border-[var(--pd-global-nav-bg-border)] border-b-[1px]"
   style="-webkit-app-region: drag;">

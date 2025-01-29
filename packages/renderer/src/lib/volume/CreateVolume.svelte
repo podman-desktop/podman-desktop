@@ -70,7 +70,7 @@ export let volumeName = '';
         <label for="providerChoice" class="py-3 block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
           >Container Engine
           <select
-            class="w-full p-2 outline-none bg-[var(--pd-select-bg)] rounded-sm text-[var(--pd-content-card-text)]"
+            class="w-full p-2 outline-hidden bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
             aria-label="Provider Choice"
             disabled={createVolumeFinished}
             bind:value={selectedProvider}>

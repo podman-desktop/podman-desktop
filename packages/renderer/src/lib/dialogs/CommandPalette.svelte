@@ -171,7 +171,7 @@ async function onInputChange(): Promise<void> {
     <div class="flex justify-center items-center mt-1">
       <div
         bind:this={outerDiv}
-        class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-sm p-2 rounded shadow-[var(--pd-input-field-stroke)] text-sm">
+        class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-xs p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-sm">
         <div class="w-full flex flex-row">
           <input
             bind:this={inputElement}
@@ -179,7 +179,7 @@ async function onInputChange(): Promise<void> {
             type="text"
             bind:value={inputValue}
             on:input={onInputChange}
-            class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-none" />
+            class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" />
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
           {#each filteredCommandInfoItems as item, i}

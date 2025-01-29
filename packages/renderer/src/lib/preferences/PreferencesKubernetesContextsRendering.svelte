@@ -216,7 +216,7 @@ async function connect(contextName: string): Promise<void> {
               {/if}
             {/if}
             <!-- Centered items div -->
-            <div class="pl-3 flex-grow flex flex-col justify-center">
+            <div class="pl-3 grow flex flex-col justify-center">
               <div class="flex flex-col items-left">
                 {#if context.currentContext}
                   <span class="text-sm text-[var(--pd-invert-content-card-text)]" aria-label="Current Context"

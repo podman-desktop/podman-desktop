@@ -474,7 +474,7 @@ function updateKubeResult(): void {
           bind:value={ingressPort}
           name="serviceName"
           id="serviceName"
-          class=" cursor-default w-full p-2 outline-none text-sm bg-[var(--pd-select-bg)] rounded-sm text-[var(--pd-content-card-text)]"
+          class=" cursor-default w-full p-2 outline-hidden text-sm bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
           aria-label="Select a Port"
           required>
           <option value="" disabled selected>Select a port</option>
@@ -524,7 +524,7 @@ function updateKubeResult(): void {
         <label for="namespaceToUse" class="block mb-1 text-sm font-medium text-[var(--pd-content-card-header-text)]"
           >Kubernetes Namespace:</label>
         <select
-          class="w-full p-2 outline-none text-sm bg-[var(--pd-select-bg)] rounded-sm text-[var(--pd-content-card-text)]"
+          class="w-full p-2 outline-hidden text-sm bg-[var(--pd-select-bg)] rounded-xs text-[var(--pd-content-card-text)]"
           aria-label="Select a Kubernetes Namespace"
           name="namespaceChoice"
           bind:value={currentNamespace}>

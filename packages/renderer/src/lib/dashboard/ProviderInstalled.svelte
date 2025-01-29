@@ -156,7 +156,7 @@ async function onInstallationClick(): Promise<void> {
         <div
           class="z-10 min-w-[130px] m-auto bg-primary text-[13px] text-[var(--pd-button-text)] absolute w-full"
           class:hidden={!installationOptionsMenuVisible}>
-          <ul class="w-full outline-none bg-[var(--pd-dropdown-bg)] rounded-sm placeholder-[var(--pd-content-text)]">
+          <ul class="w-full outline-hidden bg-[var(--pd-dropdown-bg)] rounded-xs placeholder-[var(--pd-content-text)]">
             <li>
               <button
                 class="w-full p-2 bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)] cursor-pointer"

@@ -118,7 +118,7 @@ onMount(() => {
       {#if displayValueFieldInput}
         <input
           type="text"
-          class="w-40 outline-none bg-[var(--pd-input-field-bg)] focus:bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-content-text)]"
+          class="w-40 outline-hidden bg-[var(--pd-input-field-bg)] focus:bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-content-text)]"
           bind:value={additionalValue}
           bind:this={inputHtmlElement}
           on:keydown={handleKeydownAdditionalField} />

@@ -90,7 +90,7 @@ export function warnings(this: CompileContext, d: Directive): boolean {
     // add the warning description
     if (item.description) {
       // add title to the left
-      this.tag('<div class="flex-grow">');
+      this.tag('<div class="grow">');
       this.raw(item.description);
       this.tag('</div>');
     }

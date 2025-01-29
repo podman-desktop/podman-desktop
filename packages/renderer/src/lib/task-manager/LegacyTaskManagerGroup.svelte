@@ -23,7 +23,7 @@ let lastItem = (a: unknown[], i: number): boolean => i === a.length - 1;
       <Fa class="mr-1" size="0.45x" icon={icon} />
       <div class="flex-nowrap uppercase font-bold text-xs">{title} ({tasks.length})</div>
     </div>
-    <hr class="flex-grow flex w-max h-[2px] bg-[var(--pd-modal-header-text)] border-0" />
+    <hr class="grow flex w-max h-[2px] bg-[var(--pd-modal-header-text)] border-0" />
   </div>
   <div class="w-full">
     {#each tasks as task, index}

@@ -28,7 +28,7 @@ onDestroy(() => window.removeEventListener('resize', updateMenuLocation));
   data-testid="help-menu">
   <div
     title="Help Menu Items"
-    class="z-10 m-1 rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-none">
+    class="z-10 m-1 rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-hidden">
     <slot />
   </div>
 </div>

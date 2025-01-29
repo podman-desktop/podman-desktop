@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../../tailwind.config.cjs';
 
 /* Disable dragging links elements */
 a {
@@ -8,4 +7,9 @@ a {
   user-select: none;
   -webkit-user-drag: none;
   -webkit-app-region: no-drag;
+}
+
+@theme {
+  --spacing-leftnavbar: 48px;
+  --spacing-leftsidebar: 170px;
 }

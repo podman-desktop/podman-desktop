@@ -24,6 +24,7 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
 import { coverageConfig } from '../../vitest-shared-extensions.config';
+import tailwindcss from '@tailwindcss/vite';
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
@@ -39,7 +40,7 @@ export default defineConfig({
       '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
     },
   },
-  plugins: [svelte({ hot: !process.env.VITEST }), svelteTesting()],
+  plugins: [tailwindcss(), svelte({ hot: !process.env.VITEST }), svelteTesting()],
   optimizeDeps: {
     exclude: ['tinro'],
   },

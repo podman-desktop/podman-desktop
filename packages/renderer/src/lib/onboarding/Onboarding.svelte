@@ -324,7 +324,7 @@ $: globalOnboarding = global;
     role="region"
     aria-label="Onboarding Body"
     class="flex flex-col bg-[var(--pd-content-card-bg)] text-[var(--pd-details-body-text)] {globalOnboarding
-      ? 'flex-auto fixed top-0 left-0 right-0 bottom-0 bg-no-repeat z-[45] pt-9 overflow-y-auto'
+      ? 'flex-auto fixed top-0 left-0 right-0 bottom-0 bg-no-repeat z-45 pt-9 overflow-y-auto'
       : 'h-full overflow-y-auto w-full overflow-x-hidden'}"
     class:bodyWithBar={!activeStep.step.completionEvents || activeStep.step.completionEvents.length === 0}>
     <div class="flex flex-col h-full">
@@ -485,7 +485,7 @@ $: globalOnboarding = global;
         <div
           class="flex flex-row-reverse p-6 bg-[var(--pd-content-bg)] fixed {globalOnboarding
             ? 'w-full'
-            : 'w-[calc(100%-theme(width.leftnavbar)-theme(width.leftsidebar))] mb-5'} bottom-0 pr-10 max-h-20 bg-opacity-90 z-20"
+            : 'w-[calc(100%-(var(--width-leftnavbar))-(var(--width-leftsidebar)))] mb-5'} bottom-0 pr-10 max-h-20 bg-opacity-90 z-20"
           role="group"
           aria-label="Step Buttons">
           <Button

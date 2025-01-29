@@ -27,19 +27,6 @@ module.exports = {
   ],
   darkMode: 'class',
   theme: {
-    extend: {
-      transitionProperty: {
-        width: 'width',
-      },
-      width: {
-        leftnavbar: '48px',
-        leftsidebar: '170px',
-      },
-      minWidth: {
-        leftnavbar: '48px',
-        leftsidebar: '170px',
-      },
-    },
     fontSize: {
       xs: '10px',
       sm: '11px',

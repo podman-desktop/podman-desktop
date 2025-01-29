@@ -89,14 +89,14 @@ export default function Home(): JSX.Element {
             {/* buttons section */}
             <div className="mt-4 flex justify-center items-center gap-x-4">
               <Link
-                className="items-center mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-none hover:bg-purple-500 rounded-xl text-md font-semibold"
+                className="items-center mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-xl text-md font-semibold"
                 to={'/docs/ai-lab/installing'}>
                 <FontAwesomeIcon size="1x" icon={faRocket} className="mr-2" />
                 Get started
               </Link>
 
               <Link
-                className="items-center mt-auto no-underline hover:no-underline inline-flex text-charcoal-500 dark:text-white border-0 py-2 px-6 focus:outline-none text-md font-semibold"
+                className="items-center mt-auto no-underline hover:no-underline inline-flex text-charcoal-500 dark:text-white border-0 py-2 px-6 focus:outline-hidden text-md font-semibold"
                 to={'https://github.com/containers/podman-desktop-extension-ai-lab'}>
                 Learn more on GitHub
                 <FontAwesomeIcon size="1x" icon={faArrowRight} className="ml-2" />
@@ -104,7 +104,7 @@ export default function Home(): JSX.Element {
             </div>
 
             {/* Application video */}
-            <div className="my-12 rounded-xl from-purple-500 bg-gradient-to-r to-fuschia-500">
+            <div className="my-12 rounded-xl from-purple-500 bg-linear-to-r to-fuschia-500">
               <div className="p-8">
                 <video className="rounded-xl w-full h-full" controls>
                   <source

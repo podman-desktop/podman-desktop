@@ -172,7 +172,7 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
 {#each groupItems.items as groupItem}
   <div class="container flex flex-row w-full pt-2" role="list" aria-label="{groupItem.name}">
     <!-- column with the group-->
-    <div class="h-full bg-[var(--pd-button-primary-bg)] rounded p-1">
+    <div class="h-full bg-[var(--pd-button-primary-bg)] rounded-sm p-1">
       <IconImage
         image={groupItem.icon}
         alt={groupItem.name}

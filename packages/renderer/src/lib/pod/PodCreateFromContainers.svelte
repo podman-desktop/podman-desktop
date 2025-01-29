@@ -227,7 +227,7 @@ function navigateToContainers(): void {
           <WarningMessage class="flex flex-row w-full  mb-2" error={getWarningText()} />
         {/if}
         <div class="mb-2">
-          <span class="block font-semibold rounded text-[var(--pd-content-card-header-text)]"
+          <span class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
             >Name of the pod:</span>
         </div>
         <div class="mb-4">
@@ -242,7 +242,7 @@ function navigateToContainers(): void {
 
         <div class="mb-2">
           <span
-            class="block font-semibold rounded text-[var(--pd-content-card-header-text)]"
+            class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
             aria-label="Containers">Containers to replicate to the pod:</span>
         </div>
         <div class="w-full bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
@@ -259,7 +259,7 @@ function navigateToContainers(): void {
         {#if mapPortExposed.size > 0}
           <div class="mb-2">
             <span
-              class="block font-semibold rounded text-[var(--pd-content-card-header-text)]"
+              class="block font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
               aria-label="Exposed ports">All selected ports will be exposed:</span>
           </div>
           <div class="bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
@@ -280,7 +280,7 @@ function navigateToContainers(): void {
       {#if providerConnections.length > 1}
         <label
           for="providerConnectionName"
-          class="block mb-2 font-semibold rounded text-[var(--pd-content-card-header-text)]"
+          class="block mb-2 font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
           >Container engine:</label>
         <Dropdown
           class="w-full"

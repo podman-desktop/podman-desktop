@@ -115,7 +115,7 @@ export function WindowsDownloads(): JSX.Element {
           <h3 className="mt-0">Podman Desktop for Windows</h3>
           <div className="pt-8">
             <Link
-              className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-none hover:bg-purple-500 rounded text-md font-semibold"
+              className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               to={downloadData.setupX64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now

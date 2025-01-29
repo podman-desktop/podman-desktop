@@ -45,5 +45,5 @@ test('tooltip z order', async () => {
 
   // get the tooltip
   const tooltip = screen.getByText('my tooltip');
-  expect(tooltip.parentElement).toHaveClass('z-[60]');
+  expect(tooltip.parentElement).toHaveClass('z-60');
 });
