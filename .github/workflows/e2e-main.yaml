@@ -50,6 +50,13 @@ on:
         - docker
         - podman 
         required: false
+      update_with_extensions: 
+        description: 'Installation Type For Update Test'
+        type: choice
+        options:
+        - 'false'
+        - 'true'
+        required: false
 
 jobs:
   e2e-tests:
@@ -156,11 +163,17 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests
+    name: win update e2e tests - ${{ matrix.installation }}
     runs-on: windows-2022
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        installation: ['vanilla', 'custom-extensions']
+        exclude:
+        - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -186,7 +199,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.0.0"
+          $version="1.15.0"
           jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
@@ -200,8 +213,11 @@ jobs:
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
 
       - name: Run E2E Update test
+        env:
+          INSTALLATION_TYPE: ${{ matrix.installation }}
         run: |
           echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          echo "${{ env.INSTALLATION_TYPE }}"
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
@@ -218,7 +234,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: update-e2e-test
+          name: update-e2e-test-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
@@ -254,7 +270,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.13.0"
+          version="1.15.0"
           jq --arg version "$version" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 

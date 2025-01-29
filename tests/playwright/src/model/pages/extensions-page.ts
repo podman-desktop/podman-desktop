@@ -41,7 +41,7 @@ export class ExtensionsPage {
       name: 'additionalActions',
     });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
-    this.catalogTab = this.page.getByRole('button', { name: 'Catalog' });
+    this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
   }
 

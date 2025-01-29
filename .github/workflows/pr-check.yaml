@@ -427,7 +427,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.0.0"
+          $version="1.15.0"
           jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
@@ -491,7 +491,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.13.0"
+          version="1.15.0"
           jq --arg version "$version" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 
@@ -504,7 +504,7 @@ jobs:
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.13.0*)
+          pdVolumePath=$(find /Volumes -name *1.15.0*)
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app

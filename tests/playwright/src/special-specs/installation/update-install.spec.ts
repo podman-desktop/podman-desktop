@@ -18,11 +18,16 @@
 
 import type { Locator } from '@playwright/test';
 
+import { extensionsExternalList, podmanExtension } from '/@/model/core/extensions';
+
+import { ExtensionCardPage, ExtensionCatalogCardPage } from '../..';
 import type { StatusBar } from '../../model/workbench/status-bar';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
-import { isLinux } from '../../utility/platform';
+import { isLinux, isMac } from '../../utility/platform';
 
+const installExtensions = process.env.INSTALLATION_TYPE !== 'vanilla' ? true : false;
+const activeExtensionStatus = 'ACTIVE';
 let sBar: StatusBar;
 let updateAvailableDialog: Locator;
 let updateDialog: Locator;
@@ -57,6 +62,51 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     // handle welcome page now
     await welcomePage.handleWelcomePage(true);
   });
+
+  test.describe
+    .serial('External Extensions installation', () => {
+      test.skip(!installExtensions || isMac, 'Skipping extension installation, testing fresh/vanilla update');
+
+      test('Podman Extension is activated', async ({ navigationBar, page }) => {
+        const extensions = await navigationBar.openExtensions();
+        await playExpect(async () => {
+          await extensions.openInstalledTab();
+          const podmanExtensionCard = new ExtensionCardPage(
+            page,
+            podmanExtension.extensionName,
+            podmanExtension.extensionFullLabel,
+          );
+          await podmanExtensionCard.card.scrollIntoViewIfNeeded();
+          await playExpect(podmanExtensionCard.status).toHaveText(activeExtensionStatus);
+        }).toPass({ timeout: 30_000 });
+      });
+
+      extensionsExternalList.forEach(extension => {
+        test(`Installation of ${extension.extensionFullName}`, async ({ navigationBar, page }) => {
+          test.setTimeout(200_000);
+          const extensionsPage = await navigationBar.openExtensions();
+          await extensionsPage.openCatalogTab();
+          const extensionCatalogCard = new ExtensionCatalogCardPage(page, extension.extensionName);
+          await playExpect(extensionCatalogCard.parent).toBeVisible();
+          await extensionCatalogCard.install(180_000);
+          await test.step('Extension is installed', async () => {
+            await extensionsPage.openInstalledTab();
+            await playExpect
+              .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionLabel))
+              .toBeTruthy();
+            const extensionDetailsPage = await extensionsPage.openExtensionDetails(
+              extension.extensionLabel,
+              extension.extensionFullLabel,
+              extension.extensionFullName,
+            );
+            await playExpect(extensionDetailsPage.heading).toBeVisible();
+            await test.step.skip('Extension is active - unstable on windows now', async () => {
+              await playExpect.soft(extensionDetailsPage.status).toHaveText(activeExtensionStatus, { timeout: 20_000 });
+            });
+          });
+        });
+      });
+    });
 
   test('Version button is visible', async () => {
     await playExpect(sBar.content).toBeVisible();
