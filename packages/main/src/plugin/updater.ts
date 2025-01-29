@@ -298,6 +298,19 @@ export class Updater {
           },
         },
       },
+      {
+        id: 'preferences.update.prerelease',
+        title: 'Allow prerelease',
+        type: 'object',
+        properties: {
+          ['preferences.update.prerelease']: {
+            description: 'Configure whether you want to allow updating to prerelease verions of Podman Desktop',
+            type: 'boolean',
+            hidden: true,
+            default: 'false',
+          },
+        },
+      },
     ]);
   }
 
@@ -322,6 +335,14 @@ export class Updater {
       .catch((err: unknown) => {
         console.error('Something went wrong while trying to update update.reminder preference', err);
       });
+  }
+
+  /**
+   * Retrieves the value of the prerelease update configuration.
+   * @returns The value of the prerelease update configuration.
+   */
+  private getConfigurationPrereleaseValue(): boolean {
+    return this.configurationRegistry.getConfiguration('preferences').get<boolean>('update.prerelease', false);
   }
 
   /**
@@ -423,6 +444,9 @@ export class Updater {
   public init(): Disposable {
     // disable auto download
     autoUpdater.autoDownload = false;
+    if (this.getConfigurationPrereleaseValue()) {
+      autoUpdater.allowPrerelease = true;
+    }
 
     this.registerDefaultCommands();
 
