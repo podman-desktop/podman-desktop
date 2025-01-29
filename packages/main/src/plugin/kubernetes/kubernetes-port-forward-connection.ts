@@ -78,13 +78,12 @@ export class PortForwardConnectionService {
    */
   protected async performForward(forwardSetup: ForwardingSetup): Promise<IDisposable> {
     const server = this.createServer(forwardSetup);
+    const disposable = Disposable.create(() => server.close());
 
     return new Promise<IDisposable>((resolve, reject) => {
-      server.listen(forwardSetup.forward.localPort, 'localhost', () => {
-        this.onServerListen(forwardSetup, server, resolve, reject).catch(console.error);
-      });
-
+      server.listen(forwardSetup.forward.localPort, 'localhost');
       server.on('error', (error: NodeJS.ErrnoException) => this.onServerError(error, reject, forwardSetup));
+      resolve(disposable);
     });
   }
 
@@ -108,44 +107,6 @@ export class PortForwardConnectionService {
         )
         .catch(console.error);
     });
-  }
-
-  /**
-   * Handles the server listen event. Also performs initial check for the resource availability by making fetch request.
-   * If the response is 200, the port forwarding will be marked as successful.
-   * @param forwardSetup - The forwarding setup information.
-   * @param server - The server instance.
-   * @param resolve - The resolve function of the promise.
-   * @param reject - The reject function of the promise.
-   * @returns A promise that resolves when the server is listening.
-   * @throws If the host is not reachable or the server fails to listen.
-   */
-  protected async onServerListen(
-    forwardSetup: ForwardingSetup,
-    server: net.Server,
-    resolve: (value: IDisposable) => void,
-    reject: (reason?: Error) => void,
-  ): Promise<void> {
-    const disposable = Disposable.create(() => server.close());
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    try {
-      const response = await fetch(`http://localhost:${forwardSetup.forward.localPort}`, { signal: controller.signal });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        resolve(disposable);
-      } else {
-        disposable.dispose();
-        reject(new Error(`Host is not reachable, received status: ${response.status}`));
-      }
-    } catch (error) {
-      disposable.dispose();
-      reject(new Error(`Host is not reachable: ${(error as Error).message}`));
-    }
   }
 
   /**

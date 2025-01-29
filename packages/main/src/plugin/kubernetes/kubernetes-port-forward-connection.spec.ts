@@ -30,7 +30,7 @@ import {
   PortForwardConnectionService,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-connection.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import { Disposable, type IDisposable } from '/@/plugin/types/disposable.js';
+import { type IDisposable } from '/@/plugin/types/disposable.js';
 import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 const mockKubeConfig = {
@@ -152,15 +152,6 @@ class TestablePortForwardConnectionService extends PortForwardConnectionService 
     return super.getForwardingSetup(resource, forward);
   }
 
-  public override async onServerListen(
-    forwardSetup: ForwardingSetup,
-    server: net.Server,
-    resolve: (value: IDisposable) => void,
-    reject: (reason?: Error) => void,
-  ): Promise<void> {
-    return super.onServerListen(forwardSetup, server, resolve, reject);
-  }
-
   public override createServer(forwardSetup: ForwardingSetup): net.Server {
     return super.createServer(forwardSetup);
   }
@@ -201,7 +192,7 @@ describe('PortForwardConnectionService', () => {
     };
 
     const server = {
-      listen: vi.fn((_port, _host, callback) => callback()),
+      listen: vi.fn((_port, _host): void => {}),
       on: vi.fn(),
       close: vi.fn(),
     };
@@ -216,67 +207,8 @@ describe('PortForwardConnectionService', () => {
     const disposable = await service.performForward(forwardSetup);
 
     expect(net.createServer).toHaveBeenCalled();
-    expect(server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
+    expect(server.listen).toHaveBeenCalledWith(3000, 'localhost');
     expect(disposable.dispose).toBeInstanceOf(Function);
-  });
-
-  test('should throw an error if server fails to listen', async () => {
-    const forwardSetup = {
-      name: 'test-pod',
-      namespace: 'default',
-      forward: { localPort: 3000, remotePort: 80 },
-    };
-
-    const server = {
-      listen: vi.fn((_port, _host, callback) => callback()),
-      on: vi.fn(),
-      close: vi.fn(),
-    };
-
-    (net.createServer as unknown as MockedFunction<typeof net.createServer>).mockReturnValue(
-      server as unknown as net.Server,
-    );
-    (global.fetch as unknown as MockedFunction<typeof fetch>).mockRejectedValue(new Error('Host is not reachable'));
-
-    await expect(service.performForward(forwardSetup)).rejects.toThrow('Host is not reachable');
-
-    expect(net.createServer).toHaveBeenCalled();
-    expect(server.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
-  });
-
-  test('should dispose and reject when response.ok is not true, (isolated onServerListen testing)', async () => {
-    const forwardSetup = {
-      name: 'test-pod',
-      namespace: 'default',
-      forward: { localPort: 3000, remotePort: 80 },
-    };
-
-    const server = {
-      listen: vi.fn((_port, _host, callback) => callback()),
-      on: vi.fn(),
-      close: vi.fn(),
-    };
-
-    (net.createServer as unknown as MockedFunction<typeof net.createServer>).mockReturnValue(
-      server as unknown as net.Server,
-    );
-    (global.fetch as unknown as MockedFunction<typeof fetch>).mockResolvedValueOnce(
-      new Response(undefined, { status: 404 }),
-    );
-
-    const dispose = vi.fn();
-    const disposable = { dispose, [Symbol.dispose]: dispose };
-    const createDisposable = vi.spyOn(Disposable, 'create').mockReturnValue(disposable as never);
-
-    const resolve = vi.fn();
-    const reject = vi.fn();
-
-    await service.onServerListen(forwardSetup as never, server as never, resolve, reject);
-
-    expect(dispose).toHaveBeenCalled();
-    expect(reject).toHaveBeenCalledWith(new Error('Host is not reachable, received status: 404'));
-
-    createDisposable.mockRestore();
   });
 
   test('should create a server and call portForward with correct arguments', async () => {
