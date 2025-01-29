@@ -35,12 +35,13 @@ UI guidelines -->
   line-height: normal;
 }
 .markdown :global(a) {
-  color: theme(colors.purple.500);
+  color: var(--pd-link);
   text-decoration: none;
+  border-radius: 4px;
+  padding: 0.125rem;
 }
 .markdown :global(a):hover {
-  color: theme(colors.purple.400);
-  text-decoration: underline;
+  background-color: var(--pd-link-hover-bg);
 }
 </style>
 
