@@ -62,7 +62,7 @@ async function ondetails(extensionId: string): Promise<void> {
           {provider.kubernetesProviderConnectionCreationDisplayName ?? provider.name}
         </h1>
     
-        <p class="text-sm text-gray-300 mb-6">
+        <p class="text-sm text-[var(--pd-content-text)] mb-6">
         <Markdown markdown={provider.emptyConnectionMarkdownDescription} />
         </p>
     
