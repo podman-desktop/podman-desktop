@@ -16,17 +16,6 @@
   src: url('../../static/fonts/manrope.ttf') format('truetype');
 }
 
-/*
-Apply style on documentation
-*/
-[data-theme='dark'].docs-doc-page .main-wrapper a {
-  color: text-purple-200;
-}
-
-.docs-doc-page .main-wrapper a {
-  color: text-purple-600;
-}
-
 /* You can override the default Infima variables here. */
 :root {
   --ifm-font-family-base: 'Manrope', sans-serif;
@@ -185,6 +174,6 @@ li.footer__item a svg {
   align-items: center;
 }
 
-.footer a {
+a {
   color: var(--ifm-link-color);
 }
