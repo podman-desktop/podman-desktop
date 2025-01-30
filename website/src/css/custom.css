@@ -179,31 +179,39 @@ a {
 }
 
 /* headings */
-.theme-doc-markdown.markdown h1 {
+
+article .markdown h1 {
   font-size: 1.5rem;
   font-weight: bolder;
 }
 
-.theme-doc-markdown.markdown h2 {
+nav h2,
+article .markdown h2 {
   font-size: 1.2rem;
   font-weight: bolder;
 }
 
+nav h3,
+article .markdown h3 {
+  font-size: 1.1rem;
+  font-weight: bolder;
+}
+
 /* lists */
-.theme-doc-markdown.markdown ul,
-.theme-doc-markdown.markdown ol {
+article .markdown ul,
+article .markdown ol {
   margin-block-start: 1em;
   margin-block-end: 1em;
   margin-inline-start: 0px;
   margin-inline-end: 0px;
   padding-inline-start: 40px;
 }
-.theme-doc-markdown.markdown ul {
+article .markdown ul {
   list-style-type: disc;
 }
-.theme-doc-markdown.markdown ol {
+article .markdown ol {
   list-style-type: decimal;
 }
-.theme-doc-markdown.markdown ol ol {
+article .markdown ol ol {
   list-style-type: lower-roman;
 }
