@@ -21,13 +21,16 @@ import '@testing-library/jest-dom/vitest';
 import type { KubernetesObject, V1Deployment } from '@kubernetes/client-node';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
+import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 
+import * as resourcesListen from '../kube/resources-listen';
 import DeploymentsList from './DeploymentsList.svelte';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock('../kube/resources-listen');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -37,152 +40,230 @@ beforeEach(() => {
   vi.mocked(states).kubernetesCurrentContextState = writable();
 });
 
-test('Expect deployment empty screen', async () => {
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable<KubernetesObject[]>([]);
-  render(DeploymentsList);
-  const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
-  expect(noDeployments).toBeInTheDocument();
-});
-
-test('Expect deployments list', async () => {
-  const deployment: V1Deployment = {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      name: 'my-deployment',
-      namespace: 'test-namespace',
+describe.each<{
+  experimental: boolean;
+  initMocks: () => void;
+  initObjectsList: (objects: KubernetesObject[]) => { update: (objects: KubernetesObject[]) => void };
+}>([
+  {
+    experimental: true,
+    initMocks: (): void => {
+      vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable([]);
     },
-    spec: {
-      replicas: 2,
-      selector: {},
-      template: {},
+    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+      let callback: (resoures: KubernetesContextResources[]) => void;
+      vi.mocked(resourcesListen.listenResources).mockImplementation(
+        async (_resources, cb): Promise<resourcesListen.ResourceListener> => {
+          callback = cb;
+          return {
+            setSearchTerm: async (): Promise<void> => {
+              callback([
+                {
+                  contextName: 'ctx1',
+                  items: objects,
+                },
+              ]);
+            },
+            updateContexts: async (): Promise<void> => {
+              callback([
+                {
+                  contextName: 'ctx1',
+                  items: objects,
+                },
+              ]);
+            },
+            dispose: vi.fn(),
+          };
+        },
+      );
+      return {
+        update: (objects: KubernetesObject[]): void => {
+          callback([
+            {
+              contextName: 'ctx1',
+              items: objects,
+            },
+          ]);
+        },
+      };
     },
-  };
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable<KubernetesObject[]>([deployment]);
-
-  render(DeploymentsList);
-  const deploymentName = screen.getByRole('cell', { name: 'my-deployment test-namespace' });
-  expect(deploymentName).toBeInTheDocument();
-});
-
-test('Expect correct column overflow', async () => {
-  const deployment: V1Deployment = {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      name: 'my-deployment',
-      namespace: 'test-namespace',
+  },
+  {
+    experimental: false,
+    initMocks: (): void => {
+      vi.mocked(resourcesListen.listenResources).mockResolvedValue(undefined);
     },
-    spec: {
-      replicas: 2,
-      selector: {},
-      template: {},
+    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+      const store = writable<KubernetesObject[]>(objects);
+      vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = store;
+      return {
+        update: (objects: KubernetesObject[]): void => {
+          store.set(objects);
+        },
+      };
     },
-  };
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable<KubernetesObject[]>([deployment]);
+  },
+])('kubernetes experimental is %s', ({ experimental: _experimental, initObjectsList, initMocks }) => {
+  beforeEach(() => {
+    initMocks();
+  });
 
-  render(DeploymentsList);
-  const rows = await screen.findAllByRole('row');
-  expect(rows).toBeDefined();
-  expect(rows.length).toBe(2);
+  test('Expect deployment empty screen', async () => {
+    initObjectsList([]);
+    render(DeploymentsList);
+    const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
+    expect(noDeployments).toBeInTheDocument();
+  });
 
-  const cells = await within(rows[1]).findAllByRole('cell');
-  expect(cells).toBeDefined();
-  expect(cells.length).toBe(8);
+  test('Expect deployments list', async () => {
+    const deployment: V1Deployment = {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'my-deployment',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        replicas: 2,
+        selector: {},
+        template: {},
+      },
+    };
+    initObjectsList([deployment]);
 
-  expect(cells[2]).toHaveClass('overflow-hidden');
-  expect(cells[3]).toHaveClass('overflow-hidden');
-  expect(cells[4]).not.toHaveClass('overflow-hidden');
-  expect(cells[5]).toHaveClass('overflow-hidden');
-  expect(cells[6]).toHaveClass('overflow-hidden');
-  expect(cells[7]).toHaveClass('overflow-hidden');
-});
+    render(DeploymentsList);
+    await vi.waitFor(() => {
+      const deploymentName = screen.getByRole('cell', { name: 'my-deployment test-namespace' });
+      expect(deploymentName).toBeInTheDocument();
+    });
+  });
 
-test('Expect filter empty screen', async () => {
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable<KubernetesObject[]>([]);
+  test('Expect correct column overflow', async () => {
+    const deployment: V1Deployment = {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'my-deployment',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        replicas: 2,
+        selector: {},
+        template: {},
+      },
+    };
+    initObjectsList([deployment]);
 
-  render(DeploymentsList, { searchTerm: 'No match' });
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-  expect(filterButton).toBeInTheDocument();
-});
+    render(DeploymentsList);
 
-test('Expect user confirmation to pop up when preferences require', async () => {
-  const deployment: V1Deployment = {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      name: 'my-deployment',
-      namespace: 'test-namespace',
-    },
-    spec: {
-      replicas: 2,
-      selector: {},
-      template: {},
-    },
-  };
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable<KubernetesObject[]>([deployment]);
+    await vi.waitFor(async () => {
+      const rows = await screen.findAllByRole('row');
+      expect(rows).toBeDefined();
+      expect(rows.length).toBe(2);
 
-  render(DeploymentsList);
+      const cells = await within(rows[1]).findAllByRole('cell');
+      expect(cells).toBeDefined();
+      expect(cells.length).toBe(8);
 
-  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle deployment' });
-  await fireEvent.click(checkboxes[0]);
+      expect(cells[2]).toHaveClass('overflow-hidden');
+      expect(cells[3]).toHaveClass('overflow-hidden');
+      expect(cells[4]).not.toHaveClass('overflow-hidden');
+      expect(cells[5]).toHaveClass('overflow-hidden');
+      expect(cells[6]).toHaveClass('overflow-hidden');
+      expect(cells[7]).toHaveClass('overflow-hidden');
+    });
+  });
 
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  test('Expect filter empty screen', async () => {
+    initObjectsList([]);
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+    render(DeploymentsList, { searchTerm: 'No match' });
+    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+    expect(filterButton).toBeInTheDocument();
+  });
 
-  const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
-  await fireEvent.click(deleteButton);
+  test('Expect user confirmation to pop up when preferences require', async () => {
+    const deployment: V1Deployment = {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'my-deployment',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        replicas: 2,
+        selector: {},
+        template: {},
+      },
+    };
+    initObjectsList([deployment]);
 
-  expect(window.showMessageBox).toHaveBeenCalledOnce();
+    render(DeploymentsList);
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
-  await fireEvent.click(deleteButton);
-  expect(window.showMessageBox).toHaveBeenCalledTimes(2);
-  await vi.waitFor(() => expect(window.kubernetesDeleteDeployment).toHaveBeenCalled());
-});
+    await vi.waitFor(async () => {
+      const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle deployment' });
+      await fireEvent.click(checkboxes[0]);
+    });
 
-test('deployemnts list is updated when kubernetesCurrentContextDeploymentsFiltered changes', async () => {
-  const deployment1: V1Deployment = {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      name: 'my-deployment-1',
-      namespace: 'test-namespace',
-    },
-    spec: {
-      replicas: 2,
-      selector: {},
-      template: {},
-    },
-  };
-  const deployment2: V1Deployment = {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      name: 'my-deployment-2',
-      namespace: 'test-namespace',
-    },
-    spec: {
-      replicas: 2,
-      selector: {},
-      template: {},
-    },
-  };
-  const filtered = writable<KubernetesObject[]>([deployment1, deployment2]);
-  vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = filtered;
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  const component = render(DeploymentsList);
-  const deploymentName1 = screen.getByRole('cell', { name: 'my-deployment-1 test-namespace' });
-  expect(deploymentName1).toBeInTheDocument();
-  const deploymentName2 = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
-  expect(deploymentName2).toBeInTheDocument();
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
-  filtered.set([deployment2]);
-  await component.rerender({});
+    const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
+    await fireEvent.click(deleteButton);
 
-  const deploymentName1after = screen.queryByRole('cell', { name: 'my-deployment-1 test-namespace' });
-  expect(deploymentName1after).not.toBeInTheDocument();
-  const deploymentName2after = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
-  expect(deploymentName2after).toBeInTheDocument();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
+
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    await fireEvent.click(deleteButton);
+    expect(window.showMessageBox).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(window.kubernetesDeleteDeployment).toHaveBeenCalled());
+  });
+
+  test('deployemnts list is updated when resources change', async () => {
+    const deployment1: V1Deployment = {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'my-deployment-1',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        replicas: 2,
+        selector: {},
+        template: {},
+      },
+    };
+    const deployment2: V1Deployment = {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'my-deployment-2',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        replicas: 2,
+        selector: {},
+        template: {},
+      },
+    };
+    const list = initObjectsList([deployment1, deployment2]);
+
+    const component = render(DeploymentsList);
+
+    await vi.waitFor(async () => {
+      const deploymentName1 = screen.getByRole('cell', { name: 'my-deployment-1 test-namespace' });
+      expect(deploymentName1).toBeInTheDocument();
+      const deploymentName2 = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
+      expect(deploymentName2).toBeInTheDocument();
+    });
+
+    list.update([deployment2]);
+    await component.rerender({});
+
+    const deploymentName1after = screen.queryByRole('cell', { name: 'my-deployment-1 test-namespace' });
+    expect(deploymentName1after).not.toBeInTheDocument();
+    const deploymentName2after = screen.getByRole('cell', { name: 'my-deployment-2 test-namespace' });
+    expect(deploymentName2after).toBeInTheDocument();
+  });
 });

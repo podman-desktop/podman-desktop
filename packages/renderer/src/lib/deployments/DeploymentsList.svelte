@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { KubernetesObject } from '@kubernetes/client-node';
 import {
   Button,
   FilteredEmptyScreen,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
+import { onDestroy, onMount } from 'svelte';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -18,8 +20,10 @@ import {
   kubernetesCurrentContextDeploymentsFiltered,
 } from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import { withBulkConfirmation } from '../actions/BulkActions';
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
+import { listenResources } from '../kube/resources-listen';
 import { DeploymentUtils } from './deployment-utils';
 import DeploymentColumnActions from './DeploymentColumnActions.svelte';
 import DeploymentColumnConditions from './DeploymentColumnConditions.svelte';
@@ -35,14 +39,35 @@ interface Props {
 
 let { searchTerm = '' }: Props = $props();
 
+let resources = $state<KubernetesObject[] | undefined>(undefined);
+let resourceListener: IDisposable | undefined;
+
+onMount(async () => {
+  resourceListener = await listenResources(
+    'deployments',
+    {
+      searchTermStore: deploymentSearchPattern,
+    },
+    (updatedResources: KubernetesObject[]) => {
+      resources = updatedResources;
+    },
+  );
+});
+
+onDestroy(() => {
+  resourceListener?.dispose();
+});
+
 $effect(() => {
   deploymentSearchPattern.set(searchTerm);
 });
 
+$effect(() => {
+  resources = $kubernetesCurrentContextDeploymentsFiltered;
+});
+
 const deploymentUtils = new DeploymentUtils();
-const deployments = $derived(
-  $kubernetesCurrentContextDeploymentsFiltered.map(deployment => deploymentUtils.getDeploymentUI(deployment)),
-);
+const deployments = $derived(resources?.map(deployment => deploymentUtils.getDeploymentUI(deployment)) ?? []);
 
 // delete the items selected in the list
 let bulkDeleteInProgress = $state<boolean>(false);
@@ -145,7 +170,7 @@ const row = new TableRow<DeploymentUI>({ selectable: (_deployment): boolean => t
       defaultSortColumn="Name">
     </Table>
 
-    {#if $kubernetesCurrentContextDeploymentsFiltered.length === 0}
+    {#if deployments.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen
           icon={DeploymentIcon}
