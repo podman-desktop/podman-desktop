@@ -2,7 +2,10 @@
 import ServiceActions from './ServiceActions.svelte';
 import type { ServiceUI } from './ServiceUI';
 
-export let object: ServiceUI;
+interface Props {
+  object: ServiceUI;
+}
+let { object }: Props = $props();
 </script>
 
 <ServiceActions service={object} on:update />

@@ -11,7 +11,10 @@ import { Fa } from 'svelte-fa';
 import Label from '../ui/Label.svelte';
 import type { ServiceUI } from './ServiceUI';
 
-export let object: ServiceUI;
+interface Props {
+  object: ServiceUI;
+}
+let { object }: Props = $props();
 
 // Determine both the icon and color based on the service type
 function getTypeAttributes(type: string): { color: string; icon: IconDefinition } {

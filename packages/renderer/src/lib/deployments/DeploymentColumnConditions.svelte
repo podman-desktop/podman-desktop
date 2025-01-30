@@ -14,7 +14,10 @@ import Fa from 'svelte-fa';
 import Label from '../ui/Label.svelte';
 import type { DeploymentCondition, DeploymentUI } from './DeploymentUI';
 
-export let object: DeploymentUI;
+interface Props {
+  object: DeploymentUI;
+}
+let { object }: Props = $props();
 
 // Determine both the icon and color based on the deployment condition
 function getConditionAttributes(condition: DeploymentCondition): { name: string; color: string; icon: IconDefinition } {

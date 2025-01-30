@@ -5,7 +5,10 @@ import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-export let object: IngressUI | RouteUI;
+interface Props {
+  object: IngressUI | RouteUI;
+}
+let { object }: Props = $props();
 
 const ingressRouteUtils = new IngressRouteUtils();
 </script>

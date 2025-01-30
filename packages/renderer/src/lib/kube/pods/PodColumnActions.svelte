@@ -2,11 +2,10 @@
 import PodActions from './PodActions.svelte';
 import type { PodUI } from './PodUI';
 
-let {
-  object,
-}: {
+interface Props {
   object: PodUI;
-} = $props();
+}
+let { object }: Props = $props();
 </script>
 
 <PodActions pod={object} dropdownMenu={true} on:update />

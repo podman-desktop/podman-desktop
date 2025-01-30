@@ -3,11 +3,10 @@ import { router } from 'tinro';
 
 import type { PodUI } from './PodUI';
 
-let {
-  object,
-}: {
+interface Props {
   object: PodUI;
-} = $props();
+}
+let { object }: Props = $props();
 
 function openDetails(): void {
   router.goto(`/kubernetes/pods/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);

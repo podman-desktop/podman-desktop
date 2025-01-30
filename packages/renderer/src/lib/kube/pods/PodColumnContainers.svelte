@@ -2,11 +2,10 @@
 import Dots from '../../ui/Dots.svelte';
 import type { PodUI } from './PodUI';
 
-let {
-  object,
-}: {
+interface Props {
   object: PodUI;
-} = $props();
+}
+let { object }: Props = $props();
 </script>
 
 <Dots containers={object.containers} />

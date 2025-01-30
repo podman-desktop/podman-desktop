@@ -5,7 +5,10 @@ import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-export let object: IngressUI | RouteUI;
+interface Props {
+  object: IngressUI | RouteUI;
+}
+let { object }: Props = $props();
 </script>
 
 <StatusIcon icon={IngressRouteIcon} status={object.status} />

@@ -5,7 +5,10 @@ import Fa from 'svelte-fa';
 import Label from '../ui/Label.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
-export let object: ConfigMapSecretUI;
+interface Props {
+  object: ConfigMapSecretUI;
+}
+let { object }: Props = $props();
 
 // Determine the icon and color based on the type
 function getTypeAttributes(type: string): { color: string; icon: IconDefinition } {

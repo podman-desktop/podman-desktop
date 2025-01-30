@@ -4,7 +4,10 @@ import { router } from 'tinro';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
-export let object: ConfigMapSecretUI;
+interface Props {
+  object: ConfigMapSecretUI;
+}
+let { object }: Props = $props();
 
 function openDetails(): void {
   const configmapSecretUtils = new ConfigMapSecretUtils();
@@ -22,7 +25,7 @@ function openDetails(): void {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
   <div class="text-sm text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

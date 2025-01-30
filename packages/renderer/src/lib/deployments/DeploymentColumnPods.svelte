@@ -1,7 +1,10 @@
 <script lang="ts">
 import type { DeploymentUI } from './DeploymentUI';
 
-export let object: DeploymentUI;
+interface Props {
+  object: DeploymentUI;
+}
+let { object }: Props = $props();
 </script>
 
 <div class="text-[var(--pd-table-body-text)]">

@@ -3,14 +3,17 @@ import { router } from 'tinro';
 
 import type { PVCUI } from './PVCUI';
 
-export let object: PVCUI;
+interface Props {
+  object: PVCUI;
+}
+let { object }: Props = $props();
 
 function openDetails(): void {
   router.goto(`/kubernetes/persistentvolumeclaims/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
   <div class="max-w-full overflow-hidden text-ellipsis text-[var(--pd-table-body-text-highlight)]">
     {object.name}
   </div>

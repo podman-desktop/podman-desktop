@@ -5,7 +5,10 @@ import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-export let object: IngressUI | RouteUI;
+interface Props {
+  object: IngressUI | RouteUI;
+}
+let { object }: Props = $props();
 
 function openDetails(): void {
   const ingressRouteUtils = new IngressRouteUtils();
@@ -17,7 +20,7 @@ function openDetails(): void {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

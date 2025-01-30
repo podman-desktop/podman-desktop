@@ -6,30 +6,36 @@ import Fa from 'svelte-fa';
 import Label from '../ui/Label.svelte';
 import type { NodeUI } from './NodeUI';
 
-export let object: NodeUI;
+interface Props {
+  object: NodeUI;
+}
+let { object }: Props = $props();
 
-let roleName: string;
-let roleIcon: IconDefinition;
+let roleName = $state<string>();
+let roleIcon = $state<IconDefinition>(faServer);
+let roleClass = $state<string>();
 
-function getConditionColour(role: 'control-plane' | 'node'): string {
-  switch (role) {
+$effect(() => {
+  switch (object.role) {
     case 'control-plane':
       roleName = 'Control Plane';
       // faSatelliteDish: Represents a satellite dish, suitable for the control plane role
       roleIcon = faSatelliteDish;
-      return 'text-[var(--pd-status-running)]';
+      roleClass = 'text-[var(--pd-status-running)]';
+      break;
     case 'node':
       roleName = 'Node';
       // faServer: Better represents a "node" / server rack
       roleIcon = faServer;
-      return 'text-[var(--pd-status-updated)]';
+      roleClass = 'text-[var(--pd-status-updated)]';
+      break;
   }
-}
+});
 </script>
 
 <div class="flex flex-row gap-1">
   <Label name={roleName}>
-    <Fa size="1x" icon={roleIcon} class={getConditionColour(object.role)} />
+    <Fa size="1x" icon={roleIcon} class={roleClass} />
   </Label>
   {#if object.hasGpu}
     <Label name="GPU">

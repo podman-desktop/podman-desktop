@@ -3,14 +3,17 @@ import { router } from 'tinro';
 
 import type { ServiceUI } from './ServiceUI';
 
-export let object: ServiceUI;
+interface Props {
+  object: ServiceUI;
+}
+let { object }: Props = $props();
 
 function openDetails(): void {
   router.goto(`/kubernetes/services/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" on:click={openDetails}>
+<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
   <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
     {object.name}
   </div>

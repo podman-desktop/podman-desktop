@@ -5,7 +5,10 @@ import Fa from 'svelte-fa';
 import Label from '../ui/Label.svelte';
 import type { PVCUI } from './PVCUI';
 
-export let object: PVCUI;
+interface Props {
+  object: PVCUI;
+}
+let { object }: Props = $props();
 
 // Determine the icon and color based on the access mode, with comments explaining each icon choice
 // Many = multiple access points, so should be green

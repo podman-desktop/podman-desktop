@@ -2,7 +2,10 @@
 import PVCActions from './PVCActions.svelte';
 import type { PVCUI } from './PVCUI';
 
-export let object: PVCUI;
+interface Props {
+  object: PVCUI;
+}
+let { object }: Props = $props();
 </script>
 
 <PVCActions pvc={object} on:update />
