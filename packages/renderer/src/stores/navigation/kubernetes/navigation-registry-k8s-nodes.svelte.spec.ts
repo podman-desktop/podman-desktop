@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,9 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { createNavigationKubernetesNodesEntry } from './navigation-registry-k8s-nodes.svelte';
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  Object.defineProperty(window, 'kubernetesRegisterGetCurrentContextResources', {
-    value: kubernetesRegisterGetCurrentContextResourcesMock,
-  });
-});
-
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
 
 test('createNavigationKubernetesNodesEntry', async () => {
   const nodes: KubernetesObject[] = [
@@ -47,7 +38,7 @@ test('createNavigationKubernetesNodesEntry', async () => {
       },
     },
   ];
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue(nodes);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue(nodes);
 
   const entry = createNavigationKubernetesNodesEntry();
 

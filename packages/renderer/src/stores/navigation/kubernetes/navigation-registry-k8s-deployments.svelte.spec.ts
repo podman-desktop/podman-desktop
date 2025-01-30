@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,37 +17,28 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { createNavigationKubernetesDeploymentsEntry } from './navigation-registry-k8s-deployments.svelte';
 
-beforeEach(() => {
-  vi.resetAllMocks();
-  Object.defineProperty(window, 'kubernetesRegisterGetCurrentContextResources', {
-    value: kubernetesRegisterGetCurrentContextResourcesMock,
-  });
-});
-
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
-
 test('createNavigationKubernetesDeploymentsEntry', async () => {
-  const nodes: KubernetesObject[] = [
+  const deployments: KubernetesObject[] = [
     {
       apiVersion: 'v1',
-      kind: 'Node',
+      kind: 'Deployment',
       metadata: {
-        name: 'node1',
+        name: 'deployment1',
       },
     },
     {
       apiVersion: 'v1',
-      kind: 'Node',
+      kind: 'Deployment',
       metadata: {
-        name: 'node2',
+        name: 'deployment2',
       },
     },
   ];
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue(nodes);
+  vi.mocked(window.kubernetesRegisterGetCurrentContextResources).mockResolvedValue(deployments);
 
   const entry = createNavigationKubernetesDeploymentsEntry();
 
