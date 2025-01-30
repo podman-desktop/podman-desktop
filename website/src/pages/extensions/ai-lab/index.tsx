@@ -128,7 +128,7 @@ export default function Home(): JSX.Element {
             <div className="w-full grid grid-cols-2 gap-2 lg:grid-cols-2">
               {RECIPES.map(recipe => (
                 <div
-                  className="px-8 py-4 rounded-xl from-purple-500 from-70% bg-gradient-to-t to-white flex flex-col grow items-center text-black text-center"
+                  className="px-8 py-4 rounded-xl flex flex-col grow items-center text-black text-center"
                   style={{
                     background: getGradient(recipe.colorFrom, recipe.colorTo),
                     border: `1px solid ${recipe.colorFrom}`,
