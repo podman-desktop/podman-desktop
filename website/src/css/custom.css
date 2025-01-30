@@ -16,37 +16,15 @@
   src: url('../../static/fonts/manrope.ttf') format('truetype');
 }
 
-/* Apply default style for markdown*/
-@layer base {
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-size: revert;
-    font-weight: revert;
-  }
-  ol,
-  ul {
-    list-style: revert;
-    margin: revert;
-    padding: revert;
-  }
-  a {
-    color: revert;
-  }
-}
-
 /*
 Apply style on documentation
 */
 [data-theme='dark'].docs-doc-page .main-wrapper a {
-  @apply text-purple-200;
+  color: text-purple-200;
 }
 
 .docs-doc-page .main-wrapper a {
-  @apply text-purple-600;
+  color: text-purple-600;
 }
 
 /* You can override the default Infima variables here. */

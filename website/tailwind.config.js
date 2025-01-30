@@ -4,6 +4,7 @@ const rootTailWindConfig = require('../tailwind.config.cjs');
 module.exports = {
   content: ['./docusaurus.config.js', './src/**/*.{js,jsx,ts,tsx}'],
   darkMode: 'class',
+  important: true,
   theme: {
     extend: {
       // share same color palette of Podman Desktop UI
