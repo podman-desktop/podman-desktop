@@ -25,7 +25,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
@@ -37,10 +37,10 @@ const getFeaturedExtensionsMock = vi.fn();
 const getProviderInfosMock = vi.fn();
 
 // fake the window.events object
-beforeAll(() => {
+beforeEach(() => {
   (window as any).getConfigurationValue = vi.fn();
   (window as any).updateConfigurationValue = vi.fn();
-  (window as any).getPodmanDesktopVersion = vi.fn();
+  (window as any).getPodmanDesktopVersion = vi.fn().mockResolvedValue('1.0.0');
   (window as any).telemetryConfigure = vi.fn();
   (window as any).getFeaturedExtensions = getFeaturedExtensionsMock;
   (window as any).getProviderInfos = getProviderInfosMock;
@@ -49,6 +49,7 @@ beforeAll(() => {
       func();
     },
   };
+  vi.clearAllMocks();
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -271,4 +272,17 @@ test('Make sure the provider with name podman appears first even if its 2nd in t
   const providerList = screen.getByLabelText('providerList');
   const firstChild = providerList.children[0];
   expect(firstChild).toHaveTextContent('Podman');
+});
+
+test('Expect that releaseNotesBanner.show configuration value is set to current version when showWelcome is set to true', async () => {
+  await waitRender({});
+  await vi.waitFor(() =>
+    expect(vi.mocked(window.updateConfigurationValue)).toBeCalledWith(`releaseNotesBanner.show`, '1.0.0'),
+  );
+});
+
+test('Expect that releaseNotesBanner.show configuration value is not set to current version when showWelcome is not set to true', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValueOnce('value1');
+  await waitRender({});
+  expect(vi.mocked(window.updateConfigurationValue)).not.toBeCalledWith(`releaseNotesBanner.show`, '1.0.0');
 });

@@ -61,6 +61,10 @@ onMount(async () => {
     showTelemetry = true;
   }
   podmanDesktopVersion = await window.getPodmanDesktopVersion();
+
+  if (showWelcome) {
+    await window.updateConfigurationValue(`releaseNotesBanner.show`, podmanDesktopVersion);
+  }
 });
 
 async function closeWelcome(): Promise<void> {

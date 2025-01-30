@@ -3,6 +3,7 @@ import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { updateAvailable } from '/@/stores/update-store';
 import type { ReleaseNotes } from '/@api/release-notes-info';
 
@@ -15,9 +16,17 @@ let currentVersion: string | undefined = $state();
 let notesInfo: ReleaseNotes | undefined = $state();
 let imageError: boolean = $state(false);
 
-const receiveShowReleaseNotes = window.events?.receive('show-release-notes', () => {
-  showBanner = true;
-});
+function onDidChangeConfigurationCallback(e: Event): void {
+  if (!('detail' in e) || !e.detail || typeof e.detail !== 'object') {
+    return;
+  }
+  if ('key' in e.detail && 'value' in e.detail) {
+    const detail = e.detail as { key: string; value: string };
+    if ('releaseNotesBanner.show' === detail.key) {
+      showBanner = detail.value !== currentVersion ? true : false;
+    }
+  }
+}
 
 async function openReleaseNotes(): Promise<void> {
   if (!notesURL) return;
@@ -41,6 +50,7 @@ async function onClose(): Promise<void> {
 }
 
 onMount(async () => {
+  onDidChangeConfiguration.addEventListener('releaseNotesBanner.show', onDidChangeConfigurationCallback);
   currentVersion = await window.getPodmanDesktopVersion();
   showBanner = (await window.getConfigurationValue(`releaseNotesBanner.show`)) !== currentVersion ? true : false;
   await getInfoFromNotes();
@@ -51,7 +61,7 @@ function onImageError(): void {
 }
 
 onDestroy(async () => {
-  receiveShowReleaseNotes.dispose();
+  onDidChangeConfiguration.removeEventListener('releaseNotesBanner.show', onDidChangeConfigurationCallback);
 });
 </script>
 

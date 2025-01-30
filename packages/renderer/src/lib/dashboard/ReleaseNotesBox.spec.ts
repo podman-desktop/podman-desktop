@@ -23,6 +23,8 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+
 import { updateAvailable } from '../../stores/update-store';
 import ReleaseNotesBox from './ReleaseNotesBox.svelte';
 
@@ -45,6 +47,8 @@ beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
 });
 
+const callbacks = new Map<string, (arg: unknown) => void>();
+
 beforeEach(() => {
   vi.resetAllMocks();
   podmanDesktopUpdateAvailableMock.mockResolvedValue(false);
@@ -55,13 +59,9 @@ beforeEach(() => {
     notes: responseJSON,
   });
   getConfigurationValueMock.mockResolvedValue('show');
-  (window.events as unknown) = {
-    receive: vi.fn().mockImplementation(() => {
-      return {
-        dispose: vi.fn(),
-      };
-    }),
-  };
+  onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
+    callbacks.set(message, callback);
+  });
 });
 
 test('expect banner to be visible', async () => {
@@ -159,4 +159,45 @@ test('expect no release notes widget if no notesUrl as well', async () => {
   expect(
     screen.queryByText('Release notes are currently unavailable, please check again later or try this'),
   ).not.toBeInTheDocument();
+});
+
+test('show release notes on configuration change to non-current version value', async () => {
+  // do not show release notes
+  getConfigurationValueMock.mockResolvedValueOnce('1.1.0');
+  const showReleaseNotes = 'releaseNotesBanner.show';
+  render(ReleaseNotesBox);
+  await tick();
+
+  expect(screen.queryByText(responseJSON.title)).not.toBeInTheDocument();
+  expect(screen.queryByText(responseJSON.summary)).not.toBeInTheDocument();
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+  callbacks.get(showReleaseNotes)?.({ detail: { key: showReleaseNotes, value: 'show' } });
+  await tick();
+
+  expect(screen.getByText(responseJSON.title)).toBeInTheDocument();
+  expect(screen.getAllByText(responseJSON.summary)[0]).toBeInTheDocument();
+  expect(screen.getByRole('img')).toBeInTheDocument();
+  expect(screen.getByRole('img')).toHaveAttribute('src', responseJSON.image);
+});
+
+test('hide release notes on configuration change to current version value', async () => {
+  getConfigurationValueMock.mockResolvedValueOnce('show');
+  const showReleaseNotes = 'releaseNotesBanner.show';
+  render(ReleaseNotesBox);
+  await tick();
+
+  await vi.waitFor(() => {
+    expect(screen.getByText(responseJSON.title)).toBeInTheDocument();
+    expect(screen.getAllByText(responseJSON.summary)[0]).toBeInTheDocument();
+    expect(screen.getByRole('img')).toBeInTheDocument();
+    expect(screen.getByRole('img')).toHaveAttribute('src', responseJSON.image);
+  });
+
+  callbacks.get(showReleaseNotes)?.({ detail: { key: showReleaseNotes, value: '1.1.0' } });
+  await tick();
+
+  expect(screen.queryByText(responseJSON.title)).not.toBeInTheDocument();
+  expect(screen.queryByText(responseJSON.summary)).not.toBeInTheDocument();
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
