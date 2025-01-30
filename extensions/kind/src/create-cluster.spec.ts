@@ -29,6 +29,7 @@ vi.mock('@podman-desktop/api', async () => {
     Logger: {},
     kubernetes: {
       createResources: vi.fn(),
+      getKubeconfig: vi.fn().mockReturnValue({ path: '/some/path' }),
     },
     provider: {
       getContainerConnections: vi
