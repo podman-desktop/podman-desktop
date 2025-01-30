@@ -24,8 +24,8 @@ import { writable } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import * as resourcesListen from '../kube/resources-listen';
 import DeploymentsList from './DeploymentsList.svelte';
 
@@ -48,42 +48,22 @@ describe.each<{
   {
     experimental: true,
     initMocks: (): void => {
-      vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable([]);
+      vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable();
     },
     initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
-      let callback: (resoures: KubernetesContextResources[]) => void;
+      let callback: (resoures: KubernetesObject[]) => void;
       vi.mocked(resourcesListen.listenResources).mockImplementation(
-        async (_resources, cb): Promise<resourcesListen.ResourceListener> => {
+        async (_resources, _options, cb): Promise<IDisposable> => {
           callback = cb;
+          setTimeout(() => callback(objects));
           return {
-            setSearchTerm: async (): Promise<void> => {
-              callback([
-                {
-                  contextName: 'ctx1',
-                  items: objects,
-                },
-              ]);
-            },
-            updateContexts: async (): Promise<void> => {
-              callback([
-                {
-                  contextName: 'ctx1',
-                  items: objects,
-                },
-              ]);
-            },
-            dispose: vi.fn(),
+            dispose: (): void => {},
           };
         },
       );
       return {
-        update: (objects: KubernetesObject[]): void => {
-          callback([
-            {
-              contextName: 'ctx1',
-              items: objects,
-            },
-          ]);
+        update: (updatedObjects: KubernetesObject[]): void => {
+          callback(updatedObjects);
         },
       };
     },

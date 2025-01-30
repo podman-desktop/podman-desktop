@@ -17,14 +17,18 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
+import { writable } from 'svelte/store';
 import { beforeAll, expect, type Mock, test, vi } from 'vitest';
 
+import * as contexts from '/@/stores/kubernetes-contexts';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 
 import { Disposable } from '../../../../main/src/plugin/types/disposable';
 import { listenResources } from './resources-listen';
 
 const callbacks = new Map<string, () => void>();
+
+vi.mock('/@/stores/kubernetes-contexts');
 
 const eventEmitter = {
   receive: (message: string, callback: () => void): void => {
@@ -41,10 +45,30 @@ beforeAll(() => {
       },
     },
   });
-  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+});
+
+test('listenResources is undefined in non experimental mode', async () => {
+  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(false);
+  const result = await listenResources('resource1', {}, (): void => {});
+  expect(result).toBeUndefined();
+});
+
+test('listenResources is undefined in non experimental mode (getConfigurationValue fails)', async () => {
+  vi.mocked(window.getConfigurationValue<boolean>).mockRejectedValue(undefined);
+  const result = await listenResources('resource1', {}, (): void => {});
+  expect(result).toBeUndefined();
 });
 
 test('non filtered resources', async () => {
+  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+  vi.mocked(contexts).kubernetesContexts = writable([
+    {
+      currentContext: true,
+      name: 'ctx1',
+      cluster: 'cluster1',
+      user: 'user1',
+    },
+  ]);
   const resource1: KubernetesObject = {
     metadata: {
       name: 'res1',
@@ -55,27 +79,77 @@ test('non filtered resources', async () => {
     items: [resource1],
   };
 
-  const callbackSpy: Mock<(resoures: KubernetesContextResources[]) => void> = vi.fn();
+  const callbackSpy: Mock<(resoures: KubernetesObject[]) => void> = vi.fn();
   vi.mocked(window.kubernetesGetResources).mockResolvedValue([contextResource]);
-  const listener = await listenResources('resource1', callbackSpy);
-  expect(listener).not.toBeUndefined();
-  await listener!.updateContexts(['ctx1']);
 
-  callbackSpy.mockClear();
+  const listener = await listenResources('resource1', {}, callbackSpy);
+  expect(listener).not.toBeUndefined();
+
+  expect(window.kubernetesGetResources).toHaveBeenCalledWith(['ctx1'], 'resource1');
+
+  await vi.waitFor(() => {
+    expect(callbackSpy).toHaveBeenCalledWith([resource1]);
+  });
+});
+
+test('updated resources without filter', async () => {
+  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+  vi.mocked(contexts).kubernetesContexts = writable([
+    {
+      currentContext: true,
+      name: 'ctx1',
+      cluster: 'cluster1',
+      user: 'user1',
+    },
+  ]);
+  const resource1: KubernetesObject = {
+    metadata: {
+      name: 'res1',
+    },
+  };
+  const contextResource: KubernetesContextResources = {
+    contextName: 'ctx1',
+    items: [resource1],
+  };
+
+  const callbackSpy: Mock<(resoures: KubernetesObject[]) => void> = vi.fn();
+  vi.mocked(window.kubernetesGetResources).mockResolvedValue([contextResource]);
+  const listener = await listenResources('resource1', {}, callbackSpy);
+  expect(listener).not.toBeUndefined();
+
+  expect(window.kubernetesGetResources).toHaveBeenCalledWith(['ctx1'], 'resource1');
+
+  await vi.waitFor(() => {
+    expect(callbackSpy).toHaveBeenCalledWith([resource1]);
+  });
+
+  // now update the resources and send an event
+  const newResource: KubernetesObject = {
+    metadata: {
+      name: 'res2',
+    },
+  };
+  contextResource.items = [resource1, newResource];
   const callback = callbacks.get('kubernetes-update-resource1');
   expect(callback).toBeDefined();
-  expect(callbackSpy).not.toHaveBeenCalled();
-
   callbackSpy.mockClear();
-  vi.mocked(window.kubernetesGetResources).mockClear();
   callback!();
-  expect(window.kubernetesGetResources).toHaveBeenCalledWith(['ctx1'], 'resource1');
   await vi.waitFor(() => {
-    expect(callbackSpy).toHaveBeenCalledWith([contextResource]);
+    expect(callbackSpy).toHaveBeenCalledWith([resource1, newResource]);
   });
 });
 
 test('filtered resources', async () => {
+  const searchTermStore = writable<string>('');
+  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+  vi.mocked(contexts).kubernetesContexts = writable([
+    {
+      currentContext: true,
+      name: 'ctx1',
+      cluster: 'cluster1',
+      user: 'user1',
+    },
+  ]);
   const resource1: KubernetesObject = {
     metadata: {
       name: 'res1',
@@ -86,75 +160,107 @@ test('filtered resources', async () => {
       name: 'res2',
     },
   };
-  let contextResource: KubernetesContextResources = {
+  const contextResource: KubernetesContextResources = {
     contextName: 'ctx1',
     items: [resource1, resource2],
   };
 
-  const callbackSpy: Mock<(resoures: KubernetesContextResources[]) => void> = vi.fn();
+  const callbackSpy: Mock<(resoures: KubernetesObject[]) => void> = vi.fn();
   vi.mocked(window.kubernetesGetResources).mockResolvedValue([contextResource]);
-  const listener = await listenResources('resource1', callbackSpy);
+
+  const listener = await listenResources(
+    'resource1',
+    {
+      searchTermStore,
+    },
+    callbackSpy,
+  );
   expect(listener).not.toBeUndefined();
 
-  callbackSpy.mockClear();
-  await listener!.setSearchTerm('res2');
+  expect(window.kubernetesGetResources).toHaveBeenCalledWith(['ctx1'], 'resource1');
+
   await vi.waitFor(() => {
-    expect(callbackSpy).toHaveBeenCalledWith([
-      {
-        contextName: 'ctx1',
-        items: [resource2],
-      },
-    ]);
+    expect(callbackSpy).toHaveBeenCalledWith([resource1, resource2]);
   });
 
+  // now set a search term matching no resource
   callbackSpy.mockClear();
-  await listener!.setSearchTerm('notfound');
+  searchTermStore.set('notfound');
   await vi.waitFor(() => {
-    expect(callbackSpy).toHaveBeenCalledWith([
-      {
-        contextName: 'ctx1',
-        items: [],
-      },
-    ]);
+    expect(callbackSpy).toHaveBeenCalledWith([]);
   });
 
+  // now set a search term matching one resource
   callbackSpy.mockClear();
-  await listener!.setSearchTerm('res1');
+  searchTermStore.set('res1');
   await vi.waitFor(() => {
-    expect(callbackSpy).toHaveBeenCalledWith([
-      {
-        contextName: 'ctx1',
-        items: [resource1],
-      },
-    ]);
+    expect(callbackSpy).toHaveBeenCalledWith([resource1]);
   });
+});
 
-  // filter is still active when resources change
-  // here, resource1 appears in the result, but resource2 is still filtered
-  callbackSpy.mockClear();
-
-  const resource1bis: KubernetesObject = {
+test('updated resources with filter', async () => {
+  const searchTermStore = writable<string>('');
+  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+  vi.mocked(contexts).kubernetesContexts = writable([
+    {
+      currentContext: true,
+      name: 'ctx1',
+      cluster: 'cluster1',
+      user: 'user1',
+    },
+  ]);
+  const resource1: KubernetesObject = {
     metadata: {
-      name: 'res1bis',
+      name: 'res1',
     },
   };
-  contextResource = {
+  const resource2: KubernetesObject = {
+    metadata: {
+      name: 'res2',
+    },
+  };
+  const contextResource: KubernetesContextResources = {
     contextName: 'ctx1',
-    items: [resource1, resource2, resource1bis],
+    items: [resource1, resource2],
   };
 
+  const callbackSpy: Mock<(resoures: KubernetesObject[]) => void> = vi.fn();
   vi.mocked(window.kubernetesGetResources).mockResolvedValue([contextResource]);
 
+  const listener = await listenResources(
+    'resource1',
+    {
+      searchTermStore,
+    },
+    callbackSpy,
+  );
+  expect(listener).not.toBeUndefined();
+
+  expect(window.kubernetesGetResources).toHaveBeenCalledWith(['ctx1'], 'resource1');
+
+  await vi.waitFor(() => {
+    expect(callbackSpy).toHaveBeenCalledWith([resource1, resource2]);
+  });
+
+  // now set a search term matching no resource
+  callbackSpy.mockClear();
+  searchTermStore.set('res3');
+  await vi.waitFor(() => {
+    expect(callbackSpy).toHaveBeenCalledWith([]);
+  });
+
+  // now update the resources and send an event
+  const newResource: KubernetesObject = {
+    metadata: {
+      name: 'res3',
+    },
+  };
+  contextResource.items = [resource1, resource2, newResource];
   const callback = callbacks.get('kubernetes-update-resource1');
   expect(callback).toBeDefined();
-  expect(callbackSpy).not.toHaveBeenCalled();
+  callbackSpy.mockClear();
   callback!();
   await vi.waitFor(() => {
-    expect(callbackSpy).toHaveBeenCalledWith([
-      {
-        contextName: 'ctx1',
-        items: [resource1, resource1bis],
-      },
-    ]);
+    expect(callbackSpy).toHaveBeenCalledWith([newResource]);
   });
 });
