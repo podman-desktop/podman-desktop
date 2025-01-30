@@ -1112,18 +1112,13 @@ export class PluginSystem {
         taskActionName?: string,
         taskActionCallback?: () => void,
       ) => {
-        if (!providerContainerConnectionInfo || !imageName || !callback || typeof callback !== 'function') {
+        if (!providerContainerConnectionInfo || !imageName || typeof callback !== 'function') {
           return;
         }
 
         let taskAction: TaskAction | undefined;
 
-        if (
-          taskActionName &&
-          typeof taskActionName === 'string' &&
-          taskActionCallback &&
-          typeof taskActionCallback === 'function'
-        ) {
+        if (taskActionName && typeof taskActionName === 'string' && typeof taskActionCallback === 'function') {
           taskAction = {
             name: taskActionName,
             execute: taskActionCallback,
