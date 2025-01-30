@@ -12,10 +12,12 @@ interface Props {
 
 let { onCloseForm, category = 'bug', contentChange }: Props = $props();
 
-let issueTitle = $state('');
-let issueDescription = $state('');
+let issueTitle: string = $state('');
+let issueDescription: string = $state('');
 let includeSystemInfo: boolean = $state(true); // default to true
 let includeExtensionInfo: boolean = $state(true); // default to true
+
+const disabled: boolean = $derived(!issueTitle || !issueDescription);
 
 let issueValidationError = $derived.by(() => {
   if (!issueTitle) {
@@ -108,12 +110,12 @@ async function previewOnGitHub(): Promise<void> {
     {/if}
   </svelte:fragment>
   <svelte:fragment slot="validation">
-    {#if !issueTitle || !issueDescription}
+    {#if disabled}
       <ErrorMessage class="text-xs" error={issueValidationError}/>
     {/if}
   </svelte:fragment>
   <svelte:fragment slot="buttons">
     <Button class="underline" type="link" aria-label="Cancel" on:click={(): void => onCloseForm(true)}>Cancel</Button>
-    <Button aria-label="Preview on GitHub" on:click={previewOnGitHub} disabled={!issueTitle || !issueDescription}>Preview on GitHub</Button>
+    <Button aria-label="Preview on GitHub" on:click={previewOnGitHub} disabled={disabled}>Preview on GitHub</Button>
   </svelte:fragment>
 </FeedbackForm>
