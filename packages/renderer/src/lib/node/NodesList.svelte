@@ -9,7 +9,6 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onMount } from 'svelte';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -23,18 +22,18 @@ import NodeColumnStatus from './NodeColumnStatus.svelte';
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 import type { NodeUI } from './NodeUI';
 
-export let searchTerm = '';
-$: nodeSearchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let nodes: NodeUI[] = [];
+let { searchTerm = '' }: Props = $props();
+
+$effect(() => {
+  nodeSearchPattern.set(searchTerm);
+});
 
 const nodeUtils = new NodeUtils();
-
-onMount(() => {
-  return kubernetesCurrentContextNodesFiltered.subscribe(value => {
-    nodes = value.map(node => nodeUtils.getNodeUI(node));
-  });
-});
+const nodes = $derived($kubernetesCurrentContextNodesFiltered.map(node => nodeUtils.getNodeUI(node)));
 
 let table: Table;
 
@@ -104,8 +103,7 @@ const row = new TableRow<NodeUI>({});
       data={nodes}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): NodeUI[] => (nodes = nodes)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $kubernetesCurrentContextNodesFiltered.length === 0}
