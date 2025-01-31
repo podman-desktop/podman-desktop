@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024 - 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,55 +16,32 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1Ingress } from '@kubernetes/client-node';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-/* eslint-disable import/no-duplicates */
-import { tick } from 'svelte';
 import { readable, writable } from 'svelte/store';
-/* eslint-enable import/no-duplicates */
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
+import * as states from '/@/stores/kubernetes-contexts-state';
 import type { V1Route } from '/@api/openshift-types';
 
 import IngressesRoutesList from './IngressesRoutesList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
-  return {
-    routeSearchPattern: writable(''),
-    ingressSearchPattern: writable(''),
-    kubernetesCurrentContextIngresses: vi.fn(),
-    kubernetesCurrentContextIngressesFiltered: writable<KubernetesObject[]>([]),
-    kubernetesCurrentContextRoutes: vi.fn(),
-    kubernetesCurrentContextRoutesFiltered: writable<KubernetesObject[]>([]),
-    kubernetesCurrentContextState: readable({
-      reachable: true,
-      error: 'initializing',
-      resources: { pods: 0, deployments: 0 },
-    } as ContextGeneralState),
-  };
-});
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-
-  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
-  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(states).ingressSearchPattern = writable<string>('');
+  vi.mocked(states).routeSearchPattern = writable<string>('');
+  vi.mocked(states).kubernetesContextsCheckingStateDelayed = writable();
+  vi.mocked(states).kubernetesCurrentContextState = writable();
 });
 
-async function waitRender(customProperties: object): Promise<void> {
-  render(IngressesRoutesList, { ...customProperties });
-  await tick();
-}
-
 test('Expect ingress&routes empty screen', async () => {
+  vi.mocked(states).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([]);
+  vi.mocked(states).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([]);
   render(IngressesRoutesList);
   const noIngressesNorRoutes = screen.getByRole('heading', { name: 'No ingresses or routes' });
   expect(noIngressesNorRoutes).toBeInTheDocument();
@@ -116,12 +93,10 @@ test('Expect element in ingresses list', async () => {
   } as V1Route;
 
   // mock object stores
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([ingress]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([ingress]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = readable<KubernetesObject[]>([route]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([route]);
+  vi.mocked(states).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([ingress]);
+  vi.mocked(states).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([route]);
 
-  await waitRender({});
+  render(IngressesRoutesList);
 
   const ingressName = screen.getByRole('cell', { name: 'my-ingress test-namespace' });
   expect(ingressName).toBeInTheDocument();
@@ -131,17 +106,17 @@ test('Expect element in ingresses list', async () => {
 
 test('Expect filter empty screen if no match', async () => {
   // mock object stores
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([]);
+  vi.mocked(states).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([]);
+  vi.mocked(states).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([]);
 
-  await waitRender({ searchTerm: 'No match' });
+  render(IngressesRoutesList, { searchTerm: 'No match' });
 
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
   expect(filterButton).toBeInTheDocument();
 });
 
 test('Expect status column name to be clickable / sortable', async () => {
-  await waitRender({});
+  render(IngressesRoutesList);
 
   const statusColumn = screen.getByRole('columnheader', { name: 'Status' });
   expect(statusColumn).toBeInTheDocument();
@@ -151,7 +126,7 @@ test('Expect status column name to be clickable / sortable', async () => {
 });
 
 test('Expect there to be an age column', async () => {
-  await waitRender({});
+  render(IngressesRoutesList);
 
   const ageColumn = screen.getByRole('columnheader', { name: 'Age' });
   expect(ageColumn).toBeInTheDocument();
@@ -186,17 +161,15 @@ test('Expect user confirmation to pop up when preferences require', async () => 
     },
   } as V1Ingress;
 
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngresses = readable<KubernetesObject[]>([ingress]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([ingress]);
+  vi.mocked(states).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([ingress]);
 
-  await waitRender({});
+  render(IngressesRoutesList);
 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle ingress & route' });
   await fireEvent.click(checkboxes[0]);
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
@@ -208,4 +181,114 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.kubernetesDeleteIngress).toHaveBeenCalled());
+});
+
+test('Expect list to be updated when stores change', async () => {
+  const ingress1 = {
+    metadata: {
+      name: 'my-ingress-1',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      rules: [
+        {
+          host: 'foo.bar.com',
+          http: {
+            paths: [
+              {
+                path: '/foo',
+                pathType: 'Prefix',
+                backend: {
+                  resource: {
+                    name: 'bucket',
+                    kind: 'StorageBucket',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  } as V1Ingress;
+  const ingress2 = {
+    metadata: {
+      name: 'my-ingress-2',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      rules: [
+        {
+          host: 'foo.bar.com',
+          http: {
+            paths: [
+              {
+                path: '/foo',
+                pathType: 'Prefix',
+                backend: {
+                  resource: {
+                    name: 'bucket',
+                    kind: 'StorageBucket',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  } as V1Ingress;
+  const route = {
+    metadata: {
+      name: 'my-route',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      host: 'foo.bar.com',
+      port: {
+        targetPort: '80',
+      },
+      to: {
+        kind: 'Service',
+        name: 'service',
+      },
+    },
+  } as V1Route;
+
+  // mock object stores
+  const filteredIngresses = (vi.mocked(states).kubernetesCurrentContextIngressesFiltered = writable<KubernetesObject[]>(
+    [ingress1, ingress2],
+  ));
+  const filteredRoutes = (vi.mocked(states).kubernetesCurrentContextRoutesFiltered = writable<KubernetesObject[]>([
+    route,
+  ]));
+
+  const component = render(IngressesRoutesList);
+
+  let ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
+  expect(ingressName1).toBeInTheDocument();
+  let ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
+  expect(ingressName2).toBeInTheDocument();
+  let routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
+  expect(routeName).toBeInTheDocument();
+
+  filteredIngresses.set([ingress1]);
+  await component.rerender({});
+
+  ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
+  expect(ingressName1).toBeInTheDocument();
+  ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
+  expect(ingressName2).not.toBeInTheDocument();
+  routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
+  expect(routeName).toBeInTheDocument();
+
+  filteredRoutes.set([]);
+  await component.rerender({});
+
+  ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
+  expect(ingressName1).toBeInTheDocument();
+  ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
+  expect(ingressName2).not.toBeInTheDocument();
+  routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
+  expect(routeName).not.toBeInTheDocument();
 });

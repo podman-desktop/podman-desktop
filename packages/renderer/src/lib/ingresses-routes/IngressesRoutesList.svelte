@@ -10,8 +10,6 @@ import {
   TableRow,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -35,38 +33,26 @@ import IngressRouteEmptyScreen from './IngressRouteEmptyScreen.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-export let searchTerm = '';
-$: routeSearchPattern.set(searchTerm);
-$: ingressSearchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let ingressesUI: IngressUI[] = [];
-let routesUI: RouteUI[] = [];
-let ingressesRoutesUI: (IngressUI | RouteUI)[] = [];
+let { searchTerm = '' }: Props = $props();
+
+$effect(() => {
+  routeSearchPattern.set(searchTerm);
+  ingressSearchPattern.set(searchTerm);
+});
 
 const ingressRouteUtils = new IngressRouteUtils();
 
-let ingressesUnsubscribe: Unsubscriber;
-let routesUnsubscribe: Unsubscriber;
-onMount(() => {
-  ingressesUnsubscribe = kubernetesCurrentContextIngressesFiltered.subscribe(value => {
-    ingressesUI = value.map(ingress => ingressRouteUtils.getIngressUI(ingress));
-    ingressesRoutesUI = [...ingressesUI, ...routesUI];
-  });
-
-  routesUnsubscribe = kubernetesCurrentContextRoutesFiltered.subscribe(value => {
-    routesUI = value.map(route => ingressRouteUtils.getRouteUI(route as V1Route));
-    ingressesRoutesUI = [...ingressesUI, ...routesUI];
-  });
-});
-
-onDestroy(() => {
-  // unsubscribe from the store
-  ingressesUnsubscribe?.();
-  routesUnsubscribe?.();
-});
+const ingressesRoutesUI = $derived([
+  ...$kubernetesCurrentContextIngressesFiltered.map(ingress => ingressRouteUtils.getIngressUI(ingress)),
+  ...$kubernetesCurrentContextRoutesFiltered.map(route => ingressRouteUtils.getRouteUI(route as V1Route)),
+]);
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedIngressesRoutes(): Promise<void> {
   const selectedIngressesRoutes = ingressesRoutesUI.filter(ingressesRoutesUI => ingressesRoutesUI.selected);
   if (selectedIngressesRoutes.length === 0) {
@@ -76,7 +62,6 @@ async function deleteSelectedIngressesRoutes(): Promise<void> {
   // mark ingress or route for deletion
   bulkDeleteInProgress = true;
   selectedIngressesRoutes.forEach(ingressRoute => (ingressRoute.status = 'DELETING'));
-  ingressesRoutesUI = ingressesRoutesUI;
 
   if (selectedIngressesRoutes.length > 0) {
     bulkDeleteInProgress = true;
@@ -98,7 +83,7 @@ async function deleteSelectedIngressesRoutes(): Promise<void> {
   }
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber = $state<number>(0);
 let table: Table;
 
 let statusColumn = new TableColumn<IngressUI>('Status', {
@@ -186,8 +171,7 @@ const row = new TableRow<IngressUI | RouteUI>({ selectable: (_ingressRoute): boo
       data={ingressesRoutesUI}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): (IngressUI | RouteUI)[] => (ingressesRoutesUI = ingressesRoutesUI)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $kubernetesCurrentContextIngressesFiltered.length === 0 && $kubernetesCurrentContextRoutesFiltered.length === 0}
