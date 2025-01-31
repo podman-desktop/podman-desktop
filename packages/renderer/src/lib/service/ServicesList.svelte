@@ -11,7 +11,6 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onMount } from 'svelte';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -27,21 +26,22 @@ import ServiceColumnType from './ServiceColumnType.svelte';
 import ServiceEmptyScreen from './ServiceEmptyScreen.svelte';
 import type { ServiceUI } from './ServiceUI';
 
-export let searchTerm = '';
-$: serviceSearchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let services: ServiceUI[] = [];
+let { searchTerm = '' }: Props = $props();
+
+$effect(() => {
+  serviceSearchPattern.set(searchTerm);
+});
 
 const serviceUtils = new ServiceUtils();
 
-onMount(() => {
-  return kubernetesCurrentContextServicesFiltered.subscribe(value => {
-    services = value.map(service => serviceUtils.getServiceUI(service));
-  });
-});
+const services = $derived($kubernetesCurrentContextServicesFiltered.map(service => serviceUtils.getServiceUI(service)));
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedServices(): Promise<void> {
   const selectedServices = services.filter(service => service.selected);
   if (selectedServices.length === 0) {
@@ -51,7 +51,6 @@ async function deleteSelectedServices(): Promise<void> {
   // mark services for deletion
   bulkDeleteInProgress = true;
   selectedServices.forEach(service => (service.status = 'DELETING'));
-  services = services;
 
   await Promise.all(
     selectedServices.map(async service => {
@@ -65,7 +64,7 @@ async function deleteSelectedServices(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber = $state<number>(0);
 let table: Table;
 
 let statusColumn = new TableColumn<ServiceUI>('Status', {
@@ -150,8 +149,7 @@ const row = new TableRow<ServiceUI>({ selectable: (_service): boolean => true })
       data={services}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): ServiceUI[] => (services = services)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $kubernetesCurrentContextServicesFiltered.length === 0}

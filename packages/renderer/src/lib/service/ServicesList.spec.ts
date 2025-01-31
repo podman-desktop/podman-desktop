@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,45 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
-import type { V1Service } from '@kubernetes/client-node';
+import type { KubernetesObject, V1Service } from '@kubernetes/client-node';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-/* eslint-disable import/no-duplicates */
-import { tick } from 'svelte';
-import { get } from 'svelte/store';
-/* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { writable } from 'svelte/store';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import { kubernetesCurrentContextServices } from '/@/stores/kubernetes-contexts-state';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
 import ServicesList from './ServicesList.svelte';
 
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-});
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
-  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
-  vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(states).serviceSearchPattern = writable<string>('');
+  vi.mocked(states).kubernetesContextsCheckingStateDelayed = writable();
+  vi.mocked(states).kubernetesCurrentContextState = writable();
 });
 
-async function waitRender(customProperties: object): Promise<void> {
-  render(ServicesList, { ...customProperties });
-  await tick();
-}
-
 test('Expect service empty screen', async () => {
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([]);
+  vi.mocked(states).kubernetesCurrentContextServicesFiltered = writable<KubernetesObject[]>([]);
   render(ServicesList);
   const noServices = screen.getByRole('heading', { name: 'No services' });
   expect(noServices).toBeInTheDocument();
@@ -74,40 +58,18 @@ test('Expect services list', async () => {
       externalName: 'serve',
     },
   };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([service]);
+  vi.mocked(states).kubernetesCurrentContextServicesFiltered = writable<KubernetesObject[]>([service]);
 
-  // wait while store is populated
-  while (get(kubernetesCurrentContextServices).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  await waitRender({});
+  render(ServicesList);
 
   const serviceName = screen.getByRole('cell', { name: 'my-service test-namespace' });
   expect(serviceName).toBeInTheDocument();
 });
 
 test('Expect filter empty screen', async () => {
-  const service: V1Service = {
-    apiVersion: 'v1',
-    kind: 'Service',
-    metadata: {
-      name: 'my-service',
-    },
-    spec: {
-      selector: {},
-      ports: [],
-      externalName: 'serve',
-    },
-  };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([service]);
+  vi.mocked(states).kubernetesCurrentContextServicesFiltered = writable<KubernetesObject[]>([]);
 
-  // wait while store is populated
-  while (get(kubernetesCurrentContextServices).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  await waitRender({ searchTerm: 'No match' });
+  render(ServicesList, { searchTerm: 'No match' });
 
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
   expect(filterButton).toBeInTheDocument();
@@ -126,21 +88,14 @@ test('Expect user confirmation to pop up when preferences require', async () => 
       externalName: 'serve',
     },
   };
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([service]);
+  vi.mocked(states).kubernetesCurrentContextServicesFiltered = writable<KubernetesObject[]>([service]);
 
-  // wait while store is populated
-  while (get(kubernetesCurrentContextServices).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  await waitRender({});
+  render(ServicesList);
 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle service' });
   await fireEvent.click(checkboxes[0]);
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
@@ -151,4 +106,50 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.kubernetesDeleteService).toHaveBeenCalled());
+});
+
+test('services list is updated when kubernetesCurrentContextServicesFiltered changes', async () => {
+  const service1: V1Service = {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: {
+      name: 'my-service-1',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      selector: {},
+      ports: [],
+      externalName: 'serve',
+    },
+  };
+  const service2: V1Service = {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: {
+      name: 'my-service-2',
+      namespace: 'test-namespace',
+    },
+    spec: {
+      selector: {},
+      ports: [],
+      externalName: 'serve',
+    },
+  };
+
+  const filtered = writable<KubernetesObject[]>([service1, service2]);
+  vi.mocked(states).kubernetesCurrentContextServicesFiltered = filtered;
+
+  const component = render(ServicesList);
+  const serviceName1 = screen.getByRole('cell', { name: 'my-service-1 test-namespace' });
+  expect(serviceName1).toBeInTheDocument();
+  const serviceName2 = screen.getByRole('cell', { name: 'my-service-2 test-namespace' });
+  expect(serviceName2).toBeInTheDocument();
+
+  filtered.set([service2]);
+  await component.rerender({});
+
+  const serviceName1after = screen.queryByRole('cell', { name: 'my-service-1 test-namespace' });
+  expect(serviceName1after).not.toBeInTheDocument();
+  const serviceName2after = screen.getByRole('cell', { name: 'my-service-2 test-namespace' });
+  expect(serviceName2after).toBeInTheDocument();
 });
