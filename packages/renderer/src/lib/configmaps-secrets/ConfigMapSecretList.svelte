@@ -11,8 +11,6 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -32,38 +30,26 @@ import ConfigMapSecretColumnType from './ConfigMapSecretColumnType.svelte';
 import ConfigMapSecretEmptyScreen from './ConfigMapSecretEmptyScreen.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
-export let searchTerm = '';
-$: secretSearchPattern.set(searchTerm);
-$: configmapSearchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let configmapsUI: ConfigMapSecretUI[] = [];
-let secretsUI: ConfigMapSecretUI[] = [];
-let configmapsSecretsUI: ConfigMapSecretUI[] = [];
+let { searchTerm = '' }: Props = $props();
+
+$effect(() => {
+  secretSearchPattern.set(searchTerm);
+  configmapSearchPattern.set(searchTerm);
+});
 
 const configmapSecretUtils = new ConfigMapSecretUtils();
 
-let configmapsUnsubscribe: Unsubscriber;
-let secretsUnsubscribe: Unsubscriber;
-onMount(() => {
-  configmapsUnsubscribe = kubernetesCurrentContextConfigMapsFiltered.subscribe(value => {
-    configmapsUI = value.map(configmap => configmapSecretUtils.getConfigMapSecretUI(configmap));
-    configmapsSecretsUI = [...configmapsUI, ...secretsUI];
-  });
-
-  secretsUnsubscribe = kubernetesCurrentContextSecretsFiltered.subscribe(value => {
-    secretsUI = value.map(secret => configmapSecretUtils.getConfigMapSecretUI(secret));
-    configmapsSecretsUI = [...configmapsUI, ...secretsUI];
-  });
-});
-
-onDestroy(() => {
-  // unsubscribe from the store
-  configmapsUnsubscribe?.();
-  secretsUnsubscribe?.();
-});
+const configmapsSecretsUI = $derived([
+  ...$kubernetesCurrentContextConfigMapsFiltered.map(cm => configmapSecretUtils.getConfigMapSecretUI(cm)),
+  ...$kubernetesCurrentContextSecretsFiltered.map(secret => configmapSecretUtils.getConfigMapSecretUI(secret)),
+]);
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedConfigMapsSecrets(): Promise<void> {
   const selectedConfigMapsSecrets = configmapsSecretsUI.filter(configmapsSecretsUI => configmapsSecretsUI.selected);
   if (selectedConfigMapsSecrets.length === 0) {
@@ -73,7 +59,6 @@ async function deleteSelectedConfigMapsSecrets(): Promise<void> {
   // mark configmap or secret for deletion
   bulkDeleteInProgress = true;
   selectedConfigMapsSecrets.forEach(configmapSecret => (configmapSecret.status = 'DELETING'));
-  configmapsSecretsUI = configmapsSecretsUI;
 
   if (selectedConfigMapsSecrets.length > 0) {
     bulkDeleteInProgress = true;
@@ -101,7 +86,7 @@ async function deleteSelectedConfigMapsSecrets(): Promise<void> {
   }
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber = $state<number>(0);
 let table: Table;
 
 let statusColumn = new TableColumn<ConfigMapSecretUI>('Status', {
@@ -175,8 +160,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): bo
       data={configmapsSecretsUI}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): ConfigMapSecretUI[] => (configmapsSecretsUI = configmapsSecretsUI)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $kubernetesCurrentContextConfigMapsFiltered.length === 0 && $kubernetesCurrentContextSecretsFiltered.length === 0}
