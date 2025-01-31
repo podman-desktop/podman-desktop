@@ -46,7 +46,7 @@ export default function Home(): JSX.Element {
               </ul>
             </div>
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
-              Extend capabilities with Podman Desktop extensions.
+              Extend capabilities with Podman Desktop extensions
             </h1>
             <p>
               Podman Desktop leverages a variety of extensions to manage different container engines effectively.
@@ -64,7 +64,7 @@ export default function Home(): JSX.Element {
             />
 
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
-              Extend capabilities with Docker Desktop extensions.
+              Extend capabilities with Docker Desktop extensions
             </h1>
             <p>
               Utilizing Docker Desktop UI extensions, Podman Desktop is equipped with a wrapper that intercepts API

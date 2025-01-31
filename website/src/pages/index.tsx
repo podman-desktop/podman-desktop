@@ -191,7 +191,7 @@ function Extensibility(): JSX.Element {
           <SectionTitle name="extensibility" />
 
           <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Bring new features to Podman Desktop with extensions.
+            Bring new features to Podman Desktop with extensions
           </h2>
         </div>
 
@@ -466,7 +466,7 @@ function MainFeatures(): JSX.Element {
           <SectionTitle name="features" />
 
           <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Build, run and manage containers.
+            Build, run and manage containers
           </h2>
         </div>
         <div className="container px-5 pb-5 mx-auto">
