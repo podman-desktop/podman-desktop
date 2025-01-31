@@ -16,53 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
-import type { V1PersistentVolumeClaim } from '@kubernetes/client-node';
+import type { KubernetesObject, V1PersistentVolumeClaim } from '@kubernetes/client-node';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-/* eslint-disable import/no-duplicates */
-import { tick } from 'svelte';
-import { get } from 'svelte/store';
-/* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { writable } from 'svelte/store';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import {
-  kubernetesCurrentContextPersistentVolumeClaims,
-  kubernetesCurrentContextPersistentVolumeClaimsFiltered,
-} from '/@/stores/kubernetes-contexts-state';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
 import PVCList from './PVCList.svelte';
 
-const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();
-
-beforeAll(() => {
-  (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-});
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  (window as any).kubernetesRegisterGetCurrentContextResources = kubernetesRegisterGetCurrentContextResourcesMock;
-  vi.mocked(window.kubernetesGetContextsGeneralState).mockResolvedValue(new Map());
-  vi.mocked(window.kubernetesGetCurrentContextGeneralState).mockResolvedValue({} as ContextGeneralState);
-  vi.mocked(window.kubernetesUnregisterGetCurrentContextResources).mockResolvedValue([]);
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(states).persistentVolumeClaimSearchPattern = writable<string>('');
+  vi.mocked(states).kubernetesContextsCheckingStateDelayed = writable();
+  vi.mocked(states).kubernetesCurrentContextState = writable();
 });
 
-async function waitRender(customProperties: object): Promise<void> {
-  render(PVCList, { ...customProperties });
-  // wait until the PVC list is populated
-  while (get(kubernetesCurrentContextPersistentVolumeClaimsFiltered).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  await tick();
-}
-
 test('Expect PVC empty screen', async () => {
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([]);
+  vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = writable<KubernetesObject[]>([]);
   render(PVCList);
   const noPVCS = screen.getByRole('heading', { name: 'No PVCs' });
   expect(noPVCS).toBeInTheDocument();
@@ -76,34 +52,25 @@ test('Expect PVC list', async () => {
     },
   } as V1PersistentVolumeClaim;
 
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([pvc]);
+  vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = writable<KubernetesObject[]>([pvc]);
 
-  // wait while store is populated
-  while (get(kubernetesCurrentContextPersistentVolumeClaims).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  await waitRender({});
+  render(PVCList);
 
   const pvcName = screen.getByRole('cell', { name: 'pvc1 default' });
   expect(pvcName).toBeInTheDocument();
 });
 
 test('Expect user confirmation to pop up when preferences require', async () => {
-  kubernetesRegisterGetCurrentContextResourcesMock.mockResolvedValue([
-    {
-      metadata: {
-        name: 'pvc12',
-        namespace: 'default',
-      },
+  const pvc: V1PersistentVolumeClaim = {
+    metadata: {
+      name: 'pvc12',
+      namespace: 'default',
     },
-  ]);
-  // wait while store is populated
-  while (get(kubernetesCurrentContextPersistentVolumeClaims).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  } as V1PersistentVolumeClaim;
 
-  await waitRender({});
+  vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = writable<KubernetesObject[]>([pvc]);
+
+  render(PVCList);
 
   const pvcName1 = screen.getByRole('cell', { name: 'pvc12 default' });
   expect(pvcName1).toBeInTheDocument();
@@ -114,7 +81,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
-  (window as any).showMessageBox = vi.fn();
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete 1 selected items' });
@@ -125,4 +91,35 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.kubernetesDeletePersistentVolumeClaim).toHaveBeenCalled());
+});
+
+test('PVCs list is updated when kubernetesCurrentContextPersistentVolumeClaimsFiltered changes', async () => {
+  const pvc1: V1PersistentVolumeClaim = {
+    metadata: {
+      name: 'my-pvc-1',
+      namespace: 'test-namespace',
+    },
+  } as V1PersistentVolumeClaim;
+  const pvc2: V1PersistentVolumeClaim = {
+    metadata: {
+      name: 'my-pvc-2',
+      namespace: 'test-namespace',
+    },
+  } as V1PersistentVolumeClaim;
+  const filtered = writable<KubernetesObject[]>([pvc1, pvc2]);
+  vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = filtered;
+
+  const component = render(PVCList);
+  const pvcName1 = screen.getByRole('cell', { name: 'my-pvc-1 test-namespace' });
+  expect(pvcName1).toBeInTheDocument();
+  const pvcName2 = screen.getByRole('cell', { name: 'my-pvc-2 test-namespace' });
+  expect(pvcName2).toBeInTheDocument();
+
+  filtered.set([pvc2]);
+  await component.rerender({});
+
+  const pvcName1after = screen.queryByRole('cell', { name: 'my-pvc-1 test-namespace' });
+  expect(pvcName1after).not.toBeInTheDocument();
+  const pvcName2after = screen.getByRole('cell', { name: 'my-pvc-2 test-namespace' });
+  expect(pvcName2after).toBeInTheDocument();
 });

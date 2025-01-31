@@ -11,7 +11,6 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onMount } from 'svelte';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -30,21 +29,22 @@ import PVCColumnStatus from './PVCColumnStatus.svelte';
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 import type { PVCUI } from './PVCUI';
 
-export let searchTerm = '';
-$: persistentVolumeClaimSearchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let pvcs: PVCUI[] = [];
+let { searchTerm = '' }: Props = $props();
+
+$effect(() => {
+  persistentVolumeClaimSearchPattern.set(searchTerm);
+});
 
 const pvcUtils = new PVCUtils();
 
-onMount(() => {
-  return kubernetesCurrentContextPersistentVolumeClaimsFiltered.subscribe(value => {
-    pvcs = value.map(pvc => pvcUtils.getPVCUI(pvc));
-  });
-});
+const pvcs = $derived($kubernetesCurrentContextPersistentVolumeClaimsFiltered.map(pvc => pvcUtils.getPVCUI(pvc)));
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedPVCs(): Promise<void> {
   const selectedPVCs = pvcs.filter(pvc => pvc.selected);
   if (selectedPVCs.length === 0) {
@@ -54,7 +54,6 @@ async function deleteSelectedPVCs(): Promise<void> {
   // mark pvcs for deletion
   bulkDeleteInProgress = true;
   selectedPVCs.forEach(pvc => (pvc.status = 'DELETING'));
-  pvcs = pvcs;
 
   await Promise.all(
     selectedPVCs.map(async pvc => {
@@ -68,7 +67,7 @@ async function deleteSelectedPVCs(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber = $state<number>(0);
 let table: Table;
 
 let statusColumn = new TableColumn<PVCUI>('Status', {
@@ -151,8 +150,7 @@ const row = new TableRow<PVCUI>({ selectable: (_pvc): boolean => true });
       data={pvcs}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): PVCUI[] => (pvcs = pvcs)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $kubernetesCurrentContextPersistentVolumeClaimsFiltered.length === 0}
