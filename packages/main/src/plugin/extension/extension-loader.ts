@@ -1411,6 +1411,9 @@ export class ExtensionLoader {
       navigateToResources: async (): Promise<void> => {
         await this.navigationManager.navigateToResources();
       },
+      navigateToCliTools: async (): Promise<void> => {
+        await this.navigationManager.navigateToCliTools();
+      },
       navigateToEditProviderContainerConnection: async (
         connection: containerDesktopAPI.ProviderContainerConnection,
       ): Promise<void> => {

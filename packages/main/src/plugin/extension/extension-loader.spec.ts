@@ -1615,6 +1615,16 @@ describe('Navigation', async () => {
     // checked on onboarding registry
     expect(vi.mocked(onboardingRegistry.getOnboarding)).toHaveBeenCalledWith('do.not-exists');
   });
+
+  test('navigateToCliTools', async () => {
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToCliTools();
+    expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.CLI_TOOLS });
+  });
 });
 
 test('check listWebviews', async () => {

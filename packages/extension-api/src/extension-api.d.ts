@@ -4775,6 +4775,9 @@ declare module '@podman-desktop/api' {
     // Navigate to a specific pod referenced by kind, name and engineId
     export function navigateToPod(kind: string, name: string, engineId: string): Promise<void>;
 
+    // Navigate to the CliTools page
+    export function navigateToCliTools(): Promise<void>;
+
     // Navigate to a specific contribution (aka extension page) referenced by name
     export function navigateToContribution(name: string): Promise<void>;
 
