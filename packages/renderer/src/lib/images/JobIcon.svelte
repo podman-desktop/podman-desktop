@@ -6,7 +6,8 @@ interface Props {
 
 let { size = '40', solid }: Props = $props();
 
-let style: string = solid ? 'fill:currentColor' : 'fill:none;stroke:currentColor;stroke-width:0.3;stroke-linecap:round';
+let baseStyle: string = 'stroke:currentColor;stroke-width:0.3;stroke-linecap:round;';
+let style: string = baseStyle + (solid ? 'fill:currentColor' : 'fill:none');
 </script>
 
 <svg
