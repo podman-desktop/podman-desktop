@@ -17,12 +17,13 @@ export interface Kind {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transformer: (o: KubernetesObject) => any;
   delete: (name: string) => Promise<void>;
+  isResource: (o: KubernetesObject) => boolean;
   searchPatternStore: Writable<string>;
   legacyObjectStore: Readable<KubernetesObject[]>;
 }
 
 interface Props {
-  kind: Kind;
+  kinds: Kind[];
   searchTerm: string;
   singular: string;
   plural: string;
@@ -36,35 +37,45 @@ interface Props {
   emptySnippet: Snippet;
 }
 
-let { kind, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
+let { kinds, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
 
 let resources = $state<KubernetesObject[] | undefined>(undefined);
-let resourceListener: IDisposable | undefined;
-let legacyUnsubscriber: Unsubscriber;
+let resourceListeners: (IDisposable | undefined)[] = [];
+let legacyUnsubscribers: Unsubscriber[] = [];
 
-const objects = $derived(resources?.map(object => kind.transformer(object)) ?? []);
+const objects = $derived(
+  resources?.map(object => kinds.find(kind => kind.isResource(object))?.transformer(object)) ?? [],
+);
 
 $effect(() => {
-  kind.searchPatternStore.set(searchTerm);
+  kinds.forEach(kind => kind.searchPatternStore.set(searchTerm));
 });
 
 onMount(async () => {
-  resourceListener = await listenResources(
-    kind.resource,
-    {
-      searchTermStore: kind.searchPatternStore,
-    },
-    (updatedResources: KubernetesObject[]) => {
-      resources = updatedResources;
-    },
-  );
+  for (let kind of kinds) {
+    resourceListeners.push(
+      await listenResources(
+        kind.resource,
+        {
+          searchTermStore: kind.searchPatternStore,
+        },
+        (updatedResources: KubernetesObject[]) => {
+          resources = updatedResources;
+        },
+      ),
+    );
 
-  legacyUnsubscriber = kind.legacyObjectStore.subscribe(o => (resources = o));
+    legacyUnsubscribers.push(kind.legacyObjectStore.subscribe(o => (resources = o)));
+  }
 });
 
 onDestroy(() => {
-  resourceListener?.dispose();
-  legacyUnsubscriber?.();
+  for (let resourceListener of resourceListeners) {
+    resourceListener?.dispose();
+  }
+  for (let legacyUnsubscriber of legacyUnsubscribers) {
+    legacyUnsubscriber?.();
+  }
 });
 
 // delete the items selected in the list
@@ -82,7 +93,8 @@ async function deleteSelectedObjects(): Promise<void> {
   await Promise.all(
     selectedObjects.map(async object => {
       try {
-        await kind.delete(object.name);
+        await kinds.find(kind => kind.isResource(object))?.delete(object.name);
+        //        await kind.delete(object.name);
       } catch (e) {
         console.error(`error while deleting ${singular}`, e);
       }

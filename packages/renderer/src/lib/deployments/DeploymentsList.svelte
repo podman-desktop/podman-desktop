@@ -67,13 +67,14 @@ const row = new TableRow<DeploymentUI>({ selectable: (_deployment): boolean => t
 </script>
 
 <KubernetesObjectsList
-  kind={{
+  kinds={[{
     resource: 'deployments',
     transformer: deploymentUtils.getDeploymentUI,
     delete: window.kubernetesDeleteDeployment,
+    isResource: (): boolean => true,
     searchPatternStore: deploymentSearchPattern,
     legacyObjectStore: kubernetesCurrentContextDeploymentsFiltered,
-  }}
+  }]}
   singular="deployment"
   plural="deployments"
   icon={DeploymentIcon}
