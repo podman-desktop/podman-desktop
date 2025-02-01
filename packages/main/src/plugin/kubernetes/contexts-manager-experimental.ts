@@ -24,6 +24,7 @@ import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 
 import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
+import { ConfigmapsResourceFactory } from './configmaps-resource-factory.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
 import type { ContextPermissionResult, ContextResourcePermission } from './context-permissions-checker.js';
@@ -36,6 +37,7 @@ import { PodsResourceFactory } from './pods-resource-factory.js';
 import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryHandler } from './resource-factory-handler.js';
 import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resource-informer.js';
+import { SecretsResourceFactory } from './secrets-resource-factory.js';
 
 const HEALTH_CHECK_TIMEOUT_MS = 5_000;
 
@@ -88,7 +90,12 @@ export class ContextsManagerExperimental {
   }
 
   protected getResourceFactories(): ResourceFactory[] {
-    return [new PodsResourceFactory(), new DeploymentsResourceFactory()];
+    return [
+      new PodsResourceFactory(),
+      new DeploymentsResourceFactory(),
+      new ConfigmapsResourceFactory(),
+      new SecretsResourceFactory(),
+    ];
   }
 
   async update(kubeconfig: KubeConfig): Promise<void> {
