@@ -39,12 +39,12 @@ interface Props {
 
 let { kinds, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
 
-let resources = $state<KubernetesObject[] | undefined>(undefined);
+let resources = $state<{ [key: string]: KubernetesObject[] | undefined }>({});
 let resourceListeners: (IDisposable | undefined)[] = [];
 let legacyUnsubscribers: Unsubscriber[] = [];
 
 const objects = $derived(
-  resources?.map(object => kinds.find(kind => kind.isResource(object))?.transformer(object)) ?? [],
+  kinds.flatMap(kind => resources[kind.resource]?.map(object => kind.transformer(object)) ?? []),
 );
 
 $effect(() => {
@@ -60,12 +60,12 @@ onMount(async () => {
           searchTermStore: kind.searchPatternStore,
         },
         (updatedResources: KubernetesObject[]) => {
-          resources = updatedResources;
+          resources[kind.resource] = updatedResources;
         },
       ),
     );
 
-    legacyUnsubscribers.push(kind.legacyObjectStore.subscribe(o => (resources = o)));
+    legacyUnsubscribers.push(kind.legacyObjectStore.subscribe(o => (resources[kind.resource] = o)));
   }
 });
 
@@ -81,20 +81,22 @@ onDestroy(() => {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedObjects(): Promise<void> {
-  const selectedObjects = objects.filter(object => object.selected);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const selectedObjects = objects.filter((object: any) => object?.selected);
   if (selectedObjects.length === 0) {
     return;
   }
 
   // mark objects for deletion
   bulkDeleteInProgress = true;
-  selectedObjects.forEach(image => (image.status = 'DELETING'));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  selectedObjects.forEach((image: any) => (image.status = 'DELETING'));
 
   await Promise.all(
-    selectedObjects.map(async object => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    selectedObjects.map(async (object: any) => {
       try {
         await kinds.find(kind => kind.isResource(object))?.delete(object.name);
-        //        await kind.delete(object.name);
       } catch (e) {
         console.error(`error while deleting ${singular}`, e);
       }

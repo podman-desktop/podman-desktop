@@ -75,11 +75,13 @@ test('Expect configmap and secrets list', async () => {
 
   render(ConfigMapSecretList);
 
-  const configMapNames = screen.getAllByRole('cell', { name: 'my-configmap my-namespace' });
-  expect(configMapNames.length).toBeGreaterThan(0);
-  // Expect ConfigMap type
-  const configMapTypes = screen.getAllByRole('cell', { name: 'ConfigMap' });
-  expect(configMapTypes.length).toBeGreaterThan(0);
+  await vi.waitFor(() => {
+    const configMapNames = screen.getAllByRole('cell', { name: 'my-configmap my-namespace' });
+    expect(configMapNames.length).toBeGreaterThan(0);
+    // Expect ConfigMap type
+    const configMapTypes = screen.getAllByRole('cell', { name: 'ConfigMap' });
+    expect(configMapTypes.length).toBeGreaterThan(0);
+  });
 
   const secretNames = screen.getAllByRole('cell', { name: 'my-secret my-namespace' });
   expect(secretNames.length).toBeGreaterThan(0);
@@ -131,19 +133,21 @@ test('list is updated when kubernetesCurrentContextConfigMapsFiltered changes', 
 
   const component = render(ConfigMapSecretList);
 
-  let configMapName1 = screen.queryByRole('cell', { name: 'my-configmap-1 my-namespace' });
-  expect(configMapName1).toBeInTheDocument();
-  let configMapName2 = screen.queryByRole('cell', { name: 'my-configmap-2 my-namespace' });
-  expect(configMapName2).toBeInTheDocument();
-  let secretNames = screen.queryByRole('cell', { name: 'my-secret my-namespace' });
-  expect(secretNames).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const configMapName1 = screen.queryByRole('cell', { name: 'my-configmap-1 my-namespace' });
+    expect(configMapName1).toBeInTheDocument();
+    const configMapName2 = screen.queryByRole('cell', { name: 'my-configmap-2 my-namespace' });
+    expect(configMapName2).toBeInTheDocument();
+    const secretNames = screen.queryByRole('cell', { name: 'my-secret my-namespace' });
+    expect(secretNames).toBeInTheDocument();
+  });
 
   filteredConfigmaps.set([configMap1]);
   await component.rerender({});
 
-  configMapName1 = screen.queryByRole('cell', { name: 'my-configmap-1 my-namespace' });
-  configMapName2 = screen.queryByRole('cell', { name: 'my-configmap-2 my-namespace' });
-  secretNames = screen.queryByRole('cell', { name: 'my-secret my-namespace' });
+  let configMapName1 = screen.queryByRole('cell', { name: 'my-configmap-1 my-namespace' });
+  let configMapName2 = screen.queryByRole('cell', { name: 'my-configmap-2 my-namespace' });
+  let secretNames = screen.queryByRole('cell', { name: 'my-secret my-namespace' });
 
   expect(configMapName1).toBeInTheDocument();
   expect(configMapName2).not.toBeInTheDocument();
