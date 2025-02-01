@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { KubernetesObject } from '@kubernetes/client-node';
 import {
   Button,
   FilteredEmptyScreen,
@@ -11,6 +12,7 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
+import { onDestroy, onMount } from 'svelte';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
@@ -21,7 +23,9 @@ import {
   secretSearchPattern,
 } from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
+import { listenResources } from '../kube/resources-listen';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
 import ConfigMapSecretColumnActions from './ConfigMapSecretColumnActions.svelte';
 import ConfigMapSecretColumnName from './ConfigMapSecretColumnName.svelte';
@@ -36,6 +40,41 @@ interface Props {
 
 let { searchTerm = '' }: Props = $props();
 
+let configmaps = $state<KubernetesObject[] | undefined>(undefined);
+let configmapListener: IDisposable | undefined;
+
+let secrets = $state<KubernetesObject[] | undefined>(undefined);
+let secretListener: IDisposable | undefined;
+
+onMount(async () => {
+  configmapListener = await listenResources(
+    'configmaps',
+    {
+      searchTermStore: configmapSearchPattern,
+    },
+    (updatedResources: KubernetesObject[]) => {
+      configmaps = updatedResources;
+    },
+  );
+  secretListener = await listenResources(
+    'secrets',
+    {
+      searchTermStore: secretSearchPattern,
+    },
+    (updatedResources: KubernetesObject[]) => {
+      secrets = updatedResources;
+    },
+  );
+});
+
+onDestroy(() => {
+  configmapListener?.dispose();
+  secretListener?.dispose();
+});
+
+$effect(() => console.log('==> configmaps', configmaps));
+$effect(() => console.log('==> secrets', secrets));
+
 $effect(() => {
   secretSearchPattern.set(searchTerm);
   configmapSearchPattern.set(searchTerm);
@@ -43,9 +82,17 @@ $effect(() => {
 
 const configmapSecretUtils = new ConfigMapSecretUtils();
 
+$effect(() => {
+  configmaps = $kubernetesCurrentContextConfigMapsFiltered;
+});
+
+$effect(() => {
+  secrets = $kubernetesCurrentContextSecretsFiltered;
+});
+
 const configmapsSecretsUI = $derived([
-  ...$kubernetesCurrentContextConfigMapsFiltered.map(cm => configmapSecretUtils.getConfigMapSecretUI(cm)),
-  ...$kubernetesCurrentContextSecretsFiltered.map(secret => configmapSecretUtils.getConfigMapSecretUI(secret)),
+  ...(configmaps?.map(cm => configmapSecretUtils.getConfigMapSecretUI(cm)) ?? []),
+  ...(secrets?.map(secret => configmapSecretUtils.getConfigMapSecretUI(secret)) ?? []),
 ]);
 
 // delete the items selected in the list
@@ -163,7 +210,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): bo
       defaultSortColumn="Name">
     </Table>
 
-    {#if $kubernetesCurrentContextConfigMapsFiltered.length === 0 && $kubernetesCurrentContextSecretsFiltered.length === 0}
+    {#if configmaps?.length === 0 && secrets?.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen icon={ConfigMapSecretIcon} kind="configmaps or secrets" bind:searchTerm={searchTerm} />
       {:else}
