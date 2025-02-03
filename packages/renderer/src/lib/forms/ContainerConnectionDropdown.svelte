@@ -23,8 +23,8 @@ let {
   disabled,
 }: Props = $props();
 
-function handleChange(nValue: string | undefined): void {
-  if (nValue) {
+function handleChange(nValue: unknown): void {
+  if (typeof nValue === 'string') {
     value = connections.find(connection => connection.endpoint.socketPath === nValue);
   } else {
     value = undefined;
