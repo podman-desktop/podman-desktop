@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,12 +127,9 @@ const originalConsole = console;
 const memoryLogs: { logType: LogType; date: Date; message: string }[] = [];
 
 export interface KeyLogger {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  log(key: symbol, ...data: any[]): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error(key: symbol, ...data: any[]): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  warn(key: symbol, ...data: any[]): void;
+  log(key: symbol, ...data: unknown[]): void;
+  error(key: symbol, ...data: unknown[]): void;
+  warn(key: symbol, ...data: unknown[]): void;
 }
 
 export const buildApiSender = (): ApiSenderType => {
@@ -160,8 +157,7 @@ export function initExposure(): void {
   interface ErrorMessage {
     name: string;
     message: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extra: any;
+    extra: unknown;
   }
 
   function decodeError(error: ErrorMessage): Error {
@@ -171,8 +167,7 @@ export function initExposure(): void {
     return e;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function ipcInvoke(channel: string, ...args: any): Promise<any> {
+  async function ipcInvoke<T>(channel: string, ...args: unknown[]): Promise<T> {
     const { error, result } = await ipcRenderer.invoke(channel, ...args);
     if (error) {
       throw decodeError(error);
@@ -188,10 +183,8 @@ export function initExposure(): void {
   // keep console log data
   const types: LogType[] = ['log', 'warn', 'trace', 'debug', 'error'];
   types.forEach(logType => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const originalFunction = (originalConsole as any)[logType];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (console as any)[logType] = (...args: unknown[]): void => {
+    const originalFunction = originalConsole[logType];
+    console[logType] = (...args: unknown[]): void => {
       originalFunction(...args);
       memoryLogs.push({ logType: logType, date: new Date(), message: args.join(' ') });
     };
@@ -952,8 +945,7 @@ export function initExposure(): void {
     'createContainerProviderConnection',
     async (
       internalProviderId: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      params: { [key: string]: any },
+      params: { [key: string]: unknown },
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
       tokenId: number | undefined,
@@ -987,8 +979,7 @@ export function initExposure(): void {
     'createKubernetesProviderConnection',
     async (
       internalProviderId: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      params: { [key: string]: any },
+      params: { [key: string]: unknown },
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
       tokenId: number | undefined,
@@ -1156,8 +1147,7 @@ export function initExposure(): void {
     async (
       providerId: string,
       providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      params: { [key: string]: any },
+      params: { [key: string]: unknown },
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
       tokenId: number | undefined,
@@ -1252,8 +1242,7 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld(
     'executeStatusBarEntryCommand',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (command: string, args: any[]): Promise<void> => {
+    async (command: string, args: unknown[]): Promise<void> => {
       return ipcInvoke('status-bar:executeStatusBarEntryCommand', command, args);
     },
   );
@@ -1490,8 +1479,7 @@ export function initExposure(): void {
     'updateConfigurationValue',
     async (
       key: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      value: any,
+      value: unknown,
       scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
     ): Promise<void> => {
       return ipcInvoke('configuration-registry:updateConfigurationValue', key, value, scope);
