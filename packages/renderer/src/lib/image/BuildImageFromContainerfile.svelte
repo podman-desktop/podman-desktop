@@ -8,7 +8,7 @@ import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 
-import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import { handleNavigation } from '/@/navigation';
 import { type BuildImageInfo, buildImagesInfo } from '/@/stores/build-images';
@@ -343,7 +343,7 @@ async function abortBuild(): Promise<void> {
       <div hidden={buildImageInfo?.buildRunning}>
         <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Container engine</label>
-        <ProviderContainerConnectionDropdown
+        <ContainerConnectionDropdown
           id="providerChoice"
           name="providerChoice"
           bind:value={selectedProvider}

@@ -69,7 +69,7 @@ const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
   displayName: 'test',
   status: 'started',
   endpoint: {
-    socketPath: '',
+    socketPath: 'dummy/socket',
   },
   type: 'podman',
 };
@@ -388,6 +388,9 @@ describe('container connections', () => {
       ...CONTAINER_CONNECTION_MOCK,
       name: `connection-${index}`,
       displayName: `Connection ${index}`,
+      endpoint: {
+        socketPath: `socket-${index}`,
+      },
     })),
   };
 
