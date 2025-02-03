@@ -6,7 +6,7 @@ import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import type { ImageSearchOptions } from '/@api/image-registry';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
@@ -330,7 +330,7 @@ async function searchFunction(value: string): Promise<void> {
         <div class="pt-4">
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
             >Container Engine</label>
-          <ProviderContainerConnectionDropdown
+          <ContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
             bind:value={selectedProviderConnection}

@@ -12,7 +12,7 @@ import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
-import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 
@@ -245,7 +245,7 @@ function goBackToPodsPage(): void {
                 class:text-[var(--pd-content-card-header-text)]={userChoice === 'podman'}
                 class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'podman'}
                 >Container Engine</label>
-              <ProviderContainerConnectionDropdown
+              <ContainerConnectionDropdown
                 id="providerChoice"
                 name="providerChoice"
                 bind:value={selectedProvider}

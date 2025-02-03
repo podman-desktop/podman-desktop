@@ -7,7 +7,7 @@ import { onMount } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
-import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -108,7 +108,7 @@ async function importContainers(): Promise<void> {
     <div class="mb-4">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Container engine</label>
-      <ProviderContainerConnectionDropdown
+      <ContainerConnectionDropdown
         id="providerChoice"
         name="providerChoice"
         bind:value={selectedProvider}

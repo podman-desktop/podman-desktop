@@ -5,7 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
@@ -283,7 +283,7 @@ function navigateToContainers(): void {
           for="providerConnectionName"
           class="block mb-2 font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
           >Container engine:</label>
-        <ProviderContainerConnectionDropdown
+        <ContainerConnectionDropdown
           class="w-full"
           name="providerChoice"
           bind:value={selectedProvider}
