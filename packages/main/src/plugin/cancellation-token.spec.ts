@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@
 
 import { beforeAll, beforeEach, expect, test, vi, vitest } from 'vitest';
 
+import type { CancellationTokenSource } from './cancellation-token.js';
 import { CancellationTokenImpl } from './cancellation-token.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cancellationTokenRegistry: any;
+let cancellationTokenRegistry: CancellationTokenRegistry;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -36,7 +36,7 @@ beforeAll(() => {
 test('Should return CancellationToken', async () => {
   const tokenSourceId = cancellationTokenRegistry.createCancellationTokenSource();
   const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenSourceId);
-  const token = tokenSource.token;
+  const token = tokenSource?.token;
   expect(token).toBeDefined();
   expect(token instanceof CancellationTokenImpl).toBe(true);
 });
@@ -44,22 +44,23 @@ test('Should return CancellationToken', async () => {
 test('Check if token cancel is triggered when tokenSource cancel', async () => {
   const tokenSourceId = cancellationTokenRegistry.createCancellationTokenSource();
   const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenSourceId);
-  const token = tokenSource.token;
-  const tokenCancelMock = vitest.spyOn(token, 'cancel');
-  tokenCancelMock.mockImplementation(() => {});
-  tokenSource.cancel();
+  const token = tokenSource?.token;
+  expect(token instanceof CancellationTokenImpl).toBe(true);
+  const tokenCancelMock = vitest.spyOn(token as CancellationTokenImpl, 'cancel');
+  tokenSource?.cancel();
   expect(tokenCancelMock).toBeCalled();
 });
 
 test('Check if tokenSource cancel is triggered if tokenSource is disposed', async () => {
   const tokenSourceId = cancellationTokenRegistry.createCancellationTokenSource();
   const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenSourceId);
-  const token = tokenSource.token;
-  const tokenSourceCancelMock = vitest.spyOn(tokenSource, 'cancel');
-  tokenSourceCancelMock.mockImplementation(() => {});
-  const tokenDisposeMock = vitest.spyOn(token, 'dispose');
-  tokenDisposeMock.mockImplementation(() => {});
-  tokenSource.dispose(true);
+  const token = tokenSource?.token;
+  expect(token instanceof CancellationTokenImpl).toBe(true);
+  // assert the object is not undefined and then only of type CancellationTokenSource
+  expect(tokenSource).toBeDefined();
+  const tokenSourceCancelMock = vitest.spyOn(tokenSource as CancellationTokenSource, 'cancel');
+  const tokenDisposeMock = vitest.spyOn(token as CancellationTokenImpl, 'dispose');
+  tokenSource?.dispose(true);
   expect(tokenSourceCancelMock).toBeCalled();
   expect(tokenDisposeMock).toBeCalled();
 });
@@ -67,12 +68,13 @@ test('Check if tokenSource cancel is triggered if tokenSource is disposed', asyn
 test('Check if tokenSource cancel is not triggered if tokenSource is disposed without cancel set', async () => {
   const tokenSourceId = cancellationTokenRegistry.createCancellationTokenSource();
   const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenSourceId);
-  const token = tokenSource.token;
-  const tokenSourceCancelMock = vitest.spyOn(tokenSource, 'cancel');
-  tokenSourceCancelMock.mockImplementation(() => {});
-  const tokenDisposeMock = vitest.spyOn(token, 'dispose');
-  tokenDisposeMock.mockImplementation(() => {});
-  tokenSource.dispose();
+  const token = tokenSource?.token;
+  expect(token instanceof CancellationTokenImpl).toBe(true);
+  // assert the object is not undefined and then only of type CancellationTokenSource
+  expect(tokenSource).toBeDefined();
+  const tokenSourceCancelMock = vitest.spyOn(tokenSource as CancellationTokenSource, 'cancel');
+  const tokenDisposeMock = vitest.spyOn(token as CancellationTokenImpl, 'dispose');
+  tokenSource?.dispose();
   expect(tokenSourceCancelMock).toBeCalledTimes(0);
   expect(tokenDisposeMock).toBeCalled();
 });

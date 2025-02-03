@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import { assertType, beforeAll, expect, test } from 'vitest';
 import { CancellationTokenSource } from './cancellation-token.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cancellationTokenRegistry: any;
+let cancellationTokenRegistry: CancellationTokenRegistry;
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
