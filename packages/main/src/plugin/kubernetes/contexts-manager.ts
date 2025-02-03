@@ -45,6 +45,7 @@ import type {
 } from '@kubernetes/client-node';
 import {
   AppsV1Api,
+  BatchV1Api,
   CoreV1Api,
   CustomObjectsApi,
   KubeConfig,
@@ -479,14 +480,8 @@ export class ContextsManager {
   }
 
   public createCronJobInformer(kc: KubeConfig, namespace: string, context: KubeContext): CancellableInformer {
-    const customObjectsApi = kc.makeApiClient(CustomObjectsApi);
-    const listFn = (): Promise<KubernetesListObject<V1CronJob>> =>
-      customObjectsApi.listNamespacedCustomObject({
-        group: 'batch',
-        version: 'v1',
-        namespace,
-        plural: 'cronjobs',
-      }) as Promise<KubernetesListObject<V1CronJob>>;
+    const batchV1Api = kc.makeApiClient(BatchV1Api);
+    const listFn = (): Promise<KubernetesListObject<V1CronJob>> => batchV1Api.listNamespacedCronJob({ namespace });
     const path = `/apis/batch/v1/namespaces/${namespace}/cronjobs`;
     let timer: NodeJS.Timeout | undefined;
     let connectionDelay: NodeJS.Timeout | undefined;
