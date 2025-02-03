@@ -2,11 +2,12 @@
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
+import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -107,15 +108,11 @@ async function importContainers(): Promise<void> {
     <div class="mb-4">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Container engine</label>
-      <Dropdown
-        name="providerChoice"
+      <ProviderContainerConnectionDropdown
         id="providerChoice"
+        name="providerChoice"
         bind:value={selectedProvider}
-        options={providerConnections.map(providerConnection => ({
-          label: providerConnection.name,
-          value: providerConnection,
-        }))}>
-      </Dropdown>
+        connections={providerConnections}/>
     </div>
     {/if}
 

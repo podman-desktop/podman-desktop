@@ -3,11 +3,12 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Button, Input } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 
+import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import { handleNavigation } from '/@/navigation';
 import { type BuildImageInfo, buildImagesInfo } from '/@/stores/build-images';
@@ -342,15 +343,11 @@ async function abortBuild(): Promise<void> {
       <div hidden={buildImageInfo?.buildRunning}>
         <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Container engine</label>
-          <Dropdown
-            name="providerChoice"
-            id="providerChoice"
-            bind:value={selectedProvider}
-            options={providerConnections.map(providerConnection => ({
-              label: providerConnection.name,
-              value: providerConnection,
-            }))}>
-          </Dropdown>
+        <ProviderContainerConnectionDropdown
+          id="providerChoice"
+          name="providerChoice"
+          bind:value={selectedProvider}
+          connections={providerConnections}/>
       </div>
     {/if}
 
