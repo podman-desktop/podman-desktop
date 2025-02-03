@@ -41,7 +41,7 @@ export interface DockerExtensionMetadata {
   };
 }
 
-interface ComposeObject {
+export interface ComposeObject {
   services: {
     [key: string]: {
       image?: string;
