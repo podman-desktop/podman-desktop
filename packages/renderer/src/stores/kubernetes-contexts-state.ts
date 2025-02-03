@@ -141,6 +141,32 @@ export const kubernetesCurrentContextServicesFiltered = derived(
     $services.filter(service => findMatchInLeaves(service, $searchPattern.toLowerCase())),
 );
 
+// CronJobs
+
+export const kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([], set => {
+  window
+    .kubernetesRegisterGetCurrentContextResources('cronjobs')
+    .then(value => set(value))
+    .catch((err: unknown) => console.log('Error registering Kubernetes cronjobs', err));
+  window.events?.receive('kubernetes-current-context-cronjobs-update', (value: unknown) => {
+    set(value as KubernetesObject[]);
+  });
+  return (): void => {
+    window
+      .kubernetesUnregisterGetCurrentContextResources('cronjobs')
+      .catch((err: unknown) => console.log('Error unregistering Kubernetes cronjobs', err));
+  };
+});
+
+export const cronJobSearchPattern = writable('');
+
+// Current context of CronJobs
+export const kubernetesCurrentContextCronJobsFiltered = derived(
+  [cronJobSearchPattern, kubernetesCurrentContextCronJobs],
+  ([$searchPattern, $cronJobs]) =>
+    $cronJobs.filter(cronJob => findMatchInLeaves(cronJob, $searchPattern.toLowerCase())),
+);
+
 // Nodes
 
 export const kubernetesCurrentContextNodes = readable<KubernetesObject[]>([], set => {

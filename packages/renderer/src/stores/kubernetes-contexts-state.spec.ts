@@ -26,6 +26,7 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import type { ResourceName } from '/@api/kubernetes-contexts-states';
 
 import {
+  kubernetesCurrentContextCronJobs,
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextNodes,
   kubernetesCurrentContextPods,
@@ -64,26 +65,33 @@ beforeAll(() => {
   vi.clearAllMocks();
 });
 
-test.each(['nodes', 'pods', 'deployments', 'services'])('confirm %s store is receiving events', async resourceName => {
-  switch (resourceName) {
-    case 'nodes': {
-      await testKubernetesStore(resourceName, kubernetesCurrentContextNodes);
-      break;
+test.each(['nodes', 'pods', 'deployments', 'services', 'cronjobs'])(
+  'confirm %s store is receiving events',
+  async resourceName => {
+    switch (resourceName) {
+      case 'nodes': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextNodes);
+        break;
+      }
+      case 'pods': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextPods);
+        break;
+      }
+      case 'deployments': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextDeployments);
+        break;
+      }
+      case 'services': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextServices);
+        break;
+      }
+      case 'cronjobs': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextCronJobs);
+        break;
+      }
     }
-    case 'pods': {
-      await testKubernetesStore(resourceName, kubernetesCurrentContextPods);
-      break;
-    }
-    case 'deployments': {
-      await testKubernetesStore(resourceName, kubernetesCurrentContextDeployments);
-      break;
-    }
-    case 'services': {
-      await testKubernetesStore(resourceName, kubernetesCurrentContextServices);
-      break;
-    }
-  }
-});
+  },
+);
 
 async function testKubernetesStore(resourceName: string, store: Readable<KubernetesObject[]>): Promise<void> {
   const event = `kubernetes-current-context-${resourceName}-update`;
