@@ -47,12 +47,10 @@ export interface RunOptions {
 }
 
 export function getAssetsFolder(): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (isDev()) {
     return path.resolve(__dirname, '..', 'assets');
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return path.resolve((process as any).resourcesPath, 'extensions', 'podman', 'packages', 'extension', 'assets');
+    return path.resolve(process.resourcesPath, 'extensions', 'podman', 'packages', 'extension', 'assets');
   }
 }
 
