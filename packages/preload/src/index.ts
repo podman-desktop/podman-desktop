@@ -868,7 +868,7 @@ export function initExposure(): void {
   let checkCallbackId = 0;
   contextBridge.exposeInMainWorld(
     'runInstallPreflightChecks',
-    async (providerId: string, callBack: PreflightChecksCallback) => {
+    async (providerId: string, callBack: PreflightChecksCallback): Promise<boolean> => {
       checkCallbackId++;
       preflightChecksCallbacks.set(checkCallbackId, callBack);
       return await ipcInvoke('provider-registry:runInstallPreflightChecks', providerId, checkCallbackId);
@@ -891,7 +891,7 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld(
     'runUpdatePreflightChecks',
-    async (providerId: string, callBack: PreflightChecksCallback) => {
+    async (providerId: string, callBack: PreflightChecksCallback): Promise<boolean> => {
       checkCallbackId++;
       preflightChecksCallbacks.set(checkCallbackId, callBack);
       return await ipcInvoke('provider-registry:runUpdatePreflightChecks', providerId, checkCallbackId);
