@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -36,16 +34,15 @@ vi.mock('node:fs');
 
 // mock express dependency and default export
 vi.mock('express', () => ({
-  default: (): any => {
-    return {
+  default: (): typeof express =>
+    ({
       use: vi.fn(),
-      listen: vi.fn().mockImplementation((_portNumber, func: any) => {
+      listen: vi.fn().mockImplementation((_portNumber, func: () => void) => {
         func();
         return { on: vi.fn() };
       }),
       on: vi.fn().mockResolvedValue(undefined),
-    };
-  },
+    }) as unknown as typeof express,
 }));
 
 // provide a custom free port number
@@ -104,13 +101,13 @@ test('check start', async () => {
   expect(webviewRegistry.getRegistryHttpPort()).toBe(45678);
 });
 
-function getRouterFunction(path: string): (req: any, res: any) => void {
-  const map = new Map<string, (req: any, res: any) => void>();
+function getRouterFunction(path: string): (req: unknown, res: unknown) => void {
+  const map = new Map<string, (req: unknown, res: unknown) => void>();
 
   // create a mock of expres.Router
   const routerMock = {
     // store functions in the map
-    get: vi.fn().mockImplementation((path: string, func: any) => {
+    get: vi.fn().mockImplementation((path: string, func: () => void) => {
       map.set(path, func);
     }),
   } as unknown as Router;
