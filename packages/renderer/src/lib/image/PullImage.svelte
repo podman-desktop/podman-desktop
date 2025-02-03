@@ -1,11 +1,12 @@
 <script lang="ts">
 import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
 import type { ImageSearchOptions } from '/@api/image-registry';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
@@ -329,15 +330,11 @@ async function searchFunction(value: string): Promise<void> {
         <div class="pt-4">
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
             >Container Engine</label>
-          <Dropdown
+          <ProviderContainerConnectionDropdown
             id="providerChoice"
             name="providerChoice"
             bind:value={selectedProviderConnection}
-            options={providerConnections.map(providerConnection => ({
-              label: providerConnection.name,
-              value: providerConnection,
-            }))}>
-          </Dropdown>
+            connections={providerConnections}/>
         </div>
       {/if}
       {#if providerConnections.length === 1}

@@ -1,10 +1,11 @@
 <script lang="ts">
-import { Button, Checkbox, Dropdown, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import ProviderContainerConnectionDropdown from '/@/lib/forms/ProviderContainerConnectionDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
@@ -282,15 +283,12 @@ function navigateToContainers(): void {
           for="providerConnectionName"
           class="block mb-2 font-semibold rounded-sm text-[var(--pd-content-card-header-text)]"
           >Container engine:</label>
-        <Dropdown
+        <ProviderContainerConnectionDropdown
           class="w-full"
           name="providerChoice"
           bind:value={selectedProvider}
-          options={providerConnections.map(providerConnection => ({
-            label: providerConnection.name,
-            value: providerConnection,
-          }))}>
-        </Dropdown>
+          connections={providerConnections}
+        />
       {/if}
       {#if providerConnections.length === 1 && selectedProviderConnection?.name}
         <input type="hidden" name="providerChoice" readonly bind:value={selectedProviderConnection.name} />
