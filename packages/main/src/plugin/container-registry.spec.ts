@@ -2917,6 +2917,10 @@ describe('createContainer', () => {
     await verifyCreateContainer({ WorkingDir: 'workdir' });
   });
 
+  test('test create and start Container with custom HostPort', async () => {
+    await verifyCreateContainer({ HostConfig: { PortBindings: { '123/tcp': { HostPort: '123' } } } });
+  });
+
   test('test container is created but not started', async () => {
     const createdId = '1234';
 
