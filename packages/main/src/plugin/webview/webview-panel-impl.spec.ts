@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
@@ -149,8 +147,8 @@ test('check set complex iconPath', async () => {
   expect(webviewPanelImpl.iconPath).toBeDefined();
 
   // check light and dark
-  expect((webviewPanelImpl.iconPath as any)?.light).toStrictEqual(Uri.parse('https://www.podman-desktop.io/light'));
-  expect((webviewPanelImpl.iconPath as any).dark).toStrictEqual(Uri.parse('https://www.podman-desktop.io/dark'));
+  expect(webviewPanelImpl.iconPath.light).toStrictEqual(Uri.parse('https://www.podman-desktop.io/light'));
+  expect(webviewPanelImpl.iconPath.dark).toStrictEqual(Uri.parse('https://www.podman-desktop.io/dark'));
 
   // check apiSender called
   expect(apiSender.send).toHaveBeenCalledWith('webview-update');
