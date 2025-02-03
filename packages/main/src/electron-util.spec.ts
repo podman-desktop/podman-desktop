@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrowserWindow } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -62,7 +61,7 @@ test('findWindow - return window', () => {
   expect(firstWindow).toBeDefined();
 
   // check it's the MyCustomWindow
-  expect((firstWindow as any).constructor.name).toContain('MyCustomWindow');
+  expect(firstWindow?.constructor.name).toContain('MyCustomWindow');
 });
 
 test('findWindow - return undefined if none', () => {
