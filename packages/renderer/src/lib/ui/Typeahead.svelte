@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-import type { GroupItem } from './Typeahead';
+import type { TypeaheadItem } from './Typeahead';
 
 interface Props {
   placeholder?: string;
@@ -12,7 +12,7 @@ interface Props {
   id?: string;
   name?: string;
   error?: boolean;
-  resultItems?: GroupItem[];
+  resultItems?: TypeaheadItem[];
   onInputChange?: (s: string) => Promise<void>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
@@ -59,8 +59,8 @@ let items: string[] = $derived(
 let itemHeadings: { [index: number]: string[] } = $state({});
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
-let pageStep = 10;
-let userValue: string = '';
+let pageStep: number = $state(10);
+let userValue: string = $state('');
 let loading: boolean = $state(false);
 
 $effect(() => {
@@ -69,7 +69,8 @@ $effect(() => {
   }
   let headings: { [index: number]: string[] } = {};
   let currentItems: string[] = [];
-  for (let { values, group } of resultItems) {
+  let groupedItems = groupItems(resultItems);
+  for (let group in groupedItems) {
     if (group) {
       if (headings[currentItems.length]) {
         headings[currentItems.length].push(group);
@@ -77,17 +78,40 @@ $effect(() => {
         headings[currentItems.length] = [group];
       }
     }
-    currentItems = currentItems.concat(values);
+    currentItems = currentItems.concat(groupedItems[group]);
   }
   items = currentItems;
   itemHeadings = headings;
 });
+
 function onItemSelected(s: string): void {
   value = s;
   userValue = s;
   input?.focus();
   close();
   onChange?.(s);
+}
+
+function groupItems(itemsList: TypeaheadItem[]): { [group: string]: string[] } {
+  let groupedItems: { [group: string]: string[] } = {};
+  let groups = [...new Set(itemsList.map(item => item.group ?? ''))];
+  for (const group of groups) {
+    let values = itemsList.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
+    if (compare) {
+      groupedItems[group] = values.toSorted(compare);
+    } else {
+      groupedItems[group] = values.toSorted((a: string, b: string) => {
+        if (a.startsWith(userValue) === b.startsWith(userValue)) {
+          return a.localeCompare(b);
+        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+  }
+  return groupedItems;
 }
 
 function onInput(): void {

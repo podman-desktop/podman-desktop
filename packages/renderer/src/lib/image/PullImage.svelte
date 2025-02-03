@@ -13,7 +13,7 @@ import type { PullEvent } from '/@api/pull-event';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
-import type { GroupItem } from '../ui/Typeahead';
+import type { TypeaheadItem } from '../ui/Typeahead';
 import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
@@ -29,7 +29,8 @@ let shortnameImages: string[] = [];
 let podmanFQN = '';
 let usePodmanFQN = false;
 let isValidName = true;
-let searchResult: GroupItem[] = [];
+let searchResult: TypeaheadItem[] = [];
+let sortResults: ((a: string, b: string) => number) | undefined;
 
 export let imageToPull: string | undefined = undefined;
 
@@ -250,7 +251,8 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
 async function searchFunction(value: string): Promise<void> {
   try {
-    const result = (await searchImages(value)).toSorted((a: string, b: string) => {
+    const result = await searchImages(value);
+    sortResults = (a: string, b: string): number => {
       const dockerIoValue = `docker.io/${value}`;
       const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
       const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
@@ -261,10 +263,11 @@ async function searchFunction(value: string): Promise<void> {
       } else {
         return 1;
       }
-    });
-    searchResult = [{ values: result }];
+    };
+    searchResult = result.map(value => ({ value: value }));
   } catch (error: unknown) {
     searchResult = [];
+    sortResults = undefined;
   }
 }
 </script>
@@ -292,6 +295,7 @@ async function searchFunction(value: string): Promise<void> {
           placeholder="Image name"
           onInputChange={searchFunction}
           resultItems={searchResult}
+          compare={sortResults}
           onChange={async (s: string): Promise<void> => {
             validateImageName(s);
             await resolveShortname();

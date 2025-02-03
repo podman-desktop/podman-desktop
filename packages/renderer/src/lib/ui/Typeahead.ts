@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface GroupItem {
-  values: string[];
+export interface TypeaheadItem {
+  value: string;
   group?: string;
 }
