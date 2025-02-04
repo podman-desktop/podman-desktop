@@ -10,7 +10,7 @@ type TelemetryLinkProps = {
 };
 
 const sendGoatCounterEvent = (path: string, title: string): void => {
-  window.goatcounter.count({
+  window.goatcounter?.count({
     path: path,
     title: title,
     event: true,
@@ -22,9 +22,7 @@ export const TelemetryLink = (props: TelemetryLinkProps): JSX.Element => {
     <Link
       className={props.className}
       to={props.to}
-      onClick={() => {
-        sendGoatCounterEvent(props.eventPath, props.eventTitle);
-      }}>
+      onClick={() => sendGoatCounterEvent(props.eventPath, props.eventTitle)}>
       {props.children}
     </Link>
   );
