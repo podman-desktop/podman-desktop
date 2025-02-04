@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as fs from 'node:fs';
 
@@ -125,6 +123,15 @@ test('Check asGotMethod', async () => {
 });
 
 describe('handleExtensionVMServiceRequest', () => {
+  const checkMessage = (result: unknown, expected: string): void => {
+    expect(result && typeof result === 'object' && 'message' in result).toBeTruthy();
+    let message: unknown = '';
+    if (result && typeof result === 'object' && 'message' in result) {
+      message = result.message;
+    }
+    expect(message).toBe(expected);
+  };
+
   test('Check GET raw text', async () => {
     const reply = 'hello world';
     server = setupServer(http.get('http://localhost:10000/foo/bar', () => new HttpResponse(reply)));
@@ -148,7 +155,7 @@ describe('handleExtensionVMServiceRequest', () => {
     server = setupServer(http.get('http://localhost:10000/foo/bar', () => HttpResponse.json(reply)));
     server.listen({ onUnhandledRequest: 'error' });
 
-    const result: any = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
+    const result = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
       method: 'GET',
       url: '/foo/bar',
       headers: {
@@ -158,7 +165,7 @@ describe('handleExtensionVMServiceRequest', () => {
     });
 
     // check content is JSON and with correct output
-    expect(result.message).toBe('hello world');
+    checkMessage(result, 'hello world');
   });
 
   test('Check POST with JSON', async () => {
@@ -179,7 +186,7 @@ describe('handleExtensionVMServiceRequest', () => {
     );
     server.listen({ onUnhandledRequest: 'error' });
 
-    const result: any = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
+    const result = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
       method: 'POST',
       url: '/foo/bar',
       headers: {},
@@ -187,7 +194,7 @@ describe('handleExtensionVMServiceRequest', () => {
     });
 
     // check content is JSON and with correct output
-    expect(result.message).toBe('hello world');
+    checkMessage(result, 'hello world');
   });
 
   test('Check DELETE ', async () => {
@@ -198,7 +205,7 @@ describe('handleExtensionVMServiceRequest', () => {
     server = setupServer(http.delete('http://localhost:10000/foo/bar', () => HttpResponse.json(reply)));
     server.listen({ onUnhandledRequest: 'error' });
 
-    const result: any = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
+    const result = await dockerDesktopInstallation.handleExtensionVMServiceRequest('10000', {
       method: 'DELETE',
       url: '/foo/bar',
       headers: { 'X-foo': 'foobar' },
@@ -206,7 +213,7 @@ describe('handleExtensionVMServiceRequest', () => {
     });
 
     // check content is JSON and with correct output
-    expect(result.message).toBe('hello world');
+    checkMessage(result, 'hello world');
   });
 
   test('Check PUT access 401', async () => {
@@ -279,7 +286,7 @@ test('Check handlePluginInstall', async () => {
 
   const allReplies: string[] = [];
 
-  const ipcMainEventReplyMock = vi.fn().mockImplementation((channel: string, ...args: any[]) => {
+  const ipcMainEventReplyMock = vi.fn().mockImplementation((channel: string, ...args: unknown[]) => {
     allReplies.push(`${channel}=>${args.join(',')}`);
   });
 

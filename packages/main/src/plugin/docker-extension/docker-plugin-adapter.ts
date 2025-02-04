@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,13 +189,10 @@ export class DockerPluginAdapter {
         resolve(execResult);
       });
       spawnProcess.on('error', error => {
+        const rawExecResult: RawExecResult = { ...error, stdout: execResult.stdout, stderr: execResult.stderr };
         execResult.killed = true;
         execResult.signal = error.toString();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).stderr = execResult.stderr;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).stdout = execResult.stdout;
-        resolve(error as unknown as RawExecResult);
+        resolve(rawExecResult);
       });
     });
   }
