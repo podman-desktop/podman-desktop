@@ -85,8 +85,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       semver:
-        specifier: ^7.7.0
-        version: 7.7.0
+        specifier: ^7.7.1
+        version: 7.7.1
       stream-json:
         specifier: ^1.9.1
         version: 1.9.1
@@ -408,8 +408,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/extension-api
       semver:
-        specifier: ^7.7.0
-        version: 7.7.0
+        specifier: ^7.7.1
+        version: 7.7.1
       shell-path:
         specifier: ^3.0.0
         version: 3.0.0
@@ -10068,11 +10068,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  semver@7.7.0:
-    resolution: {integrity: sha512-DrfFnPzblFmNrIZzg5RzHegbiRWg7KMR7btwi2yjHwx06zsUbO5g613sVwEV7FTwmzJu+Io0lJe2GJ3LxqpvBQ==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   semver@7.7.1:
     resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
     engines: {node: '>=10'}
@@ -13025,7 +13020,7 @@ snapshots:
       react-router: 5.3.4(react@18.2.0)
       react-router-config: 5.1.1(react-router@5.3.4(react@18.2.0))(react@18.2.0)
       react-router-dom: 5.3.4(react@18.2.0)
-      semver: 7.7.0
+      semver: 7.7.1
       serve-handler: 6.1.6
       shelljs: 0.8.5
       tslib: 2.8.1
@@ -17945,7 +17940,7 @@ snapshots:
       lazy-val: 1.0.5
       lodash.escaperegexp: 4.1.2
       lodash.isequal: 4.5.0
-      semver: 7.7.0
+      semver: 7.7.1
       tiny-typed-emitter: 2.1.0
     transitivePeerDependencies:
       - supports-color
@@ -18199,7 +18194,7 @@ snapshots:
   eslint-compat-utils@0.5.1(eslint@9.19.0(jiti@2.4.2)):
     dependencies:
       eslint: 9.19.0(jiti@2.4.2)
-      semver: 7.7.0
+      semver: 7.7.1
 
   eslint-etc@5.2.1(eslint@9.19.0(jiti@2.4.2))(typescript@5.6.3):
     dependencies:
@@ -18350,7 +18345,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.1)
       postcss-safe-parser: 6.0.0(postcss@8.5.1)
       postcss-selector-parser: 6.1.2
-      semver: 7.7.0
+      semver: 7.7.1
       svelte-eslint-parser: 0.43.0(svelte@5.19.7)
     optionalDependencies:
       svelte: 5.19.7
@@ -18374,7 +18369,7 @@ snapshots:
       read-pkg-up: 7.0.1
       regexp-tree: 0.1.27
       regjsparser: 0.10.0
-      semver: 7.7.0
+      semver: 7.7.1
       strip-indent: 3.0.0
 
   eslint-scope@5.1.1:
@@ -22911,8 +22906,6 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.6.3: {}
-
-  semver@7.7.0: {}
 
   semver@7.7.1: {}
 

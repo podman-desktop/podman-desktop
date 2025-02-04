@@ -138,7 +138,7 @@
   "dependencies": {
     "@octokit/rest": "^21.1.0",
     "@podman-desktop/api": "workspace:*",
-    "semver": "^7.7.0",
+    "semver": "^7.7.1",
     "shell-path": "^3.0.0"
   },
   "devDependencies": {
