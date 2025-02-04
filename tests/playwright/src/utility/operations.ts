@@ -184,6 +184,7 @@ export async function handleConfirmationDialog(
       : dialog.getByRole('button', { name: cancelButton });
     await playExpect(button).toBeEnabled();
     await button.click();
+    await waitUntil(async () => !(await dialog.isVisible(), { timeout: 10_000 }));
   });
 }
 
