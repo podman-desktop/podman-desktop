@@ -108,7 +108,7 @@ async function getMacOSConnectionProxyByPass(exec: Exec, connection: string): Pr
   try {
     const result = await exec.exec('networksetup', ['-getproxybypassdomains', connection]);
     const lines = result.stdout.split(/\r?\n/);
-    const line = lines.join(';');
+    const line = lines.map(entry => entry.replace(/^\*\./, '')).join(',');
     return line.length > 0 ? line : undefined;
   } catch (err) {
     console.warn(`Error while getting MacOS proxy settings for connection ${connection}`, err);
