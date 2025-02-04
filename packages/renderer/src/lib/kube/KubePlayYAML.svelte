@@ -37,8 +37,7 @@ let currentNamespace: string | undefined;
 let allNamespaces: V1NamespaceList;
 
 let playKubeResultRaw: string;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let playKubeResultJSON: any;
+let playKubeResultJSON: unknown;
 
 let userChoice: 'podman' | 'kubernetes' = 'podman';
 
@@ -89,19 +88,32 @@ async function playKubeFile(): Promise<void> {
         // If there are container errors, that means that it was *able* to create the container
         // but if failed to start. We will add this to the "warning" section as we were able to create the
         // We add this with comma deliminated errors
-        if (playKubeResultJSON.Pods.length > 0) {
-          // Filter out the pods that have container errors, but check to see that container errors exists first
-          const containerErrors = playKubeResultJSON.Pods.filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (pod: any) => pod.ContainerErrors && pod.ContainerErrors.length > 0,
-          );
+        if (playKubeResultJSON && typeof playKubeResultJSON === 'object' && 'Pods' in playKubeResultJSON) {
+          if (
+            playKubeResultJSON.Pods !== undefined &&
+            Array.isArray(playKubeResultJSON.Pods) &&
+            playKubeResultJSON.Pods.length > 0
+          ) {
+            // Filter out the pods that have container errors, but check to see that container errors exists first
+            const containerErrors = playKubeResultJSON.Pods.filter(
+              (pod: unknown) =>
+                pod &&
+                typeof pod === 'object' &&
+                'ContainerErrors' in pod &&
+                Array.isArray(pod.ContainerErrors) &&
+                pod.ContainerErrors.length > 0,
+            );
 
-          // For each Pod that has container errors, we will add the container errors to the warning message
-          if (containerErrors.length > 0) {
-            runWarning = `The following pods were created but failed to start: ${containerErrors
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .map((pod: any) => pod.ContainerErrors.join(', '))
-              .join(', ')}`;
+            // For each Pod that has container errors, we will add the container errors to the warning message
+            if (containerErrors.length > 0) {
+              runWarning = `The following pods were created but failed to start: ${containerErrors
+                .map((pod: unknown) =>
+                  pod && typeof pod === 'object' && 'ContainerErrors' in pod && Array.isArray(pod.ContainerErrors)
+                    ? pod.ContainerErrors.join(', ')
+                    : '',
+                )
+                .join(', ')}`;
+            }
           }
         }
 
@@ -334,12 +346,12 @@ function goBackToPodsPage(): void {
         <ErrorMessage class="text-sm" error={runError} />
       {/if}
 
-      {#if playKubeResultJSON}
+      {#if playKubeResultJSON && typeof playKubeResultJSON === 'object'}
         <!-- Output area similar to DeployPodToKube.svelte -->
         <div class="bg-[var(--pd--content-card-bg)] p-5 my-4 text-[var(--pd-content-card-text)]">
           <div class="flex flex-row items-center">
             <div>
-              {#if playKubeResultJSON?.Pods.length > 1}
+              {#if 'Pods' in playKubeResultJSON && Array.isArray(playKubeResultJSON?.Pods) && playKubeResultJSON?.Pods.length > 1}
                 Created pods:
               {:else}
                 Created pod:

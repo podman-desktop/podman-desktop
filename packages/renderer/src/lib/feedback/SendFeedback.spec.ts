@@ -36,8 +36,7 @@ vi.mock('./feedbackForms/DevelopersFeedback.svelte', () => ({
 
 beforeAll(() => {
   (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any): void => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
