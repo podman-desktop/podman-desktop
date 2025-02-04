@@ -29,12 +29,7 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import PodDetails from './PodDetails.svelte';
 
-const mocks = vi.hoisted(() => ({
-  TerminalMock: vi.fn(),
-}));
-vi.mock('@xterm/xterm', () => ({
-  Terminal: mocks.TerminalMock,
-}));
+vi.mock('@xterm/xterm');
 vi.mock('@xterm/addon-search');
 
 vi.mock('/@/stores/kubernetes-contexts-state', async () => {
@@ -62,12 +57,6 @@ const showMessageBoxMock = vi.fn();
 const kubernetesDeletePodMock = vi.fn();
 
 beforeAll(() => {
-  mocks.TerminalMock.mockReturnValue({
-    loadAddon: vi.fn(),
-    open: vi.fn(),
-    write: vi.fn(),
-    dispose: vi.fn(),
-  });
   global.ResizeObserver = vi.fn().mockReturnValue({
     observe: vi.fn(),
     unobserve: vi.fn(),
@@ -80,7 +69,6 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.kubernetesListRoutes).mockResolvedValue([]);
-  //vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
   vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('ns');
   vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
   vi.mocked(window.kubernetesDeletePod).mockImplementation(kubernetesDeletePodMock);

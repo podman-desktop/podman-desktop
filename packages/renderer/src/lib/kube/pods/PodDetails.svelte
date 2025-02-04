@@ -27,10 +27,10 @@ interface Props {
 }
 let { name, namespace }: Props = $props();
 
-let pod = $state<PodUI>();
-let detailsPage = $state<DetailsPage>();
+let pod = $state<PodUI | undefined>();
+let detailsPage = $state<DetailsPage | undefined>();
 let kubePod = $state<V1Pod | undefined>();
-let kubeError = $state<string>();
+let kubeError = $state<string | undefined>();
 
 onMount(() => {
   const podUtils = new PodUtils();
@@ -46,7 +46,7 @@ onMount(() => {
       }
     } else if (detailsPage) {
       // the pod has been deleted
-      detailsPage.close();
+      detailsPage?.close();
     }
   });
 });

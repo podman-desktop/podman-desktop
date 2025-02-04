@@ -20,9 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import { podsInfos } from '/@/stores/pods';
+import { beforeAll, expect, test, vi } from 'vitest';
 
 import { terminalService } from '../../pod/KubernetesTerminalService';
 import KubernetesTerminalBrowser from './KubernetesTerminalBrowser.svelte';
@@ -60,11 +58,6 @@ beforeAll(() => {
       getComputedStyle: vi.fn(),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-      matchMedia: vi.fn().mockReturnValue({
-        matches: false,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
     },
   });
   vi.mocked(window.getComputedStyle).mockReturnValue({
@@ -91,10 +84,6 @@ const pod: PodUI = {
     },
   ],
 } as unknown as PodUI;
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
 
 test('Expect switch of terminal clicking on the item', async () => {
   render(KubernetesTerminalBrowser, { pod: pod });
