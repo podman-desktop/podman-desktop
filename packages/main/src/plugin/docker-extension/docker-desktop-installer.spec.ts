@@ -20,7 +20,7 @@ import { cp, readFile, writeFile } from 'node:fs/promises';
 
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ContributionManager } from '../contribution-manager.js';
+import type { ContributionManager, DockerExtensionMetadata } from '../contribution-manager.js';
 import { DockerDesktopInstaller } from './docker-desktop-installer.js';
 
 let dockerDesktopInstaller: TestDockerDesktopInstaller;
@@ -124,7 +124,7 @@ describe('Check setupContribution', async () => {
 
     const metadata = {
       name: 'My Extension',
-    };
+    } as unknown as DockerExtensionMetadata;
 
     // mock loadMetadata with a name
     vi.mocked(contributionManager.loadMetadata).mockResolvedValueOnce(metadata);
@@ -161,7 +161,7 @@ describe('Check setupContribution', async () => {
     const sendLog: (message: string) => void = vi.fn();
     const sendError: (message: string) => void = vi.fn();
 
-    const metadata = {};
+    const metadata = {} as unknown as DockerExtensionMetadata;
 
     // mock loadMetadata with a name
     vi.mocked(contributionManager.loadMetadata).mockResolvedValueOnce(metadata);
@@ -194,7 +194,7 @@ describe('Check setupContribution', async () => {
       vm: {
         composefile: 'docker-compose.yaml',
       },
-    };
+    } as unknown as DockerExtensionMetadata;
 
     // mock loadMetadata with a name
     vi.mocked(contributionManager.loadMetadata).mockResolvedValueOnce(metadata);

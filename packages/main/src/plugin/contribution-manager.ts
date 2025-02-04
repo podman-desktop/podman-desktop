@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,25 @@ import { getFreePort } from './util/port.js';
 
 export interface DockerExtensionMetadata {
   name: string;
+  description?: string;
+  extensionId?: string;
+  publisher?: string;
+  title?: string;
+  version?: string;
   vm?: {
     composefile?: string;
     exposes?: {
       socket?: string;
+    };
+  };
+  ui: {
+    [key: string]: {
+      title: string;
+      src: string;
+      root: string;
+      backend?: {
+        socket: string;
+      };
     };
   };
 }
@@ -107,6 +122,9 @@ export class ContributionManager {
         const uiKeys = Object.keys(metadata.ui);
         return uiKeys.map(key => {
           const uiMetadata = metadata.ui[key];
+          if (!uiMetadata) {
+            throw new Error('Invalid metadata');
+          }
 
           const uiUri = `file://${path.join(directory, uiMetadata.root, uiMetadata.src)}`;
 
@@ -300,8 +318,9 @@ export class ContributionManager {
     }
 
     // check we have the podman desktop service running
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const podmanDesktopService = jsonResultPs.find((item: any) => item.Service === 'podman-desktop-socket');
+    const podmanDesktopService = jsonResultPs.find((item: unknown) => {
+      return item && typeof item === 'object' && 'Service' in item && item.Service === 'podman-desktop-socket';
+    });
 
     if (!podmanDesktopService) {
       throw new Error(`unable to find the podman-desktop-socket service in the ps command ${result.stdout}`);
@@ -372,9 +391,8 @@ export class ContributionManager {
     return this.exec.exec(composeBinary, args, { env, cwd });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async loadBase64Icon(rootDirectory: string, metadata: any): Promise<string> {
-    if (!metadata.icon) {
+  async loadBase64Icon(rootDirectory: string, metadata: unknown): Promise<string> {
+    if (!metadata || typeof metadata !== 'object' || !('icon' in metadata) || typeof metadata.icon !== 'string') {
       return this.EMPTY_ICON;
     }
     const iconPath = path.join(rootDirectory, metadata.icon);
@@ -386,8 +404,7 @@ export class ContributionManager {
       .then(data => 'data:image/svg+xml;base64,' + Buffer.from(data).toString('base64'));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async loadMetadata(rootDirectory: string): Promise<any> {
+  async loadMetadata(rootDirectory: string): Promise<DockerExtensionMetadata> {
     const manifestPath = path.join(rootDirectory, 'metadata.json');
     if (!fs.existsSync(manifestPath)) {
       throw new Error('Invalid path : ' + manifestPath);

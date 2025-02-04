@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { Stats } from 'node:fs';
 import { promises } from 'node:fs';
 
 import type { ProviderContainerConnection } from '@podman-desktop/api';
-import type { Mock } from 'vitest';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import type { DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
@@ -42,7 +39,7 @@ const providerRegistry: ProviderRegistry = {
   getProviderInfos: vi.fn(),
 } as unknown as ProviderRegistry;
 
-export class TestDockerCompatibility extends DockerCompatibility {
+class TestDockerCompatibility extends DockerCompatibility {
   public override getTypeFromServerInfo(
     info: { OperatingSystem?: string },
     podmanInfo?: unknown,
@@ -59,10 +56,10 @@ const dockerodePodmanInfoMock = vi.fn();
 
 vi.mock('dockerode', async () => {
   class Dockerode {
-    async info(): Promise<Mock<any>> {
+    async info(): Promise<unknown> {
       return dockerodeInfoMock();
     }
-    async podmanInfo(): Promise<Mock<any>> {
+    async podmanInfo(): Promise<unknown> {
       return dockerodePodmanInfoMock();
     }
   }
