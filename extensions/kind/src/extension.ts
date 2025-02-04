@@ -21,6 +21,7 @@ import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
 import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@podman-desktop/api';
+import { window } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
 import { connectionAuditor, createCluster } from './create-cluster';
@@ -60,10 +61,35 @@ const registeredKubernetesConnections: {
 
 let kindCli: CliTool | undefined;
 let kindPath: string | undefined;
+let installer: KindInstaller;
 
 let installer: KindInstaller;
 
 const imageHandler = new ImageHandler();
+
+async function installLatestKind(): Promise<string> {
+  // 1. get latest asset
+  const latest = await installer.getLatestVersionAsset();
+  // 2. download it
+  let cliPath = await installer.download(latest);
+
+  // 3. try to install system-wide: (can fail)
+  try {
+    cliPath = await installBinaryToSystem(cliPath, KIND_CLI_NAME);
+  } catch (err: unknown) {
+    console.log(`${KIND_CLI_NAME} not updated system-wide. Error: ${String(err)}`);
+  }
+
+  // update cli tool
+  kindCli?.updateVersion({
+    version: removeVersionPrefix(latest.tag),
+    path: cliPath,
+    installationSource: 'extension',
+  });
+
+  // return new path
+  return cliPath;
+}
 
 async function registerProvider(
   extensionContext: extensionApi.ExtensionContext,
@@ -72,11 +98,19 @@ async function registerProvider(
 ): Promise<void> {
   const disposable = provider.setKubernetesProviderConnectionFactory(
     {
-      create: (params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken) => {
-        if (kindPath) {
-          return createCluster(params, kindPath, telemetryLogger, logger, token);
+      create: async (params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken) => {
+        // if kind is not installed, let's ask the user to install it
+        if (!kindPath) {
+          const result = await window.showInformationMessage(
+            'Kind is not installed, do you can to install the latest version?',
+            'Cancel',
+            'Confirm',
+          );
+          if (result !== 'Confirm') throw new Error('Unable to create kind cluster. No kind cli detected');
+          kindPath = await installLatestKind();
         }
-        return Promise.reject(new Error('Unable to create kind cluster. No kind cli detected'));
+
+        return createCluster(params, kindPath, telemetryLogger, logger, token);
       },
       creationDisplayName: 'Kind cluster',
     },
