@@ -39,9 +39,6 @@ test('multiple banners should be rendered', async () => {
 
   extensionBannerInfos.set(banners);
 
-  // ask to update the featured Extensions store
-  window.dispatchEvent(new CustomEvent('system-ready'));
-
   render(ExtensionBanners);
 
   for (const banner of banners) {
@@ -79,9 +76,6 @@ test('only banners with when condition evaluated to true should be rendered', as
 
   providerInfos.set([providerInfo as unknown as ProviderInfo]);
   extensionBannerInfos.set([banner1, banner2]);
-
-  // ask to update the featured Extensions store
-  window.dispatchEvent(new CustomEvent('system-ready'));
 
   render(ExtensionBanners);
 
