@@ -18,6 +18,7 @@ import ContainerDetails from './lib/container/ContainerDetails.svelte';
 import ContainerExport from './lib/container/ContainerExport.svelte';
 import ContainerList from './lib/container/ContainerList.svelte';
 import ContextKey from './lib/context/ContextKey.svelte';
+import CronJobList from './lib/cronjob/CronJobList.svelte';
 import DashboardPage from './lib/dashboard/DashboardPage.svelte';
 import DeploymentDetails from './lib/deployments/DeploymentDetails.svelte';
 import DeploymentsList from './lib/deployments/DeploymentsList.svelte';
@@ -301,6 +302,9 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
           </Route>
           <Route path="/kubernetes/ingressesRoutes" breadcrumb="Ingresses & Routes" navigationHint="root">
             <IngressesRoutesList />
+          </Route>
+          <Route path="/kubernetes/cronjobs" breadcrumb="CronJobs" navigationHint="root">
+            <CronJobList />
           </Route>
           <Route
             path="/kubernetes/ingressesRoutes/ingress/:name/:namespace/*"

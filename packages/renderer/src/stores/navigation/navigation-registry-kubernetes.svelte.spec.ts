@@ -54,6 +54,7 @@ test('createNavigationImageEntry with current context', async () => {
   ];
   vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable<ContextGeneralState>({} as ContextGeneralState);
   vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>(nodes);
+  vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);
@@ -70,9 +71,9 @@ test('createNavigationImageEntry with current context', async () => {
   expect(entry.name).toBe('Kubernetes');
   expect(entry.icon.iconComponent).toBe(KubeIcon);
 
-  // should have 9 items
+  // should have 10 items
   await vi.waitFor(() => {
-    expect(entry.items?.length).toBe(9);
+    expect(entry.items?.length).toBe(10);
   });
 });
 
@@ -81,6 +82,7 @@ test('createNavigationImageEntry without current context', async () => {
     error: NO_CURRENT_CONTEXT_ERROR,
   } as ContextGeneralState);
   vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>([]);
+  vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextDeployments = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextPods = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextServices = readable<KubernetesObject[]>([]);

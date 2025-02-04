@@ -1,11 +1,13 @@
 <script lang="ts">
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { Link } from '@podman-desktop/ui-svelte';
+import type { Component } from 'svelte';
 
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { containersInfos } from '/@/stores/containers';
 import {
   kubernetesCurrentContextConfigMaps,
+  kubernetesCurrentContextCronJobs,
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextIngresses,
   kubernetesCurrentContextNodes,
@@ -20,6 +22,7 @@ import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 
 import { kubernetesContexts } from '../../stores/kubernetes-contexts';
 import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
+import CronJobIcon from '../images/CronJobIcon.svelte';
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
 import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
 import NodeIcon from '../images/NodeIcon.svelte';
@@ -63,6 +66,7 @@ let pvcCount = $derived($kubernetesCurrentContextPersistentVolumeClaims.length);
 let configMapSecretCount = $derived(
   $kubernetesCurrentContextConfigMaps.length + $kubernetesCurrentContextSecrets.length,
 );
+let cronjobCount = $derived($kubernetesCurrentContextCronJobs.length);
 let expandedDetails: boolean = $state(true);
 let expandedGuide: boolean = $state(true);
 
@@ -126,6 +130,7 @@ async function openKubernetesDocumentation(): Promise<void> {
                     <KubernetesDashboardResourceCard type='Ingresses & Routes' Icon={IngressRouteIcon} count={ingressRouteCount} link='/kubernetes/ingressesRoutes'/>
                     <KubernetesDashboardResourceCard type='Persistent Volume Claims' Icon={PvcIcon} count={pvcCount} link='/kubernetes/persistentvolumeclaims'/>
                     <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' Icon={ConfigMapSecretIcon} count={configMapSecretCount} link='/kubernetes/configmapsSecrets'/>
+                    <KubernetesDashboardResourceCard type='CronJobs' Icon={CronJobIcon as Component} count={cronjobCount} link='/kubernetes/cronjobs'/>
                 </div>
                 <!-- Graphs -->
                 

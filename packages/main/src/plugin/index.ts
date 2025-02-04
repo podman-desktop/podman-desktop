@@ -2462,6 +2462,10 @@ export class PluginSystem {
       return kubernetesClient.deleteConfigMap(name);
     });
 
+    this.ipcHandle('kubernetes-client:deleteCronJob', async (_listener, name: string): Promise<void> => {
+      return kubernetesClient.deleteCronJob(name);
+    });
+
     this.ipcHandle('kubernetes-client:deleteSecret', async (_listener, name: string): Promise<void> => {
       return kubernetesClient.deleteSecret(name);
     });
