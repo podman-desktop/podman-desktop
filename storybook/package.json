@@ -29,7 +29,7 @@
     "@storybook/svelte": "^8.5.3",
     "@storybook/svelte-vite": "^8.5.3",
     "@storybook/test": "^8.5.3",
-    "@sveltejs/package": "^2.3.9",
+    "@sveltejs/package": "^2.3.10",
     "@sveltejs/vite-plugin-svelte": "5.0.3",
     "@tsconfig/svelte": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
