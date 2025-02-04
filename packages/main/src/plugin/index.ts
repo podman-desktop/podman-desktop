@@ -252,7 +252,7 @@ export class PluginSystem {
   encodeIpcError(e: unknown): { name?: string; message: unknown; extra?: Record<string, unknown> } {
     let builtError;
     if (e instanceof Error) {
-      builtError = { name: e.name, message: e.message, extra: { ...e } };
+      builtError = e;
     } else {
       builtError = { message: e };
     }
