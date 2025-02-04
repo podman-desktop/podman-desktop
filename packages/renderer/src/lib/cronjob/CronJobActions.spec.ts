@@ -41,8 +41,8 @@ const cronjob: CronJobUI = {
 };
 
 beforeEach(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
-  Object.defineProperty(window, 'kubernetesDeleteCronJob', { value: deleteMock });
+  vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
+  vi.mocked(window.kubernetesDeleteCronJob).mockImplementation(deleteMock);
 });
 
 afterEach(() => {

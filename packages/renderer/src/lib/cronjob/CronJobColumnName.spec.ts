@@ -37,7 +37,7 @@ const cronjob: CronJobUI = {
 };
 
 test('Expect simple column styling', async () => {
-  render(CronJobColumnName, { object: JSON.parse(JSON.stringify(cronjob)) });
+  render(CronJobColumnName, { object: cronjob });
 
   const text = screen.getByText(cronjob.name);
   expect(text).toBeInTheDocument();
@@ -45,7 +45,7 @@ test('Expect simple column styling', async () => {
 });
 
 test('Expect to show namespace in column', async () => {
-  render(CronJobColumnName, { object: JSON.parse(JSON.stringify(cronjob)) });
+  render(CronJobColumnName, { object: cronjob });
 
   const text = screen.getByText(cronjob.namespace);
   expect(text).toBeInTheDocument();

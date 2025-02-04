@@ -1,8 +1,7 @@
 <script lang="ts">
 import CronJobActions from './CronJobActions.svelte';
-import type { CronJobUI } from './CronJobUI';
 
-export let object: CronJobUI;
+let { object } = $props();
 </script>
 
 <CronJobActions cronjob={object} on:update />
