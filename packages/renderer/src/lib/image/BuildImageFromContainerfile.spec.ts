@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import '@testing-library/jest-dom/vitest';
 
@@ -43,27 +41,16 @@ vi.mock('@xterm/xterm', () => {
 // fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any): void => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  (window as any).dispatchEvent = vi.fn();
-  (window as any).getConfigurationValue = vi.fn();
-  (window as any).matchMedia = vi.fn().mockReturnValue({
+  vi.mocked(window.matchMedia).mockReturnValue({
     addListener: vi.fn(),
-  });
-  (window as any).openDialog = vi.fn().mockResolvedValue(['Containerfile']);
-  (window as any).telemetryPage = vi.fn().mockResolvedValue(undefined);
-  // Mock the getOsArch function to return 'linux/amd64' by default for the form
-  (window as any).getOsArch = vi.fn();
-  (window as any).buildImage = vi.fn();
-  (window as any).createManifest = vi.fn();
-  (window as any).getImageCheckerProviders = vi.fn();
-  (window as any).getCancellableTokenSource = vi.fn().mockReturnValue({
-    cancel: vi.fn(),
-  });
-  (window as any).pathRelative = vi.fn();
+  } as unknown as MediaQueryList);
+  vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
+  vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
 });
 
 beforeEach(() => {

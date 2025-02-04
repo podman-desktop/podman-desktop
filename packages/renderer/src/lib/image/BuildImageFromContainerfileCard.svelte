@@ -1,6 +1,7 @@
 <script lang="ts">
-import { faCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCircle, faPlusCircle, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Checkbox, isFontAwesomeIcon, Tooltip } from '@podman-desktop/ui-svelte';
+import type { Component } from 'svelte';
 import { createEventDispatcher, onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 
@@ -9,8 +10,7 @@ export let badge: string = '';
 export let isDefault: boolean = false;
 export let checked: boolean = false;
 export let value: string = '';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let icon: any | undefined = '';
+export let icon: unknown | undefined = undefined;
 let iconType: 'fontAwesome' | 'unknown' | undefined = undefined;
 
 export let additionalItem: boolean = false;
@@ -126,9 +126,9 @@ onMount(() => {
     </div>
     <div class="flex grow justify-end">
       {#if iconType === 'fontAwesome'}
-        <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon} size="1.5x" />
+        <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
       {:else if iconType === 'unknown'}
-        <svelte:component this={icon} class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
+        <svelte:component this={icon as Component} class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
       {/if}
     </div>
   </div>
