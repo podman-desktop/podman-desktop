@@ -579,7 +579,6 @@ export class LibpodDockerode {
     // replace createVolume call by not wrapping the result into an object named Volume
     // we need the raw data
     prototypeOfDockerode.createVolume = function (opts: unknown): Promise<VolumeCreateResponse> {
-      console.log('got createVolume', opts);
       const optsf: DialOptions = {
         path: '/volumes/create?',
         method: 'POST',
