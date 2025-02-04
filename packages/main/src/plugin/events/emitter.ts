@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 import type { IDisposable } from '../types/disposable.js';
@@ -33,18 +32,18 @@ export type DisposableGroup = { push(disposable: IDisposable): void } | { add(di
  * @param disposables An array to which a {{IDisposable}} will be added.
  * @return a disposable to remove the listener again.
  */
-export type Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: DisposableGroup) => IDisposable;
+export type Event<T> = (listener: (e: T) => unknown, thisArgs?: unknown, disposables?: DisposableGroup) => IDisposable;
 
-type Callback = (...args: any[]) => any;
+type Callback = (...args: unknown[]) => unknown;
 class CallbackList implements Iterable<Callback> {
   private _callbacks: Function[] | undefined;
-  private _contexts: any[] | undefined;
+  private _contexts: unknown[] | undefined;
 
   get length(): number {
     return this._callbacks?.length ?? 0;
   }
 
-  public add(callback: Function, context: any = undefined, bucket?: IDisposable[]): void {
+  public add(callback: Function, context: unknown = undefined, bucket?: IDisposable[]): void {
     if (!this._callbacks) {
       this._callbacks = [];
       this._contexts = [];
@@ -57,7 +56,7 @@ class CallbackList implements Iterable<Callback> {
     }
   }
 
-  public remove(callback: Function, context: any = undefined): void {
+  public remove(callback: Function, context: unknown = undefined): void {
     if (!this._callbacks) {
       return;
     }
@@ -92,14 +91,14 @@ class CallbackList implements Iterable<Callback> {
     return callbacks
       .map(
         (callback, i) =>
-          (...args: any[]) =>
+          (...args: unknown[]) =>
             callback.apply(contexts?.[i], args),
 
       )[Symbol.iterator]();
   }
 
-  public invoke(...args: any[]): any[] {
-    const ret: any[] = [];
+  public invoke(...args: unknown[]): unknown[] {
+    const ret: unknown[] = [];
     for (const callback of this) {
       try {
         ret.push(callback(...args));
@@ -125,7 +124,7 @@ export interface EmitterOptions {
   onLastListenerRemove?: Function;
 }
 
-export class Emitter<T = any> {
+export class Emitter<T = unknown> {
   private static LEAK_WARNING_THRESHHOLD = 175;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -148,8 +147,7 @@ export class Emitter<T = any> {
   }
 
   private getMaxListeners(event: Event<unknown> | undefined): number {
-    const { maxListeners } = event as any;
-    return typeof maxListeners === 'number' ? maxListeners : 0;
+    return event && 'maxListeners' in event && typeof event.maxListeners === 'number' ? event.maxListeners : 0;
   }
 
   /**
@@ -159,7 +157,7 @@ export class Emitter<T = any> {
   get event(): Event<T> {
     if (!this._event) {
       this._event = Object.assign(
-        (listener: (e: T) => any, thisArgs?: any, disposables?: DisposableGroup) => {
+        (listener: (e: T) => unknown, thisArgs?: unknown, disposables?: DisposableGroup) => {
           if (!this._callbacks) {
             this._callbacks = new CallbackList();
           }
@@ -261,7 +259,7 @@ export class Emitter<T = any> {
    * To be kept private to fire an event to
    * subscribers
    */
-  fire(event: T): any {
+  fire(event: T): void {
     if (this._callbacks) {
       this._callbacks.invoke(event);
     }
@@ -271,7 +269,7 @@ export class Emitter<T = any> {
    * Process each listener one by one.
    * Return `false` to stop iterating over the listeners, `true` to continue.
    */
-  async sequence(processor: (listener: (e: T) => any) => Promise<boolean>): Promise<void> {
+  async sequence(processor: (listener: (e: T) => unknown) => Promise<boolean>): Promise<void> {
     if (this._callbacks) {
       for (const listener of this._callbacks) {
         if (!(await processor(listener))) {

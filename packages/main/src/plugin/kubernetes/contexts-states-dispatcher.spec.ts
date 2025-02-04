@@ -18,6 +18,8 @@
 
 import { expect, test, vi } from 'vitest';
 
+import type { IDisposable } from '/@/plugin/types/disposable.js';
+
 import type { ApiSenderType } from '../api.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import type { ContextPermissionResult, ContextResourcePermission } from './context-permissions-checker.js';
@@ -46,7 +48,7 @@ test('ContextsStatesDispatcher should call updateHealthStates when onContextHeal
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  vi.mocked(manager.onContextHealthStateChange).mockImplementation(f => f({} as ContextHealthState));
+  vi.mocked(manager.onContextHealthStateChange).mockImplementation(f => f({} as ContextHealthState) as IDisposable);
   vi.mocked(manager.getHealthCheckersStates).mockReturnValue(new Map<string, ContextHealthState>());
   dispatcher.init();
   expect(updateHealthStatesSpy).toHaveBeenCalled();
@@ -74,7 +76,7 @@ test('ContextsStatesDispatcher should call updatePermissions when onContextPermi
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  vi.mocked(manager.onContextPermissionResult).mockImplementation(f => f({} as ContextPermissionResult));
+  vi.mocked(manager.onContextPermissionResult).mockImplementation(f => f({} as ContextPermissionResult) as IDisposable);
   dispatcher.init();
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).toHaveBeenCalled();
@@ -102,7 +104,7 @@ test('ContextsStatesDispatcher should call updateHealthStates and updatePermissi
   expect(updateHealthStatesSpy).not.toHaveBeenCalled();
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 
-  vi.mocked(manager.onContextDelete).mockImplementation(f => f({} as DispatcherEvent));
+  vi.mocked(manager.onContextDelete).mockImplementation(f => f({} as DispatcherEvent) as IDisposable);
   dispatcher.init();
   expect(updateHealthStatesSpy).toHaveBeenCalled();
   expect(updatePermissionsSpy).toHaveBeenCalled();
