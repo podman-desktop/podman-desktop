@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import LoadImages from './LoadImages.svelte';
-
-const openDialogMock = vi.fn();
-const loadImagesMock = vi.fn();
 
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
@@ -62,12 +57,6 @@ const providerInfo = {
   installationSupport: undefined,
 } as unknown as ProviderInfo;
 
-// fake the window.events object
-beforeAll(() => {
-  (window as any).openDialog = openDialogMock;
-  (window as any).loadImages = loadImagesMock;
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -81,7 +70,7 @@ test('Expect load button to be disabled', async () => {
 
 test('Expect loadImage button to be enabled when atleast one archive is selected', async () => {
   providerInfos.set([providerInfo]);
-  openDialogMock.mockResolvedValue(['path/file.tar']);
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
   render(LoadImages);
   const btnAddArchive = screen.getByRole('button', { name: 'Add archive' });
   expect(btnAddArchive).toBeInTheDocument();
@@ -91,7 +80,7 @@ test('Expect loadImage button to be enabled when atleast one archive is selected
   expect(btnLoadImages).toBeInTheDocument();
   expect(btnLoadImages).toBeEnabled();
 
-  expect(openDialogMock).toBeCalledWith({
+  expect(vi.mocked(window.openDialog)).toBeCalledWith({
     selectors: ['multiSelections', 'openFile'],
     title: 'Select Tar Archive(s) containing Image(s) to load',
   });
@@ -99,7 +88,7 @@ test('Expect loadImage button to be enabled when atleast one archive is selected
 
 test('Expect loadImage button to be disabled when atleast one archive is selected but there is no provider', async () => {
   providerInfos.set([]);
-  openDialogMock.mockResolvedValue(['path/file.tar']);
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
   render(LoadImages);
   const btnAddArchive = screen.getByRole('button', { name: 'Add archive' });
   expect(btnAddArchive).toBeInTheDocument();
@@ -112,8 +101,8 @@ test('Expect loadImage button to be disabled when atleast one archive is selecte
 
 test('Expect load button calls loadImages func', async () => {
   providerInfos.set([providerInfo]);
-  openDialogMock.mockResolvedValue(['path/file.tar']);
-  loadImagesMock.mockResolvedValue('');
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
+  vi.mocked(window.loadImages).mockResolvedValue();
   const goToMock = vi.spyOn(router, 'goto');
   render(LoadImages);
   const btnAddArchive = screen.getByRole('button', { name: 'Add archive' });
@@ -125,7 +114,7 @@ test('Expect load button calls loadImages func', async () => {
   expect(btnLoadImages).toBeEnabled();
   await userEvent.click(btnLoadImages);
 
-  expect(loadImagesMock).toBeCalledWith({
+  expect(vi.mocked(window.loadImages)).toBeCalledWith({
     provider: pInfo,
     archives: ['path/file.tar'],
   });
@@ -134,8 +123,8 @@ test('Expect load button calls loadImages func', async () => {
 
 test('Expect error shown if loadImages function fails', async () => {
   providerInfos.set([providerInfo]);
-  openDialogMock.mockResolvedValue(['path/file.tar']);
-  loadImagesMock.mockRejectedValue('load failed');
+  vi.mocked(window.openDialog).mockResolvedValue(['path/file.tar']);
+  vi.mocked(window.loadImages).mockRejectedValue('load failed');
   render(LoadImages);
   const btnAddArchive = screen.getByRole('button', { name: 'Add archive' });
   expect(btnAddArchive).toBeInTheDocument();
@@ -146,7 +135,7 @@ test('Expect error shown if loadImages function fails', async () => {
   expect(btnLoadImages).toBeEnabled();
   await userEvent.click(btnLoadImages);
 
-  expect(loadImagesMock).toBeCalledWith({
+  expect(vi.mocked(window.loadImages)).toBeCalledWith({
     provider: pInfo,
     archives: ['path/file.tar'],
   });

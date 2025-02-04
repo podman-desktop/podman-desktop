@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { Uri } from '@podman-desktop/api';
@@ -25,7 +23,7 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
@@ -47,15 +45,6 @@ const imageInfo2: ImageInfoUI = {
   tag: '',
   engineId: 'engine',
 } as ImageInfoUI;
-
-const saveDialogMock = vi.fn();
-const saveImagesMock = vi.fn();
-
-// fake the window.events object
-beforeAll(() => {
-  (window as any).saveDialog = saveDialogMock;
-  (window as any).saveImages = saveImagesMock;
-});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,8 +90,8 @@ test('Expect deleteImage is visible if page has been opened with multiple item',
 });
 
 test('Expect save button to be enabled if output target is selected and saveImages function called', async () => {
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
-  saveImagesMock.mockResolvedValue('');
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.saveImages).mockResolvedValue();
   const goToMock = vi.spyOn(router, 'goto');
 
   saveImagesInfo.set([imageInfo]);
@@ -123,7 +112,7 @@ test('Expect save button to be enabled if output target is selected and saveImag
 
   await userEvent.click(saveButtonAfterSelection);
 
-  expect(saveImagesMock).toBeCalledWith({
+  expect(vi.mocked(window.saveImages)).toBeCalledWith({
     images: [
       {
         id: 'id',
@@ -136,8 +125,8 @@ test('Expect save button to be enabled if output target is selected and saveImag
 });
 
 test('Expect saveImages function called with tagged images', async () => {
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
-  saveImagesMock.mockResolvedValue('');
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.saveImages).mockResolvedValue();
   const goToMock = vi.spyOn(router, 'goto');
 
   // default tag (latest)
@@ -180,7 +169,7 @@ test('Expect saveImages function called with tagged images', async () => {
 
   await userEvent.click(saveButton);
 
-  expect(saveImagesMock).toBeCalledWith({
+  expect(vi.mocked(window.saveImages)).toBeCalledWith({
     images: [
       {
         id: 'quay.io/podman/hello:latest',
@@ -201,8 +190,8 @@ test('Expect saveImages function called with tagged images', async () => {
 });
 
 test('Expect error message dispayed if saveImages fails', async () => {
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
-  saveImagesMock.mockRejectedValue('error while saving');
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.saveImages).mockRejectedValue('error while saving');
   const goToMock = vi.spyOn(router, 'goto');
 
   saveImagesInfo.set([imageInfo]);
@@ -221,7 +210,7 @@ test('Expect error message dispayed if saveImages fails', async () => {
 
   const errorDiv = screen.getByLabelText('Error Message Content');
 
-  expect(saveImagesMock).toBeCalledWith({
+  expect(vi.mocked(window.saveImages)).toBeCalledWith({
     images: [
       {
         id: 'id',

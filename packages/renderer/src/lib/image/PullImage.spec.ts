@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -32,26 +30,15 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import PullImage from './PullImage.svelte';
 
-const pullImageMock = vi.fn();
-const resolveShortnameImageMock = vi.fn();
-const listImageTagsInRegistryMock = vi.fn();
-
-// fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any): void => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  (window as any).telemetryPage = vi.fn().mockResolvedValue(undefined);
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(undefined);
-  (window as any).matchMedia = vi.fn().mockReturnValue({
-    addListener: vi.fn(),
-  });
-  (window as any).pullImage = pullImageMock;
-  (window as any).resolveShortnameImage = resolveShortnameImageMock.mockResolvedValue(['docker.io/test1']);
-  (window as any).listImageTagsInRegistry = listImageTagsInRegistryMock;
+  vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
 
   Object.defineProperty(window, 'matchMedia', {
     value: () => {
@@ -150,7 +137,7 @@ describe('PullImage', () => {
     render(PullImage, { imageToPull: 'image-does-not-exist' });
 
     // first call to pull image throw an error
-    pullImageMock.mockRejectedValueOnce(new Error('Image does not exists'));
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Image does not exists'));
 
     const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
     await userEvent.click(pullImagebutton);
@@ -172,7 +159,7 @@ describe('PullImage', () => {
     render(PullImage);
 
     // first call to pull image throw an error
-    pullImageMock.mockRejectedValueOnce(new Error('Image does not exists'));
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Image does not exists'));
 
     await userEvent.keyboard('image-does-not-exist[Enter]');
 
@@ -188,10 +175,10 @@ describe('PullImage', () => {
     const renderResult = render(PullImage, { imageToPull: 'image-does-not-exist' });
 
     // first call to pull image throw an error
-    pullImageMock.mockRejectedValueOnce(new Error('Image does not exists'));
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Image does not exists'));
 
     // next one are ok
-    pullImageMock.mockResolvedValueOnce({});
+    vi.mocked(window.pullImage).mockResolvedValueOnce();
 
     const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
     await userEvent.click(pullImagebutton);
@@ -234,10 +221,10 @@ describe('PullImage', () => {
     render(PullImage, { imageToPull: 'my.registry.com/image-to-pull' });
 
     // first call to pull image throw an error
-    pullImageMock.mockRejectedValueOnce(new Error('Image does not exists'));
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Image does not exists'));
 
     // next one are ok
-    pullImageMock.mockResolvedValueOnce({});
+    vi.mocked(window.pullImage).mockResolvedValueOnce();
 
     const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
     await userEvent.click(pullImagebutton);
@@ -250,14 +237,14 @@ describe('PullImage', () => {
 });
 
 test('Expect if no docker.io shortname to use Podman FQN', async () => {
-  resolveShortnameImageMock.mockResolvedValue(['someregistry/test1']);
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1']);
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
-  expect(resolveShortnameImageMock).toBeCalled();
+  expect(vi.mocked(window.resolveShortnameImage)).toBeCalled();
   await tick();
   const FQNButton = screen.getByRole('checkbox', { name: 'Use Podman FQN' });
 
@@ -265,44 +252,44 @@ test('Expect if no docker.io shortname to use Podman FQN', async () => {
   const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
   await userEvent.click(pullImagebutton);
 
-  const imageName = pullImageMock.mock.calls[0][1];
+  const imageName = vi.mocked(window.pullImage).mock.calls[0][1];
   expect(imageName).toBe('someregistry/test1');
 });
 
 test('Expect if no docker.io shortname but checkbox not checked to use docker hub', async () => {
-  resolveShortnameImageMock.mockResolvedValue(['someregistry/test1']);
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1']);
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
-  expect(resolveShortnameImageMock).toBeCalled();
+  expect(vi.mocked(window.resolveShortnameImage)).toBeCalled();
   await tick();
 
   const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
   await userEvent.click(pullImagebutton);
 
-  const imageName = pullImageMock.mock.calls[0][1];
+  const imageName = vi.mocked(window.pullImage).mock.calls[0][1];
   expect(imageName).toBe('docker.io/test1');
 });
 
 test('Expect if docker.io shortname exists to not use Podman FQN', async () => {
-  resolveShortnameImageMock.mockResolvedValue(['someregistry/test1', 'docker.io/test1']);
+  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1', 'docker.io/test1']);
   render(PullImage);
 
   const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
-  expect(resolveShortnameImageMock).toBeCalled();
+  expect(vi.mocked(window.resolveShortnameImage)).toBeCalled();
   await tick();
   expect(screen.queryByRole('checkbox', { name: 'Use Podman FQN' })).not.toBeInTheDocument();
 
   const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
   await userEvent.click(pullImagebutton);
 
-  const imageName = pullImageMock.mock.calls[0][1];
+  const imageName = vi.mocked(window.pullImage).mock.calls[0][1];
   expect(imageName).toBe('test1');
 });
 
@@ -313,13 +300,13 @@ test('Expect not to check not shortname images', async () => {
   await userEvent.click(textbox);
   await userEvent.paste('test1/');
 
-  expect(resolveShortnameImageMock).not.toBeCalled();
+  expect(vi.mocked(window.resolveShortnameImage)).not.toBeCalled();
 });
 
 test('Expect latest tag warning is displayed when the image does not have latest tag', async () => {
   render(PullImage);
 
-  listImageTagsInRegistryMock.mockResolvedValue(['other']);
+  vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['other']);
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is displayed
@@ -331,7 +318,7 @@ test('Expect latest tag warning is displayed when the image does not have latest
 test('Expect latest tag warning is not displayed when the image has latest tag', async () => {
   render(PullImage);
 
-  listImageTagsInRegistryMock.mockResolvedValue(['latest', 'other']);
+  vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is not displayed
@@ -342,7 +329,7 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
 test('input component should not raise an error when the input is valid', async () => {
   const pullImage = render(PullImage);
 
-  listImageTagsInRegistryMock.mockResolvedValue(['latest', 'other']);
+  vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
   await userEvent.keyboard('my-registry/image');
 
   const cellOutsideInput = pullImage.getAllByRole('textbox');
@@ -355,7 +342,7 @@ test('input component should not raise an error when the input is valid', async 
 test('input component should raise an error when the input is not valid', async () => {
   const pullImage = render(PullImage);
 
-  listImageTagsInRegistryMock.mockResolvedValue({});
+  vi.mocked(window.listImageTagsInRegistry).mockResolvedValue([]);
   await userEvent.keyboard('my-registry/image');
 
   const cellOutsideInput = pullImage.getAllByRole('textbox');
@@ -368,7 +355,7 @@ test('input component should raise an error when the input is not valid', async 
 test('input component should raise an error when the input is not valid - error', async () => {
   const pullImage = render(PullImage);
 
-  listImageTagsInRegistryMock.mockImplementation(() => {
+  vi.mocked(window.listImageTagsInRegistry).mockImplementation(() => {
     throw Error('Error msg');
   });
   await userEvent.keyboard('my-registry/image');

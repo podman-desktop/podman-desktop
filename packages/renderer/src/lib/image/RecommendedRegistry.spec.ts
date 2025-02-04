@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -30,16 +28,11 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 // fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any): void => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(undefined);
-  (window as any).matchMedia = vi.fn().mockReturnValue({
-    addListener: vi.fn(),
-  });
-
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
   Object.defineProperty(window, 'matchMedia', {
     value: () => {
       return {
