@@ -46,7 +46,7 @@ export class NavigationBar {
     });
     this.imagesLink = this.page.getByRole('link', { name: 'Images' });
     this.containersLink = this.page.getByRole('link', { name: 'Containers' }).nth(0);
-    this.podsLink = this.page.getByRole('link', { name: 'Pods' });
+    this.podsLink = this.page.getByRole('link', { name: 'Pods', exact: true });
     this.volumesLink = this.page.getByRole('link', { name: 'Volumes' });
     this.dashboardLink = this.page.getByRole('link', { name: 'Dashboard' });
     this.settingsLink = this.page.getByRole('link', { name: 'Settings' });
