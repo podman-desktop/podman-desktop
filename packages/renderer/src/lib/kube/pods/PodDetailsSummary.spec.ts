@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type {
+  CoreV1Event,
   V1ConfigMapVolumeSource,
   V1Container,
   V1PersistentVolumeClaimVolumeSource,
@@ -28,16 +29,24 @@ import type {
   V1SecretVolumeSource,
   V1Volume,
 } from '@kubernetes/client-node';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
+import { writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import * as states from '/@/stores/kubernetes-contexts-state';
+
+import * as eventsTable from '../details/EventsTable.svelte';
 import PodDetailsSummary from './PodDetailsSummary.svelte';
+
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 const fakePod: V1Pod = {
   apiVersion: 'v1',
   kind: 'Pod',
   metadata: {
     name: 'fakepod',
+    namespace: 'default',
+    uid: '12345678',
     annotations: {
       'example.com/annotation1': 'annotation-value1',
       'example.com/annotation2': 'annotation-value2',
@@ -104,16 +113,51 @@ const fakePod: V1Pod = {
   } as V1PodStatus,
 };
 
+const events: CoreV1Event[] = [
+  {
+    metadata: {
+      name: 'event1',
+    },
+    involvedObject: { uid: '12345678' },
+  },
+  {
+    metadata: {
+      name: 'event2',
+    },
+    involvedObject: { uid: '12345678' },
+  },
+];
+
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('default');
 });
 
-test('Render with a kubernetes object', async () => {
-  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue(fakePod);
+test('expect summary renders with V1Pod object', async () => {
+  vi.mocked(states).kubernetesCurrentContextEvents = writable<CoreV1Event[]>([]);
+  render(PodDetailsSummary, { props: { pod: fakePod } });
 
-  render(PodDetailsSummary, { pod: fakePod });
+  // Check that the rendered text is correct
+  expect(screen.getByText('fakepod')).toBeInTheDocument();
+  expect(screen.getByText('Running')).toBeInTheDocument();
+  expect(screen.getByText('fake-service-account')).toBeInTheDocument();
+  expect(screen.getByText('Always')).toBeInTheDocument();
+  expect(screen.getAllByText('fake-container')[0]).toBeInTheDocument();
+  expect(screen.getByText('fake-image')).toBeInTheDocument();
+  expect(screen.getByText('ENV_VAR1: value1')).toBeInTheDocument();
+  expect(screen.getByText('ENV_VAR2: value2')).toBeInTheDocument();
+  expect(screen.getByText('secret-volume')).toBeInTheDocument();
+  expect(screen.getByText('configmap-volume')).toBeInTheDocument();
+  expect(screen.getByText('pvc-volume')).toBeInTheDocument();
+  expect(screen.getByText('secret-volume')).toBeInTheDocument();
+  expect(screen.getByText('configmap-volume')).toBeInTheDocument();
+  expect(screen.getByText('pvc-volume')).toBeInTheDocument();
+  expect(screen.getByText('No events')).toBeInTheDocument();
+});
 
-  // wait for the text to show as it sometimes takes a few ms
-  await waitFor(() => expect(screen.getByText('fake-secret')).toBeInTheDocument());
+test('expect EventsTable is called with events', async () => {
+  const eventsTableSpy = vi.spyOn(eventsTable, 'default');
+  vi.mocked(states).kubernetesCurrentContextEvents = writable<CoreV1Event[]>(events);
+  render(PodDetailsSummary, { props: { pod: fakePod } });
+
+  expect(eventsTableSpy).toHaveBeenCalledWith(expect.anything(), { events: events });
 });

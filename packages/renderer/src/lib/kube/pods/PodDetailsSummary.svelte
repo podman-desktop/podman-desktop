@@ -12,7 +12,7 @@ import KubePodStatusArtifact from '../details/KubePodStatusArtifact.svelte';
 
 interface Props {
   pod: V1Pod | undefined;
-  kubeError: string | undefined;
+  kubeError?: string;
 }
 let { pod, kubeError = undefined }: Props = $props();
 
@@ -29,7 +29,6 @@ basic information -->
   {#if pod}
     <KubeObjectMetaArtifact artifact={pod.metadata} />
     <KubePodStatusArtifact artifact={pod.status} />
-    <KubePodSpecArtifact artifact={pod.spec} />
     <KubePodSpecArtifact artifact={pod.spec} podName={pod.metadata?.name} namespace={pod.metadata?.namespace} />
     <KubeEventsArtifact events={events} />
   {:else}
