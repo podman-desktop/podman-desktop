@@ -33,13 +33,13 @@ import WelcomePage from './WelcomePage.svelte';
 
 // fake the window.events object
 beforeEach(() => {
+  vi.resetAllMocks();
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  vi.clearAllMocks();
 });
 
 async function waitRender(customProperties: object): Promise<void> {
