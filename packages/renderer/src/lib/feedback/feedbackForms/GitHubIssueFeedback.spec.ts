@@ -49,6 +49,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.previewOnGitHub).mockResolvedValue(undefined);
+  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
 });
 
 /**
