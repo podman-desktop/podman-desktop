@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 
 const mocks = vi.hoisted(() => ({
   subscribeMock: vi.fn(),
   getCurrentKubeContextState: vi.fn(),
-
-  // window mocks
-  eventsMocks: vi.fn(),
 }));
 
 vi.mock('../../stores/kubernetes-contexts-state', () => ({
@@ -44,12 +37,9 @@ vi.mock('../../stores/kubernetes-contexts-state', () => ({
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.subscribeMock.mockImplementation(listener => {
-    listener(mocks.getCurrentKubeContextState());
+    listener();
     return { unsubscribe: (): void => {} };
   });
-
-  (window as any).events = mocks.eventsMocks;
-  (window as any).kubernetesGetContextsGeneralState = mocks.getCurrentKubeContextState;
 });
 
 test('Expect deployment empty screen', async () => {
@@ -59,14 +49,17 @@ test('Expect deployment empty screen', async () => {
 });
 
 test('If kubernetesCurrentContextState is not empty, expect that the empty screen say you do not have permission to view the nodes', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
-    error: undefined,
-    reachable: true,
-    resources: {
-      pods: 0,
-      deployments: 0,
-    },
-  } as ContextGeneralState);
+  mocks.subscribeMock.mockImplementation(listener => {
+    listener({
+      error: undefined,
+      reachable: true,
+      resources: {
+        pods: 0,
+        deployments: 0,
+      },
+    });
+    return { unsubscribe: (): void => {} };
+  });
   render(NodeEmptyScreen);
   const noNodes = screen.getByText('You may not have permission to view the nodes on your cluster');
   expect(noNodes).toBeInTheDocument();

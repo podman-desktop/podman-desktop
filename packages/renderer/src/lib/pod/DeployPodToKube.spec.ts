@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 
@@ -165,7 +164,7 @@ beforeEach(() => {
   listSimpleContainersByLabelMock.mockResolvedValue([simpleContainerInfo]);
 });
 
-async function waitRender(customProperties: any): Promise<void> {
+async function waitRender(customProperties: object): Promise<void> {
   render(DeployPodToKube, { resourceId: 'foo', engineId: 'bar', type: 'unknown', ...customProperties });
   await tick();
   await tick();

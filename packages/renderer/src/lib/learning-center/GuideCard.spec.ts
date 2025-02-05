@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -25,10 +23,6 @@ import { afterEach, beforeEach, expect, suite, test, vi } from 'vitest';
 
 import GuideCard from './GuideCard.svelte';
 
-beforeEach(() => {
-  (window as any).openExternal = vi.fn();
-  (window as any).telemetryTrack = vi.fn();
-});
 afterEach(() => {
   vi.resetAllMocks();
 });
