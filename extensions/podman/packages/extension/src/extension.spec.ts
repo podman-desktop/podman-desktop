@@ -1769,7 +1769,7 @@ describe('initCheckAndRegisterUpdate', () => {
       dispose: disposeMock,
     });
 
-    let func: undefined | ((_s: string) => Promise<void>) = undefined;
+    let func = async (_s: string): Promise<void> => {};
     vi.mocked(provider.onDidUpdateVersion).mockImplementation((f: (_s: string) => Promise<void>) => {
       func = f;
       return { dispose: (): void => {} };
@@ -1795,8 +1795,7 @@ describe('initCheckAndRegisterUpdate', () => {
       stdout: 'podman version 4.0',
     } as unknown as extensionApi.RunResult);
     // call the updateVersion
-    expect(func).not.toBeUndefined();
-    await func!('v1');
+    await func('v1');
 
     // check that we call registerUpdate on the provider
     expect(registerUpdateMock).toBeCalledWith({
