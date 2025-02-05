@@ -60,13 +60,22 @@ async function previewOnGitHub(): Promise<void> {
     includeSystemInfo: $state.snapshot(includeSystemInfo),
     includeExtensionInfo: $state.snapshot(includeExtensionInfo),
   };
-  try {
-    await window.previewOnGitHub(issueProperties);
-    onCloseForm(false);
-    await window.telemetryTrack(`feedback.FormSubmitted`, { feedbackCategory: category });
-  } catch (error: unknown) {
-    console.error('There was a problem with preview on GitHub', error);
-  }
+  let telemetryEventProperties: { [property: string]: unknown } = { feedbackCategory: category };
+
+  window
+    .previewOnGitHub(issueProperties)
+    .then(() => {
+      onCloseForm(false);
+    })
+    .catch((error: unknown) => {
+      telemetryEventProperties['error'] = error;
+      console.error('There was a problem with preview on GitHub', error);
+    })
+    .finally(() => {
+      window
+        .telemetryTrack(`feedback.FormSubmitted`, telemetryEventProperties)
+        .catch((err: unknown) => console.error('Error sending feedback.formSubmitted telemetry', err));
+    });
 }
 </script>
 
