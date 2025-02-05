@@ -2862,6 +2862,7 @@ declare module '@podman-desktop/api' {
       Entrypoint?: string | string[];
       OnBuild?: unknown;
       Labels: { [label: string]: string };
+      Annotations: { [label: string]: string };
     };
     NetworkSettings: {
       Bridge: string;
@@ -2911,6 +2912,7 @@ declare module '@podman-desktop/api' {
         Memory: number;
         Labels: unknown;
       };
+      Annotations: { [label: string]: string };
     };
   }
 
