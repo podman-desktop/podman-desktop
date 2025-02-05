@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -37,7 +35,7 @@ import WelcomePage from './WelcomePage.svelte';
 beforeEach(() => {
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
   (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
+    receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
