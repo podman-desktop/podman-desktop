@@ -123,12 +123,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     async () => {
       // If the version is undefined (checks weren't run, or the user didn't select a version)
       // we will just download the latest version
-      if (composeVersionMetadata === undefined) {
-        composeVersionMetadata = await composeDownload.getLatestVersionAsset();
-      }
-
       let downloaded: boolean = false;
       try {
+        if (composeVersionMetadata === undefined) {
+          composeVersionMetadata = await composeDownload.getLatestVersionAsset();
+        }
         // Download
         await composeDownload.download(composeVersionMetadata);
 
@@ -140,9 +139,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         if (!composeCliTool) {
           await registerCLITool(composeDownload, detect, extensionContext);
         }
+      } catch (error) {
+        await extensionApi.window.showErrorMessage(`Unable to download docker-compose binary: ${error}`);
       } finally {
         // Make sure we log the telemetry even if we encounter an error
-        // If we have downloaded the binary, we can log it as being succcessfully downloaded
+        // If we have downloaded the binary, we can log it as being successfully downloaded
         telemetryLogger?.logUsage('compose.onboarding.downloadCommand', {
           successful: downloaded,
           version: composeVersionMetadata?.tag,

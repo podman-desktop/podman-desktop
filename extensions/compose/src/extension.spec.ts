@@ -59,6 +59,9 @@ vi.mock('@podman-desktop/api', async () => {
     cli: {
       createCliTool: vi.fn(),
     },
+    window: {
+      showErrorMessage: vi.fn(),
+    },
   };
 });
 
@@ -515,5 +518,14 @@ describe('registerCLITool', () => {
       installationSource: 'extension',
       version: '1.0.0',
     });
+  });
+
+  test('onboarding download command shows error message if version list cannot be obtained', async () => {
+    await activate(extensionContextMock);
+    const downloadCommandHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[2][1];
+    vi.mocked(composeDownloadMock.getLatestVersionAsset).mockRejectedValue(new Error('API call error'));
+    vi.mocked(extensionApi.window.showErrorMessage).mockResolvedValue(undefined);
+    await downloadCommandHandler();
+    expect(extensionApi.window.showErrorMessage).toHaveBeenCalledOnce();
   });
 });
