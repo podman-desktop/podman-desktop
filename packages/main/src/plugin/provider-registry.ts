@@ -399,8 +399,22 @@ export class ProviderRegistry {
     // grab the provider
     const provider = this.getMatchingProvider(internalId);
 
-    await autoStart.start(new LoggerImpl());
-
+    let updateContainerConnectionCalled: boolean = false;
+    const context = {
+      updateContainerConnection: (containerProviderConnection: ContainerProviderConnection): void => {
+        updateContainerConnectionCalled = true;
+        const providerConnectionInfo = this.getProviderConnectionInfo(containerProviderConnection);
+        if (this.isProviderContainerConnection(providerConnectionInfo)) {
+          this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
+        }
+      },
+    };
+    await autoStart.start(new LoggerImpl(), context);
+    if (!updateContainerConnectionCalled) {
+      console.warn(
+        `autostart called for provider ${provider.id} but provider never called updateContainerConnection. Provider needs to call this method or UpdateContainerConnection events won't be propagated`,
+      );
+    }
     // send the event
     this._onDidUpdateProvider.fire({
       id: provider.id,

@@ -607,13 +607,17 @@ declare module '@podman-desktop/api' {
     preflightChecks?(): InstallCheck[];
   }
 
+  export interface AutostartContext {
+    updateContainerConnection(containerProviderConnection: ContainerProviderConnection): void;
+  }
+
   /**
    * By providing this interface, when Podman Desktop is starting
    * It'll start the provider through this interface.
    * It can be turned off/on by the user.
    */
   export interface ProviderAutostart {
-    start(logger: Logger): Promise<void>;
+    start(logger: Logger, context?: AutostartContext): Promise<void>;
   }
 
   /**

@@ -1456,7 +1456,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionContext.subscriptions.push(command);
   }
 
-  const doAutoStart = async (logger: extensionApi.Logger): Promise<void> => {
+  const doAutoStart = async (
+    logger: extensionApi.Logger,
+    autostartContext: extensionApi.AutostartContext,
+  ): Promise<void> => {
     autostartInProgress = true;
     // If autostart has been enabled for the machine, try to start it.
     try {
@@ -1490,6 +1493,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
             containerProviderConnection,
           );
           await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, true);
+          autostartContext.updateContainerConnection(containerProviderConnection);
           autoMachineStarted = true;
           autoMachineName = machineName;
         }
@@ -1498,10 +1502,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   };
 
   provider.registerAutostart({
-    start: async (logger: extensionApi.Logger) => {
+    start: async (logger: extensionApi.Logger, autostartContext: extensionApi.AutostartContext) => {
       try {
         autostartInProgress = true;
-        await doAutoStart(logger);
+        await doAutoStart(logger, autostartContext);
       } finally {
         autostartInProgress = false;
       }
