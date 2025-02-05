@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023 - 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import type * as proc from 'node:child_process';
 import * as fs from 'node:fs';
@@ -104,7 +104,7 @@ const machine1Name = 'podman-machine-1';
 
 // Create fake of MachineJSON
 let fakeMachineJSON: extension.MachineJSON[];
-let fakeMachineInfoJSON: any;
+let fakeMachineInfoJSON: unknown;
 
 const telemetryLogger: extensionApi.TelemetryLogger = {
   logUsage: vi.fn(),
@@ -191,7 +191,7 @@ vi.mock('@podman-desktop/api', async () => {
     },
     configuration: {
       getConfiguration: (): Configuration => config,
-      onDidChangeConfiguration: (): any => {
+      onDidChangeConfiguration: (): Disposable => {
         return {
           dispose: vi.fn(),
         };
@@ -1769,8 +1769,8 @@ describe('initCheckAndRegisterUpdate', () => {
       dispose: disposeMock,
     });
 
-    let func: any;
-    vi.mocked(provider.onDidUpdateVersion).mockImplementation((f: any) => {
+    let func: undefined | ((_s: string) => Promise<void>) = undefined;
+    vi.mocked(provider.onDidUpdateVersion).mockImplementation((f: (_s: string) => Promise<void>) => {
       func = f;
       return { dispose: (): void => {} };
     });
@@ -1795,7 +1795,8 @@ describe('initCheckAndRegisterUpdate', () => {
       stdout: 'podman version 4.0',
     } as unknown as extensionApi.RunResult);
     // call the updateVersion
-    await func();
+    expect(func).not.toBeUndefined();
+    await func!('v1');
 
     // check that we call registerUpdate on the provider
     expect(registerUpdateMock).toBeCalledWith({
