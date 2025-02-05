@@ -21,22 +21,21 @@
  *--------------------------------------------------------------------------------------------*/
 // based on https://github.com/microsoft/vscode/blob/3eed9319874b7ca037128962593b6a8630869253/src/vs/platform/contextkey/browser/contextKeyService.ts
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ApiSenderType } from '../api.js';
 import type { IContext } from '../api/context-info.js';
 
 export class Context implements IContext {
-  private _value: Record<string, any>;
+  private _value: Record<string, unknown>;
 
   constructor(private apiSender: ApiSenderType) {
     this._value = {};
   }
 
-  get value(): Record<string, any> {
+  get value(): Record<string, unknown> {
     return { ...this._value };
   }
 
-  setValue(key: string, value: any): boolean {
+  setValue(key: string, value: unknown): boolean {
     if (this._value[key] !== value) {
       this._value[key] = value;
       this.apiSender.send('context-value-updated', {
@@ -64,7 +63,7 @@ export class Context implements IContext {
   getValue<T>(key: string): T | undefined {
     const contextValue = this._value[key];
     if (contextValue !== undefined) {
-      return contextValue;
+      return contextValue as T;
     }
     return this.getDottedKeyValue(key);
   }
@@ -97,7 +96,7 @@ export class Context implements IContext {
     return contextValue;
   }
 
-  collectAllValues(): Record<string, any> {
+  collectAllValues(): Record<string, unknown> {
     return this._value;
   }
 }
