@@ -1,7 +1,12 @@
 <script lang="ts">
 import { faLinux } from '@fortawesome/free-brands-svg-icons';
-import { faChevronCircleDown, faChevronRight, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
-import { onMount } from 'svelte';
+import {
+  faChevronCircleDown,
+  faChevronRight,
+  faLayerGroup,
+  type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
+import { type Component, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import WebAssemblyIcon from '../images/WebAssemblyIcon.svelte';
@@ -16,7 +21,7 @@ interface CardInfo {
   isDefault: boolean;
   checked: boolean;
   value: string;
-  icon: unknown;
+  icon: IconDefinition | Component | undefined;
 }
 
 const DEFAULT_CARDS: CardInfo[] = [
