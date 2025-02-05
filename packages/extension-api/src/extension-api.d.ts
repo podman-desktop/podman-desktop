@@ -2492,6 +2492,7 @@ declare module '@podman-desktop/api' {
       Layers?: string[];
       BaseLayer?: string;
     };
+    Annotations: { [key: string]: string };
   }
 
   export interface NetworkContainer {
@@ -2750,6 +2751,7 @@ declare module '@podman-desktop/api' {
     CpuPercent?: number;
     CpuRealtimePeriod?: number;
     CpuRealtimeRuntime?: number;
+    Annotations: { [key: string]: string };
   }
 
   /**
@@ -2862,7 +2864,6 @@ declare module '@podman-desktop/api' {
       Entrypoint?: string | string[];
       OnBuild?: unknown;
       Labels: { [label: string]: string };
-      Annotations: { [label: string]: string };
     };
     NetworkSettings: {
       Bridge: string;
@@ -2912,7 +2913,6 @@ declare module '@podman-desktop/api' {
         Memory: number;
         Labels: unknown;
       };
-      Annotations: { [label: string]: string };
     };
   }
 
