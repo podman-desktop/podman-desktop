@@ -865,8 +865,7 @@ export class ProviderRegistry {
 
   async createContainerProviderConnection(
     internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
     logHandler: Logger,
     token?: CancellationToken,
   ): Promise<void> {
@@ -894,11 +893,7 @@ export class ProviderRegistry {
     }
   }
 
-  async auditConnectionParameters(
-    internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: AuditRequestItems,
-  ): Promise<AuditResult> {
+  async auditConnectionParameters(internalProviderId: string, params: AuditRequestItems): Promise<AuditResult> {
     // grab the correct provider
     const provider = this.getMatchingProvider(internalProviderId);
     const emptyAuditResult: AuditResult = { records: [] };
@@ -912,8 +907,7 @@ export class ProviderRegistry {
 
   async createKubernetesProviderConnection(
     internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
     logHandler: Logger,
     token?: CancellationToken,
   ): Promise<void> {
@@ -1052,8 +1046,7 @@ export class ProviderRegistry {
   async editProviderConnection(
     internalProviderId: string,
     providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
     logHandler?: Logger,
     token?: CancellationToken,
   ): Promise<void> {
