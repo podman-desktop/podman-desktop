@@ -401,7 +401,7 @@ interface DockerodeInternalsModem extends Omit<DockerModem, 'buildRequest'> {
 }
 
 // add the ability to patch some modem methods
-interface DockerodeInternals extends Omit<Dockerode, 'modem'>, LibPod {
+export interface DockerodeInternals extends Omit<Dockerode, 'modem'>, LibPod {
   modem: DockerodeInternalsModem;
 }
 

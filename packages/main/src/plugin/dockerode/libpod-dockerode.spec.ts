@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,20 @@
  ***********************************************************************/
 
 /* eslint-disable no-null/no-null */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { rm, writeFile } from 'node:fs/promises';
+import type { RequestOptions } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeAll, expect, test } from 'vitest';
 
-import { type LibPod, LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
+import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
+import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import type { PodmanListImagesOptions } from '/@api/image-info.js';
 
 import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json';
@@ -211,13 +213,18 @@ test('Check attach API', async () => {
   server.listen({ onUnhandledRequest: 'error' });
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
-  const libPod = api as any;
+  const libPod = api as unknown as DockerodeInternals;
 
   // patch libpod to not wait for the test as websocket is not supported by mock server
   const originalBuildRequest = libPod.modem.buildRequest;
-  libPod.modem.buildRequest = function (options: unknown, context: any, data: unknown, callback: unknown): void {
+  libPod.modem.buildRequest = function (
+    options: RequestOptions,
+    context: DockerModem.DialOptions,
+    data?: string | Buffer | NodeJS.ReadableStream,
+    callback?: DockerModem.RequestCallback,
+  ): void {
     context.openStdin = false;
-    return originalBuildRequest.call(this, options, context, data, callback);
+    originalBuildRequest.call(this, options, context, data, callback);
   };
 
   const stream = await (api as unknown as LibPod).podmanAttach(containerId);
