@@ -33,17 +33,9 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 import WelcomePage from './WelcomePage.svelte';
 
-const getFeaturedExtensionsMock = vi.fn();
-const getProviderInfosMock = vi.fn();
-
 // fake the window.events object
 beforeEach(() => {
-  (window as any).getConfigurationValue = vi.fn();
-  (window as any).updateConfigurationValue = vi.fn();
-  (window as any).getPodmanDesktopVersion = vi.fn().mockResolvedValue('1.0.0');
-  (window as any).telemetryConfigure = vi.fn();
-  (window as any).getFeaturedExtensions = getFeaturedExtensionsMock;
-  (window as any).getProviderInfos = getProviderInfosMock;
+  vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
   (window.events as unknown) = {
     receive: (_channel: string, func: any): void => {
       func();
