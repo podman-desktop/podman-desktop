@@ -125,10 +125,12 @@ onMount(() => {
       {/if}
     </div>
     <div class="flex grow justify-end">
-      {#if iconType === 'fontAwesome'}
-        <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
-      {:else if iconType === 'unknown'}
-        <svelte:component this={icon as Component} class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
+      {#if icon}
+        {#if iconType === 'fontAwesome'}
+          <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
+        {:else if iconType === 'unknown'}
+          <svelte:component this={icon as Component} class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
+        {/if}
       {/if}
     </div>
   </div>
