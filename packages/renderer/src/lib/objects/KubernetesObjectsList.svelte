@@ -65,7 +65,11 @@ onMount(async () => {
       ),
     );
 
-    legacyUnsubscribers.push(kind.legacyObjectStore.subscribe(o => (resources[kind.resource] = o)));
+    legacyUnsubscribers.push(
+      kind.legacyObjectStore.subscribe(o => {
+        resources[kind.resource] = o;
+      }),
+    );
   }
 });
 
