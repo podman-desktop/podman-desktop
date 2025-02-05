@@ -514,11 +514,10 @@ test('test that blank kubeconfig path will be set to default one', async () => {
 test('kube watcher', () => {
   const client = createTestClient('fooNS');
   const path: string[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let errorHandler: any;
+  let errorHandler: ((args: unknown[]) => void) | undefined;
 
   // mock TestKubernetesClient.createWatchObject
-  const watchMethodMock = vi.fn().mockImplementation((pathMethod, _ignore1, _ignore2, c) => {
+  const watchMethodMock = vi.fn().mockImplementation((pathMethod, _ignore1, _ignore2, c: (args: unknown[]) => void) => {
     path.push(pathMethod);
     errorHandler = c;
     return Promise.resolve();
@@ -536,7 +535,7 @@ test('kube watcher', () => {
 
   // call the error Handler with undefined
   if (errorHandler !== undefined) {
-    errorHandler(undefined);
+    errorHandler([undefined]);
   }
 
   expect(createWatchObjectSpy).toBeCalled();
@@ -550,10 +549,9 @@ test('should throw error if cannot call the cluster (readNamespacedDeployment re
 
   try {
     await client.readNamespacedDeployment('deployment', 'default');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     expect(err).to.be.a('Error');
-    expect(err.message).equal('K8sError');
+    expect((err as Error).message).equal('K8sError');
   }
 });
 
@@ -594,10 +592,9 @@ test('should throw error if cannot call the cluster (readNamespacedIngress rejec
 
   try {
     await client.readNamespacedIngress('ingress', 'default');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     expect(err).to.be.a('Error');
-    expect(err.message).equal('K8sError');
+    expect((err as Error).message).equal('K8sError');
   }
 });
 
@@ -705,10 +702,9 @@ test('should throw error if cannot call the cluster (getNamespacedCustomObject r
 
   try {
     await client.readNamespacedRoute('route', 'default');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     expect(err).to.be.a('Error');
-    expect(err.message).equal('K8sError');
+    expect((err as Error).message).equal('K8sError');
   }
 });
 
@@ -840,10 +836,9 @@ test('should throw error if cannot call the cluster (readNamespacedService rejec
 
   try {
     await client.readNamespacedService('service', 'default');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     expect(err).to.be.a('Error');
-    expect(err.message).equal('K8sError');
+    expect((err as Error).message).equal('K8sError');
   }
 });
 
@@ -1016,12 +1011,11 @@ test('If Kubernetes returns a http error, output the http body message error.', 
 
   try {
     await client.createResources('dummy', [{ apiVersion: 'v1' }]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.log(err);
     // Check that the error is clientNode.HttpError
     expect(err).to.be.a('Error');
-    expect(err.message).contain('A K8sError within message body');
+    expect((err as Error).message).contain('A K8sError within message body');
   }
 });
 

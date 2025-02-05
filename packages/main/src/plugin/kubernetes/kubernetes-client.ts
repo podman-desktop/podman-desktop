@@ -67,6 +67,7 @@ import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middl
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import * as jsYaml from 'js-yaml';
 import type { WebSocket } from 'ws';
+import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
@@ -1032,15 +1033,27 @@ export class KubernetesClient {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private wrapK8sClientError(e: any): Error {
-    if (e?.response?.body) {
-      if (e.response.body.message) {
+  private wrapK8sClientError(e: unknown): Error {
+    if (
+      e &&
+      e instanceof Error &&
+      'response' in e &&
+      e.response &&
+      typeof e.response === 'object' &&
+      'body' in e.response &&
+      e?.response?.body
+    ) {
+      if (
+        typeof e.response.body === 'object' &&
+        'message' in e.response.body &&
+        typeof e.response.body.message === 'string'
+      ) {
         return this.newError(e.response.body.message, e);
+      } else if (typeof e.response.body === 'string') {
+        return this.newError(e.response.body, e);
       }
-      return this.newError(e.response.body, e);
     }
-    return e;
+    return e instanceof Error ? e : new Error(`${e}`);
   }
 
   getKubeconfig(): containerDesktopAPI.Uri {
@@ -1058,10 +1071,9 @@ export class KubernetesClient {
     this.kubeConfigWatcher?.dispose();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getTags(tags: any[]): any[] {
+  getTags(tags: Tags): Tags {
     for (const tag of tags) {
-      if (tag.tag === 'tag:yaml.org,2002:int') {
+      if (typeof tag === 'object' && 'tag' in tag && tag.tag === 'tag:yaml.org,2002:int') {
         const newTag = { ...tag };
         newTag.test = /^(0[0-7][0-7][0-7])$/;
         newTag.resolve = (str: string): number => parseInt(str, 8);

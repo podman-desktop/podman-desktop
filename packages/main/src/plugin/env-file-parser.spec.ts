@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-useless-escape */
 
-import { promises } from 'node:fs';
+import { promises, type Stats } from 'node:fs';
 
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
@@ -167,7 +166,7 @@ test('check parseEnvFile', async () => {
   readFileMock.mockResolvedValue(content);
 
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 100 } as any);
+  statsFileMock.mockResolvedValue({ size: 100 } as Stats);
 
   const result = await envfileParser.parseEnvFile('foo');
 
@@ -183,7 +182,7 @@ test('check parseEnvFiles', async () => {
   readFileMock.mockResolvedValueOnce(content2);
 
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 100 } as any);
+  statsFileMock.mockResolvedValue({ size: 100 } as Stats);
 
   const result = await envfileParser.parseEnvFiles(['foo1', 'foo2']);
 
@@ -197,7 +196,7 @@ test('check parseEnvFile with comments', async () => {
   readFileMock.mockResolvedValue(content1);
 
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 100 } as any);
+  statsFileMock.mockResolvedValue({ size: 100 } as Stats);
 
   const result = await envfileParser.parseEnvFile('foo1');
 
@@ -207,7 +206,7 @@ test('check parseEnvFile with comments', async () => {
 test('check parseEnvFile and expect error with a file too big', async () => {
   // big file
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 2048 * 1024 } as any);
+  statsFileMock.mockResolvedValue({ size: 2048 * 1024 } as Stats);
 
   await expect(envfileParser.parseEnvFile('foo')).rejects.toThrowError(
     'Environment file foo is too big. Maximum size is 1MB.',
@@ -217,7 +216,7 @@ test('check parseEnvFile and expect error with a file too big', async () => {
 test('check parseEnvFile and expect error with invalid entries', async () => {
   // big file
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 1024 } as any);
+  statsFileMock.mockResolvedValue({ size: 1024 } as Stats);
 
   const content = 'hello world';
   const readFileMock = vi.spyOn(promises, 'readFile');
