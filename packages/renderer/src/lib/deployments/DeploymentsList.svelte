@@ -72,7 +72,7 @@ const row = new TableRow<DeploymentUI>({ selectable: (_deployment): boolean => t
     transformer: deploymentUtils.getDeploymentUI,
     delete: window.kubernetesDeleteDeployment,
     isResource: (): boolean => true,
-    searchPatternStore: deploymentSearchPattern,
+    legacySearchPatternStore: deploymentSearchPattern,
     legacyObjectStore: kubernetesCurrentContextDeploymentsFiltered,
   }]}
   singular="deployment"

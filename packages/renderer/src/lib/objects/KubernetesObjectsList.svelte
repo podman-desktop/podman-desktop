@@ -18,7 +18,7 @@ export interface Kind {
   transformer: (o: KubernetesObject) => any;
   delete: (name: string) => Promise<void>;
   isResource: (o: KubernetesObject) => boolean;
-  searchPatternStore: Writable<string>;
+  legacySearchPatternStore: Writable<string>;
   legacyObjectStore: Readable<KubernetesObject[]>;
 }
 
@@ -48,7 +48,7 @@ const objects = $derived(
 );
 
 $effect(() => {
-  kinds.forEach(kind => kind.searchPatternStore.set(searchTerm));
+  kinds.forEach(kind => kind.legacySearchPatternStore.set(searchTerm));
 });
 
 onMount(async () => {
@@ -57,7 +57,7 @@ onMount(async () => {
       await listenResources(
         kind.resource,
         {
-          searchTermStore: kind.searchPatternStore,
+          searchTermStore: kind.legacySearchPatternStore,
         },
         (updatedResources: KubernetesObject[]) => {
           resources[kind.resource] = updatedResources;

@@ -78,7 +78,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): bo
       transformer: configmapSecretUtils.getConfigMapSecretUI,
       delete: window.kubernetesDeleteConfigMap,
       isResource: configmapSecretUtils.isConfigMap,
-      searchPatternStore: configmapSearchPattern,
+      legacySearchPatternStore: configmapSearchPattern,
       legacyObjectStore: kubernetesCurrentContextConfigMapsFiltered,
     },
     {
@@ -86,7 +86,7 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): bo
       transformer: configmapSecretUtils.getConfigMapSecretUI,
       delete: window.kubernetesDeleteSecret,
       isResource: configmapSecretUtils.isSecret,
-      searchPatternStore: secretSearchPattern,
+      legacySearchPatternStore: secretSearchPattern,
       legacyObjectStore: kubernetesCurrentContextSecretsFiltered,
     },
   ]}
