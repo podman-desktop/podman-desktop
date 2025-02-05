@@ -11,11 +11,11 @@ interface Props {
   name?: string;
   error?: boolean;
   resultItems?: string[];
-  sort?: boolean;
   onInputChange?: (s: string) => Promise<void>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
   class?: string;
+  compare?: (a: string, b: string) => number;
 }
 
 let {
@@ -28,11 +28,11 @@ let {
   name,
   error = false,
   resultItems = [],
-  sort = false,
   onInputChange,
   onChange,
   onEnter,
   class: className,
+  compare,
 }: Props = $props();
 
 let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
@@ -41,8 +41,9 @@ let list: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
 let items: string[] = $derived(
-  sort
-    ? resultItems.toSorted((a: string, b: string) => {
+  resultItems.toSorted(
+    compare ??
+      ((a: string, b: string): number => {
         if (a.startsWith(userValue) === b.startsWith(userValue)) {
           return a.localeCompare(b);
         } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
@@ -50,8 +51,8 @@ let items: string[] = $derived(
         } else {
           return 1;
         }
-      })
-    : resultItems,
+      }),
+  ),
 );
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
