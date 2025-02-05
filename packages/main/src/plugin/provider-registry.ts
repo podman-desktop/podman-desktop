@@ -1006,28 +1006,7 @@ export class ProviderRegistry {
       await lifecycle.start(context, logHandler);
     } finally {
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
-        const sendEvents = (status: ProviderConnectionStatus): void => {
-          const event = {
-            providerId: provider.id,
-            connection: {
-              displayName: providerConnectionInfo.displayName,
-              name: providerConnectionInfo.name,
-              type: providerConnectionInfo.type,
-              endpoint: providerConnectionInfo.endpoint,
-              status: (): ProviderConnectionStatus => {
-                return status;
-              },
-            },
-            status: status as ProviderConnectionStatus,
-          };
-          this._onBeforeDidUpdateContainerConnection.fire(event);
-          this._onDidUpdateContainerConnection.fire(event);
-          this._onAfterDidUpdateContainerConnection.fire(event);
-        };
-        sendEvents('starting');
-        this.onProviderConnectionApiAttached(`${provider.id}.${providerConnectionInfo.name}`, () =>
-          sendEvents('started'),
-        );
+        this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
       } else {
         this._onDidUpdateKubernetesConnection.fire({
           providerId: provider.id,
@@ -1352,5 +1331,31 @@ export class ProviderRegistry {
       return this.toProviderInfo(provider);
     }
     return undefined;
+  }
+
+  protected fireUpdateContainerConnectionEvents(
+    providerId: string,
+    providerConnectionInfo: ProviderContainerConnectionInfo,
+  ): void {
+    const sendEvents = (status: ProviderConnectionStatus): void => {
+      const event = {
+        providerId: providerId,
+        connection: {
+          displayName: providerConnectionInfo.displayName,
+          name: providerConnectionInfo.name,
+          type: providerConnectionInfo.type,
+          endpoint: providerConnectionInfo.endpoint,
+          status: (): ProviderConnectionStatus => {
+            return status;
+          },
+        },
+        status: status as ProviderConnectionStatus,
+      };
+      this._onBeforeDidUpdateContainerConnection.fire(event);
+      this._onDidUpdateContainerConnection.fire(event);
+      this._onAfterDidUpdateContainerConnection.fire(event);
+    };
+    sendEvents('starting');
+    this.onProviderConnectionApiAttached(`${providerId}.${providerConnectionInfo.name}`, () => sendEvents('started'));
   }
 }
