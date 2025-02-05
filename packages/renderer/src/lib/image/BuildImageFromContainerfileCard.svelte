@@ -10,7 +10,7 @@ export let badge: string = '';
 export let isDefault: boolean = false;
 export let checked: boolean = false;
 export let value: string = '';
-export let icon: unknown | undefined = undefined;
+export let icon: IconDefinition | Component | undefined = undefined;
 let iconType: 'fontAwesome' | 'unknown' | undefined = undefined;
 
 export let additionalItem: boolean = false;

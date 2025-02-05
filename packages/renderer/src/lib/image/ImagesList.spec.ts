@@ -41,8 +41,8 @@ beforeEach(() => {
   providerInfos.set([]);
   imagesInfos.set([]);
   viewsContributions.set([]);
-  vi.mocked(window.onDidUpdateProviderStatus).mockImplementation(() => Promise.resolve());
-  vi.mocked(window.hasAuthconfigForImage).mockImplementation(() => Promise.resolve(false));
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
+  vi.mocked(window.hasAuthconfigForImage).mockResolvedValue(false);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
@@ -90,7 +90,7 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:456456456456456',
       RepoTags: ['veryold:image'],
@@ -99,7 +99,7 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['fedora:recent'],
@@ -108,8 +108,8 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -161,8 +161,8 @@ test('Expect filter empty screen', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -206,7 +206,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:1'],
@@ -215,7 +215,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'docker',
       engineName: 'docker',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:2'],
@@ -224,7 +224,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:2345678901234',
       RepoTags: ['fedora:3'],
@@ -233,7 +233,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:3456789012345',
       RepoTags: ['fedora:4'],
@@ -242,8 +242,8 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -303,8 +303,8 @@ describe('Contributions', () => {
           engineId: 'podman',
           engineName: 'podman',
           Labels: labels,
-        } as unknown as ImageInfo,
-      ]);
+        },
+      ] as unknown as ImageInfo[]);
 
       window.dispatchEvent(new CustomEvent('extensions-already-started'));
       window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -381,8 +381,8 @@ describe('Contributions', () => {
           engineId: 'podman',
           engineName: 'podman',
           Labels: labels,
-        } as unknown as ImageInfo,
-      ]);
+        },
+      ] as unknown as ImageInfo[]);
 
       window.dispatchEvent(new CustomEvent('extensions-already-started'));
       window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -465,7 +465,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:456456456456456',
       RepoTags: ['veryold:image'],
@@ -474,7 +474,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['fedora:recent'],
@@ -483,8 +483,8 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   const goToMock = vi.spyOn(router, 'goto');
 
@@ -546,7 +546,7 @@ test('Manifest images display without actions', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
+    },
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['manifestimage:latest'],
@@ -556,8 +556,8 @@ test('Manifest images display without actions', async () => {
       engineId: 'podman',
       engineName: 'podman',
       isManifest: true,
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   // dispatch events
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
@@ -622,8 +622,8 @@ test('Expect user confirmation to pop up when preferences require', async () => 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
-    } as unknown as ImageInfo,
-  ]);
+    },
+  ] as unknown as ImageInfo[]);
 
   // dispatch events
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
