@@ -45,9 +45,14 @@ beforeAll(() => {
       func();
     },
   };
-  vi.mocked(window.matchMedia).mockReturnValue({
-    addListener: vi.fn(),
-  } as unknown as MediaQueryList);
+  Object.defineProperty(window, 'matchMedia', {
+    value: () => {
+      return {
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      };
+    },
+  });
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
