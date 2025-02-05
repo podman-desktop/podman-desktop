@@ -39,9 +39,7 @@ vi.mock('./image-handler', () => {
   };
 });
 
-vi.mock('./kind-installer', () => ({
-  KindInstaller: vi.fn(),
-}));
+vi.mock('./kind-installer');
 
 vi.mock('@podman-desktop/api', () => ({
   window: {
@@ -82,13 +80,6 @@ vi.mock('@podman-desktop/api', () => ({
   },
 }));
 
-const KIND_INSTALLER_MOCK: KindInstaller = {
-  getLatestVersionAsset: vi.fn(),
-  getKindCliStoragePath: vi.fn(),
-  download: vi.fn(),
-  promptUserForVersion: vi.fn(),
-} as unknown as KindInstaller;
-
 const CLI_TOOL_MOCK: extensionApi.CliTool = {
   displayName: 'test',
   dispose: vi.fn(),
@@ -100,7 +91,7 @@ const CLI_TOOL_MOCK: extensionApi.CliTool = {
 beforeEach(() => {
   vi.resetAllMocks();
 
-  vi.mocked(KIND_INSTALLER_MOCK.getKindCliStoragePath).mockReturnValue('storage-path');
+  vi.mocked(KindInstaller.prototype.getKindCliStoragePath).mockReturnValue('storage-path');
 
   vi.mocked(podmanDesktopApi.env.createTelemetryLogger).mockReturnValue({
     logUsage: vi.fn(),
@@ -121,8 +112,6 @@ beforeEach(() => {
   createProviderMock.mockImplementation(() => ({ setKubernetesProviderConnectionFactory: vi.fn() }));
 
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
-  vi.mocked(KindInstaller).mockReturnValue(KIND_INSTALLER_MOCK);
-
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
   vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
 });
@@ -322,18 +311,18 @@ describe('cli#update', () => {
   test('update updatable version should update version', async () => {
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
 
-    vi.mocked(KIND_INSTALLER_MOCK.getKindCliStoragePath).mockReturnValue('storage-path');
-    vi.mocked(KIND_INSTALLER_MOCK.promptUserForVersion).mockResolvedValue({
+    vi.mocked(KindInstaller.prototype.getKindCliStoragePath).mockReturnValue('storage-path');
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
       tag: 'v1.0.0',
     } as unknown as KindGithubReleaseArtifactMetadata);
     const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
     await update?.selectVersion();
     await update.doUpdate({} as unknown as extensionApi.Logger);
 
-    expect(KIND_INSTALLER_MOCK.download).toHaveBeenCalledWith({
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
       tag: 'v1.0.0',
     });
-    expect(KIND_INSTALLER_MOCK.getKindCliStoragePath).toHaveBeenCalled();
+    expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
 
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({
@@ -389,7 +378,7 @@ describe('cli#install', () => {
   test('after selecting the version to be installed it should download kind', async () => {
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
     // mock prompt result
-    vi.mocked(KIND_INSTALLER_MOCK.promptUserForVersion).mockResolvedValue({
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
       tag: 'v1.0.0',
     } as unknown as KindGithubReleaseArtifactMetadata);
 
@@ -399,10 +388,10 @@ describe('cli#install', () => {
     await cliToolInstaller?.selectVersion();
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
-    expect(KIND_INSTALLER_MOCK.download).toHaveBeenCalledWith({
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
       tag: 'v1.0.0',
     });
-    expect(KIND_INSTALLER_MOCK.getKindCliStoragePath).toHaveBeenCalled();
+    expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({
       installationSource: 'extension',
@@ -415,7 +404,7 @@ describe('cli#install', () => {
     // mock error when trying to install system wide
     vi.mocked(util.installBinaryToSystem).mockRejectedValue('error');
     // mock user select v1.0.0
-    vi.mocked(KIND_INSTALLER_MOCK.promptUserForVersion).mockResolvedValue({
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
       tag: 'v1.0.0',
     } as unknown as KindGithubReleaseArtifactMetadata);
 
@@ -426,10 +415,10 @@ describe('cli#install', () => {
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
     // ensure the download has been called
-    expect(KIND_INSTALLER_MOCK.download).toHaveBeenCalledWith({
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
       tag: 'v1.0.0',
     });
-    expect(KIND_INSTALLER_MOCK.getKindCliStoragePath).toHaveBeenCalled();
+    expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({
       installationSource: 'extension',
