@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024 - 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
 import { PodsResourceFactory } from './pods-resource-factory.js';
+import { PVCsResourceFactory } from './pvcs-resource-factory.js';
 import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryHandler } from './resource-factory-handler.js';
 import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resource-informer.js';
@@ -97,6 +98,7 @@ export class ContextsManagerExperimental {
       new ConfigmapsResourceFactory(),
       new SecretsResourceFactory(),
       new ServicesResourceFactory(),
+      new PVCsResourceFactory(),
     ];
   }
 
