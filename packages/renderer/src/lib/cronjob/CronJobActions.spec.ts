@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import CronJobActions from './CronJobActions.svelte';
 import type { CronJobUI } from './CronJobUI';
@@ -40,13 +40,9 @@ const cronjob: CronJobUI = {
 };
 
 beforeEach(() => {
+  vi.resetAllMocks();
   vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
   vi.mocked(window.kubernetesDeleteCronJob).mockImplementation(deleteMock);
-});
-
-afterEach(() => {
-  vi.resetAllMocks();
-  vi.clearAllMocks();
 });
 
 test('Expect no error and status deleting cronjob', async () => {

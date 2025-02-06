@@ -31,7 +31,6 @@ vi.mock('/@/stores/kubernetes-contexts-state');
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.clearAllMocks();
   vi.mocked(states).cronJobSearchPattern = writable<string>('');
   vi.mocked(states).kubernetesContextsCheckingStateDelayed = writable();
   vi.mocked(states).kubernetesCurrentContextState = writable();

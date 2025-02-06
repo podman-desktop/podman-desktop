@@ -11,7 +11,7 @@ let {
   detailed = false,
 }: {
   cronjob: CronJobUI;
-  detailed: boolean;
+  detailed?: boolean;
 } = $props();
 
 async function deleteCronJob(): Promise<void> {

@@ -1,11 +1,10 @@
 <script lang="ts">
 import type { CronJobUI } from './CronJobUI';
 
-let {
-  object,
-}: {
+interface Props {
   object: CronJobUI;
-} = $props();
+}
+let { object }: Props = $props();
 </script>
 
 <!-- Add the summary in the future, keep hover:cursor-pointer so we do not forget! -->

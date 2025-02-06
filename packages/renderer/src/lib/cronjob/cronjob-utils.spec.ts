@@ -24,7 +24,7 @@ import { CronJobUtils } from './cronjob-utils';
 let cronjobUtils: CronJobUtils;
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   cronjobUtils = new CronJobUtils();
 });
 
