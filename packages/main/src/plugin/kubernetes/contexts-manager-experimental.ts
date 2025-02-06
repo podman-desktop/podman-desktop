@@ -38,6 +38,7 @@ import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryHandler } from './resource-factory-handler.js';
 import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resource-informer.js';
 import { SecretsResourceFactory } from './secrets-resource-factory.js';
+import { ServicesResourceFactory } from './services-resource-factory.js';
 
 const HEALTH_CHECK_TIMEOUT_MS = 5_000;
 
@@ -95,6 +96,7 @@ export class ContextsManagerExperimental {
       new DeploymentsResourceFactory(),
       new ConfigmapsResourceFactory(),
       new SecretsResourceFactory(),
+      new ServicesResourceFactory(),
     ];
   }
 
