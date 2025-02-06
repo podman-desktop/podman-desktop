@@ -11,11 +11,12 @@ import { withBulkConfirmation } from '../actions/BulkActions';
 import KubeActions from '../kube/KubeActions.svelte';
 import { listenResources } from '../kube/resources-listen';
 import KubernetesCurrentContextConnectionBadge from '../ui/KubernetesCurrentContextConnectionBadge.svelte';
+import type { KubernetesObjectUI } from './KubernetesObjectUI';
 
 export interface Kind {
   resource: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transformer: (o: KubernetesObject) => any;
+  transformer: (o: KubernetesObject) => KubernetesObjectUI;
   delete: (name: string) => Promise<void>;
   isResource: (o: KubernetesObject) => boolean;
   legacySearchPatternStore: Writable<string>;

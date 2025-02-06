@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import type { ServiceUI } from './ServiceUI';
 export class ServiceUtils {
   getServiceUI(service: V1Service): ServiceUI {
     return {
+      kind: 'Service',
       uid: service.metadata?.uid ?? '',
       name: service.metadata?.name ?? '',
       status: 'RUNNING',

@@ -59,6 +59,7 @@ const podInfo = {
 test('Expect to get node and namespace from pod info', () => {
   const pod = podUtils.getPodUI(podInfo);
 
+  expect(pod.kind).toBe('Pod');
   expect(pod.name).toBe('my-pod');
   expect(pod.node).toBe('test-node');
   expect(pod.namespace).toBe('test-namespace');

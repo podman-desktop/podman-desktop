@@ -30,6 +30,7 @@ beforeEach(() => {
 
 test('expect basic UI conversion', async () => {
   const cronjob = {
+    kind: 'CronJob',
     metadata: {
       name: 'my-cronjob',
       namespace: 'test-namespace',
@@ -37,6 +38,7 @@ test('expect basic UI conversion', async () => {
     status: {},
   } as V1CronJob;
   const cronjobUI = cronjobUtils.getCronJobUI(cronjob);
+  expect(cronjobUI.kind).toEqual('CronJob');
   expect(cronjobUI.name).toEqual('my-cronjob');
   expect(cronjobUI.namespace).toEqual('test-namespace');
 });

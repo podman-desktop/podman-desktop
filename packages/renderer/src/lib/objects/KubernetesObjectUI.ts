@@ -16,25 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { V1CronJob } from '@kubernetes/client-node';
-
-import type { CronJobUI } from './CronJobUI';
-
-export class CronJobUtils {
-  getCronJobUI(cronjob: V1CronJob): CronJobUI {
-    return {
-      kind: 'CronJob',
-      uid: cronjob.metadata?.uid ?? '',
-      name: cronjob.metadata?.name ?? '',
-      status: 'RUNNING',
-      namespace: cronjob.metadata?.namespace ?? '',
-      created: cronjob.metadata?.creationTimestamp,
-      selected: false,
-      schedule: cronjob.spec?.schedule ?? '',
-      suspended: cronjob.spec?.suspend ?? false,
-      lastScheduleTime: cronjob.status?.lastScheduleTime,
-      // Get the number of "active" jobs, we just get the length of the array
-      active: cronjob.status?.active?.length ?? 0,
-    };
-  }
+export interface KubernetesObjectUI {
+  kind?: string;
+  name: string;
+  namespace?: string;
+  status: string;
+  selected?: boolean;
 }

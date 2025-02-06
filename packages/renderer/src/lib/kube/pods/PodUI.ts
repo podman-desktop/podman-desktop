@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
 import type { PodInfoContainerUI } from '../../pod/PodInfoUI';
 
-export interface PodUI {
-  name: string;
-  status: string;
+export interface PodUI extends KubernetesObjectUI {
   namespace: string;
   created?: Date;
   selected: boolean;

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ beforeEach(() => {
 describe('PVC UI conversion', () => {
   test('expect basic PVC UI conversion', async () => {
     const fakePVC = {
+      kind: 'PersistentVolumeClaim',
       metadata: {
         name: 'pvc-1',
         namespace: 'default',
@@ -52,6 +53,7 @@ describe('PVC UI conversion', () => {
 
     const pvcUI = pvcUtils.getPVCUI(fakePVC);
 
+    expect(pvcUI.kind).toEqual('PersistentVolumeClaim');
     expect(pvcUI.name).toEqual('pvc-1');
     expect(pvcUI.namespace).toEqual('default');
     expect(pvcUI.status).toEqual('RUNNING');

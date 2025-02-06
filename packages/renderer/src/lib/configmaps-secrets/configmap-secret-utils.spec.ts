@@ -30,6 +30,7 @@ beforeEach(() => {
 
 test('expect configmap UI conversion', async () => {
   const configMap = {
+    kind: 'ConfigMap',
     metadata: {
       name: 'my-configmap',
       namespace: 'test-namespace',
@@ -40,6 +41,7 @@ test('expect configmap UI conversion', async () => {
     },
   } as V1ConfigMap;
   const configMapUI = configMapSecretUtils.getConfigMapSecretUI(configMap);
+  expect(configMapUI.kind).toEqual('ConfigMap');
   expect(configMapUI.name).toEqual('my-configmap');
   expect(configMapUI.namespace).toEqual('test-namespace');
   expect(configMapUI.keys).toEqual(['key1', 'key2']);
@@ -47,6 +49,7 @@ test('expect configmap UI conversion', async () => {
 
 test('expect secret UI conversion', async () => {
   const secret = {
+    kind: 'Secret',
     metadata: {
       name: 'my-secret',
       namespace: 'test-namespace',
@@ -58,6 +61,7 @@ test('expect secret UI conversion', async () => {
     type: 'Opaque',
   } as V1Secret;
   const secretUI = configMapSecretUtils.getConfigMapSecretUI(secret);
+  expect(secretUI.kind).toEqual('Secret');
   expect(secretUI.name).toEqual('my-secret');
   expect(secretUI.namespace).toEqual('test-namespace');
   expect(secretUI.keys).toEqual(['key1', 'key2']);

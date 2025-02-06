@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ export interface HostPathObject {
 export class IngressRouteUtils {
   getIngressUI(ingress: V1Ingress): IngressUI {
     return {
+      kind: 'Ingress',
       name: ingress.metadata?.name ?? '',
       namespace: ingress.metadata?.namespace ?? '',
       status: 'RUNNING',
@@ -41,6 +42,7 @@ export class IngressRouteUtils {
   }
   getRouteUI(route: V1Route): RouteUI {
     return {
+      kind: 'Route',
       name: route.metadata?.name ?? '',
       namespace: route.metadata?.namespace ?? '',
       status: 'RUNNING',

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 import type { V1IngressRule } from '@kubernetes/client-node';
 
-export interface IngressUI {
-  name: string;
+import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+
+export interface IngressUI extends KubernetesObjectUI {
   namespace: string;
-  status: string;
   rules?: Array<V1IngressRule>;
   selected: boolean;
   created?: Date;

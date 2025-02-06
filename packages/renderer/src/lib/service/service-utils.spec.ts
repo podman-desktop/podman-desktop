@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ beforeEach(() => {
 
 test('expect basic UI conversion', async () => {
   const service = {
+    kind: 'Service',
     metadata: {
       name: 'my-service',
       namespace: 'test-namespace',
@@ -37,6 +38,7 @@ test('expect basic UI conversion', async () => {
     status: {},
   } as V1Service;
   const serviceUI = serviceUtils.getServiceUI(service);
+  expect(serviceUI.kind).toEqual('Service');
   expect(serviceUI.name).toEqual('my-service');
   expect(serviceUI.namespace).toEqual('test-namespace');
 });

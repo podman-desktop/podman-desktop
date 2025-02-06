@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface CronJobUI {
+import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+
+export interface CronJobUI extends KubernetesObjectUI {
   uid: string;
-  name: string;
-  status: string;
   namespace: string;
   created?: Date;
   selected: boolean;

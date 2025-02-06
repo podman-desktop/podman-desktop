@@ -49,6 +49,7 @@ export class PodUtils {
       }) ?? [];
 
     return {
+      kind: 'Pod',
       name: pod.metadata?.name ?? '',
       status: this.getStatus(pod.metadata?.deletionTimestamp ? 'DELETING' : (pod.status?.phase ?? '')),
       created: pod.metadata?.creationTimestamp,

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ beforeEach(() => {
 });
 
 const ingressUI: IngressUI = {
+  kind: 'Ingress',
   name: 'my-ingress',
   namespace: 'test-namespace',
   status: 'RUNNING',
@@ -58,6 +59,7 @@ const ingressUI: IngressUI = {
 };
 
 const ingressUIWith2Paths: IngressUI = {
+  kind: 'Ingress',
   name: 'my-ingress',
   namespace: 'test-namespace',
   status: 'RUNNING',
@@ -96,6 +98,7 @@ const ingressUIWith2Paths: IngressUI = {
 };
 
 const routeUI: RouteUI = {
+  kind: 'Route',
   name: 'my-route',
   namespace: 'test-namespace',
   status: 'RUNNING',
@@ -138,6 +141,7 @@ test('expect basic UI conversion for ingress', async () => {
     },
   } as V1Ingress;
   const ingressUI = ingressRouteUtils.getIngressUI(ingress);
+  expect(ingressUI.kind).toEqual('Ingress');
   expect(ingressUI.name).toEqual('my-ingress');
   expect(ingressUI.namespace).toEqual('test-namespace');
   expect(ingressUI.rules).toBeDefined();
@@ -162,6 +166,7 @@ test('expect basic UI conversion for route with port', async () => {
     },
   } as V1Route;
   const routeUI = ingressRouteUtils.getRouteUI(route);
+  expect(routeUI.kind).toEqual('Route');
   expect(routeUI.name).toEqual('my-route');
   expect(routeUI.namespace).toEqual('test-namespace');
   expect(routeUI.host).toEqual(route.spec.host);
@@ -187,6 +192,7 @@ test('expect basic UI conversion for route with path', async () => {
     },
   } as V1Route;
   const routeUI = ingressRouteUtils.getRouteUI(route);
+  expect(routeUI.kind).toEqual('Route');
   expect(routeUI.name).toEqual('my-route');
   expect(routeUI.namespace).toEqual('test-namespace');
   expect(routeUI.host).toEqual(route.spec.host);

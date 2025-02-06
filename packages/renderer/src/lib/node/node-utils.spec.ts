@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ beforeEach(() => {
 describe('Node UI conversion', () => {
   test('expect basic node UI conversion', async () => {
     const node = {
+      kind: 'Node',
       metadata: {
         name: 'kube-node',
         labels: {
@@ -50,6 +51,7 @@ describe('Node UI conversion', () => {
 
     const nodeUI = nodeUtils.getNodeUI(node);
 
+    expect(nodeUI.kind).toEqual('Node');
     expect(nodeUI.name).toEqual('kube-node');
     expect(nodeUI.status).toEqual('RUNNING');
     expect(nodeUI.role).toEqual('control-plane');

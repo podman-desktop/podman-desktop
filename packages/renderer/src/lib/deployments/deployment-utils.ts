@@ -41,6 +41,7 @@ export class DeploymentUtils {
     }
 
     return {
+      kind: 'Deployment',
       uid: deployment.metadata?.uid ?? '',
       name: deployment.metadata?.name ?? '',
       status: status,
