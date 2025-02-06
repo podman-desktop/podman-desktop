@@ -41,7 +41,6 @@ beforeEach(() => {
   providerInfos.set([]);
   imagesInfos.set([]);
   viewsContributions.set([]);
-  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.hasAuthconfigForImage).mockResolvedValue(false);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
@@ -52,7 +51,6 @@ beforeEach(() => {
       func();
     },
   };
-  vi.mocked(window.deleteImage).mockResolvedValue(undefined);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
