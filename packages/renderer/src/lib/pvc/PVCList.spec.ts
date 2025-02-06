@@ -56,8 +56,10 @@ test('Expect PVC list', async () => {
 
   render(PVCList);
 
-  const pvcName = screen.getByRole('cell', { name: 'pvc1 default' });
-  expect(pvcName).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const pvcName = screen.getByRole('cell', { name: 'pvc1 default' });
+    expect(pvcName).toBeInTheDocument();
+  });
 });
 
 test('Expect user confirmation to pop up when preferences require', async () => {
@@ -72,8 +74,10 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   render(PVCList);
 
-  const pvcName1 = screen.getByRole('cell', { name: 'pvc12 default' });
-  expect(pvcName1).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const pvcName1 = screen.getByRole('cell', { name: 'pvc12 default' });
+    expect(pvcName1).toBeInTheDocument();
+  });
 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle PVC' });
   await fireEvent.click(checkboxes[0]);
@@ -110,10 +114,13 @@ test('PVCs list is updated when kubernetesCurrentContextPersistentVolumeClaimsFi
   vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = filtered;
 
   const component = render(PVCList);
-  const pvcName1 = screen.getByRole('cell', { name: 'my-pvc-1 test-namespace' });
-  expect(pvcName1).toBeInTheDocument();
-  const pvcName2 = screen.getByRole('cell', { name: 'my-pvc-2 test-namespace' });
-  expect(pvcName2).toBeInTheDocument();
+
+  await vi.waitFor(() => {
+    const pvcName1 = screen.getByRole('cell', { name: 'my-pvc-1 test-namespace' });
+    expect(pvcName1).toBeInTheDocument();
+    const pvcName2 = screen.getByRole('cell', { name: 'my-pvc-2 test-namespace' });
+    expect(pvcName2).toBeInTheDocument();
+  });
 
   filtered.set([pvc2]);
   await component.rerender({});
