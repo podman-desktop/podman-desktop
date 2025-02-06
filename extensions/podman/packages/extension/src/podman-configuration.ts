@@ -57,14 +57,17 @@ export class PodmanConfiguration {
       const tomlConfigFile = toml.parse(containersConfigFile);
 
       if (tomlConfigFile?.engine) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const engineConf: any = tomlConfigFile.engine;
+        const engineConf = tomlConfigFile.engine;
 
         // env in engine section
         // env are written like array of key=value ['https_proxy=http://10.0.0.244:9090', 'http_proxy=http://10.0.0.244:9090']
-        if (engineConf.env && Array.isArray(engineConf.env)) {
-          const envArray: string[] = engineConf.env;
+        if (typeof engineConf === 'object' && 'env' in engineConf && engineConf.env && Array.isArray(engineConf.env)) {
+          const envArray = engineConf.env;
           envArray.forEach(envVar => {
+            if (typeof envVar !== 'string') {
+              console.error(`podman configuration env is not a string but ${typeof envVar}: ${envVar}`);
+              return;
+            }
             const split = envVar.split('=');
             if (split.length === 2) {
               if (split[0] === 'https_proxy') {
@@ -117,9 +120,8 @@ export class PodmanConfiguration {
       // Read the file
       const containersConfigFile = await this.readContainersConfigFile();
       const tomlConfigFile = toml.parse(containersConfigFile);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const machine: any = tomlConfigFile.machine;
-      if (machine && 'rosetta' in machine) {
+      const machine = tomlConfigFile.machine;
+      if (machine && typeof machine === 'object' && 'rosetta' in machine) {
         const val = machine['rosetta'];
         if (typeof val === 'boolean') {
           return val;
