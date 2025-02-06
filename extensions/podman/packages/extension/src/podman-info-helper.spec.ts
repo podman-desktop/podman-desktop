@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -125,8 +124,15 @@ test('should grab podman from the installer', async () => {
   expect(records.podmanMachineNetworkBackend).toBe('netavark');
   expect(records.podmanMachineNetworkBackendVersion).toBe('netavark 1.7.0');
   expect(records.podmanMachineNetworkOciRuntime).toBeDefined();
-  expect((records.podmanMachineNetworkOciRuntime as any).name).toBe('crun');
-
+  if (
+    records.podmanMachineNetworkOciRuntime &&
+    typeof records.podmanMachineNetworkOciRuntime === 'object' &&
+    'name' in records.podmanMachineNetworkOciRuntime
+  ) {
+    expect(records.podmanMachineNetworkOciRuntime.name).toBe('crun');
+  } else {
+    throw new Error('records.podmanMachineNetworkOciRuntime has wrong type');
+  }
   expect(records.podmanMachineVersion).toBe('4.6.2');
   expect(records.podmanMachineVersionBuiltTime).toBe('Tue Sep 12 22:07:26 2023');
   expect(records.podmanMachineVersionGo).toBe('go1.20.7');
