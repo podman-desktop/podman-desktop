@@ -1,23 +1,11 @@
 <script lang="ts">
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import {
-  Button,
-  FilteredEmptyScreen,
-  NavPage,
-  Table,
-  TableColumn,
-  TableDurationColumn,
-  TableRow,
-  TableSimpleColumn,
-} from '@podman-desktop/ui-svelte';
+import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
-import KubeActions from '/@/lib/kube/KubeActions.svelte';
-import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { kubernetesCurrentContextServicesFiltered, serviceSearchPattern } from '/@/stores/kubernetes-contexts-state';
 
-import { withBulkConfirmation } from '../actions/BulkActions';
 import ServiceIcon from '../images/ServiceIcon.svelte';
+import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { ServiceUtils } from './service-utils';
 import ServiceColumnActions from './ServiceColumnActions.svelte';
 import ServiceColumnName from './ServiceColumnName.svelte';
@@ -37,35 +25,6 @@ $effect(() => {
 });
 
 const serviceUtils = new ServiceUtils();
-
-const services = $derived($kubernetesCurrentContextServicesFiltered.map(service => serviceUtils.getServiceUI(service)));
-
-// delete the items selected in the list
-let bulkDeleteInProgress = $state<boolean>(false);
-async function deleteSelectedServices(): Promise<void> {
-  const selectedServices = services.filter(service => service.selected);
-  if (selectedServices.length === 0) {
-    return;
-  }
-
-  // mark services for deletion
-  bulkDeleteInProgress = true;
-  selectedServices.forEach(service => (service.status = 'DELETING'));
-
-  await Promise.all(
-    selectedServices.map(async service => {
-      try {
-        await window.kubernetesDeleteService(service.name);
-      } catch (e) {
-        console.error('error while deleting service', e);
-      }
-    }),
-  );
-  bulkDeleteInProgress = false;
-}
-
-let selectedItemsNumber = $state<number>(0);
-let table: Table;
 
 let statusColumn = new TableColumn<ServiceUI>('Status', {
   align: 'center',
@@ -118,46 +77,24 @@ const columns = [
 const row = new TableRow<ServiceUI>({ selectable: (_service): boolean => true });
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="services">
-  <svelte:fragment slot="additional-actions">
-    <KubeActions />
-  </svelte:fragment>
-
-  <svelte:fragment slot="bottom-additional-actions">
-    {#if selectedItemsNumber > 0}
-      <Button
-        on:click={(): void =>
-          withBulkConfirmation(
-            deleteSelectedServices,
-            `delete ${selectedItemsNumber} service${selectedItemsNumber > 1 ? 's' : ''}`,
-          )}
-        title="Delete {selectedItemsNumber} selected items"
-        inProgress={bulkDeleteInProgress}
-        icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
-    {/if}
-    <div class="flex grow justify-end">
-      <KubernetesCurrentContextConnectionBadge />
-    </div>
-  </svelte:fragment>
-
-  <div class="flex min-w-full h-full" slot="content">
-    <Table
-      kind="service"
-      bind:this={table}
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={services}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Name">
-    </Table>
-
-    {#if $kubernetesCurrentContextServicesFiltered.length === 0}
-      {#if searchTerm}
-        <FilteredEmptyScreen icon={ServiceIcon} kind="services" bind:searchTerm={searchTerm} />
-      {:else}
-        <ServiceEmptyScreen />
-      {/if}
-    {/if}
-  </div>
-</NavPage>
+<KubernetesObjectsList
+  kinds={[{
+    resource: 'services',
+    transformer: serviceUtils.getServiceUI,
+    delete: window.kubernetesDeleteService,
+    isResource: (): boolean => true,
+    legacySearchPatternStore: serviceSearchPattern,
+    legacyObjectStore: kubernetesCurrentContextServicesFiltered,
+  }]}
+  singular="service"
+  plural="services"
+  icon={ServiceIcon}
+  searchTerm={searchTerm}
+  columns={columns}
+  row={row}
+>
+  <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
+  {#snippet emptySnippet()}
+    <ServiceEmptyScreen />
+  {/snippet}
+</KubernetesObjectsList>
