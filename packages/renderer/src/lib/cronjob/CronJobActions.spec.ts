@@ -24,7 +24,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import CronJobActions from './CronJobActions.svelte';
 import type { CronJobUI } from './CronJobUI';
 
-const updateMock = vi.fn();
 const deleteMock = vi.fn();
 const showMessageBoxMock = vi.fn();
 
@@ -53,13 +52,12 @@ afterEach(() => {
 test('Expect no error and status deleting cronjob', async () => {
   // Mock the showMessageBox to return 0 (yes)
   showMessageBoxMock.mockResolvedValue({ response: 0 });
-  render(CronJobActions, { cronjob, onUpdate: updateMock });
+  render(CronJobActions, { cronjob, detailed: false });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete CronJob' });
   await fireEvent.click(deleteButton);
 
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteMock).toHaveBeenCalled();
 });
