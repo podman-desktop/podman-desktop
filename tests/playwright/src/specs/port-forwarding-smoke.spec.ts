@@ -29,14 +29,15 @@ const kindNode: string = `${clusterName}-control-plane`;
 const clusterContext: string = `kind-${clusterName}`;
 const skipKindInstall = process.env.SKIP_KIND_INSTALL === 'true';
 
-const imageName: string = 'docker.io/library/httpd'; //TODO non-docker image ideally ghcr.io
-const containerName: string = 'httpd-container';
+const imageName: string = 'ghcr.io/podmandesktop-ci/nginx';
+const pullImageName: string = `${imageName}:latest`;
+const containerName: string = 'nginx-container';
 const podName: string = `${containerName} ${kindNode} default`;
 
 const remotePort: number = 80;
 const localPort: number = 50000;
 const forwardAddress: string = `http://localhost:${localPort}/`;
-const responseMessage: string = 'It works!';
+const responseMessage: string = 'Welcome to nginx!';
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(200_000);
@@ -74,7 +75,7 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
     //Pull image
     let imagesPage = await navigationBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();
-    imagesPage = await pullImagePage.pullImage(imageName);
+    imagesPage = await pullImagePage.pullImage(pullImageName);
     await playExpect.poll(async () => imagesPage.waitForImageExists(imageName, 10_000)).toBeTruthy();
 
     //Push image to the cluster
@@ -95,9 +96,12 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
       { useKubernetesServices: true, useKubernetesIngress: false },
       clusterContext,
     );
-    await deployToKubernetesPage.doneButton.click(); //openPod button is bugged
+    await playExpect(deployToKubernetesPage.doneButton).toBeVisible({ timeout: 20_000 });
+    await deployToKubernetesPage.doneButton.click();
     const podsPage = await navigationBar.openPods();
-    await playExpect.poll(async () => podsPage.deployedPodExists(podName, 'kubernetes')).toBeTruthy();
+    await playExpect
+      .poll(async () => podsPage.deployedPodExists(podName, 'kubernetes'), { timeout: 15_000 })
+      .toBeTruthy();
   });
 
   test('Create port forwarding configuration', async ({ page }) => {
@@ -109,7 +113,7 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
     await playExpect(forwardButton).toBeVisible();
     await forwardButton.click();
 
-    const openInBrowserButton = page.getByRole('button', { name: 'Open in browser' });
+    const openInBrowserButton = page.getByRole('button', { name: 'Open', exact: true });
     const removeConfigurationButton = page.getByRole('button', { name: 'Remove' });
     await playExpect(openInBrowserButton).toBeVisible({ timeout: 10_000 });
     await playExpect(removeConfigurationButton).toBeVisible();
