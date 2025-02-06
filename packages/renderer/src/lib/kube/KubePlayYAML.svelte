@@ -38,6 +38,7 @@ let allNamespaces: V1NamespaceList;
 
 let playKubeResultRaw: string;
 let playKubeResultJSON: unknown;
+let playKubeResult: { Pods?: unknown[] } | undefined = undefined;
 
 let userChoice: 'podman' | 'kubernetes' = 'podman';
 
@@ -88,12 +89,15 @@ async function playKubeFile(): Promise<void> {
         // If there are container errors, that means that it was *able* to create the container
         // but if failed to start. We will add this to the "warning" section as we were able to create the
         // We add this with comma deliminated errors
-        if (playKubeResultJSON && typeof playKubeResultJSON === 'object' && 'Pods' in playKubeResultJSON) {
+        if (playKubeResultJSON && typeof playKubeResultJSON === 'object') {
+          playKubeResult = {};
           if (
+            'Pods' in playKubeResultJSON &&
             playKubeResultJSON.Pods !== undefined &&
             Array.isArray(playKubeResultJSON.Pods) &&
             playKubeResultJSON.Pods.length > 0
           ) {
+            playKubeResult.Pods = playKubeResultJSON.Pods;
             // Filter out the pods that have container errors, but check to see that container errors exists first
             const containerErrors = playKubeResultJSON.Pods.filter(
               (pod: unknown) =>
@@ -346,12 +350,12 @@ function goBackToPodsPage(): void {
         <ErrorMessage class="text-sm" error={runError} />
       {/if}
 
-      {#if playKubeResultJSON && typeof playKubeResultJSON === 'object'}
+      {#if playKubeResult}
         <!-- Output area similar to DeployPodToKube.svelte -->
         <div class="bg-[var(--pd--content-card-bg)] p-5 my-4 text-[var(--pd-content-card-text)]">
           <div class="flex flex-row items-center">
             <div>
-              {#if 'Pods' in playKubeResultJSON && Array.isArray(playKubeResultJSON?.Pods) && playKubeResultJSON?.Pods.length > 1}
+              {#if playKubeResult.Pods && playKubeResult.Pods.length > 1}
                 Created pods:
               {:else}
                 Created pod:
