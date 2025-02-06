@@ -400,15 +400,20 @@ export class ProviderRegistry {
     const provider = this.getMatchingProvider(internalId);
 
     let updateContainerConnectionCalled: boolean = false;
-    const context = {
+    const context = Object.freeze({
       updateContainerConnection: (containerProviderConnection: ContainerProviderConnection): void => {
+        if (!this.isContainerProviderConnectionRegistered(provider, containerProviderConnection)) {
+          throw new Error(
+            `container connection ${containerProviderConnection.name} is not registered by provider ${provider.name}`,
+          );
+        }
         updateContainerConnectionCalled = true;
         const providerConnectionInfo = this.getProviderConnectionInfo(containerProviderConnection);
         if (this.isProviderContainerConnection(providerConnectionInfo)) {
           this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
         }
       },
-    };
+    });
     await autoStart.start(new LoggerImpl(), context);
     if (!updateContainerConnectionCalled) {
       console.warn(
@@ -1371,5 +1376,18 @@ export class ProviderRegistry {
     };
     sendEvents('starting');
     this.onProviderConnectionApiAttached(`${providerId}.${providerConnectionInfo.name}`, () => sendEvents('started'));
+  }
+
+  isContainerProviderConnectionRegistered(
+    provider: ProviderImpl,
+    containerProviderConnection: ContainerProviderConnection,
+  ): boolean {
+    const connections = provider.containerConnections;
+    for (const connection of connections) {
+      if (connection.name === containerProviderConnection.name) {
+        return true;
+      }
+    }
+    return false;
   }
 }
