@@ -23,9 +23,17 @@ let {
   disabled,
 }: Props = $props();
 
+/**
+ * Internally this component generate a symbol for each connection provided
+ * This ensure we have a unique identifier
+ */
+let items: Map<symbol, ProviderContainerConnectionInfo> = $derived(
+  new Map(connections.map(connection => [Symbol(connection.name), connection])),
+);
+
 function handleChange(nValue: unknown): void {
-  if (typeof nValue === 'string') {
-    value = connections.find(connection => connection.endpoint.socketPath === nValue);
+  if (typeof nValue === 'symbol') {
+    value = items.get(nValue);
   } else {
     value = undefined;
   }
@@ -41,8 +49,8 @@ function handleChange(nValue: unknown): void {
   disabled={disabled}
   value={value?.endpoint?.socketPath}
   onChange={handleChange}
-  options={connections.map(providerConnection => ({
-            label: providerConnection.name,
-            value: providerConnection.endpoint.socketPath,
+  options={Array.from(items.entries()).map(([key, connection]) => ({
+            label: connection.name,
+            value: key,
           }))}>
 </Dropdown>
