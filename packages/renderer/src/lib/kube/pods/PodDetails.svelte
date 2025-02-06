@@ -27,10 +27,10 @@ interface Props {
 }
 let { name, namespace }: Props = $props();
 
-let pod = $state<PodUI | undefined>();
-let detailsPage = $state<DetailsPage | undefined>();
-let kubePod = $state<V1Pod | undefined>();
-let kubeError = $state<string | undefined>();
+let pod = $state<PodUI>();
+let detailsPage = $state<DetailsPage>();
+let kubePod = $state<V1Pod>();
+let kubeError = $state<string>();
 
 onMount(() => {
   const podUtils = new PodUtils();
