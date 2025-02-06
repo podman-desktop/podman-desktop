@@ -200,8 +200,7 @@ export class RegistrySetup {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected writeAuthFile(data: any): Promise<void> {
+  protected writeAuthFile(data: string): Promise<void> {
     return new Promise((resolve, reject) => {
       fs.writeFile(this.getAuthFileLocation(), data, 'utf8', err => {
         if (err) {
