@@ -2032,22 +2032,24 @@ export function sendTelemetryRecords(
 }
 
 export async function createMachine(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params: { [key: string]: any },
+  params: { [key: string]: unknown },
   logger?: extensionApi.Logger,
   token?: extensionApi.CancellationToken,
 ): Promise<void> {
-  const parameters = [];
+  const parameters: string[] = [];
   parameters.push('machine');
   parameters.push('init');
 
   const telemetryRecords: Record<string, unknown> = {};
 
   let provider: string | undefined;
-  if (params['podman.factory.machine.provider']) {
+  if (params['podman.factory.machine.provider'] && typeof params['podman.factory.machine.provider'] === 'string') {
     provider = getProviderByLabel(params['podman.factory.machine.provider']);
     telemetryRecords.provider = provider;
-  } else if (params['podman.factory.machine.win.provider']) {
+  } else if (
+    params['podman.factory.machine.win.provider'] &&
+    typeof params['podman.factory.machine.win.provider'] === 'string'
+  ) {
     provider = params['podman.factory.machine.win.provider'];
     telemetryRecords.provider = provider;
   } else {
@@ -2061,7 +2063,7 @@ export async function createMachine(
   }
 
   // cpus
-  if (params['podman.factory.machine.cpus']) {
+  if (params['podman.factory.machine.cpus'] && typeof params['podman.factory.machine.cpus'] === 'string') {
     let cpusValue = params['podman.factory.machine.cpus'];
     // libkrun has an issue that prevent to start a machine that has been created with more than 8 cpus, so we limit it here
     if (provider === VMTYPE.LIBKRUN && parseInt(cpusValue) > 8) {
@@ -2091,11 +2093,14 @@ export async function createMachine(
   }
 
   // image-path
-  if (params['podman.factory.machine.image-path']) {
+  if (params['podman.factory.machine.image-path'] && typeof params['podman.factory.machine.image-path'] === 'string') {
     parameters.push('--image-path');
     parameters.push(params['podman.factory.machine.image-path']);
     telemetryRecords.imagePath = 'custom';
-  } else if (params['podman.factory.machine.image-uri']) {
+  } else if (
+    params['podman.factory.machine.image-uri'] &&
+    typeof params['podman.factory.machine.image-uri'] === 'string'
+  ) {
     const imageUri = params['podman.factory.machine.image-uri'].trim();
     parameters.push('--image-path');
     if (imageUri.startsWith('https://') || imageUri.startsWith('http://')) {
@@ -2149,7 +2154,7 @@ export async function createMachine(
   }
 
   // name at the end
-  if (params['podman.factory.machine.name']) {
+  if (params['podman.factory.machine.name'] && typeof params['podman.factory.machine.name'] === 'string') {
     parameters.push(params['podman.factory.machine.name']);
     telemetryRecords.customName = params['podman.factory.machine.name'];
     telemetryRecords.defaultName = false;
