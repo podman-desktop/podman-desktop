@@ -83,12 +83,14 @@ test('expect dropdown onchange to be propagated', async () => {
   });
 
   expect(Dropdown).toHaveBeenCalledOnce();
-  const { onChange } = vi.mocked(Dropdown).mock.calls[0][1];
+  const { onChange, options } = vi.mocked(Dropdown).mock.calls[0][1];
+  // ensure the dropdown received one option
+  expect(options).toHaveLength(1);
 
   // ensure the component has provided on onChange method
   expect(onChange).toBeDefined();
   // simulate user selected the provider container connection
-  onChange?.(CONTAINER_CONNECTION_INFO.endpoint.socketPath);
+  onChange?.(options?.[0].value);
 
   expect(onchange).toHaveBeenCalledWith(CONTAINER_CONNECTION_INFO);
 });
@@ -99,7 +101,7 @@ test('expect binding to properly work', async () => {
   });
 
   expect(Dropdown).toHaveBeenCalledOnce();
-  const { onChange } = vi.mocked(Dropdown).mock.calls[0][1];
+  const { onChange, options } = vi.mocked(Dropdown).mock.calls[0][1];
 
   // ensure the component has provided on onChange method
   expect(onChange).toBeDefined();
@@ -108,7 +110,7 @@ test('expect binding to properly work', async () => {
   let alert = queryByRole('alert');
   expect(alert).toBeNull();
 
-  onChange?.(CONTAINER_CONNECTION_INFO.endpoint.socketPath);
+  onChange?.(options?.[0].value);
 
   alert = await vi.waitFor(() => {
     return getByRole('alert');
