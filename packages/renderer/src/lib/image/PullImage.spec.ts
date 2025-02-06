@@ -36,8 +36,6 @@ beforeAll(() => {
       func();
     },
   };
-  vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
 
   Object.defineProperty(window, 'matchMedia', {

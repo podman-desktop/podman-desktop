@@ -32,16 +32,6 @@ beforeAll(() => {
       func();
     },
   };
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 });
 
 beforeEach(() => {
