@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { rm } from 'node:fs/promises';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
