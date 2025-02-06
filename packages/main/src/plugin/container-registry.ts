@@ -21,6 +21,7 @@ import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
+import type { Readable } from 'node:stream';
 import { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
@@ -637,8 +638,11 @@ export class ContainerProviderRegistry {
         // Initialize an empty array for the case where neither API is available
         // ignore any warning as we are adding engineId and engineName to the image
         // and as one of the API uses Dockerode, the other ImageInfo
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let fetchedImages: any[] = [];
+        let fetchedImages: ((ImageInfo | Dockerode.ImageInfo) & {
+          isManifestList?: boolean;
+          Digest?: string;
+          manifests?: { digest?: string }[];
+        })[] = [];
 
         // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
         if (provider.libpodApi && this.useLibpodApiForImageList()) {
@@ -657,7 +661,7 @@ export class ContainerProviderRegistry {
           Array.from(fetchedImages).map(async image => {
             // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
             // rather than guessing
-            const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
+            const isManifest = image.isManifestList ?? guessIsManifest(image as ImageInfo, provider.connection.type);
 
             // Return the base image with the engineName and engineId as well as our isManifest parameter.
             const baseImage = {
@@ -666,7 +670,7 @@ export class ContainerProviderRegistry {
               engineId: provider.id,
               isManifest,
               Id: image.Digest ? `sha256:${image.Id}` : image.Id,
-              Digest: image.Digest || `sha256:${image.Id}`,
+              Digest: image.Digest ?? `sha256:${image.Id}`,
             };
 
             // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
@@ -688,7 +692,7 @@ export class ContainerProviderRegistry {
       }),
     );
 
-    return images.flat();
+    return images.flat() as ImageInfo[];
   }
 
   async pruneImages(engineId: string, all: boolean): Promise<void> {
@@ -805,8 +809,7 @@ export class ContainerProviderRegistry {
           const containers = await provider.api.listContainers({ all: true });
 
           // any as there is a CreatedAt field missing in the type
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const volumeListInfo: any = await provider.api.listVolumes();
+          const volumeListInfo = await provider.api.listVolumes();
 
           let storageDefinition = {
             Volumes: [],
@@ -819,9 +822,8 @@ export class ContainerProviderRegistry {
 
           const engineName = provider.name;
           const engineId = provider.id;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const volumeInfos = volumeListInfo.Volumes.map((volumeList: any) => {
-            const volumeInfo: VolumeInfo = { ...volumeList, engineName, engineId };
+          const volumeInfos = volumeListInfo.Volumes.map(volumeList => {
+            const volumeInfo: Partial<VolumeInfo> = { ...volumeList };
 
             // compute containers using this volume
             const containersUsingThisVolume = containers
@@ -842,16 +844,16 @@ export class ContainerProviderRegistry {
             volumeInfo.UsageData.RefCount = volumeInfo.containersUsage.length;
 
             // do we have a matching volume in storage definition ?
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const matchingVolume: any = (storageDefinition?.Volumes || []).find(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (volumeStorage: any) => volumeStorage.Name === volumeInfo.Name,
+            const storageDefinitionVolumes: { Name: string; UsageData: { Size: number } }[] =
+              storageDefinition?.Volumes || [];
+            const matchingVolume = storageDefinitionVolumes.find(
+              volumeStorage => volumeStorage.Name === volumeInfo.Name,
             );
             // update the size if asked and then there is a matching volume
             if (matchingVolume) {
               volumeInfo.UsageData.Size = matchingVolume.UsageData.Size;
             }
-            return volumeInfo;
+            return volumeInfo as VolumeInfo;
           });
           return { Volumes: volumeInfos, Warnings: volumeListInfo.Warnings, engineName, engineId };
         } catch (error) {
@@ -1128,8 +1130,7 @@ export class ContainerProviderRegistry {
         callback('end', '');
       });
       let firstMessage = true;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pushStream.on('data', (chunk: any) => {
+      pushStream.on('data', chunk => {
         if (firstMessage) {
           firstMessage = false;
           callback('first-message', '');
@@ -1183,12 +1184,13 @@ export class ContainerProviderRegistry {
     } catch (error) {
       // Provides a better error message for 401, 403 and 500 errors
       if (error instanceof Error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const statusCode = (error as any)?.statusCode;
-        if (statusCode === 403) {
-          error.message = `access to image "${imageName}" is denied (403 error). Can also be that image does not exist.`;
-        } else if (statusCode === 500 || statusCode === 401) {
-          error.message = `access to image "${imageName}" is denied (${statusCode} error). Can also be that the registry requires authentication.`;
+        if ('statusCode' in error) {
+          const statusCode = error.statusCode;
+          if (statusCode === 403) {
+            error.message = `access to image "${imageName}" is denied (403 error). Can also be that image does not exist.`;
+          } else if (statusCode === 500 || statusCode === 401) {
+            error.message = `access to image "${imageName}" is denied (${statusCode} error). Can also be that the registry requires authentication.`;
+          }
         }
       }
       telemetryOptions = { error: error };
@@ -1465,17 +1467,28 @@ export class ContainerProviderRegistry {
     containerToReplicate: ContainerInspectInfo,
     updatedEnv: { [p: string]: string },
   ): Record<string, unknown> {
+    type MountType = Array<{
+      Name?: string;
+      Type?: string;
+      Source: string;
+      Destination: string;
+      Mode: string;
+      RW: boolean;
+      Propagation: string;
+    }>;
+    const mounts: MountType = containerToReplicate.Mounts;
+
     return {
       command: containerToReplicate.Config.Cmd,
       entrypoint: containerToReplicate.Config.Entrypoint,
       env: updatedEnv,
       image: containerToReplicate.Config.Image,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mounts: containerToReplicate.Mounts.filter(mount => (mount as any).Type !== 'volume'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      volumes: containerToReplicate.Mounts.filter(mount => (mount as any).Type === 'volume').map(mount => {
-        return { Name: mount.Name, Dest: mount.Destination };
-      }),
+      mounts: mounts.filter(mount => mount.Type !== 'volume'),
+      volumes: mounts
+        .filter(mount => mount.Type === 'volume')
+        .map(mount => {
+          return { Name: mount.Name, Dest: mount.Destination };
+        }),
     };
   }
 
@@ -2361,13 +2374,12 @@ export class ContainerProviderRegistry {
   }
 
   private statsConsumerId = 0;
-  private statsConsumer = new Map<number, NodeJS.ReadableStream>();
+  private statsConsumer = new Map<number, Readable>();
 
   async stopContainerStats(id: number): Promise<void> {
     const consumer = this.statsConsumer.get(id);
     if (consumer) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (consumer as any).destroy();
+      consumer.destroy();
       this.statsConsumer.delete(id);
     }
   }
@@ -2390,15 +2402,13 @@ export class ContainerProviderRegistry {
 
       const containerObject = provider.api.getContainer(id);
       this.statsConsumerId++;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let stream: any;
+      let stream: Readable | undefined;
       try {
-        stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
+        stream = (await containerObject.stats({ stream: true })) as unknown as Readable;
         this.statsConsumer.set(this.statsConsumerId, stream);
 
         const pipeline = stream?.pipe(StreamValues.withParser());
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pipeline?.on('error', (error: any) => {
+        pipeline?.on('error', (error: unknown) => {
           console.error('Error while grabbing stats', error);
           try {
             stream?.destroy();
@@ -2407,8 +2417,7 @@ export class ContainerProviderRegistry {
             console.error('Error while destroying stream', error);
           }
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pipeline?.on('data', (data: any) => {
+        pipeline?.on('data', data => {
           if (data?.value) {
             callback({
               engineName: provider.name,
