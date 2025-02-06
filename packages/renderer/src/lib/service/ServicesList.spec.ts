@@ -62,8 +62,10 @@ test('Expect services list', async () => {
 
   render(ServicesList);
 
-  const serviceName = screen.getByRole('cell', { name: 'my-service test-namespace' });
-  expect(serviceName).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const serviceName = screen.getByRole('cell', { name: 'my-service test-namespace' });
+    expect(serviceName).toBeInTheDocument();
+  });
 });
 
 test('Expect filter empty screen', async () => {
@@ -92,8 +94,10 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   render(ServicesList);
 
-  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle service' });
-  await fireEvent.click(checkboxes[0]);
+  await vi.waitFor(async () => {
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle service' });
+    await fireEvent.click(checkboxes[0]);
+  });
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
@@ -140,10 +144,13 @@ test('services list is updated when kubernetesCurrentContextServicesFiltered cha
   vi.mocked(states).kubernetesCurrentContextServicesFiltered = filtered;
 
   const component = render(ServicesList);
-  const serviceName1 = screen.getByRole('cell', { name: 'my-service-1 test-namespace' });
-  expect(serviceName1).toBeInTheDocument();
-  const serviceName2 = screen.getByRole('cell', { name: 'my-service-2 test-namespace' });
-  expect(serviceName2).toBeInTheDocument();
+
+  await vi.waitFor(async () => {
+    const serviceName1 = screen.getByRole('cell', { name: 'my-service-1 test-namespace' });
+    expect(serviceName1).toBeInTheDocument();
+    const serviceName2 = screen.getByRole('cell', { name: 'my-service-2 test-namespace' });
+    expect(serviceName2).toBeInTheDocument();
+  });
 
   filtered.set([service2]);
   await component.rerender({});
