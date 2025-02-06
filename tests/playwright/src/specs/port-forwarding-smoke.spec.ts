@@ -28,6 +28,7 @@ const clusterName: string = 'kind-cluster';
 const kindNode: string = `${clusterName}-control-plane`;
 const clusterContext: string = `kind-${clusterName}`;
 const skipKindInstall = process.env.SKIP_KIND_INSTALL === 'true';
+const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
 const imageName: string = 'ghcr.io/podmandesktop-ci/nginx';
 const pullImageName: string = `${imageName}:latest`;
@@ -53,7 +54,10 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   }
 
   if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-    await createKindCluster(page, clusterName, false, 300_000, { useIngressController: false });
+    await createKindCluster(page, clusterName, false, 300_000, {
+      providerType: providerTypeGHA,
+      useIngressController: false,
+    });
   } else {
     await createKindCluster(page, clusterName, true, 300_000);
   }
@@ -72,6 +76,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' }, () => {
   test('Prepare deployment on the cluster', async ({ navigationBar }) => {
+    test.setTimeout(120_000);
     //Pull image
     let imagesPage = await navigationBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();
@@ -96,7 +101,7 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
       { useKubernetesServices: true, useKubernetesIngress: false },
       clusterContext,
     );
-    await playExpect(deployToKubernetesPage.doneButton).toBeVisible({ timeout: 20_000 });
+    await playExpect(deployToKubernetesPage.doneButton).toBeVisible({ timeout: 45_000 });
     await deployToKubernetesPage.doneButton.click();
     const podsPage = await navigationBar.openPods();
     await playExpect
@@ -120,7 +125,7 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
   });
 
   test('Verify new local port response', async () => {
-    const response: Response = await fetch(forwardAddress);
+    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
     const blob: Blob = await response.blob();
     const text: string = await blob.text();
     playExpect(text).toContain(responseMessage);
@@ -135,8 +140,8 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
 
     const localPortCell = configurationRow.getByRole('cell').nth(4);
     const remotePortCell = configurationRow.getByRole('cell').nth(5);
-    playExpect(Number(localPortCell.textContent())).toEqual(localPort);
-    playExpect(Number(remotePortCell.textContent())).toEqual(remotePort);
+    playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
+    playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
   });
 
   test('Delete configuration', async ({ page }) => {
@@ -161,12 +166,12 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
     const podsPage = await navigationBar.openPods();
     const podDetailPage = await podsPage.openPodDetails(podName);
     await podDetailPage.activateTab('Summary');
-    const forwardButton = page.getByRole('button', { name: `Forward port ${remotePort}` });
+    const forwardButton = page.getByRole('button', { name: `Forward...` });
     await playExpect(forwardButton).toBeVisible();
   });
 
   test('Verify link response after removal', async () => {
-    const response: Response = await fetch(forwardAddress);
+    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
     const blob: Blob = await response.blob();
     const text: string = await blob.text();
     playExpect(text).not.toContain(responseMessage);
