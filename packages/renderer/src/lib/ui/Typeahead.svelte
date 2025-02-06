@@ -42,47 +42,65 @@ let input: HTMLInputElement | undefined = $state();
 let list: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
-let items: string[] = $derived(
-  resultItems.toSorted(
-    compare ??
-      ((a: string, b: string): number => {
-        if (a.startsWith(userValue) === b.startsWith(userValue)) {
-          return a.localeCompare(b);
-        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
-          return -1;
-        } else {
-          return 1;
-        }
-      }),
-  ),
-);
-let itemHeadings: { [index: number]: string[] } = $state({});
 let opened: boolean = $state(false);
 let highlightIndex: number = $state(-1);
 let pageStep: number = $state(10);
 let userValue: string = $state('');
 let loading: boolean = $state(false);
 
-$effect(() => {
+let groupedItems: { [group: string]: string[] } = $derived(groupItems(resultItems));
+let itemHeadings: { [index: number]: string[] } = $derived(updateHeadings(groupedItems));
+
+let items: string[] = $derived.by(() => {
   if (disabled) {
-    return;
+    return [];
   }
-  let headings: { [index: number]: string[] } = {};
   let currentItems: string[] = [];
-  let groupedItems = groupItems(resultItems);
-  for (let group in groupedItems) {
-    if (group) {
-      if (headings[currentItems.length]) {
-        headings[currentItems.length].push(group);
-      } else {
-        headings[currentItems.length] = [group];
-      }
-    }
+  for (const group in groupedItems) {
     currentItems = currentItems.concat(groupedItems[group]);
   }
-  items = currentItems;
-  itemHeadings = headings;
+  return currentItems;
 });
+
+function groupItems(itemsList: TypeaheadItem[]): { [group: string]: string[] } {
+  let groupedItems: { [group: string]: string[] } = {};
+  let groups = [...new Set(itemsList.map(item => item.group ?? ''))];
+  for (const group of groups) {
+    let values = itemsList.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
+    groupedItems[group] = values.toSorted(
+      compare ??
+        ((a: string, b: string): number => {
+          if (a.startsWith(userValue) === b.startsWith(userValue)) {
+            return a.localeCompare(b);
+          } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
+            return -1;
+          } else {
+            return 1;
+          }
+        }),
+    );
+  }
+  return groupedItems;
+}
+
+function updateHeadings(groups: { [group: string]: string[] }): { [index: number]: string[] } {
+  if (disabled) {
+    return {};
+  }
+  let headingIndex = 0;
+  let headings: { [index: number]: string[] } = {};
+  for (const group in groups) {
+    if (group) {
+      if (headings[headingIndex]) {
+        headings[headingIndex].push(group);
+      } else {
+        headings[headingIndex] = [group];
+      }
+      headingIndex += groups[group].length;
+    }
+  }
+  return headings;
+}
 
 function onItemSelected(s: string): void {
   value = s;
@@ -90,28 +108,6 @@ function onItemSelected(s: string): void {
   input?.focus();
   close();
   onChange?.(s);
-}
-
-function groupItems(itemsList: TypeaheadItem[]): { [group: string]: string[] } {
-  let groupedItems: { [group: string]: string[] } = {};
-  let groups = [...new Set(itemsList.map(item => item.group ?? ''))];
-  for (const group of groups) {
-    let values = itemsList.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
-    if (compare) {
-      groupedItems[group] = values.toSorted(compare);
-    } else {
-      groupedItems[group] = values.toSorted((a: string, b: string) => {
-        if (a.startsWith(userValue) === b.startsWith(userValue)) {
-          return a.localeCompare(b);
-        } else if (a.startsWith(userValue) && !b.startsWith(userValue)) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
-    }
-  }
-  return groupedItems;
 }
 
 function onInput(): void {

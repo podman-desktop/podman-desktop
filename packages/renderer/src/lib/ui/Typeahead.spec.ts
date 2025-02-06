@@ -124,80 +124,7 @@ test('should list the result after the delay, and display spinner during loading
 });
 
 test('should list items started with search term on top if no compare function is provided', async () => {
-  let searchResult: string[] = [];
-  const searchFunction = async (s: string): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    searchResult = [{ values: ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'] }];
-  };
-  const { rerender } = render(Typeahead, {
-    initialFocus: true,
-    onInputChange: searchFunction,
-    resultItems: searchResult,
-    delay: 10,
-  });
-
-  const input = screen.getByRole('textbox');
-
-  await userEvent.type(input, 'aze');
-  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
-  await rerender({ resultItems: searchResult });
-  await tick();
-
-  await waitFor(() => {
-    const list = screen.getByRole('row');
-    const items = within(list).getAllByRole('button');
-    expect(items.length).toBe(6);
-    expect(items[0].textContent).toBe('aze01');
-    expect(items[1].textContent).toBe('aze02');
-    expect(items[2].textContent).toBe('aze03');
-    expect(items[3].textContent).toBe('z0');
-  });
-});
-
-test('should list items in order based on compare function if provided', async () => {
-  const compareFunction = (a: string, b: string): number => {
-    if (a.startsWith('first') === b.startsWith('first')) {
-      return a.localeCompare(b);
-    } else if (a.startsWith('first') && !b.startsWith('first')) {
-      return -1;
-    } else {
-      return 1;
-    }
-  };
-
-  let searchResult: string[] = [];
-  const searchFunction = async (): Promise<void> => {
-    searchResult = ['first01', 'second01', 'first03', 'athird01', 'second02', 'first02'];
-  };
-
-  const { rerender } = render(Typeahead, {
-    initialFocus: true,
-    onInputChange: searchFunction,
-    resultItems: searchResult,
-    delay: 10,
-    compare: compareFunction,
-  });
-
-  const input = screen.getByRole('textbox');
-  await userEvent.type(input, 'a');
-  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
-  await rerender({ resultItems: searchResult });
-  await tick();
-  await waitFor(() => {
-    const list = screen.getByRole('row');
-    const items = within(list).getAllByRole('button');
-    expect(items.length).toBe(6);
-    expect(items[0].textContent).toBe('first01');
-    expect(items[1].textContent).toBe('first02');
-    expect(items[2].textContent).toBe('first03');
-    expect(items[3].textContent).toBe('athird01');
-    expect(items[4].textContent).toBe('second01');
-    expect(items[5].textContent).toBe('second02');
-  });
-});
-
-test('should navigate in list with keys', async () => {
-  let searchResult: GroupItem[] = [];
+  let searchResult: TypeaheadItem[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
     searchResult = ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'].map(value => ({ value: value }));
@@ -227,7 +154,7 @@ test('should navigate in list with keys', async () => {
   });
 });
 
-test('should list items based compare function if provided', async () => {
+test('should list items in order based on compare function if provided', async () => {
   const compareFunction = (a: string, b: string): number => {
     if (a.startsWith('first') === b.startsWith('first')) {
       return a.localeCompare(b);
