@@ -26,12 +26,12 @@ import { Mutex } from 'async-mutex';
 import * as toml from 'smol-toml';
 
 const configurationRosetta = 'setting.rosetta';
-const mutex = new Mutex();
 
 /**
  * Manages access to the containers.conf configuration file used to configure Podman
  */
 export class PodmanConfiguration {
+  private mutex: Mutex = new Mutex();
   async init(): Promise<void> {
     let httpProxy = undefined;
     let httpsProxy = undefined;
@@ -39,9 +39,7 @@ export class PodmanConfiguration {
 
     // we receive an update for the current proxy settings
     extensionApi.proxy.onDidUpdateProxy(async (proxySettings: ProxySettings) => {
-      await mutex.runExclusive(async () => {
-        await this.updateProxySettings(proxySettings);
-      });
+      await this.doUpdateProxySettings(proxySettings);
     });
 
     // in case of proxy being enabled or disabled we need to update the containers.conf file
@@ -49,13 +47,9 @@ export class PodmanConfiguration {
       // eslint-disable-next-line sonarjs/no-selector-parameter
       if (enabled) {
         const updatedProxySettings = extensionApi.proxy.getProxySettings();
-        await mutex.runExclusive(async () => {
-          await this.updateProxySettings(updatedProxySettings);
-        });
+        await this.doUpdateProxySettings(updatedProxySettings);
       } else {
-        await mutex.runExclusive(async () => {
-          await this.updateProxySettings(undefined);
-        });
+        await this.doUpdateProxySettings(undefined);
       }
     });
 
@@ -110,6 +104,15 @@ export class PodmanConfiguration {
           await this.handleRosettaSetting();
         }
       });
+    }
+  }
+
+  async doUpdateProxySettings(proxy: undefined | ProxySettings): Promise<void> {
+    const release = await this.mutex.acquire();
+    try {
+      await this.updateProxySettings(proxy);
+    } finally {
+      release();
     }
   }
 
