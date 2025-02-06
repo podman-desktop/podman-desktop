@@ -19,13 +19,17 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import type {
+  AutostartContext,
   CheckResult,
   ContainerProviderConnection,
   InstallCheck,
   KubernetesProviderConnection,
+  Logger,
+  Provider,
   ProviderCleanup,
   ProviderConnectionShellAccess,
   ProviderConnectionShellAccessSession,
+  ProviderConnectionStatus,
   ProviderInstallation,
   ProviderLifecycle,
   ProviderUpdate,
@@ -58,6 +62,7 @@ let containerRegistry: ContainerProviderRegistry;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.restoreAllMocks();
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
   const telemetry: Telemetry = {
     track: telemetryTrackMock,
@@ -440,6 +445,172 @@ describe('should send events when starting a container connection', async () => 
       expect(onBeforeDidUpdateContainerConnectionCalled).toBe(2);
       expect(onDidUpdateContainerConnectionCalled).toBe(2);
       expect(onAfterDidUpdateContainerConnectionCalled).toBe(2);
+    });
+  });
+});
+
+describe('when auto-starting a container connection', async () => {
+  let connection: ProviderContainerConnectionInfo;
+  let provider: Provider;
+  let containerProviderConnection: ContainerProviderConnection;
+
+  beforeEach(() => {
+    provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    connection = {
+      name: 'connection',
+      displayName: 'connection',
+      type: 'docker',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status: 'started',
+      vmType: {
+        id: 'libkrun',
+        name: 'libkrun',
+      },
+    };
+
+    containerProviderConnection = {
+      name: 'connection',
+      displayName: 'connection',
+      type: 'docker',
+      lifecycle: {
+        start: vi.fn(),
+        stop: vi.fn(),
+      },
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status(): ProviderConnectionStatus {
+        return 'started';
+      },
+      vmType: 'libkrun',
+    };
+
+    providerRegistry.registerAutostartEngine(autostartEngine);
+  });
+
+  describe('when provider does not call updateContainerConnection', () => {
+    beforeEach(() => {
+      provider.registerAutostart({
+        start: async (_logger: Logger, _context?: AutostartContext) => {},
+      });
+    });
+
+    test('a warn should be displayed', async () => {
+      vi.spyOn(console, 'warn');
+      await providerRegistry.runAutostart('0');
+      expect(console.warn).toHaveBeenCalledWith(
+        `autostart called for provider internal but provider never called updateContainerConnection. Provider needs to call this method or UpdateContainerConnection events won't be propagated`,
+      );
+    });
+  });
+
+  describe('when provider calls updateContainerConnection with non-registered connection', () => {
+    beforeEach(() => {
+      provider.registerAutostart({
+        start: async (_logger: Logger, context?: AutostartContext) => {
+          context?.updateContainerConnection(containerProviderConnection);
+        },
+      });
+    });
+
+    test('an error should be thrown', async () => {
+      await expect(() => providerRegistry.runAutostart('0')).rejects.toThrowError(
+        'container connection connection is not registered by provider internal',
+      );
+    });
+  });
+
+  describe('when provider calls updateContainerConnection with registered connection', () => {
+    beforeEach(() => {
+      provider.registerContainerProviderConnection(containerProviderConnection);
+
+      provider.registerAutostart({
+        start: async (_logger: Logger, context?: AutostartContext) => {
+          context?.updateContainerConnection(containerProviderConnection);
+        },
+      });
+    });
+
+    test('should send events when api is directly attached', async () => {
+      vi.mocked(containerRegistry.isApiAttached).mockReturnValue(true);
+
+      let onBeforeDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onBeforeDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onBeforeDidUpdateContainerConnectionCalled++;
+      });
+      let onDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onDidUpdateContainerConnectionCalled++;
+      });
+      let onAfterDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onAfterDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onAfterDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onAfterDidUpdateContainerConnectionCalled++;
+      });
+
+      await providerRegistry.runAutostart('0');
+
+      expect(onBeforeDidUpdateContainerConnectionCalled).toBe(2);
+      expect(onDidUpdateContainerConnectionCalled).toBe(2);
+      expect(onAfterDidUpdateContainerConnectionCalled).toBe(2);
+    });
+
+    test('should send events when api is eventually attached', async () => {
+      vi.mocked(containerRegistry.isApiAttached).mockReturnValue(false);
+      vi.mocked(containerRegistry.onApiAttached).mockImplementation(c => {
+        setTimeout(() => {
+          c('internal.connection');
+        }, 10);
+        return Disposable.noop();
+      });
+
+      let onBeforeDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onBeforeDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onBeforeDidUpdateContainerConnectionCalled++;
+      });
+      let onDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onDidUpdateContainerConnectionCalled++;
+      });
+      let onAfterDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onAfterDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onAfterDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onAfterDidUpdateContainerConnectionCalled++;
+      });
+
+      await providerRegistry.runAutostart('0');
+
+      expect(onBeforeDidUpdateContainerConnectionCalled).toBe(1);
+      expect(onDidUpdateContainerConnectionCalled).toBe(1);
+      expect(onAfterDidUpdateContainerConnectionCalled).toBe(1);
+
+      await vi.waitFor(() => {
+        expect(onBeforeDidUpdateContainerConnectionCalled).toBe(2);
+        expect(onDidUpdateContainerConnectionCalled).toBe(2);
+        expect(onAfterDidUpdateContainerConnectionCalled).toBe(2);
+      });
     });
   });
 });
