@@ -86,6 +86,7 @@ const CLI_TOOL_MOCK: extensionApi.CliTool = {
   registerUpdate: vi.fn(),
   registerInstaller: vi.fn(),
   updateVersion: vi.fn(),
+  version: '0.0.1',
 } as unknown as extensionApi.CliTool;
 
 beforeEach(() => {
@@ -304,7 +305,7 @@ describe('cli#update', () => {
   test('try to update before selecting cli tool version should throw an error', async () => {
     const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
     await expect(() => update?.doUpdate({} as unknown as extensionApi.Logger)).rejects.toThrowError(
-      'Cannot update test-storage-path/kind version 0.0.1. No release selected.',
+      'Cannot update kind version 0.0.1. No release selected.',
     );
   });
 
@@ -349,11 +350,21 @@ async function getCliToolInstaller(): Promise<extensionApi.CliToolInstaller> {
 
 describe('cli#install', () => {
   beforeEach(() => {
+    // mock create cli tool
+    vi.mocked(podmanDesktopApi.cli.createCliTool).mockReturnValue({
+      ...CLI_TOOL_MOCK,
+      version: undefined,
+      dispose: vi.fn(),
+    });
+
     // mock no kind detected
     vi.mocked(util.getKindBinaryInfo).mockRejectedValue('no kind');
   });
 
   test('try to install when there is already an existing version should throw an error', async () => {
+    // mock create cli tool (existing version)
+    vi.mocked(podmanDesktopApi.cli.createCliTool).mockReturnValue(CLI_TOOL_MOCK);
+
     // mock existing cli tool
     vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
       version: '0.0.1',
@@ -363,7 +374,7 @@ describe('cli#install', () => {
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
     await expect(() => cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger)).rejects.toThrowError(
-      `Cannot install kind. Version 0.0.1 in test-storage-path/kind is already installed.`,
+      `Cannot install kind. Version 0.0.1 is already installed.`,
     );
   });
 

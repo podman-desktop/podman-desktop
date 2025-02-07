@@ -61,6 +61,8 @@ const registeredKubernetesConnections: {
 let kindCli: CliTool | undefined;
 let kindPath: string | undefined;
 
+let installer: KindInstaller;
+
 const imageHandler = new ImageHandler();
 
 async function registerProvider(
@@ -336,10 +338,17 @@ export async function moveImage(
   }
 }
 
-export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
-  const telemetryLogger = extensionApi.env.createTelemetryLogger();
+/**
+ * Function to register the kind cli tool
+ * @param extensionContext
+ * @param telemetryLogger
+ */
+async function registerCliTool(
+  extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
   const octokit = new Octokit();
-  const installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokit);
+  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokit);
 
   let binary: { path: string; version: string } | undefined = undefined;
   let installationSource: extensionApi.CliToolInstallationSource | undefined;
@@ -363,32 +372,22 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   }
 
   // if the binary exists (either system-wide or in extension storage), we get its version/path
-  let binaryVersion: string | undefined;
-  let binaryPath: string | undefined;
   if (binary) {
-    binaryVersion = binary.version;
-    binaryPath = binary.path;
-    kindPath = binaryPath;
+    kindPath = binary.path;
   }
+
   // we register it
   kindCli = extensionApi.cli.createCliTool({
     name: KIND_CLI_NAME,
     images: {
       icon: './icon.png',
     },
-    version: binaryVersion,
-    path: binaryPath,
+    version: binary?.version,
+    path: binary?.path,
     displayName: KIND_DISPLAY_NAME,
     markdownDescription: KIND_MARKDOWN,
     installationSource,
   });
-
-  // let's create a provider
-  await createProvider(extensionContext, telemetryLogger);
-
-  // if we do not have anything installed, let's add it to the status bar
-  let releaseToInstall: KindGithubReleaseArtifactMetadata | undefined;
-  let releaseVersionToInstall: string | undefined;
 
   extensionContext.subscriptions.push(kindCli);
 
@@ -396,6 +395,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   if (installationSource === 'external') {
     return;
   }
+
+  // if we do not have anything installed, let's add it to the status bar
+  let releaseToInstall: KindGithubReleaseArtifactMetadata | undefined;
+  let releaseVersionToInstall: string | undefined;
+
   // register the updater to allow users to upgrade/downgrade their cli
   let releaseToUpdateTo: KindGithubReleaseArtifactMetadata | undefined;
   let releaseVersionToUpdateTo: string | undefined;
@@ -412,13 +416,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const update = {
     version: latestVersion !== kindCli.version ? latestVersion : undefined,
     selectVersion: async (): Promise<string> => {
-      const selected = await installer.promptUserForVersion(binaryVersion);
+      const selected = await installer.promptUserForVersion(binary?.version);
       releaseToUpdateTo = selected;
       releaseVersionToUpdateTo = removeVersionPrefix(selected.tag);
       return releaseVersionToUpdateTo;
     },
     doUpdate: async (): Promise<void> => {
-      if (!binaryVersion || !binaryPath) {
+      if (!kindCli?.version) {
         throw new Error(`Cannot update ${KIND_CLI_NAME}. No cli tool installed.`);
       }
 
@@ -428,7 +432,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       }
 
       if (!releaseToUpdateTo || !releaseVersionToUpdateTo) {
-        throw new Error(`Cannot update ${binaryPath} version ${binaryVersion}. No release selected.`);
+        throw new Error(`Cannot update kind version ${kindCli.version}. No release selected.`);
       }
 
       // download, install system wide and update cli version
@@ -444,7 +448,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         installationSource: 'extension',
         path: cliPath,
       });
-      binaryVersion = releaseVersionToUpdateTo;
       if (releaseVersionToUpdateTo === latestVersion) {
         delete update.version;
       } else {
@@ -463,10 +466,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       return releaseVersionToInstall;
     },
     doInstall: async _logger => {
-      if (binaryVersion ?? binaryPath) {
-        throw new Error(
-          `Cannot install ${KIND_CLI_NAME}. Version ${binaryVersion} in ${binaryPath} is already installed.`,
-        );
+      if (kindCli?.version) {
+        throw new Error(`Cannot install ${KIND_CLI_NAME}. Version ${kindCli.version} is already installed.`);
       }
       if (!releaseToInstall || !releaseVersionToInstall) {
         throw new Error(`Cannot install ${KIND_CLI_NAME}. No release selected.`);
@@ -487,8 +488,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         path: cliPath,
         installationSource: 'extension',
       });
-      binaryVersion = releaseVersionToInstall;
-      binaryPath = cliPath;
       kindPath = cliPath;
       if (releaseVersionToInstall === latestVersion) {
         delete update.version;
@@ -499,7 +498,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       releaseToInstall = undefined;
     },
     doUninstall: async _logger => {
-      if (!binaryVersion) {
+      if (!kindCli?.version) {
         throw new Error(`Cannot uninstall ${KIND_CLI_NAME}. No version detected.`);
       }
 
@@ -512,11 +511,19 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       await deleteFile(systemPath);
 
       // update the version and path to undefined
-      binaryVersion = undefined;
-      binaryPath = undefined;
       kindPath = undefined;
     },
   });
+}
+
+export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
+  const telemetryLogger = extensionApi.env.createTelemetryLogger();
+
+  // let's register the CLI Tool
+  await registerCliTool(extensionContext, telemetryLogger);
+
+  // let's create a provider
+  await createProvider(extensionContext, telemetryLogger);
 }
 
 async function deleteFile(filePath: string): Promise<void> {
