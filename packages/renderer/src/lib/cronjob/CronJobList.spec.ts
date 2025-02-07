@@ -68,9 +68,10 @@ test('Expect cronjobs list', async () => {
   vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = writable<KubernetesObject[]>([cronjob]);
 
   render(CronJobList);
-
-  const cronjobName = screen.getByRole('cell', { name: 'my-cronjob test-namespace' });
-  expect(cronjobName).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const cronjobName = screen.getByRole('cell', { name: 'my-cronjob test-namespace' });
+    expect(cronjobName).toBeInTheDocument();
+  });
 });
 
 test('Expect filter empty screen', async () => {
@@ -130,16 +131,20 @@ test('Expect cronjob list is updated when kubernetesCurrentContextCronJobsFilter
   vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = filtered;
 
   const component = render(CronJobList);
-  const cronjobName1 = screen.getByRole('cell', { name: 'my-cronjob-1 test-namespace' });
-  expect(cronjobName1).toBeInTheDocument();
-  const cronjobName2 = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
-  expect(cronjobName2).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const cronjobName1 = screen.getByRole('cell', { name: 'my-cronjob-1 test-namespace' });
+    expect(cronjobName1).toBeInTheDocument();
+    const cronjobName2 = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
+    expect(cronjobName2).toBeInTheDocument();
+  });
 
   filtered.set([cronjob2]);
   await component.rerender({});
 
-  const cronjobName1after = screen.queryByRole('cell', { name: 'my-cronjob-1 test-namespace' });
-  expect(cronjobName1after).not.toBeInTheDocument();
-  const cronjobName2after = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
-  expect(cronjobName2after).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const cronjobName1after = screen.queryByRole('cell', { name: 'my-cronjob-1 test-namespace' });
+    expect(cronjobName1after).not.toBeInTheDocument();
+    const cronjobName2after = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
+    expect(cronjobName2after).toBeInTheDocument();
+  });
 });
