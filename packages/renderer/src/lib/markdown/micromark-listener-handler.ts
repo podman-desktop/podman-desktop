@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 import { executeButtonCommand } from './component/micromark-button';
 import { executeExpandableToggle } from './component/micromark-expandable-section';
 
+const eventObject: { target?: object } = {};
+
 export function createListener(
   inProgressMarkdownCommandExecutionCallback: (
     command: string,
@@ -26,16 +28,33 @@ export function createListener(
     value?: unknown,
   ) => void,
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (e: any): void => {
+  return (e: unknown): void => {
+    if (e && typeof e === 'object' && 'target' in e && e.target && typeof e.target === 'object') {
+      eventObject.target = e.target;
+    }
+
     // Retrieve the command and expandable within the dataset
-    const command = e.target.dataset.command;
-    const expandable = e.target.dataset.expandable;
+    let command: string | undefined;
+    let expandable: string | undefined;
+
+    if (
+      eventObject.target &&
+      'dataset' in eventObject.target &&
+      eventObject.target.dataset &&
+      typeof eventObject.target.dataset === 'object'
+    ) {
+      if ('command' in eventObject.target.dataset && typeof eventObject.target.dataset.command === 'string') {
+        command = eventObject.target.dataset.command;
+      }
+      if ('expandable' in eventObject.target.dataset && typeof eventObject.target.dataset.expandable === 'string') {
+        expandable = eventObject.target.dataset.expandable;
+      }
+    }
 
     // if the user click on a a href link containing data-pd-jump-in-page attribute
-    if (e.target instanceof HTMLAnchorElement) {
+    if (eventObject.target instanceof HTMLAnchorElement) {
       // get a matching attribute ?
-      const hrefId = e.target.getAttribute('data-pd-jump-in-page');
+      const hrefId = eventObject.target.getAttribute('data-pd-jump-in-page');
 
       // get a linked ID
       if (hrefId) {
@@ -59,33 +78,37 @@ export function createListener(
     }
 
     // if the user clicked on a button (new way)
-    if (!command && e.target instanceof HTMLButtonElement) {
-      executeButtonCommand(e.target.id).catch((err: unknown) =>
-        console.error(`Error executing command ${e.target.id}`, err),
-      );
+    if (!command && eventObject.target instanceof HTMLButtonElement) {
+      const targetId = eventObject.target.id;
+      executeButtonCommand(targetId).catch((err: unknown) => console.error(`Error executing command ${targetId}`, err));
       return;
     }
 
     // Only check if the command exists and the target is not disabled
-    if (command && !e.target.disabled) {
+    if (command && eventObject.target && 'disabled' in eventObject.target && !eventObject.target.disabled) {
       // If the target is an instance of a button element, we know that we are going to execute either
       // a command or hyperlink
-      if (e.target instanceof HTMLButtonElement) {
+      if (eventObject.target instanceof HTMLButtonElement) {
+        const targetButton = eventObject.target as HTMLButtonElement;
         // If the command exists and the button is not disabled, we execute the command
         // we'll also be updating the inProgressMarkdownCommandExecutionCallback so we have
         // real-time updates on the button
         inProgressMarkdownCommandExecutionCallback(command, 'starting');
-        e.target.disabled = true;
-        e.target.firstChild.style.display = 'inline-block';
+        targetButton.disabled = true;
+        if (targetButton.firstChild && targetButton.firstChild instanceof HTMLElement) {
+          targetButton.firstChild.style.display = 'inline-block';
+        }
         window
           .executeCommand(command)
           .then(value => inProgressMarkdownCommandExecutionCallback(command, 'successful', value))
           .catch((reason: unknown) => inProgressMarkdownCommandExecutionCallback(command, 'failed', reason))
           .finally(() => {
-            e.target.disabled = false;
-            e.target.firstChild.style.display = 'none';
+            targetButton.disabled = false;
+            if (targetButton.firstChild && targetButton.firstChild instanceof HTMLElement) {
+              targetButton.firstChild.style.display = 'none';
+            }
           });
-      } else if (e.target instanceof HTMLAnchorElement) {
+      } else if (eventObject.target instanceof HTMLAnchorElement) {
         // Execute the command since it's a simple "link" to it
         // usually associated with a dialog / quickpick action.
         window.executeCommand(command).catch((reason: unknown) => console.error(String(reason)));
