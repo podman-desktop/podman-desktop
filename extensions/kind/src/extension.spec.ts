@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 
 import type * as extensionApi from '@podman-desktop/api';
 import * as podmanDesktopApi from '@podman-desktop/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as extension from './extension';
 import type { KindGithubReleaseArtifactMetadata } from './kind-installer';
@@ -115,6 +115,10 @@ beforeEach(() => {
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
   vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
+});
+
+afterEach(() => {
+  extension.deactivate();
 });
 
 function activate(options?: Partial<extensionApi.ExtensionContext>): Promise<void> {
@@ -305,7 +309,7 @@ describe('cli#update', () => {
   test('try to update before selecting cli tool version should throw an error', async () => {
     const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
     await expect(() => update?.doUpdate({} as unknown as extensionApi.Logger)).rejects.toThrowError(
-      'Cannot update kind version 0.0.1. No release selected.',
+      'Cannot update test-storage-path/kind version 0.0.1. No release selected.',
     );
   });
 
@@ -374,7 +378,7 @@ describe('cli#install', () => {
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
     await expect(() => cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger)).rejects.toThrowError(
-      `Cannot install kind. Version 0.0.1 is already installed.`,
+      `Cannot install kind. Version 0.0.1 in test-storage-path/kind is already installed.`,
     );
   });
 

@@ -422,7 +422,7 @@ async function registerCliTool(
       return releaseVersionToUpdateTo;
     },
     doUpdate: async (): Promise<void> => {
-      if (!kindCli?.version) {
+      if (!kindCli?.version || !kindPath) {
         throw new Error(`Cannot update ${KIND_CLI_NAME}. No cli tool installed.`);
       }
 
@@ -432,7 +432,7 @@ async function registerCliTool(
       }
 
       if (!releaseToUpdateTo || !releaseVersionToUpdateTo) {
-        throw new Error(`Cannot update kind version ${kindCli.version}. No release selected.`);
+        throw new Error(`Cannot update ${kindPath} version ${binary?.version}. No release selected.`);
       }
 
       // download, install system wide and update cli version
@@ -466,8 +466,10 @@ async function registerCliTool(
       return releaseVersionToInstall;
     },
     doInstall: async _logger => {
-      if (kindCli?.version) {
-        throw new Error(`Cannot install ${KIND_CLI_NAME}. Version ${kindCli.version} is already installed.`);
+      if (kindCli?.version || kindPath) {
+        throw new Error(
+          `Cannot install ${KIND_CLI_NAME}. Version ${kindCli?.version} in ${kindPath} is already installed.`,
+        );
       }
       if (!releaseToInstall || !releaseVersionToInstall) {
         throw new Error(`Cannot install ${KIND_CLI_NAME}. No release selected.`);
@@ -562,4 +564,6 @@ async function deleteFileAsAdmin(filePath: string): Promise<void> {
 
 export function deactivate(): void {
   console.log('stopping kind extension');
+  kindPath = undefined;
+  kindCli = undefined;
 }
