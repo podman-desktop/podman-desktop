@@ -59,6 +59,7 @@ import type { Menu } from '/@/plugin/menu-registry.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendations/recommendations-api.js';
+import { PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -112,6 +113,7 @@ import type {
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import type { PinOption } from '/@api/status-bar/pin-option.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -562,6 +564,15 @@ export class PluginSystem {
       }
     });
 
+    const pinRegistry = new PinRegistry(
+      statusBarRegistry,
+      commandRegistry,
+      apiSender,
+      configurationRegistry,
+      providerRegistry,
+    );
+    pinRegistry.init();
+
     statusBarRegistry.setEntry('help', false, -1, undefined, 'Help', 'fa fa-question-circle', true, 'help');
 
     statusBarRegistry.setEntry(
@@ -747,6 +758,18 @@ export class PluginSystem {
 
     // setup security restrictions on links
     await this.setupSecurityRestrictionsOnLinks(messageBox);
+
+    this.ipcHandle('statusbar:pin:get-options', async (): Promise<Array<PinOption>> => {
+      return pinRegistry.getOptions();
+    });
+
+    this.ipcHandle('statusbar:pin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.pin(optionId);
+    });
+
+    this.ipcHandle('statusbar:unpin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.unpin(optionId);
+    });
 
     this.ipcHandle('tasks:clear-all', async (): Promise<void> => {
       return taskManager.clearTasks();

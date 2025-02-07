@@ -90,6 +90,7 @@ import type {
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
+import type { PinOption } from '/@api/status-bar/pin-option';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
@@ -208,6 +209,18 @@ export function initExposure(): void {
   // Handle protocol to install extensions by delegating to the renderer process
   ipcRenderer.on('podman-desktop-protocol:install-extension', (_, extensionId: string) => {
     apiSender.send('install-extension:from-id', extensionId);
+  });
+
+  contextBridge.exposeInMainWorld('getStatusBarPinOptions', async (): Promise<Array<PinOption>> => {
+    return ipcInvoke('statusbar:pin:get-options');
+  });
+
+  contextBridge.exposeInMainWorld('pinStatusBar', async (optionId: string): Promise<Array<PinOption>> => {
+    return ipcInvoke('statusbar:pin', optionId);
+  });
+
+  contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<Array<PinOption>> => {
+    return ipcInvoke('statusbar:unpin', optionId);
   });
 
   contextBridge.exposeInMainWorld('clearTasks', async (): Promise<void> => {

@@ -4,6 +4,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import { router } from 'tinro';
 
+import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 import type { NavigationRequest } from '/@api/navigation-request';
@@ -372,6 +373,7 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
       </div>
     </div>
     <HelpActions/>
+    <PinActions/>
     <StatusBar />
   </main>
 </Route>

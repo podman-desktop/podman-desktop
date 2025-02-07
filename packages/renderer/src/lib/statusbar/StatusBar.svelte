@@ -5,6 +5,8 @@ import TaskIndicator from '/@/lib/statusbar/TaskIndicator.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarEntries } from '/@/stores/statusbar';
+import { statusBarPinned } from '/@/stores/statusbar-pinned';
+import type { ProviderInfo } from '/@api/provider-info';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
 
 import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statusbar-registry';
@@ -14,9 +16,17 @@ import StatusBarItem from './StatusBarItem.svelte';
 let leftEntries: StatusBarEntry[] = $state([]);
 let rightEntries: StatusBarEntry[] = $state([]);
 
-let containerProviders = $derived($providerInfos.filter(provider => provider.containerConnections.length > 0));
+let pinned: Set<string> = $derived(
+  new Set($statusBarPinned.filter(option => option.pinned).map(option => option.value)),
+);
 
-let kubernetesProviders = $derived($providerInfos.filter(provider => provider.kubernetesConnections.length > 0));
+let containerProviders: ProviderInfo[] = $derived(
+  $providerInfos.filter(provider => provider.containerConnections.length > 0 && pinned.has(provider.id)),
+);
+
+let kubernetesProviders = $derived(
+  $providerInfos.filter(provider => provider.kubernetesConnections.length > 0 && pinned.has(provider.id)),
+);
 
 let experimentalTaskStatusBar: boolean = $state(false);
 let experimentalProvidersStatusBar: boolean = $state(false);
