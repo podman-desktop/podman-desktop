@@ -1,18 +1,8 @@
 <script lang="ts">
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import {
-  Button,
-  FilteredEmptyScreen,
-  NavPage,
-  Table,
-  TableColumn,
-  TableDurationColumn,
-  TableRow,
-} from '@podman-desktop/ui-svelte';
+import { type KubernetesObject } from '@kubernetes/client-node';
+import { TableColumn, TableDurationColumn, TableRow } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
-import KubeActions from '/@/lib/kube/KubeActions.svelte';
-import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import {
   ingressSearchPattern,
   kubernetesCurrentContextIngressesFiltered,
@@ -21,8 +11,8 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 import type { V1Route } from '/@api/openshift-types';
 
-import { withBulkConfirmation } from '../actions/BulkActions';
 import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
+import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
 import IngressRouteColumnActions from './IngressRouteColumnActions.svelte';
 import IngressRouteColumnBackend from './IngressRouteColumnBackend.svelte';
@@ -45,46 +35,6 @@ $effect(() => {
 });
 
 const ingressRouteUtils = new IngressRouteUtils();
-
-const ingressesRoutesUI = $derived([
-  ...$kubernetesCurrentContextIngressesFiltered.map(ingress => ingressRouteUtils.getIngressUI(ingress)),
-  ...$kubernetesCurrentContextRoutesFiltered.map(route => ingressRouteUtils.getRouteUI(route as V1Route)),
-]);
-
-// delete the items selected in the list
-let bulkDeleteInProgress = $state<boolean>(false);
-async function deleteSelectedIngressesRoutes(): Promise<void> {
-  const selectedIngressesRoutes = ingressesRoutesUI.filter(ingressesRoutesUI => ingressesRoutesUI.selected);
-  if (selectedIngressesRoutes.length === 0) {
-    return;
-  }
-
-  // mark ingress or route for deletion
-  bulkDeleteInProgress = true;
-  selectedIngressesRoutes.forEach(ingressRoute => (ingressRoute.status = 'DELETING'));
-
-  if (selectedIngressesRoutes.length > 0) {
-    bulkDeleteInProgress = true;
-    await Promise.all(
-      selectedIngressesRoutes.map(async ingressRoute => {
-        const isIngress = ingressRouteUtils.isIngress(ingressRoute);
-        try {
-          if (isIngress) {
-            await window.kubernetesDeleteIngress(ingressRoute.name);
-          } else {
-            await window.kubernetesDeleteRoute(ingressRoute.name);
-          }
-        } catch (e) {
-          console.error(`error while deleting ${isIngress ? 'ingress' : 'route'}`, e);
-        }
-      }),
-    );
-    bulkDeleteInProgress = false;
-  }
-}
-
-let selectedItemsNumber = $state<number>(0);
-let table: Table;
 
 let statusColumn = new TableColumn<IngressUI>('Status', {
   align: 'center',
@@ -140,46 +90,35 @@ const columns = [
 const row = new TableRow<IngressUI | RouteUI>({ selectable: (_ingressRoute): boolean => true });
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="ingresses & routes">
-  <svelte:fragment slot="additional-actions">
-    <KubeActions />
-  </svelte:fragment>
 
-  <svelte:fragment slot="bottom-additional-actions">
-    {#if selectedItemsNumber > 0}
-      <Button
-        on:click={(): void =>
-          withBulkConfirmation(
-            deleteSelectedIngressesRoutes,
-            `delete ${selectedItemsNumber} Ingress${selectedItemsNumber > 1 ? 'es' : ''} / Route${selectedItemsNumber > 1 ? 's' : ''}`,
-          )}
-        title="Delete {selectedItemsNumber} selected items"
-        inProgress={bulkDeleteInProgress}
-        icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
-    {/if}
-    <div class="flex grow justify-end">
-      <KubernetesCurrentContextConnectionBadge />
-    </div>
-  </svelte:fragment>
-
-  <div class="flex min-w-full h-full" slot="content">
-    <Table
-      kind="ingress & route"
-      bind:this={table}
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={ingressesRoutesUI}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Name">
-    </Table>
-
-    {#if $kubernetesCurrentContextIngressesFiltered.length === 0 && $kubernetesCurrentContextRoutesFiltered.length === 0}
-      {#if searchTerm}
-        <FilteredEmptyScreen icon={IngressRouteIcon} kind="ingresses or routes" bind:searchTerm={searchTerm} />
-      {:else}
-        <IngressRouteEmptyScreen />
-      {/if}
-    {/if}
-  </div>
-</NavPage>
+<KubernetesObjectsList
+  kinds={[
+    {
+      resource: 'ingresses',
+      transformer: ingressRouteUtils.getIngressUI,
+      delete: window.kubernetesDeleteIngress,
+      isResource: (o: KubernetesObject): boolean => ingressRouteUtils.isIngress(o as IngressUI | RouteUI),
+      legacySearchPatternStore: ingressSearchPattern,
+      legacyObjectStore: kubernetesCurrentContextIngressesFiltered,
+    },
+    {
+      resource: 'routes',
+      transformer: (o: KubernetesObject): RouteUI => ingressRouteUtils.getRouteUI(o as V1Route),
+      delete: window.kubernetesDeleteRoute,
+      isResource: (): boolean => true,
+      legacySearchPatternStore: routeSearchPattern,
+      legacyObjectStore: kubernetesCurrentContextRoutesFiltered,
+    },
+  ]}
+  singular="ingress and route"
+  plural="ingresses and routes"
+  icon={IngressRouteIcon}
+  searchTerm={searchTerm}
+  columns={columns}
+  row={row}
+>
+  <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
+  {#snippet emptySnippet()}
+    <IngressRouteEmptyScreen />
+  {/snippet}
+</KubernetesObjectsList>

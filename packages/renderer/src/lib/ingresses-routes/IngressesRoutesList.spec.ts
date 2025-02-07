@@ -98,10 +98,12 @@ test('Expect element in ingresses list', async () => {
 
   render(IngressesRoutesList);
 
-  const ingressName = screen.getByRole('cell', { name: 'my-ingress test-namespace' });
-  expect(ingressName).toBeInTheDocument();
-  const routeName = screen.getByRole('cell', { name: 'my-route test-namespace' });
-  expect(routeName).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const ingressName = screen.getByRole('cell', { name: 'my-ingress test-namespace' });
+    expect(ingressName).toBeInTheDocument();
+    const routeName = screen.getByRole('cell', { name: 'my-route test-namespace' });
+    expect(routeName).toBeInTheDocument();
+  });
 });
 
 test('Expect filter empty screen if no match', async () => {
@@ -165,8 +167,10 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   render(IngressesRoutesList);
 
-  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle ingress & route' });
-  await fireEvent.click(checkboxes[0]);
+  await vi.waitFor(async () => {
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle ingress and route' });
+    await fireEvent.click(checkboxes[0]);
+  });
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
@@ -265,21 +269,23 @@ test('Expect list to be updated when stores change', async () => {
 
   const component = render(IngressesRoutesList);
 
-  let ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
-  expect(ingressName1).toBeInTheDocument();
-  let ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
-  expect(ingressName2).toBeInTheDocument();
-  let routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
-  expect(routeName).toBeInTheDocument();
+  await vi.waitFor(async () => {
+    const ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
+    expect(ingressName1).toBeInTheDocument();
+    const ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
+    expect(ingressName2).toBeInTheDocument();
+    const routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
+    expect(routeName).toBeInTheDocument();
+  });
 
   filteredIngresses.set([ingress1]);
   await component.rerender({});
 
-  ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
+  let ingressName1 = screen.queryByRole('cell', { name: 'my-ingress-1 test-namespace' });
   expect(ingressName1).toBeInTheDocument();
-  ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
+  let ingressName2 = screen.queryByRole('cell', { name: 'my-ingress-2 test-namespace' });
   expect(ingressName2).not.toBeInTheDocument();
-  routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
+  let routeName = screen.queryByRole('cell', { name: 'my-route test-namespace' });
   expect(routeName).toBeInTheDocument();
 
   filteredRoutes.set([]);
