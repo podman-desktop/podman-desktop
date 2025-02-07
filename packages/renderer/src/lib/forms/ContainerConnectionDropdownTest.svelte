@@ -11,6 +11,7 @@ let { connections }: Props = $props();
 let selected: undefined | ProviderContainerConnectionInfo = $state(undefined);
 </script>
 
+<label for="providerChoice">Container Engine</label>
 <ContainerConnectionDropdown
   id="providerChoice"
   name="providerChoice"
