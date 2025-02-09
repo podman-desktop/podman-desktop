@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 
 export function setupRegistry(): string[] {
   const urlDefault = 'ghcr.io';
-  const registryUrl = process.env.REGISTRY_URL ? process.env.REGISTRY_URL : urlDefault;
+  const registryUrl = process.env.REGISTRY_URL ?? urlDefault;
   const ciDefault = process.env.CI ? 'podmandesktop-ci' : '';
-  const registryUsername = process.env.REGISTRY_USERNAME ? process.env.REGISTRY_USERNAME : ciDefault;
-  const tokenDef = process.env.PODMANDESKTOP_CI_BOT_TOKEN ? process.env.PODMANDESKTOP_CI_BOT_TOKEN : '';
+  const registryUsername = process.env.REGISTRY_USERNAME ?? ciDefault;
+  const tokenDef = process.env.PODMANDESKTOP_CI_BOT_TOKEN ?? '';
   const pwsdDefault = process.env.CI ? tokenDef : '';
-  const registryPswdSecret = process.env.REGISTRY_PASSWD ? process.env.REGISTRY_PASSWD : pwsdDefault;
+  const registryPswdSecret = process.env.REGISTRY_PASSWD ?? pwsdDefault;
   return [registryUrl, registryUsername, registryPswdSecret];
 }
 

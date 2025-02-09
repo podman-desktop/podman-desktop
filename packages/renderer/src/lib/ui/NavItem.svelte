@@ -37,7 +37,7 @@ onDestroy(() => {
 <a
   href={onClick ? '#top' : uri}
   class=""
-  aria-label={ariaLabel ? ariaLabel : tooltip}
+  aria-label={ariaLabel ?? tooltip}
   on:click|preventDefault={onClick}>
   <div
     class="flex py-2 justify-center items-center cursor-pointer min-h-9"

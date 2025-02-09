@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ const RESOURCE_NAME: string = 'Compose';
 
 let composeVersion: string;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
-const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ? process.env.COMPOSE_PARTIAL_INSTALL : false;
+const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
 
 test.skip(!!isCI && isLinux, 'Tests suite should not run on Linux platform');
 

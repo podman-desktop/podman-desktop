@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('registry-image-e2e');
 
   [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
-  imageName = process.env.REGISTRY_IMAGE_NAME ? process.env.REGISTRY_IMAGE_NAME : 'alpine-hello';
-  imageTag = process.env.REGISTRY_IMAGE_TAG ? process.env.REGISTRY_IMAGE_TAG : 'latest';
+  imageName = process.env.REGISTRY_IMAGE_NAME ?? 'alpine-hello';
+  imageTag = process.env.REGISTRY_IMAGE_TAG ?? 'latest';
   imageUrl = registryUrl + '/' + registryUsername + '/' + imageName;
 
   await welcomePage.handleWelcomePage(true);

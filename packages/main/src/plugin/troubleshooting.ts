@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ export class Troubleshooting {
     // otherwise just use .txt
     const filenameParts = filename.split('.');
     // Use the file extension if it's provided, otherwise use the one from the file name, or default to txt
-    const fileExtension = extension ? extension : filenameParts.length > 1 ? filenameParts[1] : 'txt';
+    const fileExtension = (extension ?? filenameParts.length > 1) ? filenameParts[1] : 'txt';
     return `${filenameParts[0]}-${moment().format('YYYYMMDDHHmmss')}.${fileExtension}`;
   }
 }

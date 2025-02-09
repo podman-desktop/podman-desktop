@@ -77,13 +77,13 @@ function precision(value: number, incrementOrDecrement: number): number {
 }
 
 function onDecrement(e: MouseEvent): void {
-  const dec = step ? step : 1;
+  const dec = step ?? 1;
   e.preventDefault();
   value = precision(value, -dec);
 }
 
 function onIncrement(e: MouseEvent): void {
-  const inc = step ? step : 1;
+  const inc = step ?? 1;
   e.preventDefault();
   value = precision(value, inc);
 }

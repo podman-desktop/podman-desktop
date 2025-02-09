@@ -53,11 +53,7 @@ export let artifact: V1PersistentVolumeClaimStatus | undefined;
               <tr>
                 <Cell>Type: {condition.type}</Cell>
                 <Cell
-                  >Status: {condition.status}, LastProbeTime: {condition.lastProbeTime
-                    ? condition.lastProbeTime
-                    : 'N/A'}, LastTransitionTime: {condition.lastTransitionTime
-                    ? condition.lastTransitionTime
-                    : 'N/A'}</Cell>
+                  >Status: {condition.status}, LastProbeTime: {condition.lastProbeTime ?? 'N/A'}, LastTransitionTime: {condition.lastTransitionTime ?? 'N/A'}</Cell>
               </tr>
             {/each}
           </tbody>

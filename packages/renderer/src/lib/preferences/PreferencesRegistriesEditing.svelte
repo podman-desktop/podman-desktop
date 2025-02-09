@@ -257,7 +257,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         <div
           class="flex flex-col w-full border-t border-[var(--pd-content-text)] text-[var(--pd-invert-content-card-text)]"
           role="row"
-          aria-label={registry.name ? registry.name : registry.serverUrl}>
+          aria-label={registry.name ?? registry.serverUrl}>
           <div class="flex flex-row items-center pt-4 pb-3 space-x-2">
             <div class="pl-5 w-2/5" role="cell">
               <div class="flex w-full h-full">
