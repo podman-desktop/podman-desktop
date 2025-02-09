@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 import { promises } from 'node:fs';
 
-import { describe, expect, test, vi, vitest } from 'vitest';
+import { beforeEach, describe, expect, test, vi, vitest } from 'vitest';
 
 import { makeExecutable } from './utils';
 
@@ -31,6 +31,10 @@ vi.mock('@podman-desktop/api', async () => {
 });
 
 describe('makeExecutable', async () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   const fakePath = '/fake/path';
   test('mac', async () => {
     vitest.spyOn(process, 'platform', 'get').mockReturnValue('darwin');

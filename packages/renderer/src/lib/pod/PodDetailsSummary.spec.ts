@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,9 +138,6 @@ const fakePodV1: V1Pod = {
   },
 };
 
-const kubernetesGetCurrentNamespaceMock = vi.fn();
-const kubernetesReadNamespacedPodMock = vi.fn();
-
 vi.mock('/@/stores/kubernetes-contexts-state', async () => {
   return {
     kubernetesCurrentContextEvents: vi.fn(),
@@ -148,18 +145,13 @@ vi.mock('/@/stores/kubernetes-contexts-state', async () => {
 });
 
 beforeEach(() => {
-  Object.defineProperty(window, 'kubernetesGetCurrentNamespace', {
-    value: kubernetesGetCurrentNamespaceMock,
-  });
-  Object.defineProperty(window, 'kubernetesReadNamespacedPod', {
-    value: kubernetesReadNamespacedPodMock,
-  });
+  vi.resetAllMocks();
 });
 
 test('Render with a kubernetes object', async () => {
   // Mock the values
-  kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
-  kubernetesReadNamespacedPodMock.mockResolvedValue(fakePod);
+  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('default');
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue(fakePod);
 
   const eventsStore = writable<CoreV1Event[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextEvents = eventsStore;
@@ -167,7 +159,7 @@ test('Render with a kubernetes object', async () => {
   render(PodDetailsSummary, { pod: JSON.parse(JSON.stringify(fakePodInfoUI)) });
 
   // Wait for the mock to be called as it sometimes takes a few ms
-  await waitFor(() => expect(kubernetesReadNamespacedPodMock).toHaveBeenCalled());
+  await waitFor(() => expect(vi.mocked(window.kubernetesReadNamespacedPod)).toHaveBeenCalled());
 
   // Test that 'fake-secret' shows up
   expect(screen.getByText('fake-secret')).toBeInTheDocument();
@@ -175,8 +167,8 @@ test('Render with a kubernetes object', async () => {
 
 test('Render the pod information when pod object is kind == podman', async () => {
   // Mock the values
-  kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
-  kubernetesReadNamespacedPodMock.mockResolvedValue(undefined);
+  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('default');
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue(undefined);
 
   const fakePodInfo = JSON.parse(JSON.stringify(fakePodInfoUI));
   fakePodInfo.kind = 'podman';
@@ -192,8 +184,8 @@ test('Render the pod information when pod object is kind == podman', async () =>
 });
 
 test('Expect KubePodDetailsSummary to be called with related events only', async () => {
-  kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
-  kubernetesReadNamespacedPodMock.mockResolvedValue(fakePodV1);
+  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('default');
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue(fakePodV1);
   const kubePodDetailsSummarySpy = vi.spyOn(kubePodDetailsSummary, 'default');
   // mock object stores
   const events: CoreV1Event[] = [
@@ -231,8 +223,8 @@ test('Expect KubePodDetailsSummary to be called with related events only', async
 });
 
 test('expect events to be redisplayed when updated', async () => {
-  kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
-  kubernetesReadNamespacedPodMock.mockResolvedValue(fakePodV1);
+  vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('default');
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue(fakePodV1);
   const kubePodDetailsSummarySpy = vi.spyOn(kubePodDetailsSummary, 'default');
   // mock object stores
   const events: CoreV1Event[] = [

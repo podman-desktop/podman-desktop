@@ -2226,6 +2226,11 @@ describe('loading extension folders', () => {
   } as fs.Dirent;
 
   describe('in dev mode', () => {
+    beforeEach(() => {
+      vi.restoreAllMocks();
+      vi.resetAllMocks();
+    });
+
     test('ignores files', async () => {
       vi.spyOn(fs.promises, 'readdir').mockResolvedValue([fileEntry]);
 
