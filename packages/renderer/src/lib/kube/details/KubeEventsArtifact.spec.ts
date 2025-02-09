@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CoreV1Event } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as eventsTable from '/@/lib/kube/details/EventsTable.svelte';
 
 import KubeEventsArtifact from './KubeEventsArtifact.svelte';
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+  vi.resetAllMocks();
+});
 
 test('expect EventsTable is called with events if there are events', async () => {
   const eventsTableSpy = vi.spyOn(eventsTable, 'default');

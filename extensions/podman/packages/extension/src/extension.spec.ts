@@ -117,6 +117,8 @@ const mocks = vi.hoisted(() => ({
   getQemuVersionMock: vi.fn(),
 }));
 
+vi.mock('node:fs');
+
 // mock ps-list
 vi.mock('ps-list', async () => {
   return {
@@ -364,11 +366,7 @@ describe.each([
   });
 
   test('verify create command called with correct values', async () => {
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -379,7 +377,7 @@ describe.each([
       'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
       'podman.factory.machine.provider': provider,
     });
-    expect(spyExecPromise).toBeCalledWith(
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       ['machine', 'init', '--cpus', '2', '--memory', '1000', '--disk-size', '232', '--image-path', 'path', '--rootful'],
       {
@@ -403,11 +401,7 @@ describe.each([
   });
 
   test('verify create command called with correct image-path values with image URL', async () => {
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -418,7 +412,7 @@ describe.each([
       'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
       'podman.factory.machine.provider': provider,
     });
-    expect(spyExecPromise).toBeCalledWith(
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       [
         'machine',
@@ -454,11 +448,7 @@ describe.each([
   });
 
   test('verify create command called with correct image-path values with registry', async () => {
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -469,7 +459,7 @@ describe.each([
       'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
       'podman.factory.machine.provider': provider,
     });
-    expect(spyExecPromise).toBeCalledWith(
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       [
         'machine',
@@ -506,11 +496,7 @@ describe.each([
 
   test('verify create command called with correct values with user mode networking', async () => {
     vi.mocked(extensionApi.env).isMac = true;
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -535,7 +521,7 @@ describe.each([
       '--rootful',
       '--user-mode-networking',
     ];
-    expect(spyExecPromise).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
       logger: undefined,
       env: {
         CONTAINERS_MACHINE_PROVIDER: provider,
@@ -557,11 +543,8 @@ describe.each([
 
   test('verify create command called with now flag if start machine after creation is enabled', async () => {
     vi.mocked(extensionApi.env).isMac = true;
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -586,7 +569,7 @@ describe.each([
       '--rootful',
       '--now',
     ];
-    expect(spyExecPromise).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
       logger: undefined,
       env: {
         CONTAINERS_MACHINE_PROVIDER: provider,
@@ -597,14 +580,14 @@ describe.each([
   });
 
   test('verify error contains name, message and stderr if creation fails', async () => {
-    vi.spyOn(extensionApi.process, 'exec').mockRejectedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as extensionApi.RunResult);
+    vi.mocked(extensionApi.process.exec).mockRejectedValueOnce({
       name: 'name',
       message: 'description',
       stderr: 'error',
     });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
     await expect(
       extension.createMachine({
         'podman.factory.machine.cpus': '2',
@@ -656,11 +639,7 @@ describe.each([
     vi.mocked(getAssetsFolder).mockReturnValue('fake');
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
-    const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-    spyExecPromise.mockImplementationOnce(() => {
-      return Promise.resolve({} as extensionApi.RunResult);
-    });
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
@@ -955,40 +934,31 @@ test('test checkDefaultMachine - if there is no machine marked as default, take 
 });
 
 test('test checkDefaultMachine - if user wants to change default machine, check if it is rootful and update connection', async () => {
-  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-    stdout: JSON.stringify(fakeMachineInfoJSON),
-  } as extensionApi.RunResult);
-
   const fakeInspectJSON = [
     {
       Name: 'podman-machine-default',
       Rootful: true,
     },
   ];
-
-  // return as inspect result a rootful machine
-  const inspectCall = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
     stdout: JSON.stringify(fakeInspectJSON),
   } as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+    stdout: JSON.stringify(fakeMachineInfoJSON),
+  } as extensionApi.RunResult);
 
-  const spyPrompt = vi.spyOn(extensionApi.window, 'showInformationMessage');
-  spyPrompt.mockResolvedValue('Yes');
+  vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Yes');
 
-  vi.mock('node:fs');
-
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   const infoContentJSON = {
     Rootful: true,
   };
-  const spyReadFile = vi.spyOn(fs.promises, 'readFile');
-  spyReadFile.mockResolvedValue(JSON.stringify(infoContentJSON));
+  vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(infoContentJSON));
 
   await extension.checkDefaultMachine(fakeMachineJSON);
 
-  expect(spyExecPromise).toHaveBeenCalledWith(
+  expect(vi.mocked(extensionApi.process.exec)).toHaveBeenCalledWith(
     podmanCli.getPodmanCli(),
     ['system', 'connection', 'default', `${machineDefaultName}-root`],
     {
@@ -997,38 +967,33 @@ test('test checkDefaultMachine - if user wants to change default machine, check 
       },
     },
   );
-  expect(inspectCall).toHaveBeenCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect', machineDefaultName], {
-    env: {
-      CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+  expect(vi.mocked(extensionApi.process.exec)).toHaveBeenCalledWith(
+    podmanCli.getPodmanCli(),
+    ['machine', 'inspect', machineDefaultName],
+    {
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+      },
     },
-  });
+  );
 });
 
 test('test checkDefaultMachine - if user wants to change machine, check that it only change the connection once if it is rootless', async () => {
-  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-    stdout: JSON.stringify(fakeMachineInfoJSON),
-  } as extensionApi.RunResult);
-
   const fakeInspectJSON = [
     {
       Name: 'podman-machine-default',
       Rootful: false,
     },
   ];
-
   // return as inspect result a rootless machine
-  const inspectCall = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
     stdout: JSON.stringify(fakeInspectJSON),
   } as extensionApi.RunResult);
 
   const spyPrompt = vi.spyOn(extensionApi.window, 'showInformationMessage');
   spyPrompt.mockResolvedValue('Yes');
 
-  vi.mock('node:fs');
-
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.mocked(fs.existsSync).mockReturnValue(true);
 
   const infoContentJSON = {
     Rootful: false,
@@ -1038,7 +1003,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
 
   await extension.checkDefaultMachine(fakeMachineJSON);
 
-  expect(spyExecPromise).toHaveBeenCalledWith(
+  expect(vi.mocked(extensionApi.process.exec)).toHaveBeenCalledWith(
     podmanCli.getPodmanCli(),
     ['system', 'connection', 'default', machineDefaultName],
     {
@@ -1047,11 +1012,15 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
       },
     },
   );
-  expect(inspectCall).toHaveBeenCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect', machineDefaultName], {
-    env: {
-      CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+  expect(vi.mocked(extensionApi.process.exec)).toHaveBeenCalledWith(
+    podmanCli.getPodmanCli(),
+    ['machine', 'inspect', machineDefaultName],
+    {
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+      },
     },
-  });
+  );
 });
 
 test('test checkDefaultMachine - if user wants to change machine, check that it only changes to rootless as machine inspect is not returning Rootful field (old versions of podman)', async () => {
@@ -2732,13 +2701,12 @@ describe.each(['windows', 'mac', 'linux'])('podman machine properties audit on %
   });
   if (os === 'linux') {
     test('is not used', async () => {
-      const orExistsSync = fs.existsSync;
       vi.spyOn(fs, 'existsSync').mockImplementation((path: fs.PathLike) => {
         if (path.toString().endsWith('/podman/podman.sock')) {
           console.log('========>', path);
           return true;
         }
-        return orExistsSync(path);
+        return false;
       });
       await extension.activate(mockExtensionForAuditTests());
       await vi.waitFor(() => expect(vi.mocked(provider.setContainerProviderConnectionFactory)).not.toBeCalled());

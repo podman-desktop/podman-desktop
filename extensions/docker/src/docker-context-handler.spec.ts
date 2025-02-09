@@ -210,11 +210,11 @@ describe('getContexts', () => {
     vi.spyOn(fs.promises, 'readdir').mockResolvedValue([
       {
         isDirectory: () => true,
-        name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
+        name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
       } as fs.Dirent,
       {
         isDirectory: () => true,
-        name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+        name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
       } as fs.Dirent,
     ]);
 
@@ -239,11 +239,11 @@ describe('getContexts', () => {
     vi.spyOn(fs.promises, 'readdir').mockResolvedValue([
       {
         isDirectory: () => true,
-        name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
+        name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
       } as fs.Dirent,
       {
         isDirectory: () => true,
-        name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+        name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
       } as fs.Dirent,
     ]);
 
@@ -266,7 +266,7 @@ describe('getContexts', () => {
       { isDirectory: () => true, name: 'invalidsha' } as fs.Dirent,
       {
         isDirectory: () => true,
-        name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+        name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
       } as fs.Dirent,
     ]);
 
@@ -277,13 +277,13 @@ describe('getContexts', () => {
 
     // expect error
     expect(console.error).toBeCalledWith(
-      'Context name bar does not match the directory name invalidsha. Found fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
+      'Context name foo does not match the directory name invalidsha. Found 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
     );
 
     // only 2 contexts as the one is filtered
     expect(contexts.length).toBe(2);
     expect(contexts.find(c => c.name === 'default')).toBeDefined();
-    expect(contexts.find(c => c.name === 'foo')).toBeDefined();
-    expect(contexts.find(c => c.name === 'bar')).not.toBeDefined();
+    expect(contexts.find(c => c.name === 'foo')).not.toBeDefined();
+    expect(contexts.find(c => c.name === 'bar')).toBeDefined();
   });
 });

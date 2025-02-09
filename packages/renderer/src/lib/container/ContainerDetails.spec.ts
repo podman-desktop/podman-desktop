@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,14 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 import type { ContainerInfo } from '/@api/container-info';
+import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 
 import ContainerDetails from './ContainerDetails.svelte';
-
-const listContainersMock = vi.fn();
-
-const getContainerInspectMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const myContainer: ContainerInfo = {
   Id: 'myContainer',
@@ -52,35 +48,15 @@ const myContainer: ContainerInfo = {
   ImageBase64RepoTag: '',
 };
 
-const deleteContainerMock = vi.fn();
-const getContributedMenusMock = vi.fn();
-
 vi.mock('@xterm/xterm');
 vi.mock('@xterm/addon-search');
 
 const getConfigurationValueMock = vi.fn().mockReturnValue(12);
 
-beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
-  Object.defineProperty(window, 'listContainers', { value: listContainersMock });
-  Object.defineProperty(window, 'deleteContainer', { value: deleteContainerMock });
-  Object.defineProperty(window, 'getContainerInspect', { value: getContainerInspectMock });
-
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
-
-  Object.defineProperty(window, 'logsContainer', { value: vi.fn() });
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
-    }),
-  });
-  Object.defineProperty(window, 'ResizeObserver', {
-    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
-  });
-
-  Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+beforeEach(() => {
+  vi.restoreAllMocks();
+  vi.resetAllMocks();
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 test('Expect logs when tty is not enabled', async () => {
@@ -91,11 +67,11 @@ test('Expect logs when tty is not enabled', async () => {
   // spy router.goto
   const routerGotoSpy = vi.spyOn(router, 'goto');
 
-  getContainerInspectMock.mockResolvedValue({
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
     Config: {
       Tty: false,
     },
-  });
+  } as unknown as ContainerInspectInfo);
 
   // render the component
   render(ContainerDetails, { containerID: 'myContainer' });
@@ -120,20 +96,17 @@ test('Expect show tty if container has tty enabled', async () => {
   // spy router.goto
   const routerGotoSpy = vi.spyOn(router, 'goto');
 
-  getContainerInspectMock.mockResolvedValue({
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
     Config: {
       Tty: true,
       OpenStdin: true,
     },
-  });
+  } as unknown as ContainerInspectInfo);
 
   // render the component
   render(ContainerDetails, { containerID: 'myContainer' });
 
-  // wait router.goto is called
-  while (routerGotoSpy.mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(routerGotoSpy.mock.calls.length > 0));
 
   // grab current route and check we have been redirected to tty
   const currentRoute = window.location;
@@ -145,14 +118,14 @@ test('Expect show tty if container has tty enabled', async () => {
 test('Expect redirect to previous page if container is deleted', async () => {
   getConfigurationValueMock.mockResolvedValue(undefined);
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   router.goto('/');
 
-  getContainerInspectMock.mockResolvedValue({
+  vi.mocked(window.getContainerInspect).mockResolvedValue({
     Config: {},
-  });
+  } as unknown as ContainerInspectInfo);
   const routerGotoSpy = vi.spyOn(router, 'goto');
-  listContainersMock.mockResolvedValue([myContainer]);
+  vi.mocked(window.listContainers).mockResolvedValue([myContainer]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   while (get(containersInfos).length !== 1) {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -160,7 +133,7 @@ test('Expect redirect to previous page if container is deleted', async () => {
 
   // remove myContainer from the store when we call 'deleteContainer'
   // it will then refresh the store and update ContainerDetails page
-  deleteContainerMock.mockImplementation(() => {
+  vi.mocked(window.deleteContainer).mockImplementation(async (): Promise<void> => {
     containersInfos.update(containers => containers.filter(container => container.Id !== myContainer.Id));
   });
 
@@ -187,7 +160,7 @@ test('Expect redirect to previous page if container is deleted', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   // check that delete method has been called
-  expect(deleteContainerMock).toHaveBeenCalled();
+  expect(vi.mocked(window.deleteContainer)).toHaveBeenCalled();
 
   // expect that we have called the router when page has been removed
   // to jump to the previous page

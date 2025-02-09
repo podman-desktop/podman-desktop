@@ -1649,7 +1649,7 @@ describe('buildImage', () => {
     vi.mocked(fs.existsSync).mockImplementation(path => {
       return String(path).endsWith('Containerfile.0') || String(path).endsWith('Containerfile.1');
     });
-    vi.mocked(dockerAPI.buildImage).mockReset();
+    vi.mocked(dockerAPI.buildImage).mockClear();
 
     // Mock tar.pack to call the original one with the additional parameter `fs`,
     // virtualizing an fs with empty directories
@@ -1753,7 +1753,7 @@ describe('buildImage', () => {
     vi.mocked(fs.existsSync).mockImplementation(path => {
       return String(path).endsWith('Containerfile.0') || String(path).endsWith('Containerfile.1');
     });
-    vi.mocked(dockerAPI.buildImage).mockReset();
+    vi.mocked(dockerAPI.buildImage).mockClear();
 
     // Mock tar.pack to call the original one with the additional parameter `fs`,
     // virtualizing an fs with empty directories
@@ -3578,6 +3578,7 @@ test('check handleEvents with loadArchive', async () => {
 
 test('check handleEvents is not calling the console.log for health_status event', async () => {
   const consoleLogSpy = vi.spyOn(console, 'log');
+  consoleLogSpy.mockClear();
   const getEventsMock = vi.fn();
   let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
   // keep the function passed in parameter of getEventsMock
@@ -5029,6 +5030,7 @@ describe('saveImages', () => {
       },
       api,
     } as unknown as InternalContainerProvider);
+    pipelineMock.mockClear();
     await containerRegistry.saveImages({
       outputTarget: 'path',
       images: [
@@ -5478,6 +5480,7 @@ test('saveImage succeeds', async () => {
     },
     api,
   } as unknown as InternalContainerProvider);
+  pipelineMock.mockClear();
   await containerRegistry.saveImage('podman1', 'an-image', '/path/to/file');
 
   expect(pipelineMock).toHaveBeenCalledOnce();
@@ -5486,7 +5489,7 @@ test('saveImage succeeds', async () => {
 test('saveImage succeeds when a passing a cancellable token never canceled', async () => {
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const cancellableTokenId = cancellationTokenRegistry.createCancellationTokenSource();
-  const token = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)!.token;
+  const token = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)?.token;
   const dockerode = new Dockerode({ protocol: 'http', host: 'localhost' });
   const stream: Dockerode.Image = {
     get: vi.fn(),
@@ -5511,6 +5514,7 @@ test('saveImage succeeds when a passing a cancellable token never canceled', asy
     },
     api,
   } as unknown as InternalContainerProvider);
+  pipelineMock.mockClear();
   await containerRegistry.saveImage('podman1', 'an-image', '/path/to/file', token);
 
   expect(pipelineMock).toHaveBeenCalledOnce();
@@ -5527,8 +5531,8 @@ describe('using fake timers', () => {
   test('saveImage canceled during image download', async () => {
     const cancellationTokenRegistry = new CancellationTokenRegistry();
     const cancellableTokenId = cancellationTokenRegistry.createCancellationTokenSource();
-    const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)!;
-    const token = tokenSource.token;
+    const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId);
+    const token = tokenSource?.token;
     const dockerode = new Dockerode({ protocol: 'http', host: 'localhost' });
     const imageObjectGetMock = vi.fn().mockImplementation(() => {
       return new Promise(resolve => {
@@ -5555,7 +5559,7 @@ describe('using fake timers', () => {
       api,
     } as unknown as InternalContainerProvider);
     setTimeout(() => {
-      tokenSource.cancel();
+      tokenSource?.cancel();
     }, 500);
 
     const savePromise = containerRegistry.saveImage('podman1', 'an-image', '/path/to/file', token);
@@ -5572,8 +5576,8 @@ test('saveImage canceled during image saving on filesystem', async () => {
   vi.mocked(fs.createWriteStream).mockImplementation(fsModule.createWriteStream);
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const cancellableTokenId = cancellationTokenRegistry.createCancellationTokenSource();
-  const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)!;
-  const token = tokenSource.token;
+  const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId);
+  const token = tokenSource?.token;
   const dockerode = new Dockerode({ protocol: 'http', host: 'localhost' });
   const imageObjectGetMock = vi.fn().mockResolvedValue(() => {
     const stream = Readable.from(Buffer.from('a content'));
@@ -5603,7 +5607,7 @@ test('saveImage canceled during image saving on filesystem', async () => {
     api,
   } as unknown as InternalContainerProvider);
   setTimeout(() => {
-    tokenSource.cancel();
+    tokenSource?.cancel();
   }, 50);
 
   const tmpdir = os.tmpdir();
