@@ -186,10 +186,7 @@ export class DockerDesktopInstallation {
     return builtError;
   }
 
-  ipcHandle(
-    channel: string,
-    listener: (event: IpcMainInvokeEvent, ...args: string[]) => Promise<void> | unknown,
-  ): void {
+  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: string[]) => Promise<void>): void {
     ipcMain.handle(channel, async (...args) => {
       try {
         return { result: await Promise.resolve(listener(...args)) };
