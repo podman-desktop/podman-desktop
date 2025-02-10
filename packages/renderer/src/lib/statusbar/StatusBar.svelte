@@ -91,9 +91,6 @@ onDestroy(() => {
   role="contentinfo"
   aria-label="Status Bar">
   <div class="flex flex-nowrap gap-x-1.5 h-full truncate">
-    {#each leftEntries as entry}
-      <StatusBarItem entry={entry} />
-    {/each}
     {#if experimentalProvidersStatusBar}
       {#each containerProviders as entry}
         <ProviderWidget entry={entry}/>
@@ -102,6 +99,9 @@ onDestroy(() => {
         <ProviderWidget entry={entry}/>
       {/each}
     {/if}
+    {#each leftEntries as entry}
+      <StatusBarItem entry={entry} />
+    {/each}
   </div>
   <div class="flex flex-wrap flex-row-reverse gap-x-1.5 h-full place-self-end">
     {#each rightEntries as entry}
