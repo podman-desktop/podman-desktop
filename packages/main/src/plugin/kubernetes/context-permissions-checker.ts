@@ -58,7 +58,7 @@ export interface ContextPermissionResult extends Permission {
 }
 
 export class ContextPermissionsChecker implements Disposable {
-  contextName: string;
+  #contextName: string;
   #kubeconfig: KubeConfigSingleContext;
   #client: AuthorizationV1Api;
   #request: ContextPermissionsRequest;
@@ -73,10 +73,14 @@ export class ContextPermissionsChecker implements Disposable {
   // If the result is denied, `onDenyRequests` will be started
   constructor(kubeconfig: KubeConfigSingleContext, contextName: string, request: ContextPermissionsRequest) {
     this.#kubeconfig = kubeconfig;
-    this.contextName = contextName;
+    this.#contextName = contextName;
     this.#request = request;
     this.#results = [];
     this.#client = this.#kubeconfig.getKubeConfig().makeApiClient(AuthorizationV1Api);
+  }
+
+  get contextName(): string {
+    return this.#contextName;
   }
 
   public async start(): Promise<void> {
@@ -84,7 +88,7 @@ export class ContextPermissionsChecker implements Disposable {
     if ((!result.allowed || result.denied) && this.#request.onDenyRequests?.length) {
       // if not permitted and sub-requests are defined, let start them and don't send any result
       for (const subreq of this.#request.onDenyRequests) {
-        const subchecker = new ContextPermissionsChecker(this.#kubeconfig, this.contextName, subreq);
+        const subchecker = new ContextPermissionsChecker(this.#kubeconfig, this.#contextName, subreq);
         this.#subCheckers.push(subchecker);
         subchecker.onPermissionResult((permissionResult: ContextPermissionResult) => {
           this.saveAndFireResult(permissionResult);
@@ -107,7 +111,7 @@ export class ContextPermissionsChecker implements Disposable {
     this.#onPermissionResult.fire(result);
     for (const resourceName of result.resources) {
       this.#results.push({
-        contextName: this.contextName,
+        contextName: this.#contextName,
         resourceName,
         attrs: result.attrs,
         permitted: result.permitted,
