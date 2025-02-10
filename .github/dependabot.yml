@@ -18,16 +18,29 @@ updates:
       time: "03:00"
     open-pull-requests-limit: 20
     groups:
+      argosci:
+        applies-to: version-updates
+        patterns:
+          - "@argos-ci/*"
       storybook:
         applies-to: version-updates
         patterns:
           - "@storybook/*"
           - "storybook"
           - "storybook-dark-mode"
+      commitlint:
+        applies-to: version-updates
+        patterns:
+          - "@commitlint/*"
       docusaurus:
         applies-to: version-updates
         patterns:
           - "@docusaurus/*"
+      eslint:
+        applies-to: version-updates
+        patterns:
+          - "eslint"
+          - "@eslint/*"
       fortawesome:
         applies-to: version-updates
         patterns:
@@ -37,3 +50,13 @@ updates:
         patterns:
           - "@typescript-eslint/*"
           - "typescript-eslint"
+      tailwindcss:
+        applies-to: version-updates
+        patterns:
+          - "@tailwindcss/*"
+          - "tailwindcss"
+      vitest:
+        applies-to: version-updates
+        patterns:
+          - "@vitest/*"
+          - "vitest"
