@@ -19,8 +19,6 @@
 import { executeButtonCommand } from './component/micromark-button';
 import { executeExpandableToggle } from './component/micromark-expandable-section';
 
-const eventObject: { target?: object } = {};
-
 export function createListener(
   inProgressMarkdownCommandExecutionCallback: (
     command: string,
@@ -29,6 +27,8 @@ export function createListener(
   ) => void,
 ) {
   return (e: unknown): void => {
+    const eventObject: { target?: object } = {};
+
     if (e && typeof e === 'object' && 'target' in e && e.target && typeof e.target === 'object') {
       eventObject.target = e.target;
     }
