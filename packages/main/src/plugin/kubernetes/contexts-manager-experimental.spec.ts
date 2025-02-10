@@ -529,7 +529,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           ({
             start: permissionsStartMock,
             onPermissionResult: onPermissionResultMock,
-            isForContext: vi.fn(),
+            contextName: 'ctx',
           }) as unknown as ContextPermissionsChecker,
       );
       onCacheUpdatedMock.mockImplementation(f => {
@@ -556,7 +556,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           ({
             start: permissionsStartMock,
             onPermissionResult: onPermissionResultMock,
-            isForContext: vi.fn(),
+            contextName: 'ctx1',
           }) as unknown as ContextPermissionsChecker,
       );
       onCacheUpdatedMock.mockImplementation(f => {
@@ -583,7 +583,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           ({
             start: permissionsStartMock,
             onPermissionResult: onPermissionResultMock,
-            isForContext: vi.fn(),
+            contextName: 'ctx1',
           }) as unknown as ContextPermissionsChecker,
       );
       const listMock = vi.fn();
@@ -614,7 +614,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           ({
             start: permissionsStartMock,
             onPermissionResult: onPermissionResultMock,
-            isForContext: vi.fn(),
+            contextName: 'ctx1',
           }) as unknown as ContextPermissionsChecker,
       );
       const listMock = vi.fn();
@@ -734,12 +734,20 @@ test('HealthChecker and PermissionsChecker are disposed for each context being r
       }) as unknown as ContextHealthChecker,
   );
 
-  vi.mocked(ContextPermissionsChecker).mockImplementation(
+  vi.mocked(ContextPermissionsChecker).mockImplementationOnce(
     () =>
       ({
         start: permissionsStartMock,
         dispose: permissionsDisposeMock,
-        isForContext: vi.fn().mockReturnValueOnce(true).mockReturnValueOnce(false),
+        contextName: 'context1',
+      }) as unknown as ContextPermissionsChecker,
+  );
+  vi.mocked(ContextPermissionsChecker).mockImplementationOnce(
+    () =>
+      ({
+        start: permissionsStartMock,
+        dispose: permissionsDisposeMock,
+        contextName: 'context2',
       }) as unknown as ContextPermissionsChecker,
   );
 

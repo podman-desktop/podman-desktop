@@ -117,8 +117,8 @@ export class ContextsManagerExperimental {
 
     newHealthChecker.onReachable(async (state: ContextHealthState) => {
       // register and start permissions checker
-      const previousPermissionsCheckers = this.#permissionsCheckers.filter(permissionChecker =>
-        permissionChecker.isForContext(state.contextName),
+      const previousPermissionsCheckers = this.#permissionsCheckers.filter(
+        permissionChecker => permissionChecker.contextName === state.contextName,
       );
       for (const checker of previousPermissionsCheckers) {
         checker.dispose();
@@ -186,14 +186,14 @@ export class ContextsManagerExperimental {
     const healthChecker = this.#healthCheckers.get(state.contextName);
     healthChecker?.dispose();
     this.#healthCheckers.delete(state.contextName);
-    const permissionsCheckers = this.#permissionsCheckers.filter(permissionChecker =>
-      permissionChecker.isForContext(state.contextName),
+    const permissionsCheckers = this.#permissionsCheckers.filter(
+      permissionChecker => permissionChecker.contextName === state.contextName,
     );
     for (const checker of permissionsCheckers) {
       checker.dispose();
     }
     this.#permissionsCheckers = this.#permissionsCheckers.filter(
-      permissionChecker => !permissionChecker.isForContext(state.contextName),
+      permissionChecker => permissionChecker.contextName !== state.contextName,
     );
   }
 
