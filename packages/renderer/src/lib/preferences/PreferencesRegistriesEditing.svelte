@@ -7,6 +7,7 @@ import { onMount } from 'svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
+import IconImage from '../appearance/IconImage.svelte';
 import Dialog from '../dialogs/Dialog.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
@@ -264,7 +265,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                 <div class="flex items-center">
                   <!-- Only show if a "suggested" registry icon has been added -->
                   {#if registry.icon}
-                    <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    <IconImage image={registry.icon} class="w-6 h-6" alt={registry.name}></IconImage>
                   {/if}
                   {#if registry.name}
                     <span class="ml-2">
@@ -390,7 +391,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               <div class="flex w-full h-full">
                 <div class="flex items-center">
                   {#if registry.icon}
-                    <img alt={registry.name} src={'data:image/png;base64,' + registry.icon} width="24" height="24" />
+                    <IconImage image={registry.icon} class="w-6 h-6" alt={registry.name}></IconImage>
                   {/if}
                   <!-- By default, just show the name, but if we go to add it, show the full URL including https -->
                   <span class="ml-2">

@@ -19,21 +19,16 @@ import * as extensionApi from '@podman-desktop/api';
 
 import dockerIoImage from './images/docker.io.png';
 import gcrIoImage from './images/gcr.io.png';
-import ghcrIoImage from './images/ghcr.io.png';
+import ghcrIoImageDark from './images/ghcr.io-dark.png';
+import ghcrIoImageLight from './images/ghcr.io-light.png';
 import quayIoImage from './images/quay.io.png';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   // For each defaultRegistries, suggest the registry to Podman Desktop
   for (const registry of defaultRegistries) {
-    // remove the image prefix from vite base64 object
-    const registryEntry = {
-      ...registry,
-      icon: stripImagePrefix(registry.icon ?? ''),
-    };
-
     // Suggest it to the registry and add to subscriptions
-    const disposable = extensionApi.registry.suggestRegistry(registryEntry);
+    const disposable = extensionApi.registry.suggestRegistry(registry);
     extensionContext.subscriptions.push(disposable);
   }
 }
@@ -58,7 +53,7 @@ const defaultRegistries: extensionApi.RegistrySuggestedProvider[] = [
   {
     name: 'GitHub',
     url: 'ghcr.io',
-    icon: ghcrIoImage,
+    icon: { light: ghcrIoImageDark, dark: ghcrIoImageLight },
   },
   {
     name: 'Google Container Registry',
@@ -66,8 +61,3 @@ const defaultRegistries: extensionApi.RegistrySuggestedProvider[] = [
     icon: gcrIoImage,
   },
 ];
-
-// Remove data:image/png;base64,
-export function stripImagePrefix(imageContent: string): string {
-  return imageContent.replace(/^data:image\/\w+;base64,/, '');
-}

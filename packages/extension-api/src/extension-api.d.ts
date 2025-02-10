@@ -1085,7 +1085,7 @@ declare module '@podman-desktop/api' {
     url: string;
 
     // Optional base64 PNG image (for transparency / non vector icons)
-    icon?: string;
+    icon?: string | { light: string; dark: string };
   }
 
   export interface Registry extends RegistryCreateOptions {
@@ -1093,7 +1093,7 @@ declare module '@podman-desktop/api' {
 
     // Optional name and icon for the registry when it's being added (used for display within the UI)
     name?: string;
-    icon?: string;
+    icon?: string | { light: string; dark: string };
   }
 
   export interface RegistryCreateOptions {
