@@ -37,7 +37,7 @@ export interface ContextPermissionsRequest {
   onDenyRequests?: ContextPermissionsRequest[];
 }
 
-// ContextResourcePermission is the permission for a specific resource
+// Permission is the permission for a specific resource
 export interface Permission {
   attrs: V1ResourceAttributes;
   // permitted if allowed and not denied
@@ -45,6 +45,7 @@ export interface Permission {
   reason?: string;
 }
 
+// ContextResourcePermission is the permission for a specific resource in a specific context
 export interface ContextResourcePermission extends Permission {
   contextName: string;
   resourceName: string;
