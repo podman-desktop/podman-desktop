@@ -497,7 +497,7 @@ describe('kubernetes create factory', () => {
 
   beforeEach(async () => {
     // default: no binary
-    vi.spyOn(util, 'getKindBinaryInfo').mockRejectedValue(new Error('no binary installed'));
+    vi.mocked(util.getKindBinaryInfo).mockRejectedValue(new Error('no binary installed'));
 
     vi.mocked(podmanDesktopApi.provider.createProvider).mockReturnValue(PROVIDER_MOCK);
     // default to cancel
