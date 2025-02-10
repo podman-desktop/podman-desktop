@@ -34,6 +34,7 @@ import { ContextResourceRegistry } from './context-resource-registry.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
+import { NodesResourceFactory } from './nodes-resource-factory.js';
 import { PodsResourceFactory } from './pods-resource-factory.js';
 import { PVCsResourceFactory } from './pvcs-resource-factory.js';
 import type { ResourceFactory } from './resource-factory.js';
@@ -100,6 +101,7 @@ export class ContextsManagerExperimental {
       new SecretsResourceFactory(),
       new ServicesResourceFactory(),
       new PVCsResourceFactory(),
+      new NodesResourceFactory(),
     ];
   }
 

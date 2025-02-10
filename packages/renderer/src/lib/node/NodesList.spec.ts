@@ -67,8 +67,10 @@ test('Expect nodes list', async () => {
 
   render(NodesList);
 
-  const nodeName = screen.getByRole('cell', { name: 'node1' });
-  expect(nodeName).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const nodeName = screen.getByRole('cell', { name: 'node1' });
+    expect(nodeName).toBeInTheDocument();
+  });
 
   const nodeRole = screen.getByRole('cell', { name: 'Control Plane' });
   expect(nodeRole).toBeInTheDocument();
