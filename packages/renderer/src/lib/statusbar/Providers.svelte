@@ -23,7 +23,7 @@ function onclick(): void {
 }
 </script>
 
-{#if pinned.size > 0}
+{#if $statusBarPinned.length > 0}
   <!-- We cannot use <Fa> object here, as we detect click on this button and outside to toggle the menu -->
   <button
     data-task-button="Pin"
