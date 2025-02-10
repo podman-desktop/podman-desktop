@@ -947,7 +947,7 @@ importers:
         version: 4.0.0
       docusaurus-plugin-typedoc:
         specifier: ^1.2.3
-        version: 1.2.3(typedoc-plugin-markdown@4.4.1(typedoc@0.27.6(typescript@5.6.3)))
+        version: 1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.6(typescript@5.6.3)))
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -992,8 +992,8 @@ importers:
         specifier: ^0.27.6
         version: 0.27.6(typescript@5.6.3)
       typedoc-plugin-markdown:
-        specifier: ^4.4.1
-        version: 4.4.1(typedoc@0.27.6(typescript@5.6.3))
+        specifier: ^4.4.2
+        version: 4.4.2(typedoc@0.27.6(typescript@5.6.3))
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -11028,8 +11028,8 @@ packages:
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
 
-  typedoc-plugin-markdown@4.4.1:
-    resolution: {integrity: sha512-fx23nSCvewI9IR8lzIYtzDphETcgTDuxKcmHKGD4lo36oexC+B1k4NaCOY58Snqb4OlE8OXDAGVcQXYYuLRCNw==}
+  typedoc-plugin-markdown@4.4.2:
+    resolution: {integrity: sha512-kJVkU2Wd+AXQpyL6DlYXXRrfNrHrEIUgiABWH8Z+2Lz5Sq6an4dQ/hfvP75bbokjNDUskOdFlEEm/0fSVyC7eg==}
     engines: {node: '>= 18'}
     peerDependencies:
       typedoc: 0.27.x
@@ -17999,9 +17999,9 @@ snapshots:
 
   docusaurus-plugin-goatcounter@4.0.0: {}
 
-  docusaurus-plugin-typedoc@1.2.3(typedoc-plugin-markdown@4.4.1(typedoc@0.27.6(typescript@5.6.3))):
+  docusaurus-plugin-typedoc@1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.6(typescript@5.6.3))):
     dependencies:
-      typedoc-plugin-markdown: 4.4.1(typedoc@0.27.6(typescript@5.6.3))
+      typedoc-plugin-markdown: 4.4.2(typedoc@0.27.6(typescript@5.6.3))
 
   dom-accessibility-api@0.5.16: {}
 
@@ -24101,7 +24101,7 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-plugin-markdown@4.4.1(typedoc@0.27.6(typescript@5.6.3)):
+  typedoc-plugin-markdown@4.4.2(typedoc@0.27.6(typescript@5.6.3)):
     dependencies:
       typedoc: 0.27.6(typescript@5.6.3)
 
