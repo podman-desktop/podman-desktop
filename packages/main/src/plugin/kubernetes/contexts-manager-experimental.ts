@@ -41,6 +41,7 @@ import { PVCsResourceFactory } from './pvcs-resource-factory.js';
 import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryHandler } from './resource-factory-handler.js';
 import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resource-informer.js';
+import { RoutesResourceFactory } from './routes-resource-factory.js';
 import { SecretsResourceFactory } from './secrets-resource-factory.js';
 import { ServicesResourceFactory } from './services-resource-factory.js';
 
@@ -104,6 +105,7 @@ export class ContextsManagerExperimental {
       new PVCsResourceFactory(),
       new NodesResourceFactory(),
       new IngressesResourceFactory(),
+      new RoutesResourceFactory(),
     ];
   }
 
