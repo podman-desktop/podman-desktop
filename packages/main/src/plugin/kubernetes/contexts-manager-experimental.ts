@@ -136,6 +136,10 @@ export class ContextsManagerExperimental {
         newPermissionChecker.onPermissionResult(this.onPermissionResult.bind(this));
 
         newPermissionChecker.onPermissionResult((event: ContextPermissionResult) => {
+          if (!event.permitted) {
+            // if the user does not have watch permission, do not try to start informers on these resources
+            return;
+          }
           for (const resource of event.resources) {
             const contextName = event.kubeConfig.getKubeConfig().currentContext;
             const factory = this.#resourceFactoryHandler.getResourceFactoryByResourceName(resource);

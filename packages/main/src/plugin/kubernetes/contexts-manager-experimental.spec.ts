@@ -467,6 +467,69 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     expect(startMock).toHaveBeenCalledTimes(2); // on resource1 for each context (resource2 and resource3 do not have informer declared)
   });
 
+  test('informer is started for permitted resources only', async () => {
+    const kcSingle1 = new KubeConfigSingleContext(kc, context1);
+    const kcSingle2 = new KubeConfigSingleContext(kc, context2);
+    let call = 0;
+    let permissionCall = 0;
+    onreachableMock.mockImplementation(f => {
+      call++;
+      f({
+        kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
+        contextName: call === 1 ? 'context1' : 'context2',
+        checking: false,
+        reachable: true,
+      } as ContextHealthState);
+    });
+    onPermissionResultMock.mockImplementation(f => {
+      permissionCall++;
+      switch (permissionCall) {
+        case 1:
+        case 2:
+          f({
+            kubeConfig: kcSingle1,
+            resources: ['resource1', 'resource2'],
+            permitted: true,
+          });
+          break;
+        case 3:
+        case 4:
+          f({
+            kubeConfig: kcSingle2,
+            resources: ['resource1', 'resource2'],
+            permitted: false,
+          });
+          break;
+        case 5:
+        case 6:
+          f({
+            kubeConfig: kcSingle1,
+            resources: ['resource3'],
+            permitted: true,
+          });
+          break;
+        case 7:
+        case 8:
+          f({
+            kubeConfig: kcSingle2,
+            resources: ['resource3'],
+            permitted: true,
+          });
+          break;
+      }
+    });
+    vi.mocked(ContextPermissionsChecker).mockImplementation(
+      () =>
+        ({
+          start: permissionsStartMock,
+          onPermissionResult: onPermissionResultMock,
+          isForContext: vi.fn(),
+        }) as unknown as ContextPermissionsChecker,
+    );
+    await manager.update(kc);
+    expect(startMock).toHaveBeenCalledTimes(1); // on resource1 for context1 only (resource2 and resource3 do not have informer declared;, and resource1 is not permitted in context2)
+  });
+
   describe('informer is started', async () => {
     let kcSingle1: KubeConfigSingleContext;
     let kcSingle2: KubeConfigSingleContext;
