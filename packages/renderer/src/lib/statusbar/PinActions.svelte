@@ -1,16 +1,21 @@
 <script lang="ts">
-import { faThumbtack, faThumbtackSlash } from '@fortawesome/free-solid-svg-icons';
-import { DropdownMenu } from '@podman-desktop/ui-svelte';
-
+import ProviderWidget from '/@/lib/statusbar/ProviderWidget.svelte';
+import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
+import type { ProviderInfo } from '/@api/provider-info';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
-import type { PinOption } from '/@api/status-bar/pin-option';
 
 import PinMenu from './PinMenu.svelte';
 
 let showMenu: boolean = $state(false);
 let outsideWindow: HTMLDivElement;
 window.events?.receive(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU, toggleMenu);
+
+let pinned: Set<string> = $derived(new Set($statusBarPinned.filter(pin => pin.pinned).map(pin => pin.value)));
+
+let providers: Map<ProviderInfo, boolean> = $derived(
+  new Map($providerInfos.map(provider => [provider, pinned.has(provider.id)])),
+);
 
 function toggleMenu(): void {
   showMenu = !showMenu;
@@ -26,17 +31,17 @@ function onWindowClick(e: Event): void {
   const target = e.target as HTMLElement;
   // Listen to anything **but** the button that has "data-task-button" attribute with a value of "Help"
   if (target && target.getAttribute('data-task-button') !== 'Pin') {
+    console.log('clicked on', target);
     showMenu = outsideWindow.contains(target);
   }
 }
 
-function onItemClick(option: PinOption): void {
-  console.log('onClick', option);
-  if (option.pinned) {
-    window.unpinStatusBar($state.snapshot(option.value)).catch(console.error);
-  } else {
-    window.pinStatusBar($state.snapshot(option.value)).catch(console.error);
-  }
+function unpin(providerId: string): void {
+  window.unpinStatusBar(providerId).catch(console.error);
+}
+
+function pin(providerId: string): void {
+  window.pinStatusBar(providerId).catch(console.error);
 }
 </script>
 
@@ -45,13 +50,11 @@ function onItemClick(option: PinOption): void {
 <div bind:this={outsideWindow}>
   {#if showMenu}
     <PinMenu>
-      {#each $statusBarPinned as option }
-        <DropdownMenu.Item
-          title={option.label}
-          tooltip={option.label}
-          enabled={true}
-          icon={option.pinned?faThumbtack:faThumbtackSlash}
-          onClick={onItemClick.bind(undefined, option)}
+      {#each providers.entries() as [provider, pinned] }
+        <ProviderWidget
+          class="w-full"
+          entry={provider} command={pinned?unpin.bind(undefined, provider.id):pin.bind(undefined, provider.id)}
+          pinIcon={pinned?'pin':'unpin'}
         />
       {/each}
     </PinMenu>

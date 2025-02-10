@@ -564,13 +564,7 @@ export class PluginSystem {
       }
     });
 
-    const pinRegistry = new PinRegistry(
-      statusBarRegistry,
-      commandRegistry,
-      apiSender,
-      configurationRegistry,
-      providerRegistry,
-    );
+    const pinRegistry = new PinRegistry(commandRegistry, apiSender, configurationRegistry, providerRegistry);
     pinRegistry.init();
 
     statusBarRegistry.setEntry('help', false, -1, undefined, 'Help', 'fa fa-question-circle', true, 'help');

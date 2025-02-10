@@ -21,13 +21,9 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { IDisposable } from '/@/plugin/types/disposable.js';
-import { Disposable } from '/@/plugin/types/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
-
-export const STATUSBAR_PIN_ID = 'pin';
 
 export class PinRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
@@ -35,7 +31,6 @@ export class PinRegistry implements IDisposable {
   #configuration: containerDesktopAPI.Configuration | undefined;
 
   constructor(
-    private statusBarRegistry: StatusBarRegistry,
     private commandRegistry: CommandRegistry,
     private apiSender: ApiSenderType,
     private configurationRegistry: ConfigurationRegistry,
@@ -67,11 +62,14 @@ export class PinRegistry implements IDisposable {
   }
 
   public getOptions(): Array<PinOption> {
-    return this.providers.getProviderInfos().map(provider => ({
-      value: provider.id,
-      label: provider.name,
-      pinned: this.#pinned.has(provider.id),
-    }));
+    return this.providers
+      .getProviderInfos()
+      .filter(provider => provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0)
+      .map(provider => ({
+        value: provider.id,
+        label: provider.name,
+        pinned: this.#pinned.has(provider.id),
+      }));
   }
 
   private async save(): Promise<void> {
@@ -84,23 +82,6 @@ export class PinRegistry implements IDisposable {
   }
 
   init(): void {
-    // register pin entry
-    this.statusBarRegistry.setEntry(
-      STATUSBAR_PIN_ID,
-      true,
-      Number.MAX_VALUE,
-      undefined,
-      'Pin',
-      'fa fa-thumbtack',
-      true,
-      STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU_COMMAND,
-    );
-    this.#disposables.push(
-      Disposable.create(() => {
-        this.statusBarRegistry.removeEntry(STATUSBAR_PIN_ID);
-      }),
-    );
-
     // register toggle menu command
     this.#disposables.push(
       this.commandRegistry.registerCommand(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU_COMMAND, () => {

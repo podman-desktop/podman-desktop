@@ -1,5 +1,7 @@
 <script lang="ts">
+import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
+import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import type { ProviderInfo } from '/@api/provider-info';
@@ -10,9 +12,11 @@ import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 interface Props {
   entry: ProviderInfo;
   command?: () => void;
+  class?: string;
+  pinIcon?: 'pin' | 'unpin';
 }
 
-let { entry, command = (): void => router.goto('/preferences/resources') }: Props = $props();
+let { entry, command = (): void => router.goto('/preferences/resources'), class: className, pinIcon }: Props = $props();
 
 let tooltipText = $derived.by(() => {
   let tooltip = '';
@@ -24,14 +28,21 @@ let tooltipText = $derived.by(() => {
   return tooltip;
 });
 </script>
-  
+
 <Button
   on:click={command}
-  class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent"
+  class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent {className}"
   title={tooltipText}
   aria-label={entry.name}
   padding="px-2 py-1">
-  
+  {#if pinIcon}
+    <div class="w-4">
+      {#if pinIcon === 'pin'}
+        <Fa icon={faCheck} />
+      {/if}
+    </div>
+  {/if}
+
   {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
     <ProviderWidgetStatus entry={entry} />
   {/if}
