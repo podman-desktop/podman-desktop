@@ -27,34 +27,32 @@ export function createListener(
   ) => void,
 ) {
   return (e: unknown): void => {
-    const eventObject: { target?: object } = {};
+    let eventTarget: object | undefined = undefined;
 
     if (e && typeof e === 'object' && 'target' in e && e.target && typeof e.target === 'object') {
-      eventObject.target = e.target;
+      eventTarget = e.target;
+    } else {
+      return;
     }
 
     // Retrieve the command and expandable within the dataset
     let command: string | undefined;
     let expandable: string | undefined;
 
-    if (
-      eventObject.target &&
-      'dataset' in eventObject.target &&
-      eventObject.target.dataset &&
-      typeof eventObject.target.dataset === 'object'
-    ) {
-      if ('command' in eventObject.target.dataset && typeof eventObject.target.dataset.command === 'string') {
-        command = eventObject.target.dataset.command;
+    if ('dataset' in eventTarget && eventTarget.dataset && typeof eventTarget.dataset === 'object') {
+      const targetDataset = eventTarget.dataset;
+      if ('command' in targetDataset && typeof targetDataset.command === 'string') {
+        command = targetDataset.command;
       }
-      if ('expandable' in eventObject.target.dataset && typeof eventObject.target.dataset.expandable === 'string') {
-        expandable = eventObject.target.dataset.expandable;
+      if ('expandable' in targetDataset && typeof targetDataset.expandable === 'string') {
+        expandable = targetDataset.expandable;
       }
     }
 
     // if the user click on a a href link containing data-pd-jump-in-page attribute
-    if (eventObject.target instanceof HTMLAnchorElement) {
+    if (eventTarget instanceof HTMLAnchorElement) {
       // get a matching attribute ?
-      const hrefId = eventObject.target.getAttribute('data-pd-jump-in-page');
+      const hrefId = eventTarget.getAttribute('data-pd-jump-in-page');
 
       // get a linked ID
       if (hrefId) {
@@ -78,18 +76,18 @@ export function createListener(
     }
 
     // if the user clicked on a button (new way)
-    if (!command && eventObject.target instanceof HTMLButtonElement) {
-      const targetId = eventObject.target.id;
+    if (!command && eventTarget instanceof HTMLButtonElement) {
+      const targetId = eventTarget.id;
       executeButtonCommand(targetId).catch((err: unknown) => console.error(`Error executing command ${targetId}`, err));
       return;
     }
 
     // Only check if the command exists and the target is not disabled
-    if (command && eventObject.target && 'disabled' in eventObject.target && !eventObject.target.disabled) {
+    if (command && 'disabled' in eventTarget && !eventTarget.disabled) {
       // If the target is an instance of a button element, we know that we are going to execute either
       // a command or hyperlink
-      if (eventObject.target instanceof HTMLButtonElement) {
-        const targetButton = eventObject.target as HTMLButtonElement;
+      if (eventTarget instanceof HTMLButtonElement) {
+        const targetButton = eventTarget as HTMLButtonElement;
         // If the command exists and the button is not disabled, we execute the command
         // we'll also be updating the inProgressMarkdownCommandExecutionCallback so we have
         // real-time updates on the button
@@ -108,7 +106,7 @@ export function createListener(
               targetButton.firstChild.style.display = 'none';
             }
           });
-      } else if (eventObject.target instanceof HTMLAnchorElement) {
+      } else if (eventTarget instanceof HTMLAnchorElement) {
         // Execute the command since it's a simple "link" to it
         // usually associated with a dialog / quickpick action.
         window.executeCommand(command).catch((reason: unknown) => console.error(String(reason)));
