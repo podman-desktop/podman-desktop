@@ -61,7 +61,6 @@ const registeredKubernetesConnections: {
 
 let kindCli: CliTool | undefined;
 let kindPath: string | undefined;
-let installer: KindInstaller;
 
 let installer: KindInstaller;
 

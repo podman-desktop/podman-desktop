@@ -268,7 +268,8 @@ describe('install', () => {
     const downloadReleaseAssetMock = vi
       .spyOn(installer, 'downloadReleaseAsset')
       .mockImplementation(() => Promise.resolve());
-    await installer.download(resultREST[0]);
+    const output = await installer.download(resultREST[0]);
+    expect(output).toStrictEqual(path.join(installer.getKindCliStoragePath()));
     expect(downloadReleaseAssetMock).toBeCalledWith(186178238, expect.any(String));
     expect(chmodMock).not.toBeCalled();
   });
