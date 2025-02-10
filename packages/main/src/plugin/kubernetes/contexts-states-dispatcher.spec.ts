@@ -19,10 +19,11 @@
 import { expect, test, vi } from 'vitest';
 
 import type { IDisposable } from '/@/plugin/types/disposable.js';
+import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContextHealthState } from './context-health-checker.js';
-import type { ContextPermissionResult, ContextResourcePermission } from './context-permissions-checker.js';
+import type { ContextPermissionResult } from './context-permissions-checker.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
 import type { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';
@@ -68,7 +69,7 @@ test('ContextsStatesDispatcher should call updatePermissions when onContextPermi
   const apiSender: ApiSenderType = {
     send: vi.fn(),
   } as unknown as ApiSenderType;
-  vi.mocked(manager.getPermissions).mockReturnValue(new Map<string, Map<string, ContextResourcePermission>>());
+  vi.mocked(manager.getPermissions).mockReturnValue([]);
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   const updateHealthStatesSpy = vi.spyOn(dispatcher, 'updateHealthStates');
   const updatePermissionsSpy = vi.spyOn(dispatcher, 'updatePermissions');
@@ -95,7 +96,7 @@ test('ContextsStatesDispatcher should call updateHealthStates and updatePermissi
   const apiSender: ApiSenderType = {
     send: vi.fn(),
   } as unknown as ApiSenderType;
-  vi.mocked(manager.getPermissions).mockReturnValue(new Map<string, Map<string, ContextResourcePermission>>());
+  vi.mocked(manager.getPermissions).mockReturnValue([]);
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
   const updateHealthStatesSpy = vi.spyOn(dispatcher, 'updateHealthStates');
   const updatePermissionsSpy = vi.spyOn(dispatcher, 'updatePermissions');
@@ -166,78 +167,35 @@ test('getContextsPermissions should return the values as an array', () => {
     send: vi.fn(),
   } as unknown as ApiSenderType;
   const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
-  const value = new Map<string, Map<string, ContextResourcePermission>>([
-    [
-      'context1',
-      new Map<string, ContextResourcePermission>([
-        [
-          'resource1',
-          {
-            attrs: {},
-            permitted: true,
-            reason: 'ok',
-          },
-        ],
-        [
-          'resource2',
-          {
-            attrs: {},
-            permitted: false,
-            reason: 'nok',
-          },
-        ],
-      ]),
-    ],
-    [
-      'context2',
-      new Map<string, ContextResourcePermission>([
-        [
-          'resource1',
-          {
-            attrs: {},
-            permitted: false,
-            reason: 'nok',
-          },
-        ],
-        [
-          'resource2',
-          {
-            attrs: {},
-            permitted: true,
-            reason: 'ok',
-          },
-        ],
-      ]),
-    ],
-  ]);
+  const value: ContextPermission[] = [
+    {
+      contextName: 'context1',
+      resourceName: 'resource1',
+      permitted: true,
+      reason: 'ok',
+    },
+    {
+      contextName: 'context1',
+      resourceName: 'resource2',
+      permitted: false,
+      reason: 'nok',
+    },
+    {
+      contextName: 'context2',
+      resourceName: 'resource1',
+      permitted: false,
+      reason: 'nok',
+    },
+    {
+      contextName: 'context2',
+      resourceName: 'resource2',
+      permitted: true,
+      reason: 'ok',
+    },
+  ];
   vi.mocked(manager.getPermissions).mockReturnValue(value);
   const result = dispatcher.getContextsPermissions();
-  expect(result).toEqual([
-    {
-      contextName: 'context1',
-      resourceName: 'resource1',
-      permitted: true,
-      reason: 'ok',
-    },
-    {
-      contextName: 'context1',
-      resourceName: 'resource2',
-      permitted: false,
-      reason: 'nok',
-    },
-    {
-      contextName: 'context2',
-      resourceName: 'resource1',
-      permitted: false,
-      reason: 'nok',
-    },
-    {
-      contextName: 'context2',
-      resourceName: 'resource2',
-      permitted: true,
-      reason: 'ok',
-    },
-  ]);
+  expect(result).toEqual(value);
 });
 
 test('updatePermissions should call apiSender.send with kubernetes-contexts-permissions', () => {

@@ -58,7 +58,7 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
           reason: 'a reason',
         },
       });
-      permissionsChecker = new ContextPermissionsChecker(kubeConfig, {
+      permissionsChecker = new ContextPermissionsChecker(kubeConfig, 'ctx1', {
         attrs,
         resources,
       });
@@ -78,13 +78,17 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
 
     test('getPermissions returns permitted true', async () => {
       const permissions = permissionsChecker.getPermissions();
-      const expected = new Map<string, ContextResourcePermission>();
-      expected.set('resource1', {
+      const expected: ContextResourcePermission[] = [];
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource1',
         attrs,
         permitted: true,
         reason: 'a reason',
       });
-      expected.set('resource2', {
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource2',
         attrs,
         permitted: true,
         reason: 'a reason',
@@ -102,7 +106,7 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
           reason: 'a reason',
         },
       });
-      permissionsChecker = new ContextPermissionsChecker(kubeConfig, {
+      permissionsChecker = new ContextPermissionsChecker(kubeConfig, 'ctx1', {
         attrs,
         resources,
       });
@@ -122,13 +126,17 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
 
     test('getPermissions returns permitted false', async () => {
       const permissions = permissionsChecker.getPermissions();
-      const expected = new Map<string, ContextResourcePermission>();
-      expected.set('resource1', {
+      const expected: ContextResourcePermission[] = [];
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource1',
         attrs,
         permitted: false,
         reason: 'a reason',
       });
-      expected.set('resource2', {
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource2',
         attrs,
         permitted: false,
         reason: 'a reason',
@@ -145,7 +153,7 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
           reason: 'a reason',
         },
       });
-      permissionsChecker = new ContextPermissionsChecker(kubeConfig, {
+      permissionsChecker = new ContextPermissionsChecker(kubeConfig, 'ctx1', {
         attrs,
         resources,
       });
@@ -165,13 +173,17 @@ describe('ContextPermissionsChecker is built with a non recursive request', asyn
 
     test('getPermissions returns permitted false', async () => {
       const permissions = permissionsChecker.getPermissions();
-      const expected = new Map<string, ContextResourcePermission>();
-      expected.set('resource1', {
+      const expected: ContextResourcePermission[] = [];
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource1',
         attrs,
         permitted: false,
         reason: 'a reason',
       });
-      expected.set('resource2', {
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource2',
         attrs,
         permitted: false,
         reason: 'a reason',
@@ -248,7 +260,7 @@ describe('ContextPermissionsChecker is built with a recursive request', async ()
           },
         };
       });
-      permissionsChecker = new ContextPermissionsChecker(kubeConfig, {
+      permissionsChecker = new ContextPermissionsChecker(kubeConfig, 'ctx1', {
         attrs,
         resources,
         onDenyRequests: [
@@ -285,13 +297,17 @@ describe('ContextPermissionsChecker is built with a recursive request', async ()
 
     test('getPermissions returns permitted true for resource1 and false for resource2', async () => {
       const permissions = permissionsChecker.getPermissions();
-      const expected = new Map<string, ContextResourcePermission>();
-      expected.set('resource1', {
+      const expected: ContextResourcePermission[] = [];
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource1',
         attrs: attrsResource1,
         permitted: true,
         reason: 'a reason 1',
       });
-      expected.set('resource2', {
+      expected.push({
+        contextName: 'ctx1',
+        resourceName: 'resource2',
         attrs: attrsResource2,
         permitted: false,
         reason: 'a reason 2',

@@ -18,6 +18,7 @@
 
 import type { KubeConfig, KubernetesObject, ObjectCache } from '@kubernetes/client-node';
 
+import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
@@ -27,7 +28,7 @@ import { Emitter } from '../events/emitter.js';
 import { ConfigmapsResourceFactory } from './configmaps-resource-factory.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
-import type { ContextPermissionResult, ContextResourcePermission } from './context-permissions-checker.js';
+import type { ContextPermissionResult } from './context-permissions-checker.js';
 import { ContextPermissionsChecker } from './context-permissions-checker.js';
 import { ContextResourceRegistry } from './context-resource-registry.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
@@ -55,7 +56,7 @@ export class ContextsManagerExperimental {
   #resourceFactoryHandler: ResourceFactoryHandler;
   #dispatcher: ContextsDispatcher;
   #healthCheckers: Map<string, ContextHealthChecker>;
-  #permissionsCheckers: Map<string, ContextPermissionsChecker>;
+  #permissionsCheckers: ContextPermissionsChecker[];
   #informers: ContextResourceRegistry<ResourceInformer<KubernetesObject>>;
   #objectCaches: ContextResourceRegistry<ObjectCache<KubernetesObject>>;
 
@@ -81,7 +82,7 @@ export class ContextsManagerExperimental {
     }
     // Add more resources here
     this.#healthCheckers = new Map<string, ContextHealthChecker>();
-    this.#permissionsCheckers = new Map<string, ContextPermissionsChecker>();
+    this.#permissionsCheckers = [];
     this.#informers = new ContextResourceRegistry<ResourceInformer<KubernetesObject>>();
     this.#objectCaches = new ContextResourceRegistry<ObjectCache<KubernetesObject>>();
     this.#dispatcher = new ContextsDispatcher();
@@ -116,14 +117,22 @@ export class ContextsManagerExperimental {
 
     newHealthChecker.onReachable(async (state: ContextHealthState) => {
       // register and start permissions checker
-      const previousPermissionsChecker = this.#permissionsCheckers.get(state.contextName);
-      previousPermissionsChecker?.dispose();
+      const previousPermissionsCheckers = this.#permissionsCheckers.filter(permissionChecker =>
+        permissionChecker.isForContext(state.contextName),
+      );
+      for (const checker of previousPermissionsCheckers) {
+        checker.dispose();
+      }
 
       const namespace = state.kubeConfig.getNamespace();
       const permissionRequests = this.#resourceFactoryHandler.getPermissionsRequests(namespace);
       for (const permissionRequest of permissionRequests) {
-        const newPermissionChecker = new ContextPermissionsChecker(state.kubeConfig, permissionRequest);
-        this.#permissionsCheckers.set(state.contextName, newPermissionChecker);
+        const newPermissionChecker = new ContextPermissionsChecker(
+          state.kubeConfig,
+          state.contextName,
+          permissionRequest,
+        );
+        this.#permissionsCheckers.push(newPermissionChecker);
         newPermissionChecker.onPermissionResult(this.onPermissionResult.bind(this));
 
         newPermissionChecker.onPermissionResult((event: ContextPermissionResult) => {
@@ -177,9 +186,15 @@ export class ContextsManagerExperimental {
     const healthChecker = this.#healthCheckers.get(state.contextName);
     healthChecker?.dispose();
     this.#healthCheckers.delete(state.contextName);
-    const permissionsChecker = this.#permissionsCheckers.get(state.contextName);
-    permissionsChecker?.dispose();
-    this.#permissionsCheckers.delete(state.contextName);
+    const permissionsCheckers = this.#permissionsCheckers.filter(permissionChecker =>
+      permissionChecker.isForContext(state.contextName),
+    );
+    for (const checker of permissionsCheckers) {
+      checker.dispose();
+    }
+    this.#permissionsCheckers = this.#permissionsCheckers.filter(
+      permissionChecker => !permissionChecker.isForContext(state.contextName),
+    );
   }
 
   private onStateChange(state: ContextHealthState): void {
@@ -200,12 +215,8 @@ export class ContextsManagerExperimental {
   }
 
   /* getPermissions returns the current permissions */
-  getPermissions(): Map</* contextName */ string, Map</* resource */ string, ContextResourcePermission>> {
-    const result = new Map<string, Map<string, ContextResourcePermission>>();
-    for (const [contextName, pc] of this.#permissionsCheckers.entries()) {
-      result.set(contextName, pc.getPermissions());
-    }
-    return result;
+  getPermissions(): ContextPermission[] {
+    return this.#permissionsCheckers.flatMap(permissionsChecker => permissionsChecker.getPermissions());
   }
 
   getResourcesCount(): ResourceCount[] {
@@ -268,10 +279,10 @@ export class ContextsManagerExperimental {
 
   // disposeAllPermissionsCheckers disposes all permissions checkers and removes them from registry
   private disposeAllPermissionsCheckers(): void {
-    for (const [contextName, permissionChecker] of this.#permissionsCheckers.entries()) {
+    for (const permissionChecker of this.#permissionsCheckers) {
       permissionChecker.dispose();
-      this.#permissionsCheckers.delete(contextName);
     }
+    this.#permissionsCheckers = [];
   }
 
   // disposeAllInformers disposes all informers and removes them from registry

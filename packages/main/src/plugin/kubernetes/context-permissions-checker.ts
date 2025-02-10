@@ -38,25 +38,31 @@ export interface ContextPermissionsRequest {
 }
 
 // ContextResourcePermission is the permission for a specific resource
-export interface ContextResourcePermission {
+export interface Permission {
   attrs: V1ResourceAttributes;
   // permitted if allowed and not denied
   permitted: boolean;
   reason?: string;
 }
 
+export interface ContextResourcePermission extends Permission {
+  contextName: string;
+  resourceName: string;
+}
+
 // ContextPermissionResult is the result of a request, which can cover several resources
-export interface ContextPermissionResult extends ContextResourcePermission {
+export interface ContextPermissionResult extends Permission {
   kubeConfig: KubeConfigSingleContext;
   resources: string[];
 }
 
 export class ContextPermissionsChecker implements Disposable {
+  #contextName: string;
   #kubeconfig: KubeConfigSingleContext;
   #client: AuthorizationV1Api;
   #request: ContextPermissionsRequest;
   #subCheckers: ContextPermissionsChecker[] = [];
-  #results: Map<string, ContextResourcePermission>;
+  #results: ContextResourcePermission[];
 
   #onPermissionResult = new Emitter<ContextPermissionResult>();
   onPermissionResult: Event<ContextPermissionResult> = this.#onPermissionResult.event;
@@ -64,11 +70,16 @@ export class ContextPermissionsChecker implements Disposable {
   // builds a ContextPermissionsChecker which will check permissions on the current context of the given kubeConfig
   // The request will be made with `attrs` and if allowed, permissions will be given for `resources`
   // If the result is denied, `onDenyRequests` will be started
-  constructor(kubeconfig: KubeConfigSingleContext, request: ContextPermissionsRequest) {
+  constructor(kubeconfig: KubeConfigSingleContext, contextName: string, request: ContextPermissionsRequest) {
     this.#kubeconfig = kubeconfig;
+    this.#contextName = contextName;
     this.#request = request;
-    this.#results = new Map<string, ContextResourcePermission>();
+    this.#results = [];
     this.#client = this.#kubeconfig.getKubeConfig().makeApiClient(AuthorizationV1Api);
+  }
+
+  public isForContext(contextName: string): boolean {
+    return this.#contextName === contextName;
   }
 
   public async start(): Promise<void> {
@@ -76,7 +87,7 @@ export class ContextPermissionsChecker implements Disposable {
     if ((!result.allowed || result.denied) && this.#request.onDenyRequests?.length) {
       // if not permitted and sub-requests are defined, let start them and don't send any result
       for (const subreq of this.#request.onDenyRequests) {
-        const subchecker = new ContextPermissionsChecker(this.#kubeconfig, subreq);
+        const subchecker = new ContextPermissionsChecker(this.#kubeconfig, this.#contextName, subreq);
         this.#subCheckers.push(subchecker);
         subchecker.onPermissionResult((permissionResult: ContextPermissionResult) => {
           this.saveAndFireResult(permissionResult);
@@ -97,8 +108,10 @@ export class ContextPermissionsChecker implements Disposable {
 
   private saveAndFireResult(result: ContextPermissionResult): void {
     this.#onPermissionResult.fire(result);
-    for (const resource of result.resources) {
-      this.#results.set(resource, {
+    for (const resourceName of result.resources) {
+      this.#results.push({
+        contextName: this.#contextName,
+        resourceName,
         attrs: result.attrs,
         permitted: result.permitted,
         reason: result.reason,
@@ -106,7 +119,7 @@ export class ContextPermissionsChecker implements Disposable {
     }
   }
 
-  public getPermissions(): Map<string, ContextResourcePermission> {
+  public getPermissions(): ContextResourcePermission[] {
     return this.#results;
   }
 

@@ -65,14 +65,7 @@ export class ContextsStatesDispatcher {
   }
 
   getContextsPermissions(): ContextPermission[] {
-    return Array.from(this.manager.getPermissions().entries()).flatMap(([contextName, permissions]) => {
-      return Array.from(permissions.entries()).map(([resourceName, contextResourcePermission]) => ({
-        contextName,
-        resourceName,
-        permitted: contextResourcePermission.permitted,
-        reason: contextResourcePermission.reason,
-      }));
-    });
+    return this.manager.getPermissions();
   }
 
   updateResourcesCount(): void {
