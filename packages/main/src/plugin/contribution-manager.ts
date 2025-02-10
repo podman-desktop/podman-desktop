@@ -110,7 +110,7 @@ export class ContributionManager {
     const allContribs = await Promise.all(
       matchingDirectories.map(async directory => {
         const metadata = await this.loadMetadata(directory);
-        const extensionId = metadata.extensionId ? metadata.extensionId : metadata.name;
+        const extensionId = metadata.extensionId ?? metadata.name;
         // grab only UI contributions for now
         if (!metadata.ui) {
           return [];
