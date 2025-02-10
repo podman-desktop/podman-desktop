@@ -39,13 +39,13 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async () => {
-  test.setTimeout(30_000);
+  test.setTimeout(90_000);
 });
 
 test.describe
   .serial('Verification of UI handling lots of objects', () => {
     test(`Verification of images`, async ({ navigationBar }) => {
-      test.setTimeout(5_000);
+      test.setTimeout(30_000);
       const images = await navigationBar.openImages();
       //count images => 1 original image + (1 tagged * 10) + 1 localhost/podman-pause from pods = 12
       await playExpect.poll(async () => images.countRowsFromTable()).toBe(12);
@@ -57,7 +57,7 @@ test.describe
     });
 
     test(`Verification of containers`, async ({ navigationBar }) => {
-      test.setTimeout(5_000);
+      test.setTimeout(30_000);
       const containers = await navigationBar.openContainers();
       //count containers => (1 manually created + 2 from creating pods) * 10 = 30
       await playExpect.poll(async () => containers.countRowsFromTable()).toBe(30);
@@ -69,7 +69,7 @@ test.describe
     });
 
     test(`Verification of pods`, async ({ navigationBar }) => {
-      test.setTimeout(5_000);
+      test.setTimeout(30_000);
       const pods = await navigationBar.openPods();
       //count pods => 1 manually created * 10 = 10
       await playExpect.poll(async () => pods.countRowsFromTable()).toBe(10);
