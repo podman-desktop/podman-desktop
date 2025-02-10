@@ -21,6 +21,7 @@ import { join } from 'path';
 import * as path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
+import tailwindcss from '@tailwindcss/vite';
 
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
@@ -39,7 +40,7 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [svelte(), svelteTesting()],
+  plugins: [tailwindcss(), svelte(), svelteTesting()],
   test: {
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,

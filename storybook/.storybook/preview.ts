@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import type { Preview } from '@storybook/svelte';
-import 'tailwindcss/tailwind.css';
 import { createElement, useState, useEffect } from 'react';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 import { themes } from '@storybook/theming';
 import { DocsContainer } from '@storybook/addon-docs';
+import './main.css';
 import './themes.css';
 
 const preview: Preview = {
