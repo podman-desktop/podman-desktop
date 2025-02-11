@@ -30,6 +30,7 @@ export class DeployToKubernetesPage extends BasePage {
   readonly servicesCheckbox: Locator;
   readonly restrictedContextCheckbox: Locator;
   readonly createIngressCheckbox: Locator;
+  readonly createOpenShiftRoutesCheckbox: Locator;
   readonly selectPortCombobox: Locator;
   readonly deploymentStatus: Locator;
 
@@ -54,6 +55,9 @@ export class DeployToKubernetesPage extends BasePage {
     this.createIngressCheckbox = this.content.getByRole('checkbox', {
       name: 'Create Ingress',
     });
+    this.createOpenShiftRoutesCheckbox = this.content.getByRole('checkbox', {
+      name: 'Use Routes',
+    });
     this.selectPortCombobox = this.content.getByRole('combobox', {
       name: 'Select a Port',
     });
@@ -69,6 +73,8 @@ export class DeployToKubernetesPage extends BasePage {
       useRestrictedSecurityContext,
       useKubernetesIngress,
       containerExposedPort,
+      isOpenShiftCluster,
+      useOpenShiftRoutes,
     }: DeployPodOptions = {},
     context: string,
     namespace: string = 'default',
@@ -97,16 +103,27 @@ export class DeployToKubernetesPage extends BasePage {
         await playExpect(this.restrictedContextCheckbox).not.toBeChecked();
       }
 
-      await playExpect(this.createIngressCheckbox).toBeEnabled();
-      if (useKubernetesIngress) {
-        await this.createIngressCheckbox.check();
-        await playExpect(this.createIngressCheckbox).toBeChecked();
-        if (containerExposedPort) {
-          await this.selectExposedPort(containerExposedPort);
+      if (isOpenShiftCluster) {
+        await playExpect(this.createOpenShiftRoutesCheckbox).toBeEnabled();
+        if (useOpenShiftRoutes) {
+          await this.createOpenShiftRoutesCheckbox.check();
+          await playExpect(this.createOpenShiftRoutesCheckbox).toBeChecked();
+        } else {
+          await this.createOpenShiftRoutesCheckbox.uncheck();
+          await playExpect(this.createOpenShiftRoutesCheckbox).not.toBeChecked();
         }
       } else {
-        await this.createIngressCheckbox.uncheck();
-        await playExpect(this.createIngressCheckbox).not.toBeChecked();
+        await playExpect(this.createIngressCheckbox).toBeEnabled();
+        if (useKubernetesIngress) {
+          await this.createIngressCheckbox.check();
+          await playExpect(this.createIngressCheckbox).toBeChecked();
+          if (containerExposedPort) {
+            await this.selectExposedPort(containerExposedPort);
+          }
+        } else {
+          await this.createIngressCheckbox.uncheck();
+          await playExpect(this.createIngressCheckbox).not.toBeChecked();
+        }
       }
 
       await this.kubernetesContext.scrollIntoViewIfNeeded();

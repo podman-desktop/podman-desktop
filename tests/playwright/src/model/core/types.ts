@@ -36,6 +36,8 @@ export interface DeployPodOptions {
   useRestrictedSecurityContext?: boolean;
   useKubernetesIngress?: boolean;
   containerExposedPort?: string;
+  isOpenShiftCluster?: boolean;
+  useOpenShiftRoutes?: boolean;
 }
 
 export interface PlayKubernetesOptions {
