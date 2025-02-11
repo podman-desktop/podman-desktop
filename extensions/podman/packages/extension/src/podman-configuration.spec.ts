@@ -181,11 +181,11 @@ test('updateProxySettings should be called one at the time', async () => {
   const call1 = podmanConfiguration.doUpdateProxySettings(undefined);
   const call2 = podmanConfiguration.doUpdateProxySettings(proxySettings);
 
-  await Promise.all([call1, call2]);
-
-  // Check that the proxy update was called twice
-  expect(updateProxySettingsMock).toHaveBeenCalledTimes(2);
-
+  await call1;
+  expect(updateProxySettingsMock).toHaveBeenCalledTimes(1);
   expect(updateProxySettingsMock.mock.calls[0][0]).toBe(undefined);
+
+  await call2;
+  expect(updateProxySettingsMock).toHaveBeenCalledTimes(2);
   expect(updateProxySettingsMock.mock.calls[1][0]).toBe(proxySettings);
 });
