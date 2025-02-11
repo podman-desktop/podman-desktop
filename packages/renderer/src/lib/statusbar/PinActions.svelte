@@ -14,7 +14,11 @@ window.events?.receive(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU, toggleMenu);
 let pinned: Set<string> = $derived(new Set($statusBarPinned.filter(pin => pin.pinned).map(pin => pin.value)));
 
 let providers: Map<ProviderInfo, boolean> = $derived(
-  new Map($providerInfos.map(provider => [provider, pinned.has(provider.id)])),
+  new Map(
+    $providerInfos
+      .filter(provider => provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0)
+      .map(provider => [provider, pinned.has(provider.id)]),
+  ),
 );
 
 function toggleMenu(): void {
