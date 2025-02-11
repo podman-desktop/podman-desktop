@@ -34,6 +34,7 @@ export interface NavigationParameters {
   [NavigationPage.DEPLOY_TO_KUBE]: { id: string; engineId: string };
   [NavigationPage.IMAGES]: never;
   [NavigationPage.IMAGE_BUILD]: { taskId: number | undefined };
+  [NavigationPage.IMAGE_PUSH_TASK]: { imageId: string; engineId: string; tag: string; taskId: number | undefined };
   [NavigationPage.IMAGE]: { id: string; engineId: string; tag: string };
   [NavigationPage.MANIFEST]: { id: string; engineId: string; tag: string };
   [NavigationPage.ONBOARDING]: { extensionId: string };
