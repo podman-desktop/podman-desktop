@@ -39,7 +39,7 @@ export class PodmanConfiguration {
 
     // we receive an update for the current proxy settings
     extensionApi.proxy.onDidUpdateProxy(async (proxySettings: ProxySettings) => {
-      await this.doUpdateProxySettings(proxySettings);
+      await this.updateProxySettings(proxySettings);
     });
 
     // in case of proxy being enabled or disabled we need to update the containers.conf file
@@ -47,9 +47,9 @@ export class PodmanConfiguration {
       // eslint-disable-next-line sonarjs/no-selector-parameter
       if (enabled) {
         const updatedProxySettings = extensionApi.proxy.getProxySettings();
-        await this.doUpdateProxySettings(updatedProxySettings);
+        await this.updateProxySettings(updatedProxySettings);
       } else {
-        await this.doUpdateProxySettings(undefined);
+        await this.updateProxySettings(undefined);
       }
     });
 
@@ -110,10 +110,10 @@ export class PodmanConfiguration {
     }
   }
 
-  async doUpdateProxySettings(proxy: undefined | ProxySettings): Promise<void> {
+  async updateProxySettings(proxy: undefined | ProxySettings): Promise<void> {
     const release = await this.mutex.acquire();
     try {
-      await this.updateProxySettings(proxy);
+      await this.doUpdateProxySettings(proxy);
     } finally {
       release();
     }
@@ -202,7 +202,7 @@ export class PodmanConfiguration {
     }
   }
 
-  async updateProxySettings(proxySettings: ProxySettings | undefined): Promise<void> {
+  async doUpdateProxySettings(proxySettings: ProxySettings | undefined): Promise<void> {
     // create empty config file
     const containersConfContent = {
       containers: {},

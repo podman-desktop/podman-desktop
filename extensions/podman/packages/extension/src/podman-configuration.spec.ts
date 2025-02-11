@@ -167,7 +167,7 @@ describe('isRosettaEnabled', () => {
   });
 });
 
-test('updateProxySettings should be called one at the time', async () => {
+test('doUpdateProxySettings should be called one at the time', async () => {
   const proxySettings: ProxySettings = {
     httpProxy: 'httpProxy',
     httpsProxy: 'httpsProxy',
@@ -175,17 +175,17 @@ test('updateProxySettings should be called one at the time', async () => {
   };
 
   // Mock updateProxySettings
-  const updateProxySettingsMock = vi.spyOn(podmanConfiguration, 'updateProxySettings');
+  const doUpdateProxySettingsMock = vi.spyOn(podmanConfiguration, 'doUpdateProxySettings');
 
   // Simultaneously call the function twice
-  const call1 = podmanConfiguration.doUpdateProxySettings(undefined);
-  const call2 = podmanConfiguration.doUpdateProxySettings(proxySettings);
+  const call1 = podmanConfiguration.updateProxySettings(undefined);
+  const call2 = podmanConfiguration.updateProxySettings(proxySettings);
 
   await call1;
-  expect(updateProxySettingsMock).toHaveBeenCalledTimes(1);
-  expect(updateProxySettingsMock.mock.calls[0][0]).toBe(undefined);
+  expect(doUpdateProxySettingsMock).toHaveBeenCalledTimes(1);
+  expect(doUpdateProxySettingsMock.mock.calls[0][0]).toBe(undefined);
 
   await call2;
-  expect(updateProxySettingsMock).toHaveBeenCalledTimes(2);
-  expect(updateProxySettingsMock.mock.calls[1][0]).toBe(proxySettings);
+  expect(doUpdateProxySettingsMock).toHaveBeenCalledTimes(2);
+  expect(doUpdateProxySettingsMock.mock.calls[1][0]).toBe(proxySettings);
 });
