@@ -36,6 +36,7 @@ import ImagesList from './lib/image/ImagesList.svelte';
 import ImportContainersImages from './lib/image/ImportContainersImages.svelte';
 import LoadImages from './lib/image/LoadImages.svelte';
 import PullImage from './lib/image/PullImage.svelte';
+import PushImage from './lib/image/PushImage.svelte';
 import RunImage from './lib/image/RunImage.svelte';
 import SaveImages from './lib/image/SaveImages.svelte';
 import IngressDetails from './lib/ingresses-routes/IngressDetails.svelte';
@@ -192,6 +193,9 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
         </Route>
         <Route path="/images/pull" breadcrumb="Pull an Image">
           <PullImage />
+        </Route>
+        <Route path="/images/push/:imageId/:engineId/:base64RepoTag/*" breadcrumb="Push an Image" let:meta>
+          <PushImage imageId={decodeURI(meta.params.imageId)} engineId={decodeURI(meta.params.engineId)} base64RepoTag={meta.params.base64RepoTag}/>
         </Route>
         <Route path="/images/import" breadcrumb="Import Containers">
           <ImportContainersImages />
