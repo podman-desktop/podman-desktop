@@ -25,11 +25,11 @@ export function createListener(
     state: 'starting' | 'failed' | 'successful',
     value?: unknown,
   ) => void,
-) {
-  return (e: unknown): void => {
-    let eventTarget: object | undefined = undefined;
+): EventListener {
+  return (e: Event): void => {
+    let eventTarget: EventTarget;
 
-    if (e && typeof e === 'object' && 'target' in e && e.target && typeof e.target === 'object') {
+    if (e.target && typeof e.target === 'object') {
       eventTarget = e.target;
     } else {
       return;

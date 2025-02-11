@@ -72,7 +72,7 @@ export let inProgressMarkdownCommandExecutionCallback: (
 ) => void = () => {};
 
 // Create an event listener for updating the in-progress markdown command execution callback
-const eventListeners: ((e: unknown) => void)[] = [];
+const eventListeners: EventListener[] = [];
 
 // Render the markdown or the html+micromark markdown reactively
 $: markdown
