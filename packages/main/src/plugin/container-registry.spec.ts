@@ -6001,7 +6001,7 @@ describe('kube play', () => {
           build: true,
         },
       );
-    }).rejects.toThrowError('kube play build is not supported on podman: Podman 5.3 and above support this feature');
+    }).rejects.toThrowError('kube play build is not supported on podman: Podman 5.3.0 and above supports this feature');
   });
 
   test('build option false should use playKube with YAML file', async () => {

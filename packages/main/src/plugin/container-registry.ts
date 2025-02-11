@@ -2471,7 +2471,7 @@ export class ContainerProviderRegistry {
       const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
       if (!buildSupported)
         throw new Error(
-          `kube play build is not supported on ${provider.connection.name}: Podman 5.3 and above support this feature`,
+          `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
         );
 
       const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
