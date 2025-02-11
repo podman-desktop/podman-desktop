@@ -25,8 +25,12 @@ import type { IDisposable } from '/@/plugin/types/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
 
+/**
+ * The {@link PinRegistry} hold the pinned options on the providers part of the status bar.
+ */
 export class PinRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
+  // default to podman
   #pinned: Set<string> = new Set(['podman']);
   #configuration: containerDesktopAPI.Configuration | undefined;
 
@@ -117,7 +121,8 @@ export class PinRegistry implements IDisposable {
       this.notify();
     }
 
-    // notify if container connection changed
+    // notify if container connection / kubernetes connection changed
     this.#disposables.push(this.providers.onDidUpdateContainerConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUpdateKubernetesConnection(this.notify.bind(this)));
   }
 }
