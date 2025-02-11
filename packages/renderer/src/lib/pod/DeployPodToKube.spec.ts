@@ -24,7 +24,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import * as jsYaml from 'js-yaml';
-import { tick } from 'svelte';
+import { type ComponentProps, tick } from 'svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -164,7 +164,7 @@ beforeEach(() => {
   listSimpleContainersByLabelMock.mockResolvedValue([simpleContainerInfo]);
 });
 
-async function waitRender(customProperties: object): Promise<void> {
+async function waitRender(customProperties: Partial<ComponentProps<DeployPodToKube>>): Promise<void> {
   render(DeployPodToKube, { resourceId: 'foo', engineId: 'bar', type: 'unknown', ...customProperties });
   await tick();
   await tick();
