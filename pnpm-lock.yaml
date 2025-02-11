@@ -668,8 +668,8 @@ importers:
         specifier: 2.4.1
         version: 2.4.1
       tailwindcss:
-        specifier: ^4.0.1
-        version: 4.0.3
+        specifier: ^4.0.6
+        version: 4.0.6
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -756,8 +756,8 @@ importers:
         specifier: ^0.43.0
         version: 0.43.0(svelte@5.19.9)
       tailwindcss:
-        specifier: ^4.0.1
-        version: 4.0.3
+        specifier: ^4.0.6
+        version: 4.0.6
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -870,7 +870,7 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(picomatch@4.0.2)(svelte@5.19.9)(typescript@5.6.3)
       tailwindcss:
-        specifier: ^4.0.4
+        specifier: ^4.0.6
         version: 4.0.6
       typescript:
         specifier: ^5.6.3
@@ -992,8 +992,8 @@ importers:
         specifier: ^8.5.2
         version: 8.5.2
       tailwindcss:
-        specifier: ^4.0.1
-        version: 4.0.3
+        specifier: ^4.0.6
+        version: 4.0.6
       typedoc:
         specifier: ^0.27.7
         version: 0.27.7(typescript@5.6.3)
@@ -10533,9 +10533,6 @@ packages:
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
 
-  tailwindcss@4.0.3:
-    resolution: {integrity: sha512-ImmZF0Lon5RrQpsEAKGxRvHwCvMgSC4XVlFRqmbzTEDb/3wvin9zfEZrMwgsa3yqBbPqahYcVI6lulM2S7IZAA==}
-
   tailwindcss@4.0.6:
     resolution: {integrity: sha512-mysewHYJKaXgNOW6pp5xon/emCsfAMnO8WMaGKZZ35fomnR/T5gYnRg2/yRTTrtXiEl1tiVkeRt0eMO6HxEZqw==}
 
@@ -14169,11 +14166,11 @@ snapshots:
 
   '@isaacs/cliui@8.0.2':
     dependencies:
-      string-width: 4.2.3
+      string-width: 5.1.2
       string-width-cjs: string-width@4.2.3
       strip-ansi: 7.1.0
       strip-ansi-cjs: strip-ansi@6.0.1
-      wrap-ansi: 7.0.0
+      wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
   '@isaacs/fs-minipass@4.0.1':
@@ -23406,8 +23403,6 @@ snapshots:
       picocolors: 1.1.1
 
   symbol-tree@3.2.4: {}
-
-  tailwindcss@4.0.3: {}
 
   tailwindcss@4.0.6: {}
 
