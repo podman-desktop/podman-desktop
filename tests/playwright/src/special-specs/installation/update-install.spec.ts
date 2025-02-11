@@ -26,7 +26,7 @@ import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
 import { isLinux, isMac } from '../../utility/platform';
 
-const installExtensions = process.env.INSTALLATION_TYPE !== 'vanilla' ? true : false;
+const installExtensions = process.env.INSTALLATION_TYPE === 'custom-extensions' ? true : false;
 const activeExtensionStatus = 'ACTIVE';
 let sBar: StatusBar;
 let updateAvailableDialog: Locator;
