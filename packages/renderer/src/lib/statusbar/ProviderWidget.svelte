@@ -38,7 +38,7 @@ let tooltipText = $derived.by(() => {
   {#if pinIcon}
     <div class="w-4">
       {#if pinIcon === 'pin'}
-        <Fa icon={faCheck} />
+        <Fa icon={faCheck} title="Pinned" />
       {/if}
     </div>
   {/if}
