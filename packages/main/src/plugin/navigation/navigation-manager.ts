@@ -101,6 +101,23 @@ export class NavigationManager {
     });
   }
 
+  async navigateToPushImageTask(
+    imageId: string,
+    engineId: string,
+    tag: string,
+    taskId: number | undefined,
+  ): Promise<void> {
+    this.navigateTo({
+      page: NavigationPage.IMAGE_PUSH_TASK,
+      parameters: {
+        imageId,
+        engineId,
+        tag,
+        taskId,
+      },
+    });
+  }
+
   async navigateToCliTools(): Promise<void> {
     this.navigateTo({
       page: NavigationPage.CLI_TOOLS,
