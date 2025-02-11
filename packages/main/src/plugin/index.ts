@@ -28,6 +28,7 @@ import type {
   Context as KubernetesContext,
   KubernetesObject,
   V1ConfigMap,
+  V1CronJob,
   V1Deployment,
   V1Ingress,
   V1NamespaceList,
@@ -2490,6 +2491,13 @@ export class PluginSystem {
       'kubernetes-client:readNamespacedSecret',
       async (_listener, name: string, namespace: string): Promise<V1Secret | undefined> => {
         return kubernetesClient.readNamespacedSecret(name, namespace);
+      },
+    );
+
+    this.ipcHandle(
+      'kubernetes-client:readNamespacedCronJob',
+      async (_listener, name: string, namespace: string): Promise<V1CronJob | undefined> => {
+        return kubernetesClient.readNamespacedCronJob(name, namespace);
       },
     );
 
