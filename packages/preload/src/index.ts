@@ -215,11 +215,11 @@ export function initExposure(): void {
     return ipcInvoke('statusbar:pin:get-options');
   });
 
-  contextBridge.exposeInMainWorld('pinStatusBar', async (optionId: string): Promise<Array<PinOption>> => {
+  contextBridge.exposeInMainWorld('pinStatusBar', async (optionId: string): Promise<void> => {
     return ipcInvoke('statusbar:pin', optionId);
   });
 
-  contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<Array<PinOption>> => {
+  contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
     return ipcInvoke('statusbar:unpin', optionId);
   });
 

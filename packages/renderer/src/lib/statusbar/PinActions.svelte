@@ -11,13 +11,13 @@ let showMenu: boolean = $state(false);
 let outsideWindow: HTMLDivElement;
 window.events?.receive(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU, toggleMenu);
 
-let pinned: Set<string> = $derived(new Set($statusBarPinned.filter(pin => pin.pinned).map(pin => pin.value)));
+let pinned: Map<string, boolean> = $derived(new Map($statusBarPinned.map(pin => [pin.value, pin.pinned])));
 
 let providers: Map<ProviderInfo, boolean> = $derived(
   new Map(
     $providerInfos
-      .filter(provider => provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0)
-      .map(provider => [provider, pinned.has(provider.id)]),
+      .filter(provider => pinned.has(provider.id))
+      .map(provider => [provider, pinned.get(provider.id) ?? false]),
   ),
 );
 
@@ -57,7 +57,8 @@ function pin(providerId: string): void {
       {#each providers.entries() as [provider, pinned] }
         <ProviderWidget
           class="w-full"
-          entry={provider} command={pinned?unpin.bind(undefined, provider.id):pin.bind(undefined, provider.id)}
+          entry={provider}
+          command={pinned?unpin.bind(undefined, provider.id):pin.bind(undefined, provider.id)}
           pinIcon={pinned?'pin':'unpin'}
         />
       {/each}

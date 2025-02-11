@@ -9,16 +9,9 @@ let pinned: Set<string> = $derived(
   new Set($statusBarPinned.filter(option => option.pinned).map(option => option.value)),
 );
 
-let containerProviders: ProviderInfo[] = $derived(
-  $providerInfos.filter(provider => provider.containerConnections.length > 0 && pinned.has(provider.id)),
-);
-
-let kubernetesProviders = $derived(
-  $providerInfos.filter(provider => provider.kubernetesConnections.length > 0 && pinned.has(provider.id)),
-);
+let providers: ProviderInfo[] = $derived($providerInfos.filter(provider => pinned.has(provider.id)));
 
 function onclick(): void {
-  console.log('onclick provider pin (executing TOGGLE_MENU_COMMAND)');
   window.executeCommand(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU_COMMAND).catch(console.error);
 }
 </script>
@@ -34,9 +27,6 @@ function onclick(): void {
   </button>
 {/if}
 
-{#each containerProviders as entry}
-  <ProviderWidget entry={entry}/>
-{/each}
-{#each kubernetesProviders as entry}
+{#each providers as entry}
   <ProviderWidget entry={entry}/>
 {/each}
