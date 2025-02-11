@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesResourceKind } from '/@api/navigation-request';
 
-export interface DeploymentUI extends KubernetesObjectUI {
-  uid: string;
-  namespace: string;
-  replicas: number;
-  ready: number;
-  created?: Date;
-  conditions: DeploymentCondition[];
-}
-
-export interface DeploymentCondition {
-  type: string;
-  reason?: string;
-  message?: string;
+export interface KubernetesObjectUI {
+  name: string;
+  namespace?: string;
+  kind?: KubernetesResourceKind;
+  status: string;
+  selected?: boolean;
 }

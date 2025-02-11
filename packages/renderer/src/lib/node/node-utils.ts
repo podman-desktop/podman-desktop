@@ -62,6 +62,7 @@ export class NodeUtils {
     return {
       uid: node.metadata?.uid ?? '',
       name: node.metadata?.name ?? '',
+      selected: false,
       status,
       role,
       created,

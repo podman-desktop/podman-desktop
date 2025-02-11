@@ -27,6 +27,7 @@ import type { PodUI } from './PodUI';
 test('Expect action buttons', async () => {
   const pod: PodUI = {
     name: '',
+    kind: 'Pod',
     status: '',
     selected: false,
     containers: [],

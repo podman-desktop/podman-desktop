@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+
 export interface RouteToReference {
   kind: string;
   name: string;
 }
 
-export interface RouteUI {
-  name: string;
+export interface RouteUI extends KubernetesObjectUI {
   namespace: string;
-  status: string;
   host: string;
   port?: string;
   path?: string;
   to: RouteToReference;
-  selected: boolean;
   tlsEnabled: boolean;
   created?: Date;
 }

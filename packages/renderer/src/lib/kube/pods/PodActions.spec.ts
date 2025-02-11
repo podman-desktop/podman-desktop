@@ -34,6 +34,7 @@ const showMessageBoxMock = vi.fn();
 
 class PodUIImpl {
   #status: string;
+  kind: 'Pod';
   constructor(
     public name: string,
     initialStatus: string,
@@ -42,6 +43,7 @@ class PodUIImpl {
     public containers: PodInfoContainerUI[],
   ) {
     this.#status = initialStatus;
+    this.kind = 'Pod';
   }
   set status(status: string) {
     this.#status = status;

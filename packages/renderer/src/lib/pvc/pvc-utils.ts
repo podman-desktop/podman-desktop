@@ -46,6 +46,7 @@ export class PVCUtils {
     }
 
     return {
+      kind: 'PersistentVolumeClaim',
       name: pvc.metadata?.name ?? '',
       namespace: pvc.metadata?.namespace ?? '',
       status,
