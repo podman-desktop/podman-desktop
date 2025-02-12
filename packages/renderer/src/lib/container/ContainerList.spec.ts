@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,21 +41,17 @@ const deleteContainerMock = vi.fn();
 const removePodMock = vi.fn();
 const listPodsMock = vi.fn();
 
-const kubernetesListPodsMock = vi.fn();
-
 // fake the window.events object
 beforeAll(() => {
   const onDidUpdateProviderStatusMock = vi.fn();
   (window as any).onDidUpdateProviderStatus = onDidUpdateProviderStatusMock;
   onDidUpdateProviderStatusMock.mockImplementation(() => Promise.resolve());
   listPodsMock.mockImplementation(() => Promise.resolve([]));
-  kubernetesListPodsMock.mockImplementation(() => Promise.resolve([]));
   listViewsMock.mockImplementation(() => Promise.resolve([]));
   getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
   (window as any).listViewsContributions = listViewsMock;
   (window as any).listContainers = listContainersMock;
   (window as any).listPods = listPodsMock;
-  (window as any).kubernetesListPods = kubernetesListPodsMock;
   (window as any).getProviderInfos = getProviderInfosMock;
   (window as any).removePod = removePodMock;
   (window as any).deleteContainer = deleteContainerMock;
