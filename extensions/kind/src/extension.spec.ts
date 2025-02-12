@@ -531,7 +531,7 @@ describe('kubernetes create factory', () => {
     }).rejects.toThrowError('Unable to create kind cluster. No kind cli detected');
 
     expect(podmanDesktopApi.window.showInformationMessage).toHaveBeenCalledWith(
-      'Kind is not installed, do you can to install the latest version?',
+      'Kind is not installed, do you want to install the latest version?',
       'Cancel',
       'Confirm',
     );

@@ -101,7 +101,7 @@ async function registerProvider(
         // if kind is not installed, let's ask the user to install it
         if (!kindPath) {
           const result = await window.showInformationMessage(
-            'Kind is not installed, do you can to install the latest version?',
+            'Kind is not installed, do you want to install the latest version?',
             'Cancel',
             'Confirm',
           );
