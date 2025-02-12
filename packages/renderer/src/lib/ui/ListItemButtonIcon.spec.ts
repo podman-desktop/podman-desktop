@@ -155,3 +155,35 @@ test('With custom Fa icon', async () => {
   // check it is a svelte-fa class
   expect(svgElement).toHaveClass('svelte-fa');
 });
+
+test('expect button to not have inline-flex when hidden is true', async () => {
+  const title = 'title';
+
+  render(ListItemButtonIcon, {
+    title,
+    icon: faRocket,
+    hidden: true,
+    menu: false,
+  });
+
+  const listItemSpan = screen.getByTitle(title);
+  expect(listItemSpan).toBeInTheDocument();
+  expect(listItemSpan).toHaveClass('hidden');
+  expect(listItemSpan).not.toHaveClass('inline-flex');
+});
+
+test('expect button to have inline-flex when hidden is false', async () => {
+  const title = 'title';
+
+  render(ListItemButtonIcon, {
+    title,
+    icon: faRocket,
+    hidden: false,
+    menu: false,
+  });
+
+  const listItemSpan = screen.getByTitle(title);
+  expect(listItemSpan).toBeInTheDocument();
+  expect(listItemSpan).not.toHaveClass('hidden');
+  expect(listItemSpan).toHaveClass('inline-flex');
+});
