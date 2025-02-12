@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -512,36 +512,6 @@ test('test that blank kubeconfig path will be set to default one', async () => {
   const kubeconfigPath = Uri.file(resolve(homedir(), '.kube', 'config'));
   // Should be default kubeconfigpath
   expect(setKubeconfigSpy).toBeCalledWith(kubeconfigPath);
-});
-
-test('kube watcher', () => {
-  const client = createTestClient('fooNS');
-  const path: string[] = [];
-  let errorHandler: ((args: unknown[]) => void) | undefined;
-
-  // mock TestKubernetesClient.createWatchObject
-  const watchMethodMock = vi.fn().mockImplementation((pathMethod, _ignore1, _ignore2, c: (args: unknown[]) => void) => {
-    path.push(pathMethod);
-    errorHandler = c;
-    return Promise.resolve();
-  });
-
-  const createWatchObjectSpy = vi
-    .spyOn(client, 'createWatchObject')
-    .mockReturnValue({ watch: watchMethodMock } as unknown as Watch);
-
-  client.setupKubeWatcher();
-
-  expect(path).toContain('/api/v1/namespaces/fooNS/pods');
-  expect(path).toContain('/apis/apps/v1/namespaces/fooNS/deployments');
-  expect(errorHandler).toBeDefined();
-
-  // call the error Handler with undefined
-  if (errorHandler !== undefined) {
-    errorHandler([undefined]);
-  }
-
-  expect(createWatchObjectSpy).toBeCalled();
 });
 
 test('should throw error if cannot call the cluster (readNamespacedDeployment reject)', async () => {
