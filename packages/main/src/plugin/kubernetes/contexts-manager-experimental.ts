@@ -33,6 +33,7 @@ import { ContextPermissionsChecker } from './context-permissions-checker.js';
 import { ContextResourceRegistry } from './context-resource-registry.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
+import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
 import { IngressesResourceFactory } from './ingresses-resource-factory.js';
 import { NodesResourceFactory } from './nodes-resource-factory.js';
@@ -106,6 +107,7 @@ export class ContextsManagerExperimental {
       new NodesResourceFactory(),
       new IngressesResourceFactory(),
       new RoutesResourceFactory(),
+      new CronjobsResourceFactory(),
     ];
   }
 
