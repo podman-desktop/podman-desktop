@@ -81,10 +81,10 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.ONBOARDING:
       router.goto(`/preferences/onboarding/${request.parameters.extensionId}`);
       break;
-    case NavigationPage.PODS:
+    case NavigationPage.PODMAN_PODS:
       router.goto(`/pods`);
       break;
-    case NavigationPage.POD:
+    case NavigationPage.PODMAN_POD:
       router.goto(`/pods/${request.parameters.kind}/${request.parameters.name}/${request.parameters.engineId}/`);
       break;
     case NavigationPage.VOLUMES:

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,7 +234,7 @@ export class NavigationManager {
 
   async navigateToPods(): Promise<void> {
     this.navigateTo({
-      page: NavigationPage.PODS,
+      page: NavigationPage.PODMAN_PODS,
     });
   }
 
@@ -242,7 +242,7 @@ export class NavigationManager {
     await this.assertPodExist(kind, name, engineId);
 
     this.navigateTo({
-      page: NavigationPage.POD,
+      page: NavigationPage.PODMAN_POD,
       parameters: {
         kind: kind,
         name: name,

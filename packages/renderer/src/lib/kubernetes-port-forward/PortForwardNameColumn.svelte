@@ -25,7 +25,7 @@ function openPodDetails(): void {
   if (!pod) throw new Error(`Cannot find corresponding pod for name ${object.name} in namespace ${object.namespace}`);
 
   return handleNavigation({
-    page: NavigationPage.POD,
+    page: NavigationPage.PODMAN_POD,
     parameters: {
       kind: encodeURI(pod.kind),
       name: encodeURI(pod.Name),

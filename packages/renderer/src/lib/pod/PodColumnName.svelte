@@ -11,7 +11,7 @@ const podUtils = new PodUtils();
 
 function openDetailsPod(pod: PodInfoUI): void {
   handleNavigation({
-    page: NavigationPage.POD,
+    page: NavigationPage.PODMAN_POD,
     parameters: {
       kind: encodeURI(pod.kind),
       name: encodeURI(pod.name),

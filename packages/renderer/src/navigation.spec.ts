@@ -128,15 +128,15 @@ test(`Test navigationHandle for ${NavigationPage.ONBOARDING}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/onboarding/my.extension');
 });
 
-test(`Test navigationHandle for ${NavigationPage.PODS}`, () => {
-  handleNavigation({ page: NavigationPage.PODS });
+test(`Test navigationHandle for ${NavigationPage.PODMAN_PODS}`, () => {
+  handleNavigation({ page: NavigationPage.PODMAN_PODS });
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/pods');
 });
 
-test(`Test navigationHandle for ${NavigationPage.POD}`, () => {
+test(`Test navigationHandle for ${NavigationPage.PODMAN_POD}`, () => {
   handleNavigation({
-    page: NavigationPage.POD,
+    page: NavigationPage.PODMAN_POD,
     parameters: {
       engineId: 'dummyEngineId',
       name: 'dummyPod',

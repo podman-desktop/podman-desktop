@@ -34,8 +34,8 @@ export interface NavigationParameters {
   [NavigationPage.IMAGE_BUILD]: never;
   [NavigationPage.IMAGE]: { id: string; engineId: string; tag: string };
   [NavigationPage.ONBOARDING]: { extensionId: string };
-  [NavigationPage.PODS]: never;
-  [NavigationPage.POD]: { kind: string; name: string; engineId: string };
+  [NavigationPage.PODMAN_PODS]: never;
+  [NavigationPage.PODMAN_POD]: { kind: string; name: string; engineId: string };
   [NavigationPage.VOLUMES]: never;
   [NavigationPage.VOLUME]: { name: string };
   [NavigationPage.CONTRIBUTION]: { name: string };
