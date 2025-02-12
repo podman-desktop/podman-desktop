@@ -21,13 +21,16 @@ import '@testing-library/jest-dom/vitest';
 import type { KubernetesObject, V1CronJob } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
+import * as resourcesListen from '../kube/resources-listen';
 import CronJobList from './CronJobList.svelte';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock('../kube/resources-listen');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -36,115 +39,163 @@ beforeEach(() => {
   vi.mocked(states).kubernetesCurrentContextState = writable();
 });
 
-test('Expect cronjob empty screen', async () => {
-  vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = writable<KubernetesObject[]>([]);
-  render(CronJobList);
-  const noCronJobs = screen.getByRole('heading', { name: 'No cronjobs' });
-  expect(noCronJobs).toBeInTheDocument();
-});
-
-test('Expect cronjobs list', async () => {
-  const cronjob: V1CronJob = {
-    apiVersion: 'v1',
-    kind: 'CronJob',
-    metadata: {
-      name: 'my-cronjob',
-      namespace: 'test-namespace',
+describe.each<{
+  experimental: boolean;
+  initMocks: () => void;
+  initObjectsList: (objects: KubernetesObject[]) => { update: (objects: KubernetesObject[]) => void };
+}>([
+  {
+    experimental: true,
+    initMocks: (): void => {
+      vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = writable();
     },
-    spec: {
-      schedule: '*/1 * * * *',
-      suspend: false,
-      jobTemplate: {
-        spec: {
-          template: {
-            spec: {
-              containers: [],
-            },
-          },
+    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+      let callback: (resoures: KubernetesObject[]) => void;
+      vi.mocked(resourcesListen.listenResources).mockImplementation(
+        async (_resources, _options, cb): Promise<IDisposable> => {
+          callback = cb;
+          setTimeout(() => callback(objects));
+          return {
+            dispose: (): void => {},
+          };
         },
-      },
-    },
-  };
-  vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = writable<KubernetesObject[]>([cronjob]);
-
-  render(CronJobList);
-  await vi.waitFor(() => {
-    const cronjobName = screen.getByRole('cell', { name: 'my-cronjob test-namespace' });
-    expect(cronjobName).toBeInTheDocument();
-  });
-});
-
-test('Expect filter empty screen', async () => {
-  vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = writable<KubernetesObject[]>([]);
-
-  render(CronJobList, { searchTerm: 'No match' });
-
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-  expect(filterButton).toBeInTheDocument();
-});
-
-test('Expect cronjob list is updated when kubernetesCurrentContextCronJobsFiltered changes', async () => {
-  const cronjob1: V1CronJob = {
-    apiVersion: 'v1',
-    kind: 'CronJob',
-    metadata: {
-      name: 'my-cronjob-1',
-      namespace: 'test-namespace',
-    },
-    spec: {
-      schedule: '*/1 * * * *',
-      suspend: false,
-      jobTemplate: {
-        spec: {
-          template: {
-            spec: {
-              containers: [],
-            },
-          },
+      );
+      return {
+        update: (updatedObjects: KubernetesObject[]): void => {
+          callback(updatedObjects);
         },
-      },
+      };
     },
-  };
-  const cronjob2: V1CronJob = {
-    apiVersion: 'v1',
-    kind: 'CronJob',
-    metadata: {
-      name: 'my-cronjob-2',
-      namespace: 'test-namespace',
+  },
+  {
+    experimental: false,
+    initMocks: (): void => {
+      vi.mocked(resourcesListen.listenResources).mockResolvedValue(undefined);
     },
-    spec: {
-      schedule: '*/1 * * * *',
-      suspend: false,
-      jobTemplate: {
-        spec: {
-          template: {
-            spec: {
-              containers: [],
-            },
-          },
+    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+      const store = writable<KubernetesObject[]>(objects);
+      vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = store;
+      return {
+        update: (objects: KubernetesObject[]): void => {
+          store.set(objects);
         },
-      },
+      };
     },
-  };
-
-  const filtered = writable<KubernetesObject[]>([cronjob1, cronjob2]);
-  vi.mocked(states).kubernetesCurrentContextCronJobsFiltered = filtered;
-
-  const component = render(CronJobList);
-  await vi.waitFor(() => {
-    const cronjobName1 = screen.getByRole('cell', { name: 'my-cronjob-1 test-namespace' });
-    expect(cronjobName1).toBeInTheDocument();
-    const cronjobName2 = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
-    expect(cronjobName2).toBeInTheDocument();
+  },
+])('kubernetes experimental is %s', ({ experimental: _experimental, initObjectsList, initMocks }) => {
+  beforeEach(() => {
+    initMocks();
   });
 
-  filtered.set([cronjob2]);
-  await component.rerender({});
+  test('Expect cronjob empty screen', async () => {
+    initObjectsList([]);
+    render(CronJobList);
+    const noCronJobs = screen.getByRole('heading', { name: 'No cronjobs' });
+    expect(noCronJobs).toBeInTheDocument();
+  });
 
-  await vi.waitFor(() => {
-    const cronjobName1after = screen.queryByRole('cell', { name: 'my-cronjob-1 test-namespace' });
-    expect(cronjobName1after).not.toBeInTheDocument();
-    const cronjobName2after = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
-    expect(cronjobName2after).toBeInTheDocument();
+  test('Expect cronjobs list', async () => {
+    const cronjob: V1CronJob = {
+      apiVersion: 'v1',
+      kind: 'CronJob',
+      metadata: {
+        name: 'my-cronjob',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        schedule: '*/1 * * * *',
+        suspend: false,
+        jobTemplate: {
+          spec: {
+            template: {
+              spec: {
+                containers: [],
+              },
+            },
+          },
+        },
+      },
+    };
+    initObjectsList([cronjob]);
+
+    render(CronJobList);
+    await vi.waitFor(() => {
+      const cronjobName = screen.getByRole('cell', { name: 'my-cronjob test-namespace' });
+      expect(cronjobName).toBeInTheDocument();
+    });
+  });
+
+  test('Expect filter empty screen', async () => {
+    initObjectsList([]);
+
+    render(CronJobList, { searchTerm: 'No match' });
+
+    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+    expect(filterButton).toBeInTheDocument();
+  });
+
+  test('Expect cronjob list is updated when kubernetesCurrentContextCronJobsFiltered changes', async () => {
+    const cronjob1: V1CronJob = {
+      apiVersion: 'v1',
+      kind: 'CronJob',
+      metadata: {
+        name: 'my-cronjob-1',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        schedule: '*/1 * * * *',
+        suspend: false,
+        jobTemplate: {
+          spec: {
+            template: {
+              spec: {
+                containers: [],
+              },
+            },
+          },
+        },
+      },
+    };
+    const cronjob2: V1CronJob = {
+      apiVersion: 'v1',
+      kind: 'CronJob',
+      metadata: {
+        name: 'my-cronjob-2',
+        namespace: 'test-namespace',
+      },
+      spec: {
+        schedule: '*/1 * * * *',
+        suspend: false,
+        jobTemplate: {
+          spec: {
+            template: {
+              spec: {
+                containers: [],
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const list = initObjectsList([cronjob1, cronjob2]);
+
+    const component = render(CronJobList);
+    await vi.waitFor(() => {
+      const cronjobName1 = screen.getByRole('cell', { name: 'my-cronjob-1 test-namespace' });
+      expect(cronjobName1).toBeInTheDocument();
+      const cronjobName2 = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
+      expect(cronjobName2).toBeInTheDocument();
+    });
+
+    list.update([cronjob2]);
+    await component.rerender({});
+
+    await vi.waitFor(() => {
+      const cronjobName1after = screen.queryByRole('cell', { name: 'my-cronjob-1 test-namespace' });
+      expect(cronjobName1after).not.toBeInTheDocument();
+      const cronjobName2after = screen.getByRole('cell', { name: 'my-cronjob-2 test-namespace' });
+      expect(cronjobName2after).toBeInTheDocument();
+    });
   });
 });
