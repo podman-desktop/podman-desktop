@@ -599,8 +599,8 @@ importers:
         specifier: ^6.6.3
         version: 6.6.3
       '@testing-library/svelte':
-        specifier: ^5.2.6
-        version: 5.2.6(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
+        specifier: ^5.2.7
+        version: 5.2.7(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
@@ -729,8 +729,8 @@ importers:
         specifier: ^6.6.3
         version: 6.6.3
       '@testing-library/svelte':
-        specifier: ^5.2.6
-        version: 5.2.6(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
+        specifier: ^5.2.7
+        version: 5.2.7(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
@@ -3845,8 +3845,8 @@ packages:
     resolution: {integrity: sha512-IteBhl4XqYNkM54f4ejhLRJiZNqcSCoXUOG2CPK7qbD322KjQozM4kHQOfkG2oln9b9HTYqs+Sae8vBATubxxA==}
     engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
 
-  '@testing-library/svelte@5.2.6':
-    resolution: {integrity: sha512-1Y8cEg/BtV4J6g9irkY0ksz+ueDFYLiikjTLiqvQPkOUeDzR4gg2zECBf8yrOrCy3e2TAOYMcaysFa0bQMyk1w==}
+  '@testing-library/svelte@5.2.7':
+    resolution: {integrity: sha512-aGhUaFmEXEVost4QOsbHUUbHLwi7ZZRRxAHFDO2Cmr0BZD3/3+XvaYEPq70Rdw0NRNjdqZHdARBEcrCOkPuAqw==}
     engines: {node: '>= 10'}
     peerDependencies:
       svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
@@ -15268,7 +15268,7 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/svelte@5.2.6(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))':
+  '@testing-library/svelte@5.2.7(svelte@5.19.10)(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))(vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0))':
     dependencies:
       '@testing-library/dom': 10.4.0
       svelte: 5.19.10
