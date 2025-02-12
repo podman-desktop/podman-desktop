@@ -452,7 +452,22 @@ describe('should send events when starting a container connection', async () => 
 describe('when auto-starting a container connection', async () => {
   let connection: ProviderContainerConnectionInfo;
   let provider: Provider;
-  let containerProviderConnection: ContainerProviderConnection;
+  const containerProviderConnection: ContainerProviderConnection = {
+    name: 'connection',
+    displayName: 'connection',
+    type: 'docker',
+    lifecycle: {
+      start: vi.fn(),
+      stop: vi.fn(),
+    },
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    status(): ProviderConnectionStatus {
+      return 'started';
+    },
+    vmType: 'libkrun',
+  };
 
   beforeEach(() => {
     provider = providerRegistry.createProvider('id', 'name', {
@@ -472,23 +487,6 @@ describe('when auto-starting a container connection', async () => {
         id: 'libkrun',
         name: 'libkrun',
       },
-    };
-
-    containerProviderConnection = {
-      name: 'connection',
-      displayName: 'connection',
-      type: 'docker',
-      lifecycle: {
-        start: vi.fn(),
-        stop: vi.fn(),
-      },
-      endpoint: {
-        socketPath: '/endpoint1.sock',
-      },
-      status(): ProviderConnectionStatus {
-        return 'started';
-      },
-      vmType: 'libkrun',
     };
 
     providerRegistry.registerAutostartEngine(autostartEngine);
