@@ -2837,8 +2837,10 @@ declare module '@podman-desktop/api' {
     };
     Mounts: Array<{
       Name?: string;
+      Type: string;
       Source: string;
       Destination: string;
+      Driver?: string;
       Mode: string;
       RW: boolean;
       Propagation: string;
