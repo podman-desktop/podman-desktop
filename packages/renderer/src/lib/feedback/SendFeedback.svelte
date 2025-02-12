@@ -50,7 +50,7 @@ async function hideModal(confirm = true): Promise<void> {
 }
 
 function handleUpdate(e: boolean): void {
-  if (e) hasContent = true;
+  hasContent = e;
 }
 </script>
 
