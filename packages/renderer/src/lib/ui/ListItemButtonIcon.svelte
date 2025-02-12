@@ -89,13 +89,13 @@ onDestroy(() => {
 });
 
 const buttonDetailedClass =
-  'text-[var(--pd-action-button-details-text)] bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-details-hover-text)] font-medium rounded-lg text-sm inline-flex items-center px-3 py-2 text-center';
+  'text-[var(--pd-action-button-details-text)] bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-details-hover-text)] font-medium rounded-lg text-sm items-center px-3 py-2 text-center';
 const buttonDetailedDisabledClass =
-  'text-[var(--pd-action-button-details-disabled-text)] bg-[var(--pd-action-button-details-disabled-bg)] font-medium rounded-lg text-sm inline-flex items-center px-3 py-2 text-center';
+  'text-[var(--pd-action-button-details-disabled-text)] bg-[var(--pd-action-button-details-disabled-bg)] font-medium rounded-lg text-sm  items-center px-3 py-2 text-center';
 const buttonClass =
-  'text-[var(--pd-action-button-text)] hover:bg-[var(--pd-action-button-hover-bg)] hover:text-[var(--pd-action-button-hover-text)] font-medium rounded-full inline-flex items-center px-2 py-2 text-center';
+  'text-[var(--pd-action-button-text)] hover:bg-[var(--pd-action-button-hover-bg)] hover:text-[var(--pd-action-button-hover-text)] font-medium rounded-full items-center px-2 py-2 text-center';
 const buttonDisabledClass =
-  'text-[var(--pd-action-button-disabled-text)] font-medium rounded-full inline-flex items-center px-2 py-2 text-center';
+  'text-[var(--pd-action-button-disabled-text)] font-medium rounded-full items-center px-2 py-2 text-center';
 
 function handleClick(): void {
   if (enabled && !inProgress) {
@@ -133,6 +133,7 @@ const styleClass = $derived(
     class="{styleClass} relative"
     class:disabled={inProgress}
     class:hidden={hidden}
+    class:inline-flex={!hidden}
     disabled={!enabled}>
     {#if fontAwesomeIcon}
       <Fa class="h-4 w-4 {iconOffset}" icon={fontAwesomeIcon} />
