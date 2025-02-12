@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,10 @@ export interface NavigationParameters {
   [NavigationPage.KUBERNETES_PVC]: { name: string; namespace: string };
   [NavigationPage.KUBERNETES_INGRESSES_ROUTES]: never;
   [NavigationPage.KUBERNETES_INGRESSES_ROUTE]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_PODS]: never;
+  [NavigationPage.KUBERNETES_POD]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_CRON_JOBS]: never;
+  [NavigationPage.KUBERNETES_CRON_JOB]: { name: string; namespace: string };
 }
 
 // the parameters property is optional when the NavigationParameters say it is

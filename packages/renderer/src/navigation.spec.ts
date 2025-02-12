@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -377,4 +377,44 @@ test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SECRET}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
     '/kubernetes/configmapsSecrets/secret/dummy-name/dummy-ns/summary',
   );
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_PODS}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_PODS,
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/pods');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_POD}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_POD,
+    parameters: {
+      name: 'dummy-name',
+      namespace: 'dummy-ns',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/pods/dummy-name/dummy-ns/summary');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CRON_JOBS}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_CRON_JOBS,
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/cronjobs');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CRON_JOB}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_CRON_JOB,
+    parameters: {
+      name: 'dummy-name',
+      namespace: 'dummy-ns',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/cronjobs/dummy-name/dummy-ns/summary');
 });
