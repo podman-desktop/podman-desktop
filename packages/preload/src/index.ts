@@ -1991,10 +1991,6 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('kubernetesListPods', async (): Promise<PodInfo[]> => {
-    return ipcInvoke('kubernetes-client:listPods');
-  });
-
   contextBridge.exposeInMainWorld('kubernetesListRoutes', async (): Promise<V1Route[]> => {
     return ipcInvoke('kubernetes-client:listRoutes');
   });
