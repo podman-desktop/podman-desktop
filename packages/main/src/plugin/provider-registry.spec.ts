@@ -540,33 +540,82 @@ describe('when auto-starting a container connection', async () => {
     test('should send events when api is directly attached', async () => {
       vi.mocked(containerRegistry.isApiAttached).mockReturnValue(true);
 
-      let onBeforeDidUpdateContainerConnectionCalled = 0;
-      providerRegistry.onBeforeDidUpdateContainerConnection(event => {
-        expect(event.connection.name).toBe(connection.name);
-        expect(event.connection.type).toBe(connection.type);
-        expect(event.status).toBe(onBeforeDidUpdateContainerConnectionCalled ? 'started' : 'starting');
-        onBeforeDidUpdateContainerConnectionCalled++;
-      });
-      let onDidUpdateContainerConnectionCalled = 0;
-      providerRegistry.onDidUpdateContainerConnection(event => {
-        expect(event.connection.name).toBe(connection.name);
-        expect(event.connection.type).toBe(connection.type);
-        expect(event.status).toBe(onDidUpdateContainerConnectionCalled ? 'started' : 'starting');
-        onDidUpdateContainerConnectionCalled++;
-      });
-      let onAfterDidUpdateContainerConnectionCalled = 0;
-      providerRegistry.onAfterDidUpdateContainerConnection(event => {
-        expect(event.connection.name).toBe(connection.name);
-        expect(event.connection.type).toBe(connection.type);
-        expect(event.status).toBe(onAfterDidUpdateContainerConnectionCalled ? 'started' : 'starting');
-        onAfterDidUpdateContainerConnectionCalled++;
-      });
+      const onBeforeDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onBeforeDidUpdateContainerConnection(onBeforeDidUpdateContainerConnectionListenerMock);
+
+      const onDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onDidUpdateContainerConnection(onDidUpdateContainerConnectionListenerMock);
+
+      const onAfterDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onAfterDidUpdateContainerConnection(onAfterDidUpdateContainerConnectionListenerMock);
 
       await providerRegistry.runAutostart('0');
 
-      expect(onBeforeDidUpdateContainerConnectionCalled).toBe(2);
-      expect(onDidUpdateContainerConnectionCalled).toBe(2);
-      expect(onAfterDidUpdateContainerConnectionCalled).toBe(2);
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
+
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
+
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
     });
 
     test('should send events when api is eventually attached', async () => {
