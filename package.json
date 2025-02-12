@@ -75,6 +75,7 @@
     "test:website": "vitest run -r website --passWithNoTests --coverage",
     "watch": "node scripts/watch.mjs",
     "format:check": "biome format && prettier --cache --check \"website/**/*.md\"",
+    "format:clean": "rimraf node_modules/.cache/prettier",
     "format:fix": "biome format --write && prettier --cache --write \"website/**/*.md\"",
     "markdownlint:check": "markdownlint-cli2 \"website/**/*.md\" \"#website/node_modules\" \"#website/api\"",
     "markdownlint:fix": "markdownlint-cli2 --fix \"website/**/*.md\" \"#website/node_modules\"",
