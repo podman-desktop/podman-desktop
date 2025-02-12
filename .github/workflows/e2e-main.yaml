@@ -51,7 +51,7 @@ on:
         - podman 
         required: false
       update_with_extensions: 
-        description: 'Installation Type For Update Test'
+        description: 'Installation extensions before update'
         type: choice
         options:
         - 'false'
