@@ -3,6 +3,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
+  Link,
   NavPage,
   Table,
   TableColumn,
@@ -116,6 +117,10 @@ async function deleteSelectedPods(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
+async function openKubePods(): Promise<void> {
+  await window.navigateToRoute('kubernetes', { kind: 'Pod' });
+}
+
 let selectedItemsNumber: number = $state(0);
 let table: Table;
 
@@ -193,39 +198,45 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
   </svelte:fragment>
 
   <svelte:fragment slot="tabs">
-    <Button
-      type="tab"
-      on:click={(): void => {
-        searchTerm = searchTerm
-          .split(' ')
-          .filter(pattern => pattern !== 'is:running' && pattern !== 'is:stopped')
-          .join(' ');
-      }}
-      selected={!searchTerm.includes('is:stopped') && !searchTerm.includes('is:running')}>All</Button>
-    <Button
-      type="tab"
-      on:click={(): void => {
-        let temp = searchTerm
-          .trim()
-          .split(' ')
-          .filter(term => term !== 'is:stopped' && term !== 'is:running')
-          .join(' ')
-          .trim();
-        searchTerm = temp ? `${temp} is:running` : 'is:running';
-      }}
-      selected={searchTerm.includes('is:running')}>Running</Button>
-    <Button
-      type="tab"
-      on:click={(): void => {
-        let temp = searchTerm
-          .trim()
-          .split(' ')
-          .filter(term => term !== 'is:stopped' && term !== 'is:running')
-          .join(' ')
-          .trim();
-        searchTerm = temp ? `${temp} is:stopped` : 'is:stopped';
-      }}
-      selected={searchTerm.includes('is:stopped')}>Stopped</Button>
+    <div class="flex flex-col gap-3">
+      <div class="self-center text-[var(--pd-table-body-text)]">Looking for pods running on a Kubernetes cluster? We have moved them to the <Link on:click={openKubePods}>Kubernetes &gt; Pods</Link> page.</div>
+
+      <div class="flex flex-row">
+        <Button
+          type="tab"
+          on:click={(): void => {
+            searchTerm = searchTerm
+              .split(' ')
+              .filter(pattern => pattern !== 'is:running' && pattern !== 'is:stopped')
+              .join(' ');
+          }}
+          selected={!searchTerm.includes('is:stopped') && !searchTerm.includes('is:running')}>All</Button>
+        <Button
+          type="tab"
+          on:click={(): void => {
+            let temp = searchTerm
+              .trim()
+              .split(' ')
+              .filter(term => term !== 'is:stopped' && term !== 'is:running')
+              .join(' ')
+              .trim();
+            searchTerm = temp ? `${temp} is:running` : 'is:running';
+          }}
+          selected={searchTerm.includes('is:running')}>Running</Button>
+        <Button
+          type="tab"
+          on:click={(): void => {
+            let temp = searchTerm
+              .trim()
+              .split(' ')
+              .filter(term => term !== 'is:stopped' && term !== 'is:running')
+              .join(' ')
+              .trim();
+            searchTerm = temp ? `${temp} is:stopped` : 'is:stopped';
+          }}
+          selected={searchTerm.includes('is:stopped')}>Stopped</Button>
+      </div>
+    </div>
   </svelte:fragment>
 
   <div class="flex min-w-full h-full" slot="content">
@@ -239,7 +250,7 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
       defaultSortColumn="Name"
       on:update={(): PodInfoUI[] => (pods = pods)}>
     </Table>
-
+    
     {#if $filtered.length === 0 && providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
     {:else if $filtered.length === 0}
