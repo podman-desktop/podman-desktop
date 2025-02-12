@@ -98,16 +98,16 @@ export class ContextsManagerExperimental {
 
   protected getResourceFactories(): ResourceFactory[] {
     return [
-      new PodsResourceFactory(),
-      new DeploymentsResourceFactory(),
       new ConfigmapsResourceFactory(),
+      new CronjobsResourceFactory(),
+      new DeploymentsResourceFactory(),
+      new IngressesResourceFactory(),
+      new NodesResourceFactory(),
+      new PodsResourceFactory(),
+      new PVCsResourceFactory(),
+      new RoutesResourceFactory(),
       new SecretsResourceFactory(),
       new ServicesResourceFactory(),
-      new PVCsResourceFactory(),
-      new NodesResourceFactory(),
-      new IngressesResourceFactory(),
-      new RoutesResourceFactory(),
-      new CronjobsResourceFactory(),
     ];
   }
 
