@@ -321,17 +321,17 @@ test(`Test navigationHandle for ${NavigationPage.KUBERNETES_PVC}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/persistentvolumeclaims/dummy-name/dummy-ns/summary');
 });
 
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES_ROUTES}`, () => {
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES}`, () => {
   handleNavigation({
-    page: NavigationPage.KUBERNETES_INGRESSES_ROUTES,
+    page: NavigationPage.KUBERNETES_INGRESSES,
   });
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/ingressesRoutes');
 });
 
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES_ROUTE}`, () => {
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESS}`, () => {
   handleNavigation({
-    page: NavigationPage.KUBERNETES_INGRESSES_ROUTE,
+    page: NavigationPage.KUBERNETES_INGRESS,
     parameters: {
       name: 'dummy-name',
       namespace: 'dummy-ns',
@@ -343,9 +343,17 @@ test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES_ROUTE}`, (
   );
 });
 
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS}`, () => {
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_ROUTES}`, () => {
   handleNavigation({
-    page: NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS,
+    page: NavigationPage.KUBERNETES_ROUTES,
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/ingressesRoutes');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONFIGMAPS}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_CONFIGMAPS,
   });
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/configmapsSecrets');
@@ -363,6 +371,14 @@ test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONFIGMAP}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
     '/kubernetes/configmapsSecrets/configmap/dummy-name/dummy-ns/summary',
   );
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SECRETS}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_SECRETS,
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/configmapsSecrets');
 });
 
 test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SECRET}`, () => {
@@ -417,4 +433,28 @@ test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CRON_JOB}`, () => {
   });
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/cronjobs/dummy-name/dummy-ns/summary');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_RESOURCES}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_RESOURCES,
+    parameters: {
+      kind: 'Pod',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/pods');
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_RESOURCE}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_RESOURCE,
+    parameters: {
+      kind: 'Pod',
+      name: 'dummy-name',
+      namespace: 'dummy-ns',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/pods/dummy-name/dummy-ns/summary');
 });

@@ -19,7 +19,7 @@
 import { router } from 'tinro';
 
 import { NavigationPage } from '/@api/navigation-page';
-import type { NavigationRequest } from '/@api/navigation-request';
+import type { KubernetesResourceKind, NavigationRequest } from '/@api/navigation-request';
 
 // help method to ensure the handleNavigation is able to infer type properly through the switch
 // ref https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
@@ -121,63 +121,101 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto(`/preferences/container-connection/edit/${request.parameters.provider}/${request.parameters.name}`);
       break;
     case NavigationPage.KUBERNETES_SERVICES:
-      router.goto(`/kubernetes/services`);
+      gotoKubernetesResources('Service');
       break;
     case NavigationPage.KUBERNETES_SERVICE:
-      router.goto(`/kubernetes/services/${request.parameters.name}/${request.parameters.namespace}/summary`);
+      gotoKubernetesResource('Service', request.parameters.name, request.parameters.namespace);
       break;
     case NavigationPage.KUBERNETES_DEPLOYMENTS:
-      router.goto(`/kubernetes/deployments`);
+      gotoKubernetesResources('Deployment');
       break;
     case NavigationPage.KUBERNETES_DEPLOYMENT:
-      router.goto(`/kubernetes/deployments/${request.parameters.name}/${request.parameters.namespace}/summary`);
+      gotoKubernetesResource('Deployment', request.parameters.name, request.parameters.namespace);
       break;
     case NavigationPage.KUBERNETES_NODES:
-      router.goto(`/kubernetes/nodes`);
+      gotoKubernetesResources('Node');
       break;
     case NavigationPage.KUBERNETES_NODE:
-      router.goto(`/kubernetes/nodes/${request.parameters.name}/summary`);
+      gotoKubernetesResource('Node', request.parameters.name);
       break;
     case NavigationPage.KUBERNETES_PVCS:
-      router.goto(`/kubernetes/persistentvolumeclaims`);
+      gotoKubernetesResources('PersistentVolumeClaim');
       break;
     case NavigationPage.KUBERNETES_PVC:
-      router.goto(
-        `/kubernetes/persistentvolumeclaims/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
+      gotoKubernetesResource('PersistentVolumeClaim', request.parameters.name, request.parameters.namespace);
       break;
-    case NavigationPage.KUBERNETES_INGRESSES_ROUTES:
-      router.goto(`/kubernetes/ingressesRoutes`);
+    case NavigationPage.KUBERNETES_INGRESSES:
+      gotoKubernetesResources('Ingress');
       break;
-    case NavigationPage.KUBERNETES_INGRESSES_ROUTE:
-      router.goto(
-        `/kubernetes/ingressesRoutes/ingress/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
+    case NavigationPage.KUBERNETES_INGRESS:
+      gotoKubernetesResource('Ingress', request.parameters.name, request.parameters.namespace);
       break;
-    case NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS:
-      router.goto(`/kubernetes/configmapsSecrets`);
+    case NavigationPage.KUBERNETES_ROUTES:
+      gotoKubernetesResources('Route');
+      break;
+    case NavigationPage.KUBERNETES_ROUTE:
+      gotoKubernetesResource('Route', request.parameters.name, request.parameters.namespace);
+      break;
+    case NavigationPage.KUBERNETES_CONFIGMAPS:
+      gotoKubernetesResources('ConfigMap');
       break;
     case NavigationPage.KUBERNETES_CONFIGMAP:
-      router.goto(
-        `/kubernetes/configmapsSecrets/configmap/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
+      gotoKubernetesResource('ConfigMap', request.parameters.name, request.parameters.namespace);
+      break;
+    case NavigationPage.KUBERNETES_SECRETS:
+      gotoKubernetesResources('Secret');
       break;
     case NavigationPage.KUBERNETES_SECRET:
-      router.goto(
-        `/kubernetes/configmapsSecrets/secret/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
+      gotoKubernetesResource('Secret', request.parameters.name, request.parameters.namespace);
       break;
     case NavigationPage.KUBERNETES_PODS:
-      router.goto(`/kubernetes/pods`);
+      gotoKubernetesResources('Pod');
       break;
     case NavigationPage.KUBERNETES_POD:
-      router.goto(`/kubernetes/pods/${request.parameters.name}/${request.parameters.namespace}/summary`);
+      gotoKubernetesResource('Pod', request.parameters.name, request.parameters.namespace);
       break;
     case NavigationPage.KUBERNETES_CRON_JOBS:
-      router.goto(`/kubernetes/cronjobs`);
+      gotoKubernetesResources('CronJob');
       break;
     case NavigationPage.KUBERNETES_CRON_JOB:
-      router.goto(`/kubernetes/cronjobs/${request.parameters.name}/${request.parameters.namespace}/summary`);
+      gotoKubernetesResource('CronJob', request.parameters.name, request.parameters.namespace);
+      break;
+    case NavigationPage.KUBERNETES_RESOURCES:
+      gotoKubernetesResources(request.parameters.kind);
+      break;
+    case NavigationPage.KUBERNETES_RESOURCE:
+      gotoKubernetesResource(request.parameters.kind, request.parameters.name, request.parameters.namespace);
       break;
   }
 };
+
+function gotoKubernetesResources(kind: KubernetesResourceKind): void {
+  router.goto(`/kubernetes/${resourceKindToURL(kind)}`);
+}
+
+function gotoKubernetesResource(kind: KubernetesResourceKind, name: string, namespace?: string): void {
+  if (namespace) {
+    if (kind === 'Ingress' || kind === 'Route') {
+      router.goto(`/kubernetes/${resourceKindToURL(kind)}/ingress/${name}/${namespace}/summary`);
+    } else if (kind === 'ConfigMap') {
+      router.goto(`/kubernetes/${resourceKindToURL(kind)}/configmap/${name}/${namespace}/summary`);
+    } else if (kind === 'Secret') {
+      router.goto(`/kubernetes/${resourceKindToURL(kind)}/secret/${name}/${namespace}/summary`);
+    } else {
+      router.goto(`/kubernetes/${resourceKindToURL(kind)}/${name}/${namespace}/summary`);
+    }
+  } else {
+    router.goto(`/kubernetes/${resourceKindToURL(kind)}/${name}/summary`);
+  }
+}
+
+function resourceKindToURL(kind: KubernetesResourceKind): string {
+  // handle the special cases in our urls
+  if (kind === 'Ingress' || kind === 'Route') {
+    return 'ingressesRoutes';
+  } else if (kind === 'ConfigMap' || kind === 'Secret') {
+    return 'configmapsSecrets';
+  }
+  // otherwise do the simple conversion
+  return kind.toLowerCase() + 's';
+}

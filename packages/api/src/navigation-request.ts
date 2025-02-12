@@ -18,6 +18,18 @@
 
 import type { NavigationPage } from './navigation-page.js';
 
+export type KubernetesResourceKind =
+  | 'Node'
+  | 'Pod'
+  | 'Deployment'
+  | 'Service'
+  | 'Ingress'
+  | 'Route'
+  | 'CronJob'
+  | 'ConfigMap'
+  | 'Secret'
+  | 'PersistentVolumeClaim';
+
 // Define the type mapping for parameters
 export interface NavigationParameters {
   [NavigationPage.DASHBOARD]: never;
@@ -53,17 +65,22 @@ export interface NavigationParameters {
   [NavigationPage.KUBERNETES_SERVICE]: { name: string; namespace: string };
   [NavigationPage.KUBERNETES_DEPLOYMENTS]: never;
   [NavigationPage.KUBERNETES_DEPLOYMENT]: { name: string; namespace: string };
-  [NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS]: never;
+  [NavigationPage.KUBERNETES_SECRETS]: never;
   [NavigationPage.KUBERNETES_SECRET]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_CONFIGMAPS]: never;
   [NavigationPage.KUBERNETES_CONFIGMAP]: { name: string; namespace: string };
   [NavigationPage.KUBERNETES_PVCS]: never;
   [NavigationPage.KUBERNETES_PVC]: { name: string; namespace: string };
-  [NavigationPage.KUBERNETES_INGRESSES_ROUTES]: never;
-  [NavigationPage.KUBERNETES_INGRESSES_ROUTE]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_INGRESSES]: never;
+  [NavigationPage.KUBERNETES_INGRESS]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_ROUTES]: never;
+  [NavigationPage.KUBERNETES_ROUTE]: { name: string; namespace: string };
   [NavigationPage.KUBERNETES_PODS]: never;
   [NavigationPage.KUBERNETES_POD]: { name: string; namespace: string };
   [NavigationPage.KUBERNETES_CRON_JOBS]: never;
   [NavigationPage.KUBERNETES_CRON_JOB]: { name: string; namespace: string };
+  [NavigationPage.KUBERNETES_RESOURCES]: { kind: KubernetesResourceKind };
+  [NavigationPage.KUBERNETES_RESOURCE]: { kind: KubernetesResourceKind; name: string; namespace?: string };
 }
 
 // the parameters property is optional when the NavigationParameters say it is
