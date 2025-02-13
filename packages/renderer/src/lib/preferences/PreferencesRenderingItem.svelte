@@ -30,19 +30,11 @@ const recordUI = $derived.by(() => {
   const id = record.id;
 
   // split id
-  const split: string[] = id?.split('.') ?? [''];
-
-  // take string after the last dot
-  let key: string;
-  switch (title) {
-    case 'full':
-      key = split.join(' ');
-      break;
-    case 'short':
-      key = split[split.length - 1];
-      break;
+  let key = id?.substring(id?.lastIndexOf('.') + 1) ?? '';
+  key = startCase(key);
+  if (title === 'full') {
+    key = `${record.title} ${key}`;
   }
-  // const key = id?.substring(id?.lastIndexOf('.') + 1) ?? '';
 
   // define bread crumb as first part before the last dot
   const breadCrumb = id?.substring(0, id?.lastIndexOf('.')) ?? '';
@@ -50,7 +42,7 @@ const recordUI = $derived.by(() => {
   const breadCrumbUI = breadCrumb.replace(/\./g, ' > ').concat(':');
 
   return {
-    title: startCase(key),
+    title: key,
     breadCrumb: breadCrumbUI,
     description: record.description,
     markdownDescription: record.markdownDescription,
