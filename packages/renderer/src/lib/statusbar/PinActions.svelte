@@ -56,7 +56,7 @@ function pin(providerId: string): void {
     <PinMenu>
       {#each providers.entries() as [provider, pinned] }
         <ProviderWidget
-          class="w-full"
+          class="w-full text-[var(--pd-dropdown-item-text)] hover:rounded-md hover:!bg-[var(--pd-dropdown-item-hover-bg)] hover:text-[var(--pd-dropdown-item-hover-text)]"
           entry={provider}
           command={pinned?unpin.bind(undefined, provider.id):pin.bind(undefined, provider.id)}
           pinIcon={pinned?'pin':'unpin'}
