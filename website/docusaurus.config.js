@@ -419,9 +419,18 @@ const config = {
             position: 'left',
             label: 'Documentation',
           },
-          { to: '/features', label: 'Features', position: 'left' },
           { to: '/downloads', label: 'Downloads', position: 'left' },
-          { to: '/extend', label: 'Extend', position: 'left' },
+          {
+            type: 'dropdown',
+            label: 'Features',
+            position: 'left',
+            items: [
+              { to: '/features', label: 'Overview' },
+              { to: '/extend', label: 'Extend' },
+            ],
+          },
+
+          { to: '/community', label: 'Community', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
           { to: '/tutorial', label: 'Tutorials', position: 'left' },
           {
