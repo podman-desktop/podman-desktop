@@ -104,6 +104,16 @@ test.describe
           await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 60_000 });
         });
 
+        await test.step('Check terminal tab for podman machine', async () => {
+          await playExpect(podmanMachineDetails.terminalTab).toBeVisible();
+          await podmanMachineDetails.terminalTab.click();
+          await playExpect(podmanMachineDetails.terminalContent).toBeVisible();
+          await playExpect(podmanMachineDetails.terminalContent).toContainText('core@localhost');
+          await podmanMachineDetails.terminalInput.pressSequentially('pwd', { delay: 15 });
+          await podmanMachineDetails.terminalInput.press('Enter');
+          await playExpect(podmanMachineDetails.terminalContent).toContainText('/home/core');
+        });
+
         await test.step('Stop default podman machine', async () => {
           await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
           await podmanMachineDetails.podmanMachineStopButton.click();

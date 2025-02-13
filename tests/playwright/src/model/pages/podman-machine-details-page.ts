@@ -34,6 +34,8 @@ export class PodmanMachineDetails extends ResourcesPage {
   readonly logsTab: Locator;
   readonly terminalTab: Locator;
   readonly tabContent: Locator;
+  readonly terminalInput: Locator;
+  readonly terminalContent: Locator;
 
   constructor(page: Page, podmanMachineName: string) {
     super(page);
@@ -51,7 +53,9 @@ export class PodmanMachineDetails extends ResourcesPage {
     this.tabs = page.getByRole('region', { name: 'Tabs' });
     this.summaryTab = this.tabs.getByText('Summary');
     this.logsTab = this.tabs.getByText('Logs');
-    this.terminalTab = this.tabs.getByText('Terminal');
+    this.terminalTab = this.tabs.getByText('Terminal', { exact: true });
     this.tabContent = page.getByRole('region', { name: 'Tab Content' });
+    this.terminalInput = this.tabContent.getByLabel('Terminal input');
+    this.terminalContent = this.tabContent.locator('.xterm-rows');
   }
 }
