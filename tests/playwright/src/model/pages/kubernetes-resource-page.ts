@@ -25,7 +25,7 @@ import { MainPage } from './main-page';
 export class KubernetesResourcePage extends MainPage {
   readonly applyYamlButton: Locator;
 
-  constructor(page: Page, name: KubernetesResources) {
+  constructor(page: Page, name: string) {
     super(page, name);
     this.applyYamlButton = this.additionalActions.getByRole('button', {
       name: 'Apply YAML',

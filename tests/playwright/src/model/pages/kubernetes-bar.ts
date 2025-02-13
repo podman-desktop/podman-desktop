@@ -35,7 +35,15 @@ export class KubernetesBar {
   public async openTabPage(kubernetesResource: KubernetesResources): Promise<KubernetesResourcePage> {
     const resource = this.kubernetesNavBar.getByRole('link', { name: kubernetesResource });
     await resource.click();
-    return new KubernetesResourcePage(this.page, kubernetesResource);
+
+    switch (kubernetesResource) {
+      case 'Persistent Volume Claims':
+        return new KubernetesResourcePage(this.page, 'PVCs');
+      case 'ConfigMaps & Secrets':
+        return new KubernetesResourcePage(this.page, 'Configmaps and Secrets');
+      default:
+        return new KubernetesResourcePage(this.page, kubernetesResource);
+    }
   }
 
   public getSettingsNavBarTabLocator(name: string): Locator {
