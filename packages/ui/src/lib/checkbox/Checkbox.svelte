@@ -14,6 +14,7 @@ export let name: string | undefined = undefined;
 export let required = false;
 
 const dispatch = createEventDispatcher<{ click: boolean }>();
+const faSize = '1.33x';
 
 function onClick(
   event: MouseEvent & {
@@ -33,20 +34,20 @@ function onClick(
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}>
       {#if disabled}
-        <Fa size="1.3x" icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]" />
+        <Fa size={faSize} icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]" />
       {:else if indeterminate}
         <Fa
-          size="1.3x"
+          size={faSize}
           icon={faMinusSquare}
           class="text-[var(--pd-input-checkbox-indeterminate)] hover:text-[var(--pd-input-checkbox-focused-indeterminate)]" />
       {:else if checked}
         <Fa
-          size="1.3x"
+          size={faSize}
           icon={faCheckSquare}
           class="text-[var(--pd-input-checkbox-checked)] hover:text-[var(--pd-input-checkbox-focused-checked)]" />
       {:else}
         <Fa
-          size="1.3x"
+          size={faSize}
           icon={faOutlineSquare}
           class="text-[var(--pd-input-checkbox-unchecked)] hover:text-[var(--pd-input-checkbox-focused-unchecked)]" />
       {/if}

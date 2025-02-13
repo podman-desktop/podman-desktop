@@ -56,7 +56,7 @@ test('Basic check', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-unchecked)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-unchecked)]');
-  expect(icon).toHaveStyle('font-size: 1.3em');
+  expect(icon).toHaveStyle('font-size: 1.33em');
 });
 
 test('Check checked state', async () => {
@@ -75,7 +75,7 @@ test('Check checked state', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-checked)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-checked)]');
-  expect(icon).toHaveStyle('font-size: 1.3em');
+  expect(icon).toHaveStyle('font-size: 1.33em');
 });
 
 test('Check indeterminate state', async () => {
@@ -94,7 +94,7 @@ test('Check indeterminate state', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-indeterminate)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-indeterminate)]');
-  expect(icon).toHaveStyle('font-size: 1.3em');
+  expect(icon).toHaveStyle('font-size: 1.33em');
 });
 
 test('Check disabled state', async () => {
@@ -113,7 +113,7 @@ test('Check disabled state', async () => {
   const icon = peer?.children[0];
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-disabled)]');
-  expect(icon).toHaveStyle('font-size: 1.3em');
+  expect(icon).toHaveStyle('font-size: 1.33em');
 });
 
 test('Check tooltips', async () => {
