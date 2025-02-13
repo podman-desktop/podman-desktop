@@ -2350,19 +2350,29 @@ describe('checkRosettaMacArm', async () => {
   });
 });
 
+test('isLibkrunSupported should return false with 5.3.0 on intel', async () => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue('x64');
+  const enabled = extension.isLibkrunSupported('5.3.0');
+  expect(enabled).toBeFalsy();
+});
+
 test('isLibkrunSupported should return true with prelease older than rc1', async () => {
+  vi.mocked(arch).mockReturnValue('arm64');
   vi.mocked(extensionApi.env).isMac = true;
   const enabled = extension.isLibkrunSupported('5.2.0-rc2');
   expect(enabled).toBeTruthy();
 });
 
 test('isLibkrunSupported should return true with 5.2.0 version', async () => {
+  vi.mocked(arch).mockReturnValue('arm64');
   vi.mocked(extensionApi.env).isMac = true;
   const enabled = extension.isLibkrunSupported('5.2.0');
   expect(enabled).toBeTruthy();
 });
 
 test('isLibkrunSupported should return false with previous 5.1.2 version', async () => {
+  vi.mocked(arch).mockReturnValue('arm64');
   vi.mocked(extensionApi.env).isMac = true;
   const enabled = extension.isLibkrunSupported('5.1.2');
   expect(enabled).toBeFalsy();

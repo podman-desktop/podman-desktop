@@ -1921,9 +1921,13 @@ export function isUserModeNetworkingSupported(podmanVersion: string): boolean {
 
 const PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT = '5.2.0-rc1';
 
-// Checks if libkrun is supported. Only Mac platform allows this parameter to be tuned
+// Checks if libkrun is supported. Only Mac/silicon platform allows this parameter to be tuned
 export function isLibkrunSupported(podmanVersion: string): boolean {
-  return extensionApi.env.isMac && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0;
+  return (
+    extensionApi.env.isMac &&
+    os.arch() === 'arm64' &&
+    compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0
+  );
 }
 
 // Set wslEnabled. Used for testing purposes
