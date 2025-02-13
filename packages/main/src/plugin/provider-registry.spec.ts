@@ -77,11 +77,11 @@ beforeEach(() => {
 });
 
 test('should initialize provider if there is kubernetes connection provider', async () => {
-  let providerInternalId: unknown;
+  let providerInternalId: string | undefined = undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
-    providerInternalId = data;
+    providerInternalId = String(data);
   });
 
   const provider = providerRegistry.createProvider('id', 'name', {
@@ -99,7 +99,7 @@ test('should initialize provider if there is kubernetes connection provider', as
 
   expect(providerInternalId).toBeDefined();
 
-  await providerRegistry.initializeProvider(providerInternalId as string);
+  await providerRegistry.initializeProvider(providerInternalId!);
 
   expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
     name: 'internal',
@@ -111,12 +111,12 @@ test('should initialize provider if there is kubernetes connection provider', as
 });
 
 test('should send version event if update', async () => {
-  let providerInternalId: unknown;
+  let providerInternalId: string | undefined = undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(['provider-create', 'provider:update-version', 'provider-change']).toContain(message);
     if (message === 'provider-create') {
-      providerInternalId = data;
+      providerInternalId = String(data);
     }
   });
 
@@ -136,7 +136,7 @@ test('should send version event if update', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.updateProvider(providerInternalId as string);
+  await providerRegistry.updateProvider(providerInternalId!);
 
   expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
     name: 'internal',
@@ -148,11 +148,11 @@ test('should send version event if update', async () => {
 });
 
 test('should initialize provider if there is container connection provider', async () => {
-  let providerInternalId: unknown;
+  let providerInternalId: string | undefined = undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
-    providerInternalId = data;
+    providerInternalId = String(data);
   });
 
   const provider = providerRegistry.createProvider('id', 'name', {
@@ -170,7 +170,7 @@ test('should initialize provider if there is container connection provider', asy
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId as string);
+  await providerRegistry.initializeProvider(providerInternalId!);
 
   expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
     name: 'internal',
