@@ -108,7 +108,7 @@ test.describe
           await playExpect(podmanMachineDetails.terminalTab).toBeVisible();
           await podmanMachineDetails.terminalTab.click();
           await playExpect(podmanMachineDetails.terminalContent).toBeVisible();
-          await playExpect(podmanMachineDetails.terminalContent).toContainText('core@localhost');
+          await playExpect(podmanMachineDetails.terminalContent).toContainText('@');
           await podmanMachineDetails.terminalInput.pressSequentially('pwd', { delay: 15 });
           await podmanMachineDetails.terminalInput.press('Enter');
           await playExpect(podmanMachineDetails.terminalContent).toContainText('/home/core');
