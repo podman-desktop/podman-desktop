@@ -48,8 +48,8 @@ export class KubeContextPage extends SettingsPage {
     if (row === undefined) {
       throw Error(`Context: '${name}' does not exist`);
     }
-    const bannerText = await row.getByLabel('Current Context').textContent();
 
+    const bannerText = await row.getByLabel('Current Context').textContent();
     return bannerText === 'Current Context';
   }
 
