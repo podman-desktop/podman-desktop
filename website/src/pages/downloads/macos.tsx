@@ -117,7 +117,7 @@ export function MacOSDownloads(): JSX.Element {
           <div className="pt-8">
             <TelemetryLink
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
-              eventPath="/download"
+              eventPath="download"
               eventTitle="download-mac"
               to={downloadData.universal}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
@@ -131,7 +131,7 @@ export function MacOSDownloads(): JSX.Element {
             <div>Other macOS downloads:</div>
             <TelemetryLink
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-              eventPath="/download"
+              eventPath="download"
               eventTitle="download-mac"
               to={downloadData.x64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
@@ -139,7 +139,7 @@ export function MacOSDownloads(): JSX.Element {
             </TelemetryLink>
             <TelemetryLink
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 text-md font-semibold"
-              eventPath="/download"
+              eventPath="download"
               eventTitle="download-mac"
               to={downloadData.arm64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
@@ -151,7 +151,7 @@ export function MacOSDownloads(): JSX.Element {
             <div className="flex flex-row justify-center">
               <TelemetryLink
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                eventPath="/download"
+                eventPath="download"
                 eventTitle="download-mac"
                 to={downloadData.airgapsetupX64}>
                 <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
@@ -159,7 +159,7 @@ export function MacOSDownloads(): JSX.Element {
               </TelemetryLink>
               <TelemetryLink
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
-                eventPath="/download"
+                eventPath="download"
                 eventTitle="download-mac"
                 to={downloadData.airgapsetupArm64}>
                 <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
