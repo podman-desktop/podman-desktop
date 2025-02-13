@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023, 2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ test('Basic check', async () => {
   expect(checkbox).toBeInTheDocument();
   expect(checkbox).toBeEnabled();
   expect(checkbox).toHaveClass('top-0 left-0 w-px h-px');
+  expect(checkbox).toHaveClass('opacity-0');
+  expect(checkbox).toHaveClass('text-xl');
 
   const parent = checkbox.parentElement;
   expect(parent).toBeInTheDocument();
@@ -54,6 +56,7 @@ test('Basic check', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-unchecked)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-unchecked)]');
+  expect(icon).toHaveStyle('font-size: 1.3em');
 });
 
 test('Check checked state', async () => {
@@ -72,6 +75,7 @@ test('Check checked state', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-checked)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-checked)]');
+  expect(icon).toHaveStyle('font-size: 1.3em');
 });
 
 test('Check indeterminate state', async () => {
@@ -90,6 +94,7 @@ test('Check indeterminate state', async () => {
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-indeterminate)]');
   expect(icon).toHaveClass('hover:text-[var(--pd-input-checkbox-focused-indeterminate)]');
+  expect(icon).toHaveStyle('font-size: 1.3em');
 });
 
 test('Check disabled state', async () => {
@@ -108,6 +113,7 @@ test('Check disabled state', async () => {
   const icon = peer?.children[0];
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveClass('text-[var(--pd-input-checkbox-disabled)]');
+  expect(icon).toHaveStyle('font-size: 1.3em');
 });
 
 test('Check tooltips', async () => {

@@ -33,20 +33,20 @@ function onClick(
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}>
       {#if disabled}
-        <Fa size="1.1x" icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]" />
+        <Fa size="1.3x" icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]" />
       {:else if indeterminate}
         <Fa
-          size="1.1x"
+          size="1.3x"
           icon={faMinusSquare}
           class="text-[var(--pd-input-checkbox-indeterminate)] hover:text-[var(--pd-input-checkbox-focused-indeterminate)]" />
       {:else if checked}
         <Fa
-          size="1.1x"
+          size="1.3x"
           icon={faCheckSquare}
           class="text-[var(--pd-input-checkbox-checked)] hover:text-[var(--pd-input-checkbox-focused-checked)]" />
       {:else}
         <Fa
-          size="1.1x"
+          size="1.3x"
           icon={faOutlineSquare}
           class="text-[var(--pd-input-checkbox-unchecked)] hover:text-[var(--pd-input-checkbox-focused-unchecked)]" />
       {/if}
@@ -61,7 +61,7 @@ function onClick(
       required={required}
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}
-      class="opacity-0 absolute top-0 left-0 w-px h-px text-lg"
+      class="opacity-0 absolute top-0 left-0 w-px h-px text-xl"
       on:click={onClick} />
   </div>
   <slot />
