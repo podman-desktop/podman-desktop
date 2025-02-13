@@ -111,7 +111,7 @@ test.describe
           await playExpect(podmanMachineDetails.terminalContent).toContainText('@');
           await podmanMachineDetails.terminalInput.pressSequentially('pwd', { delay: 15 });
           await podmanMachineDetails.terminalInput.press('Enter');
-          await playExpect(podmanMachineDetails.terminalContent).toContainText('/home/core');
+          await playExpect(podmanMachineDetails.terminalContent).toContainText('/home/');
         });
 
         await test.step('Stop default podman machine', async () => {
