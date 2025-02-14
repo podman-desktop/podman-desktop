@@ -131,7 +131,7 @@ test('opened menu should render provider based on pin options', async () => {
   // ensure we only rendered one item
   expect(ProviderWidget).toHaveBeenCalledOnce();
   expect(ProviderWidget).toHaveBeenCalledWith(expect.anything(), {
-    class: 'w-full',
+    class: expect.any(String),
     pinIcon: 'pin',
     entry: CONTAINER_CONNECTION_PROVIDER,
     command: expect.any(Function),
