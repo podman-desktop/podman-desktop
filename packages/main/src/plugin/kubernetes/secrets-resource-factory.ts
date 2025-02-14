@@ -54,6 +54,6 @@ export class SecretsResourceFactory extends ResourceFactoryBase implements Resou
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1SecretList> => apiClient.listNamespacedSecret({ namespace });
     const path = `/api/v1/namespaces/${namespace}/secrets`;
-    return new ResourceInformer<V1Secret>(kubeconfig, path, listFn, { kind: 'Secret', plural: 'secrets' });
+    return new ResourceInformer<V1Secret>({ kubeconfig, path, listFn, kind: 'Secret', plural: 'secrets' });
   }
 }

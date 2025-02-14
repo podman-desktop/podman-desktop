@@ -63,6 +63,6 @@ export class RoutesResourceFactory extends ResourceFactoryBase implements Resour
         plural: 'routes',
       });
     const path = `/apis/route.openshift.io/v1/namespaces/${namespace}/routes`;
-    return new ResourceInformer<V1Route>(kubeconfig, path, listFn, { kind: 'Route', plural: 'routes' });
+    return new ResourceInformer<V1Route>({ kubeconfig, path, listFn, kind: 'Route', plural: 'routes' });
   }
 }

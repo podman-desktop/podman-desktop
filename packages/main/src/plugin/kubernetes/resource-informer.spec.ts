@@ -88,7 +88,10 @@ test('ResourceInformer should eventually return the list of resources', async ()
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
   const items = [{ metadata: { name: 'res1', namespace: 'ns1' } }, { metadata: { name: 'res2', namespace: 'ns1' } }];
   listFn.mockResolvedValue({ apiVersion: 'v8', items: items });
-  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new ResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -106,7 +109,10 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to tru
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
   const items = [{ metadata: { name: 'res1', namespace: 'ns1' } }, { metadata: { name: 'res2', namespace: 'ns1' } }];
   listFn.mockResolvedValue({ items: items });
-  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new ResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -128,7 +134,10 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to tru
     { metadata: { name: 'res2', namespace: 'ns1' } },
   ] as MyResource[];
   listFn.mockResolvedValue({ items: items });
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -160,7 +169,10 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to fal
     { metadata: { name: 'res2', namespace: 'ns1' } },
   ] as MyResource[];
   listFn.mockResolvedValue({ items: items });
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -187,7 +199,10 @@ test('ResourceInformer should fire onOffline event is informer fails', async () 
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -217,7 +232,10 @@ test('reconnect should do nothing if there is no error', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -246,7 +264,10 @@ test('reconnect should call start again if there is an error', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });
@@ -275,7 +296,10 @@ test('informer is stopped when disposed', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
     kind: 'MyResource',
     plural: 'myresources',
   });

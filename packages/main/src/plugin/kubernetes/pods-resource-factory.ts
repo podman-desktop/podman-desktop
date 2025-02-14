@@ -54,6 +54,6 @@ export class PodsResourceFactory extends ResourceFactoryBase implements Resource
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1PodList> => apiClient.listNamespacedPod({ namespace });
     const path = `/api/v1/namespaces/${namespace}/pods`;
-    return new ResourceInformer<V1Pod>(kubeconfig, path, listFn, { kind: 'Pod', plural: 'pods' });
+    return new ResourceInformer<V1Pod>({ kubeconfig, path, listFn, kind: 'Pod', plural: 'pods' });
   }
 }

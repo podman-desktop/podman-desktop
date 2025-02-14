@@ -44,7 +44,10 @@ export interface OfflineEvent extends BaseEvent {
   reason?: string;
 }
 
-export interface ResourceNames {
+export interface ResourceInformerOptions<T extends KubernetesObject> {
+  kubeconfig: KubeConfigSingleContext;
+  path: string;
+  listFn: ListPromise<T>;
   kind: string;
   plural: string;
 }
@@ -64,12 +67,12 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
   #onOffline = new Emitter<OfflineEvent>();
   onOffline: Event<OfflineEvent> = this.#onOffline.event;
 
-  constructor(kubeconfig: KubeConfigSingleContext, path: string, listFn: ListPromise<T>, names: ResourceNames) {
-    this.#kubeConfig = kubeconfig;
-    this.#path = path;
-    this.#listFn = listFn;
-    this.#pluralName = names.plural;
-    this.#kindName = names.kind;
+  constructor(options: ResourceInformerOptions<T>) {
+    this.#kubeConfig = options.kubeconfig;
+    this.#path = options.path;
+    this.#listFn = options.listFn;
+    this.#pluralName = options.plural;
+    this.#kindName = options.kind;
   }
 
   // start the informer and returns a cache to the data
