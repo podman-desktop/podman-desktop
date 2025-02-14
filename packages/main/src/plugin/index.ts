@@ -245,27 +245,16 @@ export class PluginSystem {
     return window.webContents;
   }
 
-  // encode the error to be sent over IPC
-  // this is needed because on the client it will display
-  // a generic error message 'Error invoking remote method' and
-  // it's not useful for end user
-  encodeIpcError(e: unknown): { name?: string; message: unknown; extra?: Record<string, unknown> } {
-    let builtError;
-    if (e instanceof Error) {
-      builtError = e;
-    } else {
-      builtError = { message: e };
-    }
-    return builtError;
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): any {
+  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void {
     ipcMain.handle(channel, async (...args) => {
       try {
         return { result: await Promise.resolve(listener(...args)) };
-      } catch (e) {
-        return { error: this.encodeIpcError(e) };
+      } catch (error) {
+        // From error instance only message property will get through.
+        // Sending non error instance as a message property of an object triggers
+        // coercion of message property to String.
+        return error instanceof Error ? { error } : { error: { message: error } };
       }
     });
   }

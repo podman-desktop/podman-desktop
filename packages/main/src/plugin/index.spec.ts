@@ -387,3 +387,29 @@ test('Pull image creates a task', async () => {
   } as PullEvent);
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
 });
+
+test('ipcMain.handle returns caught error as is if it is instance of Error', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  const handle = handlers.get('tasks:execute');
+  const errorInstance = new Error('error');
+  createTaskSpy.mockImplementation(() => {
+    throw errorInstance;
+  });
+
+  const handleReturn = await handle(undefined, '1');
+  expect(handleReturn.error).toEqual(errorInstance);
+});
+
+test('ipcMain.handle returns caught error as objects message property if it isn not instance of error', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  const handle = handlers.get('tasks:execute');
+  const nonErrorInstance = 'error';
+  createTaskSpy.mockImplementation(() => {
+    throw nonErrorInstance;
+  });
+
+  const handleReturn = await handle(undefined, '1');
+  expect(handleReturn.error).toEqual({ message: nonErrorInstance });
+});
