@@ -48,26 +48,12 @@ let pageStep: number = $state(10);
 let userValue: string = $state('');
 let loading: boolean = $state(false);
 
-let groupedItems: { [group: string]: string[] } = $derived(groupItems(resultItems));
-let itemHeadings: { [index: number]: string[] } = $derived(updateHeadings(groupedItems));
-
-let items: string[] = $derived.by(() => {
-  if (disabled) {
-    return [];
-  }
-  let currentItems: string[] = [];
-  for (const group in groupedItems) {
-    currentItems = currentItems.concat(groupedItems[group]);
-  }
-  return currentItems;
-});
-
-function groupItems(itemsList: TypeaheadItem[]): { [group: string]: string[] } {
-  let groupedItems: { [group: string]: string[] } = {};
-  let groups = [...new Set(itemsList.map(item => item.group ?? ''))];
+let groupedItems: { [group: string]: string[] } = $derived.by(() => {
+  let groupItems: { [group: string]: string[] } = {};
+  let groups = [...new Set(resultItems.map(item => item.group ?? ''))];
   for (const group of groups) {
-    let values = itemsList.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
-    groupedItems[group] = values.toSorted(
+    let values = resultItems.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
+    groupItems[group] = values.toSorted(
       compare ??
         ((a: string, b: string): number => {
           if (a.startsWith(userValue) === b.startsWith(userValue)) {
@@ -80,27 +66,38 @@ function groupItems(itemsList: TypeaheadItem[]): { [group: string]: string[] } {
         }),
     );
   }
-  return groupedItems;
-}
+  return groupItems;
+});
 
-function updateHeadings(groups: { [group: string]: string[] }): { [index: number]: string[] } {
+let itemHeadings: { [index: number]: string[] } = $derived.by(() => {
   if (disabled) {
     return {};
   }
   let headingIndex = 0;
   let headings: { [index: number]: string[] } = {};
-  for (const group in groups) {
+  for (const group in groupedItems) {
     if (group) {
       if (headings[headingIndex]) {
         headings[headingIndex].push(group);
       } else {
         headings[headingIndex] = [group];
       }
-      headingIndex += groups[group].length;
+      headingIndex += groupedItems[group].length;
     }
   }
   return headings;
-}
+});
+
+let items: string[] = $derived.by(() => {
+  if (disabled) {
+    return [];
+  }
+  let currentItems: string[] = [];
+  for (const group in groupedItems) {
+    currentItems = currentItems.concat(groupedItems[group]);
+  }
+  return currentItems;
+});
 
 function onItemSelected(s: string): void {
   value = s;
