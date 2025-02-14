@@ -48,6 +48,7 @@ import type {
   V1Status,
 } from '@kubernetes/client-node';
 import {
+  ApiException,
   ApisApi,
   AppsV1Api,
   BatchV1Api,
@@ -1481,16 +1482,12 @@ export class KubernetesClient {
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
         const error = e ?? {};
-        if (typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response: { statusCode: number } };
-          if (axiosError.response.statusCode === 404) {
-            return true;
-          }
+        if (error instanceof ApiException && error.code === 404) {
+          return true;
         }
         throw e;
       }
     }
-
     return false;
   }
 
@@ -1623,11 +1620,8 @@ export class KubernetesClient {
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
         const error = e ?? {};
-        if (typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response: { statusCode: number } };
-          if (axiosError.response.statusCode === 404) {
-            return true;
-          }
+        if (error instanceof ApiException && error.code === 404) {
+          return true;
         }
         throw e;
       }
