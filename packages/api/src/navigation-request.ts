@@ -29,6 +29,7 @@ export interface NavigationParameters {
   [NavigationPage.CONTAINER_INSPECT]: { id: string };
   [NavigationPage.CONTAINER_TERMINAL]: { id: string };
   [NavigationPage.CONTAINER_KUBE]: { id: string };
+  [NavigationPage.EXISITNG_IMAGE_CREATE_CONTAINER]: never;
   [NavigationPage.DEPLOY_TO_KUBE]: { id: string; engineId: string };
   [NavigationPage.IMAGES]: never;
   [NavigationPage.IMAGE_BUILD]: never;
