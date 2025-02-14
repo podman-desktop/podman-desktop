@@ -46,9 +46,13 @@ export interface OfflineEvent extends BaseEvent {
 
 export interface ResourceInformerOptions<T extends KubernetesObject> {
   kubeconfig: KubeConfigSingleContext;
+  // the endpoint in the Kubernetes api server to list the resources
   path: string;
+  // the function to list the resources
   listFn: ListPromise<T>;
+  // the kind of the resource (Pod, ...), appearing in the `kind` field of manifests for this resource
   kind: string;
+  // the name of the resource for the 'REST API' (pods, ...), appearing in the path above
   plural: string;
 }
 
