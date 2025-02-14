@@ -20,3 +20,7 @@ export interface TypeaheadItem {
   value: string;
   group?: string;
 }
+
+export type TypeaheadGroupedItems = { [group: string]: string[] };
+
+export type TypeaheadHeadings = { [index: number]: string[] };

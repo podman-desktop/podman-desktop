@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
 
-import type { TypeaheadItem } from './Typeahead';
+import type { TypeaheadGroupedItems, TypeaheadHeadings, TypeaheadItem } from './Typeahead';
 
 interface Props {
   placeholder?: string;
@@ -48,8 +48,8 @@ let pageStep: number = $state(10);
 let userValue: string = $state('');
 let loading: boolean = $state(false);
 
-let groupedItems: { [group: string]: string[] } = $derived.by(() => {
-  let groupItems: { [group: string]: string[] } = {};
+let groupedItems: TypeaheadGroupedItems = $derived.by(() => {
+  let groupItems: TypeaheadGroupedItems = {};
   let groups = [...new Set(resultItems.map(item => item.group ?? ''))];
   for (const group of groups) {
     let values = resultItems.filter(item => (group ? item.group === group : !item.group)).map(item => item.value);
@@ -69,12 +69,12 @@ let groupedItems: { [group: string]: string[] } = $derived.by(() => {
   return groupItems;
 });
 
-let itemHeadings: { [index: number]: string[] } = $derived.by(() => {
+let itemHeadings: TypeaheadHeadings = $derived.by(() => {
   if (disabled) {
     return {};
   }
   let headingIndex = 0;
-  let headings: { [index: number]: string[] } = {};
+  let headings: TypeaheadHeadings = {};
   for (const group in groupedItems) {
     if (group) {
       if (headings[headingIndex]) {
