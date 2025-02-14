@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Button } from '@podman-desktop/ui-svelte';
+import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import type { ProviderInfo } from '/@api/provider-info';
@@ -23,22 +23,41 @@ let tooltipText = $derived.by(() => {
   }
   return tooltip;
 });
+
+let providerStatus = $derived.by(() => {
+  if (entry.containerConnections.length > 0) {
+    return entry.containerConnections[0].status;
+  } else if (entry.kubernetesConnections.length > 0) {
+    return entry.kubernetesConnections[0].status;
+  } else {
+    return entry.status;
+  }
+});
 </script>
-  
-<Button
-  on:click={command}
-  class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent"
-  title={tooltipText}
-  aria-label={entry.name}
-  padding="px-2 py-1">
-  
-  {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-    <ProviderWidgetStatus entry={entry} />
-  {/if}
-  {#if entry.images.icon}
-    <IconImage image={entry.images.icon} class="max-h-3 grayscale" alt={entry.name}></IconImage>
-  {/if}
-  {#if entry.name}
-    <span class="whitespace-nowrap h-fit">{entry.name}</span>
-  {/if}
-</Button>
+
+<div >
+<Tooltip top  class="mb-[20px]">
+  <div slot="tip" class=" py-2 px-4">
+    {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
+      <ProviderWidgetStatus entry={entry} />
+    {/if}
+    {providerStatus}: {tooltipText}
+  </div>
+  <Button
+    on:click={command}
+    class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent"
+    aria-label={entry.name}
+    padding="px-2 py-1">
+    
+    {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
+      <ProviderWidgetStatus entry={entry} />
+    {/if}
+    {#if entry.images.icon}
+      <IconImage image={entry.images.icon} class="max-h-3 grayscale" alt={entry.name}></IconImage>
+    {/if}
+    {#if entry.name}
+      <span class="whitespace-nowrap h-fit">{entry.name}</span>
+    {/if}
+  </Button>
+</Tooltip>
+</div>

@@ -90,7 +90,7 @@ onDestroy(() => {
   class="flex justify-between px-1 bg-[var(--pd-statusbar-bg)] text-[var(--pd-statusbar-text)] text-sm space-x-2 z-40"
   role="contentinfo"
   aria-label="Status Bar">
-  <div class="flex flex-nowrap gap-x-1.5 h-full truncate">
+  <div class="flex flex-nowrap gap-x-1.5 h-full text-ellipsis whitespace-nowrap">
     {#each leftEntries as entry}
       <StatusBarItem entry={entry} />
     {/each}
