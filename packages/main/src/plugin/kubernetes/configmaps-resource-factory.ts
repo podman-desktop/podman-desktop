@@ -54,6 +54,6 @@ export class ConfigmapsResourceFactory extends ResourceFactoryBase implements Re
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1ConfigMapList> => apiClient.listNamespacedConfigMap({ namespace });
     const path = `/api/v1/namespaces/${namespace}/configmaps`;
-    return new ResourceInformer<V1ConfigMap>(kubeconfig, path, listFn, 'configmaps');
+    return new ResourceInformer<V1ConfigMap>(kubeconfig, path, listFn, { kind: 'ConfigMap', plural: 'configmaps' });
   }
 }

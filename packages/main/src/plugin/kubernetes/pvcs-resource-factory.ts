@@ -55,6 +55,9 @@ export class PVCsResourceFactory extends ResourceFactoryBase implements Resource
     const listFn = (): Promise<V1PersistentVolumeClaimList> =>
       apiClient.listNamespacedPersistentVolumeClaim({ namespace });
     const path = `/api/v1/namespaces/${namespace}/persistentvolumeclaims`;
-    return new ResourceInformer<V1PersistentVolumeClaim>(kubeconfig, path, listFn, 'persistentvolumeclaims');
+    return new ResourceInformer<V1PersistentVolumeClaim>(kubeconfig, path, listFn, {
+      kind: 'PersistentVolumeClaim',
+      plural: 'persistentvolumeclaims',
+    });
   }
 }

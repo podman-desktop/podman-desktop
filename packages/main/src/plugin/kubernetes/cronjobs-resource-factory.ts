@@ -54,6 +54,6 @@ export class CronjobsResourceFactory extends ResourceFactoryBase implements Reso
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(BatchV1Api);
     const listFn = (): Promise<V1CronJobList> => apiClient.listNamespacedCronJob({ namespace });
     const path = `/apis/batch/v1/namespaces/${namespace}/cronjobs`;
-    return new ResourceInformer<V1CronJob>(kubeconfig, path, listFn, 'cronjobs');
+    return new ResourceInformer<V1CronJob>(kubeconfig, path, listFn, { kind: 'CronJob', plural: 'cronjobs' });
   }
 }

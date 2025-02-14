@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024, 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,6 @@ export class PodsResourceFactory extends ResourceFactoryBase implements Resource
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1PodList> => apiClient.listNamespacedPod({ namespace });
     const path = `/api/v1/namespaces/${namespace}/pods`;
-    return new ResourceInformer<V1Pod>(kubeconfig, path, listFn, 'pods');
+    return new ResourceInformer<V1Pod>(kubeconfig, path, listFn, { kind: 'Pod', plural: 'pods' });
   }
 }

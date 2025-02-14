@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024, 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,12 +87,15 @@ test('ResourceInformer should eventually return the list of resources', async ()
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
   const items = [{ metadata: { name: 'res1', namespace: 'ns1' } }, { metadata: { name: 'res2', namespace: 'ns1' } }];
-  listFn.mockResolvedValue({ items: items });
-  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  listFn.mockResolvedValue({ apiVersion: 'v8', items: items });
+  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const result = informer.start();
   await vi.waitFor(() => {
     const list = result.list();
-    expect(list).toEqual(items);
+    expect(list).toEqual(items.map(i => ({ apiVersion: 'v8', kind: 'MyResource', ...i })));
   });
 });
 
@@ -103,12 +106,15 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to tru
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
   const items = [{ metadata: { name: 'res1', namespace: 'ns1' } }, { metadata: { name: 'res2', namespace: 'ns1' } }];
   listFn.mockResolvedValue({ items: items });
-  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new ResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const onCacheUpdatedCB = vi.fn();
   informer.onCacheUpdated(onCacheUpdatedCB);
   informer.start();
   await vi.waitFor(() => {
-    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresource', countChanged: true });
+    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresources', countChanged: true });
   });
 });
 
@@ -122,7 +128,10 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to tru
     { metadata: { name: 'res2', namespace: 'ns1' } },
   ] as MyResource[];
   listFn.mockResolvedValue({ items: items });
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const getListWatchOnMock = vi.fn();
   vi.spyOn(informer, 'getListWatch').mockReturnValue({
     on: getListWatchOnMock,
@@ -137,7 +146,7 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to tru
   informer.onCacheUpdated(onCacheUpdatedCB);
   informer.start();
   await vi.waitFor(() => {
-    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresource', countChanged: true });
+    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresources', countChanged: true });
   });
 });
 
@@ -151,7 +160,10 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to fal
     { metadata: { name: 'res2', namespace: 'ns1' } },
   ] as MyResource[];
   listFn.mockResolvedValue({ items: items });
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const getListWatchOnMock = vi.fn();
   vi.spyOn(informer, 'getListWatch').mockReturnValue({
     on: getListWatchOnMock,
@@ -166,7 +178,7 @@ test('ResourceInformer should fire onCacheUpdated event with countChanged to fal
   informer.onCacheUpdated(onCacheUpdatedCB);
   informer.start();
   await vi.waitFor(() => {
-    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresource', countChanged: false });
+    expect(onCacheUpdatedCB).toHaveBeenCalledWith({ kubeconfig, resourceName: 'myresources', countChanged: false });
   });
 });
 
@@ -175,7 +187,10 @@ test('ResourceInformer should fire onOffline event is informer fails', async () 
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const onCB = vi.fn();
   vi.spyOn(informer, 'getListWatch').mockReturnValue({
     on: onCB,
@@ -193,7 +208,7 @@ test('ResourceInformer should fire onOffline event is informer fails', async () 
     kubeconfig,
     offline: true,
     reason: 'an error',
-    resourceName: 'myresource',
+    resourceName: 'myresources',
   });
 });
 
@@ -202,7 +217,10 @@ test('reconnect should do nothing if there is no error', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const onCB = vi.fn();
   const startMock = vi.fn().mockResolvedValue({});
   vi.spyOn(informer, 'getListWatch').mockReturnValue({
@@ -228,7 +246,10 @@ test('reconnect should call start again if there is an error', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const onCB = vi.fn();
   const startMock = vi.fn().mockResolvedValue({});
   vi.spyOn(informer, 'getListWatch').mockReturnValue({
@@ -254,7 +275,10 @@ test('informer is stopped when disposed', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const listFn = vi.fn();
   const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
-  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, 'myresource');
+  const informer = new TestResourceInformer<MyResource>(kubeconfig, '/a/path', listFn, {
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
   const onCB = vi.fn();
   const startMock = vi.fn().mockResolvedValue({});
   const stopMock = vi.fn().mockResolvedValue({});

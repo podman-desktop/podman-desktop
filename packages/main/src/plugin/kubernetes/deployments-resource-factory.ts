@@ -55,6 +55,6 @@ export class DeploymentsResourceFactory extends ResourceFactoryBase implements R
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(AppsV1Api);
     const listFn = (): Promise<V1DeploymentList> => apiClient.listNamespacedDeployment({ namespace });
     const path = `/apis/apps/v1/namespaces/${namespace}/deployments`;
-    return new ResourceInformer<V1Deployment>(kubeconfig, path, listFn, 'deployments');
+    return new ResourceInformer<V1Deployment>(kubeconfig, path, listFn, { kind: 'Deployment', plural: 'deployments' });
   }
 }

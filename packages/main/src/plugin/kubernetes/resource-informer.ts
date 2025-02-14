@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024, 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Informer, KubernetesObject, ListPromise, ObjectCache } from '@kubernetes/client-node';
+import type {
+  Informer,
+  KubernetesListObject,
+  KubernetesObject,
+  ListPromise,
+  ObjectCache,
+} from '@kubernetes/client-node';
 import { ADD, DELETE, ERROR, ListWatch, UPDATE, Watch } from '@kubernetes/client-node';
 import type { Disposable } from '@podman-desktop/api';
 
@@ -38,11 +44,17 @@ export interface OfflineEvent extends BaseEvent {
   reason?: string;
 }
 
+export interface ResourceNames {
+  kind: string;
+  plural: string;
+}
+
 export class ResourceInformer<T extends KubernetesObject> implements Disposable {
   #kubeConfig: KubeConfigSingleContext;
   #path: string;
   #listFn: ListPromise<T>;
-  #resourceName: string;
+  #pluralName: string;
+  #kindName: string;
   #informer: Informer<T> | undefined;
   #offline: boolean = false;
 
@@ -52,11 +64,12 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
   #onOffline = new Emitter<OfflineEvent>();
   onOffline: Event<OfflineEvent> = this.#onOffline.event;
 
-  constructor(kubeconfig: KubeConfigSingleContext, path: string, listFn: ListPromise<T>, resourceName: string) {
+  constructor(kubeconfig: KubeConfigSingleContext, path: string, listFn: ListPromise<T>, names: ResourceNames) {
     this.#kubeConfig = kubeconfig;
     this.#path = path;
     this.#listFn = listFn;
-    this.#resourceName = resourceName;
+    this.#pluralName = names.plural;
+    this.#kindName = names.kind;
   }
 
   // start the informer and returns a cache to the data
@@ -64,27 +77,38 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
   // and the informer becomes offline
   start(): ObjectCache<T> {
     // internalInformer extends both Informer and ObjectCache
-    const internalInformer = this.getListWatch(this.#path, this.#listFn);
+    const typedList = async (): Promise<KubernetesListObject<T>> => {
+      const list = await this.#listFn();
+      return {
+        ...list,
+        items: list.items.map(item => ({
+          kind: this.#kindName,
+          apiVersion: list.apiVersion,
+          ...item,
+        })),
+      };
+    };
+    const internalInformer = this.getListWatch(this.#path, typedList);
     this.#informer = internalInformer;
 
     this.#informer.on(UPDATE, (_obj: T) => {
       this.#onCacheUpdated.fire({
         kubeconfig: this.#kubeConfig,
-        resourceName: this.#resourceName,
+        resourceName: this.#pluralName,
         countChanged: false,
       });
     });
     this.#informer.on(ADD, (_obj: T) => {
       this.#onCacheUpdated.fire({
         kubeconfig: this.#kubeConfig,
-        resourceName: this.#resourceName,
+        resourceName: this.#pluralName,
         countChanged: true,
       });
     });
     this.#informer.on(DELETE, (_obj: T) => {
       this.#onCacheUpdated.fire({
         kubeconfig: this.#kubeConfig,
-        resourceName: this.#resourceName,
+        resourceName: this.#pluralName,
         countChanged: true,
       });
     });
@@ -93,14 +117,14 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
       this.#offline = true;
       this.#onOffline.fire({
         kubeconfig: this.#kubeConfig,
-        resourceName: this.#resourceName,
+        resourceName: this.#pluralName,
         offline: true,
         reason: String(error),
       });
     });
     this.#informer.start().catch((err: unknown) => {
       console.error(
-        `error starting the informer for resource ${this.#resourceName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
+        `error starting the informer for resource ${this.#pluralName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
       );
     });
     return internalInformer;
@@ -113,12 +137,12 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
       this.#offline = false;
       this.#onOffline.fire({
         kubeconfig: this.#kubeConfig,
-        resourceName: this.#resourceName,
+        resourceName: this.#pluralName,
         offline: false,
       });
       this.#informer.start().catch((err: unknown) => {
         console.error(
-          `error starting the informer for resource ${this.#resourceName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
+          `error starting the informer for resource ${this.#pluralName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
         );
       });
     }
@@ -134,7 +158,7 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
     this.#onOffline.dispose();
     this.#informer?.stop().catch((err: unknown) => {
       console.error(
-        `error stopping the informer for resource ${this.#resourceName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
+        `error stopping the informer for resource ${this.#pluralName} on context ${this.#kubeConfig.getKubeConfig().currentContext}: ${String(err)}`,
       );
     });
   }

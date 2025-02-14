@@ -54,6 +54,6 @@ export class ServicesResourceFactory extends ResourceFactoryBase implements Reso
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1ServiceList> => apiClient.listNamespacedService({ namespace });
     const path = `/api/v1/namespaces/${namespace}/services`;
-    return new ResourceInformer<V1Service>(kubeconfig, path, listFn, 'services');
+    return new ResourceInformer<V1Service>(kubeconfig, path, listFn, { kind: 'Service', plural: 'services' });
   }
 }
