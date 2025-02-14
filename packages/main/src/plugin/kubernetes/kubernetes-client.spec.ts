@@ -283,12 +283,11 @@ vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-service', async () => {
 
 const execMock = vi.fn();
 beforeAll(() => {
-  vi.mock('@kubernetes/client-node', async () => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const actual = await vi.importActual<typeof import('@kubernetes/client-node')>('@kubernetes/client-node');
+  vi.mock('@kubernetes/client-node', async importOriginal => {
+    const original = await importOriginal<typeof clientNode>();
     return {
       // we need to use original ApiException
-      ...actual,
+      ...original,
       KubeConfig: vi.fn(),
       CoreV1Api: {},
       AppsV1Api: {},
