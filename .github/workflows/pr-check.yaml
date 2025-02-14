@@ -309,17 +309,17 @@ jobs:
           sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
           curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
           echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
-          sudo apt-get install -qq libprotobuf32t64 python3-protobuf libnet1
+          sudo apt-get install --allow-insecure-repositories -qq libprotobuf32t64 python3-protobuf libnet1
           echo "install criu manually from static location"
           curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
           echo "Updating all dependencies..."
-          sudo apt-get update -qq
+          sudo apt-get --allow-insecure-repositories update -qq
           echo "installing/update podman package..."
-          sudo apt-get -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
+          sudo apt-get --allow-insecure-repositorie -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
             sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
             curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add - && \
-            sudo apt-get update && \
-            sudo apt-get -y install podman; }
+            sudo apt-get --allow-insecure-repositories update && \
+            sudo apt-get --allow-insecure-repositories -y install podman; }
           podman version
 
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
@@ -539,7 +539,7 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
-          
+
   update-e2e-test:
     name: update E2E test
     runs-on: ubuntu-24.04
