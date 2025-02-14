@@ -50,7 +50,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(12);
     for (let imgNum = 1; imgNum <= 10; imgNum++) {
       await playExpect
-        .poll(async () => await images.waitForImageExists(`quay.io/my-image-${imgNum}`), { timeout: 5_000 })
+        .poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`), { timeout: 5_000 })
         .toBeTruthy();
     }
   });
