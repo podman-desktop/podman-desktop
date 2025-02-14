@@ -674,6 +674,12 @@ export class PluginSystem {
       onboardingRegistry,
     );
 
+    commandRegistry.registerCommand('kubernetes-navigation', args => {
+      apiSender.send('kubernetes-navigation', args);
+    });
+
+    navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
+
     const extensionAnalyzer = new ExtensionAnalyzer();
 
     const extensionWatcher = new ExtensionWatcher(fileSystemMonitoring);
@@ -2837,6 +2843,13 @@ export class PluginSystem {
       }
       window.close();
     });
+
+    this.ipcHandle(
+      'navigation:navigateToRoute',
+      async (_listener, routeId: string, ...args: unknown[]): Promise<void> => {
+        return navigationManager.navigateToRoute(routeId, ...args);
+      },
+    );
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();
