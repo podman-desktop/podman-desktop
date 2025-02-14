@@ -399,7 +399,6 @@ export class ProviderRegistry {
     // grab the provider
     const provider = this.getMatchingProvider(internalId);
 
-    let updateContainerConnectionCalled: boolean = false;
     const context = Object.freeze({
       updateContainerConnection: (containerProviderConnection: ContainerProviderConnection): void => {
         if (!this.isContainerProviderConnectionRegistered(provider, containerProviderConnection)) {
@@ -407,7 +406,6 @@ export class ProviderRegistry {
             `container connection ${containerProviderConnection.name} is not registered by provider ${provider.name}`,
           );
         }
-        updateContainerConnectionCalled = true;
         const providerConnectionInfo = this.getProviderConnectionInfo(containerProviderConnection);
         if (this.isProviderContainerConnection(providerConnectionInfo)) {
           this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
@@ -415,11 +413,6 @@ export class ProviderRegistry {
       },
     });
     await autoStart.start(new LoggerImpl(), context);
-    if (!updateContainerConnectionCalled) {
-      console.warn(
-        `autostart called for provider ${provider.id} but provider never called updateContainerConnection. Provider needs to call this method or UpdateContainerConnection events won't be propagated`,
-      );
-    }
     // send the event
     this._onDidUpdateProvider.fire({
       id: provider.id,
