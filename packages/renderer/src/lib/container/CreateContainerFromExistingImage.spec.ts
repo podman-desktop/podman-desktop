@@ -96,8 +96,8 @@ beforeEach(() => {
     value: () => {
       return {
         matches: false,
-        addListener: () => {},
-        removeListener: () => {},
+        addListener: (): void => {},
+        removeListener: (): void => {},
       };
     },
   });
@@ -141,7 +141,7 @@ test('Expect that textbox and two buttons show up when page opened', async () =>
   expect(cancelButton).toBeInTheDocument();
   expect(cancelButton).not.toBeDisabled();
 
-  const actionButton = screen.getByRole('button', { name: 'Select image' });
+  const actionButton = screen.getByRole('button', { name: 'Select Image' });
   expect(actionButton).toBeInTheDocument();
   expect(actionButton).toBeDisabled();
 });
@@ -175,7 +175,7 @@ test('Expect not a local image to have an active pull image button', async () =>
 
   const list = screen.getByRole('row');
   const items = within(list).getAllByRole('button');
-  expect(items.length).toBe(3);
+  expect(items.length).toBe(2);
 
   await userEvent.keyboard('[ArrowDown]');
 
