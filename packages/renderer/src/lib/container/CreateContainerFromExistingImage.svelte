@@ -18,14 +18,9 @@ import RecommendedRegistry from '../image/RecommendedRegistry.svelte';
 import ImageIcon from '../images/ImageIcon.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
+import type { TypeaheadItem } from '../ui/Typeahead';
 import Typeahead from '../ui/Typeahead.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
-
-interface GroupItem {
-  values: string[];
-  group?: string;
-  sorted?: boolean;
-}
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
@@ -41,9 +36,10 @@ let podmanFQN = '';
 let usePodmanFQN = false;
 let isValidName = true;
 let matchingLocalImages: string[] = [];
-let values: GroupItem[] = [];
+let values: TypeaheadItem[] = [];
 
 let imageToPull: string = '';
+let sortResults: ((a: string, b: string) => number) | undefined;
 
 $: providerConnections = $providerInfos
   .map(provider => provider.containerConnections)
@@ -77,7 +73,7 @@ async function resolveShortname(): Promise<void> {
   }
 }
 
-function callback(event: PullEvent) {
+function callback(event: PullEvent): void {
   let lineIndexToWrite;
   if (event.status && event.id) {
     const lineNumber = lineNumberPerId.get(event.id);
@@ -118,7 +114,7 @@ function callback(event: PullEvent) {
   }
 }
 
-async function pullImage() {
+async function pullImage(): Promise<void> {
   if (!selectedProviderConnection) {
     pullError = 'No current provider connection';
     return;
@@ -156,7 +152,7 @@ async function pullImage() {
   }
 }
 
-async function gotoManageRegistries() {
+async function gotoManageRegistries(): Promise<void> {
   router.goto('/preferences/registries');
 }
 
@@ -169,7 +165,7 @@ onMount(() => {
 let imageNameInvalid: string | undefined = undefined;
 let imageNameIsInvalid = imageToPull === undefined || imageToPull.trim() === '';
 function validateImageName(image: string): void {
-  if ((imageToPull === '' && image.trim() === '') || (imageToPull && (image === undefined || image.trim() === ''))) {
+  if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
     imageNameInvalid = 'Please enter a value';
   } else {
@@ -227,7 +223,7 @@ async function searchLocalImages(value: string): Promise<string[]> {
     }
     return [];
   });
-  matchingLocalImages = localImagesNames.flat().filter(image => image.includes(value) && image !== '');
+  matchingLocalImages = localImagesNames.flat().filter(image => image !== '' && image.includes(value));
   return matchingLocalImages;
 }
 
@@ -285,7 +281,8 @@ async function buildContainerFromImage(): Promise<void> {
 
 async function searchFunction(value: string): Promise<void> {
   const localImagesValues = await searchLocalImages(value);
-  const remoteImagesValues = (await searchImages(value)).toSorted((a: string, b: string) => {
+  const remoteImagesValues = await searchImages(value);
+  sortResults = (a: string, b: string): number => {
     const dockerIoValue = `docker.io/${value}`;
     const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
     const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
@@ -296,11 +293,11 @@ async function searchFunction(value: string): Promise<void> {
     } else {
       return 1;
     }
-  });
+  };
 
   values = [
-    { values: localImagesValues, group: 'Local Images' },
-    { values: remoteImagesValues, group: 'Registry Images', sorted: true },
+    ...localImagesValues.map(value => ({ value: value, group: 'Local Images' })),
+    ...remoteImagesValues.map(value => ({ value: value, group: 'Registry Images' })),
   ];
 }
 
@@ -321,7 +318,7 @@ async function onEnterOperation(): Promise<void> {
     <ImageIcon />
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    <Button on:click={() => gotoManageRegistries()} icon={faCog}>Manage registries</Button>
+    <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
   </svelte:fragment>
   <div slot="content" class="space-y-2 flex flex-col">
     <div class="flex flex-col">
@@ -330,8 +327,9 @@ async function onEnterOperation(): Promise<void> {
         name="imageName"
         placeholder="Select an exisiting image"
         onInputChange={searchFunction}
-        groupValues={values}
-        onChange={async (s: string) => {
+        resultItems={values}
+        compare={sortResults}
+        onChange={async (s: string): Promise<void> => {
           validateImageName(s);
           await resolveShortname();
           await searchLatestTag();
@@ -380,24 +378,26 @@ async function onEnterOperation(): Promise<void> {
     {/if}
   
     <footer>
-      <div class="w-full flex flex-row justify-end gap-3 my-3">
-        <Button type="secondary" class="mr-3 w-full" on:click={() => router.goto($lastPage.path)}>Cancel</Button>
-        {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
-          {#if !pullFinished}
-            <Button
-              icon={faArrowCircleDown}
-              class="w-full"
-              bind:disabled={imageNameIsInvalid}
-              on:click={() => pullImage()}
-              bind:inProgress={pullInProgress}>
-              Pull Image
-            </Button>
+      <div class="w-full flex flex-col justify-end gap-3 my-3">
+        <div class="flex flex-row">
+          <Button type="secondary" class="mr-3 w-full" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
+          {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
+            {#if !pullFinished}
+              <Button
+                icon={faArrowCircleDown}
+                class="w-full"
+                bind:disabled={imageNameIsInvalid}
+                on:click={pullImage}
+                bind:inProgress={pullInProgress}>
+                Pull Image
+              </Button>
+            {:else}
+              <Button class="w-full" on:click={buildContainerFromImage} bind:disabled={imageNameIsInvalid}>Select Image</Button>
+            {/if}
           {:else}
-            <Button class="w-full" on:click={() => buildContainerFromImage()} bind:disabled={imageNameIsInvalid}>Select Image</Button>
+            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Select Image</Button>
           {/if}
-        {:else}
-          <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={() => buildContainerFromImage()}>Select Image</Button>
-        {/if}
+        </div>
         {#if pullError}
           <ErrorMessage error={pullError} />
         {/if}
