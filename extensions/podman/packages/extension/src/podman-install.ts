@@ -27,6 +27,7 @@ import { BaseCheck, OrCheck, SequenceCheck } from './base-check';
 import { getDetectionChecks } from './detection-checks';
 import type { MachineJSON } from './extension';
 import {
+  calcPodmanMachineSetting,
   getJSONMachineList,
   isLibkrunSupported,
   isRootfulMachineInitSupported,
@@ -181,6 +182,7 @@ export class PodmanInstall {
           PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
           isLibkrunSupported(newInstalledPodman.version),
         );
+        await calcPodmanMachineSetting();
       }
       // update detections checks
       provider.updateDetectionChecks(getDetectionChecks(newInstalledPodman));
