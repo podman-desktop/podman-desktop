@@ -91,6 +91,7 @@ test('expect being able to reconnect ', async () => {
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
 
+  let startTime = performance.now();
   await vi.waitFor(() => {
     // search a div having aria-live="assertive" attribute
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
@@ -98,6 +99,8 @@ test('expect being able to reconnect ', async () => {
     // check the content
     expect(terminalLinesLiveRegion).toHaveTextContent('hello world');
   }, 10_000);
+  let endTime = performance.now();
+  console.warn('==> duration ms (1)', endTime - startTime);
 
   // should be no terminal being stored
   const terminals = get(containerTerminals);
@@ -116,12 +119,15 @@ test('expect being able to reconnect ', async () => {
   // wait shellInContainerMock is called
   await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(2));
 
+  startTime = performance.now();
   await vi.waitFor(() => {
     const terminalLinesLiveRegion2 = renderObject.container.querySelector('div[aria-live="assertive"]');
 
     // check the content
     expect(terminalLinesLiveRegion2).toHaveTextContent('hello world');
   }, 10_000);
+  endTime = performance.now();
+  console.warn('==> duration ms (2)', endTime - startTime);
 
   // creating a new terminal requires new shellInContainer call
   expect(shellInContainerMock).toHaveBeenCalledTimes(2);

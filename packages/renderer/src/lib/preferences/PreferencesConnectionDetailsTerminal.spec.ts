@@ -117,7 +117,10 @@ test('expect being able to reconnect ', async () => {
   const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
 
   // check the content
-  await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
+  let startTime = performance.now();
+  await vi.waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'), 10_000);
+  let endTime = performance.now();
+  console.warn('==> duration ms (2)', endTime - startTime);
 
   // should be no terminal being stored
   const terminals = get(providerTerminals);
@@ -138,8 +141,11 @@ test('expect being able to reconnect ', async () => {
 
   const terminalLinesLiveRegion2 = renderObject.container.querySelector('div[aria-live="assertive"]');
 
+  startTime = performance.now();
   // check the content
-  await waitFor(() => expect(terminalLinesLiveRegion2).toHaveTextContent('hello world'));
+  await vi.waitFor(() => expect(terminalLinesLiveRegion2).toHaveTextContent('hello world'), 10_000);
+  endTime = performance.now();
+  console.warn('==> duration ms (2)', endTime - startTime);
 
   // creating a new terminal requires new shellInProvider call
   expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2);
@@ -198,8 +204,11 @@ test('terminal active/ restarts connection after stopping and starting a provide
   // search a div having aria-live="assertive" attribute
   const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
 
+  const startTime = performance.now();
   // check the content
-  await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
+  await vi.waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'), 10_000);
+  const endTime = performance.now();
+  console.warn('==> duration ms (2)', endTime - startTime);
 
   await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
 
