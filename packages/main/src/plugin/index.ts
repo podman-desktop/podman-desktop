@@ -94,6 +94,7 @@ import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
+import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
@@ -674,8 +675,8 @@ export class PluginSystem {
       onboardingRegistry,
     );
 
-    commandRegistry.registerCommand('kubernetes-navigation', args => {
-      apiSender.send('kubernetes-navigation', args);
+    commandRegistry.registerCommand('kubernetes-navigation', (navRequest: KubernetesNavigationRequest) => {
+      apiSender.send('kubernetes-navigation', navRequest);
     });
 
     navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
