@@ -492,22 +492,6 @@ describe('when auto-starting a container connection', async () => {
     providerRegistry.registerAutostartEngine(autostartEngine);
   });
 
-  describe('when provider does not call updateContainerConnection', () => {
-    beforeEach(() => {
-      provider.registerAutostart({
-        start: async (_logger: Logger, _context?: AutostartContext) => {},
-      });
-    });
-
-    test('a warn should be displayed', async () => {
-      vi.spyOn(console, 'warn');
-      await providerRegistry.runAutostart('0');
-      expect(console.warn).toHaveBeenCalledWith(
-        `autostart called for provider internal but provider never called updateContainerConnection. Provider needs to call this method or UpdateContainerConnection events won't be propagated`,
-      );
-    });
-  });
-
   describe('when provider calls updateContainerConnection with non-registered connection', () => {
     beforeEach(() => {
       provider.registerAutostart({

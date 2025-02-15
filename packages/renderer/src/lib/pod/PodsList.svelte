@@ -146,6 +146,7 @@ let containersColumn = new TableColumn<PodInfoUI>('Containers', {
 
 let ageColumn = new TableColumn<PodInfoUI, Date | undefined>('Age', {
   renderer: TableDurationColumn,
+  comparator: (a, b): number => new Date(a.created).getTime() - new Date(b.created).getTime(),
   renderMapping(object): Date | undefined {
     return podUtils.getUpDate(object);
   },

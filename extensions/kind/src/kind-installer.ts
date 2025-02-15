@@ -159,7 +159,7 @@ export class KindInstaller {
     return path.resolve(storageBinFolder, `kind${fileExtension}`);
   }
 
-  async download(release: KindGithubReleaseArtifactMetadata): Promise<void> {
+  async download(release: KindGithubReleaseArtifactMetadata): Promise<string> {
     // Get asset id
     const assetId = await this.getReleaseAssetId(release.id, os.platform(), os.arch());
 
@@ -178,6 +178,8 @@ export class KindInstaller {
       // eslint-disable-next-line sonarjs/file-permissions
       await fs.promises.chmod(kindDownloadLocation, 0o755);
     }
+
+    return kindDownloadLocation;
   }
 
   async downloadReleaseAsset(assetId: number, destination: string): Promise<void> {

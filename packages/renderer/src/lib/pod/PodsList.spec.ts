@@ -522,7 +522,7 @@ const runningPod: PodInfo = {
       Status: 'running',
     },
   ],
-  Created: '',
+  Created: new Date().toISOString(), // now
   Id: 'beab25123a40',
   InfraId: 'pod1',
   Labels: {},
@@ -544,7 +544,7 @@ const stoppedPod: PodInfo = {
       Status: 'stopped',
     },
   ],
-  Created: '',
+  Created: new Date(new Date().getTime() - 1000 * 60).toISOString(), // now - 1 hour
   Id: 'e8129c5720b3',
   InfraId: 'pod2',
   Labels: {},
@@ -662,4 +662,46 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removePod).toHaveBeenCalled());
+});
+
+test('Expect age column to be sortable', async () => {
+  getProvidersInfoMock.mockResolvedValue([provider]);
+  listPodsMock.mockResolvedValue([stoppedPod, runningPod]);
+  kubernetesListPodsMock.mockResolvedValue([]);
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5000 });
+
+  const { getAllByRole } = render(PodsList);
+
+  // get all the column and found the age column by text content
+  const ageColumn = getAllByRole('columnheader').find(header => header.textContent?.trim() === 'Age');
+  if (!ageColumn) throw new Error('Age column is required');
+
+  // Ensure the fa sort icon is visible
+  expect(Array.from(ageColumn?.children ?? []).some(child => child.classList.contains('fa-sort'))).toBeTruthy();
+
+  // let's sort
+  await fireEvent.click(ageColumn);
+
+  // Wait for the right ordering (stoppedPod is now - 1 hour & runningPod is now)
+  await vi.waitFor(() => {
+    const items = getAllByRole('row');
+    expect(items).toHaveLength(3);
+    const [, first, second] = items;
+    // stopped should be first (old => new)
+    expect(first.textContent).toContain(stoppedPod.Name);
+    expect(second.textContent).toContain(runningPod.Name);
+  });
+
+  // let's invert the sorting
+  await fireEvent.click(ageColumn);
+
+  await vi.waitFor(() => {
+    const [, first, second] = getAllByRole('row');
+    // not inverted, running should be first (new => old)
+    expect(first.textContent).toContain(runningPod.Name);
+    expect(second.textContent).toContain(stoppedPod.Name);
+  });
 });

@@ -42,8 +42,6 @@ const recordUI = $derived.by(() => {
       key = split[split.length - 1];
       break;
   }
-  // const key = id?.substring(id?.lastIndexOf('.') + 1) ?? '';
-
   // define bread crumb as first part before the last dot
   const breadCrumb = id?.substring(0, id?.lastIndexOf('.')) ?? '';
   // and replace dot by > in breadcrumb

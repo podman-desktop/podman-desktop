@@ -283,8 +283,11 @@ vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-service', async () => {
 
 const execMock = vi.fn();
 beforeAll(() => {
-  vi.mock('@kubernetes/client-node', async () => {
+  vi.mock('@kubernetes/client-node', async importOriginal => {
+    const original = await importOriginal<typeof clientNode>();
     return {
+      // we need to use original ApiException
+      ...original,
       KubeConfig: vi.fn(),
       CoreV1Api: {},
       AppsV1Api: {},
@@ -1646,7 +1649,9 @@ test('Should return true if the job is deleted within the timeout', async () => 
   const namespace = 'test-namespace';
   const jobName = 'test-job';
 
-  batchApiMock.readNamespacedJobStatus = vi.fn().mockRejectedValueOnce({ response: { statusCode: 404 } });
+  batchApiMock.readNamespacedJobStatus = vi
+    .fn()
+    .mockRejectedValueOnce(new clientNode.ApiException(404, 'a message', {}, {}));
 
   const result = await client.testWaitForJobDeletion(batchApiMock, namespace, jobName);
   expect(result).toBe(true);
@@ -1697,7 +1702,7 @@ test('Should throw an exception if a read namespaced job status API call returns
   const namespace = 'test-namespace';
   const jobName = 'test-job';
 
-  const errorResponse = { response: { statusCode: 500 } };
+  const errorResponse = new clientNode.ApiException(500, 'a message', {}, {});
   batchApiMock.readNamespacedJobStatus = vi.fn().mockRejectedValue(errorResponse);
 
   await expect(client.testWaitForJobDeletion(batchApiMock, namespace, jobName)).rejects.toThrow(
@@ -2027,7 +2032,9 @@ test('Should return true if the pod is successfully deleted', async () => {
   const namespace = 'default';
   const podName = 'test-pod';
 
-  (coreApiMock.readNamespacedPodStatus as Mock).mockRejectedValueOnce({ response: { statusCode: 404 } });
+  (coreApiMock.readNamespacedPodStatus as Mock).mockRejectedValueOnce(
+    new clientNode.ApiException(404, 'a message', {}, {}),
+  );
 
   const result = await client.testWaitForPodDeletion(coreApiMock as CoreV1Api, podName, namespace);
 
@@ -2081,7 +2088,7 @@ test('Should throw an error if an unexpected error occurs and it differs than 40
   const namespace = 'default';
   const podName = 'test-pod';
 
-  const errorResponse = { response: { statusCode: 500 } };
+  const errorResponse = new clientNode.ApiException(500, 'a message', {}, {});
   (coreApiMock.readNamespacedPodStatus as Mock).mockRejectedValueOnce(errorResponse);
 
   await expect(client.testWaitForPodDeletion(coreApiMock as CoreV1Api, podName, namespace)).rejects.toThrow(

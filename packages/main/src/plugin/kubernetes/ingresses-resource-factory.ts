@@ -55,6 +55,6 @@ export class IngressesResourceFactory extends ResourceFactoryBase implements Res
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(NetworkingV1Api);
     const listFn = (): Promise<V1IngressList> => apiClient.listNamespacedIngress({ namespace });
     const path = `/apis/networking.k8s.io/v1/namespaces/${namespace}/ingresses`;
-    return new ResourceInformer<V1Ingress>(kubeconfig, path, listFn, 'ingresses');
+    return new ResourceInformer<V1Ingress>({ kubeconfig, path, listFn, kind: 'Ingress', plural: 'ingresses' });
   }
 }

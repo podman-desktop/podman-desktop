@@ -53,6 +53,6 @@ export class NodesResourceFactory extends ResourceFactoryBase implements Resourc
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1NodeList> => apiClient.listNode();
     const path = `/api/v1/nodes`;
-    return new ResourceInformer<V1Node>(kubeconfig, path, listFn, 'nodes');
+    return new ResourceInformer<V1Node>({ kubeconfig, path, listFn, kind: 'Node', plural: 'nodes' });
   }
 }
