@@ -142,7 +142,7 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
         <SendFeedback />
         <ToastHandler />
         <ToastTaskNotifications />
-        <Route path="/" breadcrumb="Dashboard Page">
+        <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
         </Route>
         <Route path="/containers" breadcrumb="Containers" navigationHint="root">
