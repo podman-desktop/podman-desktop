@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { installBinaryToSystem } from './cli-run';
+import { getSystemBinaryPath, installBinaryToSystem } from './cli-run';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -127,3 +127,22 @@ test('success: installBinaryToSystem on linux with /usr/local/bin NOT created ye
     expect.objectContaining({ isAdmin: true }),
   );
 });
+
+test.each([{ platform: 'linux' }, { platform: 'linux', env: { FLATPAK_ID: 1 } }])(
+  'Return correct SystemBinaryPath for $platform',
+  ({ platform, env }) => {
+    Object.defineProperty(process, 'platform', {
+      value: platform,
+    });
+
+    if (env) {
+      Object.defineProperty(process, 'env', {
+        value: env,
+      });
+    }
+
+    const expectedPath = env?.FLATPAK_ID ? '/run/host/usr/local/bin' : '/usr/local/bin';
+
+    expect(getSystemBinaryPath('testFile')).toBe(`${expectedPath}/testFile`);
+  },
+);

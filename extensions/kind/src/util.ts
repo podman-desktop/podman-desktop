@@ -24,6 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
 const localBinDir = '/usr/local/bin';
+const flatpakLocalBinDir = '/run/host/usr/local/bin';
 
 export function getSystemBinaryPath(binaryName: string): string {
   switch (process.platform) {
@@ -38,7 +39,11 @@ export function getSystemBinaryPath(binaryName: string): string {
       );
     case 'darwin':
     case 'linux':
-      return join(localBinDir, binaryName);
+      if (process.env['FLATPAK_ID']) {
+        return join(flatpakLocalBinDir, binaryName);
+      } else {
+        return join(localBinDir, binaryName);
+      }
     default:
       throw new Error(`unsupported platform: ${process.platform}.`);
   }
