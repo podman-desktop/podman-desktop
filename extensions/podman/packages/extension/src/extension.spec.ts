@@ -1225,35 +1225,6 @@ test('handlecompatibilitymodesetting: disable compatibility called when configur
   expect(disableMock).toHaveBeenCalled();
 });
 
-test('ensure started machine check for machine version', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
-    (_command, args) =>
-      new Promise<extensionApi.RunResult>(resolve => {
-        if (args?.[0] === 'machine' && args?.[1] === 'list') {
-          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
-        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({} as extensionApi.RunResult);
-        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
-          resolve({
-            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
-          } as extensionApi.RunResult);
-        } else if (args?.[0] === '--version') {
-          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
-        } else if (args?.[0] === '--connection' && args?.[1] === 'podman-machine-default' && args?.[2] === 'version') {
-          resolve({ stdout: JSON.stringify({ Server: { Version: '1.2.3' } }) } as extensionApi.RunResult);
-        }
-      }),
-  );
-
-  await extension.updateMachines(provider, podmanConfiguration);
-  expect(provider.registerContainerProviderConnection).toHaveBeenCalled();
-  const { version } = vi.mocked(provider.registerContainerProviderConnection).mock.calls[0][0];
-  expect(version).toBeDefined();
-  expect(version?.()).toBe('1.2.3');
-});
-
 test('ensure started machine reports default configuration', async () => {
   vi.mocked(extensionApi.env).isLinux = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
@@ -3275,4 +3246,42 @@ test('activate and autostart should not duplicate machines ', async () => {
   // should be only 1 but we allow some more calls (if there is not a check to check during the autostart it would be 100+ calls)
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
+});
+
+test('ensure updateMachines check for machine version', async () => {
+  // setup env as linux
+  vi.mocked(extensionApi.env).isLinux = true;
+  // mock process#exec
+  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>(resolve => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({} as extensionApi.RunResult);
+        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === '--version') {
+          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
+        } else if (args?.[0] === '--connection' && args?.[1] === 'podman-machine-default' && args?.[2] === 'version') {
+          // simulate result of podman --connection=podman-machine-default version
+          resolve({ stdout: JSON.stringify({ Server: { Version: '1.2.3' } }) } as extensionApi.RunResult);
+        }
+      }),
+  );
+
+  // init extension
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  // run update machines workflow
+  await extension.updateMachines(provider, podmanConfiguration);
+
+  // ensure we registered a container provider connection
+  expect(provider.registerContainerProviderConnection).toHaveBeenCalledOnce();
+  // let's extract the ContainerProviderConnection#version function we provided
+  const { version } = vi.mocked(provider.registerContainerProviderConnection).mock.calls[0][0];
+  // ensure the version is defined and we are getting the version we mocked
+  expect(version).toBeDefined();
+  expect(version?.()).toBe('1.2.3');
 });
