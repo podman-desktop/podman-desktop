@@ -35,6 +35,7 @@ import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
+import { EventsResourceFactory } from './events-resource-factory.js';
 import { IngressesResourceFactory } from './ingresses-resource-factory.js';
 import { NodesResourceFactory } from './nodes-resource-factory.js';
 import { PodsResourceFactory } from './pods-resource-factory.js';
@@ -101,6 +102,7 @@ export class ContextsManagerExperimental {
       new ConfigmapsResourceFactory(),
       new CronjobsResourceFactory(),
       new DeploymentsResourceFactory(),
+      new EventsResourceFactory(),
       new IngressesResourceFactory(),
       new NodesResourceFactory(),
       new PodsResourceFactory(),
