@@ -3277,8 +3277,11 @@ test('ensure updateMachines check for machine version', async () => {
   // run update machines workflow
   await extension.updateMachines(provider, podmanConfiguration);
 
-  // ensure we registered a container provider connection
-  expect(provider.registerContainerProviderConnection).toHaveBeenCalledOnce();
+  await vi.waitFor(() => {
+    // ensure we registered a container provider connection
+    expect(provider.registerContainerProviderConnection).toHaveBeenCalledOnce();
+  });
+
   // let's extract the ContainerProviderConnection#version function we provided
   const { version } = vi.mocked(provider.registerContainerProviderConnection).mock.calls[0][0];
   // ensure the version is defined and we are getting the version we mocked
