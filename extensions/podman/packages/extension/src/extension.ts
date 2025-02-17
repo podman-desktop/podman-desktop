@@ -24,6 +24,7 @@ import * as path from 'node:path';
 
 import type { ContainerEngineInfo, RunError } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
+import { Mutex } from 'async-mutex';
 import { compareVersions } from 'compare-versions';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
@@ -85,8 +86,6 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 let isDisguisedPodmanSocket = true;
 let disguisedPodmanSocketWatcher: extensionApi.FileSystemWatcher | undefined;
 
-let autostartInProgress = false;
-
 // Configuration buttons
 const configurationCompatibilityMode = 'setting.dockerCompatibility';
 let telemetryLogger: extensionApi.TelemetryLogger | undefined;
@@ -96,6 +95,8 @@ const qemuHelper = new QemuHelper();
 const krunkitHelper = new KrunkitHelper();
 const podmanBinaryHelper = new PodmanBinaryLocationHelper();
 const podmanInfoHelper = new PodmanInfoHelper();
+
+const updateMachinesMutex = new Mutex();
 
 let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
@@ -182,6 +183,14 @@ function notifySetupPodman(): void {
 }
 
 export async function updateMachines(
+  provider: extensionApi.Provider,
+  podmanConfiguration: PodmanConfiguration,
+): Promise<void> {
+  // do not run multiple updates at the same time
+  await updateMachinesMutex.runExclusive(async () => doUpdateMachines(provider, podmanConfiguration));
+}
+
+async function doUpdateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
 ): Promise<void> {
@@ -675,14 +684,12 @@ export async function monitorMachines(
 ): Promise<void> {
   // call us again
   if (!stopLoop) {
-    // skip the update during the auto start process
-    if (!autostartInProgress) {
-      try {
-        await updateMachines(provider, podmanConfiguration);
-      } catch (error) {
-        // ignore the update of machines
-      }
+    try {
+      await updateMachines(provider, podmanConfiguration);
+    } catch (error) {
+      // ignore the update of machines
     }
+
     await timeout(5000);
     monitorMachines(provider, podmanConfiguration).catch((error: unknown) => {
       console.error('Error monitoring podman machines', error);
@@ -1465,7 +1472,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     logger: extensionApi.Logger,
     autostartContext: extensionApi.AutostartContext,
   ): Promise<void> => {
-    autostartInProgress = true;
     // If autostart has been enabled for the machine, try to start it.
     try {
       await updateMachines(provider, podmanConfiguration);
@@ -1508,12 +1514,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   provider.registerAutostart({
     start: async (logger: extensionApi.Logger, autostartContext: extensionApi.AutostartContext) => {
-      try {
-        autostartInProgress = true;
-        await doAutoStart(logger, autostartContext);
-      } finally {
-        autostartInProgress = false;
-      }
+      await doAutoStart(logger, autostartContext);
     },
   });
 

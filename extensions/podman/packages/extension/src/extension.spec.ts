@@ -1602,6 +1602,31 @@ test('Should notify clean machine if getJSONMachineList is erroring due to an in
   expect(extensionApi.context.setValue).toBeCalledWith(extension.CLEANUP_REQUIRED_MACHINE_KEY, true);
 });
 
+test('No updates of machines in parallel', async () => {
+  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isMac = true;
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+  spyExecPromise.mockResolvedValue({ stdout: '[]' } as extensionApi.RunResult);
+
+  const updateMachines1 = extension.updateMachines(provider, podmanConfiguration);
+  const updateMachines2 = extension.updateMachines(provider, podmanConfiguration);
+
+  await updateMachines1;
+
+  // only call once as no parallel
+  const podmanMachineListCalls = spyExecPromise.mock.calls.filter(
+    call => call[0] === 'podman' && JSON.stringify(call[1]) === JSON.stringify(['machine', 'list', '--format', 'json']),
+  );
+  expect(podmanMachineListCalls.length).toBe(1);
+
+  // wait the second call
+  await updateMachines2;
+  const podmanMachineListAfterCalls = spyExecPromise.mock.calls.filter(
+    call => call[0] === 'podman' && JSON.stringify(call[1]) === JSON.stringify(['machine', 'list', '--format', 'json']),
+  );
+  expect(podmanMachineListAfterCalls.length).toBe(2);
+});
+
 describe('initCheckAndRegisterUpdate', () => {
   test('check there is an update', async () => {
     const podmanInstall = {
