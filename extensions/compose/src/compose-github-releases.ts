@@ -75,7 +75,7 @@ export class ComposeGitHubReleases {
       arch = 'aarch64';
     }
 
-    const listOfAssets = await this.octokit.repos.listReleaseAssets({
+    const listOfAssets = await this.octokit.paginate(this.octokit.repos.listReleaseAssets, {
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
       release_id: releaseId,
@@ -84,7 +84,7 @@ export class ComposeGitHubReleases {
     const searchedAssetName = `docker-compose-${operatingSystem}-${arch}${extension}`;
 
     // search for the right asset
-    const asset = listOfAssets.data.find(asset => searchedAssetName === asset.name);
+    const asset = listOfAssets.find(asset => searchedAssetName === asset.name);
     if (!asset) {
       throw new Error(`No asset found for ${operatingSystem} and ${arch}`);
     }
