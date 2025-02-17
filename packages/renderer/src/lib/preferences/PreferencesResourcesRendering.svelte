@@ -551,7 +551,7 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
                 <div aria-label="Connection Version">
                   {provider.name}
-                  {container.version ? `v${container.version}` : ''}
+                  {container.version ?? ''}
                 </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>

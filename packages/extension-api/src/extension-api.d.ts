@@ -401,7 +401,9 @@ declare module '@podman-desktop/api' {
      * the vmTypeDisplayName property cannot be set if vmType is undefined
      */
     vmTypeDisplayName?: string;
-    // the remote may be different from the client version
+    /**
+     * the remote may be different from the client version
+     */
     version?(): string | undefined;
   }
 
