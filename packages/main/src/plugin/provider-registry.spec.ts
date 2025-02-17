@@ -77,7 +77,7 @@ beforeEach(() => {
 });
 
 test('should initialize provider if there is kubernetes connection provider', async () => {
-  let providerInternalId: string | undefined = undefined;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
@@ -111,7 +111,7 @@ test('should initialize provider if there is kubernetes connection provider', as
 });
 
 test('should send version event if update', async () => {
-  let providerInternalId: string | undefined = undefined;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(['provider-create', 'provider:update-version', 'provider-change']).toContain(message);
@@ -148,7 +148,7 @@ test('should send version event if update', async () => {
 });
 
 test('should initialize provider if there is container connection provider', async () => {
-  let providerInternalId: string | undefined = undefined;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
@@ -208,7 +208,7 @@ test('connections should contain the display name provided when registering', as
 });
 
 test('should reset state if initialization fails', async () => {
-  let providerInternalId: unknown;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
@@ -231,7 +231,7 @@ test('should reset state if initialization fails', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await expect(providerRegistry.initializeProvider(providerInternalId as string)).rejects.toThrowError(error);
+  await expect(providerRegistry.initializeProvider(providerInternalId!)).rejects.toThrowError(error);
 
   expect(updateStatusMock).toHaveBeenCalledWith('configuring');
   expect(updateStatusMock).toHaveBeenCalledWith('installed');
@@ -596,7 +596,7 @@ test('should retrieve context of container provider', async () => {
 });
 
 test('should retrieve context of kubernetes provider', async () => {
-  let providerInternalId: unknown;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((_message, data) => {
     providerInternalId = data;
@@ -616,7 +616,7 @@ test('should retrieve context of kubernetes provider', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId as string);
+  await providerRegistry.initializeProvider(providerInternalId!);
 
   const connection: ProviderKubernetesConnectionInfo = {
     name: 'connection',
