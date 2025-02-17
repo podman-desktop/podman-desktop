@@ -178,7 +178,9 @@ test.each([{ platform: 'linux' }, { platform: 'linux', env: { FLATPAK_ID: 1 } }]
       });
     }
 
-    const expectedPath = env?.FLATPAK_ID ? '/run/host/usr/local/bin' : '/usr/local/bin';
+    const expectedPath = env?.FLATPAK_ID
+      ? `${path.sep}run${path.sep}host${path.sep}usr${path.sep}local${path.sep}bin`
+      : `${path.sep}usr${path.sep}local${path.sep}bin`;
 
     expect(getSystemBinaryPath('testFile')).toBe(`${expectedPath}/testFile`);
   },
