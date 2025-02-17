@@ -1,17 +1,19 @@
 <script lang="ts">
-import type { V1Service } from '@kubernetes/client-node';
+import type { CoreV1Event, KubernetesObject, V1Service } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
 import { kubernetesCurrentContextEvents, kubernetesCurrentContextServices } from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { EventUI } from '../events/EventUI';
 import ServiceIcon from '../images/ServiceIcon.svelte';
 import KubeEditYAML from '../kube/KubeEditYAML.svelte';
+import { listenResource } from '../kube/resource-listen';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import StateChange from '../ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
@@ -31,21 +33,40 @@ let detailsPage: DetailsPage | undefined = $state(undefined);
 let kubeService: V1Service | undefined = $state(undefined);
 let kubeError: string | undefined = $state(undefined);
 
-let events: EventUI[] = $derived($kubernetesCurrentContextEvents.filter(ev => ev.involvedObject.uid === service?.uid));
+let events = $state<EventUI[]>([]);
+let listener: IDisposable | undefined;
 
-onMount(() => {
+onMount(async () => {
   const serviceUtils = new ServiceUtils();
-  // loading service info
-  return kubernetesCurrentContextServices.subscribe(services => {
-    const matchingService = services.find(srv => srv.metadata?.name === name && srv.metadata?.namespace === namespace);
-    if (matchingService) {
-      service = serviceUtils.getServiceUI(matchingService);
-      loadDetails().catch((err: unknown) => console.error(`Error getting service details: ${service?.name}`, err));
-    } else if (detailsPage) {
-      // the service has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'services',
+    name,
+    namespace,
+    listenEvents: true,
+    legacyResourceStore: kubernetesCurrentContextServices,
+    legacyEventsStore: kubernetesCurrentContextEvents,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the service has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      service = serviceUtils.getServiceUI(resource);
+      if (isExperimental) {
+        kubeService = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting service details: ${service?.name}`, err));
+      }
+    },
+    onEventsUpdated: (updatedEvents: CoreV1Event[]) => {
+      events = updatedEvents;
+    },
   });
+});
+
+onDestroy(() => {
+  listener?.dispose();
 });
 
 async function loadDetails(): Promise<void> {
