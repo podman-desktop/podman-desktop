@@ -15,6 +15,7 @@ overrides:
   cssstyle>@asamuzakjp/css-color: ^2.8.3-b.2
   vitest>vite: ^6.1.0
   tsx>esbuild: ^0.25.0
+  vite>esbuild: ^0.25.0
 
 importers:
 
@@ -24637,7 +24638,7 @@ snapshots:
 
   vite@6.1.0(@types/node@20.17.19)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0):
     dependencies:
-      esbuild: 0.24.2
+      esbuild: 0.25.0
       postcss: 8.5.1
       rollup: 4.34.4
     optionalDependencies:
@@ -24651,7 +24652,7 @@ snapshots:
 
   vite@6.1.0(@types/node@22.13.4)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.36.0)(tsx@4.19.2)(yaml@2.7.0):
     dependencies:
-      esbuild: 0.24.2
+      esbuild: 0.25.0
       postcss: 8.5.1
       rollup: 4.34.4
     optionalDependencies:

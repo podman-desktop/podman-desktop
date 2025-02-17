@@ -224,7 +224,8 @@
       "@kubernetes/client-node>jsonpath-plus": "^10.0.7",
       "cssstyle>@asamuzakjp/css-color": "^2.8.3-b.2",
       "vitest>vite": "^6.1.0",
-      "tsx>esbuild": "^0.25.0"
+      "tsx>esbuild": "^0.25.0",
+      "vite>esbuild": "^0.25.0"
     }
   },
   "packageManager": "pnpm@9.14.1+sha512.7f1de9cffea40ff4594c48a94776112a0db325e81fb18a9400362ff7b7247f4fbd76c3011611c9f8ac58743c3dc526017894e07948de9b72052f874ee2edfdcd"
