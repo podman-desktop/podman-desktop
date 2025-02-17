@@ -157,7 +157,7 @@
     "watch": "vite build --watch"
   },
   "dependencies": {
-    "@octokit/rest": "^21.1.0",
+    "@octokit/rest": "^21.1.1",
     "mustache": "^4.2.0",
     "shell-path": "^3.0.0"
   },

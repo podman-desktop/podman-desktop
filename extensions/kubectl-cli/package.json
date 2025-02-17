@@ -136,7 +136,7 @@
     "format:fix": "biome format --write"
   },
   "dependencies": {
-    "@octokit/rest": "^21.1.0",
+    "@octokit/rest": "^21.1.1",
     "@podman-desktop/api": "workspace:*",
     "semver": "^7.7.1",
     "shell-path": "^3.0.0"
