@@ -182,6 +182,6 @@ test.each([{ platform: 'linux' }, { platform: 'linux', env: { FLATPAK_ID: 1 } }]
       ? `${path.sep}run${path.sep}host${path.sep}usr${path.sep}local${path.sep}bin`
       : `${path.sep}usr${path.sep}local${path.sep}bin`;
 
-    expect(getSystemBinaryPath('testFile')).toBe(`${expectedPath}/testFile`);
+    expect(getSystemBinaryPath('testFile')).toBe(`${expectedPath}${path.sep}testFile`);
   },
 );
