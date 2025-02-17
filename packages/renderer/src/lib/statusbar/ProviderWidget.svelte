@@ -28,7 +28,7 @@ let providerStatus = $state('');
 </script>
 
 <div >
-<Tooltip top  class="mb-[20px]">
+<Tooltip top class="mb-[20px]">
   <div slot="tip" class=" py-2 px-4">
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
       <ProviderWidgetStatus entry={entry}/>
