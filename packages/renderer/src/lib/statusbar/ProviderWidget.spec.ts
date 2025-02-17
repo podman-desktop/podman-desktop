@@ -84,7 +84,7 @@ test('Expect title to include container provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
-  expect(screen.getByText('ready: connection 1, connection 2')).toBeInTheDocument();
+  expect(screen.getByText('Running: connection 1, connection 2')).toBeInTheDocument();
 });
 
 test('Expect title to include Kubernetes provider connections', () => {
@@ -94,5 +94,5 @@ test('Expect title to include Kubernetes provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
-  expect(screen.getByText('ready: connection 1, connection 2')).toBeInTheDocument();
+  expect(screen.getByText('Running: connection 1, connection 2')).toBeInTheDocument();
 });
