@@ -160,6 +160,8 @@ const config = {
       '--device=dri',
       // Read/write home directory access
       '--filesystem=home',
+      // Read/write /usr, /bin, /sbin, /lib{32, 64}, /etc/ld.so.cache, /etc/alternatives directories access, mounted at /run/host
+      '--filesystem=host-os',
       // Read podman socket
       '--filesystem=xdg-run/podman:create',
       // Read docker socket

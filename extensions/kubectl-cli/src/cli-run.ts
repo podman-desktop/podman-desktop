@@ -28,6 +28,7 @@ export interface RunOptions {
 }
 
 const localBinDir = '/usr/local/bin';
+const flatpakLocalBinDir = '/run/host/usr/local/bin';
 
 export function getSystemBinaryPath(binaryName: string): string {
   switch (process.platform) {
@@ -42,7 +43,11 @@ export function getSystemBinaryPath(binaryName: string): string {
       );
     case 'darwin':
     case 'linux':
-      return path.join(localBinDir, binaryName);
+      if (process.env['FLATPAK_ID']) {
+        return path.join(flatpakLocalBinDir, binaryName);
+      } else {
+        return path.join(localBinDir, binaryName);
+      }
     default:
       throw new Error(`unsupported platform: ${process.platform}.`);
   }
