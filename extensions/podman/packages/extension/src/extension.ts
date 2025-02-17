@@ -777,6 +777,11 @@ function prettyMachineName(machineName: string): string {
   return name;
 }
 
+/**
+ * This function will check for the version of a podman connection
+ * @param machineInfo
+ * @param force
+ */
 async function updatePodmanServer(machineInfo: { name: string; vmType?: string }, force = false): Promise<void> {
   // do not check if we already have
   if (podmanServerVersions.has(machineInfo.name) && !force) return;
