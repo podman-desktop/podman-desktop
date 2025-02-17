@@ -11,6 +11,7 @@ export let bottom = false;
 export let bottomLeft = false;
 export let bottomRight = false;
 export let left = false;
+export let classStyle = '';
 </script>
 
 <Tooltip
@@ -22,7 +23,8 @@ export let left = false;
   bottom={bottom}
   bottomLeft={bottomLeft}
   bottomRight={bottomRight}
-  left={left}>
+  left={left}
+  class={classStyle}>
   <slot />
   <svelte:fragment slot="tip">
     {#if tipSlot}

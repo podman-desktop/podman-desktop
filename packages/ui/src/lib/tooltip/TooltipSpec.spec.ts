@@ -49,6 +49,13 @@ test('Expect basic prop styling', async () => {
   expect(element).toHaveClass('border-[1px]');
 });
 
+test('Expect class styling to apply to tip slot div', async () => {
+  render(TooltipSpec, { classStyle: 'my-[5px] mx-[10px]' });
+
+  const slotElement = screen.getByLabelText('tooltip');
+  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
+});
+
 function createTest(props: Record<string, boolean>, locationName: string, expectedStyle = locationName): void {
   test(`Expect property ${locationName} to add ${expectedStyle} class to parent element`, () => {
     render(TooltipSpec, { tipSlot: tip, ...props });
