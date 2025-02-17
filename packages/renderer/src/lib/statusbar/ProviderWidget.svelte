@@ -24,22 +24,14 @@ let tooltipText = $derived.by(() => {
   return tooltip;
 });
 
-let providerStatus = $derived.by(() => {
-  if (entry.containerConnections.length > 0) {
-    return entry.containerConnections[0].status;
-  } else if (entry.kubernetesConnections.length > 0) {
-    return entry.kubernetesConnections[0].status;
-  } else {
-    return entry.status;
-  }
-});
+let providerStatus = $state('');
 </script>
 
 <div >
 <Tooltip top  class="mb-[20px]">
   <div slot="tip" class=" py-2 px-4">
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-      <ProviderWidgetStatus entry={entry} />
+      <ProviderWidgetStatus entry={entry}/>
     {/if}
     {providerStatus}: {tooltipText}
   </div>
@@ -50,7 +42,7 @@ let providerStatus = $derived.by(() => {
     padding="px-2 py-1">
     
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-      <ProviderWidgetStatus entry={entry} />
+      <ProviderWidgetStatus entry={entry}  bind:displayProviderStatus={providerStatus}/>
     {/if}
     {#if entry.images.icon}
       <IconImage image={entry.images.icon} class="max-h-3 grayscale" alt={entry.name}></IconImage>

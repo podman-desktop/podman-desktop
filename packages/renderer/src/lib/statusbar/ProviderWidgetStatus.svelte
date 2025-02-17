@@ -6,9 +6,10 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 interface Props {
   entry: ProviderInfo;
+  displayProviderStatus?: string;
 }
 
-let { entry }: Props = $props();
+let { entry, displayProviderStatus = $bindable() }: Props = $props();
 
 let providerStatus = $derived.by(() => {
   if (entry.containerConnections.length > 0) {
@@ -17,6 +18,44 @@ let providerStatus = $derived.by(() => {
     return entry.kubernetesConnections[0].status;
   } else {
     return entry.status;
+  }
+});
+
+$effect(() => {
+  switch (providerStatus) {
+    case 'ready':
+      displayProviderStatus = 'Running';
+      break;
+    case 'started':
+      displayProviderStatus = 'Running';
+      break;
+    case 'error':
+      displayProviderStatus = 'Error';
+      break;
+    case 'starting':
+      displayProviderStatus = 'Starting';
+      break;
+    case 'stopping':
+      displayProviderStatus = 'Stopping';
+      break;
+    case 'stopped':
+      displayProviderStatus = 'Off';
+      break;
+    case 'unknown':
+      displayProviderStatus = 'Unknown';
+      break;
+    case 'not-installed':
+      displayProviderStatus = 'Not installed';
+      break;
+    case 'installed':
+      displayProviderStatus = 'Installed but not ready';
+      break;
+    case 'configuring':
+      displayProviderStatus = 'Configuring';
+      break;
+    case 'configured':
+      displayProviderStatus = 'Off';
+      break;
   }
 });
 
