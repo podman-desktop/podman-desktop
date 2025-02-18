@@ -428,7 +428,7 @@ describe('registerCLITool', () => {
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     vi.mocked(extensionApi.process.exec).mockResolvedValue({
-      stdout: 'test-storage-path/kind',
+      stdout: 'system-wide-path',
     } as extensionApi.RunResult);
 
     let installer: extensionApi.CliToolInstaller | undefined;
@@ -496,7 +496,7 @@ describe('registerCLITool', () => {
       tag: 'v1.0.0',
     } as unknown as ComposeGithubReleaseArtifactMetadata);
     vi.mocked(extensionApi.process.exec).mockResolvedValue({
-      stdout: 'test-storage-path/kind',
+      stdout: 'system-wide-path',
     } as extensionApi.RunResult);
 
     let installer: extensionApi.CliToolInstaller | undefined;
