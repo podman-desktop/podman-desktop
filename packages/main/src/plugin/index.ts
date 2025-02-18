@@ -98,6 +98,7 @@ import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
+import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
@@ -2989,6 +2990,13 @@ export class PluginSystem {
       'extension-development-folders:removeDevelopmentFolder',
       async (_listener: unknown, path: string): Promise<void> => {
         return extensionDevelopmentFolders.removeDevelopmentFolder(path);
+      },
+    );
+
+    this.ipcHandle(
+      'kubernetes:getTroubleshootingInformation',
+      async (_listener: unknown): Promise<KubernetesTroubleshootingInformation> => {
+        return kubernetesClient.getTroubleshootingInformation();
       },
     );
 

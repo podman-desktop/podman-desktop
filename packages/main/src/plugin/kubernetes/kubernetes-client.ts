@@ -80,6 +80,7 @@ import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-context
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
+import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
 import type { ApiSenderType } from '../api.js';
@@ -1741,5 +1742,14 @@ export class KubernetesClient {
       );
     }
     return this.contextsStatesDispatcher.getResources(contextNames, resourceName);
+  }
+
+  public getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
+    if (!this.contextsStatesDispatcher) {
+      throw new Error(
+        `contextsStatesDispatcher is undefined when getting troubleshooting information. This should not happen in Kubernetes experimental`,
+      );
+    }
+    return this.contextsStatesDispatcher.getTroubleshootingInformation();
   }
 }

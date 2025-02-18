@@ -75,6 +75,7 @@ import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-context
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
+import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
@@ -2412,6 +2413,13 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('trackExtensionFolder', async (path: string): Promise<void> => {
     return ipcInvoke('extension-development-folders:addDevelopmentFolder', path);
   });
+
+  contextBridge.exposeInMainWorld(
+    'kubernetesGetTroubleshootingInformation',
+    async (): Promise<KubernetesTroubleshootingInformation> => {
+      return ipcInvoke('kubernetes:getTroubleshootingInformation');
+    },
+  );
 }
 
 // expose methods

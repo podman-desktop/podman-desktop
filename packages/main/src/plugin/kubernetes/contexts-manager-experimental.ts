@@ -22,6 +22,7 @@ import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
+import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 
 import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
@@ -302,5 +303,24 @@ export class ContextsManagerExperimental {
     for (const informer of this.#informers.getAll()) {
       informer.value.dispose();
     }
+  }
+
+  getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
+    return {
+      healthCheckers: Array.from(this.#healthCheckers.values())
+        .map(healthChecker => healthChecker.getState())
+        .map(state => ({
+          contextName: state.contextName,
+          checking: state.checking,
+          reachable: state.reachable,
+        })),
+      permissionCheckers: this.#permissionsCheckers.flatMap(permissionChecker => permissionChecker.getPermissions()),
+      informers: this.#informers.getAll().map(informer => ({
+        contextName: informer.contextName,
+        resourceName: informer.resourceName,
+        isOffline: informer.value.isOffline(),
+        objectsCount: this.#objectCaches.get(informer.contextName, informer.resourceName)?.list().length,
+      })),
+    };
   }
 }

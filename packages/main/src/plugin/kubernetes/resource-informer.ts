@@ -169,4 +169,8 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
       );
     });
   }
+
+  isOffline(): boolean {
+    return this.#offline;
+  }
 }
