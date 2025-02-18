@@ -401,7 +401,7 @@ test('ipcMain.handle returns caught error as is if it is instance of Error', asy
   expect(handleReturn.error).toEqual(errorInstance);
 });
 
-test('ipcMain.handle returns caught error as objects message property if it isn not instance of error', async () => {
+test('ipcMain.handle returns caught error as objects message property if it is not instance of error', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('tasks:execute');
