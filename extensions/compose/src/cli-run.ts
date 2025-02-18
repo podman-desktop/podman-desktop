@@ -24,7 +24,6 @@ import * as extensionApi from '@podman-desktop/api';
 
 export const localBinDir = path.join('/', 'usr', 'local', 'bin');
 export const localWindowsBinDir = path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'WindowsApps');
-const flatpakLocalBinDir = '/run/host/usr/local/bin';
 
 export function getSystemBinaryPath(binaryName: string): string {
   switch (process.platform) {
@@ -32,11 +31,7 @@ export function getSystemBinaryPath(binaryName: string): string {
       return path.join(localWindowsBinDir, binaryName.endsWith('.exe') ? binaryName : `${binaryName}.exe`);
     case 'darwin':
     case 'linux':
-      if (process.env['FLATPAK_ID']) {
-        return path.join(flatpakLocalBinDir, binaryName);
-      } else {
-        return path.join(localBinDir, binaryName);
-      }
+      return path.join(localBinDir, binaryName);
     default:
       throw new Error(`unsupported platform: ${process.platform}.`);
   }

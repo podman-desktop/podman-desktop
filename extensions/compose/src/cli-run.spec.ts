@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { getSystemBinaryPath, installBinaryToSystem, localBinDir } from './cli-run';
+import { installBinaryToSystem, localBinDir } from './cli-run';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -164,24 +164,3 @@ test('success: installBinaryToSystem to show warning if binary path not in PATH'
   );
   expect(extensionApi.window.showWarningMessage).toBeCalled();
 });
-
-test.each([{ platform: 'linux' }, { platform: 'linux', env: { FLATPAK_ID: 1 } }])(
-  'Return correct SystemBinaryPath for $platform',
-  ({ platform, env }) => {
-    Object.defineProperty(process, 'platform', {
-      value: platform,
-    });
-
-    if (env) {
-      Object.defineProperty(process, 'env', {
-        value: env,
-      });
-    }
-
-    const expectedPath = env?.FLATPAK_ID
-      ? `${path.sep}run${path.sep}host${path.sep}usr${path.sep}local${path.sep}bin`
-      : `${path.sep}usr${path.sep}local${path.sep}bin`;
-
-    expect(getSystemBinaryPath('testFile')).toBe(`${expectedPath}${path.sep}testFile`);
-  },
-);

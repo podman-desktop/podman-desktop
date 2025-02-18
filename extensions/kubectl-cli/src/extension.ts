@@ -415,7 +415,7 @@ async function postActivate(
 
       // delete the executable in the system path
       const systemPath = getSystemBinaryPath(kubectlCliName);
-      await deleteFile(systemPath);
+      await deleteExecutableAsAdmin(systemPath);
 
       // update the version to undefined
       currentVersion = undefined;
@@ -474,5 +474,35 @@ async function deleteFileAsAdmin(filePath: string): Promise<void> {
   } catch (error) {
     console.error(`Failed to uninstall '${filePath}': ${error}`);
     throw error;
+  }
+}
+
+async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
+  const system = process.platform;
+
+  const args: string[] = [filePath];
+  const command = system === 'win32' ? 'del' : 'rm';
+  const checkCommand = system === 'win32' ? 'where.exe' : 'which';
+  let fileExistsPath = '';
+
+  try {
+    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, [filePath]);
+    fileExistsPath = fullPath;
+  } catch (err) {
+    if (err && typeof err === 'object' && 'stderr' in err) {
+      console.log(err.stderr);
+    } else {
+      console.warn(`Error checking kubectl ${filePath} path`, err);
+    }
+  }
+
+  if (fileExistsPath) {
+    try {
+      // Use admin prileges
+      await extensionApi.process.exec(command, args, { isAdmin: true });
+    } catch (error) {
+      console.error(`Failed to uninstall '${filePath}': ${error}`);
+      throw error;
+    }
   }
 }
