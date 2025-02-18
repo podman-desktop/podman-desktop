@@ -6,8 +6,8 @@ import { router } from 'tinro';
 import type { ProviderInfo } from '/@api/provider-info';
 
 import IconImage from '../appearance/IconImage.svelte';
+import { getStatusName } from './ProviderWidgetStatus';
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
-import { getStatusName } from './ProviderWidgetStatus.ts';
 
 interface Props {
   entry: ProviderInfo;
