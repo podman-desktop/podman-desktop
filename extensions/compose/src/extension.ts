@@ -477,7 +477,7 @@ async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
   let fileExistsPath = '';
 
   try {
-    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, [filePath]);
+    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, args);
     fileExistsPath = fullPath;
   } catch (err) {
     if (err && typeof err === 'object' && 'stderr' in err) {

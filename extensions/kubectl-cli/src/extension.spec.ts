@@ -621,8 +621,11 @@ describe('postActivate', () => {
     const cliInstaller = await deferredCliInstall;
     await cliInstaller.doUninstall({} as unknown as Logger);
 
-    expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, path.join(extensionContext.storagePath, 'bin', 'kubectl'));
-    expect(fs.promises.unlink).toHaveBeenNthCalledWith(2, 'system-path');
+    expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(extensionContext.storagePath, 'bin', 'kubectl'));
+    const command = process.platform === 'win32' ? 'del' : 'rm';
+    const checkCommand = process.platform === 'win32' ? 'where.exe' : 'which';
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(checkCommand, ['system-path']);
+    expect(extensionApi.process.exec).toHaveBeenCalledWith(command, ['system-path'], { isAdmin: true });
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -690,6 +693,5 @@ describe('postActivate', () => {
       [path.join(extensionContext.storagePath, 'bin', 'kubectl')],
       { isAdmin: true },
     );
-    expect(extensionApi.process.exec).toHaveBeenNthCalledWith(5, command, ['system-path'], { isAdmin: true });
   });
 });

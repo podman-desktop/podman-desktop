@@ -455,12 +455,18 @@ describe('cli#uninstall', () => {
   test('by uninstalling it should delete all executables', async () => {
     // mock the binary exists
     vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(podmanDesktopApi.process.exec).mockResolvedValue({
+      stdout: 'test-storage-path/kind',
+    } as extensionApi.RunResult);
 
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
     await cliToolInstaller?.doUninstall({} as unknown as extensionApi.Logger);
-    expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, 'storage-path');
-    expect(fs.promises.unlink).toHaveBeenNthCalledWith(2, 'test-storage-path/kind');
+    expect(fs.promises.unlink).toHaveBeenCalledWith('storage-path');
+    const command = process.platform === 'win32' ? 'del' : 'rm';
+    const checkCommand = process.platform === 'win32' ? 'where.exe' : 'which';
+    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith(checkCommand, ['test-storage-path/kind']);
+    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith(command, ['test-storage-path/kind'], { isAdmin: true });
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -479,8 +485,5 @@ describe('cli#uninstall', () => {
     // check command
     const command = process.platform === 'win32' ? 'del' : 'rm';
     expect(podmanDesktopApi.process.exec).toHaveBeenNthCalledWith(1, command, ['storage-path'], { isAdmin: true });
-    expect(podmanDesktopApi.process.exec).toHaveBeenNthCalledWith(2, command, ['test-storage-path/kind'], {
-      isAdmin: true,
-    });
   });
 });
