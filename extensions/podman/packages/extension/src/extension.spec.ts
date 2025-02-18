@@ -3251,6 +3251,8 @@ test('activate and autostart should not duplicate machines ', async () => {
 test('ensure updateMachines check for machine version', async () => {
   // setup env as linux
   vi.mocked(extensionApi.env).isLinux = true;
+  // init extension
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   // mock process#exec
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
@@ -3271,9 +3273,6 @@ test('ensure updateMachines check for machine version', async () => {
         }
       }),
   );
-
-  // init extension
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   // run update machines workflow
   await extension.updateMachines(provider, podmanConfiguration);
 

@@ -1930,8 +1930,15 @@ export async function getJSONMachineListByProvider(containerMachineProvider?: st
 }
 
 export async function deactivate(): Promise<void> {
-  stopLoop = true;
   console.log('stopping podman extension');
+  // cleanup
+  stopLoop = true;
+  listeners.clear();
+  podmanServerVersions.clear();
+  podmanMachinesInfo.clear();
+  currentConnections.clear();
+  containerProviderConnections.clear();
+
   await stopAutoStartedMachine().then(() => {
     if (autoMachineStarted) {
       console.log('stopped autostarted machine', autoMachineName);
