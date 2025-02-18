@@ -7,6 +7,7 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 import IconImage from '../appearance/IconImage.svelte';
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
+import { getStatusName } from './ProviderWidgetStatus.ts';
 
 interface Props {
   entry: ProviderInfo;
@@ -43,8 +44,6 @@ let connectionsStatuses = $derived.by(() => {
   }
   return connectionsStatuses;
 });
-
-let providerStatus = $state('');
 </script>
 
 <div >
@@ -54,7 +53,7 @@ let providerStatus = $state('');
       {#each connectionsStatuses as status}
         <div class="flex flex-row items-center h-fit">
           <ProviderWidgetStatus status={status.status} class="mr-1 mt-1"/>
-          {status.status}: {status.connecions}
+          {getStatusName(status.status)}: {status.connecions}
         </div>
       {/each}
     </div>
@@ -66,7 +65,7 @@ let providerStatus = $state('');
     padding="px-2 py-1">
     
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-      <ProviderWidgetStatus entry={entry}  bind:displayProviderStatus={providerStatus}/>
+      <ProviderWidgetStatus entry={entry} />
     {/if}
     {#if entry.images.icon}
       <IconImage image={entry.images.icon} class="max-h-3 grayscale" alt={entry.name}></IconImage>
