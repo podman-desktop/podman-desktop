@@ -23,16 +23,24 @@ import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import { isKubernetesExperimentalMode, listenResources } from './resources-listen';
 
 export interface ListenResourceOptions {
+  // plural name of the resource to listen
   resourceName: string;
+  // name of the specific resource to listen
   name: string;
+  // namespace to undefined to search non-namespaced resource
   namespace?: string;
+  // set to true to handle events attached to the resource
   listenEvents?: boolean;
 
-  legacyResourceStore: Readable<KubernetesObject[]>;
+  // stores to be set for non-experimental mode
+  legacyResourceStore?: Readable<KubernetesObject[]>;
   legacyEventsStore?: Readable<KubernetesObject[]>;
 
+  // called when the resource is not found
   onResourceNotFound: () => void;
+  // called every time the resource is updated
   onResourceUpdated: (resource: KubernetesObject, experimental: boolean) => void;
+  // called every time events attached to the resource are updated
   onEventsUpdated?: (events: CoreV1Event[]) => void;
 }
 
@@ -87,7 +95,9 @@ export async function listenResource(options: ListenResourceOptions): Promise<ID
       });
     }
   } else {
-    resourcesUnsubscriber = options.legacyResourceStore.subscribe(onUpdatedResources);
+    if (options.legacyResourceStore) {
+      resourcesUnsubscriber = options.legacyResourceStore.subscribe(onUpdatedResources);
+    }
     if (options.listenEvents && options.legacyEventsStore) {
       eventsUnsubscriber = options.legacyEventsStore.subscribe(updatedEvents => {
         allEvents = updatedEvents.map(e => ({ kind: 'Event', ...e }));
