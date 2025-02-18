@@ -30,18 +30,18 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-
 import { SequenceCheck } from './base-check';
 import { getSocketCompatibility } from './compatibility-mode';
 import { getDetectionChecks } from './detection-checks';
-import { KrunkitHelper } from './krunkit-helper';
-import { PodmanBinaryLocationHelper } from './podman-binary-location-helper';
+import { KrunkitHelper } from './helpers/krunkit-helper';
+import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-helper';
 import { PodmanCleanupMacOS } from './podman-cleanup-macos';
 import { PodmanCleanupWindows } from './podman-cleanup-windows';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import { PodmanConfiguration } from './podman-configuration';
-import { PodmanInfoHelper } from './podman-info-helper';
+import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { HyperVCheck, PodmanInstall, WSL2Check, WSLVersionCheck } from './podman-install';
 import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
 import { PodmanRemoteConnections } from './podman-remote-connections';
-import { QemuHelper } from './qemu-helper';
+import { QemuHelper } from './helpers/qemu-helper';
 import { RegistrySetup } from './registry-setup';
 import {
   appConfigDir,
@@ -54,7 +54,7 @@ import {
   VMTYPE,
 } from './util';
 import { getDisguisedPodmanInformation, getSocketPath, isDisguisedPodman } from './warnings';
-import { WslHelper } from './wsl-helper';
+import { WslHelper } from './helpers/wsl-helper';
 
 type StatusHandler = (name: string, event: extensionApi.ProviderConnectionStatus) => void;
 

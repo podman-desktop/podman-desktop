@@ -281,13 +281,13 @@ vi.mock('node:os', async () => {
   };
 });
 
-vi.mock('./qemu-helper', () => ({
+vi.mock('./helpers/qemu-helper', () => ({
   QemuHelper: vi.fn().mockReturnValue({
     getQemuVersion: mocks.getQemuVersionMock,
   }),
 }));
 
-vi.mock('./krunkit-helper', async () => {
+vi.mock('./helpers/krunkit-helper', async () => {
   return {
     KrunkitHelper: vi.fn().mockImplementation(() => {
       return {
@@ -296,7 +296,7 @@ vi.mock('./krunkit-helper', async () => {
     }),
   };
 });
-vi.mock('./podman-binary-location-helper', async () => {
+vi.mock('./helpers/podman-binary-location-helper', async () => {
   return {
     PodmanBinaryLocationHelper: vi.fn().mockImplementation(() => {
       return {
@@ -305,7 +305,7 @@ vi.mock('./podman-binary-location-helper', async () => {
     }),
   };
 });
-vi.mock('./podman-info-helper', async () => {
+vi.mock('./helpers/podman-info-helper', async () => {
   return {
     PodmanInfoHelper: vi.fn().mockImplementation(() => {
       return {

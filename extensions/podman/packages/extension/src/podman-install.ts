@@ -46,7 +46,7 @@ import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import * as podman5JSON from './podman5.json';
 import { getPowerShellClient } from './powershell';
 import { getAssetsFolder, normalizeWSLOutput } from './util';
-import { WslHelper } from './wsl-helper';
+import { WslHelper } from './helpers/wsl-helper';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
