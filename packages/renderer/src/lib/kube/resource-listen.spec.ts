@@ -24,14 +24,7 @@ import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import { listenResource } from './resource-listen';
 import * as resourcesListen from './resources-listen';
 
-vi.mock(import('./resources-listen'), async importOriginal => {
-  const original = await importOriginal();
-  return {
-    // we want to access the original isKubernetesExperimentalMode
-    ...original,
-    listenResources: vi.fn(),
-  };
-});
+vi.mock(import('./resources-listen'));
 
 type initListsReturnType = {
   updateResources: (objects: KubernetesObject[]) => void;
@@ -105,7 +98,7 @@ describe.each<{
     let listener: IDisposable | undefined;
 
     beforeEach(() => {
-      vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(experimental);
+      vi.mocked(resourcesListen.isKubernetesExperimentalMode).mockResolvedValue(experimental);
     });
 
     afterEach(() => {
