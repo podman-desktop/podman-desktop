@@ -30,7 +30,7 @@ import type {
   ProviderLifecycle,
   ProviderUpdate,
 } from '@podman-desktop/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   CheckStatus,
@@ -99,15 +99,19 @@ test('should initialize provider if there is kubernetes connection provider', as
 
   expect(providerInternalId).toBeDefined();
 
-  await providerRegistry.initializeProvider(providerInternalId!);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should send version event if update', async () => {
@@ -136,15 +140,19 @@ test('should send version event if update', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.updateProvider(providerInternalId!);
+  if (providerInternalId) {
+    await providerRegistry.updateProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(updateCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalledTimes(3);
+    expect(updateCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalledTimes(3);
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should initialize provider if there is container connection provider', async () => {
@@ -170,15 +178,19 @@ test('should initialize provider if there is container connection provider', asy
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId!);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('connections should contain the display name provided when registering', async () => {
@@ -231,10 +243,14 @@ test('should reset state if initialization fails', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await expect(providerRegistry.initializeProvider(providerInternalId!)).rejects.toThrowError(error);
+  if (providerInternalId) {
+    await expect(providerRegistry.initializeProvider(providerInternalId)).rejects.toThrowError(error);
 
-  expect(updateStatusMock).toHaveBeenCalledWith('configuring');
-  expect(updateStatusMock).toHaveBeenCalledWith('installed');
+    expect(updateStatusMock).toHaveBeenCalledWith('configuring');
+    expect(updateStatusMock).toHaveBeenCalledWith('installed');
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('expect isContainerConnection returns true with a ContainerConnection', async () => {
@@ -616,37 +632,41 @@ test('should retrieve context of kubernetes provider', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId!);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId!);
 
-  const connection: ProviderKubernetesConnectionInfo = {
-    name: 'connection',
-    endpoint: {
-      apiURL: 'url',
-    },
-    status: 'stopped',
-  };
+    const connection: ProviderKubernetesConnectionInfo = {
+      name: 'connection',
+      endpoint: {
+        apiURL: 'url',
+      },
+      status: 'stopped',
+    };
 
-  const startMock = vi.fn();
-  const stopMock = vi.fn();
-  provider.registerKubernetesProviderConnection({
-    name: 'connection',
-    lifecycle: {
-      start: startMock,
-      stop: stopMock,
-    },
-    endpoint: {
-      apiURL: 'url',
-    },
-    status() {
-      return 'stopped';
-    },
-  });
+    const startMock = vi.fn();
+    const stopMock = vi.fn();
+    provider.registerKubernetesProviderConnection({
+      name: 'connection',
+      lifecycle: {
+        start: startMock,
+        stop: stopMock,
+      },
+      endpoint: {
+        apiURL: 'url',
+      },
+      status() {
+        return 'stopped';
+      },
+    });
 
-  const context = providerRegistry.getMatchingConnectionLifecycleContext('0', connection);
-  expect(context instanceof LifecycleContextImpl).toBeTruthy();
+    const context = providerRegistry.getMatchingConnectionLifecycleContext('0', connection);
+    expect(context instanceof LifecycleContextImpl).toBeTruthy();
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should retrieve provider internal id from id', async () => {
