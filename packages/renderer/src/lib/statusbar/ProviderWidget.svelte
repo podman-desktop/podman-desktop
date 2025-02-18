@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
@@ -14,14 +15,33 @@ interface Props {
 
 let { entry, command = (): void => router.goto('/preferences/resources') }: Props = $props();
 
-let tooltipText = $derived.by(() => {
-  let tooltip = '';
+let connectionsStatuses = $derived.by(() => {
+  let statuses: ProviderStatus | ProviderConnectionStatus[];
+  let connectionsStatuses: { status: ProviderStatus | ProviderConnectionStatus; connecions: string }[] = [];
   if (entry.containerConnections.length > 0) {
-    tooltip = entry.containerConnections.map(c => c.name).join(', ');
+    statuses = [...new Set(entry.containerConnections.map(connection => connection.status))];
+    let connections = '';
+    for (const status of statuses) {
+      connections = entry.containerConnections
+        .filter(connection => connection.status === status)
+        .map(c => c.name)
+        .join(', ');
+      connectionsStatuses.push({ status: status, connecions: connections });
+    }
   } else if (entry.kubernetesConnections.length > 0) {
-    tooltip = entry.kubernetesConnections.map(c => c.name).join(', ');
+    statuses = [...new Set(entry.kubernetesConnections.map(connection => connection.status))];
+    let connections = '';
+    for (const status of statuses) {
+      connections = entry.kubernetesConnections
+        .filter(connection => connection.status === status)
+        .map(c => c.name)
+        .join(', ');
+      connectionsStatuses.push({ status: status, connecions: connections });
+    }
+  } else {
+    connectionsStatuses.push({ status: entry.status, connecions: entry.name });
   }
-  return tooltip;
+  return connectionsStatuses;
 });
 
 let providerStatus = $state('');
@@ -29,11 +49,15 @@ let providerStatus = $state('');
 
 <div >
 <Tooltip top class="mb-[20px]">
-  <div slot="tip" class=" py-2 px-4">
-    {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-      <ProviderWidgetStatus entry={entry}/>
-    {/if}
-    {providerStatus}: {tooltipText}
+  <div slot="tip" class="py-2 px-4">
+    <div class="flex flex-col">
+      {#each connectionsStatuses as status}
+        <div class="flex flex-row items-center h-fit">
+          <ProviderWidgetStatus status={status.status} class="mr-1 mt-1"/>
+          {status.status}: {status.connecions}
+        </div>
+      {/each}
+    </div>
   </div>
   <Button
     on:click={command}

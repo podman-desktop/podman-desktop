@@ -77,22 +77,26 @@ test('Expect the prop command to be used when it is passed with the entry', asyn
   expect(router.goto).toBeCalledWith('/some/page');
 });
 
-test('Expect title to include container provider connections', () => {
+test('Expect tooltip to include container provider connections', () => {
   providerMock.containerConnections = [
     { name: 'connection 1', status: 'ready' } as unknown as ProviderContainerConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderContainerConnectionInfo,
+    { name: 'connection 3', status: 'stopped' } as unknown as ProviderContainerConnectionInfo,
   ];
   render(ProviderWidget, { entry: providerMock });
 
   expect(screen.getByText('Running: connection 1, connection 2')).toBeInTheDocument();
+  expect(screen.getByText('Off: connection 3')).toBeInTheDocument();
 });
 
-test('Expect title to include Kubernetes provider connections', () => {
+test('Expect tooltip to include Kubernetes provider connections', () => {
   providerMock.kubernetesConnections = [
     { name: 'connection 1', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
+    { name: 'connection 3', status: 'stopped' } as unknown as ProviderKubernetesConnectionInfo,
   ];
   render(ProviderWidget, { entry: providerMock });
 
   expect(screen.getByText('Running: connection 1, connection 2')).toBeInTheDocument();
+  expect(screen.getByText('Off: connection 3')).toBeInTheDocument();
 });
