@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 
 import { ContainerState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
-import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
+import { deployPodToCluster } from '../utility/kubernetes';
 import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
@@ -97,15 +97,7 @@ test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e'
     await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
   });
 
-  test('Deploy the container ', async ({ page, navigationBar }) => {
-    const containerDetailsPage = new ContainerDetailsPage(page, CONTAINER_NAME);
-    await playExpect(containerDetailsPage.heading).toBeVisible();
-    const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
-    await deployToKubernetesPage.deployPod(CONTAINER_NAME, { useKubernetesServices: true }, KUBERNETES_CONTEXT);
-
-    const podsPage = await navigationBar.openPods();
-    await playExpect
-      .poll(async () => podsPage.deployedPodExists(DEPLOYED_POD_NAME, 'kubernetes'), { timeout: 15_000 })
-      .toBeTruthy();
+  test('Deploy the container ', async ({ page }) => {
+    await deployPodToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
   });
 });
