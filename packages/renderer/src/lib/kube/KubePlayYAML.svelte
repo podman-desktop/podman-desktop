@@ -180,7 +180,7 @@ onDestroy(() => {
 function goBackToPodsPage(): void {
   // redirect to the pods page
   handleNavigation({
-    page: NavigationPage.PODS,
+    page: NavigationPage.PODMAN_PODS,
   });
 }
 </script>

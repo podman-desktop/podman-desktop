@@ -348,8 +348,9 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   console.error = originalConsoleError;
+  await extension.deactivate();
 });
 
 describe.each([

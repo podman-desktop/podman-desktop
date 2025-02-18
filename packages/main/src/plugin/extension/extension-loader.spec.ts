@@ -1426,7 +1426,7 @@ describe('Navigation', async () => {
     const sendMock = vi.spyOn(apiSender, 'send');
 
     await api.navigation.navigateToPods();
-    expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.PODS });
+    expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.PODMAN_PODS });
   });
   test('navigateToPod existing pod', async () => {
     const api = createApi();
@@ -1443,7 +1443,7 @@ describe('Navigation', async () => {
 
     // Ensure the send method is called properly
     expect(sendMock).toBeCalledWith('navigate', {
-      page: NavigationPage.POD,
+      page: NavigationPage.PODMAN_POD,
       parameters: {
         kind: 'valid-kind',
         name: 'valid-name',

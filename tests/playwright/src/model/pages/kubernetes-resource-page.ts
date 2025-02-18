@@ -18,7 +18,7 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { KubernetesResources } from '../core/types';
+import { KubernetesResourceAttributes, KubernetesResources } from '../core/types';
 import { KubernetesResourceDetailsPage } from './kubernetes-resource-details-page';
 import { MainPage } from './main-page';
 
@@ -35,6 +35,12 @@ export class KubernetesResourcePage extends MainPage {
   getResourceRowByName(resourceName: string): Locator {
     const resourceRow = this.content.getByRole('row', { name: resourceName });
     return resourceRow;
+  }
+
+  async geAttributeByRow(row: Locator, attributeName: string, resourceType: KubernetesResources): Promise<Locator> {
+    const attributes = KubernetesResourceAttributes[resourceType];
+    const attrIndex = attributes.indexOf(attributeName) + 1;
+    return row.getByRole('cell').nth(attrIndex);
   }
 
   async openResourceDetails(

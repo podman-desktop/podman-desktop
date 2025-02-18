@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
@@ -61,6 +62,10 @@ class TestColorRegistry extends ColorRegistry {
 
   override initContent(): void {
     super.initContent();
+  }
+
+  override initLabel(): void {
+    super.initLabel();
   }
 }
 
@@ -562,5 +567,73 @@ describe('registerExtensionThemes', () => {
         { id: 'dark-theme1', parent: 'dark' },
       ] as unknown as RawThemeContribution[]),
     ).toThrowError('Theme already exists. Extension trying to register the same theme : foo.bar');
+  });
+});
+
+describe('initLabel', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    // mock the registerColor
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initLabel();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('primary color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the first call
+    expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(colorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(colorPalette.purple[700]);
+
+    expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(colorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(colorPalette.purple[300]);
+  });
+
+  test('secondary color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the first call
+    expect(spyOnRegisterColor.mock.calls[4]?.[0]).toStrictEqual('label-secondary-bg');
+    expect(spyOnRegisterColor.mock.calls[4]?.[1].light).toBe(colorPalette.sky[200]);
+    expect(spyOnRegisterColor.mock.calls[4]?.[1].dark).toBe(colorPalette.sky[900]);
+
+    expect(spyOnRegisterColor.mock.calls[5]?.[0]).toStrictEqual('label-secondary-text');
+    expect(spyOnRegisterColor.mock.calls[5]?.[1].light).toBe(colorPalette.sky[900]);
+    expect(spyOnRegisterColor.mock.calls[5]?.[1].dark).toBe(colorPalette.sky[200]);
+  });
+
+  test('tertiary color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the first call
+    expect(spyOnRegisterColor.mock.calls[6]?.[0]).toStrictEqual('label-tertiary-bg');
+    expect(spyOnRegisterColor.mock.calls[6]?.[1].light).toBe(colorPalette.green[200]);
+    expect(spyOnRegisterColor.mock.calls[6]?.[1].dark).toBe(colorPalette.green[900]);
+
+    expect(spyOnRegisterColor.mock.calls[7]?.[0]).toStrictEqual('label-tertiary-text');
+    expect(spyOnRegisterColor.mock.calls[7]?.[1].light).toBe(colorPalette.green[900]);
+    expect(spyOnRegisterColor.mock.calls[7]?.[1].dark).toBe(colorPalette.green[200]);
+  });
+
+  test('quaternary color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the first call
+    expect(spyOnRegisterColor.mock.calls[8]?.[0]).toStrictEqual('label-quaternary-bg');
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(colorPalette.amber[100]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(colorPalette.amber[800]);
+
+    expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(colorPalette.amber[900]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(colorPalette.amber[400]);
   });
 });

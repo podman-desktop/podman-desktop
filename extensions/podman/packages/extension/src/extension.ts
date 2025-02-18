@@ -1886,6 +1886,12 @@ export async function deactivate(): Promise<void> {
       console.log('stopped autostarted machine', autoMachineName);
     }
   });
+
+  // cleanup
+  listeners.clear();
+  podmanMachinesInfo.clear();
+  currentConnections.clear();
+  containerProviderConnections.clear();
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';

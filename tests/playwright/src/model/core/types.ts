@@ -53,4 +53,15 @@ export enum KubernetesResources {
   IngeressesRoutes = 'Ingresses & Routes',
   PVCs = 'Persistent Volume Claims',
   ConfigMapsSecrets = 'ConfigMaps & Secrets',
+  PortForwarding = 'Port Forwarding',
 }
+
+export const KubernetesResourceAttributes: Record<KubernetesResources, string[]> = {
+  [KubernetesResources.Nodes]: ['Status', 'Name', 'Roles', 'Version', 'OS', 'Kernel', 'Age'],
+  [KubernetesResources.Deployments]: ['Selected', 'Status', 'Name', 'Conditions', 'Pods', 'Age', 'Actions'],
+  [KubernetesResources.Services]: ['Selected', 'Status', 'Name', 'Type', 'Cluster IP', 'Ports', 'Age', 'Actions'],
+  [KubernetesResources.IngeressesRoutes]: ['Selected', 'Status', 'Name', 'Host/Path', 'Backend', 'Age', 'Actions'],
+  [KubernetesResources.PVCs]: ['Selected', 'Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
+  [KubernetesResources.ConfigMapsSecrets]: ['Selected', 'Status', 'Name', 'Type', 'Keys', 'Age', 'Actions'],
+  [KubernetesResources.PortForwarding]: ['Status', 'Name', 'Type', 'Local Port', 'Remote Port', 'Actions'],
+};

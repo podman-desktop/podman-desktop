@@ -200,8 +200,7 @@ export class Proxy {
     const original = globalThis.fetch;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const _me = this;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    globalThis.fetch = function (url: any, opts?: any): Promise<Response> {
+    globalThis.fetch = function (url: URL | RequestInfo, opts?: object): Promise<Response> {
       const proxyurl = getProxyUrl(_me, asURL(url).protocol === 'https');
       if (proxyurl) {
         opts = {

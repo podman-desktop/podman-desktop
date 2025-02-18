@@ -121,7 +121,7 @@ export class RunImagePage extends BasePage {
         // disable the checkbox in advanced tab
         await this.activateTab('Advanced');
         const checkbox = this.page.getByRole('checkbox', {
-          name: 'Interactive: Keep STDIN',
+          name: 'Use interactive',
         });
         if (optionalParams.interactive) {
           await checkbox.check();

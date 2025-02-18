@@ -6,9 +6,11 @@ import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
+import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation';
 import type { NavigationRequest } from '/@api/navigation-request';
 
 import AppNavigation from './AppNavigation.svelte';
+import { navigateTo } from './kubernetesNavigation';
 import Appearance from './lib/appearance/Appearance.svelte';
 import ComposeDetails from './lib/compose/ComposeDetails.svelte';
 import ConfigMapDetails from './lib/configmaps-secrets/ConfigMapDetails.svelte';
@@ -106,6 +108,10 @@ window.events?.receive('show-release-notes', () => {
 window.events?.receive('navigate', (navigationRequest: unknown) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleNavigation(navigationRequest as NavigationRequest<any>);
+});
+
+window.events?.receive('kubernetes-navigation', (args: unknown) => {
+  navigateTo(args as KubernetesNavigationRequest);
 });
 </script>
 

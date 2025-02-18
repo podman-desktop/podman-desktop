@@ -86,7 +86,7 @@ export let left = false;
     {/if}
     {#if $$slots.tip && !tip && !$tooltipHidden}
       <div
-        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)]"
+        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {$$props.class}"
         aria-label="tooltip">
         <slot name="tip" />
       </div>

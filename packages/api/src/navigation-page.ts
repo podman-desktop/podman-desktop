@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ export enum NavigationPage {
   IMAGE_BUILD = 'image-build',
   IMAGE = 'image',
   ONBOARDING = 'preferences-onboarding',
-  PODS = 'pods',
-  POD = 'pod',
+  PODMAN_PODS = 'pods',
+  PODMAN_POD = 'pod',
   VOLUMES = 'volumes',
   VOLUME = 'volume',
   CONTRIBUTION = 'contribution',
@@ -57,4 +57,8 @@ export enum NavigationPage {
   KUBERNETES_CONFIGMAPS_SECRETS = 'kubernetes-configmaps-secrets',
   KUBERNETES_CONFIGMAP = 'kubernetes-configmap',
   KUBERNETES_SECRET = 'kubernetes-secret',
+  KUBERNETES_PODS = 'kubernetes-pods',
+  KUBERNETES_POD = 'kubernetes-pod',
+  KUBERNETES_CRON_JOBS = 'kubernetes-cronjobs',
+  KUBERNETES_CRON_JOB = 'kubernetes-cronjob',
 }

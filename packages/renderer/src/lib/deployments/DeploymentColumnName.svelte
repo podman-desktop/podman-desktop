@@ -1,6 +1,4 @@
 <script lang="ts">
-import { router } from 'tinro';
-
 import type { DeploymentUI } from './DeploymentUI';
 
 interface Props {
@@ -8,8 +6,8 @@ interface Props {
 }
 let { object }: Props = $props();
 
-function openDetails(): void {
-  router.goto(`/kubernetes/deployments/${encodeURI(object.name)}/${encodeURI(object.namespace)}/summary`);
+async function openDetails(): Promise<void> {
+  await window.navigateToRoute('kubernetes', [{ kind: 'Deployment', name: object.name, namespace: object.namespace }]);
 }
 </script>
 

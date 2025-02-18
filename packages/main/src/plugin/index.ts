@@ -94,6 +94,7 @@ import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
+import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
@@ -662,6 +663,12 @@ export class PluginSystem {
       commandRegistry,
       onboardingRegistry,
     );
+
+    commandRegistry.registerCommand('kubernetes-navigation', (navRequest: KubernetesNavigationRequest) => {
+      apiSender.send('kubernetes-navigation', navRequest);
+    });
+
+    navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
 
     const extensionAnalyzer = new ExtensionAnalyzer();
 
@@ -2826,6 +2833,13 @@ export class PluginSystem {
       }
       window.close();
     });
+
+    this.ipcHandle(
+      'navigation:navigateToRoute',
+      async (_listener, routeId: string, ...args: unknown[]): Promise<void> => {
+        return navigationManager.navigateToRoute(routeId, ...args);
+      },
+    );
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();

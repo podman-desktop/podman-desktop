@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
 import DeploymentColumnName from './DeploymentColumnName.svelte';
@@ -51,11 +50,13 @@ test('Expect clicking works', async () => {
   expect(text).toBeInTheDocument();
 
   // test click
-  const routerGotoSpy = vi.spyOn(router, 'goto');
+  const navigationSpy = vi.spyOn(window, 'navigateToRoute');
 
   await fireEvent.click(text);
 
-  expect(routerGotoSpy).toBeCalledWith('/kubernetes/deployments/my-deployment/default/summary');
+  expect(navigationSpy).toBeCalledWith('kubernetes', [
+    { kind: 'Deployment', name: deployment.name, namespace: deployment.namespace },
+  ]);
 });
 
 test('Expect to show namespace in column', async () => {

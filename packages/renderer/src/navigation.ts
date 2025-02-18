@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,10 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.ONBOARDING:
       router.goto(`/preferences/onboarding/${request.parameters.extensionId}`);
       break;
-    case NavigationPage.PODS:
+    case NavigationPage.PODMAN_PODS:
       router.goto(`/pods`);
       break;
-    case NavigationPage.POD:
+    case NavigationPage.PODMAN_POD:
       router.goto(`/pods/${request.parameters.kind}/${request.parameters.name}/${request.parameters.engineId}/`);
       break;
     case NavigationPage.VOLUMES:
@@ -166,6 +166,18 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto(
         `/kubernetes/configmapsSecrets/secret/${request.parameters.name}/${request.parameters.namespace}/summary`,
       );
+      break;
+    case NavigationPage.KUBERNETES_PODS:
+      router.goto(`/kubernetes/pods`);
+      break;
+    case NavigationPage.KUBERNETES_POD:
+      router.goto(`/kubernetes/pods/${request.parameters.name}/${request.parameters.namespace}/summary`);
+      break;
+    case NavigationPage.KUBERNETES_CRON_JOBS:
+      router.goto(`/kubernetes/cronjobs`);
+      break;
+    case NavigationPage.KUBERNETES_CRON_JOB:
+      router.goto(`/kubernetes/cronjobs/${request.parameters.name}/${request.parameters.namespace}/summary`);
       break;
   }
 };
