@@ -1175,12 +1175,12 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${label}primary-bg`, {
-      dark: colorPalette.purple[800],
-      light: colorPalette.purple[400],
+      dark: colorPalette.purple[700],
+      light: colorPalette.purple[300],
     });
     this.registerColor(`${label}primary-text`, {
       dark: colorPalette.purple[300],
-      light: colorPalette.purple[900],
+      light: colorPalette.purple[700],
     });
 
     this.registerColor(`${label}secondary-bg`, {
