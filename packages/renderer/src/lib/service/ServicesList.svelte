@@ -5,10 +5,10 @@ import moment from 'moment';
 import { kubernetesCurrentContextServicesFiltered, serviceSearchPattern } from '/@/stores/kubernetes-contexts-state';
 
 import ServiceIcon from '../images/ServiceIcon.svelte';
+import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { ServiceUtils } from './service-utils';
 import ServiceColumnActions from './ServiceColumnActions.svelte';
-import ServiceColumnName from './ServiceColumnName.svelte';
 import ServiceColumnStatus from './ServiceColumnStatus.svelte';
 import ServiceColumnType from './ServiceColumnType.svelte';
 import ServiceEmptyScreen from './ServiceEmptyScreen.svelte';
@@ -35,7 +35,7 @@ let statusColumn = new TableColumn<ServiceUI>('Status', {
 
 let nameColumn = new TableColumn<ServiceUI>('Name', {
   width: '1.3fr',
-  renderer: ServiceColumnName,
+  renderer: KubernetesColumnName,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

@@ -8,11 +8,11 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
+import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { DeploymentUtils } from './deployment-utils';
 import DeploymentColumnActions from './DeploymentColumnActions.svelte';
 import DeploymentColumnConditions from './DeploymentColumnConditions.svelte';
-import DeploymentColumnName from './DeploymentColumnName.svelte';
 import DeploymentColumnPods from './DeploymentColumnPods.svelte';
 import DeploymentColumnStatus from './DeploymentColumnStatus.svelte';
 import DeploymentEmptyScreen from './DeploymentEmptyScreen.svelte';
@@ -34,7 +34,7 @@ let statusColumn = new TableColumn<DeploymentUI>('Status', {
 });
 
 let nameColumn = new TableColumn<DeploymentUI>('Name', {
-  renderer: DeploymentColumnName,
+  renderer: KubernetesColumnName,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

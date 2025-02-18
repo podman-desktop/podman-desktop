@@ -8,11 +8,11 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 
 import PVCIcon from '../images/PVCIcon.svelte';
+import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { PVCUtils } from './pvc-utils';
 import PVCColumnActions from './PVCColumnActions.svelte';
 import PvcColumnMode from './PVCColumnMode.svelte';
-import PVCColumnName from './PVCColumnName.svelte';
 import PVCColumnStatus from './PVCColumnStatus.svelte';
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 import type { PVCUI } from './PVCUI';
@@ -37,7 +37,7 @@ let statusColumn = new TableColumn<PVCUI>('Status', {
 });
 
 let nameColumn = new TableColumn<PVCUI>('Name', {
-  renderer: PVCColumnName,
+  renderer: KubernetesColumnName,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

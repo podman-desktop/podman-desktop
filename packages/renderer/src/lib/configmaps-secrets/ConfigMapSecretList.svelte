@@ -10,10 +10,10 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 
 import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
+import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
 import ConfigMapSecretColumnActions from './ConfigMapSecretColumnActions.svelte';
-import ConfigMapSecretColumnName from './ConfigMapSecretColumnName.svelte';
 import ConfigMapSecretColumnStatus from './ConfigMapSecretColumnStatus.svelte';
 import ConfigMapSecretColumnType from './ConfigMapSecretColumnType.svelte';
 import ConfigMapSecretEmptyScreen from './ConfigMapSecretEmptyScreen.svelte';
@@ -36,7 +36,7 @@ let statusColumn = new TableColumn<ConfigMapSecretUI>('Status', {
 
 let nameColumn = new TableColumn<ConfigMapSecretUI>('Name', {
   width: '1.3fr',
-  renderer: ConfigMapSecretColumnName,
+  renderer: KubernetesColumnName,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
