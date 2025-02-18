@@ -138,8 +138,16 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@smoke' },
     const configurationRow = portForwardingPage.getResourceRowByName(containerName);
     await playExpect(configurationRow).toBeVisible();
 
-    const localPortCell = configurationRow.getByRole('cell').nth(4);
-    const remotePortCell = configurationRow.getByRole('cell').nth(5);
+    const localPortCell = await portForwardingPage.geAttributeByRow(
+      configurationRow,
+      'Local Port',
+      KubernetesResources.PortForwarding,
+    );
+    const remotePortCell = await portForwardingPage.geAttributeByRow(
+      configurationRow,
+      'Remote Port',
+      KubernetesResources.PortForwarding,
+    );
     playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
     playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
   });
