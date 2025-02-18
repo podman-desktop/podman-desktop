@@ -46,9 +46,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of images`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const images = await navigationBar.openImages();
-    //count images => 1 original image + (1 tagged * 10) + 1 localhost/podman-pause from pods = 12
-    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(12);
-    for (let imgNum = 1; imgNum <= 10; imgNum++) {
+    //count images => 1 original image + (1 tagged * 100) + 1 localhost/podman-pause from pods = 102
+    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(102);
+    for (let imgNum = 1; imgNum <= 100; imgNum++) {
       await playExpect
         .poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`), { timeout: 5_000 })
         .toBeTruthy();
@@ -58,9 +58,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of containers`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const containers = await navigationBar.openContainers();
-    //count containers => (1 manually created + 2 from creating pods) * 10 = 30
-    await playExpect.poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 }).toBe(30);
-    for (let containerNum = 1; containerNum <= 10; containerNum++) {
+    //count containers => (1 manually created + 2 from creating pods) * 100 = 300
+    await playExpect.poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 }).toBe(300);
+    for (let containerNum = 1; containerNum <= 100; containerNum++) {
       await playExpect
         .poll(async () => await containers.containerExists(`my-container-${containerNum}`), { timeout: 5_000 })
         .toBeTruthy();
@@ -70,9 +70,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of pods`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const pods = await navigationBar.openPods();
-    //count pods => 1 manually created * 10 = 10
-    await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(10);
-    for (let podNum = 1; podNum <= 10; podNum++) {
+    //count pods => 1 manually created * 100 = 100
+    await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(100);
+    for (let podNum = 1; podNum <= 100; podNum++) {
       await playExpect.poll(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 5_000 }).toBeTruthy();
     }
   });
