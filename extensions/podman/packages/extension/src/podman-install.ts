@@ -38,6 +38,7 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from './extension';
+import { WslHelper } from './helpers/wsl-helper';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './macos-checks';
 import { PodmanCleanupMacOS } from './podman-cleanup-macos';
 import { PodmanCleanupWindows } from './podman-cleanup-windows';
@@ -46,7 +47,6 @@ import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import * as podman5JSON from './podman5.json';
 import { getPowerShellClient } from './powershell';
 import { getAssetsFolder, normalizeWSLOutput } from './util';
-import { WslHelper } from './helpers/wsl-helper';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
