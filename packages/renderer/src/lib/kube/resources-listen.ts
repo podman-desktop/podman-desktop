@@ -114,7 +114,7 @@ function filter(resources: KubernetesObject[], searchTerm: string): KubernetesOb
   return resources.filter(resource => findMatchInLeaves(resource, searchTerm.toLowerCase()));
 }
 
-async function isKubernetesExperimentalMode(): Promise<boolean> {
+export async function isKubernetesExperimentalMode(): Promise<boolean> {
   try {
     return (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
   } catch {

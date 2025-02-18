@@ -1,19 +1,28 @@
 <script lang="ts">
 import { Page, Tab } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import Route from '/@/Route.svelte';
 
 import { lastPage } from '../../stores/breadcrumb';
+import { isKubernetesExperimentalMode } from '../kube/resources-listen';
 import { getTabUrl, isTabSelected } from '../ui/Util';
 import TroubleshootingDevToolsConsoleLogs from './TroubleshootingDevToolsConsoleLogs.svelte';
 import TroubleshootingGatherLogs from './TroubleshootingGatherLogs.svelte';
+import TroubleshootingPageKubernetes from './TroubleshootingPageKubernetes.svelte';
 import TroubleshootingPageProviders from './TroubleshootingPageProviders.svelte';
 import TroubleshootingPageStores from './TroubleshootingPageStores.svelte';
+
+let displayKubernetes = $state<boolean>(false);
 
 export function goToPreviousPage(): void {
   router.goto($lastPage.path);
 }
+
+onMount(async () => {
+  displayKubernetes = await isKubernetesExperimentalMode();
+});
 </script>
 
 <Page title="Troubleshooting" on:close={goToPreviousPage}>
@@ -30,6 +39,9 @@ export function goToPreviousPage(): void {
       selected={isTabSelected($router.path, 'gatherlogs')}
       url={getTabUrl($router.path, 'gatherlogs')} />
     <Tab title="Stores" selected={isTabSelected($router.path, 'stores')} url={getTabUrl($router.path, 'stores')} />
+    {#if displayKubernetes}
+      <Tab title="Kubernetes" selected={isTabSelected($router.path, 'kubernetes')} url={getTabUrl($router.path, 'kubernetes')} />
+    {/if}
   </div>
   <div class="flex w-full h-full overflow-auto" slot="content">
     <Route path="/repair-connections" breadcrumb="Repair & Connections" navigationHint="tab">
@@ -47,5 +59,11 @@ export function goToPreviousPage(): void {
     <Route path="/stores" breadcrumb="Stores" navigationHint="tab">
       <TroubleshootingPageStores />
     </Route>
+
+    {#if displayKubernetes}
+      <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="tab">
+        <TroubleshootingPageKubernetes />
+      </Route>
+    {/if}
   </div>
 </Page>
