@@ -1173,6 +1173,41 @@ export class ColorRegistry {
       dark: colorPalette.gray[500],
       light: colorPalette.charcoal[300],
     });
+
+    // AI Lab tags
+    this.registerColor(`${label}category-bg`, {
+      dark: colorPalette.purple[800],
+      light: colorPalette.purple[400],
+    });
+    this.registerColor(`${label}backend-bg`, {
+      dark: colorPalette.sky[900],
+      light: colorPalette.sky[200],
+    });
+    this.registerColor(`${label}language-bg`, {
+      dark: colorPalette.green[900],
+      light: colorPalette.green[200],
+    });
+    this.registerColor(`${label}framework-bg`, {
+      dark: colorPalette.amber[800],
+      light: colorPalette.amber[100],
+    });
+
+    this.registerColor(`${label}category-text`, {
+      dark: colorPalette.purple[300],
+      light: colorPalette.purple[900],
+    });
+    this.registerColor(`${label}backend-text`, {
+      dark: colorPalette.sky[200],
+      light: colorPalette.sky[900],
+    });
+    this.registerColor(`${label}language-text`, {
+      dark: colorPalette.green[200],
+      light: colorPalette.green[900],
+    });
+    this.registerColor(`${label}framework-text`, {
+      dark: colorPalette.amber[400],
+      light: colorPalette.amber[900],
+    });
   }
 
   protected initStatusColors(): void {
