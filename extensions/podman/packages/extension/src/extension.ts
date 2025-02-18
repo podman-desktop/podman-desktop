@@ -1879,19 +1879,19 @@ export async function getJSONMachineListByProvider(containerMachineProvider?: st
 }
 
 export async function deactivate(): Promise<void> {
-  console.log('stopping podman extension');
-  // cleanup
   stopLoop = true;
-  listeners.clear();
-  podmanMachinesInfo.clear();
-  currentConnections.clear();
-  containerProviderConnections.clear();
-
+  console.log('stopping podman extension');
   await stopAutoStartedMachine().then(() => {
     if (autoMachineStarted) {
       console.log('stopped autostarted machine', autoMachineName);
     }
   });
+
+  // cleanup
+  listeners.clear();
+  podmanMachinesInfo.clear();
+  currentConnections.clear();
+  containerProviderConnections.clear();
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
