@@ -37,6 +37,7 @@ import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
 import { IngressesResourceFactory } from './ingresses-resource-factory.js';
+import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import { NodesResourceFactory } from './nodes-resource-factory.js';
 import { PodsResourceFactory } from './pods-resource-factory.js';
 import { PVCsResourceFactory } from './pvcs-resource-factory.js';
@@ -117,77 +118,7 @@ export class ContextsManagerExperimental {
   }
 
   private async onAdd(event: DispatcherEvent): Promise<void> {
-    // register and start health checker
-    const previousHealthChecker = this.#healthCheckers.get(event.contextName);
-    previousHealthChecker?.dispose();
-    const newHealthChecker = new ContextHealthChecker(event.config);
-    this.#healthCheckers.set(event.contextName, newHealthChecker);
-    newHealthChecker.onStateChange(this.onStateChange.bind(this));
-
-    newHealthChecker.onReachable(async (state: ContextHealthState) => {
-      // register and start permissions checker
-      const previousPermissionsCheckers = this.#permissionsCheckers.filter(
-        permissionChecker => permissionChecker.contextName === state.contextName,
-      );
-      for (const checker of previousPermissionsCheckers) {
-        checker.dispose();
-      }
-
-      const namespace = state.kubeConfig.getNamespace();
-      const permissionRequests = this.#resourceFactoryHandler.getPermissionsRequests(namespace);
-      for (const permissionRequest of permissionRequests) {
-        const newPermissionChecker = new ContextPermissionsChecker(
-          state.kubeConfig,
-          state.contextName,
-          permissionRequest,
-        );
-        this.#permissionsCheckers.push(newPermissionChecker);
-        newPermissionChecker.onPermissionResult(this.onPermissionResult.bind(this));
-
-        newPermissionChecker.onPermissionResult((event: ContextPermissionResult) => {
-          if (!event.permitted) {
-            // if the user does not have watch permission, do not try to start informers on these resources
-            return;
-          }
-          for (const resource of event.resources) {
-            const contextName = event.kubeConfig.getKubeConfig().currentContext;
-            const factory = this.#resourceFactoryHandler.getResourceFactoryByResourceName(resource);
-            if (!factory) {
-              throw new Error(
-                `a permission for resource ${resource} has been received but no factory is handling it, this should not happen`,
-              );
-            }
-            if (!factory.informer) {
-              // no informer for this factory, skipping
-              // (we may want to check permissions on some resource, without having to start an informer)
-              continue;
-            }
-            const informer = factory.informer.createInformer(event.kubeConfig);
-            this.#informers.set(contextName, resource, informer);
-            informer.onCacheUpdated((e: CacheUpdatedEvent) => {
-              this.#onResourceUpdated.fire({
-                contextName: e.kubeconfig.getKubeConfig().currentContext,
-                resourceName: e.resourceName,
-              });
-              if (e.countChanged) {
-                this.#onResourceCountUpdated.fire({
-                  contextName: e.kubeconfig.getKubeConfig().currentContext,
-                  resourceName: e.resourceName,
-                });
-              }
-            });
-            informer.onOffline((_e: OfflineEvent) => {
-              /* send event to dispatcher */
-            });
-            const cache = informer.start();
-            this.#objectCaches.set(contextName, resource, cache);
-          }
-        });
-        await newPermissionChecker.start();
-      }
-    });
-
-    await newHealthChecker.start({ timeout: HEALTH_CHECK_TIMEOUT_MS });
+    await this.startMonitoring(event.config, event.contextName);
   }
 
   private async onUpdate(event: DispatcherEvent): Promise<void> {
@@ -196,18 +127,7 @@ export class ContextsManagerExperimental {
   }
 
   private onDelete(state: DispatcherEvent): void {
-    const healthChecker = this.#healthCheckers.get(state.contextName);
-    healthChecker?.dispose();
-    this.#healthCheckers.delete(state.contextName);
-    const permissionsCheckers = this.#permissionsCheckers.filter(
-      permissionChecker => permissionChecker.contextName === state.contextName,
-    );
-    for (const checker of permissionsCheckers) {
-      checker.dispose();
-    }
-    this.#permissionsCheckers = this.#permissionsCheckers.filter(
-      permissionChecker => permissionChecker.contextName !== state.contextName,
-    );
+    this.stopMonitoring(state.contextName);
   }
 
   private onStateChange(state: ContextHealthState): void {
@@ -322,5 +242,93 @@ export class ContextsManagerExperimental {
         objectsCount: this.#objectCaches.get(informer.contextName, informer.resourceName)?.list().length,
       })),
     };
+  }
+
+  private async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
+    // register and start health checker
+    const previousHealthChecker = this.#healthCheckers.get(contextName);
+    previousHealthChecker?.dispose();
+    const newHealthChecker = new ContextHealthChecker(config);
+    this.#healthCheckers.set(contextName, newHealthChecker);
+    newHealthChecker.onStateChange(this.onStateChange.bind(this));
+
+    newHealthChecker.onReachable(async (state: ContextHealthState) => {
+      // register and start permissions checker
+      const previousPermissionsCheckers = this.#permissionsCheckers.filter(
+        permissionChecker => permissionChecker.contextName === state.contextName,
+      );
+      for (const checker of previousPermissionsCheckers) {
+        checker.dispose();
+      }
+
+      const namespace = state.kubeConfig.getNamespace();
+      const permissionRequests = this.#resourceFactoryHandler.getPermissionsRequests(namespace);
+      for (const permissionRequest of permissionRequests) {
+        const newPermissionChecker = new ContextPermissionsChecker(
+          state.kubeConfig,
+          state.contextName,
+          permissionRequest,
+        );
+        this.#permissionsCheckers.push(newPermissionChecker);
+        newPermissionChecker.onPermissionResult(this.onPermissionResult.bind(this));
+
+        newPermissionChecker.onPermissionResult((event: ContextPermissionResult) => {
+          if (!event.permitted) {
+            // if the user does not have watch permission, do not try to start informers on these resources
+            return;
+          }
+          for (const resource of event.resources) {
+            const contextName = event.kubeConfig.getKubeConfig().currentContext;
+            const factory = this.#resourceFactoryHandler.getResourceFactoryByResourceName(resource);
+            if (!factory) {
+              throw new Error(
+                `a permission for resource ${resource} has been received but no factory is handling it, this should not happen`,
+              );
+            }
+            if (!factory.informer) {
+              // no informer for this factory, skipping
+              // (we may want to check permissions on some resource, without having to start an informer)
+              continue;
+            }
+            const informer = factory.informer.createInformer(event.kubeConfig);
+            this.#informers.set(contextName, resource, informer);
+            informer.onCacheUpdated((e: CacheUpdatedEvent) => {
+              this.#onResourceUpdated.fire({
+                contextName: e.kubeconfig.getKubeConfig().currentContext,
+                resourceName: e.resourceName,
+              });
+              if (e.countChanged) {
+                this.#onResourceCountUpdated.fire({
+                  contextName: e.kubeconfig.getKubeConfig().currentContext,
+                  resourceName: e.resourceName,
+                });
+              }
+            });
+            informer.onOffline((_e: OfflineEvent) => {
+              /* send event to dispatcher */
+            });
+            const cache = informer.start();
+            this.#objectCaches.set(contextName, resource, cache);
+          }
+        });
+        await newPermissionChecker.start();
+      }
+    });
+    await newHealthChecker.start({ timeout: HEALTH_CHECK_TIMEOUT_MS });
+  }
+
+  private stopMonitoring(contextName: string): void {
+    const healthChecker = this.#healthCheckers.get(contextName);
+    healthChecker?.dispose();
+    this.#healthCheckers.delete(contextName);
+    const permissionsCheckers = this.#permissionsCheckers.filter(
+      permissionChecker => permissionChecker.contextName === contextName,
+    );
+    for (const checker of permissionsCheckers) {
+      checker.dispose();
+    }
+    this.#permissionsCheckers = this.#permissionsCheckers.filter(
+      permissionChecker => permissionChecker.contextName !== contextName,
+    );
   }
 }
