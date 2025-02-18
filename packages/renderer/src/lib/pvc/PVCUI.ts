@@ -16,13 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
 
-export interface PVCUI extends KubernetesObjectUI {
-  namespace: string;
+export interface PVCUI extends KubernetesNamespacedObjectUI {
   storageClass: string;
   accessModes: string[];
   size: string;
-  selected: boolean;
   created?: Date;
 }

@@ -16,13 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
 
-export interface CronJobUI extends KubernetesObjectUI {
+export interface CronJobUI extends KubernetesNamespacedObjectUI {
   uid: string;
-  namespace: string;
   created?: Date;
-  selected: boolean;
 
   // The "schedule" in cron format. See: https://en.wikipedia.org/wiki/Cron
   schedule: string;

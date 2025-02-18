@@ -16,15 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI.ts';
+import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI.ts';
 
-export interface DeploymentUI extends KubernetesObjectUI {
+export interface DeploymentUI extends KubernetesNamespacedObjectUI {
   uid: string;
-  namespace: string;
   replicas: number;
   ready: number;
   created?: Date;
-  selected: boolean;
   conditions: DeploymentCondition[];
 }
 

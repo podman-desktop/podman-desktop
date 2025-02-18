@@ -16,20 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
 
 export interface RouteToReference {
   kind: string;
   name: string;
 }
 
-export interface RouteUI extends KubernetesObjectUI {
-  namespace: string;
+export interface RouteUI extends KubernetesNamespacedObjectUI {
   host: string;
   port?: string;
   path?: string;
   to: RouteToReference;
-  selected: boolean;
   tlsEnabled: boolean;
   created?: Date;
 }

@@ -16,12 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
 
-export interface ConfigMapSecretUI extends KubernetesObjectUI {
-  namespace: string;
+export interface ConfigMapSecretUI extends KubernetesNamespacedObjectUI {
   keys: string[];
-  selected: boolean;
   type: string;
   created?: Date;
 }
