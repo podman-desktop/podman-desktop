@@ -21,27 +21,23 @@ import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/a
 export function getStatusName(status: ProviderStatus | ProviderConnectionStatus): string {
   switch (status) {
     case 'ready':
-      return 'Running';
     case 'started':
       return 'Running';
+    case 'stopped':
+    case 'configured':
+      return 'Off';
     case 'error':
       return 'Error';
     case 'starting':
       return 'Starting';
     case 'stopping':
       return 'Stopping';
-    case 'stopped':
-      return 'Off';
-    case 'unknown':
-      return 'Unknown';
     case 'not-installed':
       return 'Not installed';
     case 'installed':
       return 'Installed but not ready';
     case 'configuring':
       return 'Configuring';
-    case 'configured':
-      return 'Off';
     default:
       return 'Unknown';
   }

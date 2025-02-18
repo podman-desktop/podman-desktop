@@ -11,7 +11,7 @@ import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 interface Props {
   entry: ProviderInfo;
   command?: () => void;
-  disableTooltip: boolean;
+  disableTooltip?: boolean;
 }
 
 let { entry, command = (): void => router.goto('/preferences/resources'), disableTooltip = false }: Props = $props();
