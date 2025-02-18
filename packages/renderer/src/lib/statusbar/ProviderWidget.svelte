@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
@@ -12,48 +11,30 @@ import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 interface Props {
   entry: ProviderInfo;
   command?: () => void;
+  disableTooltip: boolean;
 }
 
-let { entry, command = (): void => router.goto('/preferences/resources') }: Props = $props();
+let { entry, command = (): void => router.goto('/preferences/resources'), disableTooltip = false }: Props = $props();
 
-let connectionsStatuses = $derived.by(() => {
-  let statuses: ProviderStatus | ProviderConnectionStatus[];
-  let connectionsStatuses: { status: ProviderStatus | ProviderConnectionStatus; connecions: string }[] = [];
+let connections = $derived.by(() => {
   if (entry.containerConnections.length > 0) {
-    statuses = [...new Set(entry.containerConnections.map(connection => connection.status))];
-    let connections = '';
-    for (const status of statuses) {
-      connections = entry.containerConnections
-        .filter(connection => connection.status === status)
-        .map(c => c.name)
-        .join(', ');
-      connectionsStatuses.push({ status: status, connecions: connections });
-    }
+    return entry.containerConnections;
   } else if (entry.kubernetesConnections.length > 0) {
-    statuses = [...new Set(entry.kubernetesConnections.map(connection => connection.status))];
-    let connections = '';
-    for (const status of statuses) {
-      connections = entry.kubernetesConnections
-        .filter(connection => connection.status === status)
-        .map(c => c.name)
-        .join(', ');
-      connectionsStatuses.push({ status: status, connecions: connections });
-    }
+    return entry.kubernetesConnections;
   } else {
-    connectionsStatuses.push({ status: entry.status, connecions: entry.name });
+    return [entry];
   }
-  return connectionsStatuses;
 });
 </script>
 
 <div >
 <Tooltip top class="mb-[20px]">
-  <div slot="tip" class="py-2 px-4">
+  <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
-      {#each connectionsStatuses as status}
+      {#each connections as connection}
         <div class="flex flex-row items-center h-fit">
-          <ProviderWidgetStatus status={status.status} class="mr-1 mt-1"/>
-          {getStatusName(status.status)}: {status.connecions}
+          <ProviderWidgetStatus status={connection.status} class="mr-1 mt-1"/>
+          {getStatusName(connection.status)}: {connection.name}
         </div>
       {/each}
     </div>
