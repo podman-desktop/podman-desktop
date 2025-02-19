@@ -83,3 +83,4 @@ export * from './model/pages/welcome-page';
 export * from './model/workbench/navigation';
 export * from './model/workbench/status-bar';
 export * from './utility/cluster-operations';
+export * from './utility/kubernetes';
