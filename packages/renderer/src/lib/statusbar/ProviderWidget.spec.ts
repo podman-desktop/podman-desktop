@@ -85,9 +85,12 @@ test('Expect tooltip to include container provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
-  expect(screen.getByText('Running: connection 1')).toBeInTheDocument();
-  expect(screen.getByText('Running: connection 2')).toBeInTheDocument();
-  expect(screen.getByText('Off: connection 3')).toBeInTheDocument();
+  expect(screen.getAllByText('Running').length).toBe(2);
+  expect(screen.getAllByText('Off').length).toBe(1);
+
+  expect(screen.getByText(': connection 1')).toBeInTheDocument();
+  expect(screen.getByText(': connection 2')).toBeInTheDocument();
+  expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });
 
 test('Expect tooltip to include Kubernetes provider connections', () => {
@@ -98,7 +101,10 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
-  expect(screen.getByText('Running: connection 1')).toBeInTheDocument();
-  expect(screen.getByText('Running: connection 2')).toBeInTheDocument();
-  expect(screen.getByText('Off: connection 3')).toBeInTheDocument();
+  expect(screen.getAllByText('Running').length).toBe(2);
+  expect(screen.getAllByText('Off').length).toBe(1);
+
+  expect(screen.getByText(': connection 1')).toBeInTheDocument();
+  expect(screen.getByText(': connection 2')).toBeInTheDocument();
+  expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });

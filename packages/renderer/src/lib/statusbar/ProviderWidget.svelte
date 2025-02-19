@@ -5,8 +5,8 @@ import { router } from 'tinro';
 import type { ProviderInfo } from '/@api/provider-info';
 
 import IconImage from '../appearance/IconImage.svelte';
-import { getStatusName } from './ProviderWidgetStatus';
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
+import ProviderWidgetStatusStyle from './ProviderWidgetStatusStyle.svelte';
 
 interface Props {
   entry: ProviderInfo;
@@ -34,7 +34,8 @@ let connections = $derived.by(() => {
       {#each connections as connection}
         <div class="flex flex-row items-center h-fit">
           <ProviderWidgetStatus status={connection.status} class="mr-1 mt-1"/>
-          {getStatusName(connection.status)}: {connection.name}
+          <ProviderWidgetStatusStyle status={connection.status}/>
+          : {connection.name}
         </div>
       {/each}
     </div>
