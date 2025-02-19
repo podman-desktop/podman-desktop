@@ -57,8 +57,9 @@ export async function installBinaryToSystem(binaryPath: string, binaryName: stri
   let args: string[] = [];
   let command: string | undefined;
   if (system === 'win32') {
-    command = 'copy';
-    args = [`"${binaryPath}"`, `"${destinationPath}"`];
+    // admin privileges are are not needed on Windows
+    await fs.promises.copyFile(binaryPath, destinationPath)
+    return destinationPath;
   } else if (system === 'darwin') {
     command = 'exec';
     args = ['cp', '-f', binaryPath, destinationPath];
@@ -85,7 +86,7 @@ export async function installBinaryToSystem(binaryPath: string, binaryName: stri
     if (!command) {
       throw new Error('No command defined');
     }
-    // Use admin prileges / ask for password for copying to /usr/local/bin
+    // Use admin privileges / ask for password for copying to /usr/local/bin
     await extensionApi.process.exec(command, args, { isAdmin: true });
     console.log(`Successfully installed '${binaryName}' binary.`);
     if (!process.env.PATH?.includes(destinationFolder)) {

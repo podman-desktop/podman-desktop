@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { installBinaryToSystem, localBinDir } from './cli-run';
+import { getSystemBinaryPath, installBinaryToSystem, localBinDir } from './cli-run';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -46,6 +46,10 @@ vi.mock('@podman-desktop/api', async () => {
 vi.mock('node:fs', async () => {
   return {
     existsSync: vi.fn(),
+    copyFileSync: vi.fn(),
+    promises: {
+      copyFile: vi.fn(),
+    },
   };
 });
 
@@ -163,4 +167,17 @@ test('success: installBinaryToSystem to show warning if binary path not in PATH'
     expect.objectContaining({ isAdmin: true }),
   );
   expect(extensionApi.window.showWarningMessage).toBeCalled();
+});
+
+test('installBinaryToSystem copy binary on windows using fs.copyFile', async () => {
+  // Mock the platform to be windows
+  Object.defineProperty(process, 'platform', {
+    value: 'win32',
+  });
+  vi.mocked(fs.promises.copyFile).mockResolvedValue();
+
+  await installBinaryToSystem('test', 'tmpBinary');
+
+  // check called with admin being true
+  expect(vi.mocked(fs.promises.copyFile)).toBeCalledWith('test', getSystemBinaryPath('tmpBinary'));
 });
