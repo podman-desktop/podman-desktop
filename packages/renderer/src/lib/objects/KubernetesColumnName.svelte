@@ -13,9 +13,9 @@ function isNamespaced(object: KubernetesObjectUI): object is KubernetesNamespace
 
 async function openDetails(): Promise<void> {
   if (isNamespaced(object)) {
-    await window.navigateToRoute('kubernetes', [{ kind: object.kind, name: object.name, namespace: object.namespace }]);
+    await window.navigateToRoute('kubernetes', { kind: object.kind, name: object.name, namespace: object.namespace });
   } else {
-    await window.navigateToRoute('kubernetes', [{ kind: object.kind, name: object.name }]);
+    await window.navigateToRoute('kubernetes', { kind: object.kind, name: object.name });
   }
 }
 </script>

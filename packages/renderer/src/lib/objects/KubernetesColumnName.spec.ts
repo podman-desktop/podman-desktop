@@ -67,7 +67,7 @@ test('Expect clicking works', async () => {
 
   await fireEvent.click(name);
 
-  expect(window.navigateToRoute).toBeCalledWith('kubernetes', [{ kind: node.kind, name: node.name }]);
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', { kind: node.kind, name: node.name });
 });
 
 test('Expect namespaced clicking works', async () => {
@@ -80,7 +80,9 @@ test('Expect namespaced clicking works', async () => {
 
   await fireEvent.click(name);
 
-  expect(window.navigateToRoute).toBeCalledWith('kubernetes', [
-    { kind: deployment.kind, name: deployment.name, namespace: deployment.namespace },
-  ]);
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', {
+    kind: deployment.kind,
+    name: deployment.name,
+    namespace: deployment.namespace,
+  });
 });
