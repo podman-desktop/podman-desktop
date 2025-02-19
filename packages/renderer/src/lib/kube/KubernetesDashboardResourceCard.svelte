@@ -1,19 +1,18 @@
 <script lang="ts">
 import type { Component } from 'svelte';
-import { router } from 'tinro';
 
 interface Props {
   type: string;
   Icon: Component;
   activeCount?: number;
   count: number;
-  link: string;
+  kind: string;
 }
 
-let { type, Icon, activeCount, count, link }: Props = $props();
+let { type, Icon, activeCount, count, kind }: Props = $props();
 
-function openLink(): void {
-  router.goto(link);
+async function openLink(): Promise<void> {
+  await window.navigateToRoute('kubernetes', { kind: kind });
 }
 </script>
 

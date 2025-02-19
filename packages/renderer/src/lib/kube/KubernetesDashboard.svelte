@@ -123,14 +123,14 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <!-- Metrics - non-collapsible -->
                 <div class="text-xl pt-2">Metrics</div>
                 <div class="grid grid-cols-4 gap-4">
-                    <KubernetesDashboardResourceCard type='Nodes' Icon={NodeIcon} activeCount={activeNodeCount} count={nodeCount} link='/kubernetes/nodes'/>
-                    <KubernetesDashboardResourceCard type='Deployments' Icon={DeploymentIcon} activeCount={activeDeploymentsCount} count={deploymentCount} link='/kubernetes/deployments'/>
-                    <KubernetesDashboardResourceCard type='Pods' Icon={PodIcon} count={podCount} link='/kubernetes/pods'/>
-                    <KubernetesDashboardResourceCard type='Services' Icon={ServiceIcon} count={serviceCount} link='/kubernetes/services'/>
-                    <KubernetesDashboardResourceCard type='Ingresses & Routes' Icon={IngressRouteIcon} count={ingressRouteCount} link='/kubernetes/ingressesRoutes'/>
-                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' Icon={PvcIcon} count={pvcCount} link='/kubernetes/persistentvolumeclaims'/>
-                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' Icon={ConfigMapSecretIcon} count={configMapSecretCount} link='/kubernetes/configmapsSecrets'/>
-                    <KubernetesDashboardResourceCard type='CronJobs' Icon={CronJobIcon as Component} count={cronjobCount} link='/kubernetes/cronjobs'/>
+                    <KubernetesDashboardResourceCard type='Nodes' Icon={NodeIcon} activeCount={activeNodeCount} count={nodeCount} kind='Node'/>
+                    <KubernetesDashboardResourceCard type='Deployments' Icon={DeploymentIcon} activeCount={activeDeploymentsCount} count={deploymentCount} kind='Deployment'/>
+                    <KubernetesDashboardResourceCard type='Pods' Icon={PodIcon} count={podCount} kind='Pod'/>
+                    <KubernetesDashboardResourceCard type='Services' Icon={ServiceIcon} count={serviceCount} kind='Service'/>
+                    <KubernetesDashboardResourceCard type='Ingresses & Routes' Icon={IngressRouteIcon} count={ingressRouteCount} kind='Ingress'/>
+                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' Icon={PvcIcon} count={pvcCount} kind='PersistentVolumeClaim'/>
+                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' Icon={ConfigMapSecretIcon} count={configMapSecretCount} kind='ConfigMap'/>
+                    <KubernetesDashboardResourceCard type='CronJobs' Icon={CronJobIcon as Component} count={cronjobCount} kind='CronJob'/>
                 </div>
                 <!-- Graphs -->
                 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import NodeIcon from '../images/NodeIcon.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
 
 test('Verify basic card format', async () => {
-  const params = { type: 'a type', Icon: NodeIcon, count: 4, link: 'test' };
+  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Pod' };
   render(KubernetesDashboardResourceCard, params);
 
   const type = screen.getByText(params.type);
@@ -42,15 +41,12 @@ test('Verify basic card format', async () => {
 });
 
 test('Expect clicking works', async () => {
-  const gotoSpy = vi.spyOn(router, 'goto');
-
-  const params = { type: 'a type', Icon: NodeIcon, count: 4, link: 'test-link' };
+  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Service' };
   render(KubernetesDashboardResourceCard, params);
 
   const type = screen.getByText(params.type);
   expect(type).toBeInTheDocument();
 
-  expect(gotoSpy).not.toHaveBeenCalled();
   await userEvent.click(type);
-  expect(gotoSpy).toHaveBeenCalledWith(params.link);
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', { kind: 'Service' });
 });
