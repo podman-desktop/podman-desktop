@@ -121,6 +121,8 @@ export async function changeDeploymentYamlFile(
   page: Page,
   resourceType: KubernetesResources,
   deploymentName: string,
+  currentReplicaCount: number = 3,
+  updatedReplicaCount: number = 5,
 ): Promise<void> {
   return test.step(`Change deployment kubernetes cluster resource`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -129,7 +131,7 @@ export async function changeDeploymentYamlFile(
       .poll(async () => await podsPage.countPodReplicas(deploymentName), {
         timeout: 60_000,
       })
-      .toBe(3);
+      .toBe(currentReplicaCount);
 
     const kubernetesBar = await navigationBar.openKubernetes();
     const deploymentsPage = await kubernetesBar.openTabPage(resourceType);
@@ -137,13 +139,16 @@ export async function changeDeploymentYamlFile(
     await playExpect(deploymentsPage.getResourceRowByName(deploymentName)).toBeVisible();
     const deploymentDetails = await deploymentsPage.openResourceDetails(deploymentName, resourceType);
     await playExpect(deploymentDetails.heading).toBeVisible();
-    await deploymentDetails.editKubernetsYamlFile('replicas: 3', 'replicas: 5');
+    await deploymentDetails.editKubernetsYamlFile(
+      `replicas: ${currentReplicaCount}`,
+      `replicas: ${updatedReplicaCount}`,
+    );
 
     await navigationBar.openPods();
     await playExpect
       .poll(async () => await podsPage.countPodReplicas(deploymentName), {
         timeout: 60_000,
       })
-      .toBe(5);
+      .toBe(updatedReplicaCount);
   });
 }
