@@ -12,7 +12,7 @@ import {
 import type { V1Route } from '/@api/openshift-types';
 
 import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
+import NameColumn from '../kube/column/Name.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
 import IngressRouteColumnActions from './IngressRouteColumnActions.svelte';
@@ -44,7 +44,7 @@ let statusColumn = new TableColumn<IngressUI>('Status', {
 });
 
 let nameColumn = new TableColumn<IngressUI | RouteUI>('Name', {
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

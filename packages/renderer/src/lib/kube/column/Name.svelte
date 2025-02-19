@@ -1,15 +1,12 @@
 <script lang="ts">
-import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from './KubernetesObjectUI';
+import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
+import { isNamespaced } from '../kube-util';
 
 interface Props {
   object: KubernetesObjectUI;
 }
 
 let { object }: Props = $props();
-
-function isNamespaced(object: KubernetesObjectUI): object is KubernetesNamespacedObjectUI {
-  return 'namespace' in object;
-}
 
 async function openDetails(): Promise<void> {
   if (isNamespaced(object)) {

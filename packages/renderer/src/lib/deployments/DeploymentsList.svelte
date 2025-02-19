@@ -8,7 +8,7 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
-import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
+import NameColumn from '../kube/column/Name.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { DeploymentUtils } from './deployment-utils';
 import DeploymentColumnActions from './DeploymentColumnActions.svelte';
@@ -34,7 +34,7 @@ let statusColumn = new TableColumn<DeploymentUI>('Status', {
 });
 
 let nameColumn = new TableColumn<DeploymentUI>('Name', {
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

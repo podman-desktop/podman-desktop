@@ -5,9 +5,9 @@ import moment from 'moment';
 import { kubernetesCurrentContextPodsFiltered, podSearchPattern } from '/@/stores/kubernetes-contexts-state';
 
 import PodIcon from '../../images/PodIcon.svelte';
-import KubernetesColumnName from '../../objects/KubernetesColumnName.svelte';
 import KubernetesObjectsList from '../../objects/KubernetesObjectsList.svelte';
 import PodEmptyScreen from '../../pod/PodEmptyScreen.svelte';
+import NameColumn from '../column/Name.svelte';
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';
 import PodColumnContainers from './PodColumnContainers.svelte';
@@ -35,7 +35,7 @@ let statusColumn = new TableColumn<PodUI>('Status', {
 
 let nameColumn = new TableColumn<PodUI>('Name', {
   width: '2fr',
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

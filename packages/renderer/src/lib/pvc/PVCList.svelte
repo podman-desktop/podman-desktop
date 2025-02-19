@@ -8,7 +8,7 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 
 import PVCIcon from '../images/PVCIcon.svelte';
-import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
+import NameColumn from '../kube/column/Name.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { PVCUtils } from './pvc-utils';
 import PVCColumnActions from './PVCColumnActions.svelte';
@@ -37,7 +37,7 @@ let statusColumn = new TableColumn<PVCUI>('Status', {
 });
 
 let nameColumn = new TableColumn<PVCUI>('Name', {
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

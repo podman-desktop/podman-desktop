@@ -5,7 +5,7 @@ import moment from 'moment';
 import { kubernetesCurrentContextNodesFiltered, nodeSearchPattern } from '/@/stores/kubernetes-contexts-state';
 
 import NodeIcon from '../images/NodeIcon.svelte';
-import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
+import NameColumn from '../kube/column/Name.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { NodeUtils } from './node-utils';
 import NodeColumnRoles from './NodeColumnRoles.svelte';
@@ -33,7 +33,7 @@ let statusColumn = new TableColumn<NodeUI>('Status', {
 });
 
 let nameColumn = new TableColumn<NodeUI>('Name', {
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 

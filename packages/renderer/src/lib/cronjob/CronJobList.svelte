@@ -5,7 +5,7 @@ import moment from 'moment';
 import { cronJobSearchPattern, kubernetesCurrentContextCronJobsFiltered } from '/@/stores/kubernetes-contexts-state';
 
 import CronJobIcon from '../images/CronJobIcon.svelte';
-import KubernetesColumnName from '../objects/KubernetesColumnName.svelte';
+import NameColumn from '../kube/column/Name.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { capitalize } from '../ui/Util';
 import { CronJobUtils } from './cronjob-utils';
@@ -33,7 +33,7 @@ let statusColumn = new TableColumn<CronJobUI>('Status', {
 
 let nameColumn = new TableColumn<CronJobUI>('Name', {
   width: '1.3fr',
-  renderer: KubernetesColumnName,
+  renderer: NameColumn,
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
