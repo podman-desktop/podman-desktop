@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ImageDetailsPage } from '../model/pages/image-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
+import { untagImagesFromPodman } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const helloContainer = 'quay.io/podman/hello';
@@ -144,7 +145,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
     playExpect(await imagesPage.waitForImageDelete('docker.io/library/build-image-test')).toBeTruthy();
   });
 
-  test('Prune images', async ({ navigationBar }) => {
+  test('Prune all images', async ({ navigationBar }) => {
     test.setTimeout(240_000);
 
     const imagesPage = await navigationBar.openImages();
@@ -154,17 +155,13 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       await imagesPage.pullImage(helloContainer);
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), {
-          timeout: 0,
-        })
+        .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
         .toBeTruthy();
 
       await imagesPage.renameImage(helloContainer, image);
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(image, 10_000), {
-          timeout: 0,
-        })
+        .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
         .toBeTruthy();
     }
 
@@ -173,10 +170,56 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
 
     for (const image of imageList) {
       await playExpect
-        .poll(async () => await imagesPage.waitForImageDelete(image, 180_000), {
-          timeout: 0,
-        })
+        .poll(async () => await imagesPage.waitForImageDelete(image, 180_000), { timeout: 0 })
         .toBeTruthy();
     }
+  });
+
+  test('Prune untagged images', async ({ navigationBar }) => {
+    test.setTimeout(240_000);
+
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    for (const image of imageList) {
+      await imagesPage.pullImage(helloContainer);
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
+        .toBeTruthy();
+
+      await imagesPage.renameImage(helloContainer, image);
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
+        .toBeTruthy();
+    }
+
+    await imagesPage.pullImage(imageToSearch);
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 120_000), { timeout: 0 })
+      .toBeTruthy();
+
+    await untagImagesFromPodman(imageList[0]);
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageExists('<none>', 60_000), { timeout: 0 })
+      .toBeTruthy();
+
+    await imagesPage.pruneUntaggedImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageDelete('<none>', 60_000), { timeout: 0 })
+      .toBeTruthy();
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 60_000), { timeout: 0 })
+      .toBeTruthy();
+
+    await imagesPage.deleteAllUnusedImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
+      .toBeTruthy();
   });
 });

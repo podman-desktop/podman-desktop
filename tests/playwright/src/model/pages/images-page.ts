@@ -41,35 +41,14 @@ export class ImagesPage extends MainPage {
 
   constructor(page: Page) {
     super(page, 'images');
-    this.pullImageButton = this.additionalActions.getByRole('button', {
-      name: 'Pull',
-      exact: true,
-    });
-    this.pruneImagesButton = this.additionalActions.getByRole('button', {
-      name: 'Prune',
-      exact: true,
-    });
-    this.buildImageButton = this.additionalActions.getByRole('button', {
-      name: 'Build',
-      exact: true,
-    });
-    this.pruneConfirmationButton = this.page.getByRole('button', {
-      name: 'All unused images',
-      exact: true,
-    });
+    this.pullImageButton = this.additionalActions.getByRole('button', { name: 'Pull', exact: true });
+    this.pruneImagesButton = this.additionalActions.getByRole('button', { name: 'Prune', exact: true });
+    this.buildImageButton = this.additionalActions.getByRole('button', { name: 'Build', exact: true });
+    this.pruneConfirmationButton = this.page.getByRole('button', { name: 'All unused images', exact: true });
     this.loadImagesFromTarButton = this.additionalActions.getByLabel('Load Images', { exact: true });
-    this.addArchiveButton = this.page.getByRole('button', {
-      name: 'Add archive',
-      exact: true,
-    });
-    this.confirmLoadImagesButton = this.page.getByRole('button', {
-      name: 'Load Images',
-      exact: true,
-    });
-    this.deleteAllUnusedImagesCheckbox = this.page.getByRole('checkbox', {
-      name: 'Toggle all',
-      exact: true,
-    });
+    this.addArchiveButton = this.page.getByRole('button', { name: 'Add archive', exact: true });
+    this.confirmLoadImagesButton = this.page.getByRole('button', { name: 'Load Images', exact: true });
+    this.deleteAllUnusedImagesCheckbox = this.page.getByRole('checkbox', { name: 'Toggle all', exact: true });
     this.deleteAllSelectedButton = this.bottomAdditionalActions.getByRole('button', { name: 'Delete' });
   }
 
@@ -126,9 +105,17 @@ export class ImagesPage extends MainPage {
   }
 
   async pruneImages(): Promise<ImagesPage> {
-    return test.step('Prune images', async () => {
+    return test.step('Prune all images', async () => {
       await this.pruneImagesButton.click();
       await handleConfirmationDialog(this.page, 'Prune', true, 'All unused images');
+      return this;
+    });
+  }
+
+  async pruneUntaggedImages(): Promise<ImagesPage> {
+    return test.step('Prune untagged images', async () => {
+      await this.pruneImagesButton.click();
+      await handleConfirmationDialog(this.page, 'Prune', true, 'All untagged images');
       return this;
     });
   }
@@ -153,18 +140,14 @@ export class ImagesPage extends MainPage {
 
   async waitForImageExists(name: string, timeout = 5_000): Promise<boolean> {
     return test.step(`Wait for image: ${name} to exist`, async () => {
-      await waitUntil(async () => await this.imageExists(name), {
-        timeout: timeout,
-      });
+      await waitUntil(async () => await this.imageExists(name), { timeout: timeout });
       return true;
     });
   }
 
   async waitForImageDelete(name: string, timeout = 5_000): Promise<boolean> {
     return test.step(`Wait for image: ${name} to be deleted`, async () => {
-      await waitWhile(async () => await this.imageExists(name), {
-        timeout: timeout,
-      });
+      await waitWhile(async () => await this.imageExists(name), { timeout: timeout });
       return true;
     });
   }
