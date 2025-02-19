@@ -20,7 +20,7 @@ import { ContainerState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deployPodToCluster } from '../utility/kubernetes';
+import { deployContainerToCluster } from '../utility/kubernetes';
 import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
@@ -98,6 +98,6 @@ test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e'
   });
 
   test('Deploy the container ', async ({ page }) => {
-    await deployPodToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
+    await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
   });
 });

@@ -26,13 +26,13 @@ import type { PodsPage } from '../model/pages/pods-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { handleConfirmationDialog } from './operations';
 
-export async function deployPodToCluster(
+export async function deployContainerToCluster(
   page: Page,
   containerName: string,
   kubernetesContext: string,
   deployedPodName: string,
 ): Promise<void> {
-  return test.step(`Deploy pod '${deployedPodName}' to Kubernetes cluster`, async () => {
+  return test.step(`Deploy '${containerName}' and verify pod '${deployedPodName}' appears in the Kubernetes environment`, async () => {
     const containerDetailsPage = new ContainerDetailsPage(page, containerName);
     const navigationBar = new NavigationBar(page);
 
