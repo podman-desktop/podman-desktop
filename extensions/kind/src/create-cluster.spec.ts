@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
+
 import type { AuditRecord, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
@@ -23,6 +25,14 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
 import { getMemTotalInfo } from './util';
+
+vi.mock('node:fs', () => ({
+  promises: {
+    writeFile: vi.fn(),
+    mkdtemp: vi.fn(),
+    rm: vi.fn(),
+  },
+}));
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -51,6 +61,7 @@ vi.mock('./util', async () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(fs.promises.mkdtemp).mockResolvedValue('/tmp/file');
 });
 
 const telemetryLogUsageMock = vi.fn();
@@ -116,6 +127,80 @@ test('expect cluster to be created with ingress', async () => {
     expect.objectContaining({ provider: 'docker' }),
   );
   expect(extensionApi.kubernetes.createResources).toBeCalled();
+});
+
+test('expect cluster to be created with ports as strings', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+  await createCluster(
+    {
+      'kind.cluster.creation.http.port': '9091',
+      'kind.cluster.creation.https.port': '9444',
+    },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({
+      httpHostPort: 9091,
+      httpsHostPort: 9444,
+    }),
+  );
+  expect(fs.promises.writeFile).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.stringContaining(`
+  - containerPort: 80
+    hostPort: 9091
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 9444
+    protocol: TCP`),
+    expect.anything(),
+  );
+});
+
+test('expect cluster to be created with ports as numbers', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+  await createCluster(
+    {
+      'kind.cluster.creation.http.port': 9091,
+      'kind.cluster.creation.https.port': 9444,
+    },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({
+      httpHostPort: 9091,
+      httpsHostPort: 9444,
+    }),
+  );
+  expect(fs.promises.writeFile).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.stringContaining(`
+  - containerPort: 80
+    hostPort: 9091
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 9444
+    protocol: TCP`),
+    expect.anything(),
+  );
 });
 
 test('expect error if Kubernetes reports error', async () => {
