@@ -217,4 +217,21 @@ test('Expect a local image to have an active select image button', async () => {
   expect(router.goto).toHaveBeenCalledWith('/image/run/basic');
 });
 
-test('Expect no user input to show only local images', async () => {});
+test('Expect no user input to show only local images', async () => {
+  vi.mocked(window.searchImageInRegistry).mockResolvedValue([
+    { name: 'image12', description: '', star_count: 3, is_official: true },
+  ]);
+  render(CreateContainerFromExistingImage);
+  await tick();
+
+  const inputBox = screen.getByPlaceholderText('Select an exisiting image');
+  expect(inputBox).toBeInTheDocument();
+  await userEvent.type(inputBox, ' ');
+
+  await tick();
+  await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
+
+  const list = screen.getByRole('row');
+  const items = within(list).getAllByRole('button');
+  expect(items.length).toBe(6);
+});

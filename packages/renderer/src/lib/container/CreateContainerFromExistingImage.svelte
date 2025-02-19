@@ -27,26 +27,28 @@ const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
 const imageUtils = new ImageUtils();
 
-let logsPull: Terminal;
-let pullError = '';
-let pullInProgress = false;
-let pullFinished = false;
+let logsPull: Terminal | undefined = $state();
+let pullError = $state('');
+let pullInProgress = $state(false);
+let pullFinished = $state(false);
 let shortnameImages: string[] = [];
-let podmanFQN = '';
-let usePodmanFQN = false;
-let isValidName = true;
-let matchingLocalImages: string[] = [];
-let values: TypeaheadItem[] = [];
+let podmanFQN = $state('');
+let usePodmanFQN = $state(false);
+let isValidName = $state(true);
+let matchingLocalImages: string[] = $state([]);
+let values: TypeaheadItem[] = $state([]);
 
-let imageToPull: string = '';
-let sortResults: ((a: string, b: string) => number) | undefined;
+let imageToPull: string = $state('');
+let sortResults: ((a: string, b: string) => number) | undefined = $state();
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = $state();
 
 const lineNumberPerId = new Map<string, number>();
 let lineIndex = 0;
@@ -56,7 +58,8 @@ async function resolveShortname(): Promise<void> {
     return;
   }
   if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages = (await window.resolveShortnameImage(selectedProviderConnection, imageToPull)) ?? [];
+    shortnameImages =
+      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
     // not a shortname
   } else {
     podmanFQN = '';
@@ -93,24 +96,24 @@ function callback(event: PullEvent): void {
 
   if (event.status) {
     // move cursor to the home
-    logsPull.write(`\u001b[${lineIndexToWrite};0H`);
+    logsPull?.write(`\u001b[${lineIndexToWrite};0H`);
     // erase the line
-    logsPull.write('\u001B[2K');
+    logsPull?.write('\u001B[2K');
     // do we have id ?
     if (event.id) {
-      logsPull.write(`${event.id}: `);
+      logsPull?.write(`${event.id}: `);
     }
-    logsPull.write(event.status);
+    logsPull?.write(event.status);
     // do we have progress ?
     if (event.progress && event.progress !== '') {
-      logsPull.write(event.progress);
+      logsPull?.write(event.progress);
     } else if (event?.progressDetail?.current && event?.progressDetail?.total) {
-      logsPull.write(` ${Math.round((event.progressDetail.current / event.progressDetail.total) * 100)}%`);
+      logsPull?.write(` ${Math.round((event.progressDetail.current / event.progressDetail.total) * 100)}%`);
     }
     // write end of line
-    logsPull.write('\n\r');
+    logsPull?.write('\n\r');
   } else if (event.error) {
-    logsPull.write(event.error.replaceAll('\n', '\n\r') + '\n\r');
+    logsPull?.write(event.error.replaceAll('\n', '\n\r') + '\n\r');
   }
 }
 
@@ -137,10 +140,14 @@ async function pullImage(): Promise<void> {
   try {
     if (podmanFQN) {
       usePodmanFQN
-        ? await window.pullImage(selectedProviderConnection, podmanFQN.trim(), callback)
-        : await window.pullImage(selectedProviderConnection, `docker.io/${imageToPull.trim()}`, callback);
+        ? await window.pullImage($state.snapshot(selectedProviderConnection), podmanFQN.trim(), callback)
+        : await window.pullImage(
+            $state.snapshot(selectedProviderConnection),
+            `docker.io/${imageToPull.trim()}`,
+            callback,
+          );
     } else {
-      await window.pullImage(selectedProviderConnection, imageToPull.trim(), callback);
+      await window.pullImage($state.snapshot(selectedProviderConnection), imageToPull.trim(), callback);
     }
     pullInProgress = false;
     pullFinished = true;
@@ -162,8 +169,8 @@ onMount(() => {
   }
 });
 
-let imageNameInvalid: string | undefined = undefined;
-let imageNameIsInvalid = imageToPull === undefined || imageToPull.trim() === '';
+let imageNameInvalid: string | undefined = $state();
+let imageNameIsInvalid = $state(true);
 function validateImageName(image: string): void {
   if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
@@ -172,7 +179,7 @@ function validateImageName(image: string): void {
     imageNameIsInvalid = false;
     imageNameInvalid = undefined;
   }
-  imageToPull = image;
+  imageToPull = image.trim();
 }
 
 // allTags is defined if last search was a query to search tags of an image
@@ -227,7 +234,7 @@ async function searchLocalImages(value: string): Promise<string[]> {
   return matchingLocalImages;
 }
 
-let latestTagMessage: string | undefined = undefined;
+let latestTagMessage: string | undefined = $state();
 async function searchLatestTag(): Promise<void> {
   if (imageNameIsInvalid || !imageToPull) {
     latestTagMessage = undefined;
@@ -265,6 +272,7 @@ function checkIfTagExist(image: string, tags: string[]): void {
 }
 
 async function buildContainerFromImage(): Promise<void> {
+  // filter all the local images that at least one of their repo tags includes the imageToPull
   const localImages = (await window.listImages()).filter(
     image =>
       (image.RepoTags?.filter(repoTag => repoTag.includes(podmanFQN && usePodmanFQN ? podmanFQN : imageToPull)) ?? [])
@@ -280,6 +288,7 @@ async function buildContainerFromImage(): Promise<void> {
 }
 
 async function searchFunction(value: string): Promise<void> {
+  value = value.trim();
   const localImagesValues = await searchLocalImages(value);
   const remoteImagesValues = await searchImages(value);
   sortResults = (a: string, b: string): number => {
@@ -404,7 +413,9 @@ async function onEnterOperation(): Promise<void> {
         <RecommendedRegistry bind:imageError={pullError} imageName={imageToPull} />
       </div>
     </footer>
-    <TerminalWindow bind:terminal={logsPull} />
+    {#if (!matchingLocalImages.includes(imageToPull) && pullInProgress) || pullFinished}
+      <TerminalWindow bind:terminal={logsPull} />
+    {/if}
   </div>
 </EngineFormPage>
 
