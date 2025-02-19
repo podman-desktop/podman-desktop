@@ -54,9 +54,11 @@ test('Expect clicking works', async () => {
 
   await fireEvent.click(text);
 
-  expect(navigationSpy).toBeCalledWith('kubernetes', [
-    { kind: 'Deployment', name: deployment.name, namespace: deployment.namespace },
-  ]);
+  expect(navigationSpy).toBeCalledWith('kubernetes', {
+    kind: 'Deployment',
+    name: deployment.name,
+    namespace: deployment.namespace,
+  });
 });
 
 test('Expect to show namespace in column', async () => {

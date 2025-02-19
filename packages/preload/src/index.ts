@@ -244,7 +244,7 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('navigateToRoute', async (routeId: string, args: unknown[]): Promise<void> => {
+  contextBridge.exposeInMainWorld('navigateToRoute', async (routeId: string, ...args: unknown[]): Promise<void> => {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
   });
 

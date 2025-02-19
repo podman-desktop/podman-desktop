@@ -7,7 +7,7 @@ interface Props {
 let { object }: Props = $props();
 
 async function openDetails(): Promise<void> {
-  await window.navigateToRoute('kubernetes', [{ kind: 'Deployment', name: object.name, namespace: object.namespace }]);
+  await window.navigateToRoute('kubernetes', { kind: 'Deployment', name: object.name, namespace: object.namespace });
 }
 </script>
 
