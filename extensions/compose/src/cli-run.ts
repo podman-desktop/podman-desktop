@@ -58,7 +58,7 @@ export async function installBinaryToSystem(binaryPath: string, binaryName: stri
   let command: string | undefined;
   if (system === 'win32') {
     // admin privileges are are not needed on Windows
-    await fs.promises.copyFile(binaryPath, destinationPath)
+    await fs.promises.copyFile(binaryPath, destinationPath);
     return destinationPath;
   } else if (system === 'darwin') {
     command = 'exec';
