@@ -270,7 +270,7 @@ function internalSetConfigurationValue(id: string, modified: boolean, value: str
   } else {
     configurationValues.set(id, { modified, value });
   }
-  configurationValues = configurationValues;
+  configurationValues = $state.snapshot(configurationValues);
 }
 
 function setConfigurationValue(id: string, value: string | boolean | number): void {
