@@ -141,13 +141,19 @@ export async function createCluster(
 
   // grab http host port
   let httpHostPort = 9090;
-  if (params['kind.cluster.creation.http.port'] && typeof params['kind.cluster.creation.http.port'] === 'number') {
+  if (
+    params['kind.cluster.creation.http.port'] &&
+    ['string', 'number'].includes(typeof params['kind.cluster.creation.http.port'])
+  ) {
     httpHostPort = Number(params['kind.cluster.creation.http.port']);
   }
 
   // grab https host port
   let httpsHostPort = 9443;
-  if (params['kind.cluster.creation.https.port'] && typeof params['kind.cluster.creation.https.port'] === 'number') {
+  if (
+    params['kind.cluster.creation.https.port'] &&
+    ['string', 'number'].includes(typeof params['kind.cluster.creation.https.port'])
+  ) {
     httpsHostPort = Number(params['kind.cluster.creation.https.port']);
   }
 
