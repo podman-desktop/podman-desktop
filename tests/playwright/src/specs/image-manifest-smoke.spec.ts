@@ -43,7 +43,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
+test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
   test('Build the image using cross-arch build', async () => {
     await playExpect(imagesPage.heading).toBeVisible();
 

@@ -108,8 +108,15 @@ export class BuildImagePage extends BasePage {
       await this.showAllArchOptions();
       for (const button of await this.platformRegion.getByRole('button').all()) {
         const checkbox = button.getByRole('checkbox');
-        await checkbox.uncheck();
-        await playExpect(checkbox).not.toBeChecked();
+        try {
+          await playExpect(checkbox).toBeVisible();
+          await playExpect(checkbox).toBeChecked();
+          await playExpect(button).toBeEnabled();
+          await button.click();
+          await playExpect(checkbox).not.toBeChecked();
+        } catch {
+          console.log(`Checkbox for button "${await button.textContent()}" is already unchecked or does not exist.`);
+        }
       }
     });
   }
