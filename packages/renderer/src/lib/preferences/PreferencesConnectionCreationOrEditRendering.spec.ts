@@ -508,6 +508,51 @@ test(`Expect create with unchecked and checked checkboxes`, async () => {
   );
 });
 
+test(`cpu value is updated`, async () => {
+  const taskId = 4;
+  const callback = mockCallback(async () => {});
+
+  const booleanProperties: IConfigurationPropertyRecordedSchema[] = [
+    {
+      default: 4,
+      minimum: 1,
+      maximum: 1000,
+      title: 'CPUs',
+      parentId: '',
+      scope: 'ContainerProviderConnectionFactory',
+      id: 'test.cpus',
+      type: 'number',
+      format: 'cpu',
+      description: 'cpus',
+    },
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  render(PreferencesConnectionCreationOrEditRendering, {
+    properties: booleanProperties,
+    providerInfo,
+    connectionInfo: undefined,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId,
+  });
+  await vi.waitFor(async () => {
+    const editButton = screen.getByRole('button', { name: 'Edit' });
+    await fireEvent.click(editButton);
+  });
+  await vi.waitFor(async () => {
+    const valueInput = screen.getByRole('textbox', { name: 'cpus' });
+    await userEvent.type(valueInput, '99');
+  });
+  const saveButton = screen.getByRole('button', { name: 'Save' });
+  await fireEvent.click(saveButton);
+
+  await vi.waitFor(async () => {
+    screen.getByDisplayValue('499');
+  });
+});
+
 test(`Expect create with unchecked and checked checkboxes having multiple scopes`, async () => {
   const taskId = 4;
   const callback = mockCallback(async () => {});
