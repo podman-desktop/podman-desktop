@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   ProviderContainerConnectionInfo,
@@ -95,4 +95,21 @@ test('Expect title to include Kubernetes provider connections', () => {
   render(ProviderWidget, { entry: providerMock });
 
   expect(screen.getByTitle('connection 1, connection 2')).toBeInTheDocument();
+});
+
+describe('pinIcon props', () => {
+  test('expect no icon by default', () => {
+    const { queryByTitle } = render(ProviderWidget, { entry: providerMock });
+    expect(queryByTitle('Pinned')).toBeNull();
+  });
+
+  test('expect no icon with unpin props', () => {
+    const { queryByTitle } = render(ProviderWidget, { entry: providerMock, pinIcon: 'unpin' });
+    expect(queryByTitle('Pinned')).toBeNull();
+  });
+
+  test('Expect pin icon to be displayed', () => {
+    const { getByTitle } = render(ProviderWidget, { entry: providerMock, pinIcon: 'pin' });
+    expect(getByTitle('Pinned')).toBeInTheDocument();
+  });
 });

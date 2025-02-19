@@ -2,14 +2,13 @@
 import { onDestroy, onMount } from 'svelte';
 
 let dropDownHeight: number;
-let dropDownWidth: number;
 let dropDownElement: HTMLElement;
 
 const STATUS_BAR_HEIGHT = 26;
 
 function updateMenuLocation(): void {
   dropDownElement.style.top = `${window.innerHeight - dropDownHeight - STATUS_BAR_HEIGHT}px`;
-  dropDownElement.style.left = `${window.innerWidth - dropDownWidth - 1}px`;
+  dropDownElement.style.left = '1px';
 }
 
 onMount(() => {
@@ -22,9 +21,8 @@ onDestroy(() => window.removeEventListener('resize', updateMenuLocation));
 
 <div
   bind:offsetHeight={dropDownHeight}
-  bind:offsetWidth={dropDownWidth}
   bind:this={dropDownElement}
-  class="absolute"
+  class="absolute z-10"
   data-testid="help-menu">
   <div
     title="Help Menu Items"
