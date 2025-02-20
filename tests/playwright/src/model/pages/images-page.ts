@@ -221,4 +221,27 @@ export class ImagesPage extends MainPage {
       return count;
     });
   }
+
+  async toggleImageManifest(manifestName: string): Promise<void> {
+    const manifest = await this.getImageRowByName(manifestName);
+    if (!manifest) {
+      throw new Error(`Manifest with name "${manifestName}" not found`);
+    }
+
+    const extendManifestButton = manifest.getByRole('cell').nth(0).getByRole('button');
+    await playExpect(extendManifestButton).toBeEnabled();
+    await extendManifestButton.click();
+  }
+
+  async deleteImageManifest(manifestName: string): Promise<void> {
+    const manifest = await this.getImageRowByName(manifestName);
+    if (!manifest) {
+      throw new Error(`Manifest with name "${manifestName}" not found`);
+    }
+
+    const deleteManifestButton = manifest.getByRole('button', { name: 'Delete Manifest' });
+    await playExpect(deleteManifestButton).toBeEnabled();
+    await deleteManifestButton.click();
+    await handleConfirmationDialog(this.page);
+  }
 }
