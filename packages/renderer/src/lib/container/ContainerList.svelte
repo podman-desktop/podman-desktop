@@ -61,7 +61,7 @@ $: updateContainers(containersInfo, globalContext, viewContributions, searchTerm
 
 function fromExistingImage(): void {
   openChoiceModal = false;
-  handleNavigation({ page: NavigationPage.EXISITNG_IMAGE_CREATE_CONTAINER });
+  handleNavigation({ page: NavigationPage.EXISTING_IMAGE_CREATE_CONTAINER });
 }
 
 $: providerConnections = $providerInfos

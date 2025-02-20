@@ -153,7 +153,6 @@ test('Expect that typeahead menu has Local Images and Registry Images headings',
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'f');
 
-  await tick();
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
   expect(screen.getByText('Local Images')).toBeInTheDocument();
   expect(screen.getByText('Registry Images')).toBeInTheDocument();
@@ -170,7 +169,6 @@ test('Expect not a local image to have an active pull image button', async () =>
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'image12');
 
-  await tick();
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
 
   const list = screen.getByRole('row');
@@ -199,7 +197,6 @@ test('Expect a local image to have an active select image button', async () => {
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'fedora');
 
-  await tick();
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
 
   const list = screen.getByRole('row');
@@ -228,7 +225,6 @@ test('Expect no user input to show only local images', async () => {
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, ' ');
 
-  await tick();
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
 
   const list = screen.getByRole('row');
