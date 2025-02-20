@@ -36,6 +36,7 @@ import type { CacheUpdatedEvent, ResourceInformer } from './resource-informer.js
 const onCacheUpdatedMock = vi.fn();
 const onOfflineMock = vi.fn();
 const startMock = vi.fn();
+const informerDisposeMock = vi.fn();
 
 class TestContextsManagerExperimental extends ContextsManagerExperimental {
   override getResourceFactories(): ResourceFactory[] {
@@ -59,6 +60,7 @@ class TestContextsManagerExperimental extends ContextsManagerExperimental {
               onCacheUpdated: onCacheUpdatedMock,
               onOffline: onOfflineMock,
               start: startMock,
+              dispose: informerDisposeMock,
             } as unknown as ResourceInformer<KubernetesObject>;
           },
         }),
@@ -771,7 +773,7 @@ test('HealthChecker is built and start is called for each context being changed'
   expect(startMock).toHaveBeenCalledTimes(1);
 });
 
-test('HealthChecker and PermissionsChecker are disposed for each context being removed', async () => {
+test('HealthChecker, PermissionsChecker and informers are disposed for each context being removed', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
@@ -806,7 +808,13 @@ test('HealthChecker and PermissionsChecker are disposed for each context being r
       return {
         start: permissionsStartMock,
         dispose: permissionsDisposeMock,
-        onPermissionResult: vi.fn(),
+        onPermissionResult: vi.fn().mockImplementation(f => {
+          f({
+            permitted: true,
+            resources: ['resource1'],
+            kubeConfig: new KubeConfigSingleContext(kcWith2contexts, contextName === 'context1' ? context1 : context2),
+          });
+        }),
         contextName,
       } as unknown as ContextPermissionsChecker;
     },
@@ -833,6 +841,8 @@ test('HealthChecker and PermissionsChecker are disposed for each context being r
   expect(healthStartMock).toHaveBeenCalledTimes(0);
 
   expect(permissionsDisposeMock).toHaveBeenCalledTimes(2); // one for namespaced, one for non-namespaced
+
+  expect(informerDisposeMock).toHaveBeenCalledTimes(1); // for resource1 on context2
 });
 
 test('getHealthCheckersStates calls getState for each health checker', async () => {

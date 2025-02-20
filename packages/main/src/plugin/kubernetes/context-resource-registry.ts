@@ -60,4 +60,16 @@ export class ContextResourceRegistry<T> {
     }
     return result;
   }
+
+  getForContext(contextName: string): T[] {
+    const forContext = this.#registry.get(contextName);
+    if (!forContext) {
+      return [];
+    }
+    return Array.from(forContext.values());
+  }
+
+  removeForContext(contextName: string): void {
+    this.#registry.delete(contextName);
+  }
 }

@@ -245,9 +245,9 @@ export class ContextsManagerExperimental {
   }
 
   private async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
+    this.stopMonitoring(contextName);
+
     // register and start health checker
-    const previousHealthChecker = this.#healthCheckers.get(contextName);
-    previousHealthChecker?.dispose();
     const newHealthChecker = new ContextHealthChecker(config);
     this.#healthCheckers.set(contextName, newHealthChecker);
     newHealthChecker.onStateChange(this.onStateChange.bind(this));
@@ -330,5 +330,12 @@ export class ContextsManagerExperimental {
     this.#permissionsCheckers = this.#permissionsCheckers.filter(
       permissionChecker => permissionChecker.contextName !== contextName,
     );
+
+    const contextInformers = this.#informers.getForContext(contextName);
+    for (const informer of contextInformers) {
+      informer.dispose();
+    }
+    this.#informers.removeForContext(contextName);
+    this.#objectCaches.removeForContext(contextName);
   }
 }
