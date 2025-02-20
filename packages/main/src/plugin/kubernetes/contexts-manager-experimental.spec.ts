@@ -22,7 +22,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
-import { ContextPermissionsChecker, type ContextResourcePermission } from './context-permissions-checker.js';
+import {
+  ContextPermissionsChecker,
+  type ContextPermissionsRequest,
+  type ContextResourcePermission,
+} from './context-permissions-checker.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import type { ResourceFactory } from './resource-factory.js';
@@ -778,40 +782,34 @@ test('HealthChecker and PermissionsChecker are disposed for each context being r
   const permissionsStartMock = vi.fn();
   const permissionsDisposeMock = vi.fn();
 
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: healthStartMock,
-        dispose: healthDisposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: vi.fn().mockImplementation(f =>
-          f({
-            kubeConfig: {
-              getNamespace: vi.fn().mockReturnValue('context2'),
-            } as unknown as KubeConfigSingleContext,
-            contextName: 'context2',
-            checking: false,
-            reachable: true,
-          } as ContextHealthState),
-        ),
-      }) as unknown as ContextHealthChecker,
-  );
+  vi.mocked(ContextHealthChecker).mockImplementation((kubeConfig: KubeConfigSingleContext) => {
+    const contextName = kubeConfig.getKubeConfig().currentContext;
+    return {
+      start: healthStartMock,
+      dispose: healthDisposeMock,
+      onStateChange: onStateChangeMock,
+      onReachable: vi.fn().mockImplementation(f =>
+        f({
+          kubeConfig: {
+            getNamespace: vi.fn().mockReturnValue(contextName),
+          } as unknown as KubeConfigSingleContext,
+          contextName,
+          checking: false,
+          reachable: true,
+        } as ContextHealthState),
+      ),
+    } as unknown as ContextHealthChecker;
+  });
 
-  vi.mocked(ContextPermissionsChecker).mockImplementationOnce(
-    () =>
-      ({
+  vi.mocked(ContextPermissionsChecker).mockImplementation(
+    (_kubeconfig: KubeConfigSingleContext, contextName: string, _request: ContextPermissionsRequest) => {
+      return {
         start: permissionsStartMock,
         dispose: permissionsDisposeMock,
-        contextName: 'context1',
-      }) as unknown as ContextPermissionsChecker,
-  );
-  vi.mocked(ContextPermissionsChecker).mockImplementationOnce(
-    () =>
-      ({
-        start: permissionsStartMock,
-        dispose: permissionsDisposeMock,
-        contextName: 'context2',
-      }) as unknown as ContextPermissionsChecker,
+        onPermissionResult: vi.fn(),
+        contextName,
+      } as unknown as ContextPermissionsChecker;
+    },
   );
 
   await manager.update(kc);
@@ -834,7 +832,7 @@ test('HealthChecker and PermissionsChecker are disposed for each context being r
   expect(ContextHealthChecker).toHaveBeenCalledTimes(0);
   expect(healthStartMock).toHaveBeenCalledTimes(0);
 
-  expect(permissionsDisposeMock).toHaveBeenCalledTimes(1);
+  expect(permissionsDisposeMock).toHaveBeenCalledTimes(2); // one for namespaced, one for non-namespaced
 });
 
 test('getHealthCheckersStates calls getState for each health checker', async () => {
