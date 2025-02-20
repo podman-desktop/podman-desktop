@@ -18,8 +18,16 @@
 
 import { expect, test } from 'vitest';
 
+import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
+import CronJobIcon from '../images/CronJobIcon.svelte';
+import DeploymentIcon from '../images/DeploymentIcon.svelte';
+import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
+import NodeIcon from '../images/NodeIcon.svelte';
+import PodIcon from '../images/PodIcon.svelte';
+import PvcIcon from '../images/PVCIcon.svelte';
+import ServiceIcon from '../images/ServiceIcon.svelte';
 import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '../objects/KubernetesObjectUI';
-import { isNamespaced } from './kube-utils';
+import { getIcon, isNamespaced } from './kube-utils';
 
 const node: KubernetesObjectUI = {
   kind: 'Node',
@@ -41,4 +49,17 @@ test('isNamespaced is false for nodes', async () => {
 
 test('isNamespaced is true for deployments', async () => {
   expect(isNamespaced(deployment)).toBeTruthy();
+});
+
+test('Every Kubernetes kind has the correct icon', async () => {
+  expect(getIcon('Node')).toEqual(NodeIcon);
+  expect(getIcon('Deployment')).toEqual(DeploymentIcon);
+  expect(getIcon('Pod')).toEqual(PodIcon);
+  expect(getIcon('Service')).toEqual(ServiceIcon);
+  expect(getIcon('Ingress')).toEqual(IngressRouteIcon);
+  expect(getIcon('Route')).toEqual(IngressRouteIcon);
+  expect(getIcon('ConfigMap')).toEqual(ConfigMapSecretIcon);
+  expect(getIcon('Secret')).toEqual(ConfigMapSecretIcon);
+  expect(getIcon('PersistentVolumeClaim')).toEqual(PvcIcon);
+  expect(getIcon('CronJob')).toEqual(CronJobIcon);
 });

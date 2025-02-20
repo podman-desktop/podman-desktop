@@ -16,8 +16,46 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Component } from 'svelte';
+
+import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
+import CronJobIcon from '../images/CronJobIcon.svelte';
+import DeploymentIcon from '../images/DeploymentIcon.svelte';
+import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
+import KubeIcon from '../images/KubeIcon.svelte';
+import NodeIcon from '../images/NodeIcon.svelte';
+import PodIcon from '../images/PodIcon.svelte';
+import PvcIcon from '../images/PVCIcon.svelte';
+import ServiceIcon from '../images/ServiceIcon.svelte';
 import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '../objects/KubernetesObjectUI';
 
 export function isNamespaced(object: KubernetesObjectUI): object is KubernetesNamespacedObjectUI {
   return 'namespace' in object;
+}
+
+export function getIcon(kind: string): Component {
+  switch (kind) {
+    case 'Node':
+      return NodeIcon;
+    case 'Deployment':
+      return DeploymentIcon;
+    case 'Pod':
+      return PodIcon;
+    case 'Service':
+      return ServiceIcon;
+    case 'Ingress':
+      return IngressRouteIcon;
+    case 'Route':
+      return IngressRouteIcon;
+    case 'ConfigMap':
+      return ConfigMapSecretIcon;
+    case 'Secret':
+      return ConfigMapSecretIcon;
+    case 'PersistentVolumeClaim':
+      return PvcIcon;
+    case 'CronJob':
+      return CronJobIcon as Component;
+    default:
+      return KubeIcon;
+  }
 }
