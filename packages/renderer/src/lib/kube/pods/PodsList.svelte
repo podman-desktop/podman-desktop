@@ -7,10 +7,10 @@ import { kubernetesCurrentContextPodsFiltered, podSearchPattern } from '/@/store
 import PodIcon from '../../images/PodIcon.svelte';
 import KubernetesObjectsList from '../../objects/KubernetesObjectsList.svelte';
 import NameColumn from '../column/Name.svelte';
+import StatusColumn from '../column/Status.svelte';
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';
 import PodColumnContainers from './PodColumnContainers.svelte';
-import PodColumnStatus from './PodColumnStatus.svelte';
 import PodEmptyScreen from './PodEmptyScreen.svelte';
 import type { PodUI } from './PodUI';
 
@@ -29,7 +29,7 @@ const podUtils = new PodUtils();
 let statusColumn = new TableColumn<PodUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: PodColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => b.status.localeCompare(a.status),
 });
 

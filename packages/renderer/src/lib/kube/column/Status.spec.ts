@@ -21,21 +21,31 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import PodColumnStatus from './PodColumnStatus.svelte';
-import type { PodUI } from './PodUI';
+import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
+import Status from './Status.svelte';
 
-const pod: PodUI = {
-  name: '',
-  status: 'RUNNING',
-  selected: false,
-  containers: [],
-  namespace: '',
-};
+test('Expect pod status to be shown', async () => {
+  const pod: KubernetesObjectUI = {
+    kind: 'Pod',
+    name: 'my-pod',
+    status: 'DEGRADED',
+  };
+  render(Status, { object: pod });
 
-test('Expect simple column styling', async () => {
-  render(PodColumnStatus, { object: pod });
+  const text = screen.getByRole('status');
+  expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('bg-[var(--pd-status-degraded)]');
+});
 
-  const status = screen.getByRole('status');
-  expect(status).toBeInTheDocument();
-  expect(status).toHaveClass('bg-[var(--pd-status-running)]');
+test('Expect cronjob status to be shown', async () => {
+  const cronjob: KubernetesObjectUI = {
+    kind: 'CronJob',
+    name: 'my-cronjob',
+    status: 'RUNNING',
+  };
+  render(Status, { object: cronjob });
+
+  const text = screen.getByRole('status');
+  expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('bg-[var(--pd-status-running)]');
 });
