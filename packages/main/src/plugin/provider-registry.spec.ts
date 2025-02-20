@@ -1547,3 +1547,24 @@ test('should retrieve provider info from provider internal id', async () => {
   expect(provider2?.name).toBe('internal2name');
   expect(provider2?.extensionId).toBe('id2');
 });
+
+test('should use connection version method', async () => {
+  const versionMock = vi.fn();
+  versionMock.mockReturnValue('1.5.6');
+  const connection: ContainerProviderConnection = {
+    name: 'podman-machine-default',
+    displayName: 'connection',
+    type: 'podman',
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    lifecycle: undefined,
+    status: () => 'started',
+    version: versionMock,
+  };
+
+  const info = providerRegistry.getProviderContainerConnectionInfo(connection);
+
+  expect(versionMock).toHaveBeenCalled();
+  expect(info?.version).toStrictEqual('1.5.6');
+});

@@ -60,6 +60,7 @@ const providerInfo: ProviderInfo = {
         id: 'libkrun',
         name: 'libkrun',
       },
+      version: '1.2.3',
     },
     {
       name: secondaryContainerConnectionName,
@@ -210,6 +211,18 @@ describe('provider connections', () => {
     expect(endpointSpan.textContent).toBe('unix://socket');
     const connectionType = within(region).getByLabelText('Connection Type');
     expect(connectionType.textContent).equal('Libkrun');
+  });
+
+  test('Expect version to be reported for Container engine', async () => {
+    providerInfos.set([providerInfo]);
+
+    const { getByRole } = render(PreferencesResourcesRendering, {});
+
+    // get the region containing the content for the default connection
+    const region = getByRole('region', { name: defaultContainerConnectionName });
+
+    const version = within(region).getByLabelText(`Connection Version`);
+    expect(version.textContent).toContain(providerInfo.containerConnections[0].version);
   });
 
   test('Expect type to be reported for Docker engines', async () => {
