@@ -436,6 +436,7 @@ describe('registerCLITool', () => {
       installer = mInstaller;
       return { dispose: vi.fn() };
     });
+    vi.mocked(extensionApi.env).isMac = true;
 
     await activate(extensionContextMock);
 
