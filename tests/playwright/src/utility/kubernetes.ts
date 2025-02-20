@@ -81,6 +81,25 @@ export async function deleteKubernetesResource(
   });
 }
 
+export async function checkDeploymentReplicasInfo(
+  page: Page,
+  resourceType: KubernetesResources,
+  resourceName: string,
+  expectedReplicaCount: number,
+  timeout: number = 80_000,
+): Promise<void> {
+  const navigationBar = new NavigationBar(page);
+  const kubernetesBar = await navigationBar.openKubernetes();
+
+  const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
+  const kubernetesResourceDetails = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
+  await playExpect(kubernetesResourceDetails.heading).toBeVisible();
+  await playExpect(kubernetesResourceDetails.tabContent).toContainText(
+    `Desired: ${expectedReplicaCount}, Updated: ${expectedReplicaCount}, Total: ${expectedReplicaCount}, Available: ${expectedReplicaCount}, Unavailable: N/A`,
+    { timeout: timeout },
+  );
+}
+
 export async function checkKubernetesResourceState(
   page: Page,
   resourceType: KubernetesResources,
@@ -117,7 +136,7 @@ export async function applyYamlFileToCluster(
   });
 }
 
-export async function changeDeploymentYamlFile(
+export async function editDeploymentYamlFile(
   page: Page,
   resourceType: KubernetesResources,
   deploymentName: string,

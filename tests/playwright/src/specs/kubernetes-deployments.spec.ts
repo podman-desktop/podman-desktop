@@ -25,10 +25,11 @@ import { KubernetesResources } from '../model/core/types';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { test } from '../utility/fixtures';
 import {
-  changeDeploymentYamlFile,
+  checkDeploymentReplicasInfo,
   checkKubernetesResourceState,
   createKubernetesResource,
   deleteKubernetesResource,
+  editDeploymentYamlFile,
 } from '../utility/kubernetes';
 import { ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -77,7 +78,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(90_000);
   try {
     await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
   } finally {
@@ -85,7 +86,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Kubernetes Edit YAML Feature E2E Test', { tag: '@k8s_e2e' }, () => {
+test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
   test('Create a Kubernetes deployment resource', async ({ page }) => {
     test.setTimeout(80_000);
     await createKubernetesResource(
@@ -95,6 +96,7 @@ test.describe.serial('Kubernetes Edit YAML Feature E2E Test', { tag: '@k8s_e2e' 
       DEPLOYMENT_YAML_PATH,
       KUBERNETES_RUNTIME,
     );
+    await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, 3);
     await checkKubernetesResourceState(
       page,
       KubernetesResources.Deployments,
@@ -103,9 +105,10 @@ test.describe.serial('Kubernetes Edit YAML Feature E2E Test', { tag: '@k8s_e2e' 
       80_000,
     );
   });
-  test('Change the Kubernetes deployment YAML file', async ({ page }) => {
+  test('Edit the Kubernetes deployment YAML file', async ({ page }) => {
     test.setTimeout(120_000);
-    await changeDeploymentYamlFile(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
+    await editDeploymentYamlFile(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
+    await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, 5);
     await checkKubernetesResourceState(
       page,
       KubernetesResources.Deployments,
