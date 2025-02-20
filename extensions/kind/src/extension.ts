@@ -548,13 +548,11 @@ async function deleteFile(filePath: string): Promise<void> {
 }
 
 async function deleteFileAsAdmin(filePath: string): Promise<void> {
-  const system = process.platform;
-
   const args: string[] = [filePath];
-  const command = system === 'win32' ? 'del' : 'rm';
+  const command = extensionApi.env.isWindows ? 'del' : 'rm';
 
   try {
-    // Use admin prileges
+    // Use admin privileges
     await extensionApi.process.exec(command, args, { isAdmin: true });
   } catch (error) {
     console.error(`Failed to uninstall '${filePath}': ${error}`);
@@ -563,15 +561,12 @@ async function deleteFileAsAdmin(filePath: string): Promise<void> {
 }
 
 async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
-  const system = process.platform;
-
-  const args: string[] = [filePath];
-  const command = system === 'win32' ? 'del' : 'rm';
-  const checkCommand = system === 'win32' ? 'where.exe' : 'which';
+  const command = extensionApi.env.isWindows ? 'del' : 'rm';
+  const checkCommand = extensionApi.env.isWindows ? 'where.exe' : 'which';
   let fileExistsPath = '';
 
   try {
-    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, args);
+    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, [filePath]);
     fileExistsPath = fullPath;
   } catch (err) {
     if (err && typeof err === 'object' && 'stderr' in err) {
@@ -583,8 +578,8 @@ async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
 
   if (fileExistsPath) {
     try {
-      // Use admin prileges
-      await extensionApi.process.exec(command, args, { isAdmin: true });
+      // Use admin privileges
+      await extensionApi.process.exec(command, [filePath], { isAdmin: true });
     } catch (error) {
       console.error(`Failed to uninstall '${filePath}': ${error}`);
       throw error;

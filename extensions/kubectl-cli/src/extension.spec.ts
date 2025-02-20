@@ -615,6 +615,8 @@ describe('postActivate', () => {
       },
     );
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
 
     await KubectlExtension.activate(extensionContext);
 
@@ -622,10 +624,8 @@ describe('postActivate', () => {
     await cliInstaller.doUninstall({} as unknown as Logger);
 
     expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(extensionContext.storagePath, 'bin', 'kubectl'));
-    const command = process.platform === 'win32' ? 'del' : 'rm';
-    const checkCommand = process.platform === 'win32' ? 'where.exe' : 'which';
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(checkCommand, ['system-path']);
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(command, ['system-path'], { isAdmin: true });
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['system-path']);
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-path'], { isAdmin: true });
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -680,7 +680,8 @@ describe('postActivate', () => {
     vi.mocked(fs.promises.unlink).mockRejectedValue({
       code: 'EACCES',
     } as unknown as Error);
-    const command = process.platform === 'win32' ? 'del' : 'rm';
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
 
     await KubectlExtension.activate(extensionContext);
 
@@ -689,7 +690,7 @@ describe('postActivate', () => {
 
     expect(extensionApi.process.exec).toHaveBeenNthCalledWith(
       4,
-      command,
+      'rm',
       [path.join(extensionContext.storagePath, 'bin', 'kubectl')],
       { isAdmin: true },
     );

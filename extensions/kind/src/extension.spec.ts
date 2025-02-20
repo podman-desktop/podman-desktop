@@ -463,10 +463,8 @@ describe('cli#uninstall', () => {
 
     await cliToolInstaller?.doUninstall({} as unknown as extensionApi.Logger);
     expect(fs.promises.unlink).toHaveBeenCalledWith('storage-path');
-    const command = process.platform === 'win32' ? 'del' : 'rm';
-    const checkCommand = process.platform === 'win32' ? 'where.exe' : 'which';
-    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith(checkCommand, ['test-storage-path/kind']);
-    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith(command, ['test-storage-path/kind'], { isAdmin: true });
+    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith('which', ['test-storage-path/kind']);
+    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith('rm', ['test-storage-path/kind'], { isAdmin: true });
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -483,7 +481,6 @@ describe('cli#uninstall', () => {
     await cliToolInstaller?.doUninstall({} as unknown as extensionApi.Logger);
 
     // check command
-    const command = process.platform === 'win32' ? 'del' : 'rm';
-    expect(podmanDesktopApi.process.exec).toHaveBeenNthCalledWith(1, command, ['storage-path'], { isAdmin: true });
+    expect(podmanDesktopApi.process.exec).toHaveBeenNthCalledWith(1, 'rm', ['storage-path'], { isAdmin: true });
   });
 });

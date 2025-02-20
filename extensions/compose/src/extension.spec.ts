@@ -445,10 +445,8 @@ describe('registerCLITool', () => {
 
     await installer?.doUninstall({} as unknown as Logger);
     expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, 'storage-path');
-    const command = process.platform === 'win32' ? 'del' : 'rm';
-    const checkCommand = process.platform === 'win32' ? 'where.exe' : 'which';
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(checkCommand, ['system-wide-path']);
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(command, ['system-wide-path'], { isAdmin: true });
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['system-wide-path']);
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -464,7 +462,7 @@ describe('registerCLITool', () => {
     vi.mocked(fs.promises.unlink).mockRejectedValue({
       code: 'EACCES',
     } as unknown as Error);
-    const command = process.platform === 'win32' ? 'del' : 'rm';
+    vi.mocked(extensionApi.env).isMac = true;
 
     let installer: extensionApi.CliToolInstaller | undefined;
     vi.mocked(cliToolMock.registerInstaller).mockImplementation(mInstaller => {
@@ -479,7 +477,7 @@ describe('registerCLITool', () => {
     });
 
     await installer?.doUninstall({} as unknown as Logger);
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(command, ['storage-path'], { isAdmin: true });
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['storage-path'], { isAdmin: true });
   });
 
   test('verify that can install after uninstalling', async () => {
@@ -498,6 +496,7 @@ describe('registerCLITool', () => {
     vi.mocked(extensionApi.process.exec).mockResolvedValue({
       stdout: 'system-wide-path',
     } as extensionApi.RunResult);
+    vi.mocked(extensionApi.env).isMac = true;
 
     let installer: extensionApi.CliToolInstaller | undefined;
     vi.mocked(cliToolMock.registerInstaller).mockImplementation(mInstaller => {
@@ -513,8 +512,7 @@ describe('registerCLITool', () => {
 
     await installer?.doUninstall({} as unknown as Logger);
     expect(fs.promises.unlink).toHaveBeenCalledWith('storage-path');
-    const command = process.platform === 'win32' ? 'del' : 'rm';
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(command, ['system-wide-path'], { isAdmin: true });
+    expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
 
     await installer?.selectVersion();
 
