@@ -1921,6 +1921,13 @@ export function isRootfulMachineInitSupported(podmanVersion: string): boolean {
   return compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_ROOTFUL_MACHINE_INIT) >= 0;
 }
 
+const PODMAN_MINIMUM_VERSION_FOR_PLAYBOOK_MACHINE_INIT = '5.4.0';
+
+// Checks if playbook option is supported.
+export function isPlaybookMachineInitSupported(podmanVersion: string): boolean {
+  return compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_PLAYBOOK_MACHINE_INIT) >= 0;
+}
+
 const PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION = '4.5.0';
 
 export function isPodmanSocketLocationMoved(podmanVersion: string): boolean {

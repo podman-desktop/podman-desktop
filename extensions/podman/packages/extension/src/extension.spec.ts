@@ -2403,6 +2403,29 @@ test('isLibkrunSupported should return false with previous 5.1.2 version', async
   expect(enabled).toBeFalsy();
 });
 
+describe('isPlaybookMachineInitSupported', () => {
+  test('isPlaybookMachineInitSupported should return false with 5.3.0', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(arch).mockReturnValue('x64');
+    const enabled = extension.isPlaybookMachineInitSupported('5.3.0');
+    expect(enabled).toBeFalsy();
+  });
+
+  test('isLibkrunSupported should return true with 5.4.0 version on Windows/amd', async () => {
+    vi.mocked(arch).mockReturnValue('amd64');
+    vi.mocked(extensionApi.env).isWindows = true;
+    const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
+    expect(enabled).toBeTruthy();
+  });
+
+  test('isLibkrunSupported should return true with 5.4.0 version on arm/mac', async () => {
+    vi.mocked(arch).mockReturnValue('arm64');
+    vi.mocked(extensionApi.env).isMac = true;
+    const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
+    expect(enabled).toBeTruthy();
+  });
+});
+
 describe('sendTelemetryRecords', () => {
   test('krunkit found', async () => {
     vi.mocked(extensionApi.env).isMac = true;
