@@ -9,6 +9,7 @@ export let solid = false;
   class={$$props.class}
   style={$$props.style}
   version="1.1"
+  data-testid="Ingress Route"
   xml:space="preserve"
   viewBox="-0.3 -0.3 16.6 16.6">
   {#if solid}

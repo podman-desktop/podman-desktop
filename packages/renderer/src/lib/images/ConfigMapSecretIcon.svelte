@@ -9,6 +9,7 @@ export let size = '40';
   style={$$props.style}
   viewBox="0 0 16.015625 16"
   version="1.1"
+  data-testid="ConfigMap Secret"
   xml:space="preserve"
   xmlns="http://www.w3.org/2000/svg"
   xmlns:xlink="http://www.w3.org/1999/xlink">
