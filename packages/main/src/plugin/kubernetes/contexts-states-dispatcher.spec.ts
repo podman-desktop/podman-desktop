@@ -32,12 +32,14 @@ import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 test('ContextsStatesDispatcher should call updateHealthStates when onContextHealthStateChange event is fired', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
     onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
     onResourceUpdated: vi.fn(),
+    isContextOffline: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -59,12 +61,14 @@ test('ContextsStatesDispatcher should call updateHealthStates when onContextHeal
 test('ContextsStatesDispatcher should call updatePermissions when onContextPermissionResult event is fired', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
     onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
     onResourceUpdated: vi.fn(),
+    isContextOffline: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -86,12 +90,14 @@ test('ContextsStatesDispatcher should call updatePermissions when onContextPermi
 test('ContextsStatesDispatcher should call updateHealthStates and updatePermissions when onContextDelete event is fired', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
     onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
     onResourceCountUpdated: vi.fn(),
     onResourceUpdated: vi.fn(),
+    isContextOffline: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),
@@ -114,10 +120,12 @@ test('ContextsStatesDispatcher should call updateHealthStates and updatePermissi
 test('getContextsHealths should return the values of the map returned by manager.getHealthCheckersStates without kubeConfig', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
     onContextPermissionResult: vi.fn(),
     onContextDelete: vi.fn(),
     getHealthCheckersStates: vi.fn(),
     getPermissions: vi.fn(),
+    isContextOffline: vi.fn(),
   } as unknown as ContextsManagerExperimental;
   const apiSender: ApiSenderType = {
     send: vi.fn(),

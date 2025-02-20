@@ -187,6 +187,7 @@ describe.each([
       resourcesCount: true,
       undefinedCounts: true,
       permissions: true,
+      offline: true,
     },
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
@@ -214,21 +215,25 @@ describe.each([
           contextName: 'context-name',
           reachable: true,
           checking: false,
+          offline: false,
         },
         {
           contextName: 'context-name2',
           reachable: false,
           checking: false,
+          offline: false,
         },
         {
           contextName: 'context-name3',
           reachable: true,
           checking: false,
+          offline: false,
         },
         {
           contextName: 'context-name4',
           reachable: true,
           checking: false,
+          offline: true,
         },
       ]);
       kubernetesContextsPermissions.set([
@@ -272,6 +277,7 @@ describe.each([
       resourcesCount: true,
       undefinedCounts: false,
       permissions: false,
+      offline: false,
     },
     initMocks: (): void => {
       const state: Map<string, ContextGeneralState> = new Map();
@@ -354,6 +360,10 @@ describe.each([
       expect(within(context4).queryByText('DEPLOYMENTS')).toBeInTheDocument();
       checkNotPermitted(context4, 'Context Pods Count');
       checkNotPermitted(context4, 'Context Deployments Count');
+    }
+
+    if (implemented.offline) {
+      expect(within(context4).queryByText('CONNECTION LOST')).toBeInTheDocument();
     }
   });
 });
