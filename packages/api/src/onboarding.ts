@@ -49,6 +49,7 @@ export interface OnboardingStep {
 
 export interface Onboarding {
   title: string;
+  priority?: number;
   description?: string;
   media?: { path: string; altText: string };
   steps: OnboardingStep[];
@@ -57,6 +58,7 @@ export interface Onboarding {
 
 export interface OnboardingInfo extends Onboarding {
   extension: string;
+  removable: boolean;
   name: string;
   displayName: string;
   icon: string;
