@@ -48,5 +48,9 @@ test('Expect clicking works', async () => {
   expect(type).toBeInTheDocument();
 
   await userEvent.click(type);
-  expect(window.navigateToRoute).toBeCalledWith('kubernetes', { kind: 'Service' });
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', { kind: params.kind });
+  expect(window.telemetryTrack).toBeCalledWith('kubernetes.dashboard.resource', {
+    type: params.type,
+    kind: params.kind,
+  });
 });

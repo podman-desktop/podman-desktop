@@ -10,7 +10,11 @@ interface Props {
 let { title, link, image }: Props = $props();
 
 async function openLink(): Promise<void> {
-  await window.openExternal(link);
+  try {
+    await window.openExternal(link);
+  } finally {
+    await window.telemetryTrack('kubernetes.dashboard.guide', { title: title, link: link });
+  }
 }
 </script>
 

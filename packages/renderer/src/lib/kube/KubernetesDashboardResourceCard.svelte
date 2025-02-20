@@ -12,7 +12,11 @@ interface Props {
 let { type, Icon, activeCount, count, kind }: Props = $props();
 
 async function openLink(): Promise<void> {
-  await window.navigateToRoute('kubernetes', { kind: kind });
+  try {
+    await window.navigateToRoute('kubernetes', { kind: kind });
+  } finally {
+    await window.telemetryTrack('kubernetes.dashboard.resource', { type: type, kind: kind });
+  }
 }
 </script>
 

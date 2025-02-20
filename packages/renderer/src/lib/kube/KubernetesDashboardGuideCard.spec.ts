@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
 
-const openExternalMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  Object.defineProperty(window, 'openExternal', {
-    value: openExternalMock,
-  });
-});
-
 test('Verify basic card format', async () => {
   const title = 'a title';
-  render(KubernetesDashboardGuideCard, { title: title, link: 'test' });
+  render(KubernetesDashboardGuideCard, { title: title, link: 'test', image: '' });
 
   const titleComp = screen.getByText(title);
   expect(titleComp).toBeInTheDocument();
@@ -53,13 +44,16 @@ test('Verify basic card format', async () => {
 });
 
 test('Expect clicking works', async () => {
-  const link = 'http://test-link';
-  render(KubernetesDashboardGuideCard, { title: 'a title', link: link });
+  const params = { title: 'a title', link: 'test-link', image: '' };
+  render(KubernetesDashboardGuideCard, params);
 
   const button = screen.getByRole('button', { name: 'Read more' });
   expect(button).toBeInTheDocument();
 
-  expect(openExternalMock).not.toHaveBeenCalled();
   await userEvent.click(button);
-  expect(openExternalMock).toHaveBeenCalledWith(link);
+  expect(window.openExternal).toHaveBeenCalledWith(params.link);
+  expect(window.telemetryTrack).toHaveBeenCalledWith('kubernetes.dashboard.guide', {
+    title: params.title,
+    link: params.link,
+  });
 });
