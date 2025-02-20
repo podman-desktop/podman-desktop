@@ -42,8 +42,8 @@ import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import { PodmanConfiguration } from './podman-configuration';
 import { HyperVCheck, PodmanInstall, WSL2Check, WSLVersionCheck } from './podman-install';
 import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
-import { PodmanRemoteConnections } from './podman-remote-connections';
 import { RegistrySetup } from './registry-setup';
+import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import {
   appConfigDir,
   appHomeDir,
