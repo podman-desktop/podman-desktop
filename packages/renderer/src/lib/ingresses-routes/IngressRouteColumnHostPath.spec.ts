@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { beforeEach, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { IngressRouteUtils } from './ingress-route-utils';
 import IngressRouteColumnHostPath from './IngressRouteColumnHostPath.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-let ingressRouteUtils: IngressRouteUtils;
-
-beforeEach(() => {
-  ingressRouteUtils = new IngressRouteUtils();
-});
+const ingressRouteUtils = new IngressRouteUtils();
 
 test('Expect simple column styling with single host/path ingress', async () => {
   const ingressUI: IngressUI = {
