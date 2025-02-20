@@ -264,7 +264,7 @@ export class ContextsManagerExperimental {
     return this.#healthCheckers.has(contextName);
   }
 
-  private async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
+  protected async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
     this.stopMonitoring(contextName);
 
     // register and start health checker
@@ -337,7 +337,7 @@ export class ContextsManagerExperimental {
     await newHealthChecker.start({ timeout: HEALTH_CHECK_TIMEOUT_MS });
   }
 
-  private stopMonitoring(contextName: string): void {
+  protected stopMonitoring(contextName: string): void {
     const healthChecker = this.#healthCheckers.get(contextName);
     healthChecker?.dispose();
     this.#healthCheckers.delete(contextName);

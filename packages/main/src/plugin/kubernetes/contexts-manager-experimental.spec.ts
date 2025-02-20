@@ -90,6 +90,14 @@ class TestContextsManagerExperimental extends ContextsManagerExperimental {
       }),
     ];
   }
+
+  public override async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
+    return super.startMonitoring(config, contextName);
+  }
+
+  public override stopMonitoring(contextName: string): void {
+    return super.stopMonitoring(contextName);
+  }
 }
 
 const context1 = {
@@ -972,4 +980,38 @@ test('dispose calls dispose for each permissions checker', async () => {
 
   manager.dispose();
   expect(permissionsDisposeMock).toHaveBeenCalledTimes(2);
+});
+
+test('only current context is monitored', async () => {
+  const kc = new KubeConfig();
+  kc.loadFromOptions(kcWith2contexts);
+  const manager = new TestContextsManagerExperimental();
+  vi.spyOn(manager, 'startMonitoring');
+  vi.spyOn(manager, 'stopMonitoring');
+  await manager.update(kc);
+  expect(manager.startMonitoring).toHaveBeenCalledWith(expect.anything(), 'context1');
+
+  // change current context from context1 to context2
+  vi.mocked(manager.startMonitoring).mockClear();
+  vi.mocked(manager.stopMonitoring).mockClear();
+  const kcWith2contextsChangeCurrent = {
+    ...kcWith2contexts,
+    currentContext: 'context2',
+  };
+  kc.loadFromOptions(kcWith2contextsChangeCurrent);
+  await manager.update(kc);
+  expect(manager.stopMonitoring).toHaveBeenCalledWith('context1');
+  expect(manager.startMonitoring).toHaveBeenCalledWith(expect.anything(), 'context2');
+
+  // no more current context
+  vi.mocked(manager.startMonitoring).mockClear();
+  vi.mocked(manager.stopMonitoring).mockClear();
+  const kcWith2contextsNoCurrent = {
+    ...kcWith2contexts,
+    currentContext: undefined,
+  };
+  kc.loadFromOptions(kcWith2contextsNoCurrent);
+  await manager.update(kc);
+  expect(manager.stopMonitoring).toHaveBeenCalledWith('context2');
+  expect(manager.startMonitoring).not.toHaveBeenCalled();
 });
