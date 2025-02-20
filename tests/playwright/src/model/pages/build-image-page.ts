@@ -38,6 +38,7 @@ export class BuildImagePage extends BasePage {
   readonly amd64checkbox: Locator;
   readonly archMoreOptionsButton: Locator;
   readonly archLessOptionsButton: Locator;
+  readonly logs: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -59,6 +60,7 @@ export class BuildImagePage extends BasePage {
     this.amd64checkbox = this.platformRegion.getByLabel('Intel and AMD x86_64 systems');
     this.archMoreOptionsButton = this.platformRegion.getByRole('button', { name: 'Show more options' });
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
+    this.logs = page.getByRole('term');
   }
 
   async buildImage(
@@ -95,6 +97,8 @@ export class BuildImagePage extends BasePage {
       await this.buildButton.click();
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
+
+      await this.getBuildLogs();
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -152,5 +156,21 @@ export class BuildImagePage extends BasePage {
     } catch {
       await playExpect(this.archLessOptionsButton).toBeEnabled();
     }
+  }
+
+  async getBuildLogs(): Promise<void> {
+    await playExpect(this.logs).toBeVisible();
+    const logsMessage = this.logs.locator('.xterm-rows');
+
+    await playExpect
+      .poll(async () => {
+        const logRows = await logsMessage.locator('div:has(span)').all();
+        const logTexts = await Promise.all(logRows.map(row => row.textContent()));
+
+        logTexts.forEach(log => console.log(log));
+
+        return logTexts.join('\n');
+      })
+      .not.toContain('Error');
   }
 }
