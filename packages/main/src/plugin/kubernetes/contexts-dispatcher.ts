@@ -27,6 +27,15 @@ export interface DispatcherEvent {
   config: KubeConfigSingleContext;
 }
 
+export interface CurrentChangeEvent {
+  // the current context before the change
+  previous?: string;
+  // the current context now
+  current?: string;
+  // the config for the current context now
+  currentConfig?: KubeConfigSingleContext;
+}
+
 /**
  * ContextsDispatcher gets new Kubeconfig values with the `update` method
  * and fires Add/Update/Delete events
@@ -38,14 +47,17 @@ export interface DispatcherEvent {
  */
 export class ContextsDispatcher {
   #contexts = new Map<string, KubeConfigSingleContext>();
+  #currentContext: string | undefined;
 
   #onAdd = new Emitter<DispatcherEvent>();
   #onUpdate = new Emitter<DispatcherEvent>();
   #onDelete = new Emitter<DispatcherEvent>();
+  #onCurrentChange = new Emitter<CurrentChangeEvent>();
 
   onAdd: Event<DispatcherEvent> = this.#onAdd.event;
   onUpdate: Event<DispatcherEvent> = this.#onUpdate.event;
   onDelete: Event<DispatcherEvent> = this.#onDelete.event;
+  onCurrentChange: Event<CurrentChangeEvent> = this.#onCurrentChange.event;
 
   update(kubeconfig: KubeConfig): void {
     const contextsDiff = new Set<string>(this.#contexts.keys());
@@ -76,5 +88,23 @@ export class ContextsDispatcher {
       this.#onDelete.fire({ contextName: nameOfRemainingContext, config: ctxToRemove });
       this.#contexts.delete(nameOfRemainingContext);
     }
+
+    if (kubeconfig.currentContext !== this.#currentContext) {
+      const currentConfig = this.#contexts.get(kubeconfig.currentContext);
+      this.#onCurrentChange.fire({
+        previous: this.#currentContext,
+        current: kubeconfig.currentContext,
+        currentConfig,
+      });
+      this.#currentContext = kubeconfig.currentContext;
+    }
+  }
+
+  getKubeConfigSingleContext(contextName: string): KubeConfigSingleContext {
+    const result = this.#contexts.get(contextName);
+    if (!result) {
+      throw new Error(`config not found for context ${contextName}`);
+    }
+    return result;
   }
 }

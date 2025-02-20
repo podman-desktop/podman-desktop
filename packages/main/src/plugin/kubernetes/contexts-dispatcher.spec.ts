@@ -231,3 +231,37 @@ test('call update with a modifed context calls onUpdate', () => {
     config: new KubeConfigSingleContext(kc1, contexts[0]!),
   });
 });
+
+test('current context changes', async () => {
+  const onCurrentChangeMock = vi.fn();
+  const kcWith2contextsWithCurrent1 = {
+    ...kcWith2contexts,
+    currentContext: 'context1',
+  };
+  const kcWith2contextsWithCurrent2 = {
+    ...kcWith2contexts,
+    currentContext: 'context2',
+  };
+
+  dispatcher.onCurrentChange(onCurrentChangeMock);
+
+  const kc = new KubeConfig();
+  kc.loadFromOptions(kcWith2contextsWithCurrent1);
+  dispatcher.update(kc);
+
+  expect(onCurrentChangeMock).toHaveBeenCalledWith({
+    previous: undefined,
+    current: 'context1',
+    currentConfig: expect.anything(),
+  });
+
+  onCurrentChangeMock.mockClear();
+  kc.loadFromOptions(kcWith2contextsWithCurrent2);
+  dispatcher.update(kc);
+
+  expect(onCurrentChangeMock).toHaveBeenCalledWith({
+    previous: 'context1',
+    current: 'context2',
+    currentConfig: expect.anything(),
+  });
+});

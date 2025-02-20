@@ -32,7 +32,7 @@ import { ContextHealthChecker } from './context-health-checker.js';
 import type { ContextPermissionResult } from './context-permissions-checker.js';
 import { ContextPermissionsChecker } from './context-permissions-checker.js';
 import { ContextResourceRegistry } from './context-resource-registry.js';
-import type { DispatcherEvent } from './contexts-dispatcher.js';
+import type { CurrentChangeEvent, DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
@@ -52,11 +52,11 @@ const HEALTH_CHECK_TIMEOUT_MS = 5_000;
 
 /**
  * ContextsManagerExperimental receives new KubeConfig updates
- * and manages health checkers for each context of the KubeConfig.
+ * and manages the monitoring for each context of the KubeConfig.
  *
- * ContextsManagerExperimental fire events when a context is deleted, and to forward the states of the health checkers.
+ * ContextsManagerExperimental fire events when a context is deleted, and to forward the states of the health checkers, permission checkers and informers.
  *
- * ContextsManagerExperimental exposes the current state of the health checkers.
+ * ContextsManagerExperimental exposes the current state of the health checkers, permission checkers and informers.
  */
 export class ContextsManagerExperimental {
   #resourceFactoryHandler: ResourceFactoryHandler;
@@ -92,10 +92,10 @@ export class ContextsManagerExperimental {
     this.#informers = new ContextResourceRegistry<ResourceInformer<KubernetesObject>>();
     this.#objectCaches = new ContextResourceRegistry<ObjectCache<KubernetesObject>>();
     this.#dispatcher = new ContextsDispatcher();
-    this.#dispatcher.onAdd(this.onAdd.bind(this));
     this.#dispatcher.onUpdate(this.onUpdate.bind(this));
     this.#dispatcher.onDelete(this.onDelete.bind(this));
     this.#dispatcher.onDelete((state: DispatcherEvent) => this.#onContextDelete.fire(state));
+    this.#dispatcher.onCurrentChange(this.onCurrentChange.bind(this));
   }
 
   protected getResourceFactories(): ResourceFactory[] {
@@ -117,17 +117,26 @@ export class ContextsManagerExperimental {
     this.#dispatcher.update(kubeconfig);
   }
 
-  private async onAdd(event: DispatcherEvent): Promise<void> {
-    await this.startMonitoring(event.config, event.contextName);
-  }
-
   private async onUpdate(event: DispatcherEvent): Promise<void> {
-    // we don't try to update the checkers, we recreate them
-    return this.onAdd(event);
+    if (this.isMonitored(event.contextName)) {
+      // we don't try to update the checkers, we recreate them
+      return this.startMonitoring(event.config, event.contextName);
+    }
   }
 
   private onDelete(state: DispatcherEvent): void {
-    this.stopMonitoring(state.contextName);
+    if (this.isMonitored(state.contextName)) {
+      this.stopMonitoring(state.contextName);
+    }
+  }
+
+  private async onCurrentChange(state: CurrentChangeEvent): Promise<void> {
+    if (state.previous && this.isMonitored(state.previous)) {
+      this.stopMonitoring(state.previous);
+    }
+    if (state.current && state.currentConfig) {
+      await this.startMonitoring(state.currentConfig, state.current);
+    }
   }
 
   private onStateChange(state: ContextHealthState): void {
@@ -200,7 +209,14 @@ export class ContextsManagerExperimental {
     this.#onContextDelete.dispose();
   }
 
-  async refreshContextState(_contextName: string): Promise<void> {}
+  async refreshContextState(contextName: string): Promise<void> {
+    try {
+      const config = this.#dispatcher.getKubeConfigSingleContext(contextName);
+      await this.startMonitoring(config, contextName);
+    } catch (e: unknown) {
+      console.warn(`unable to refresh context ${contextName}`, String(e));
+    }
+  }
 
   // disposeAllHealthChecks disposes all health checks and removes them from registry
   private disposeAllHealthChecks(): void {
@@ -242,6 +258,10 @@ export class ContextsManagerExperimental {
         objectsCount: this.#objectCaches.get(informer.contextName, informer.resourceName)?.list().length,
       })),
     };
+  }
+
+  private isMonitored(contextName: string): boolean {
+    return this.#healthCheckers.has(contextName);
   }
 
   private async startMonitoring(config: KubeConfigSingleContext, contextName: string): Promise<void> {
