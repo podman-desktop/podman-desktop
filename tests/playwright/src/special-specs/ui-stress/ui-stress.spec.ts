@@ -18,7 +18,7 @@
 import type { ImagesPage } from '../../model/pages/images-page';
 import { NavigationBar } from '../../model/workbench/navigation';
 import { expect as playExpect, test } from '../../utility/fixtures';
-import { waitForPodmanMachineStartup, waitWhile } from '../../utility/wait';
+import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '../../utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
 console.log(`numberOfObjects => ${numberOfObjects}`);
@@ -67,7 +67,12 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
       await playExpect
-        .poll(async () => await containers.containerExists(`my-container-${containerNum}`), { timeout: 5_000 })
+        .poll(
+          async () =>
+            await waitUntil(async () => await containers.containerExists(`my-container-${containerNum}`), {
+              timeout: 5000,
+            }),
+        )
         .toBeTruthy();
     }
   });
@@ -78,7 +83,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      await playExpect.poll(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 5_000 }).toBeTruthy();
+      await playExpect
+        .poll(async () => await waitUntil(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 5000 }))
+        .toBeTruthy();
     }
   });
 });
