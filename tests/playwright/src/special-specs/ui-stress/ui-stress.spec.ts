@@ -20,6 +20,9 @@ import { NavigationBar } from '../../model/workbench/navigation';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { waitForPodmanMachineStartup, waitWhile } from '../../utility/wait';
 
+const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
+console.log(`numberOfObjects => ${numberOfObjects}`);
+
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('ui-stress-e2e');
   await welcomePage.handleWelcomePage(true);
@@ -46,9 +49,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of images`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const images = await navigationBar.openImages();
-    //count images => 1 original image + (1 tagged * 100) + 1 localhost/podman-pause from pods = 102
-    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(102);
-    for (let imgNum = 1; imgNum <= 100; imgNum++) {
+    //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
+    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
+    for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
       await playExpect
         .poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`), { timeout: 5_000 })
         .toBeTruthy();
@@ -58,9 +61,11 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of containers`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const containers = await navigationBar.openContainers();
-    //count containers => (1 manually created + 2 from creating pods) * 100 = 300
-    await playExpect.poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 }).toBe(300);
-    for (let containerNum = 1; containerNum <= 100; containerNum++) {
+    //count containers => (1 manually created + 2 from creating pods) * numberOfObjects = 3 * numberOfObjects
+    await playExpect
+      .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
+      .toBe(3 * numberOfObjects);
+    for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
       await playExpect
         .poll(async () => await containers.containerExists(`my-container-${containerNum}`), { timeout: 5_000 })
         .toBeTruthy();
@@ -70,9 +75,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   test(`Verification of pods`, async ({ navigationBar }) => {
     test.setTimeout(30_000);
     const pods = await navigationBar.openPods();
-    //count pods => 1 manually created * 100 = 100
-    await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(100);
-    for (let podNum = 1; podNum <= 100; podNum++) {
+    //count pods => 1 manually created * numberOfObjects = numberOfObjects
+    await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
+    for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
       await playExpect.poll(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 5_000 }).toBeTruthy();
     }
   });
