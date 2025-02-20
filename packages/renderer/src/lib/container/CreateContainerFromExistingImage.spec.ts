@@ -135,7 +135,7 @@ providerInfos.set([providerInfo]);
 test('Expect that textbox and two buttons show up when page opened', async () => {
   render(CreateContainerFromExistingImage);
 
-  const entry = screen.getByPlaceholderText('Select an exisiting image');
+  const entry = screen.getByPlaceholderText('Select an existing image');
   expect(entry).toBeInTheDocument();
   const cancelButton = screen.getByRole('button', { name: 'Cancel' });
   expect(cancelButton).toBeInTheDocument();
@@ -149,7 +149,7 @@ test('Expect that textbox and two buttons show up when page opened', async () =>
 test('Expect that typeahead menu has Local Images and Registry Images headings', async () => {
   render(CreateContainerFromExistingImage);
 
-  const inputBox = screen.getByPlaceholderText('Select an exisiting image');
+  const inputBox = screen.getByPlaceholderText('Select an existing image');
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'f');
 
@@ -165,7 +165,7 @@ test('Expect not a local image to have an active pull image button', async () =>
   render(CreateContainerFromExistingImage);
   await tick();
 
-  const inputBox = screen.getByPlaceholderText('Select an exisiting image');
+  const inputBox = screen.getByPlaceholderText('Select an existing image');
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'image12');
 
@@ -193,7 +193,7 @@ test('Expect a local image to have an active select image button', async () => {
   render(CreateContainerFromExistingImage);
   await tick();
 
-  const inputBox = screen.getByPlaceholderText('Select an exisiting image');
+  const inputBox = screen.getByPlaceholderText('Select an existing image');
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'fedora');
 
@@ -221,7 +221,7 @@ test('Expect no user input to show only local images', async () => {
   render(CreateContainerFromExistingImage);
   await tick();
 
-  const inputBox = screen.getByPlaceholderText('Select an exisiting image');
+  const inputBox = screen.getByPlaceholderText('Select an existing image');
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, ' ');
 

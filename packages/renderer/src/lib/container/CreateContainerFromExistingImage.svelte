@@ -334,7 +334,7 @@ async function onEnterOperation(): Promise<void> {
       <Typeahead
         id="imageName"
         name="imageName"
-        placeholder="Select an exisiting image"
+        placeholder="Select an existing image"
         onInputChange={searchFunction}
         resultItems={values}
         compare={sortResults}
