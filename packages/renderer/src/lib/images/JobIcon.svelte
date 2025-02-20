@@ -15,6 +15,7 @@ let style: string = baseStyle + (solid ? 'fill:currentColor' : 'fill:none');
   height={size}
   viewBox="1 1 6.4666665 6.4666666"
   version="1.1"
+  data-testid="Job"
   xml:space="preserve"
   xmlns="http://www.w3.org/2000/svg"
   xmlns:xlink="http://www.w3.org/1999/xlink">
