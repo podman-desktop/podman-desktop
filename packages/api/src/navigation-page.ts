@@ -29,6 +29,7 @@ export enum NavigationPage {
   IMAGES = 'images',
   IMAGE_BUILD = 'image-build',
   IMAGE = 'image',
+  IMAGE_PUSH_TASK = 'image-push',
   ONBOARDING = 'preferences-onboarding',
   PODMAN_PODS = 'pods',
   PODMAN_POD = 'pod',
