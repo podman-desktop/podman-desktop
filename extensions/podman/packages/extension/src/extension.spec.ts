@@ -2411,14 +2411,14 @@ describe('isPlaybookMachineInitSupported', () => {
     expect(enabled).toBeFalsy();
   });
 
-  test('isLibkrunSupported should return true with 5.4.0 version on Windows/amd', async () => {
+  test('isPlaybookMachineInitSupported should return true with 5.4.0 version on Windows/amd', async () => {
     vi.mocked(arch).mockReturnValue('amd64');
     vi.mocked(extensionApi.env).isWindows = true;
     const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
     expect(enabled).toBeTruthy();
   });
 
-  test('isLibkrunSupported should return true with 5.4.0 version on arm/mac', async () => {
+  test('isPlaybookMachineInitSupported should return true with 5.4.0 version on arm/mac', async () => {
     vi.mocked(arch).mockReturnValue('arm64');
     vi.mocked(extensionApi.env).isMac = true;
     const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
