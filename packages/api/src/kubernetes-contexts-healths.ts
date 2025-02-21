@@ -18,6 +18,10 @@
 
 export interface ContextHealth {
   contextName: string;
+  // is the health of the cluster being checked?
   checking: boolean;
+  // was the health check successful?
   reachable: boolean;
+  // is one of the informers marked offline (disconnect after being connected, the cache still being populated)
+  offline: boolean;
 }

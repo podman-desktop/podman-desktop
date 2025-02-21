@@ -52,11 +52,13 @@ test('kubernetesContextsHealths not in experimental states mode', async () => {
       contextName: 'context1',
       checking: true,
       reachable: false,
+      offline: false,
     },
     {
       contextName: 'context2',
       checking: false,
       reachable: true,
+      offline: false,
     },
   ];
 

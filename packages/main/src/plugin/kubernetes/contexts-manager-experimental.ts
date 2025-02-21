@@ -69,6 +69,9 @@ export class ContextsManagerExperimental {
   #onContextHealthStateChange = new Emitter<ContextHealthState>();
   onContextHealthStateChange: Event<ContextHealthState> = this.#onContextHealthStateChange.event;
 
+  #onOfflineChange = new Emitter<void>();
+  onOfflineChange: Event<void> = this.#onOfflineChange.event;
+
   #onContextPermissionResult = new Emitter<ContextPermissionResult>();
   onContextPermissionResult: Event<ContextPermissionResult> = this.#onContextPermissionResult.event;
 
@@ -325,7 +328,7 @@ export class ContextsManagerExperimental {
               }
             });
             informer.onOffline((_e: OfflineEvent) => {
-              /* send event to dispatcher */
+              this.#onOfflineChange.fire();
             });
             const cache = informer.start();
             this.#objectCaches.set(contextName, resource, cache);
@@ -357,5 +360,12 @@ export class ContextsManagerExperimental {
     }
     this.#informers.removeForContext(contextName);
     this.#objectCaches.removeForContext(contextName);
+  }
+
+  // returns true if at least one informer for the context is 'offline'
+  // meaning that it has lost connection with the cluster (after being connected)
+  isContextOffline(contextName: string): boolean {
+    const informers = this.#informers.getForContext(contextName);
+    return informers.some(informer => informer.isOffline());
   }
 }

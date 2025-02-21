@@ -20,6 +20,10 @@ import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
 interface KubeContextWithStates extends KubeContext {
+  // some informers have been disconnected, and their caches are still populated with the last seen resources
+  isOffline: boolean;
+  // the context has been marked as reachable (during health check in experimental mode)
+  // the context will still be marked as reachable even if it is offline
   isReachable: boolean;
   isKnown: boolean;
   isBeingChecked: boolean;
@@ -40,6 +44,7 @@ const kubernetesContextsWithStates: KubeContextWithStates[] = $derived(
     .map(kubeContext => ({
       ...kubeContext,
       isReachable: isContextReachable(kubeContext.name, experimentalStates),
+      isOffline: isContextOffline(kubeContext.name, experimentalStates),
       isKnown: isContextKnown(kubeContext.name, experimentalStates),
       isBeingChecked: isContextBeingChecked(kubeContext.name, experimentalStates),
       podsCount: getResourcesCount(kubeContext.name, 'pods', experimentalStates),
@@ -112,6 +117,15 @@ function isContextReachable(contextName: string, experimental: boolean): boolean
     );
   }
   return $kubernetesContextsState.get(contextName)?.reachable ?? false;
+}
+
+function isContextOffline(contextName: string, experimental: boolean): boolean {
+  if (experimental) {
+    return $kubernetesContextsHealths.some(
+      contextHealth => contextHealth.contextName === contextName && contextHealth.offline,
+    );
+  }
+  return false; // not implement in non-experimental mode
 }
 
 function isContextKnown(contextName: string, experimental: boolean): boolean {
@@ -243,14 +257,25 @@ async function connect(contextName: string): Promise<void> {
         <div class="grow flex-column divide-gray-900 text-[var(--pd-invert-content-card-text)]">
           <div class="flex flex-row">
             <div class="flex-none w-36">
-              {#if context.isReachable}
+              {#if context.isReachable || context.isOffline}
                 <div class="flex flex-row pt-2">
-                  <div class="w-3 h-3 rounded-full bg-[var(--pd-status-connected)]"></div>
-                  <div
-                    class="ml-1 font-bold text-[9px] text-[var(--pd-status-connected)]"
-                    aria-label="Context Reachable">
-                    REACHABLE
-                  </div>
+                  {#if context.isOffline}
+                    <Tooltip class="flex flex-row" tip="connection to the cluster lost, the resources displayed can be out of date">
+                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-paused)]"></div>
+                      <div
+                        class="ml-1 font-bold text-[9px] text-[var(--pd-status-paused)]"
+                        aria-label="Context connection lost">
+                        CONNECTION LOST
+                      </div>
+                    </Tooltip>
+                  {:else}
+                    <div class="w-3 h-3 rounded-full bg-[var(--pd-status-connected)]"></div>
+                    <div
+                      class="ml-1 font-bold text-[9px] text-[var(--pd-status-connected)]"
+                      aria-label="Context Reachable">
+                      REACHABLE
+                    </div>
+                  {/if}
                 </div>
                 <div class="flex flex-row gap-4 mt-4">
                   <div class="text-center">
