@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ vi.mock('@xterm/addon-search');
 
 const listPodsMock = vi.fn();
 const listContainersMock = vi.fn();
-const kubernetesListPodsMock = vi.fn();
 const showMessageBoxMock = vi.fn();
 const getConfigurationValueMock = vi.fn();
 
@@ -66,7 +65,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'listPods', { value: listPodsMock });
   Object.defineProperty(window, 'listContainers', { value: listContainersMock.mockResolvedValue([]) });
-  Object.defineProperty(window, 'kubernetesListPods', { value: kubernetesListPodsMock });
   Object.defineProperty(window, 'removePod', { value: removePodMock });
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock, writable: true });
@@ -92,7 +90,6 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   showMessageBoxMock.mockResolvedValue({ response: 0 });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listPodsMock.mockResolvedValue([myPod]);
-  kubernetesListPodsMock.mockResolvedValue([]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   while (get(podsInfos).length !== 1) {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -143,7 +140,6 @@ test('Expect redirect to logs', async () => {
     return (): void => {};
   });
   listPodsMock.mockResolvedValue([myPod]);
-  kubernetesListPodsMock.mockResolvedValue([]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   while (get(podsInfos).length !== 1) {
     await new Promise(resolve => setTimeout(resolve, 500));

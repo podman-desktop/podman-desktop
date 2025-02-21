@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,6 @@ const showMessageBoxMock = vi.fn();
 
 const listPodsMock = vi.fn();
 
-const kubernetesListPodsMock = vi.fn();
-
 const deleteContainersByLabelMock = vi.fn();
 
 // fake the window.events object
@@ -49,10 +47,8 @@ beforeAll(() => {
   (window as any).onDidUpdateProviderStatus = onDidUpdateProviderStatusMock;
   onDidUpdateProviderStatusMock.mockImplementation(() => Promise.resolve());
   listPodsMock.mockImplementation(() => Promise.resolve([]));
-  kubernetesListPodsMock.mockImplementation(() => Promise.resolve([]));
   (window as any).listContainers = listContainersMock;
   (window as any).listPods = listPodsMock;
-  (window as any).kubernetesListPods = kubernetesListPodsMock;
   (window as any).getProviderInfos = getProviderInfosMock;
   (window as any).deleteContainersByLabel = deleteContainersByLabelMock;
   const listViewsContributionsMock = vi.fn();

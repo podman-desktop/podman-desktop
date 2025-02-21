@@ -103,11 +103,7 @@ async function deleteSelectedPods(): Promise<void> {
   await Promise.all(
     selectedPods.map(async pod => {
       try {
-        if (pod.kind === 'podman') {
-          await window.removePod(pod.engineId, pod.id);
-        } else {
-          await window.kubernetesDeletePod(pod.name);
-        }
+        await window.removePod(pod.engineId, pod.id);
       } catch (e) {
         console.error('error while removing pod', e);
       }
@@ -239,6 +235,8 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
       defaultSortColumn="Name"
       on:update={(): PodInfoUI[] => (pods = pods)}>
     </Table>
+    
+    <div class="fixed right-2 bottom-8 self-center text-[var(--pd-table-body-text)]">Looking for pods running on a Kubernetes cluster? Check the Kubernetes &gt; Pods page</div>
 
     {#if $filtered.length === 0 && providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />

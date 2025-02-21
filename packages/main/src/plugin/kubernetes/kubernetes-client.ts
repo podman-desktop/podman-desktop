@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import type {
   V1APIGroup,
   V1APIResource,
   V1ConfigMap,
-  V1ContainerState,
   V1CronJob,
   V1Deployment,
   V1Ingress,
@@ -84,7 +83,6 @@ import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-trou
 import type { V1Route } from '/@api/openshift-types.js';
 
 import type { ApiSenderType } from '../api.js';
-import type { PodInfo } from '../api/pod-info.js';
 import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
@@ -119,46 +117,6 @@ interface ContextsManagerInterface {
 
 interface KubernetesObjectWithKind extends KubernetesObject {
   kind: string;
-}
-
-function toContainerStatus(state: V1ContainerState | undefined): string {
-  if (state) {
-    if (state.running) {
-      return 'running';
-    } else if (state.terminated) {
-      return 'terminated';
-    } else if (state.waiting) {
-      return 'waiting';
-    }
-  }
-  return 'unknown';
-}
-
-function toPodInfo(pod: V1Pod, contextName?: string): PodInfo {
-  const containers =
-    pod.status?.containerStatuses?.map(status => {
-      return {
-        Id: status.containerID ?? '',
-        Names: status.name,
-        Status: toContainerStatus(status.state),
-      };
-    }) ?? [];
-  return {
-    Cgroup: '',
-    Containers: containers,
-    Created: (pod.metadata?.creationTimestamp ?? '').toString(),
-    Id: pod.metadata?.uid ?? '',
-    InfraId: '',
-    Labels: pod.metadata?.labels ?? {},
-    Name: pod.metadata?.name ?? '',
-    Namespace: pod.metadata?.namespace ?? '',
-    Networks: [],
-    Status: pod.metadata?.deletionTimestamp ? 'DELETING' : (pod.status?.phase ?? ''),
-    engineId: contextName ?? 'kubernetes',
-    engineName: 'Kubernetes',
-    kind: 'kubernetes',
-    node: pod.spec?.nodeName,
-  };
 }
 
 const OPENSHIFT_PROJECT_API_GROUP = 'project.openshift.io';
@@ -196,8 +154,6 @@ export class KubernetesClient {
   protected currentContextName: string | undefined;
 
   private kubeConfigWatcher: containerDesktopAPI.FileSystemWatcher | undefined;
-
-  private kubeWatcher: AbortController | undefined;
 
   private apiGroups = new Array<V1APIGroup>();
 
@@ -330,34 +286,6 @@ export class KubernetesClient {
 
   protected createWatchObject(): Watch {
     return new Watch(this.kubeConfig);
-  }
-
-  setupKubeWatcher(): void {
-    this.kubeWatcher?.abort();
-    const ns = this.currentNamespace;
-    if (ns) {
-      const watch = this.createWatchObject();
-
-      watch
-        .watch(
-          '/api/v1/namespaces/' + ns + '/pods',
-          {},
-          () => this.apiSender.send('pod-event'),
-          err => console.warn('Kube pod watch ended', String(err)),
-        )
-        .then(req => (this.kubeWatcher = req))
-        .catch((err: unknown) => console.error('Kube pod event error', err));
-
-      watch
-        .watch(
-          '/apis/apps/v1/namespaces/' + ns + '/deployments',
-          {},
-          () => this.apiSender.send('deployment-event'),
-          err => console.warn('Kube deployment watch ended', String(err)),
-        )
-        .then(req => (this.kubeWatcher = req))
-        .catch((err: unknown) => console.error('Kube deployment event error', err));
-    }
   }
 
   async fetchAPIGroups(): Promise<void> {
@@ -551,14 +479,12 @@ export class KubernetesClient {
     if (currentContext && connected) {
       this.currentNamespace = await this.getDefaultNamespace(currentContext);
     }
-    this.setupKubeWatcher();
     this.apiResources.clear();
     this.#portForwardService?.dispose();
     this.#execs.forEach(entry => entry.conn.close());
     this.#execs.clear();
     this.#portForwardService = KubernetesClient.portForwardServiceProvider.getService(this, this.apiSender);
     await this.fetchAPIGroups();
-    this.apiSender.send('pod-event');
     this.apiSender.send('kubeconfig-update');
     const configCopy = new KubeConfig();
     configCopy.loadFromString(this.kubeConfig.exportConfig());
@@ -644,17 +570,6 @@ export class KubernetesClient {
     } catch (error) {
       throw this.wrapK8sClientError(error);
     }
-  }
-
-  async listPods(): Promise<PodInfo[]> {
-    const ns = this.getCurrentNamespace();
-    // Only retrieve pods if valid namespace && valid connection, otherwise we will return an empty array
-    const connected = await this.checkConnection();
-    if (ns && connected) {
-      const pods = await this.listNamespacedPod(ns);
-      return pods.items.map(pod => toPodInfo(pod, this.getCurrentContextName()));
-    }
-    return [];
   }
 
   // List all routes
