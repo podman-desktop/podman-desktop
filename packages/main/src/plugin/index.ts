@@ -943,8 +943,11 @@ export class PluginSystem {
         _listener,
         yamlFilePath: string,
         selectedProvider: ProviderContainerConnectionInfo,
+        options?: {
+          build?: boolean;
+        },
       ): Promise<PlayKubeInfo> => {
-        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider);
+        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
       },
     );
     this.ipcHandle(

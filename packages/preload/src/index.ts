@@ -355,8 +355,11 @@ export function initExposure(): void {
     async (
       relativeContainerfilePath: string,
       selectedProvider: ProviderContainerConnectionInfo,
+      options?: {
+        build?: boolean;
+      },
     ): Promise<PlayKubeInfo> => {
-      return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider);
+      return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);
     },
   );
 
