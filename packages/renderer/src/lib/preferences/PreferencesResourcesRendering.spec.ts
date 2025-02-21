@@ -330,6 +330,7 @@ test('Expect to redirect to onboarding page if setup button is clicked', async (
 
   const onboarding: OnboardingInfo = {
     extension: 'id',
+    removable: true,
     steps: [],
     title: 'onboarding',
     enablement: 'true',
@@ -356,6 +357,7 @@ test('Expect setup button to appear even if provider status is set to unknown an
   // Onboarding is enabled
   const onboarding: OnboardingInfo = {
     extension: 'id',
+    removable: true,
     steps: [],
     title: 'onboarding',
     enablement: 'true',
@@ -400,6 +402,7 @@ test('Expect to redirect to extension preferences page if onboarding is disabled
 
   const onboarding: OnboardingInfo = {
     extension: 'id',
+    removable: true,
     steps: [],
     title: 'onboarding',
     enablement: 'false',
@@ -429,6 +432,7 @@ test('Expect to not have cog icon button if provider has no active onboarding no
 
   const onboarding: OnboardingInfo = {
     extension: 'id',
+    removable: true,
     steps: [],
     title: 'onboarding',
     enablement: 'false',
@@ -471,6 +475,7 @@ test('Expect to redirect to extension onboarding page if onboarding is enabled a
 
   const onboarding: OnboardingInfo = {
     extension: 'id',
+    removable: true,
     steps: [],
     title: 'onboarding',
     enablement: 'true',

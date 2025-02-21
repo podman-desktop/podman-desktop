@@ -31,6 +31,7 @@
     ],
     "onboarding": {
       "title": "Compose Setup",
+      "priority": 60,
       "enablement": "!compose.isComposeInstalledSystemWide",
       "steps": [
         {

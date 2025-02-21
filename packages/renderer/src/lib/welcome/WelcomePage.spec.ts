@@ -84,6 +84,7 @@ test('Expect welcome screen to show three checked onboarding providers', async (
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar1',
       displayName: 'FooBar1',
@@ -100,6 +101,7 @@ test('Expect welcome screen to show three checked onboarding providers', async (
     },
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar2',
       displayName: 'FooBar2',
@@ -116,6 +118,7 @@ test('Expect welcome screen to show three checked onboarding providers', async (
     },
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar3',
       displayName: 'FooBar3',
@@ -199,6 +202,7 @@ test('Make sure the provider with name podman appears first even if its 2nd in t
   onboardingList.set([
     {
       extension: 'test.extension.id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar1',
       displayName: 'FooBar1',
@@ -215,6 +219,7 @@ test('Make sure the provider with name podman appears first even if its 2nd in t
     },
     {
       extension: 'podman.extension.id',
+      removable: true,
       title: 'onboarding',
       name: 'podman',
       displayName: 'Podman',
@@ -231,6 +236,7 @@ test('Make sure the provider with name podman appears first even if its 2nd in t
     },
     {
       extension: 'test.extension.id2',
+      removable: true,
       title: 'onboarding',
       name: 'foobar3',
       displayName: 'FooBar3',

@@ -49,6 +49,7 @@ test('Expect to have the "Try again" and Cancel buttons if the step represent a 
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -80,6 +81,7 @@ test('Expect not to have the "Try again" and "Cancel" buttons if the step repres
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -111,6 +113,7 @@ test('Expect to have the "Step Body" div if the step does not include a componen
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -140,6 +143,7 @@ test('Expect to have the embedded component if the step includes a component', a
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -171,6 +175,7 @@ test('Expect content to show / render when when clause is true', async () => {
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -207,6 +212,7 @@ test('Expect content to NOT show / render when when clause is false', async () =
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -246,6 +252,7 @@ test('Expect content with "when" to change dynamically when setting has been upd
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -296,6 +303,7 @@ test('Expect Step Body to clean up if new step has no content to display.', asyn
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -355,6 +363,7 @@ test('Expect that Esc closes', async () => {
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -405,6 +414,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'Foobar Onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -438,6 +448,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
     },
     {
       extension: 'id2',
+      removable: true,
       title: 'Foobar2 Onboarding',
       name: 'foobar2',
       displayName: 'FooBar2',
@@ -542,6 +553,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'Foobar Onboarding',
       name: 'foobar',
       displayName: 'FooBar',
@@ -575,6 +587,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
     },
     {
       extension: 'id2',
+      removable: true,
       title: 'Foobar2 Onboarding',
       name: 'foobar2',
       displayName: 'FooBar2',
@@ -675,6 +688,7 @@ test('Expect onboarding to be reset when starting completed onboarding', async (
   onboardingList.set([
     {
       extension: 'id',
+      removable: true,
       title: 'onboarding',
       name: 'foobar',
       displayName: 'FooBar',

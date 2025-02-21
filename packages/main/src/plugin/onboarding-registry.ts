@@ -55,6 +55,7 @@ export class OnboardingRegistry {
     return {
       ...onboarding,
       extension: extension.id,
+      removable: extension.removable,
       name: extension.name,
       displayName: extension.manifest?.displayName ?? extension.name,
       description: extension.manifest?.description ?? '',
@@ -90,7 +91,22 @@ export class OnboardingRegistry {
   }
 
   listOnboarding(): OnboardingInfo[] {
-    return Array.from(this.onboardingInfos.values());
+    const comparePriorities = (p1: number, p2: number): number => {
+      if (p1 === p2) {
+        return 0;
+      }
+      return p1 < p2 ? -1 : 1;
+    };
+    return Array.from(this.onboardingInfos.values()).toSorted((a, b) => {
+      if (a.removable && b.removable) {
+        return comparePriorities(a.priority ?? 100, b.priority ?? 100);
+      } else if (a.removable && !b.removable) {
+        return 1;
+      } else if (!a.removable && b.removable) {
+        return -1;
+      }
+      return comparePriorities(a.priority ?? 100, b.priority ?? 100);
+    });
   }
 
   updateStepState(status: OnboardingStatus, extension: string, stepId?: string): void {
