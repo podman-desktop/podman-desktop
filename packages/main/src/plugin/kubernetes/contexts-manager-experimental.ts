@@ -36,6 +36,7 @@ import type { CurrentChangeEvent, DispatcherEvent } from './contexts-dispatcher.
 import { ContextsDispatcher } from './contexts-dispatcher.js';
 import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
+import { EventsResourceFactory } from './events-resource-factory.js';
 import { IngressesResourceFactory } from './ingresses-resource-factory.js';
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import { NodesResourceFactory } from './nodes-resource-factory.js';
@@ -103,6 +104,7 @@ export class ContextsManagerExperimental {
       new ConfigmapsResourceFactory(),
       new CronjobsResourceFactory(),
       new DeploymentsResourceFactory(),
+      new EventsResourceFactory(),
       new IngressesResourceFactory(),
       new NodesResourceFactory(),
       new PodsResourceFactory(),
