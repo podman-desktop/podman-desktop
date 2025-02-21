@@ -107,4 +107,15 @@ export class ImageDetailsPage extends DetailsPage {
 
     return new ImagesPage(this.page);
   }
+
+  async pushImageToKindCluster(): Promise<void> {
+    const pushToKindButton = this.page.getByRole('button', { name: 'Push image to Kind cluster' });
+    await playExpect(pushToKindButton).toBeVisible();
+    await pushToKindButton.click();
+
+    const confirmationDialog = this.page.getByRole('dialog', { name: 'Kind' });
+    await playExpect(confirmationDialog).toBeVisible({ timeout: 10000 });
+    const okButton = confirmationDialog.getByRole('button', { name: 'OK' });
+    await okButton.click();
+  }
 }
