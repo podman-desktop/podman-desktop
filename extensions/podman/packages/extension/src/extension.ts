@@ -915,7 +915,7 @@ export async function startMachine(
       // propagate the error
       throw err;
     }
-    await doHandleError(provider, machineInfo, typeof err === 'string' ? err : (err as RunError));
+    await doHandleError(provider, machineInfo, podmanConfiguration, typeof err === 'string' ? err : (err as RunError));
   } finally {
     // send telemetry event
     const endTime = performance.now();
@@ -953,6 +953,7 @@ export async function stopMachine(
 async function doHandleError(
   provider: extensionApi.Provider,
   machineInfo: MachineInfo,
+  podmanConfiguration: PodmanConfiguration,
   error: string | RunError,
 ): Promise<void> {
   let errText: string = '';
@@ -964,7 +965,7 @@ async function doHandleError(
   }
 
   if (errText.toLowerCase().includes('wsl bootstrap script failed: exit status 0xffffffff')) {
-    const handled = await doHandleWSLDistroNotFoundError(provider, machineInfo);
+    const handled = await doHandleWSLDistroNotFoundError(provider, machineInfo, podmanConfiguration);
     if (handled) {
       return;
     }
@@ -978,6 +979,7 @@ async function doHandleError(
 async function doHandleWSLDistroNotFoundError(
   provider: extensionApi.Provider,
   machineInfo: MachineInfo,
+  podmanConfiguration: PodmanConfiguration,
 ): Promise<boolean> {
   const result = await extensionApi.window.showInformationMessage(
     `Error while starting Podman Machine '${machineInfo.name}'. The WSL bootstrap script failed: exist status 0xffffffff. The machine is probably broken and should be deleted and reinitialized. Do you want to recreate it?`,
@@ -993,12 +995,15 @@ async function doHandleWSLDistroNotFoundError(
           provider.updateStatus('configuring');
           await extensionApi.process.exec(getPodmanCli(), ['machine', 'rm', '-f', machineInfo.name]);
           progress.report({ increment: 40 });
-          await createMachine({
-            'podman.factory.machine.name': machineInfo.name,
-            'podman.factory.machine.cpus': machineInfo.cpus,
-            'podman.factory.machine.memory': machineInfo.memory,
-            'podman.factory.machine.diskSize': machineInfo.diskSize,
-          });
+          await createMachine(
+            {
+              'podman.factory.machine.name': machineInfo.name,
+              'podman.factory.machine.cpus': machineInfo.cpus,
+              'podman.factory.machine.memory': machineInfo.memory,
+              'podman.factory.machine.diskSize': machineInfo.diskSize,
+            },
+            podmanConfiguration,
+          );
         } catch (error) {
           console.error(error);
         } finally {
@@ -1563,10 +1568,18 @@ export async function start(
   // create machines on Linux via Podman Desktop, however we will still support
   // the lifecycle management of one.
   if (extensionApi.env.isMac || extensionApi.env.isWindows) {
+    const handleCreateMachine = (
+      params: Record<string, unknown>,
+      logger?: extensionApi.Logger,
+      token?: extensionApi.CancellationToken,
+    ): Promise<void> => {
+      return createMachine(params, podmanConfiguration, logger, token);
+    };
+
     provider.setContainerProviderConnectionFactory(
       {
-        initialize: () => createMachine({}),
-        create: createMachine,
+        initialize: () => handleCreateMachine({}),
+        create: handleCreateMachine,
         creationDisplayName: 'Podman machine',
       },
       {
@@ -2047,6 +2060,7 @@ export function sendTelemetryRecords(
 
 export async function createMachine(
   params: { [key: string]: unknown },
+  podmanConfiguration: PodmanConfiguration,
   logger?: extensionApi.Logger,
   token?: extensionApi.CancellationToken,
 ): Promise<void> {

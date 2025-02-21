@@ -371,13 +371,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.image-path': 'path',
-      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
-      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
-      'podman.factory.machine.provider': provider,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+        'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       ['machine', 'init', '--cpus', '2', '--memory', '1000', '--disk-size', '232', '--image-path', 'path', '--rootful'],
@@ -406,13 +409,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.image-uri': 'https://host/file',
-      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
-      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
-      'podman.factory.machine.provider': provider,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-uri': 'https://host/file',
+        'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+        'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       [
@@ -453,13 +459,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.image-uri': 'registry/repo/image:version',
-      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
-      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
-      'podman.factory.machine.provider': provider,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-uri': 'registry/repo/image:version',
+        'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+        'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
       [
@@ -501,13 +510,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.image-path': 'path',
-      'podman.factory.machine.memory': '1048000000',
-      'podman.factory.machine.diskSize': '250000000000',
-      'podman.factory.machine.user-mode-networking': true,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.user-mode-networking': true,
+      },
+      podmanConfiguration,
+    );
     const parameters = [
       'machine',
       'init',
@@ -549,13 +561,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.image-path': 'path',
-      'podman.factory.machine.memory': '1048000000',
-      'podman.factory.machine.diskSize': '250000000000',
-      'podman.factory.machine.now': true,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.now': true,
+      },
+      podmanConfiguration,
+    );
     const parameters = [
       'machine',
       'init',
@@ -590,13 +605,16 @@ describe.each([
       stderr: 'error',
     });
     await expect(
-      extension.createMachine({
-        'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image-path': 'path',
-        'podman.factory.machine.memory': '1048000000',
-        'podman.factory.machine.diskSize': '250000000000',
-        'podman.factory.machine.now': true,
-      }),
+      extension.createMachine(
+        {
+          'podman.factory.machine.cpus': '2',
+          'podman.factory.machine.image-path': 'path',
+          'podman.factory.machine.memory': '1048000000',
+          'podman.factory.machine.diskSize': '250000000000',
+          'podman.factory.machine.now': true,
+        },
+        podmanConfiguration,
+      ),
     ).rejects.toThrowError('name\ndescription\nerror\n');
   });
 
@@ -611,12 +629,15 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.memory': '1048000000',
-      'podman.factory.machine.diskSize': '250000000000',
-      'podman.factory.machine.now': true,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.now': true,
+      },
+      podmanConfiguration,
+    );
 
     // check telemetry is called with telemetryRecords.imagePath
     await vi.waitFor(() => {
@@ -644,13 +665,16 @@ describe.each([
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
 
-    await extension.createMachine({
-      'podman.factory.machine.cpus': '2',
-      'podman.factory.machine.memory': '1048000000',
-      'podman.factory.machine.diskSize': '250000000000',
-      'podman.factory.machine.now': true,
-      'podman.factory.machine.win.provider': provider,
-    });
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.now': true,
+        'podman.factory.machine.win.provider': provider,
+      },
+      podmanConfiguration,
+    );
 
     await vi.waitFor(() => {
       expect(telemetryLogger.logUsage).toBeCalledWith(
