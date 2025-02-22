@@ -1,15 +1,16 @@
 <script lang="ts">
-import type { Component } from 'svelte';
+import { getIcon } from './kube-utils';
 
 interface Props {
   type: string;
-  Icon: Component;
   activeCount?: number;
   count: number;
   kind: string;
 }
 
-let { type, Icon, activeCount, count, kind }: Props = $props();
+let { type, activeCount, count, kind }: Props = $props();
+
+let Icon = $derived(getIcon(kind));
 
 async function openLink(): Promise<void> {
   try {

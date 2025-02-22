@@ -1,7 +1,6 @@
 <script lang="ts">
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { Link } from '@podman-desktop/ui-svelte';
-import type { Component } from 'svelte';
 
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { containersInfos } from '/@/stores/containers';
@@ -21,14 +20,6 @@ import {
 import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 
 import { kubernetesContexts } from '../../stores/kubernetes-contexts';
-import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
-import CronJobIcon from '../images/CronJobIcon.svelte';
-import DeploymentIcon from '../images/DeploymentIcon.svelte';
-import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import NodeIcon from '../images/NodeIcon.svelte';
-import PodIcon from '../images/PodIcon.svelte';
-import PvcIcon from '../images/PVCIcon.svelte';
-import ServiceIcon from '../images/ServiceIcon.svelte';
 import { fadeSlide } from '../ui/animations';
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
@@ -123,14 +114,14 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <!-- Metrics - non-collapsible -->
                 <div class="text-xl pt-2">Metrics</div>
                 <div class="grid grid-cols-4 gap-4">
-                    <KubernetesDashboardResourceCard type='Nodes' Icon={NodeIcon} activeCount={activeNodeCount} count={nodeCount} kind='Node'/>
-                    <KubernetesDashboardResourceCard type='Deployments' Icon={DeploymentIcon} activeCount={activeDeploymentsCount} count={deploymentCount} kind='Deployment'/>
-                    <KubernetesDashboardResourceCard type='Pods' Icon={PodIcon} count={podCount} kind='Pod'/>
-                    <KubernetesDashboardResourceCard type='Services' Icon={ServiceIcon} count={serviceCount} kind='Service'/>
-                    <KubernetesDashboardResourceCard type='Ingresses & Routes' Icon={IngressRouteIcon} count={ingressRouteCount} kind='Ingress'/>
-                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' Icon={PvcIcon} count={pvcCount} kind='PersistentVolumeClaim'/>
-                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' Icon={ConfigMapSecretIcon} count={configMapSecretCount} kind='ConfigMap'/>
-                    <KubernetesDashboardResourceCard type='CronJobs' Icon={CronJobIcon as Component} count={cronjobCount} kind='CronJob'/>
+                    <KubernetesDashboardResourceCard type='Nodes' activeCount={activeNodeCount} count={nodeCount} kind='Node'/>
+                    <KubernetesDashboardResourceCard type='Deployments' activeCount={activeDeploymentsCount} count={deploymentCount} kind='Deployment'/>
+                    <KubernetesDashboardResourceCard type='Pods' count={podCount} kind='Pod'/>
+                    <KubernetesDashboardResourceCard type='Services' count={serviceCount} kind='Service'/>
+                    <KubernetesDashboardResourceCard type='Ingresses & Routes' count={ingressRouteCount} kind='Ingress'/>
+                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={pvcCount} kind='PersistentVolumeClaim'/>
+                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={configMapSecretCount} kind='ConfigMap'/>
+                    <KubernetesDashboardResourceCard type='CronJobs' count={cronjobCount} kind='CronJob'/>
                 </div>
                 <!-- Graphs -->
                 
