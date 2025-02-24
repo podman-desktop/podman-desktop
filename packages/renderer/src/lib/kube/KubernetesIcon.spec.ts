@@ -39,7 +39,7 @@ describe.each([
   test(kind, async () => {
     render(KubernetesIcon, { kind: `${kind}` });
 
-    const label = screen.getByTestId(kind, { exact: false });
+    const label = screen.getByLabelText(kind, { exact: false });
     expect(label).toBeInTheDocument();
   });
 });

@@ -9,7 +9,7 @@ export let solid = false;
   class={$$props.class}
   style={$$props.style}
   version="1.1"
-  data-testid="Deployment"
+  aria-label="Deployment"
   xml:space="preserve"
   viewBox="0 0 16 16">
   {#if solid}

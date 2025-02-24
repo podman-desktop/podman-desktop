@@ -14,7 +14,7 @@ if (!solid) {
   class={$$props.class}
   style={$$props.style}
   version="1.1"
-  data-testid="Service"
+  aria-label="Service"
   xml:space="preserve"
   viewBox="-0.5 -0.5 20.03 15">
   <!-- four boxes -->
