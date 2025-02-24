@@ -1,16 +1,18 @@
 <script lang="ts">
-import type { V1ConfigMap } from '@kubernetes/client-node';
+import type { KubernetesObject, V1ConfigMap } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
 import { kubernetesCurrentContextConfigMaps } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import ConfigMapIcon from '../images/ConfigMapSecretIcon.svelte';
 import KubeEditYAML from '../kube/KubeEditYAML.svelte';
+import { listenResource } from '../kube/resource-listen';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import StateChange from '../ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
@@ -19,37 +21,54 @@ import ConfigMapDetailsSummary from './ConfigMapDetailsSummary.svelte';
 import ConfigMapSecretActions from './ConfigMapSecretActions.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
-export let name: string;
-export let namespace: string;
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
 
-let configMap: ConfigMapSecretUI;
-let detailsPage: DetailsPage;
-let kubeConfigMap: V1ConfigMap | undefined;
-let kubeError: string;
+let configMap: ConfigMapSecretUI | undefined = $state(undefined);
+let detailsPage: DetailsPage | undefined = $state(undefined);
+let kubeConfigMap: V1ConfigMap | undefined = $state(undefined);
+let kubeError: string | undefined = $state(undefined);
 
-onMount(() => {
+let listener: IDisposable | undefined;
+
+onMount(async () => {
   const configMapUtils = new ConfigMapSecretUtils();
-  // loading configMap info
-  return kubernetesCurrentContextConfigMaps.subscribe(configMaps => {
-    const matchingConfigMap = configMaps.find(
-      configMap => configMap.metadata?.name === name && configMap.metadata?.namespace === namespace,
-    );
-    if (matchingConfigMap) {
-      configMap = configMapUtils.getConfigMapSecretUI(matchingConfigMap);
-      loadDetails().catch((err: unknown) => console.error(`Error getting config map ${configMap.name} details`, err));
-    } else if (detailsPage) {
-      // the configMap has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'configmaps',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextConfigMaps,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the deployment has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      configMap = configMapUtils.getConfigMapSecretUI(resource);
+      if (isExperimental) {
+        kubeConfigMap = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting config map ${name} details`, err));
+      }
+    },
   });
 });
 
+onDestroy(() => {
+  listener?.dispose();
+});
+
 async function loadDetails(): Promise<void> {
-  const getKubeConfigMap = await window.kubernetesReadNamespacedConfigMap(configMap.name, namespace);
+  const getKubeConfigMap = await window.kubernetesReadNamespacedConfigMap(name, namespace);
   if (getKubeConfigMap) {
     kubeConfigMap = getKubeConfigMap;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${configMap.name}`;
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -58,7 +77,7 @@ async function loadDetails(): Promise<void> {
   <DetailsPage title={configMap.name} subtitle={configMap.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={ConfigMapIcon} size={24} status={configMap.status} />
     <svelte:fragment slot="actions">
-      <ConfigMapSecretActions configMapSecret={configMap} detailed={true} on:update={(): ConfigMapSecretUI => (configMap = configMap)} />
+      <ConfigMapSecretActions configMapSecret={configMap} detailed={true} on:update={(): ConfigMapSecretUI | undefined => (configMap = configMap)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={configMap.status} />
