@@ -26,7 +26,6 @@ import KubePlayButton from '../kube/KubePlayButton.svelte';
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';
 import PodColumnContainers from './PodColumnContainers.svelte';
-import PodColumnEnvironment from './PodColumnEnvironment.svelte';
 import PodColumnName from './PodColumnName.svelte';
 import PodColumnStatus from './PodColumnStatus.svelte';
 import PodEmptyScreen from './PodEmptyScreen.svelte';
@@ -137,11 +136,6 @@ let nameColumn = new TableColumn<PodInfoUI>('Name', {
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
-let envColumn = new TableColumn<PodInfoUI>('Environment', {
-  renderer: PodColumnEnvironment,
-  comparator: (a, b): number => a.kind.localeCompare(b.kind),
-});
-
 let containersColumn = new TableColumn<PodInfoUI>('Containers', {
   renderer: PodColumnContainers,
   comparator: (a, b): number => a.containers.length - b.containers.length,
@@ -160,7 +154,6 @@ let ageColumn = new TableColumn<PodInfoUI, Date | undefined>('Age', {
 const columns = [
   statusColumn,
   nameColumn,
-  envColumn,
   containersColumn,
   ageColumn,
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),
