@@ -778,7 +778,7 @@ function prettyMachineName(machineName: string): string {
 }
 
 /**
- * This function will check for the version of a podman connection
+ * This function will check for the version of a podman connection and populate podmanServerVersions with it
  * @param machineInfo
  * @param force
  */
