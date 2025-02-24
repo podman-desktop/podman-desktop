@@ -16,7 +16,7 @@ interface Props {
   kind: string;
   size?: string;
 }
-let { kind, size }: Props = $props();
+let { kind, size = '1em' }: Props = $props();
 
 let Icon: Component = $derived.by(() => {
   switch (kind) {
