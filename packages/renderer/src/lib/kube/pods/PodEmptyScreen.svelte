@@ -1,6 +1,6 @@
 <script lang="ts">
-import PodIcon from '../../images/PodIcon.svelte';
-import KubernetesEmptyScreen from '../KubernetesEmptyScreen.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import KubernetesEmptyScreen from '/@/lib/kube/KubernetesEmptyScreen.svelte';
 </script>
 
 <KubernetesEmptyScreen
