@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { V1Deployment } from '@kubernetes/client-node';
+import type { CoreV1Event, KubernetesObject, V1Deployment } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
@@ -10,11 +10,13 @@ import {
   kubernetesCurrentContextEvents,
 } from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { EventUI } from '../events/EventUI';
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
 import KubeEditYAML from '../kube/KubeEditYAML.svelte';
+import { listenResource } from '../kube/resource-listen';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
 import { DeploymentUtils } from './deployment-utils';
@@ -22,32 +24,51 @@ import DeploymentActions from './DeploymentActions.svelte';
 import DeploymentDetailsSummary from './DeploymentDetailsSummary.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 
-export let name: string;
-export let namespace: string;
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
 
-let deployment: DeploymentUI;
-let detailsPage: DetailsPage;
-let kubeDeployment: V1Deployment | undefined;
-let kubeError: string;
+let deployment: DeploymentUI | undefined = $state(undefined);
+let detailsPage: DetailsPage | undefined = $state(undefined);
+let kubeDeployment: V1Deployment | undefined = $state(undefined);
+let kubeError: string | undefined = $state(undefined);
 
-let events: EventUI[] = [];
+let events = $state<EventUI[]>([]);
+let listener: IDisposable | undefined;
 
-onMount(() => {
+onMount(async () => {
   const deploymentUtils = new DeploymentUtils();
-  // loading deployment info
-  return kubernetesCurrentContextDeployments.subscribe(deployments => {
-    const matchingDeployment = deployments.find(
-      dep => dep.metadata?.name === name && dep.metadata?.namespace === namespace,
-    );
-    if (matchingDeployment) {
-      deployment = deploymentUtils.getDeploymentUI(matchingDeployment);
-      events = $kubernetesCurrentContextEvents.filter(ev => ev.involvedObject.uid === deployment.uid);
-      loadDetails().catch((err: unknown) => console.error(`Error getting deployment details ${deployment.name}`, err));
-    } else if (detailsPage) {
-      // the deployment has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'deployments',
+    name,
+    namespace,
+    listenEvents: true,
+    legacyResourceStore: kubernetesCurrentContextDeployments,
+    legacyEventsStore: kubernetesCurrentContextEvents,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the deployment has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      deployment = deploymentUtils.getDeploymentUI(resource);
+      if (isExperimental) {
+        kubeDeployment = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting deployment details ${name}`, err));
+      }
+    },
+    onEventsUpdated: (updatedEvents: CoreV1Event[]) => {
+      events = updatedEvents;
+    },
   });
+});
+
+onDestroy(() => {
+  listener?.dispose();
 });
 
 async function loadDetails(): Promise<void> {
@@ -55,7 +76,7 @@ async function loadDetails(): Promise<void> {
   if (getKubeDeployment) {
     kubeDeployment = getKubeDeployment;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${deployment.name}`;
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -64,7 +85,7 @@ async function loadDetails(): Promise<void> {
   <DetailsPage title={deployment.name} subtitle={deployment.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={DeploymentIcon} size={24} status={deployment.status} />
     <svelte:fragment slot="actions">
-      <DeploymentActions deployment={deployment} detailed={true} on:update={(): DeploymentUI => (deployment = deployment)} />
+      <DeploymentActions deployment={deployment} detailed={true} on:update={(): DeploymentUI | undefined => (deployment = deployment)} />
     </svelte:fragment>
     <svelte:fragment slot="tabs">
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
