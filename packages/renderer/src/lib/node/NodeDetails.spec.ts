@@ -18,13 +18,15 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { CoreV1Event, KubernetesObject, V1Node } from '@kubernetes/client-node';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
+import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
+import * as resourcesListen from '../kube/resources-listen';
 import NodeDetails from './NodeDetails.svelte';
 import * as nodeDetailsSummary from './NodeDetailsSummary.svelte';
 
@@ -38,63 +40,136 @@ const node: V1Node = {
   },
 } as V1Node;
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('../kube/resources-listen'), async importOriginal => {
+  // we want to keep the original nonVerbose
+  const original = await importOriginal();
   return {
-    kubernetesCurrentContextNodes: vi.fn(),
+    ...original,
+    listenResources: vi.fn(),
+    isKubernetesExperimentalMode: vi.fn(),
   };
 });
 
-beforeAll(() => {
-  Object.defineProperty(window, 'kubernetesReadNode', { value: vi.fn() });
+vi.mock('/@/stores/kubernetes-contexts-state');
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  router.goto('http://localhost:3000');
 });
 
-test('Confirm renders node details', async () => {
-  // mock object store
-  const nodes = writable<KubernetesObject[]>([node]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = nodes;
+type initListsReturnType = {
+  updateNodes: (objects: KubernetesObject[]) => void;
+  updateEvents: (objects: CoreV1Event[]) => void;
+};
 
-  render(NodeDetails, { name: 'my-node' });
-
-  expect(screen.getByText('my-node')).toBeInTheDocument();
-});
-
-test('Expect NodeDetailsSummary to be called with related events only', async () => {
-  const nodeDetailsSummarySpy = vi.spyOn(nodeDetailsSummary, 'default');
-  // mock object stores
-  const nodesStore = writable<KubernetesObject[]>([node]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = nodesStore;
-
-  const events: CoreV1Event[] = [
-    {
-      metadata: {
-        name: 'event1',
-      },
-      involvedObject: { uid: '12345678' },
+describe.each<{
+  experimental: boolean;
+  initLists: (nodes: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType;
+}>([
+  {
+    experimental: false,
+    initLists: (nodes: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
+      const nodesStore = writable<KubernetesObject[]>(nodes);
+      vi.mocked(states).kubernetesCurrentContextNodes = nodesStore;
+      const eventsStore = writable<CoreV1Event[]>(events);
+      vi.mocked(states).kubernetesCurrentContextEvents = eventsStore;
+      return {
+        updateNodes: (nodes: KubernetesObject[]): void => {
+          nodesStore.set(nodes);
+        },
+        updateEvents: (events: CoreV1Event[]): void => {
+          eventsStore.set(events);
+        },
+      };
     },
-    {
-      metadata: {
-        name: 'event2',
-      },
-      involvedObject: { uid: '12345678' },
+  },
+  {
+    experimental: true,
+    initLists: (nodes: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
+      let nodesCallback: (resources: KubernetesObject[]) => void;
+      let eventsCallback: (resources: CoreV1Event[]) => void;
+      vi.mocked(resourcesListen.listenResources).mockImplementation(
+        async (resourceName, _options, cb): Promise<IDisposable> => {
+          if (resourceName === 'nodes') {
+            nodesCallback = cb;
+            setTimeout(() => nodesCallback(nodes));
+            return {
+              dispose: (): void => {},
+            };
+          } else {
+            eventsCallback = cb;
+            setTimeout(() => eventsCallback(events));
+            return {
+              dispose: (): void => {},
+            };
+          }
+        },
+      );
+      return {
+        updateNodes: (updatedObjects: KubernetesObject[]): void => {
+          nodesCallback(updatedObjects);
+        },
+        updateEvents: (updatedObjects: CoreV1Event[]): void => {
+          eventsCallback(updatedObjects);
+        },
+      };
     },
-    {
-      metadata: {
-        name: 'event3',
+  },
+])('is experimental: $experimental', ({ experimental, initLists }) => {
+  beforeEach(() => {
+    vi.mocked(resourcesListen.isKubernetesExperimentalMode).mockResolvedValue(experimental);
+  });
+
+  test('Confirm renders node details', async () => {
+    // mock object store
+    initLists([node], []);
+    render(NodeDetails, { name: 'my-node' });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('my-node')).toBeInTheDocument();
+    });
+  });
+
+  test('Expect NodeDetailsSummary to be called with related events only', async () => {
+    const nodeDetailsSummarySpy = vi.spyOn(nodeDetailsSummary, 'default');
+
+    const events: CoreV1Event[] = [
+      {
+        kind: 'Event',
+        metadata: {
+          name: 'event1',
+        },
+        involvedObject: { uid: '12345678' },
       },
-      involvedObject: { uid: '1234' },
-    },
-  ];
-  const eventsStore = writable<CoreV1Event[]>(events);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextEvents = eventsStore;
+      {
+        kind: 'Event',
+        metadata: {
+          name: 'event2',
+        },
+        involvedObject: { uid: '12345678' },
+      },
+      {
+        kind: 'Event',
+        metadata: {
+          name: 'event3',
+        },
+        involvedObject: { uid: '1234' },
+      },
+    ];
 
-  vi.mocked(window.kubernetesReadNode).mockResolvedValue(node);
+    initLists([node], events);
 
-  render(NodeDetails, { name: 'my-node' });
-  router.goto('summary');
-  await waitFor(() => {
-    expect(nodeDetailsSummarySpy).toHaveBeenCalledWith(expect.anything(), {
-      node: node,
-      events: [events[0], events[1]],
+    if (!experimental) {
+      vi.mocked(window.kubernetesReadNode).mockResolvedValue(node);
+    }
+
+    render(NodeDetails, { name: 'my-node' });
+    router.goto('summary');
+    await vi.waitFor(() => {
+      expect(nodeDetailsSummarySpy).toHaveBeenCalledWith(expect.anything(), {
+        node: node,
+        events: [events[0], events[1]],
+      });
     });
   });
 });
