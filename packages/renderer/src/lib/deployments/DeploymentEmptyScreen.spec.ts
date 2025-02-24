@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,25 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
+import { listenResourcePermitted } from '../kube/resource-permission';
 import DeploymentEmptyScreen from './DeploymentEmptyScreen.svelte';
 
+vi.mock('../kube/resource-permission');
+
 test('Expect deployment empty screen', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
+
   render(DeploymentEmptyScreen);
   const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
+  expect(noDeployments).toBeInTheDocument();
+});
+
+test('Expect deployment empty screen without permitted', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+
+  render(DeploymentEmptyScreen);
+  const noDeployments = screen.getByRole('heading', { name: 'Deployments not accessible' });
   expect(noDeployments).toBeInTheDocument();
 });
