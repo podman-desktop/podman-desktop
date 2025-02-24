@@ -376,7 +376,9 @@ test('expect WSLVersion preflight check return fail result if wsl --version comm
   const winWSLCheck = new WSLVersionCheck();
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(`Call 'wsl --version' in a terminal to check your wsl version.`);
+  expect(result.docLinksDescription).equal(
+    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
+  );
 });
 
 test('expect WSLVersion preflight check return fail result if first line output do not contain any colon symbol', async () => {
@@ -389,7 +391,9 @@ test('expect WSLVersion preflight check return fail result if first line output 
   const winWSLCheck = new WSLVersionCheck();
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(`Call 'wsl --version' in a terminal to check your wsl version.`);
+  expect(result.docLinksDescription).equal(
+    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
+  );
 });
 
 test('expect WSLVersion preflight check return fail result if first line output do not contain any wsl word', async () => {
@@ -402,7 +406,9 @@ test('expect WSLVersion preflight check return fail result if first line output 
   const winWSLCheck = new WSLVersionCheck();
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(`Call 'wsl --version' in a terminal to check your wsl version.`);
+  expect(result.docLinksDescription).equal(
+    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
+  );
 });
 
 test('expect WSLVersion preflight check return fail result if first line output contain an invalid version', async () => {

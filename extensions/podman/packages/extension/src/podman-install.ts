@@ -842,7 +842,7 @@ export class WSLVersionCheck extends BaseCheck {
     }
     return this.createFailureResult({
       description: `WSL version should be >= ${this.minVersion}.`,
-      docLinksDescription: `Call 'wsl --version' in a terminal to check your wsl version.`,
+      docLinksDescription: `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
     });
   }
 }
