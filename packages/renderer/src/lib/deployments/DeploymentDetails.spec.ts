@@ -28,7 +28,7 @@ import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
 
 import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
-import * as resourcesListen from '../kube/resources-listen';
+import { isKubernetesExperimentalMode, listenResources } from '../kube/resources-listen';
 import DeploymentDetails from './DeploymentDetails.svelte';
 import * as deploymentDetailsSummary from './DeploymentDetailsSummary.svelte';
 
@@ -94,23 +94,21 @@ describe.each<{
     initLists: (deployments: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
       let deploymentsCallback: (resoures: KubernetesObject[]) => void;
       let eventsCallback: (resoures: CoreV1Event[]) => void;
-      vi.mocked(resourcesListen.listenResources).mockImplementation(
-        async (resourceName, _options, cb): Promise<IDisposable> => {
-          if (resourceName === 'deployments') {
-            deploymentsCallback = cb;
-            setTimeout(() => deploymentsCallback(deployments));
-            return {
-              dispose: (): void => {},
-            };
-          } else {
-            eventsCallback = cb;
-            setTimeout(() => eventsCallback(events));
-            return {
-              dispose: (): void => {},
-            };
-          }
-        },
-      );
+      vi.mocked(listenResources).mockImplementation(async (resourceName, _options, cb): Promise<IDisposable> => {
+        if (resourceName === 'deployments') {
+          deploymentsCallback = cb;
+          setTimeout(() => deploymentsCallback(deployments));
+          return {
+            dispose: (): void => {},
+          };
+        } else {
+          eventsCallback = cb;
+          setTimeout(() => eventsCallback(events));
+          return {
+            dispose: (): void => {},
+          };
+        }
+      });
       return {
         updateDeployments: (updatedObjects: KubernetesObject[]): void => {
           deploymentsCallback(updatedObjects);
@@ -123,7 +121,7 @@ describe.each<{
   },
 ])('is experimental: $experimental', ({ experimental, initLists }) => {
   beforeEach(() => {
-    vi.mocked(resourcesListen.isKubernetesExperimentalMode).mockResolvedValue(experimental);
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
   });
 
   test('Expect redirect to previous page if deployment is deleted', async () => {
