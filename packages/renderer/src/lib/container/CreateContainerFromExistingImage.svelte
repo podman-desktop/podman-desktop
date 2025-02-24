@@ -273,10 +273,18 @@ function checkIfTagExist(image: string, tags: string[]): void {
 
 async function buildContainerFromImage(): Promise<void> {
   // filter all the local images that at least one of their repo tags includes the imageToPull
+  let dockerLibraryImage: string | undefined;
+  if (imageToPull.startsWith('docker.io/') && imageToPull.split('/').length === 2) {
+    let [registry, imageName] = imageToPull.split('/');
+    dockerLibraryImage = `${registry}/library/${imageName}`;
+  }
   const localImages = (await window.listImages()).filter(
     image =>
-      (image.RepoTags?.filter(repoTag => repoTag.includes(podmanFQN && usePodmanFQN ? podmanFQN : imageToPull)) ?? [])
-        .length > 0,
+      (
+        image.RepoTags?.filter(repoTag =>
+          repoTag.includes(podmanFQN && usePodmanFQN ? podmanFQN : (dockerLibraryImage ?? imageToPull)),
+        ) ?? []
+      ).length > 0,
   );
   if (localImages.length > 0) {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
@@ -315,9 +323,9 @@ async function onEnterOperation(): Promise<void> {
     return;
   }
   if (!matchingLocalImages.includes(imageToPull)) {
-    await pullImage();
-  } else {
     await buildContainerFromImage();
+  } else {
+    await pullImage();
   }
 }
 </script>
