@@ -158,7 +158,7 @@ test('Expect that typeahead menu has Local Images and Registry Images headings',
   expect(screen.getByText('Registry Images')).toBeInTheDocument();
 });
 
-test('Expect not a local image to have an active pull image button', async () => {
+test('Expect not a local image to have an active pull image and run button', async () => {
   vi.mocked(window.searchImageInRegistry).mockResolvedValue([
     { name: 'image12', description: '', star_count: 3, is_official: true },
   ]);
@@ -177,7 +177,7 @@ test('Expect not a local image to have an active pull image button', async () =>
 
   await userEvent.keyboard('[ArrowDown]');
 
-  const pullImagebutton = screen.getByRole('button', { name: 'Pull Image' });
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull Image and Run' });
 
   expect(pullImagebutton).toBeInTheDocument();
   expect(pullImagebutton).not.toBeDisabled();

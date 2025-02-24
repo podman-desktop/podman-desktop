@@ -6,21 +6,20 @@ import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import { ImageUtils } from '/@/lib/image/image-utils';
+import RecommendedRegistry from '/@/lib/image/RecommendedRegistry.svelte';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
+import Typeahead from '/@/lib/ui/Typeahead.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
+import { providerInfos } from '/@/stores/providers';
 import { runImageInfo } from '/@/stores/run-image-store';
 import type { ImageSearchOptions } from '/@api/image-registry';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
-
-import { providerInfos } from '../../stores/providers';
-import { ImageUtils } from '../image/image-utils';
-import RecommendedRegistry from '../image/RecommendedRegistry.svelte';
-import ImageIcon from '../images/ImageIcon.svelte';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
-import type { TypeaheadItem } from '../ui/Typeahead';
-import Typeahead from '../ui/Typeahead.svelte';
-import WarningMessage from '../ui/WarningMessage.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
@@ -318,6 +317,11 @@ async function searchFunction(value: string): Promise<void> {
   ];
 }
 
+async function pullImageAndRun(): Promise<void> {
+  await pullImage();
+  await buildContainerFromImage();
+}
+
 async function onEnterOperation(): Promise<void> {
   if (imageToPull === '') {
     return;
@@ -325,7 +329,7 @@ async function onEnterOperation(): Promise<void> {
   if (matchingLocalImages.includes(imageToPull)) {
     await buildContainerFromImage();
   } else {
-    await pullImage();
+    await pullImageAndRun();
   }
 }
 </script>
@@ -399,18 +403,14 @@ async function onEnterOperation(): Promise<void> {
         <div class="flex flex-row">
           <Button type="secondary" class="mr-3 w-full" on:click={(): void => router.goto($lastPage.path)}>Cancel</Button>
           {#if !matchingLocalImages.includes(imageToPull) && imageToPull !== ''}
-            {#if !pullFinished}
-              <Button
-                icon={faArrowCircleDown}
-                class="w-full"
-                bind:disabled={imageNameIsInvalid}
-                on:click={pullImage}
-                bind:inProgress={pullInProgress}>
-                Pull Image
-              </Button>
-            {:else}
-              <Button class="w-full" on:click={buildContainerFromImage} bind:disabled={imageNameIsInvalid}>Run Image</Button>
-            {/if}
+            <Button
+              icon={faArrowCircleDown}
+              class="w-full"
+              bind:disabled={imageNameIsInvalid}
+              on:click={pullImageAndRun}
+              bind:inProgress={pullInProgress}>
+              Pull Image and Run
+            </Button>
           {:else}
             <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
