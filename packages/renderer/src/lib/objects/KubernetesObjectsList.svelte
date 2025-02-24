@@ -8,9 +8,11 @@ import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
 import { listenResources } from '/@/lib/kube/resources-listen';
 import type { IDisposable } from '/@api/disposable.js';
+import type { ResourceName } from '/@api/kubernetes-contexts-states';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import KubeActions from '../kube/KubeActions.svelte';
+import { listenResourcePermitted } from '../kube/resource-permission';
 import KubernetesCurrentContextConnectionBadge from '../ui/KubernetesCurrentContextConnectionBadge.svelte';
 import type { KubernetesObjectUI } from './KubernetesObjectUI';
 
@@ -47,6 +49,9 @@ let resources = $state<{ [key: string]: KubernetesObject[] | undefined }>({});
 let resourceListeners: (IDisposable | undefined)[] = [];
 let legacyUnsubscribers: Unsubscriber[] = [];
 
+let kubeActionsDisabled: boolean = $state(false);
+let selectedResource: ResourceName = $state('deployments');
+
 const objects = $derived(
   kinds.flatMap(kind => resources[kind.resource]?.map(object => kind.transformer(object)) ?? []),
 );
@@ -80,6 +85,12 @@ onMount(async () => {
       }),
     );
   }
+
+  resourceListeners.push(
+    await listenResourcePermitted(selectedResource, (permitted: boolean) => {
+      kubeActionsDisabled = !permitted;
+    }),
+  );
 });
 
 onDestroy(() => {
@@ -125,7 +136,7 @@ let table: Table;
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
   <svelte:fragment slot="additional-actions">
-    <KubeActions />
+    <KubeActions disabled={kubeActionsDisabled}/>
   </svelte:fragment>
 
   <svelte:fragment slot="bottom-additional-actions">
