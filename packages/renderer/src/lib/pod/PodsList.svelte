@@ -250,7 +250,7 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
       defaultSortColumn="Name"
       on:update={(): PodInfoUI[] => (pods = pods)}>
     </Table>
-    
+
     {#if $filtered.length === 0 && providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
     {:else if $filtered.length === 0}
