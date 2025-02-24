@@ -1704,7 +1704,7 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld(
     'sendShowInputBoxValue',
-    async (inputBoxId: number, value: string | undefined, error: string | undefined): Promise<void> => {
+    async (inputBoxId: number, value?: string, error?: string): Promise<void> => {
       return ipcInvoke('showInputBox:value', inputBoxId, value, error);
     },
   );
