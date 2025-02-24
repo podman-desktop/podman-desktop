@@ -20,6 +20,7 @@ import { expect as playExpect, type Locator, type Page } from '@playwright/test'
 
 import { handleConfirmationDialog } from '../../utility/operations';
 import { BasePage } from '../pages/base-page';
+import { TasksPage } from '../pages/tasks-page';
 
 export class StatusBar extends BasePage {
   readonly content: Locator;
@@ -62,5 +63,11 @@ export class StatusBar extends BasePage {
 
   public async kindInstallationButtonIsVisible(): Promise<boolean> {
     return (await this.kindInstallationButton.count()) > 0;
+  }
+
+  public async openTasksPage(): Promise<TasksPage> {
+    await playExpect(this.tasksButton).toBeVisible();
+    await this.tasksButton.click();
+    return new TasksPage(this.page);
   }
 }
