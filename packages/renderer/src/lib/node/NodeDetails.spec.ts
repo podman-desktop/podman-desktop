@@ -26,7 +26,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as states from '/@/stores/kubernetes-contexts-state';
 
 import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
-import * as resourcesListen from '../kube/resources-listen';
+import { isKubernetesExperimentalMode, listenResources } from '../kube/resources-listen';
 import NodeDetails from './NodeDetails.svelte';
 import * as nodeDetailsSummary from './NodeDetailsSummary.svelte';
 
@@ -88,23 +88,21 @@ describe.each<{
     initLists: (nodes: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
       let nodesCallback: (resources: KubernetesObject[]) => void;
       let eventsCallback: (resources: CoreV1Event[]) => void;
-      vi.mocked(resourcesListen.listenResources).mockImplementation(
-        async (resourceName, _options, cb): Promise<IDisposable> => {
-          if (resourceName === 'nodes') {
-            nodesCallback = cb;
-            setTimeout(() => nodesCallback(nodes));
-            return {
-              dispose: (): void => {},
-            };
-          } else {
-            eventsCallback = cb;
-            setTimeout(() => eventsCallback(events));
-            return {
-              dispose: (): void => {},
-            };
-          }
-        },
-      );
+      vi.mocked(listenResources).mockImplementation(async (resourceName, _options, cb): Promise<IDisposable> => {
+        if (resourceName === 'nodes') {
+          nodesCallback = cb;
+          setTimeout(() => nodesCallback(nodes));
+          return {
+            dispose: (): void => {},
+          };
+        } else {
+          eventsCallback = cb;
+          setTimeout(() => eventsCallback(events));
+          return {
+            dispose: (): void => {},
+          };
+        }
+      });
       return {
         updateNodes: (updatedObjects: KubernetesObject[]): void => {
           nodesCallback(updatedObjects);
@@ -117,7 +115,7 @@ describe.each<{
   },
 ])('is experimental: $experimental', ({ experimental, initLists }) => {
   beforeEach(() => {
-    vi.mocked(resourcesListen.isKubernetesExperimentalMode).mockResolvedValue(experimental);
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
   });
 
   test('Confirm renders node details', async () => {
