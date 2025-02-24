@@ -6,12 +6,12 @@ import { kubernetesCurrentContextPodsFiltered, podSearchPattern } from '/@/store
 
 import PodIcon from '../../images/PodIcon.svelte';
 import KubernetesObjectsList from '../../objects/KubernetesObjectsList.svelte';
-import PodEmptyScreen from '../../pod/PodEmptyScreen.svelte';
 import NameColumn from '../column/Name.svelte';
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';
 import PodColumnContainers from './PodColumnContainers.svelte';
 import PodColumnStatus from './PodColumnStatus.svelte';
+import PodEmptyScreen from './PodEmptyScreen.svelte';
 import type { PodUI } from './PodUI';
 
 let {
