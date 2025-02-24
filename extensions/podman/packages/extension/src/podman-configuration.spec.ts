@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 import * as fs from 'node:fs';
 
-import type { ProxySettings } from '@podman-desktop/api';
+import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
@@ -46,8 +46,10 @@ class TestPodmanConfiguration extends PodmanConfiguration {
 
 let podmanConfiguration: TestPodmanConfiguration;
 
+const extensionContext = {} as unknown as ExtensionContext;
+
 beforeEach(() => {
-  podmanConfiguration = new TestPodmanConfiguration();
+  podmanConfiguration = new TestPodmanConfiguration(extensionContext);
 });
 
 afterEach(() => {

@@ -1,0 +1,7 @@
+---
+- name: Create a symbolic link for registries.conf from host to VM
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Create symbolic link with sudo from the host
+      command: sudo ln -s {{{configurationFileInsideVmPath}}} /etc/containers/registries.conf.d/{{{configurationFileName}}}

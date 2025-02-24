@@ -20,10 +20,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { ProxySettings } from '@podman-desktop/api';
+import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Mutex } from 'async-mutex';
 import * as toml from 'smol-toml';
+
+import type { RegistryConfiguration } from './configuration/registry-configuration';
+import { RegistryConfigurationImpl } from './configuration/registry-configuration';
 
 const configurationRosetta = 'setting.rosetta';
 
@@ -32,6 +35,13 @@ const configurationRosetta = 'setting.rosetta';
  */
 export class PodmanConfiguration {
   private mutex: Mutex = new Mutex();
+
+  #registryConfiguration: RegistryConfiguration;
+
+  constructor(readonly context: ExtensionContext) {
+    this.#registryConfiguration = new RegistryConfigurationImpl(context);
+  }
+
   async init(): Promise<void> {
     let httpProxy = undefined;
     let httpsProxy = undefined;
@@ -351,5 +361,10 @@ export class PodmanConfiguration {
         }
       });
     });
+  }
+
+  // expose RegistryConfiguration interface
+  get registryConfiguration(): RegistryConfiguration {
+    return this.#registryConfiguration;
   }
 }

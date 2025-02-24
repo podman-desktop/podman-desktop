@@ -97,7 +97,11 @@ const machineInfo: extension.MachineInfo = {
   identityPath: '/path/to/key',
 };
 
-const podmanConfiguration = {} as unknown as PodmanConfiguration;
+const podmanConfiguration = {
+  registryConfiguration: {
+    getPlaybookScriptPath: vi.fn(),
+  },
+} as unknown as PodmanConfiguration;
 
 const machineDefaultName = 'podman-machine-default';
 const machine1Name = 'podman-machine-1';
@@ -682,6 +686,62 @@ describe.each([
         expect.objectContaining({ imagePath: provider === VMTYPE.HYPERV ? 'default' : 'embedded' }),
       );
     });
+  });
+
+  test('verify create command with playbook', async () => {
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.4.0',
+    } as extensionApi.RunResult);
+
+    const fakePlaybookPath = 'myPlaybookPath';
+    vi.mocked(podmanConfiguration.registryConfiguration.getPlaybookScriptPath).mockResolvedValue(fakePlaybookPath);
+
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+        'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+        'podman.factory.machine.provider': provider,
+      },
+      podmanConfiguration,
+    );
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      // check playbook parameter
+      [
+        'machine',
+        'init',
+        '--cpus',
+        '2',
+        '--memory',
+        '1000',
+        '--disk-size',
+        '232',
+        '--image-path',
+        'path',
+        '--playbook',
+        fakePlaybookPath,
+        '--rootful',
+      ],
+      {
+        logger: undefined,
+        token: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: provider,
+        },
+      },
+    );
+
+    // wait a call on telemetryLogger.logUsage
+    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    expect(telemetryLogger.logUsage).toBeCalledWith(
+      'podman.machine.init',
+      expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+    );
   });
 });
 
@@ -2271,7 +2331,7 @@ test('isIncompatibleMachineOutput', () => {
 });
 
 describe('calcPodmanMachineSetting', () => {
-  const podmanConfiguration = new PodmanConfiguration();
+  const podmanConfiguration = new PodmanConfiguration({} as unknown as extensionApi.ExtensionContext);
   let originalProvider: string | undefined;
   beforeEach(() => {
     originalProvider = process.env.CONTAINERS_MACHINE_PROVIDER;

@@ -1378,7 +1378,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     },
   ];
 
-  const podmanConfiguration = new PodmanConfiguration();
+  const podmanConfiguration = new PodmanConfiguration(extensionContext);
   await podmanConfiguration.init();
 
   const provider = extensionApi.provider.createProvider(providerOptions);
@@ -2163,16 +2163,25 @@ export async function createMachine(
     telemetryRecords.imagePath = 'default';
   }
 
+  const installedPodman = await getPodmanInstallation();
+  const version = installedPodman?.version;
   if (params['podman.factory.machine.rootful'] === undefined) {
     // should be rootful mode if version supports this mode and only if rootful is not provided (false or true)
-    const installedPodman = await getPodmanInstallation();
-    const version: string | undefined = installedPodman?.version;
     if (version) {
       const isRootfulSupported = isRootfulMachineInitSupported(version);
       if (isRootfulSupported) {
         params['podman.factory.machine.rootful'] = true;
       }
     }
+  }
+
+  // if playbook option is supported
+  if (version && isPlaybookMachineInitSupported(version)) {
+    // add the playbook option
+    parameters.push('--playbook');
+    // get the playbook script
+    const playbookPath = await podmanConfiguration.registryConfiguration.getPlaybookScriptPath();
+    parameters.push(playbookPath);
   }
 
   if (params['podman.factory.machine.rootful']) {
