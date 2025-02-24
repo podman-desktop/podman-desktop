@@ -73,7 +73,7 @@ describe.each([{ os: 'macos' }, { os: 'windows' }])('check ssh keys removal ', (
 
     // mock the result of listReleases REST API
     const containersConfContent = fsActual.readFileSync(
-      path.resolve(__dirname, `../tests/resources/containers-${os}.conf`),
+      path.resolve(__dirname, `../../tests/resources/containers-${os}.conf`),
       'utf8',
     );
 

@@ -28,6 +28,8 @@ import { compareVersions } from 'compare-versions';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { SequenceCheck } from './base-check';
+import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { getSocketCompatibility } from './compatibility-mode';
 import { getDetectionChecks } from './detection-checks';
 import { KrunkitHelper } from './helpers/krunkit-helper';
@@ -35,8 +37,6 @@ import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-hel
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
-import { PodmanCleanupMacOS } from './podman-cleanup-macos';
-import { PodmanCleanupWindows } from './podman-cleanup-windows';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import { PodmanConfiguration } from './podman-configuration';

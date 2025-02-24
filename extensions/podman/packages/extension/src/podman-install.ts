@@ -24,6 +24,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { compare, compareVersions } from 'compare-versions';
 
 import { BaseCheck, OrCheck, SequenceCheck } from './base-check';
+import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { getDetectionChecks } from './detection-checks';
 import type { MachineJSON } from './extension';
 import {
@@ -40,8 +42,6 @@ import {
 } from './extension';
 import { WslHelper } from './helpers/wsl-helper';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './macos-checks';
-import { PodmanCleanupMacOS } from './podman-cleanup-macos';
-import { PodmanCleanupWindows } from './podman-cleanup-windows';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import * as podman5JSON from './podman5.json';
