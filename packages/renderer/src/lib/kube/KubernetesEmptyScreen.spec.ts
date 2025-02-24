@@ -27,7 +27,9 @@ import KubernetesEmptyScreen from './KubernetesEmptyScreen.svelte';
 
 test('KubernetesCheckConnection is called', async () => {
   const kubernetesCheckConnectionSpy = vi.spyOn(kubernetesCheckConnection, 'default');
-  render(KubernetesEmptyScreen);
+  render(KubernetesEmptyScreen, {
+    isPermited: true,
+  });
   expect(kubernetesCheckConnectionSpy).toHaveBeenCalledWith(expect.anything(), {});
 });
 
