@@ -29,7 +29,7 @@ import { RegistryConfigurationImpl } from './registry-configuration';
 let registryConfiguration: RegistryConfiguration;
 
 const extensionContext = {
-  storagePath: '/fake/path',
+  storagePath: 'fake-path',
 } as unknown as ExtensionContext;
 
 vi.mock('node:fs/promises');
