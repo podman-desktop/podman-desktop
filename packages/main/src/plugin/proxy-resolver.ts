@@ -73,17 +73,23 @@ export function getOptions(proxy: Proxy, secure: boolean, certificates: Certific
   return options;
 }
 
+type Patched = (
+  url?: string | nodeurl.URL | null,
+  options?: http.RequestOptions | null,
+  callback?: (res: http.IncomingMessage) => void,
+) => http.ClientRequest;
+
 export function createHttpPatch(
   originals: typeof http | typeof https,
   proxy: Proxy,
   certificates: Certificates,
-): object {
+): { get: Patched; request: Patched } {
   return {
     get: patch(originals.get, certificates),
     request: patch(originals.request, certificates),
   };
 
-  function patch(original: typeof http.get, certificates: Certificates): unknown {
+  function patch(original: typeof http.get, certificates: Certificates): Patched {
     function patched(
       url?: string | nodeurl.URL | null,
       options?: http.RequestOptions | null,
