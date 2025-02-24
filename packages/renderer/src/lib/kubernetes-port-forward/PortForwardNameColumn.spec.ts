@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { KubernetesObject } from '@kubernetes/client-node';
 import { fireEvent, render } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import * as store from '/@/stores/pods'; // Adjust the import path as necessary
+import * as store from '/@/stores/kubernetes-contexts-state'; // Adjust the import path as necessary
 import { type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import PodNameColumn from './PortForwardNameColumn.svelte';
 
 const DUMMY_MAPPING: PortMapping = {
@@ -34,15 +33,23 @@ const DUMMY_MAPPING: PortMapping = {
   remotePort: 80,
 };
 
-vi.mock('/@/stores/pods', async () => ({}));
+vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
 
 beforeEach(() => {
   vi.resetAllMocks();
 
-  vi.mocked(store).podsInfos = writable<PodInfo[]>([]);
+  vi.mocked(store).kubernetesCurrentContextPods = writable<KubernetesObject[]>([]);
 });
 
 test('name should be visible', () => {
+  vi.mocked(store).kubernetesCurrentContextPods = writable<KubernetesObject[]>([
+    {
+      apiVersion: 'v1',
+      kind: 'Pod',
+      metadata: { name: 'dummy-pod-name', namespace: 'dummy-ns' },
+    },
+  ]);
+
   const { getByText } = render(PodNameColumn, {
     object: {
       name: 'dummy-pod-name',
@@ -57,16 +64,13 @@ test('name should be visible', () => {
 });
 
 test('click on name should redirect to pod page', async () => {
-  vi.mocked(store).podsInfos = writable<PodInfo[]>([
+  vi.mocked(store).kubernetesCurrentContextPods = writable<KubernetesObject[]>([
     {
-      kind: 'kubernetes',
-      Name: 'dummy-pod-name',
-      Namespace: 'dummy-ns',
-      engineId: 'dummy-engine-id',
-    } as PodInfo,
+      apiVersion: 'v1',
+      kind: 'Pod',
+      metadata: { name: 'dummy-pod-name', namespace: 'dummy-ns' },
+    },
   ]);
-
-  const gotoSpy = vi.spyOn(router, 'goto');
 
   const { getByTitle } = render(PodNameColumn, {
     object: {
@@ -81,5 +85,10 @@ test('click on name should redirect to pod page', async () => {
   expect(openBtn).toBeDefined();
 
   await fireEvent.click(openBtn);
-  expect(gotoSpy).toHaveBeenCalledWith('/pods/kubernetes/dummy-pod-name/dummy-engine-id/');
+
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', {
+    kind: 'Pod',
+    name: 'dummy-pod-name',
+    namespace: 'dummy-ns',
+  });
 });
