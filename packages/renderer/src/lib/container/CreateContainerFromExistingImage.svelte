@@ -322,7 +322,7 @@ async function onEnterOperation(): Promise<void> {
   if (imageToPull === '') {
     return;
   }
-  if (!matchingLocalImages.includes(imageToPull)) {
+  if (matchingLocalImages.includes(imageToPull)) {
     await buildContainerFromImage();
   } else {
     await pullImage();
@@ -342,7 +342,7 @@ async function onEnterOperation(): Promise<void> {
       <Typeahead
         id="imageName"
         name="imageName"
-        placeholder="Select an existing image"
+        placeholder="Select or enter an image to run"
         onInputChange={searchFunction}
         resultItems={values}
         compare={sortResults}
@@ -409,10 +409,10 @@ async function onEnterOperation(): Promise<void> {
                 Pull Image
               </Button>
             {:else}
-              <Button class="w-full" on:click={buildContainerFromImage} bind:disabled={imageNameIsInvalid}>Select Image</Button>
+              <Button class="w-full" on:click={buildContainerFromImage} bind:disabled={imageNameIsInvalid}>Run Image</Button>
             {/if}
           {:else}
-            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Select Image</Button>
+            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}
