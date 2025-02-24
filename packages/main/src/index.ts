@@ -22,11 +22,11 @@ import dns from 'node:dns';
 
 import { app, ipcMain, Menu, Tray } from 'electron';
 
-import { type AdditionalData, CodeMain } from '/@/code-main.js';
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
+import { type AdditionalData, Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import type { Event } from './plugin/events/emitter.js';
 import { Emitter } from './plugin/events/emitter.js';
@@ -41,11 +41,11 @@ import { isMac, isWindows, stoppedExtensions } from './util.js';
 let extensionLoader: ExtensionLoader | undefined;
 
 // Main startup
-const code = new CodeMain(app);
-code.main(process.argv);
+const podmanDesktopMain = new Main(app);
+podmanDesktopMain.main(process.argv);
 
-// TODO: remove when index.spec.ts tests are migrated in code-main.spec
-export const mainWindowDeferred = code.mainWindowDeferred;
+// TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
+export const mainWindowDeferred = podmanDesktopMain.mainWindowDeferred;
 
 // if arg starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
 export function sanitizeProtocolForExtension(url: string): string {
@@ -85,7 +85,7 @@ export const handleOpenUrl = (url: string): void => {
   const extensionId = url.substring('podman-desktop:extension/'.length);
 
   // wait that the window is ready
-  code.mainWindowDeferred.promise
+  podmanDesktopMain.mainWindowDeferred.promise
     .then(w => {
       w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
     })
@@ -163,7 +163,7 @@ app.whenReady().then(
     // Platforms: Linux, macOS, Windows
     // Create the main window
     createNewWindow()
-      .then(w => code.mainWindowDeferred.resolve(w))
+      .then(w => podmanDesktopMain.mainWindowDeferred.resolve(w))
       .catch((error: unknown) => {
         console.error('Error creating window', error);
       });
@@ -174,7 +174,7 @@ app.whenReady().then(
     // https://www.electronjs.org/docs/latest/tutorial/quick-start#open-a-window-if-none-are-open-macos
     app.on('activate', (_event, hasVisibleWindows) => {
       createNewWindow()
-        .then(w => code.mainWindowDeferred.resolve(w))
+        .then(w => podmanDesktopMain.mainWindowDeferred.resolve(w))
         .catch((error: unknown) => {
           console.log('Error creating window', error);
         });
@@ -203,7 +203,7 @@ app.whenReady().then(
     const onDidCreatedConfigurationRegistry: Event<ConfigurationRegistry> = _onDidCreatedConfigurationRegistry.event;
 
     // Start extensions
-    const pluginSystem = new PluginSystem(trayMenu, code.mainWindowDeferred);
+    const pluginSystem = new PluginSystem(trayMenu, podmanDesktopMain.mainWindowDeferred);
 
     onDidCreatedConfigurationRegistry(async (configurationRegistry: ConfigurationRegistry) => {
       // If we've manually set the tray icon color, update the tray icon. This can only be done
@@ -220,7 +220,7 @@ app.whenReady().then(
 
       // Register the window configuration
       // This is used to save/restore the window size and position
-      code.mainWindowDeferred.promise
+      podmanDesktopMain.mainWindowDeferred.promise
         .then(browserWindow => {
           const windowHandler = new WindowHandler(configurationRegistry, browserWindow);
           windowHandler.init();

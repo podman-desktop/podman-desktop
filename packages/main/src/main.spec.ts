@@ -18,8 +18,9 @@
 import type { App as ElectronApp } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { CodeMain } from '/@/code-main.js';
 import { isWindows } from '/@/util.js';
+
+import { Main } from './main.js';
 
 // mock electron
 vi.mock('electron');
@@ -55,7 +56,7 @@ test('running main for non-primary instance should quit application', () => {
   // mock current not primary instance
   vi.mocked(ELECTRON_APP_MOCK.requestSingleInstanceLock).mockReturnValue(false);
 
-  const code = new CodeMain(ELECTRON_APP_MOCK);
+  const code = new Main(ELECTRON_APP_MOCK);
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.quit).toHaveBeenCalledOnce();
@@ -63,7 +64,7 @@ test('running main for non-primary instance should quit application', () => {
 });
 
 test('hardware acceleration should be disabled', async () => {
-  const code = new CodeMain(ELECTRON_APP_MOCK);
+  const code = new Main(ELECTRON_APP_MOCK);
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.disableHardwareAcceleration).toHaveBeenCalledOnce();
@@ -72,7 +73,7 @@ test('hardware acceleration should be disabled', async () => {
 test('on windows setAppUserModelId should be called', async () => {
   vi.mocked(isWindows).mockReturnValue(true);
 
-  const code = new CodeMain(ELECTRON_APP_MOCK);
+  const code = new Main(ELECTRON_APP_MOCK);
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith(ELECTRON_APP_MOCK.name);

@@ -28,7 +28,7 @@ export type AdditionalData = {
 /**
  * The main Podman Desktop entry point
  */
-export class CodeMain {
+export class Main {
   // TODO: should be renamed to #app
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
