@@ -375,7 +375,6 @@ test('list opens on focus', async () => {
   };
 
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
