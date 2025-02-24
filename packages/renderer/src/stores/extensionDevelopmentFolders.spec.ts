@@ -21,7 +21,8 @@
 import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import type { IDisposable } from '../../../main/src/plugin/types/disposable';
+import type { IDisposable } from '/@api/disposable.js';
+
 import {
   extensionDevelopmentFolders,
   extensionDevelopmentFoldersEventStore,

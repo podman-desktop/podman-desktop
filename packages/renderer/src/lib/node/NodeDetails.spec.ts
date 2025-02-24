@@ -24,8 +24,8 @@ import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable.js';
 
-import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import { isKubernetesExperimentalMode, listenResources } from '../kube/resources-listen';
 import NodeDetails from './NodeDetails.svelte';
 import * as nodeDetailsSummary from './NodeDetailsSummary.svelte';

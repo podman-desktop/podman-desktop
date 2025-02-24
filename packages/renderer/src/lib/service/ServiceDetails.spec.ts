@@ -26,8 +26,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable.js';
 
-import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import * as resourcesListen from '../kube/resources-listen';
 import ServiceDetails from './ServiceDetails.svelte';
 import * as serviceDetailsSummary from './ServiceDetailsSummary.svelte';

@@ -21,8 +21,7 @@ import type { Unsubscriber, Writable } from 'svelte/store';
 
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import { findMatchInLeaves } from '/@/stores/search-util';
-
-import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
+import type { IDisposable } from '/@api/disposable.js';
 
 export interface ListenResourcesOptions {
   searchTermStore?: Writable<string>;

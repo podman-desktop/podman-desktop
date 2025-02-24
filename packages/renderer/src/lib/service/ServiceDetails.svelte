@@ -6,8 +6,8 @@ import { router } from 'tinro';
 import { stringify } from 'yaml';
 
 import { kubernetesCurrentContextEvents, kubernetesCurrentContextServices } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable.js';
 
-import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { EventUI } from '../events/EventUI';

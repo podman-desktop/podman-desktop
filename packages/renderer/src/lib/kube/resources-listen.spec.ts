@@ -23,7 +23,6 @@ import { beforeAll, expect, type Mock, test, vi } from 'vitest';
 import * as contexts from '/@/stores/kubernetes-contexts';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 
-import { Disposable } from '../../../../main/src/plugin/types/disposable';
 import { listenResources } from './resources-listen';
 
 const callbacks = new Map<string, () => void>();
@@ -41,7 +40,9 @@ beforeAll(() => {
     value: {
       receive: (message: string, callback: () => void) => {
         eventEmitter.receive(message, callback);
-        return new Disposable(() => {});
+        return {
+          dispose: (): void => {},
+        };
       },
     },
   });

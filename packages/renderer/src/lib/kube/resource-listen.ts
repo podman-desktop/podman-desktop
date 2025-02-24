@@ -19,7 +19,8 @@
 import type { CoreV1Event, KubernetesObject } from '@kubernetes/client-node';
 import type { Readable, Unsubscriber } from 'svelte/store';
 
-import type { IDisposable } from '../../../../main/src/plugin/types/disposable';
+import type { IDisposable } from '/@api/disposable.js';
+
 import { isKubernetesExperimentalMode, listenResources } from './resources-listen';
 
 export interface ListenResourceOptions {
