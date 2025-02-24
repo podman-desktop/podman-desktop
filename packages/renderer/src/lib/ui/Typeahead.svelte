@@ -40,6 +40,7 @@ let {
 let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
 let input: HTMLInputElement | undefined = $state();
 let list: HTMLDivElement | undefined = $state();
+let inputDiv: HTMLDivElement | undefined = $state();
 let scrollElements: HTMLElement[] = $state([]);
 let value: string = $state('');
 let opened: boolean = $state(false);
@@ -240,7 +241,7 @@ function requestFocus(e: HTMLInputElement): void {
 }
 
 function onWindowClick(e: Event): void {
-  if (list && e.target instanceof Node && !list.contains(e.target)) {
+  if (list && e.target instanceof Node && !list.contains(e.target) && !inputDiv?.contains(e.target)) {
     close();
   }
 }
@@ -257,7 +258,8 @@ function onWindowClick(e: Event): void {
   class:focus-within:border-[var(--pd-input-field-hover-stroke)]={!disabled}
   class:border-b-[var(--pd-input-field-stroke-readonly)]={disabled}
   class:border-b-[var(--pd-input-field-stroke-error)]={error}
-  class:focus-within:border-[var(--pd-input-field-stroke-error)]={error}>
+  class:focus-within:border-[var(--pd-input-field-stroke-error)]={error}
+  bind:this={inputDiv}>
   <input
     type="text"
     class="w-full px-0.5 outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] overflow-hidden"
@@ -275,6 +277,7 @@ function onWindowClick(e: Event): void {
     name={name}
     oninput={onInput}
     onkeydown={onKeyDown}
+    onfocus={processInput}
     use:requestFocus />
   {#if loading}
     <Spinner size="1em" />

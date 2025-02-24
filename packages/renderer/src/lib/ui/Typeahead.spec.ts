@@ -88,10 +88,9 @@ test('should list the result after the delay, and display spinner during loading
   let searchResult: TypeaheadItem[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    searchResult = [{ value: s + '01' }, { value: s + '02' }, { value: s + '03' }];
+    searchResult = s ? [{ value: s + '01' }, { value: s + '02' }, { value: s + '03' }] : [];
   };
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -127,10 +126,9 @@ test('should list items started with search term on top if no compare function i
   let searchResult: TypeaheadItem[] = [];
   const searchFunction = async (s: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 100));
-    searchResult = ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'].map(value => ({ value: value }));
+    searchResult = s ? ['z1' + s, s + '01', 'z0', s + '02', 'z2', s + '03'].map(value => ({ value: value })) : [];
   };
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -166,14 +164,15 @@ test('should list items in order based on compare function if provided', async (
   };
 
   let searchResult: TypeaheadItem[] = [];
-  const searchFunction = async (): Promise<void> => {
-    searchResult = ['first01', 'second01', 'first03', 'athird01', 'second02', 'first02'].map(value => ({
-      value: value,
-    }));
+  const searchFunction = async (s: string): Promise<void> => {
+    searchResult = s
+      ? ['first01', 'second01', 'first03', 'athird01', 'second02', 'first02'].map(value => ({
+          value: value,
+        }))
+      : [];
   };
 
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -205,10 +204,9 @@ test('should navigate in list with keys', async () => {
     for (let i = 1; i <= 15; i++) {
       result.push({ value: s + `${i}`.padStart(2, '0') });
     }
-    searchResult = result;
+    searchResult = s ? result : [];
   };
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -336,11 +334,10 @@ test('should include heading based on given order and searchFunctions order', as
 
     const result4: TypeaheadItem[] = [s + '41', s + '42', s + '43', s + '44'].map(value => ({ value: value }));
 
-    searchResult = [...result1, ...result2, ...result3, ...result4];
+    searchResult = s ? [...result1, ...result2, ...result3, ...result4] : [];
   };
 
   const { rerender } = render(Typeahead, {
-    initialFocus: true,
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -368,5 +365,35 @@ test('should include heading based on given order and searchFunctions order', as
     expect(items[10]).toBeDisabled();
     expect(items[11].textContent).toBe('test31');
     expect(items[14].textContent).toBe('test41');
+  });
+});
+
+test('list opens on focus', async () => {
+  let searchResult: TypeaheadItem[] = [];
+  const searchFunction = async (): Promise<void> => {
+    searchResult = ['text1', 'text2', 'text3', 'text4'].map(value => ({ value: value }));
+  };
+
+  const { rerender } = render(Typeahead, {
+    initialFocus: true,
+    onInputChange: searchFunction,
+    resultItems: searchResult,
+    delay: 10,
+  });
+
+  const input = screen.getByRole('textbox');
+  await userEvent.click(input);
+
+  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
+  await rerender({ resultItems: searchResult });
+
+  await waitFor(() => {
+    const list = screen.getByRole('row');
+    const items = within(list).getAllByRole('button');
+    expect(items.length).toBe(4);
+    expect(items[0].textContent).toBe('text1');
+    expect(items[1].textContent).toBe('text2');
+    expect(items[2].textContent).toBe('text3');
+    expect(items[3].textContent).toBe('text4');
   });
 });
