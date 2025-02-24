@@ -153,9 +153,11 @@ test('Expect that typeahead menu has Local Images and Registry Images headings',
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'f');
 
-  await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
-  expect(screen.getByText('Local Images')).toBeInTheDocument();
-  expect(screen.getByText('Registry Images')).toBeInTheDocument();
+  await waitFor(() => {
+    expect(screen.queryByRole('row')).toBeInTheDocument();
+    expect(screen.getByText('Local Images')).toBeInTheDocument();
+    expect(screen.getByText('Registry Images')).toBeInTheDocument();
+  });
 });
 
 test('Expect not a local image to have an active pull image and run button', async () => {
@@ -169,11 +171,11 @@ test('Expect not a local image to have an active pull image and run button', asy
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'image12');
 
-  await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
-
-  const list = screen.getByRole('row');
-  const items = within(list).getAllByRole('button');
-  expect(items.length).toBe(2);
+  await waitFor(() => {
+    const list = screen.getByRole('row');
+    const items = within(list).getAllByRole('button');
+    expect(items.length).toBe(2);
+  });
 
   await userEvent.keyboard('[ArrowDown]');
 
