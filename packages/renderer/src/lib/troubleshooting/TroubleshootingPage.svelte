@@ -3,10 +3,10 @@ import { Page, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import Route from '/@/Route.svelte';
 
 import { lastPage } from '../../stores/breadcrumb';
-import { isKubernetesExperimentalMode } from '../kube/resources-listen';
 import { getTabUrl, isTabSelected } from '../ui/Util';
 import TroubleshootingDevToolsConsoleLogs from './TroubleshootingDevToolsConsoleLogs.svelte';
 import TroubleshootingGatherLogs from './TroubleshootingGatherLogs.svelte';

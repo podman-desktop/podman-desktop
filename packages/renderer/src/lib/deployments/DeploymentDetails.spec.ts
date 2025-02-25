@@ -23,10 +23,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
 
-import { isKubernetesExperimentalMode } from '../kube/resources-listen';
 import {
   initListExperimental,
   initListsNonExperimental,
@@ -49,7 +49,7 @@ const deployment: V1Deployment = {
     template: {},
   },
 };
-vi.mock(import('../kube/resources-listen'), async importOriginal => {
+vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
   // we want to keep the original nonVerbose
   const original = await importOriginal();
   return {

@@ -6,11 +6,11 @@ import { Button, FilteredEmptyScreen, NavPage, Table } from '@podman-desktop/ui-
 import { onDestroy, onMount, type Snippet } from 'svelte';
 import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
+import { listenResources } from '/@/lib/kube/resources-listen';
 import type { IDisposable } from '/@api/disposable.js';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import KubeActions from '../kube/KubeActions.svelte';
-import { listenResources } from '../kube/resources-listen';
 import KubernetesCurrentContextConnectionBadge from '../ui/KubernetesCurrentContextConnectionBadge.svelte';
 import type { KubernetesObjectUI } from './KubernetesObjectUI';
 
