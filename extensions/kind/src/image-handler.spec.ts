@@ -128,6 +128,5 @@ test('expect cli is called with right PATH', async () => {
   const props = (extensionApi.process.exec as Mock).mock.calls[0][2];
   expect(props).to.have.property('env');
   const env = props.env;
-  expect(env).to.have.property('PATH');
-  expect(env.PATH).toBe('my-custom-path');
+  expect(env).toStrictEqual({ KIND_EXPERIMENTAL_PROVIDER: 'podman', PATH: 'my-custom-path' });
 });

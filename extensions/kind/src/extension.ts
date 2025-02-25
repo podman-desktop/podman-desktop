@@ -211,7 +211,7 @@ async function updateClusters(
           await extensionApi.containerEngine.stopContainer(cluster.engineId, cluster.id);
         },
         delete: async (logger): Promise<void> => {
-          const env = { ...process.env } as { [key: string]: string };
+          const env: { [key: string]: string } = {};
           if (cluster.engineType === 'podman') {
             env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
           }

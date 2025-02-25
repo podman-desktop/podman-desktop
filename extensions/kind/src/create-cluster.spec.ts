@@ -24,7 +24,7 @@ import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
-import { getMemTotalInfo } from './util';
+import { getKindPath, getMemTotalInfo } from './util';
 
 vi.mock('node:fs', () => ({
   promises: {
@@ -85,6 +85,7 @@ test('expect error is cli returns non zero exit code', async () => {
 });
 
 test('expect cluster to be created', async () => {
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
   (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
   await createCluster({}, '', telemetryLoggerMock);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
@@ -94,6 +95,10 @@ test('expect cluster to be created', async () => {
   );
   expect(telemetryLogErrorMock).not.toBeCalled();
   expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+  const props = (extensionApi.process.exec as Mock).mock.calls[0][2];
+  expect(props).to.have.property('env');
+  const env = props.env;
+  expect(env).toStrictEqual({ PATH: '/kind/path' });
 });
 
 test('expect cluster to be created using config file', async () => {
