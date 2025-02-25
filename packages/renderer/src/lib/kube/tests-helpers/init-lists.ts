@@ -20,9 +20,8 @@ import type { CoreV1Event, KubernetesObject } from '@kubernetes/client-node';
 import { type Writable, writable } from 'svelte/store';
 import { vi } from 'vitest';
 
+import { listenResources } from '/@/lib/kube/resources-listen';
 import type { IDisposable } from '/@api/disposable';
-
-import { listenResources } from '../resources-listen';
 
 export type initListsReturnType = {
   updateResources: (objects: KubernetesObject[]) => void;

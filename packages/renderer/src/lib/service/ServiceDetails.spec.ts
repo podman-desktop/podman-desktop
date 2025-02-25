@@ -24,14 +24,14 @@ import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as resourcesListen from '/@/lib/kube/resources-listen';
-import { lastPage } from '/@/stores/breadcrumb';
-import * as states from '/@/stores/kubernetes-contexts-state';
-
 import {
   initListExperimental,
   initListsNonExperimental,
   type initListsReturnType,
-} from '../kube/tests-helpers/init-lists';
+} from '/@/lib/kube/tests-helpers/init-lists';
+import { lastPage } from '/@/stores/breadcrumb';
+import * as states from '/@/stores/kubernetes-contexts-state';
+
 import ServiceDetails from './ServiceDetails.svelte';
 import * as serviceDetailsSummary from './ServiceDetailsSummary.svelte';
 

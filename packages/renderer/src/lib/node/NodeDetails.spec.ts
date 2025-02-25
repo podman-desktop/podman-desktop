@@ -23,13 +23,13 @@ import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
-import * as states from '/@/stores/kubernetes-contexts-state';
-
 import {
   initListExperimental,
   initListsNonExperimental,
   type initListsReturnType,
-} from '../kube/tests-helpers/init-lists';
+} from '/@/lib/kube/tests-helpers/init-lists';
+import * as states from '/@/stores/kubernetes-contexts-state';
+
 import NodeDetails from './NodeDetails.svelte';
 import * as nodeDetailsSummary from './NodeDetailsSummary.svelte';
 
