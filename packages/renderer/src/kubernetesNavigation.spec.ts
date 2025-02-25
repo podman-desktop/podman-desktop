@@ -117,9 +117,7 @@ test(`Test navigation to Routes`, () => {
 test(`Test navigation to a Route`, () => {
   navigateTo({ kind: 'Route', name: 'dummy-name', namespace: 'dummy-ns' });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
-    '/kubernetes/ingressesRoutes/ingress/dummy-name/dummy-ns/summary',
-  );
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/ingressesRoutes/route/dummy-name/dummy-ns/summary');
 });
 
 test(`Test navigation to ConfigMaps`, () => {
