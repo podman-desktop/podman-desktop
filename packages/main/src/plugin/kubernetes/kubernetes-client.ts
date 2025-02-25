@@ -948,7 +948,7 @@ export class KubernetesClient {
         plural: 'routes',
         name,
       });
-      const route = res?.body as V1Route;
+      const route = res as V1Route;
       if (route?.metadata?.managedFields) {
         delete route.metadata.managedFields;
       }
