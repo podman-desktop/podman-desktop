@@ -28,22 +28,14 @@ function disableSave(name: string, tag: string): boolean {
 
 let imageNameErrorMessage = '';
 function validateImageName(event: Event): void {
-  let inputName = event.target instanceof Input ? event.target.value : undefined;
-  if (inputName === undefined || inputName.trim() === '') {
-    imageNameErrorMessage = 'Please enter a value';
-  } else {
-    imageNameErrorMessage = '';
-  }
+  const target = event.currentTarget as HTMLInputElement;
+  imageNameErrorMessage = target.value.trim() === '' ? 'Please enter a value' : '';
 }
 
 let imageTagErrorMessage = '';
 function validateImageTag(event: Event): void {
-  let inputName = event.target instanceof Input ? event.target.value : undefined;
-  if (inputName === undefined || inputName.trim() === '') {
-    imageTagErrorMessage = 'Please enter a value';
-  } else {
-    imageTagErrorMessage = '';
-  }
+  const target = event.currentTarget as HTMLInputElement;
+  imageTagErrorMessage = target.value.trim() === '' ? 'Please enter a value' : '';
 }
 
 async function renameImage(imageName: string, imageTag: string): Promise<void> {
