@@ -366,6 +366,29 @@ describe.each([
       expect(within(context4).queryByText('CONNECTION LOST')).toBeInTheDocument();
     }
   });
+
+  test('Connect button is displayed on offline contexts', async () => {
+    if (!implemented.offline) {
+      return;
+    }
+
+    initMocks();
+    render(PreferencesKubernetesContextsRendering, {});
+
+    await vi.waitFor(() => {
+      const context1 = screen.getAllByRole('row')[0];
+      expect(within(context1).queryByText('Connect')).not.toBeInTheDocument(); // reachable and not offline
+    });
+
+    const context2 = screen.getAllByRole('row')[1];
+    expect(within(context2).queryByText('Connect')).toBeInTheDocument(); // not reachable
+
+    const context3 = screen.getAllByRole('row')[2];
+    expect(within(context3).queryByText('Connect')).not.toBeInTheDocument(); // reachable and not offline
+
+    const context4 = screen.getAllByRole('row')[3];
+    expect(within(context4).queryByText('Connect')).toBeInTheDocument(); // reachable and offline
+  });
 });
 
 test('Connect button is displayed on contexts for which state is not known', () => {

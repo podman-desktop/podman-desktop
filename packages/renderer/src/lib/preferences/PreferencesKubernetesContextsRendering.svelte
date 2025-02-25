@@ -298,6 +298,9 @@ async function connect(contextName: string): Promise<void> {
                     </div>
                   </div>
                 </div>
+                {#if context.isOffline}
+                  <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
+                {/if}
                 {#if !context.podsPermitted || !context.deploymentsPermitted}
                   <Tooltip tip={context.notPermittedHelp}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip>
                 {/if}
