@@ -18,7 +18,7 @@
 import type { ImagesPage } from '../../model/pages/images-page';
 import { NavigationBar } from '../../model/workbench/navigation';
 import { expect as playExpect, test } from '../../utility/fixtures';
-import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '../../utility/wait';
+import { waitForPodmanMachineStartup, waitWhile } from '../../utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
 console.log(`numberOfObjects => ${numberOfObjects}`);
@@ -52,9 +52,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
-      await playExpect
-        .poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`), { timeout: 5_000 })
-        .toBeTruthy();
+      await playExpect.poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`)).toBeTruthy();
     }
   });
 
@@ -66,14 +64,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
-      await playExpect
-        .poll(
-          async () =>
-            await waitUntil(async () => await containers.containerExists(`my-container-${containerNum}`), {
-              timeout: 5000,
-            }),
-        )
-        .toBeTruthy();
+      await playExpect.poll(async () => await containers.containerExists(`my-container-${containerNum}`)).toBeTruthy();
     }
   });
 
@@ -83,9 +74,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      await playExpect
-        .poll(async () => await waitUntil(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 5000 }))
-        .toBeTruthy();
+      await playExpect.poll(async () => await pods.podExists(`my-pod-${podNum}`)).toBeTruthy();
     }
   });
 });
