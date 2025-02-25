@@ -485,7 +485,7 @@ $: globalOnboarding = global;
         <div
           class="flex flex-row-reverse p-6 bg-[var(--pd-content-bg)] fixed {globalOnboarding
             ? 'w-full'
-            : 'w-[calc(100%-(var(--width-leftnavbar))-(var(--width-leftsidebar)))] mb-5'} bottom-0 pr-10 max-h-20 bg-opacity-90 z-20"
+            : 'w-[calc(100%-(var(--spacing-leftnavbar))-(var(--spacing-leftsidebar)))] mb-5'} bottom-0 pr-10 max-h-20 bg-opacity-90 z-20"
           role="group"
           aria-label="Step Buttons">
           <Button
