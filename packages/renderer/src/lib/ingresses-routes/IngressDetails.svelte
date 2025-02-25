@@ -1,11 +1,13 @@
 <script lang="ts">
-import type { V1Ingress } from '@kubernetes/client-node';
+import type { KubernetesObject, V1Ingress } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import { kubernetesCurrentContextIngresses } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
@@ -19,37 +21,55 @@ import IngressRouteActions from './IngressRouteActions.svelte';
 import ServiceDetailsSummary from './IngressRouteDetailsSummary.svelte';
 import type { IngressUI } from './IngressUI';
 
-export let name: string;
-export let namespace: string;
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
 
-let ingressUI: IngressUI;
-let detailsPage: DetailsPage;
-let kubeService: V1Ingress | undefined;
-let kubeError: string;
+let ingressUI: IngressUI | undefined = $state(undefined);
+let detailsPage: DetailsPage | undefined = $state(undefined);
+let kubeIngress: V1Ingress | undefined = $state(undefined);
+let kubeError: string | undefined = $state(undefined);
 
-onMount(() => {
+let listener: IDisposable | undefined;
+
+onMount(async () => {
   const ingressRouteUtils = new IngressRouteUtils();
 
-  return kubernetesCurrentContextIngresses.subscribe(ingress => {
-    const matchingIngress = ingress.find(srv => srv.metadata?.name === name && srv.metadata?.namespace === namespace);
-    if (matchingIngress) {
-      ingressUI = ingressRouteUtils.getIngressUI(matchingIngress);
-      loadIngressDetails().catch((err: unknown) =>
-        console.error(`Error getting ingress details ${ingressUI.name}`, err),
-      );
-    } else if (detailsPage) {
-      // the ingress has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'ingresses',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextIngresses,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the ingress has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      ingressUI = ingressRouteUtils.getIngressUI(resource);
+      if (isExperimental) {
+        kubeIngress = resource;
+      } else {
+        loadIngressDetails().catch((err: unknown) => console.error(`Error getting ingress details ${name}`, err));
+      }
+    },
   });
 });
 
+onDestroy(() => {
+  listener?.dispose();
+});
+
 async function loadIngressDetails(): Promise<void> {
-  const getKubeService = await window.kubernetesReadNamespacedIngress(ingressUI.name, namespace);
-  if (getKubeService) {
-    kubeService = getKubeService;
+  const getKubeIngress = await window.kubernetesReadNamespacedIngress(name, namespace);
+  if (getKubeIngress) {
+    kubeIngress = getKubeIngress;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${ingressUI.name}`;
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -58,7 +78,7 @@ async function loadIngressDetails(): Promise<void> {
   <DetailsPage title={ingressUI.name} subtitle={ingressUI.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={IngressRouteIcon} size={24} status={ingressUI.status} />
     <svelte:fragment slot="actions">
-      <IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={(): IngressUI => (ingressUI = ingressUI)} />
+      <IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={(): IngressUI | undefined => (ingressUI = ingressUI)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={ingressUI.status} />
@@ -70,13 +90,13 @@ async function loadIngressDetails(): Promise<void> {
     </svelte:fragment>
     <svelte:fragment slot="content">
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <ServiceDetailsSummary ingressRoute={kubeService} kubeError={kubeError} />
+        <ServiceDetailsSummary ingressRoute={kubeIngress} kubeError={kubeError} />
       </Route>
       <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-        <MonacoEditor content={JSON.stringify(kubeService, undefined, 2)} language="json" />
+        <MonacoEditor content={JSON.stringify(kubeIngress, undefined, 2)} language="json" />
       </Route>
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
-        <KubeEditYAML content={stringify(kubeService)} />
+        <KubeEditYAML content={stringify(kubeIngress)} />
       </Route>
     </svelte:fragment>
   </DetailsPage>
