@@ -1,11 +1,13 @@
 <script lang="ts">
-import type { V1PersistentVolumeClaim } from '@kubernetes/client-node';
+import type { KubernetesObject, V1PersistentVolumeClaim } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import { kubernetesCurrentContextPersistentVolumeClaims } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
@@ -19,35 +21,54 @@ import PVCActions from './PVCActions.svelte';
 import PVCDetailsSummary from './PVCDetailsSummary.svelte';
 import type { PVCUI } from './PVCUI';
 
-export let name: string;
-export let namespace: string;
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
 
-let pvc: PVCUI;
-let detailsPage: DetailsPage;
-let kubePVC: V1PersistentVolumeClaim | undefined;
-let kubeError: string;
+let pvc: PVCUI | undefined = $state(undefined);
+let detailsPage: DetailsPage | undefined = $state(undefined);
+let kubePVC: V1PersistentVolumeClaim | undefined = $state(undefined);
+let kubeError: string | undefined = $state(undefined);
 
-onMount(() => {
+let listener: IDisposable | undefined;
+
+onMount(async () => {
   const pvcUtils = new PVCUtils();
-  // loading pvc info
-  return kubernetesCurrentContextPersistentVolumeClaims.subscribe(pvcs => {
-    const matchingPVC = pvcs.find(pvc => pvc.metadata?.name === name && pvc.metadata?.namespace === namespace);
-    if (matchingPVC) {
-      pvc = pvcUtils.getPVCUI(matchingPVC);
-      loadDetails().catch((err: unknown) => console.error(`Error getting PVC details ${pvc.name}`, err));
-    } else if (detailsPage) {
-      // the pvc has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'persistentvolumeclaims',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextPersistentVolumeClaims,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the PVC has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      pvc = pvcUtils.getPVCUI(resource);
+      if (isExperimental) {
+        kubePVC = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting PVC details ${name}`, err));
+      }
+    },
   });
 });
 
+onDestroy(() => {
+  listener?.dispose();
+});
+
 async function loadDetails(): Promise<void> {
-  const getKubePVC = await window.kubernetesReadNamespacedPersistentVolumeClaim(pvc.name, namespace);
+  const getKubePVC = await window.kubernetesReadNamespacedPersistentVolumeClaim(name, namespace);
   if (getKubePVC) {
     kubePVC = getKubePVC;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${pvc.name}`;
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -56,7 +77,7 @@ async function loadDetails(): Promise<void> {
   <DetailsPage title={pvc.name} subtitle={pvc.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={PVCIcon} size={24} status={pvc.status} />
     <svelte:fragment slot="actions">
-      <PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI => (pvc = pvc)} />
+      <PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI | undefined => (pvc = pvc)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={pvc.status} />

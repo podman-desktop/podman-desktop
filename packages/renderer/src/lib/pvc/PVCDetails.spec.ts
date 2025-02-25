@@ -20,10 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1PersistentVolumeClaim } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { router } from 'tinro';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '/@/lib/kube/tests-helpers/init-lists';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
 import PVCDetails from './PVCDetails.svelte';
 
@@ -36,22 +42,50 @@ const pvc: V1PersistentVolumeClaim = {
   },
 } as V1PersistentVolumeClaim;
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
+  // we want to keep the original nonVerbose
+  const original = await importOriginal();
   return {
-    kubernetesCurrentContextPersistentVolumeClaims: vi.fn(),
+    ...original,
+    listenResources: vi.fn(),
+    isKubernetesExperimentalMode: vi.fn(),
   };
 });
 
-beforeAll(() => {
-  Object.defineProperty(window, 'kubernetesReadNamespacedPersistentVolumeClaim', { value: vi.fn() });
+vi.mock('/@/stores/kubernetes-contexts-state');
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  router.goto('http://localhost:3000');
 });
 
-test('Expect renders PVC details', async () => {
-  // mock object store
-  const pvcs = writable<KubernetesObject[]>([pvc]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPersistentVolumeClaims = pvcs;
+describe.each<{
+  experimental: boolean;
+  initLists: (configmaps: KubernetesObject[]) => initListsReturnType;
+}>([
+  {
+    experimental: false,
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaims = store),
+    }),
+  },
+  {
+    experimental: true,
+    initLists: initListExperimental({ resourceName: 'persistentvolumeclaims' }),
+  },
+])('is experimental: $experimental', ({ experimental, initLists }) => {
+  beforeEach(() => {
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
+  });
 
-  render(PVCDetails, { name: 'my-pvc', namespace: 'default' });
+  test('Expect renders PVC details', async () => {
+    // mock object store
+    initLists([pvc]);
 
-  expect(screen.getByText('my-pvc')).toBeInTheDocument();
+    render(PVCDetails, { name: 'my-pvc', namespace: 'default' });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('my-pvc')).toBeInTheDocument();
+    });
+  });
 });
