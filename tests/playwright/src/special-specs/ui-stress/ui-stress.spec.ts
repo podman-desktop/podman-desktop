@@ -15,10 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ImagesPage } from '../../model/pages/images-page';
-import { NavigationBar } from '../../model/workbench/navigation';
 import { expect as playExpect, test } from '../../utility/fixtures';
-import { waitForPodmanMachineStartup, waitWhile } from '../../utility/wait';
+import { waitForPodmanMachineStartup } from '../../utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
 console.log(`numberOfObjects => ${numberOfObjects}`);
@@ -27,27 +25,15 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('ui-stress-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
-  // wait giving a time to podman desktop to load up
-  let images: ImagesPage;
-  try {
-    images = await new NavigationBar(page).openImages();
-  } catch (error) {
-    await runner.screenshot('error-on-open-images.png');
-    throw error;
-  }
-  await waitWhile(async () => await images.pageIsEmpty(), {
-    sendError: false,
-    message: 'Images page is empty, there are no images present',
-  });
 });
 
-test.afterAll(async () => {
-  test.setTimeout(90_000);
+test.afterAll(async ({ runner }) => {
+  test.setTimeout(120_000);
+  await runner.close();
 });
 
 test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui-stress'] }, () => {
   test(`Verification of images`, async ({ navigationBar }) => {
-    test.setTimeout(30_000);
     const images = await navigationBar.openImages();
     await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
@@ -58,7 +44,6 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   });
 
   test(`Verification of containers`, async ({ navigationBar }) => {
-    test.setTimeout(30_000);
     const containers = await navigationBar.openContainers();
     await playExpect(containers.heading).toBeVisible({ timeout: 10_000 });
     //count containers => (1 manually created + 2 from creating pods) * numberOfObjects = 3 * numberOfObjects
@@ -71,7 +56,6 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   });
 
   test(`Verification of pods`, async ({ navigationBar }) => {
-    test.setTimeout(30_000);
     const pods = await navigationBar.openPods();
     await playExpect(pods.heading).toBeVisible({ timeout: 10_000 });
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
