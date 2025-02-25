@@ -1,36 +1,87 @@
 <script lang="ts">
 import { Spinner } from '@podman-desktop/ui-svelte';
+import { onDestroy, onMount } from 'svelte';
+import type { Unsubscriber } from 'svelte/store';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import {
   kubernetesContextsCheckingStateDelayed,
   kubernetesCurrentContextState,
 } from '/@/stores/kubernetes-contexts-state';
+import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import Label from './Label.svelte';
 
-function getText(state?: ContextGeneralState): string {
+interface Info {
+  text: string;
+  classColor: string;
+  tip?: string;
+}
+
+const currentContextName = $derived($kubernetesContexts?.find(c => c.currentContext)?.name);
+let info = $state<Info>();
+
+let unsubscriber: Unsubscriber | undefined;
+
+onMount(async () => {
+  const isExperimental = await isKubernetesExperimentalMode();
+  if (isExperimental) {
+    unsubscriber = kubernetesContextsHealths.subscribe(healths => {
+      const health = healths.find(health => health.contextName === currentContextName);
+      if (!health) {
+        return;
+      }
+      info = {
+        text: getTextExperimental(health),
+        classColor: getClassColorExperimental(health),
+        tip: health.reachable ? '' : 'health check not responding',
+      };
+    });
+  } else {
+    unsubscriber = kubernetesCurrentContextState.subscribe(state => {
+      info = {
+        text: getTextNonExperimental(state),
+        classColor: getClassColorNonExperimental(state),
+        tip: state?.error,
+      };
+    });
+  }
+});
+
+onDestroy(() => {
+  unsubscriber?.();
+});
+
+function getTextNonExperimental(state?: ContextGeneralState): string {
   if (state?.reachable) return 'Connected';
   return 'Cluster not reachable';
 }
 
-function getClassColor(state?: ContextGeneralState): string {
+function getClassColorNonExperimental(state?: ContextGeneralState): string {
   if (state?.reachable) return 'bg-[var(--pd-status-connected)]';
   return 'bg-[var(--pd-status-disconnected)]';
 }
 
-$: text = getText($kubernetesCurrentContextState);
-let currentContextName: string | undefined;
-$: currentContextName = $kubernetesContexts?.find(c => c.currentContext)?.name;
+function getTextExperimental(health: ContextHealth): string {
+  if (health.reachable) return 'Connected';
+  return 'Cluster not reachable';
+}
+
+function getClassColorExperimental(health: ContextHealth): string {
+  if (health.reachable) return 'bg-[var(--pd-status-connected)]';
+  return 'bg-[var(--pd-status-disconnected)]';
+}
 </script>
 
-{#if $kubernetesCurrentContextState}
+{#if !!info && currentContextName}
   <div class="flex items-center flex-row">
     {#if !!currentContextName && $kubernetesContextsCheckingStateDelayed?.get(currentContextName)}
       <div class="mr-1"><Spinner size="12px"></Spinner></div>
     {/if}
-    <Label role="status" name={text} tip={$kubernetesCurrentContextState.error}
-      ><div class="w-2 h-2 {getClassColor($kubernetesCurrentContextState)} rounded-full mx-1"></div></Label>  
+    <Label role="status" name={info.text} tip={info.tip}
+      ><div class="w-2 h-2 {info.classColor} rounded-full mx-1"></div></Label>  
   </div>
 {/if}

@@ -21,18 +21,23 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { readable, type Writable, writable } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
+import * as health from '/@/stores/kubernetes-context-health';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts';
 import * as states from '/@/stores/kubernetes-contexts-state';
 import type { KubeContext } from '/@api/kubernetes-context';
+import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
-
 vi.mock('/@/stores/kubernetes-contexts');
+vi.mock('/@/lib/kube/resources-listen');
+vi.mock('/@/stores/kubernetes-context-health');
 
 let delayed: Writable<Map<string, boolean>>;
 let contexts: Writable<KubeContext[]>;
@@ -41,130 +46,145 @@ beforeEach(() => {
   vi.resetAllMocks();
   delayed = writable<Map<string, boolean>>();
   vi.mocked(states).kubernetesContextsCheckingStateDelayed = delayed;
-  contexts = writable<KubeContext[]>();
+  contexts = writable<KubeContext[]>([
+    {
+      name: 'context1',
+      currentContext: true,
+    } as KubeContext,
+  ]);
   vi.mocked(kubeContextStore).kubernetesContexts = contexts;
 });
 
-test('expect no badges shown as no context has been provided.', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable();
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const status = screen.queryByRole('status');
-  expect(status).toBeNull();
-});
-
-test('expect badges to show as there is a context', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: undefined,
-    reachable: true,
-    resources: {
-      pods: 0,
-      deployments: 0,
+describe.each<{
+  experimental: boolean;
+  setState: (reachable: boolean, error?: string) => void;
+}>([
+  {
+    experimental: false,
+    setState: (reachable: boolean, error?: string): void => {
+      vi.mocked(states).kubernetesCurrentContextState = readable({
+        error,
+        reachable,
+        resources: {
+          pods: 0,
+          deployments: 0,
+        },
+      } as ContextGeneralState); // no current ContextState
     },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const status = screen.getByRole('status');
-  expect(status).toBeInTheDocument();
-});
-
-test('expect badges to be green when reachable', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: undefined,
-    reachable: true,
-    resources: {
-      pods: 0,
-      deployments: 0,
+  },
+  {
+    experimental: true,
+    setState: (reachable: boolean, _error?: string): void => {
+      vi.mocked(health).kubernetesContextsHealths = writable([
+        {
+          contextName: 'context1',
+          reachable,
+        } as unknown as ContextHealth,
+      ]);
     },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const status = screen.getByRole('status');
-  expect(status.firstChild).toHaveClass('bg-[var(--pd-status-connected)]');
-});
-
-test('expect badges to be gray when not reachable', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: undefined,
-    reachable: false,
-    resources: {
-      pods: 0,
-      deployments: 0,
-    },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const status = screen.getByRole('status');
-  expect(status.firstChild).toHaveClass('bg-[var(--pd-status-disconnected)]');
-});
-
-test('expect no tooltip when no error', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: undefined,
-    reachable: false,
-    resources: {
-      pods: 0,
-      deployments: 0,
-    },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const tooltip = screen.queryByLabelText('tooltip');
-  expect(tooltip).toBeNull();
-});
-
-test('expect tooltip when error', async () => {
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: 'error message',
-    reachable: false,
-    resources: {
-      pods: 0,
-      deployments: 0,
-    },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  const tooltip = screen.getByLabelText('tooltip');
-  expect(tooltip).toBeInTheDocument();
-});
-
-test('spinner should be displayed when and only when the context connectivity is being checked', async () => {
-  contexts.set([
-    {
-      name: 'context1',
-      cluster: 'cluster1',
-      user: 'user1',
-      currentContext: true,
-    },
-  ]);
-  vi.mocked(states).kubernetesCurrentContextState = readable({
-    error: 'error message',
-    reachable: false,
-    resources: {
-      pods: 0,
-      deployments: 0,
-    },
-  } as ContextGeneralState); // no current ContextState
-  render(KubernetesCurrentContextConnectionBadge);
-
-  let checking = screen.queryByLabelText('Loading');
-  expect(checking).toBeNull();
-
-  // context is being checked
-  delayed.set(new Map<string, boolean>([['context1', true]]));
-
-  // spinner should appear
-  await waitFor(() => {
-    checking = screen.queryByLabelText('Loading');
-    expect(checking).not.toBeNull();
+  },
+])('is experimental: $experimental', ({ experimental, setState }) => {
+  beforeEach(() => {
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
   });
 
-  // context is not being checked anymore
-  delayed.set(new Map<string, boolean>([['context1', false]]));
+  test('expect no badges shown as no context has been provided.', async () => {
+    contexts.set([
+      {
+        name: 'non-current',
+      } as KubeContext,
+    ]);
+    render(KubernetesCurrentContextConnectionBadge);
 
-  // spinner should disappear
-  await waitFor(() => {
-    checking = screen.queryByLabelText('Loading');
+    await tick();
+
+    const status = screen.queryByRole('status');
+    expect(status).toBeNull();
+  });
+
+  test('expect badges to show as there is a context', async () => {
+    setState(true);
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status).toBeInTheDocument();
+    });
+  });
+
+  test('expect badges to be green when reachable', async () => {
+    setState(true);
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status.firstChild).toHaveClass('bg-[var(--pd-status-connected)]');
+    });
+  });
+
+  test('expect badges to be gray when not reachable', async () => {
+    setState(false);
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status.firstChild).toHaveClass('bg-[var(--pd-status-disconnected)]');
+    });
+  });
+
+  test('expect no tooltip when no error', async () => {
+    setState(true);
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await tick();
+
+    await vi.waitFor(() => {
+      const tooltip = screen.queryByLabelText('tooltip');
+      expect(tooltip).toBeNull();
+    });
+  });
+
+  test('expect tooltip when error', async () => {
+    setState(false, 'error message');
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const tooltip = screen.getByLabelText('tooltip');
+      expect(tooltip).toBeInTheDocument();
+    });
+  });
+
+  test('spinner should be displayed when and only when the context connectivity is being checked', async () => {
+    contexts.set([
+      {
+        name: 'context1',
+        cluster: 'cluster1',
+        user: 'user1',
+        currentContext: true,
+      },
+    ]);
+    setState(false, 'error message');
+    render(KubernetesCurrentContextConnectionBadge);
+
+    let checking = screen.queryByLabelText('Loading');
     expect(checking).toBeNull();
+
+    // context is being checked
+    delayed.set(new Map<string, boolean>([['context1', true]]));
+
+    // spinner should appear
+    await waitFor(() => {
+      checking = screen.queryByLabelText('Loading');
+      expect(checking).not.toBeNull();
+    });
+
+    // context is not being checked anymore
+    delayed.set(new Map<string, boolean>([['context1', false]]));
+
+    // spinner should disappear
+    await waitFor(() => {
+      checking = screen.queryByLabelText('Loading');
+      expect(checking).toBeNull();
+    });
   });
 });
