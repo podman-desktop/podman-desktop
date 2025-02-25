@@ -20,14 +20,17 @@ import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1ConfigMap } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable';
 
-import { isKubernetesExperimentalMode, listenResources } from '../kube/resources-listen';
+import { isKubernetesExperimentalMode } from '../kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '../kube/tests-helpers/init-lists';
 import ConfigMapDetails from './ConfigMapDetails.svelte';
 
 const configMap: V1ConfigMap = {
@@ -57,43 +60,19 @@ beforeEach(() => {
   router.goto('http://localhost:3000');
 });
 
-type initListsReturnType = {
-  updateDeployments: (objects: KubernetesObject[]) => void;
-};
-
 describe.each<{
   experimental: boolean;
   initLists: (configmaps: KubernetesObject[]) => initListsReturnType;
 }>([
   {
     experimental: false,
-    initLists: (configmaps: KubernetesObject[]): initListsReturnType => {
-      const configmapsStore = writable<KubernetesObject[]>(configmaps);
-      vi.mocked(states).kubernetesCurrentContextConfigMaps = configmapsStore;
-      return {
-        updateDeployments: (configmaps: KubernetesObject[]): void => {
-          configmapsStore.set(configmaps);
-        },
-      };
-    },
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextConfigMaps = store),
+    }),
   },
   {
     experimental: true,
-    initLists: (configmaps: KubernetesObject[]): initListsReturnType => {
-      let configmapsCallback: (resoures: KubernetesObject[]) => void;
-      vi.mocked(listenResources).mockImplementation(async (resourceName, _options, cb): Promise<IDisposable> => {
-        configmapsCallback = cb;
-        setTimeout(() => configmapsCallback(configmaps));
-        return {
-          dispose: (): void => {},
-        };
-      });
-      return {
-        updateDeployments: (updatedObjects: KubernetesObject[]): void => {
-          configmapsCallback(updatedObjects);
-        },
-      };
-    },
+    initLists: initListExperimental({ resourceName: 'configmaps' }),
   },
 ])('is experimental: $experimental', ({ experimental, initLists }) => {
   beforeEach(() => {

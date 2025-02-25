@@ -26,33 +26,42 @@ import { listenResources } from '../resources-listen';
 
 export type initListsReturnType = {
   updateResources: (objects: KubernetesObject[]) => void;
-  updateEvents: (objects: CoreV1Event[]) => void;
+  updateEvents?: (objects: CoreV1Event[]) => void;
 };
 
-export function initListsNonExperimental(options: {
+interface InitListsNonExperimentalOptions {
   onResourcesStore: (store: Writable<KubernetesObject[]>) => void;
-  onEventsStore: (store: Writable<CoreV1Event[]>) => void;
-}): (resources: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType {
-  return (resources: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
+  onEventsStore?: (store: Writable<CoreV1Event[]>) => void;
+}
+
+export function initListsNonExperimental(
+  options: InitListsNonExperimentalOptions,
+): (resources: KubernetesObject[], events?: CoreV1Event[]) => initListsReturnType {
+  return (resources: KubernetesObject[], events?: CoreV1Event[]): initListsReturnType => {
     const resourcesStore = writable<KubernetesObject[]>(resources);
     options.onResourcesStore(resourcesStore);
-    const eventsStore = writable<CoreV1Event[]>(events);
-    options.onEventsStore(eventsStore);
+    let eventsStore: Writable<CoreV1Event[]>;
+    if (options.onEventsStore) {
+      eventsStore = writable<CoreV1Event[]>(events);
+      options.onEventsStore(eventsStore);
+    }
     return {
       updateResources: (resources: KubernetesObject[]): void => {
         resourcesStore.set(resources);
       },
-      updateEvents: (events: CoreV1Event[]): void => {
-        eventsStore.set(events);
-      },
+      updateEvents: options.onEventsStore
+        ? (events: CoreV1Event[]): void => {
+            eventsStore.set(events);
+          }
+        : undefined,
     };
   };
 }
 
 export function initListExperimental(options: {
   resourceName: string;
-}): (resources: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType {
-  return (resources: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
+}): (resources: KubernetesObject[], events?: CoreV1Event[]) => initListsReturnType {
+  return (resources: KubernetesObject[], events?: CoreV1Event[]): initListsReturnType => {
     let resourcesCallback: (resources: KubernetesObject[]) => void;
     let eventsCallback: (resources: CoreV1Event[]) => void;
     vi.mocked(listenResources).mockImplementation(async (listenedResourceName, _options, cb): Promise<IDisposable> => {
@@ -63,8 +72,10 @@ export function initListExperimental(options: {
           dispose: (): void => {},
         };
       } else {
-        eventsCallback = cb;
-        setTimeout(() => eventsCallback(events));
+        if (events) {
+          eventsCallback = cb;
+          setTimeout(() => eventsCallback(events));
+        }
         return {
           dispose: (): void => {},
         };
@@ -74,9 +85,11 @@ export function initListExperimental(options: {
       updateResources: (updatedObjects: KubernetesObject[]): void => {
         resourcesCallback(updatedObjects);
       },
-      updateEvents: (updatedObjects: CoreV1Event[]): void => {
-        eventsCallback(updatedObjects);
-      },
+      updateEvents: events
+        ? (updatedObjects: CoreV1Event[]): void => {
+            eventsCallback(updatedObjects);
+          }
+        : undefined,
     };
   };
 }
