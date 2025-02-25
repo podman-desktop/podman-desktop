@@ -17,6 +17,7 @@
  ***********************************************************************/
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
+import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isWindows } from '/@/util.js';
 
 import { Deferred } from './plugin/util/deferred.js';
@@ -63,6 +64,12 @@ export class Main {
       this.app.quit();
       process.exit(0);
     }
+
+    /**
+     * Enable security restrictions according to Electron guidelines
+     */
+    const security = new SecurityRestrictions(this.app);
+    security.init();
 
     /**
      * Disable Hardware Acceleration for more power-save

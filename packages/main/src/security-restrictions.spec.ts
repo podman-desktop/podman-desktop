@@ -17,23 +17,25 @@
  ***********************************************************************/
 
 import type {
+  App as ElectronApp,
   Event as ElectronEvent,
   HandlerDetails,
   PermissionRequest,
   WebContents,
   WindowOpenHandlerResponse,
 } from 'electron';
-import { app, shell } from 'electron';
+import { shell } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('electron', () => ({
-  app: {
-    on: vi.fn(),
-  },
   shell: {
     openExternal: vi.fn(),
   },
 }));
+
+const ELECTRON_APP_MOCK: ElectronApp = {
+  on: vi.fn(),
+} as unknown as ElectronApp;
 
 const ELECTRON_EVENT_MOCK: ElectronEvent = {
   preventDefault: vi.fn(),
@@ -60,21 +62,22 @@ beforeEach(async () => {
   (import.meta.env.DEV as unknown) = true;
   (import.meta.env.VITE_DEV_SERVER_URL as unknown) = VITE_DEV_SERVER_URL_MOCK;
 
-  // this combined with `vi.resetModules` allow us to re-import the module
-  await import('./security-restrictions.js');
+  const { SecurityRestrictions } = await import('/@/security-restrictions.js');
+  const security = new SecurityRestrictions(ELECTRON_APP_MOCK);
+  security.init();
 });
 
 // Utility type definition for {@link ElectronApp.on} and {@link WebContents.on}
 type Listener = (...args: unknown[]) => void;
 
 /**
- * Utility function to get listener register in {@link ElectronApp.on}
+ * Utility function to get listener register in {@link ELECTRON_APP_MOCK.on}
  * @remarks cannot found any way to properly infer type based on event value (see https://github.com/microsoft/TypeScript/issues/53439)
  * @param event
  */
 function findElectronAppListener(event: string): Listener | undefined {
-  expect(app.on).toHaveBeenCalledWith(event, expect.any(Function));
-  return vi.mocked(app.on).mock.calls.find(([mEvent]) => mEvent === event)?.[1];
+  expect(ELECTRON_APP_MOCK.on).toHaveBeenCalledWith(event, expect.any(Function));
+  return vi.mocked(ELECTRON_APP_MOCK.on).mock.calls.find(([mEvent]) => mEvent === event)?.[1];
 }
 
 /**

@@ -18,6 +18,7 @@
 import type { App as ElectronApp } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isWindows } from '/@/util.js';
 
 import { Main } from './main.js';
@@ -25,6 +26,7 @@ import { Main } from './main.js';
 // mock electron
 vi.mock('electron');
 vi.mock('/@/util.js');
+vi.mock('/@/security-restrictions.js');
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   name: 'dummy-electron-mock',
@@ -68,6 +70,13 @@ test('hardware acceleration should be disabled', async () => {
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.disableHardwareAcceleration).toHaveBeenCalledOnce();
+});
+
+test('security restriction should be initialized', async () => {
+  const code = new Main(ELECTRON_APP_MOCK);
+  code.main([]);
+
+  expect(SecurityRestrictions.prototype.init).toHaveBeenCalledOnce();
 });
 
 test('on windows setAppUserModelId should be called', async () => {

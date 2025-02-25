@@ -15,9 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-import './security-restrictions';
-
 import dns from 'node:dns';
 
 import { app, ipcMain, Menu, Tray } from 'electron';
