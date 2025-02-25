@@ -20,15 +20,18 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CoreV1Event, KubernetesObject, V1Service } from '@kubernetes/client-node';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable.js';
 
 import * as resourcesListen from '../kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '../kube/tests-helpers/init-lists';
 import ServiceDetails from './ServiceDetails.svelte';
 import * as serviceDetailsSummary from './ServiceDetailsSummary.svelte';
 
@@ -59,63 +62,20 @@ beforeEach(() => {
   router.goto('http://localhost:3000');
 });
 
-type initListsReturnType = {
-  updateServices: (objects: KubernetesObject[]) => void;
-  updateEvents: (objects: CoreV1Event[]) => void;
-};
-
 describe.each<{
   experimental: boolean;
   initLists: (services: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType;
 }>([
   {
     experimental: false,
-    initLists: (services: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
-      const servciesStore = writable<KubernetesObject[]>(services);
-      vi.mocked(states).kubernetesCurrentContextServices = servciesStore;
-      const eventsStore = writable<CoreV1Event[]>(events);
-      vi.mocked(states).kubernetesCurrentContextEvents = eventsStore;
-      return {
-        updateServices: (services: KubernetesObject[]): void => {
-          servciesStore.set(services);
-        },
-        updateEvents: (events: CoreV1Event[]): void => {
-          eventsStore.set(events);
-        },
-      };
-    },
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextServices = store),
+      onEventsStore: store => (vi.mocked(states).kubernetesCurrentContextEvents = store),
+    }),
   },
   {
     experimental: true,
-    initLists: (services: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
-      let servicesCallback: (resoures: KubernetesObject[]) => void;
-      let eventsCallback: (resoures: CoreV1Event[]) => void;
-      vi.mocked(resourcesListen.listenResources).mockImplementation(
-        async (resourceName, _options, cb): Promise<IDisposable> => {
-          if (resourceName === 'services') {
-            servicesCallback = cb;
-            setTimeout(() => servicesCallback(services));
-            return {
-              dispose: (): void => {},
-            };
-          } else {
-            eventsCallback = cb;
-            setTimeout(() => eventsCallback(events));
-            return {
-              dispose: (): void => {},
-            };
-          }
-        },
-      );
-      return {
-        updateServices: (updatedObjects: KubernetesObject[]): void => {
-          servicesCallback(updatedObjects);
-        },
-        updateEvents: (updatedObjects: CoreV1Event[]): void => {
-          eventsCallback(updatedObjects);
-        },
-      };
-    },
+    initLists: initListExperimental({ resourceName: 'services' }),
   },
 ])('is experimental: $experimental', ({ experimental, initLists }) => {
   beforeEach(() => {
@@ -131,7 +91,7 @@ describe.each<{
 
     // remove service from the store when we call delete
     vi.mocked(window.kubernetesDeleteService).mockImplementation(async () => {
-      list.updateServices([]);
+      list.updateResources([]);
     });
 
     // define a fake lastPage so we can check where we will be redirected

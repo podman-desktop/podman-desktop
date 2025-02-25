@@ -19,14 +19,17 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CoreV1Event, KubernetesObject, V1Node } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable.js';
 
-import { isKubernetesExperimentalMode, listenResources } from '../kube/resources-listen';
+import { isKubernetesExperimentalMode } from '../kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '../kube/tests-helpers/init-lists';
 import NodeDetails from './NodeDetails.svelte';
 import * as nodeDetailsSummary from './NodeDetailsSummary.svelte';
 
@@ -57,61 +60,20 @@ beforeEach(() => {
   router.goto('http://localhost:3000');
 });
 
-type initListsReturnType = {
-  updateNodes: (objects: KubernetesObject[]) => void;
-  updateEvents: (objects: CoreV1Event[]) => void;
-};
-
 describe.each<{
   experimental: boolean;
-  initLists: (nodes: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType;
+  initLists: (resources: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType;
 }>([
   {
     experimental: false,
-    initLists: (nodes: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
-      const nodesStore = writable<KubernetesObject[]>(nodes);
-      vi.mocked(states).kubernetesCurrentContextNodes = nodesStore;
-      const eventsStore = writable<CoreV1Event[]>(events);
-      vi.mocked(states).kubernetesCurrentContextEvents = eventsStore;
-      return {
-        updateNodes: (nodes: KubernetesObject[]): void => {
-          nodesStore.set(nodes);
-        },
-        updateEvents: (events: CoreV1Event[]): void => {
-          eventsStore.set(events);
-        },
-      };
-    },
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextNodes = store),
+      onEventsStore: store => (vi.mocked(states).kubernetesCurrentContextEvents = store),
+    }),
   },
   {
     experimental: true,
-    initLists: (nodes: KubernetesObject[], events: CoreV1Event[]): initListsReturnType => {
-      let nodesCallback: (resources: KubernetesObject[]) => void;
-      let eventsCallback: (resources: CoreV1Event[]) => void;
-      vi.mocked(listenResources).mockImplementation(async (resourceName, _options, cb): Promise<IDisposable> => {
-        if (resourceName === 'nodes') {
-          nodesCallback = cb;
-          setTimeout(() => nodesCallback(nodes));
-          return {
-            dispose: (): void => {},
-          };
-        } else {
-          eventsCallback = cb;
-          setTimeout(() => eventsCallback(events));
-          return {
-            dispose: (): void => {},
-          };
-        }
-      });
-      return {
-        updateNodes: (updatedObjects: KubernetesObject[]): void => {
-          nodesCallback(updatedObjects);
-        },
-        updateEvents: (updatedObjects: CoreV1Event[]): void => {
-          eventsCallback(updatedObjects);
-        },
-      };
-    },
+    initLists: initListExperimental({ resourceName: 'nodes' }),
   },
 ])('is experimental: $experimental', ({ experimental, initLists }) => {
   beforeEach(() => {
