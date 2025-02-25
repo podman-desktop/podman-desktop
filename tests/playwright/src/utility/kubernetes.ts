@@ -172,7 +172,7 @@ export async function editDeploymentYamlFile(
   });
 }
 
-export async function countKubernetesPodReplicas(page: Page, expectedPodName: string): Promise<void> {
+export async function countKubernetesPodReplicas(page: Page, expectedPodName: string): Promise<number> {
   return test.step(`Count pod replicas: ${expectedPodName}`, async () => {
     const navigationBar = new NavigationBar(page);
     const kubernetesBar = await navigationBar.openKubernetes();
