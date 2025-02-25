@@ -54,7 +54,7 @@ const row = new TableRow<ForwardConfig>({});
         defaultSortColumn="Name">
       </Table>
     {:else}
-      <EmptyScreen message="Start forwarding ports from the Pod Details > Summary tab" icon={faEthernet} title="No port forwarding configured"/>
+      <EmptyScreen message="To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)" icon={faEthernet} title="No port forwarding configured"/>
     {/if}
   </div>
 </NavPage>

@@ -37,6 +37,8 @@ beforeEach(() => {
 test('empty kubernetesCurrentContextPortForwards store should display empty screen', async () => {
   const { getByText } = render(PortForwardList);
 
-  const text = getByText('Start forwarding ports from the Pod Details > Summary tab');
+  const text = getByText(
+    'To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)',
+  );
   expect(text).toBeDefined();
 });
