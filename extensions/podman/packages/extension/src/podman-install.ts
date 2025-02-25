@@ -23,10 +23,11 @@ import { promisify } from 'node:util';
 import * as extensionApi from '@podman-desktop/api';
 import { compare, compareVersions } from 'compare-versions';
 
-import { BaseCheck, OrCheck, SequenceCheck } from './base-check';
+import { BaseCheck, OrCheck, SequenceCheck } from './checks/base-check';
+import { getDetectionChecks } from './checks/detection-checks';
+import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './checks/macos-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
-import { getDetectionChecks } from './detection-checks';
 import type { MachineJSON } from './extension';
 import {
   calcPodmanMachineSetting,
@@ -41,7 +42,6 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from './extension';
 import { WslHelper } from './helpers/wsl-helper';
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './macos-checks';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import * as podman5JSON from './podman5.json';

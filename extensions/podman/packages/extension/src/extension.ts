@@ -28,11 +28,11 @@ import { Mutex } from 'async-mutex';
 import { compareVersions } from 'compare-versions';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
-import { SequenceCheck } from './base-check';
+import { SequenceCheck } from './checks/base-check';
+import { getDetectionChecks } from './checks/detection-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { getSocketCompatibility } from './compatibility-mode';
-import { getDetectionChecks } from './detection-checks';
 import { KrunkitHelper } from './helpers/krunkit-helper';
 import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-helper';
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
