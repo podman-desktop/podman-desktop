@@ -132,6 +132,7 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     await sBar.updateButtonTitle.click();
     await playExpect(updateDialog).toBeVisible();
     await handleConfirmationDialog(page, 'Update', true, 'OK', 'Cancel');
+    await playExpect(updateDialog).not.toBeVisible();
   });
 
   test('Update is performed and restart offered', async ({ page }) => {
@@ -140,5 +141,6 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     await playExpect(updateDownloadedDialog).toBeVisible({ timeout: 120000 });
     // some buttons
     await handleConfirmationDialog(page, 'Update Downloaded', false, 'Restart', 'Cancel');
+    await playExpect(updateDownloadedDialog).not.toBeVisible();
   });
 });
