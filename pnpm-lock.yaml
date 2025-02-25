@@ -957,7 +957,7 @@ importers:
         version: 4.0.0
       docusaurus-plugin-typedoc:
         specifier: ^1.2.3
-        version: 1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.8(typescript@5.6.3)))
+        version: 1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.9(typescript@5.6.3)))
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -999,11 +999,11 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7
       typedoc:
-        specifier: ^0.27.8
-        version: 0.27.8(typescript@5.6.3)
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.6.3)
       typedoc-plugin-markdown:
         specifier: ^4.4.2
-        version: 4.4.2(typedoc@0.27.8(typescript@5.6.3))
+        version: 4.4.2(typedoc@0.27.9(typescript@5.6.3))
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -11069,12 +11069,12 @@ packages:
     peerDependencies:
       typedoc: 0.27.x
 
-  typedoc@0.27.8:
-    resolution: {integrity: sha512-q0/2TUunNEDmWkn23ULKGXieK8cgGuAmBUXC/HcZ/rgzMI9Yr4Nq3in1K1vT1NZ9zx6M78yTk3kmIPbwJgK5KA==}
+  typedoc@0.27.9:
+    resolution: {integrity: sha512-/z585740YHURLl9DN2jCWe6OW7zKYm6VoQ93H0sxZ1cwHQEQrUn5BJrEnkWhfzUdyO+BLGjnKUZ9iz9hKloFDw==}
     engines: {node: '>= 18'}
     hasBin: true
     peerDependencies:
-      typescript: 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x || 5.7.x
+      typescript: 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x || 5.7.x || 5.8.x
 
   typescript-eslint@8.24.1:
     resolution: {integrity: sha512-cw3rEdzDqBs70TIcb0Gdzbt6h11BSs2pS0yaq7hDWDBtCCSei1pPSUXE9qUdQ/Wm9NgFg8mKtMt1b8fTHIl1jA==}
@@ -18082,9 +18082,9 @@ snapshots:
 
   docusaurus-plugin-goatcounter@4.0.0: {}
 
-  docusaurus-plugin-typedoc@1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.8(typescript@5.6.3))):
+  docusaurus-plugin-typedoc@1.2.3(typedoc-plugin-markdown@4.4.2(typedoc@0.27.9(typescript@5.6.3))):
     dependencies:
-      typedoc-plugin-markdown: 4.4.2(typedoc@0.27.8(typescript@5.6.3))
+      typedoc-plugin-markdown: 4.4.2(typedoc@0.27.9(typescript@5.6.3))
 
   dom-accessibility-api@0.5.16: {}
 
@@ -24363,11 +24363,11 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-plugin-markdown@4.4.2(typedoc@0.27.8(typescript@5.6.3)):
+  typedoc-plugin-markdown@4.4.2(typedoc@0.27.9(typescript@5.6.3)):
     dependencies:
-      typedoc: 0.27.8(typescript@5.6.3)
+      typedoc: 0.27.9(typescript@5.6.3)
 
-  typedoc@0.27.8(typescript@5.6.3):
+  typedoc@0.27.9(typescript@5.6.3):
     dependencies:
       '@gerrit0/mini-shiki': 1.27.2
       lunr: 2.3.9
