@@ -1,11 +1,13 @@
 <script lang="ts">
-import type { V1Secret } from '@kubernetes/client-node';
+import type { KubernetesObject, V1Secret } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import { kubernetesCurrentContextSecrets } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
@@ -19,39 +21,54 @@ import ConfigMapSecretActions from './ConfigMapSecretActions.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 import SecretDetailsSummary from './SecretDetailsSummary.svelte';
 
-export let name: string;
-export let namespace: string;
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
 
-let secret: ConfigMapSecretUI;
-let detailsPage: DetailsPage;
-let kubeSecret: V1Secret | undefined;
-let kubeError: string;
+let secret: ConfigMapSecretUI | undefined = $state(undefined);
+let detailsPage: DetailsPage | undefined = $state(undefined);
+let kubeSecret: V1Secret | undefined = $state(undefined);
+let kubeError: string | undefined = $state(undefined);
 
-onMount(() => {
+let listener: IDisposable | undefined;
+
+onMount(async () => {
   const secretUtils = new ConfigMapSecretUtils();
-  // loading secret info
-  return kubernetesCurrentContextSecrets.subscribe(secrets => {
-    const matchingSecret = secrets.find(
-      secret => secret.metadata?.name === name && secret.metadata?.namespace === namespace,
-    );
-    if (matchingSecret) {
-      secret = secretUtils.getConfigMapSecretUI(matchingSecret);
-      loadDetails().catch((err: unknown) =>
-        console.error(`Error getting config map secret ${secret.name} details`, err),
-      );
-    } else if (detailsPage) {
-      // the secret has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'secrets',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextSecrets,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the secret has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      secret = secretUtils.getConfigMapSecretUI(resource);
+      if (isExperimental) {
+        kubeSecret = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting config map secret ${name} details`, err));
+      }
+    },
   });
 });
 
+onDestroy(() => {
+  listener?.dispose();
+});
+
 async function loadDetails(): Promise<void> {
-  const getKubeSecret = await window.kubernetesReadNamespacedSecret(secret.name, namespace);
+  const getKubeSecret = await window.kubernetesReadNamespacedSecret(name, namespace);
   if (getKubeSecret) {
     kubeSecret = getKubeSecret;
   } else {
-    kubeError = `Unable to retrieve Kubernetes details for ${secret.name}`;
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
   }
 }
 </script>
@@ -60,7 +77,7 @@ async function loadDetails(): Promise<void> {
   <DetailsPage title={secret.name} subtitle={secret.namespace} bind:this={detailsPage}>
     <StatusIcon slot="icon" icon={SecretIcon} size={24} status={secret.status} />
     <svelte:fragment slot="actions">
-      <ConfigMapSecretActions configMapSecret={secret} detailed={true} on:update={(): ConfigMapSecretUI => (secret = secret)} />
+      <ConfigMapSecretActions configMapSecret={secret} detailed={true} on:update={(): ConfigMapSecretUI | undefined => (secret = secret)} />
     </svelte:fragment>
     <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
       <StateChange state={secret.status} />
