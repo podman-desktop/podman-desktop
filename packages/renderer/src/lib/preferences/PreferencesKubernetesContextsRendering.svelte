@@ -260,7 +260,7 @@ async function connect(contextName: string): Promise<void> {
               {#if context.isReachable || context.isOffline}
                 <div class="flex flex-row pt-2">
                   {#if context.isOffline}
-                    <Tooltip class="flex flex-row" tip="connection to the cluster lost, the resources displayed can be out of date">
+                    <Tooltip class="flex flex-row" tip="connection lost, resources may be out of sync">
                       <div class="w-3 h-3 rounded-full bg-[var(--pd-status-paused)]"></div>
                       <div
                         class="ml-1 font-bold text-[9px] text-[var(--pd-status-paused)]"
