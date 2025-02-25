@@ -5,6 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import { kubernetesCurrentContextConfigMaps } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable';
 
@@ -12,7 +13,6 @@ import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import ConfigMapIcon from '../images/ConfigMapSecretIcon.svelte';
 import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import { listenResource } from '../kube/resource-listen';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import StateChange from '../ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';

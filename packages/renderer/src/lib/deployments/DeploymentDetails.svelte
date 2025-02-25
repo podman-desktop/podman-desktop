@@ -5,6 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import {
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextEvents,
@@ -16,7 +17,6 @@ import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { EventUI } from '../events/EventUI';
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
 import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import { listenResource } from '../kube/resource-listen';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
 import { DeploymentUtils } from './deployment-utils';
