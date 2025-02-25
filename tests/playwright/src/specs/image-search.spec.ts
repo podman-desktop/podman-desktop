@@ -87,7 +87,9 @@ test.describe('Image search verification', { tag: '@smoke' }, () => {
     playExpect(searchResults.length).toBeGreaterThan(0);
 
     await pullImagePage.selectValueFromSearchResults(httpdImage);
-    searchResults = await pullImagePage.getAllSearchResultsFor(httpdImage, true, httpdTag);
-    playExpect(searchResults.length).toBeGreaterThan(0);
+    await pullImagePage.getAllSearchResultsFor(httpdImage, true, httpdTag);
+    await playExpect
+      .poll(async () => (await pullImagePage.getAllSearchResultsInstantly(`${httpdImage}:${httpdTag}`)).length)
+      .toBeGreaterThan(0);
   });
 });
