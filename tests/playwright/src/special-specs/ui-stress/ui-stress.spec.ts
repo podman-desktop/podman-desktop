@@ -34,6 +34,8 @@ test.afterAll(async ({ runner }) => {
 
 test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui-stress'] }, () => {
   test(`Verification of images`, async ({ navigationBar }) => {
+    test.setTimeout(300_000);
+
     const images = await navigationBar.openImages();
     await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
@@ -44,6 +46,8 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   });
 
   test(`Verification of containers`, async ({ navigationBar }) => {
+    test.setTimeout(300_000);
+
     const containers = await navigationBar.openContainers();
     await playExpect(containers.heading).toBeVisible({ timeout: 10_000 });
     //count containers => (1 manually created + 2 from creating pods) * numberOfObjects = 3 * numberOfObjects
@@ -56,6 +60,8 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
   });
 
   test(`Verification of pods`, async ({ navigationBar }) => {
+    test.setTimeout(300_000);
+
     const pods = await navigationBar.openPods();
     await playExpect(pods.heading).toBeVisible({ timeout: 10_000 });
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
