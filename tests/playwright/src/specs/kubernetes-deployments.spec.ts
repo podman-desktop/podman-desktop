@@ -23,7 +23,7 @@ import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { test } from '../utility/fixtures';
+import { expect as playExpect, test } from '../utility/fixtures';
 import {
   checkDeploymentReplicasInfo,
   checkKubernetesResourceState,
@@ -87,6 +87,12 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
+  test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+
+    await playExpect.poll(async () => kubernetesPodsPage.content.textContent()).toContain('No pods');
+  });
   test('Create a Kubernetes deployment resource', async ({ page }) => {
     test.setTimeout(80_000);
     await createKubernetesResource(

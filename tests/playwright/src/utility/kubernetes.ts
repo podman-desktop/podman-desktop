@@ -20,7 +20,8 @@ import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import type { KubernetesResourceState } from '../model/core/states';
-import type { KubernetesResources, PlayKubernetesOptions } from '../model/core/types';
+import type { PlayKubernetesOptions } from '../model/core/types';
+import { KubernetesResources } from '../model/core/types';
 import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import type { PodsPage } from '../model/pages/pods-page';
 import { NavigationBar } from '../model/workbench/navigation';
@@ -40,9 +41,10 @@ export async function deployContainerToCluster(
     const deployToKubernetesPage = await containerDetailsPage.openDeployToKubernetesPage();
     await deployToKubernetesPage.deployPod(containerName, { useKubernetesServices: true }, kubernetesContext);
 
-    const podsPage = await navigationBar.openPods();
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
     await playExpect
-      .poll(async () => podsPage.deployedPodExists(deployedPodName, 'kubernetes'), { timeout: 15_000 })
+      .poll(async () => kubernetesPodsPage.getResourceRowByName(deployedPodName), { timeout: 15_000 })
       .toBeTruthy();
   });
 }
@@ -145,14 +147,13 @@ export async function editDeploymentYamlFile(
 ): Promise<void> {
   return test.step(`Change deployment kubernetes cluster resource`, async () => {
     const navigationBar = new NavigationBar(page);
-    const podsPage = await navigationBar.openPods();
+    const kubernetesBar = await navigationBar.openKubernetes();
     await playExpect
-      .poll(async () => await podsPage.countPodReplicas(deploymentName), {
+      .poll(async () => await countKubernetesPodReplicas(page, deploymentName), {
         timeout: 60_000,
       })
       .toBe(currentReplicaCount);
 
-    const kubernetesBar = await navigationBar.openKubernetes();
     const deploymentsPage = await kubernetesBar.openTabPage(resourceType);
     await playExpect(deploymentsPage.heading).toBeVisible();
     await playExpect(deploymentsPage.getResourceRowByName(deploymentName)).toBeVisible();
@@ -163,11 +164,28 @@ export async function editDeploymentYamlFile(
       `replicas: ${updatedReplicaCount}`,
     );
 
-    await navigationBar.openPods();
     await playExpect
-      .poll(async () => await podsPage.countPodReplicas(deploymentName), {
+      .poll(async () => await countKubernetesPodReplicas(page, deploymentName), {
         timeout: 60_000,
       })
       .toBe(updatedReplicaCount);
+  });
+}
+
+export async function countKubernetesPodReplicas(page: Page, expectedPodName: string): Promise<void> {
+  return test.step(`Count pod replicas: ${expectedPodName}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+
+    let counter: number = 0;
+    const rows = await kubernetesPodsPage.getAllTableRows();
+    for (let i = rows.length - 1; i > 0; i--) {
+      const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').textContent();
+      if (podName?.includes(expectedPodName)) {
+        counter += 1;
+      }
+    }
+    return counter;
   });
 }

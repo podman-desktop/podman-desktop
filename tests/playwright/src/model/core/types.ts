@@ -54,6 +54,7 @@ export enum KubernetesResources {
   PVCs = 'Persistent Volume Claims',
   ConfigMapsSecrets = 'ConfigMaps & Secrets',
   PortForwarding = 'Port Forwarding',
+  Pods = 'Pods',
 }
 
 export const KubernetesResourceAttributes: Record<KubernetesResources, string[]> = {
@@ -64,4 +65,5 @@ export const KubernetesResourceAttributes: Record<KubernetesResources, string[]>
   [KubernetesResources.PVCs]: ['Selected', 'Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
   [KubernetesResources.ConfigMapsSecrets]: ['Selected', 'Status', 'Name', 'Type', 'Keys', 'Age', 'Actions'],
   [KubernetesResources.PortForwarding]: ['Status', 'Name', 'Type', 'Local Port', 'Remote Port', 'Actions'],
+  [KubernetesResources.Pods]: ['Selectes', 'Status', 'Name', 'Containers', 'Age', 'Actions'],
 };

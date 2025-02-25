@@ -108,7 +108,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await checkKubernetesResourceState(page, KubernetesResources.PVCs, PVC_NAME, KubernetesResourceState.Running);
       });
       test('Delete the PVC resource', async ({ page }) => {
-        await deletePod(page, PVC_POD_NAME);
+        await deleteKubernetesResource(page, KubernetesResources.Pods, PVC_POD_NAME);
         await deleteKubernetesResource(page, KubernetesResources.PVCs, PVC_NAME);
       });
     });
@@ -144,16 +144,16 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
           KubernetesResourceState.Running,
         );
       });
-      test('Can load config and secrets via env. var in pod', async ({ page }) => {
-        const podsPage = await applyYamlFileToCluster(page, SECRET_POD_YAML_PATH, KUBERNETES_RUNTIME);
+      test('Can load config and secrets via env. var in pod', async ({ page, navigationBar }) => {
+        await applyYamlFileToCluster(page, SECRET_POD_YAML_PATH, KUBERNETES_RUNTIME);
 
-        await playExpect(podsPage.heading).toBeVisible();
+        const kubernetesBar = await navigationBar.openKubernetes();
+        const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
         await playExpect
-          .poll(async () => podsPage.getPodRowByName(SECRET_POD_NAME), {
-            timeout: 25_000,
-          })
+          .poll(async () => kubernetesPodsPage.getResourceRowByName(SECRET_POD_NAME), { timeout: 25_000 })
           .toBeTruthy();
-        const podsDetailsPage = await podsPage.openPodDetails(SECRET_POD_NAME);
+
+        const podsDetailsPage = await kubernetesPodsPage.openResourceDetails(SECRET_POD_NAME, KubernetesResources.Pods);
         await playExpect(podsDetailsPage.heading).toBeVisible();
         await playExpect.poll(async () => podsDetailsPage.getState(), { timeout: 50_000 }).toEqual(PodState.Running);
       });

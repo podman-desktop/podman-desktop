@@ -105,18 +105,4 @@ export class PodsPage extends MainPage {
       return false;
     });
   }
-
-  public async countPodReplicas(expectedPodName: string): Promise<number> {
-    return test.step(`Count pod replicas: ${expectedPodName}`, async () => {
-      let counter: number = 0;
-      const rows = await this.getAllTableRows();
-      for (let i = rows.length - 1; i > 0; i--) {
-        const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').textContent();
-        if (podName?.includes(expectedPodName)) {
-          counter += 1;
-        }
-      }
-      return counter;
-    });
-  }
 }
