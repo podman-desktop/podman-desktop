@@ -1,11 +1,13 @@
 <script lang="ts">
-import type { V1CronJob } from '@kubernetes/client-node';
+import type { KubernetesObject, V1CronJob } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import { listenResource } from '/@/lib/kube/resource-listen';
 import { kubernetesCurrentContextCronJobs } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../Route.svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
@@ -30,21 +32,35 @@ let detailsPage = $state<DetailsPage | undefined>();
 let kubeCronJob = $state<V1CronJob | undefined>();
 let kubeError = $state<string | undefined>();
 
-onMount(() => {
+let listener: IDisposable | undefined;
+
+onMount(async () => {
   const cronjobUtils = new CronJobUtils();
-  // loading cronjob info
-  return kubernetesCurrentContextCronJobs.subscribe(cronjobs => {
-    const matchingCronJob = cronjobs.find(
-      cronjob => cronjob.metadata?.name === name && cronjob.metadata?.namespace === namespace,
-    );
-    if (matchingCronJob) {
-      cronjob = cronjobUtils.getCronJobUI(matchingCronJob);
-      loadDetails().catch((err: unknown) => console.error(`Error getting CronJob details ${cronjob?.name}`, err));
-    } else if (detailsPage) {
-      // the cronjob has been deleted
-      detailsPage.close();
-    }
+  listener = await listenResource({
+    resourceName: 'cronjobs',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextCronJobs,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the cronjob has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      cronjob = cronjobUtils.getCronJobUI(resource);
+      if (isExperimental) {
+        kubeCronJob = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting CronJob details ${name}`, err));
+      }
+    },
   });
+});
+
+onDestroy(() => {
+  listener?.dispose();
 });
 
 async function loadDetails(): Promise<void> {

@@ -20,10 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1CronJob } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
-import { expect, test, vi } from 'vitest';
+import { router } from 'tinro';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '/@/lib/kube/tests-helpers/init-lists';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
 import CronJobDetails from './CronJobDetails.svelte';
 
@@ -36,18 +42,49 @@ const cronjob: V1CronJob = {
   },
 } as V1CronJob;
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
+  // we want to keep the original nonVerbose
+  const original = await importOriginal();
   return {
-    kubernetesCurrentContextCronJobs: vi.fn(),
+    ...original,
+    listenResources: vi.fn(),
+    isKubernetesExperimentalMode: vi.fn(),
   };
 });
 
-test('Expect renders CronJob details', async () => {
-  // mock object store
-  const cronjobs = writable<KubernetesObject[]>([cronjob]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = cronjobs;
+vi.mock('/@/stores/kubernetes-contexts-state');
 
-  render(CronJobDetails, { name: 'my-cronjob', namespace: 'default' });
+beforeEach(() => {
+  vi.resetAllMocks();
+  router.goto('http://localhost:3000');
+});
 
-  expect(screen.getByText('my-cronjob')).toBeInTheDocument();
+describe.each<{
+  experimental: boolean;
+  initLists: (cronjobs: KubernetesObject[]) => initListsReturnType;
+}>([
+  {
+    experimental: false,
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextCronJobs = store),
+    }),
+  },
+  {
+    experimental: true,
+    initLists: initListExperimental({ resourceName: 'cronjobs' }),
+  },
+])('is experimental: $experimental', ({ experimental, initLists }) => {
+  beforeEach(() => {
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
+  });
+
+  test('Expect renders CronJob details', async () => {
+    initLists([cronjob]);
+
+    render(CronJobDetails, { name: 'my-cronjob', namespace: 'default' });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('my-cronjob')).toBeInTheDocument();
+    });
+  });
 });
