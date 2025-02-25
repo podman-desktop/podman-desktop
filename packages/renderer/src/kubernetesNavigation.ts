@@ -36,8 +36,10 @@ function gotoKubernetesResources(kind: string): void {
 
 function gotoKubernetesResource(kind: string, name: string, namespace?: string): void {
   if (namespace) {
-    if (kind === 'Ingress' || kind === 'Route') {
+    if (kind === 'Ingress') {
       router.goto(`/kubernetes/${resourceKindToURL(kind)}/ingress/${name}/${namespace}/summary`);
+    } else if (kind === 'Route') {
+      router.goto(`/kubernetes/${resourceKindToURL(kind)}/route/${name}/${namespace}/summary`);
     } else if (kind === 'ConfigMap') {
       router.goto(`/kubernetes/${resourceKindToURL(kind)}/configmap/${name}/${namespace}/summary`);
     } else if (kind === 'Secret') {
