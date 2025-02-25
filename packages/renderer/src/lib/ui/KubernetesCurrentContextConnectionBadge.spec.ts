@@ -21,28 +21,16 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen, waitFor } from '@testing-library/svelte';
-import { type Writable, writable } from 'svelte/store';
+import { readable, type Writable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts';
-import * as kubeContextStateStore from '/@/stores/kubernetes-contexts-state';
+import * as states from '/@/stores/kubernetes-contexts-state';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
-const mocks = vi.hoisted(() => ({
-  subscribeMock: vi.fn(),
-  getCurrentKubeContextState: vi.fn(),
-
-  // window mocks
-  eventsMocks: vi.fn(),
-}));
-
-vi.mock('../../stores/kubernetes-contexts-state', () => ({
-  kubernetesCurrentContextState: {
-    subscribe: mocks.subscribeMock,
-  },
-}));
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 vi.mock('/@/stores/kubernetes-contexts');
 
@@ -51,31 +39,22 @@ let contexts: Writable<KubeContext[]>;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.subscribeMock.mockImplementation(listener => {
-    listener(mocks.getCurrentKubeContextState());
-    return { unsubscribe: (): void => {} };
-  });
-
-  (window as any).events = mocks.eventsMocks;
-  (window as any).kubernetesGetContextsGeneralState = mocks.getCurrentKubeContextState;
-
   delayed = writable<Map<string, boolean>>();
-  vi.mocked(kubeContextStateStore).kubernetesContextsCheckingStateDelayed = delayed;
+  vi.mocked(states).kubernetesContextsCheckingStateDelayed = delayed;
   contexts = writable<KubeContext[]>();
   vi.mocked(kubeContextStore).kubernetesContexts = contexts;
 });
 
 test('expect no badges shown as no context has been provided.', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue(undefined); // no current ContextState
+  vi.mocked(states).kubernetesCurrentContextState = readable();
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const status = screen.queryByRole('status');
   expect(status).toBeNull();
 });
 
 test('expect badges to show as there is a context', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: undefined,
     reachable: true,
     resources: {
@@ -85,13 +64,12 @@ test('expect badges to show as there is a context', async () => {
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const status = screen.getByRole('status');
   expect(status).toBeInTheDocument();
 });
 
 test('expect badges to be green when reachable', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: undefined,
     reachable: true,
     resources: {
@@ -101,13 +79,12 @@ test('expect badges to be green when reachable', async () => {
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const status = screen.getByRole('status');
   expect(status.firstChild).toHaveClass('bg-[var(--pd-status-connected)]');
 });
 
 test('expect badges to be gray when not reachable', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: undefined,
     reachable: false,
     resources: {
@@ -117,13 +94,12 @@ test('expect badges to be gray when not reachable', async () => {
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const status = screen.getByRole('status');
   expect(status.firstChild).toHaveClass('bg-[var(--pd-status-disconnected)]');
 });
 
 test('expect no tooltip when no error', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: undefined,
     reachable: false,
     resources: {
@@ -133,13 +109,12 @@ test('expect no tooltip when no error', async () => {
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const tooltip = screen.queryByLabelText('tooltip');
   expect(tooltip).toBeNull();
 });
 
 test('expect tooltip when error', async () => {
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: 'error message',
     reachable: false,
     resources: {
@@ -149,7 +124,6 @@ test('expect tooltip when error', async () => {
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   const tooltip = screen.getByLabelText('tooltip');
   expect(tooltip).toBeInTheDocument();
 });
@@ -163,7 +137,7 @@ test('spinner should be displayed when and only when the context connectivity is
       currentContext: true,
     },
   ]);
-  mocks.getCurrentKubeContextState.mockReturnValue({
+  vi.mocked(states).kubernetesCurrentContextState = readable({
     error: 'error message',
     reachable: false,
     resources: {
@@ -173,7 +147,6 @@ test('spinner should be displayed when and only when the context connectivity is
   } as ContextGeneralState); // no current ContextState
   render(KubernetesCurrentContextConnectionBadge);
 
-  expect(mocks.getCurrentKubeContextState).toHaveBeenCalled();
   let checking = screen.queryByLabelText('Loading');
   expect(checking).toBeNull();
 
