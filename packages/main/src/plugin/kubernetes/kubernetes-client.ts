@@ -952,6 +952,9 @@ export class KubernetesClient {
       if (route?.metadata?.managedFields) {
         delete route.metadata.managedFields;
       }
+      if (Object.keys(route).length === 0) {
+        return undefined;
+      }
       return route;
     } catch (error) {
       this.telemetry.track('kubernetesReadNamespacedRoute.error', error);

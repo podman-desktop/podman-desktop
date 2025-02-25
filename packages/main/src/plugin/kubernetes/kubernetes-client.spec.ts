@@ -748,10 +748,7 @@ test('should return route if it exists', async () => {
   };
   const client = createTestClient('default');
   makeApiClientMock.mockReturnValue({
-    getNamespacedCustomObject: () =>
-      Promise.resolve({
-        body: v1Route,
-      }),
+    getNamespacedCustomObject: () => Promise.resolve(v1Route),
   });
 
   const route = await client.readNamespacedRoute('route', 'default');
