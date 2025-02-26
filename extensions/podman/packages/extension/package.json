@@ -387,6 +387,15 @@
         }
       ],
       "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists) || podman.needPodmanMachineCleanup"
+    },
+    "menus": {
+      "dashboard/container-connection": [
+        {
+          "command": "podman.setupRegistry",
+          "title": "Setup registry configuration",
+          "when": "selectedProviderConnectionType === 'podman' && selectedProviderConnectionStatus === 'started'"
+        }
+      ]
     }
   },
   "scripts": {
