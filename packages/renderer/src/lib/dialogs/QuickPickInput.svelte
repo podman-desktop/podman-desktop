@@ -356,7 +356,9 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
           {/if}
         {:else if mode === 'QuickPick'}
           {#each quickPickFilteredItems as item, i}
-            <div class="flex w-full flex-row hover:bg-[var(--pd-modal-dropdown-highlight)]">
+            <div class="flex w-full flex-row  {i === quickPickSelectedFilteredIndex
+                  ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
+                  : 'hover:bg-[var(--pd-dropdown-bg)]'}">
               {#if quickPickCanPickMany}
                 <Checkbox class="mx-1 my-auto" bind:checked={item.checkbox} />
               {/if}
