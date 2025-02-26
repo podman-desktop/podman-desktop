@@ -42,7 +42,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
       await playExpect
-        .poll(async () => await images.waitForImageExists(`localhost/my-image-${imgNum}`, 60_000), { timeout: 0 })
+        .poll(async () => await images.waitForRowToExists(`localhost/my-image-${imgNum}`), { timeout: 0 })
         .toBeTruthy();
     }
   });
@@ -58,7 +58,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
       await playExpect
-        .poll(async () => await containers.containerExists(`my-container-${containerNum}`), { timeout: 60_000 })
+        .poll(async () => await containers.waitForRowToExists(`my-container-${containerNum}`), { timeout: 0 })
         .toBeTruthy();
     }
   });
@@ -71,7 +71,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      await playExpect.poll(async () => await pods.podExists(`my-pod-${podNum}`), { timeout: 60_000 }).toBeTruthy();
+      await playExpect.poll(async () => await pods.waitForRowToExists(`my-pod-${podNum}`), { timeout: 0 }).toBeTruthy();
     }
   });
 });

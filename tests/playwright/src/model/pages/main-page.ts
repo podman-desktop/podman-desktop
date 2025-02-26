@@ -144,4 +144,29 @@ export abstract class MainPage extends BasePage {
       return rows.length > 1 ? rows.length - 1 : 0;
     });
   }
+
+  async getRowByName(name: string): Promise<Locator | undefined> {
+    return test.step(`Get row from ${this.title} page table by name: ${name}`, async () => {
+      const locator = this.page
+        .getByRole('row')
+        .and(this.page.getByLabel(name, { exact: true }))
+        .first();
+
+      return (await locator.count()) > 0 ? locator : undefined;
+    });
+  }
+
+  async waitForRowToExists(name: string, timeout = 5_000): Promise<boolean> {
+    return test.step(`Wait for row with name: ${name} to exist`, async () => {
+      await waitUntil(async () => (await this.getRowByName(name)) !== undefined, { timeout: timeout });
+      return true;
+    });
+  }
+
+  async waitForRowToBeDelete(name: string, timeout = 5_000): Promise<boolean> {
+    return test.step(`Wait for row with name: ${name} to be deleted`, async () => {
+      await waitUntil(async () => (await this.getRowByName(name)) === undefined, { timeout: timeout });
+      return true;
+    });
+  }
 }
