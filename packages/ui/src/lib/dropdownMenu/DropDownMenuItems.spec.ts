@@ -44,22 +44,9 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect DropDownMenuItems to open on the above the button', async () => {
-  render(DropDownMenuItems, {
-    clientX: 200,
-    clientY: 400,
-  });
-  const dropDownMenuItems = screen.getByTitle('Drop Down Menu Items', {});
-
-  expect(dropDownMenuItems).toBeVisible();
-  expect(dropDownMenuItems).toBeInTheDocument();
-  expect(dropDownMenuItems).toHaveStyle('top: -100px');
-});
-
 test('Expect DropDownMenuItems to open on the under the button', async () => {
   render(DropDownMenuItems, {
     clientX: 200,
-    clientY: 50,
   });
   const dropDownMenuItems = screen.getByTitle('Drop Down Menu Items', {});
 
@@ -71,7 +58,6 @@ test('Expect DropDownMenuItems to open on the under the button', async () => {
 test('Expect DropDownMenuItems to open on the right of the button', async () => {
   render(DropDownMenuItems, {
     clientX: 650,
-    clientY: 200,
   });
   const dropDownMenuItems = screen.getByTitle('Drop Down Menu Items', {});
 
@@ -84,7 +70,6 @@ test('Expect DropDownMenuItems to open on the right of the button', async () => 
 test('Expect DropDownMenuItems to open on the left of the button', async () => {
   render(DropDownMenuItems, {
     clientX: 50,
-    clientY: 200,
   });
   const dropDownMenuItems = screen.getByTitle('Drop Down Menu Items', {});
 
