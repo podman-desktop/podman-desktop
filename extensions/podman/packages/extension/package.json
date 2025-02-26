@@ -40,6 +40,10 @@
       {
         "command": "podman.onboarding.removeUnsupportedMachines",
         "title": "Podman: Remove unsupported podman machines"
+      },
+      {
+        "command": "podman.setupRegistry",
+        "title": "Podman: Setup registry"
       }
     ],
     "configuration": {
