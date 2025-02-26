@@ -12,8 +12,6 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
-
 import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import { filtered, podsInfos, searchPattern } from '../../stores/pods';
 import { providerInfos } from '../../stores/providers';
@@ -185,9 +183,6 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
         icon={faTrash} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
-    <div class="flex grow justify-end">
-      <KubernetesCurrentContextConnectionBadge />
-    </div>
   </svelte:fragment>
 
   <svelte:fragment slot="tabs">
