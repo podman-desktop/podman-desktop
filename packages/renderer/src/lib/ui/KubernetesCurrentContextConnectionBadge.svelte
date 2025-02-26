@@ -37,7 +37,7 @@ onMount(async () => {
       info = {
         text: getTextExperimental(health),
         classColor: getClassColorExperimental(health),
-        tip: health.reachable ? '' : 'health check not responding',
+        tip: getTipExperimental(health),
       };
     });
   } else {
@@ -66,13 +66,21 @@ function getClassColorNonExperimental(state?: ContextGeneralState): string {
 }
 
 function getTextExperimental(health: ContextHealth): string {
+  if (health.offline) return 'Connection lost';
   if (health.reachable) return 'Connected';
   return 'Cluster not reachable';
 }
 
 function getClassColorExperimental(health: ContextHealth): string {
+  if (health.offline) return 'bg-[var(--pd-status-paused)]';
   if (health.reachable) return 'bg-[var(--pd-status-connected)]';
   return 'bg-[var(--pd-status-disconnected)]';
+}
+
+function getTipExperimental(health: ContextHealth): string {
+  if (health.offline) return 'connection lost, resources may be out of sync';
+  if (health.reachable) return '';
+  return 'health check not responding';
 }
 </script>
 

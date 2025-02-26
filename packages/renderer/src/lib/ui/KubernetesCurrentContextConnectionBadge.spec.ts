@@ -57,14 +57,18 @@ beforeEach(() => {
 
 describe.each<{
   experimental: boolean;
-  setState: (reachable: boolean, error?: string) => void;
+  setState: (options: {
+    reachable: boolean;
+    offline?: boolean;
+    error?: string;
+  }) => void;
 }>([
   {
     experimental: false,
-    setState: (reachable: boolean, error?: string): void => {
+    setState: (options: { reachable: boolean; _offline?: boolean; error?: string }): void => {
       vi.mocked(states).kubernetesCurrentContextState = readable({
-        error,
-        reachable,
+        error: options.error,
+        reachable: options.reachable,
         resources: {
           pods: 0,
           deployments: 0,
@@ -74,11 +78,12 @@ describe.each<{
   },
   {
     experimental: true,
-    setState: (reachable: boolean, _error?: string): void => {
+    setState: (options: { reachable: boolean; offline?: boolean; _error?: string }): void => {
       vi.mocked(health).kubernetesContextsHealths = writable([
         {
           contextName: 'context1',
-          reachable,
+          reachable: options.reachable,
+          offline: options.offline,
         } as unknown as ContextHealth,
       ]);
     },
@@ -102,18 +107,44 @@ describe.each<{
     expect(status).toBeNull();
   });
 
-  test('expect badges to show as there is a context', async () => {
-    setState(true);
+  test('expect badges to show as there is a reachable context', async () => {
+    setState({ reachable: true });
     render(KubernetesCurrentContextConnectionBadge);
 
     await vi.waitFor(() => {
       const status = screen.getByRole('status');
       expect(status).toBeInTheDocument();
+      expect(status).toHaveTextContent('Connected');
+    });
+  });
+
+  test('expect badges to show as there is a non reachable context', async () => {
+    setState({ reachable: false });
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status).toBeInTheDocument();
+      expect(status).toHaveTextContent('Cluster not reachable');
+    });
+  });
+
+  test('expect badges to show as there is an offline context', async () => {
+    if (!experimental) {
+      return;
+    }
+    setState({ reachable: true, offline: true });
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status).toBeInTheDocument();
+      expect(status).toHaveTextContent('Connection lost');
     });
   });
 
   test('expect badges to be green when reachable', async () => {
-    setState(true);
+    setState({ reachable: true });
     render(KubernetesCurrentContextConnectionBadge);
 
     await vi.waitFor(() => {
@@ -123,7 +154,7 @@ describe.each<{
   });
 
   test('expect badges to be gray when not reachable', async () => {
-    setState(false);
+    setState({ reachable: false });
     render(KubernetesCurrentContextConnectionBadge);
 
     await vi.waitFor(() => {
@@ -132,8 +163,21 @@ describe.each<{
     });
   });
 
+  test('expect badges to be orange when offline', async () => {
+    if (!experimental) {
+      return;
+    }
+    setState({ reachable: true, offline: true });
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status.firstChild).toHaveClass('bg-[var(--pd-status-paused)]');
+    });
+  });
+
   test('expect no tooltip when no error', async () => {
-    setState(true);
+    setState({ reachable: true });
     render(KubernetesCurrentContextConnectionBadge);
 
     await tick();
@@ -145,12 +189,26 @@ describe.each<{
   });
 
   test('expect tooltip when error', async () => {
-    setState(false, 'error message');
+    setState({ reachable: false, error: 'error message' });
     render(KubernetesCurrentContextConnectionBadge);
 
     await vi.waitFor(() => {
       const tooltip = screen.getByLabelText('tooltip');
       expect(tooltip).toBeInTheDocument();
+    });
+  });
+
+  test('expect tooltip when offline', async () => {
+    if (!experimental) {
+      return;
+    }
+    setState({ reachable: true, offline: true });
+    render(KubernetesCurrentContextConnectionBadge);
+
+    await vi.waitFor(() => {
+      const tooltip = screen.getByLabelText('tooltip');
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent('connection lost, resources may be out of sync');
     });
   });
 
@@ -163,7 +221,7 @@ describe.each<{
         currentContext: true,
       },
     ]);
-    setState(false, 'error message');
+    setState({ reachable: false, error: 'error message' });
     render(KubernetesCurrentContextConnectionBadge);
 
     let checking = screen.queryByLabelText('Loading');
