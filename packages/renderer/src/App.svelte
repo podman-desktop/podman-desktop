@@ -233,11 +233,10 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
         <Route path="/compose/details/:name/:engineId/*" breadcrumb="Compose Details" let:meta navigationHint="details">
           <ComposeDetails composeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
-        <Route path="/pods/:kind/:name/:engineId/*" breadcrumb="Pod Details" let:meta navigationHint="details">
+        <Route path="/pods/podman/:name/:engineId/*" breadcrumb="Pod Details" let:meta navigationHint="details">
           <PodDetails
             podName={decodeURI(meta.params.name)}
-            engineId={decodeURIComponent(meta.params.engineId)}
-            kind={decodeURI(meta.params.kind)} />
+            engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
         <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
           <PodCreateFromContainers />
