@@ -1,9 +1,8 @@
 <script lang="ts">
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
+import { fade, slide } from 'svelte/transition';
 import Fa from 'svelte-fa';
-
-import { fadeSlide } from '../utils/animations';
 
 let {
   expanded = $bindable(true),
@@ -38,8 +37,10 @@ function toggle(): void {
   </button>
 {#if initialized}
 {#if expanded}
-  <div role="region" class="pt-5" transition:fadeSlide={{ duration: 250 }}>
-    {@render children?.()}
+  <div role="region" class="pt-5" transition:slide={{ duration: 250 }}>
+    <div transition:fade={{ duration: 250 }}>
+      {@render children?.()}
+    </div>
   </div>
 {/if}
 {/if}
