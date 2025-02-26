@@ -140,11 +140,10 @@ test(`Test navigationHandle for ${NavigationPage.PODMAN_POD}`, () => {
     parameters: {
       engineId: 'dummyEngineId',
       name: 'dummyPod',
-      kind: 'kubernetes',
     },
   });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/pods/kubernetes/dummyPod/dummyEngineId/');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/pods/podman/dummyPod/dummyEngineId/');
 });
 
 test(`Test navigationHandle for ${NavigationPage.VOLUMES}`, () => {

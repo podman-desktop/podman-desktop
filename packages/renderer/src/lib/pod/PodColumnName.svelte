@@ -13,7 +13,6 @@ function openDetailsPod(pod: PodInfoUI): void {
   handleNavigation({
     page: NavigationPage.PODMAN_POD,
     parameters: {
-      kind: encodeURI(pod.kind),
       name: encodeURI(pod.name),
       engineId: encodeURIComponent(pod.engineId),
     },
