@@ -129,19 +129,22 @@ describe.each<{
     });
   });
 
-  test('expect badges to show as there is an offline context', async () => {
-    if (!experimental) {
-      return;
-    }
-    setState({ reachable: true, offline: true });
-    render(KubernetesCurrentContextConnectionBadge);
+  test(
+    'expect badges to show as there is an offline context',
+    {
+      skip: !experimental,
+    },
+    async () => {
+      setState({ reachable: true, offline: true });
+      render(KubernetesCurrentContextConnectionBadge);
 
-    await vi.waitFor(() => {
-      const status = screen.getByRole('status');
-      expect(status).toBeInTheDocument();
-      expect(status).toHaveTextContent('Connection lost');
-    });
-  });
+      await vi.waitFor(() => {
+        const status = screen.getByRole('status');
+        expect(status).toBeInTheDocument();
+        expect(status).toHaveTextContent('Connection lost');
+      });
+    },
+  );
 
   test('expect badges to be green when reachable', async () => {
     setState({ reachable: true });
@@ -163,18 +166,21 @@ describe.each<{
     });
   });
 
-  test('expect badges to be orange when offline', async () => {
-    if (!experimental) {
-      return;
-    }
-    setState({ reachable: true, offline: true });
-    render(KubernetesCurrentContextConnectionBadge);
+  test(
+    'expect badges to be orange when offline',
+    {
+      skip: !experimental,
+    },
+    async () => {
+      setState({ reachable: true, offline: true });
+      render(KubernetesCurrentContextConnectionBadge);
 
-    await vi.waitFor(() => {
-      const status = screen.getByRole('status');
-      expect(status.firstChild).toHaveClass('bg-[var(--pd-status-paused)]');
-    });
-  });
+      await vi.waitFor(() => {
+        const status = screen.getByRole('status');
+        expect(status.firstChild).toHaveClass('bg-[var(--pd-status-paused)]');
+      });
+    },
+  );
 
   test('expect no tooltip when no error', async () => {
     setState({ reachable: true });
@@ -198,19 +204,22 @@ describe.each<{
     });
   });
 
-  test('expect tooltip when offline', async () => {
-    if (!experimental) {
-      return;
-    }
-    setState({ reachable: true, offline: true });
-    render(KubernetesCurrentContextConnectionBadge);
+  test(
+    'expect tooltip when offline',
+    {
+      skip: !experimental,
+    },
+    async () => {
+      setState({ reachable: true, offline: true });
+      render(KubernetesCurrentContextConnectionBadge);
 
-    await vi.waitFor(() => {
-      const tooltip = screen.getByLabelText('tooltip');
-      expect(tooltip).toBeInTheDocument();
-      expect(tooltip).toHaveTextContent('connection lost, resources may be out of sync');
-    });
-  });
+      await vi.waitFor(() => {
+        const tooltip = screen.getByLabelText('tooltip');
+        expect(tooltip).toBeInTheDocument();
+        expect(tooltip).toHaveTextContent('connection lost, resources may be out of sync');
+      });
+    },
+  );
 
   test('spinner should be displayed when and only when the context connectivity is being checked', async () => {
     contexts.set([
