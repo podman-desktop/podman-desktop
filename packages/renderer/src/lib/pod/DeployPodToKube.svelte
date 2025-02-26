@@ -140,13 +140,16 @@ function goBackToHistory(): void {
   router.goto($lastPage.path);
 }
 
-function openPodDetails(): void {
-  if (!createdPod?.metadata?.name || !defaultContextName) {
+async function openPodDetails(): Promise<void> {
+  if (!createdPod?.metadata?.name || !createdPod?.metadata?.namespace) {
     return;
   }
-  router.goto(
-    `/pods/kubernetes/${encodeURIComponent(createdPod.metadata.name)}/${encodeURIComponent(defaultContextName)}/logs`,
-  );
+
+  await window.navigateToRoute('kubernetes', {
+    kind: 'Pod',
+    name: createdPod.metadata.name,
+    namespace: createdPod.metadata.namespace,
+  });
 }
 
 async function openRoute(route: V1Route): Promise<void> {
@@ -629,7 +632,7 @@ function updateKubeResult(): void {
         <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
         <Button
           on:click={openPodDetails}
-          disabled={!createdPod?.metadata?.name || !defaultContextName}
+          disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
           aria-label="Open Pod">Open Pod</Button>
       </div>
     {/if}

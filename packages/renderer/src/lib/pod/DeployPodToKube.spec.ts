@@ -535,12 +535,12 @@ test('Should display Open pod button after successful deployment', async () => {
 
   await waitFor(() =>
     kubernetesCreatePodMock.mockResolvedValue({
-      metadata: { name: 'foobar/api-fake-cluster.com:6443', namespace: 'default' },
+      metadata: { name: 'my-pod', namespace: 'default' },
     }),
   );
   await waitFor(() =>
     kubernetesReadNamespacedPodMock.mockResolvedValue({
-      metadata: { name: 'foobar/api-fake-cluster.com:6443' },
+      metadata: { name: 'my-pod', namespace: 'default' },
       status: {
         phase: 'Running',
       },
@@ -560,7 +560,11 @@ test('Should display Open pod button after successful deployment', async () => {
   expect(openPodButton).toBeEnabled();
 
   await fireEvent.click(openPodButton);
-  expect(router.goto).toHaveBeenCalledWith(`/pods/kubernetes/foobar%2Fapi-fake-cluster.com%3A6443/default/logs`);
+  expect(window.navigateToRoute).toBeCalledWith('kubernetes', {
+    kind: 'Pod',
+    name: 'my-pod',
+    namespace: 'default',
+  });
 });
 
 test('Done button should go back to previous page', async () => {
