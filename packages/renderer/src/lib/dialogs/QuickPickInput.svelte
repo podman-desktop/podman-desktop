@@ -134,12 +134,15 @@ const onClose = async (): Promise<void> => {
   if (validationError) {
     return;
   }
-  if (mode === 'QuickPick') {
-    await window.sendShowQuickPickValues(currentId);
-  } else if (mode === 'InputBox') {
-    await window.sendShowInputBoxValue(currentId, undefined, undefined);
-  }
+  const responseId = currentId;
+  // perform cleanup before returning value to be able to show again the next showInputBox call
+  // else we will have display being turned to true and then cleanup will do display = false
   cleanup();
+  if (mode === 'QuickPick') {
+    await window.sendShowQuickPickValues(responseId);
+  } else if (mode === 'InputBox') {
+    await window.sendShowInputBoxValue(responseId);
+  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -190,26 +193,30 @@ function cleanup(): void {
 }
 
 async function validateQuickPick(): Promise<void> {
+  let idToSend = currentId;
+  let selectedIndexes: number[] | undefined;
   if (mode === 'InputBox') {
     // needs to convert the index from the filtered index to the original index
     const originalIndex = quickPickItems.indexOf(quickPickFilteredItems[quickPickSelectedIndex]);
-
-    await window.sendShowQuickPickValues(currentId, [originalIndex]);
+    idToSend = currentId;
+    selectedIndexes = [originalIndex];
   } else {
     // grab all selected items
     if (quickPickCanPickMany) {
       const selectedItems = quickPickItems.filter(item => item.checkbox);
-      await window.sendShowQuickPickValues(
-        currentId,
-        selectedItems.map(item => quickPickItems.indexOf(item)),
-      );
+      idToSend = currentId;
+      selectedIndexes = selectedItems.map(item => quickPickItems.indexOf(item));
     } else if (quickPickSelectedIndex >= 0) {
-      await window.sendShowQuickPickValues(currentId, [quickPickSelectedIndex]);
+      selectedIndexes = [quickPickSelectedIndex];
     } else {
+      selectedIndexes = [];
       await window.sendShowQuickPickValues(currentId, []);
     }
   }
+
+  // perform cleanup before returning value to be able to show again the next show call
   cleanup();
+  await window.sendShowQuickPickValues(idToSend, selectedIndexes);
 }
 
 async function clickQuickPickItem(item: QuickPickItem, index: number): Promise<void> {
@@ -238,9 +245,14 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
         e.preventDefault();
         return;
       }
-      await window.sendShowInputBoxValue(currentId, inputValue, undefined);
-      cleanup();
       e.preventDefault();
+      // keep the values to return (to avoid clearance during cleanup step)
+      const returnId = currentId;
+      const returnValue = inputValue;
+      // perform cleanup before returning value to be able to show again the next showInputBox call
+      cleanup();
+      // return the value
+      await window.sendShowInputBoxValue(returnId, returnValue, undefined);
       return;
     } else if (mode === 'QuickPick') {
       await validateQuickPick();

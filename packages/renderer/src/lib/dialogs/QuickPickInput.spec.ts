@@ -400,4 +400,63 @@ describe('QuickPickInput', () => {
     const item1 = getByTitle('Select item1');
     expect(item1).toBeDefined();
   });
+
+  test('Expect to see two quickpick in a row', async () => {
+    // first quickpick being displayed
+    const idRequest = 123;
+    const quickPickOptions: QuickPickOptions = {
+      items: ['item1', 'item2'],
+      canPickMany: false,
+      placeHolder: 'placeHolder',
+      prompt: '',
+      id: idRequest,
+      onSelectCallback: false,
+    };
+
+    const quickPickOptions2: QuickPickOptions = {
+      items: ['foo', 'bar'],
+      canPickMany: false,
+      placeHolder: 'placeHolder',
+      prompt: 'enter a custom value',
+      id: idRequest,
+      onSelectCallback: false,
+    };
+
+    let eventCallback: ((options: QuickPickOptions) => void) | undefined;
+
+    receiveFunctionMock.mockImplementation((message: string, callback: (options: QuickPickOptions) => void) => {
+      if (message === 'showQuickPick:add') {
+        eventCallback = callback;
+      }
+    });
+
+    // when getting the response of the first quickpick, we ask to display the second quickpick
+    sendShowQuickPickValuesMock.mockImplementation(() => {
+      eventCallback?.(quickPickOptions2);
+    });
+
+    // render the first quickpick
+    const { getByTitle } = render(QuickPickInput, {});
+
+    // wait that the event callback is set
+    await vi.waitFor(() => eventCallback !== undefined);
+
+    // ok ask to display a first quickpick
+    expect(eventCallback).toBeDefined();
+    eventCallback?.(quickPickOptions);
+
+    // check the first quick pick options is displayed
+    const item1 = await vi.waitFor(() => getByTitle('Select item1'));
+    expect(item1).toBeDefined();
+
+    // now, press the ESC key
+    await userEvent.keyboard('{Escape}');
+
+    // check we received the answer for showQuickPick
+    expect(sendShowQuickPickValuesMock).toBeCalledWith(idRequest);
+
+    // and the next quickpick should be displayed
+    const itemFoo = getByTitle('Select foo');
+    expect(itemFoo).toBeDefined();
+  });
 });
