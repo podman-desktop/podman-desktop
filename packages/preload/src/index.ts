@@ -30,6 +30,7 @@ import type {
   V1CronJob,
   V1Deployment,
   V1Ingress,
+  V1Job,
   V1NamespaceList,
   V1Node,
   V1PersistentVolumeClaim,
@@ -1969,6 +1970,13 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'kubernetesReadNamespacedJob',
+    async (name: string, namespace: string): Promise<V1Job | undefined> => {
+      return ipcInvoke('kubernetes-client:readNamespacedJob', name, namespace);
+    },
+  );
+
   contextBridge.exposeInMainWorld('kubernetesIsAPIGroupSupported', async (group: string): Promise<boolean> => {
     return ipcInvoke('kubernetes-client:isAPIGroupSupported', group);
   });
@@ -2033,6 +2041,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('kubernetesDeleteCronJob', async (name: string): Promise<void> => {
     return ipcInvoke('kubernetes-client:deleteCronJob', name);
+  });
+
+  contextBridge.exposeInMainWorld('kubernetesDeleteJob', async (name: string): Promise<void> => {
+    return ipcInvoke('kubernetes-client:deleteJob', name);
   });
 
   contextBridge.exposeInMainWorld('kubernetesDeletePersistentVolumeClaim', async (name: string): Promise<void> => {

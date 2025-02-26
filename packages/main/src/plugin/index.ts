@@ -31,6 +31,7 @@ import type {
   V1CronJob,
   V1Deployment,
   V1Ingress,
+  V1Job,
   V1NamespaceList,
   V1Node,
   V1PersistentVolumeClaim,
@@ -2460,6 +2461,10 @@ export class PluginSystem {
       return kubernetesClient.deleteCronJob(name);
     });
 
+    this.ipcHandle('kubernetes-client:deleteJob', async (_listener, name: string): Promise<void> => {
+      return kubernetesClient.deleteJob(name);
+    });
+
     this.ipcHandle('kubernetes-client:deleteSecret', async (_listener, name: string): Promise<void> => {
       return kubernetesClient.deleteSecret(name);
     });
@@ -2491,6 +2496,13 @@ export class PluginSystem {
       'kubernetes-client:readNamespacedCronJob',
       async (_listener, name: string, namespace: string): Promise<V1CronJob | undefined> => {
         return kubernetesClient.readNamespacedCronJob(name, namespace);
+      },
+    );
+
+    this.ipcHandle(
+      'kubernetes-client:readNamespacedJob',
+      async (_listener, name: string, namespace: string): Promise<V1Job | undefined> => {
+        return kubernetesClient.readNamespacedJob(name, namespace);
       },
     );
 

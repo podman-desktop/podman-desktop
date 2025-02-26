@@ -2419,3 +2419,45 @@ test('Expect readNamespacedCronJob to return the cronjob', async () => {
   expect(cronjob).toBeDefined();
   expect(cronjob?.metadata?.name).toEqual('foobar');
 });
+
+test('expect deleteJob to not be called if there is no active connection', async () => {
+  const client = createTestClient('default');
+  const deleteJobMock = vi.fn();
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
+  makeApiClientMock.mockReturnValue({
+    deleteNamespacedJob: deleteJobMock,
+  });
+
+  await client.deleteJob('name');
+  expect(deleteJobMock).not.toBeCalled();
+});
+
+test('expect deleteJob to be called if there IS an active connection', async () => {
+  const client = createTestClient('default');
+  const deleteJobMock = vi.fn();
+  makeApiClientMock.mockReturnValue({
+    deleteNamespacedJob: deleteJobMock,
+  });
+  vi.spyOn(client, 'checkConnection').mockResolvedValue(true);
+  await client.deleteJob('name');
+  expect(deleteJobMock).toBeCalled();
+});
+
+test('expect readNamespacedJob to return the job', async () => {
+  const client = createTestClient('default');
+  const v1Job: V1Job = {
+    apiVersion: 'batch/v1',
+    kind: 'Job',
+    metadata: {
+      name: 'foobar',
+    },
+  };
+  makeApiClientMock.mockReturnValue({
+    readNamespacedJob: () => Promise.resolve(v1Job),
+  });
+
+  // We expect to get the correct job back (name = foobar)
+  const job = await client.readNamespacedJob('foobar', 'default');
+  expect(job).toBeDefined();
+  expect(job?.metadata?.name).toEqual('foobar');
+});
