@@ -30,10 +30,7 @@ import type {
   V1Volume,
 } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import * as states from '/@/stores/kubernetes-contexts-state';
 
 import * as eventsTable from '../details/EventsTable.svelte';
 import PodDetailsSummary from './PodDetailsSummary.svelte';
@@ -133,8 +130,7 @@ beforeEach(() => {
 });
 
 test('expect summary renders with V1Pod object', async () => {
-  vi.mocked(states).kubernetesCurrentContextEvents = writable<CoreV1Event[]>([]);
-  render(PodDetailsSummary, { props: { pod: fakePod } });
+  render(PodDetailsSummary, { props: { pod: fakePod, events: [] } });
 
   // Check that the rendered text is correct
   expect(screen.getByText('fakepod')).toBeInTheDocument();
@@ -156,8 +152,7 @@ test('expect summary renders with V1Pod object', async () => {
 
 test('expect EventsTable is called with events', async () => {
   const eventsTableSpy = vi.spyOn(eventsTable, 'default');
-  vi.mocked(states).kubernetesCurrentContextEvents = writable<CoreV1Event[]>(events);
-  render(PodDetailsSummary, { props: { pod: fakePod } });
+  render(PodDetailsSummary, { props: { pod: fakePod, events } });
 
   expect(eventsTableSpy).toHaveBeenCalledWith(expect.anything(), { events: events });
 });

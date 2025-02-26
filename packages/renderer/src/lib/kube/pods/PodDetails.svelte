@@ -5,7 +5,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
-import { kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
+import { kubernetesCurrentContextEvents, kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
 
 import Route from '../../../Route.svelte';
 import MonacoEditor from '../../editor/MonacoEditor.svelte';
@@ -31,6 +31,8 @@ let pod = $state<PodUI>();
 let detailsPage = $state<DetailsPage>();
 let kubePod = $state<V1Pod>();
 let kubeError = $state<string>();
+
+let events = $derived($kubernetesCurrentContextEvents.filter(ev => ev.involvedObject.uid === kubePod?.metadata?.uid));
 
 onMount(() => {
   const podUtils = new PodUtils();
@@ -82,7 +84,7 @@ async function loadDetails(): Promise<void> {
     </svelte:fragment>
     <svelte:fragment slot="content">
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <PodDetailsSummary pod={kubePod} kubeError={kubeError} />
+        <PodDetailsSummary pod={kubePod} kubeError={kubeError} events={events} />
       </Route>
       <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
         <PodDetailsLogs pod={pod} />
