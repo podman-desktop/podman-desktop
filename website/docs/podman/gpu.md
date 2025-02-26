@@ -191,7 +191,9 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
 #### Procedure
 
 1. Install the latest NVIDIA GPU Driver for your OS.
+
 2. Follow the instructions on [installing the NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) in relation to your Linux distribution.
+
 3. Generate the CDI Specification file for Podman:
 
 This file is saved either to /etc/cdi or /var/run/cdi on your Linux distribution and is used for Podman to detect your GPU(s).
@@ -209,6 +211,21 @@ $ nvidia-ctk cdi list
 ```
 
 More information as well as troubleshooting tips can be found [on the official NVIDIA CDI guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html).
+
+4. If on a SELinux-enabled OS (e.g. Fedora family), configure SELinux policy:
+
+Check whether SELinux is installed and enabled:
+
+```sh
+$ getenforce
+```
+
+- If `getenforce` is not found, or its output is `Permissive` or `Disabled`, no action is need.
+- If the output is `Enforcing`, configure SELinux to allow containers device access:
+
+```sh
+$ sudo setsebool -P container_use_devices true
+```
 
 #### Verification
 
