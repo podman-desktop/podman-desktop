@@ -25,19 +25,19 @@ import { AppearanceUtil } from './appearance-util';
 
 const appearanceUtil: AppearanceUtil = new AppearanceUtil();
 
-const mockedMatches = vi.fn();
+const matchMediaMock = vi.fn();
 
 beforeAll(() => {
-  Object.defineProperty(window, 'matchMedia', { value: vi.fn() });
+  Object.defineProperty(window, 'matchMedia', { value: matchMediaMock });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.matchMedia).mockReturnValue({
-    matches: mockedMatches,
+  matchMediaMock.mockReturnValue({
+    matches: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-  } as unknown as MediaQueryList);
+  });
 });
 
 test('Expect standard icon using dark configuration', async () => {
@@ -72,7 +72,7 @@ test('Expect light icon using light configuration', async () => {
 
 describe('getTheme', () => {
   test('should return dark if OS is set to dark and theme is set to system ', async () => {
-    mockedMatches.mockReturnValue(true);
+    matchMediaMock.mockReturnValue({ matches: true });
     vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.SystemEnumValue);
 
     const theme = await appearanceUtil.getTheme();
@@ -80,7 +80,7 @@ describe('getTheme', () => {
   });
 
   test('should return light if OS is set to light and theme is set to system ', async () => {
-    mockedMatches.mockReturnValue(false);
+    matchMediaMock.mockReturnValue({ matches: false });
     vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.SystemEnumValue);
 
     const theme = await appearanceUtil.getTheme();
@@ -89,7 +89,7 @@ describe('getTheme', () => {
   });
 
   test('should return dark if value is dark even if os is light', async () => {
-    mockedMatches.mockReturnValue(false);
+    matchMediaMock.mockReturnValue({ matches: false });
     vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkEnumValue);
 
     const theme = await appearanceUtil.getTheme();
@@ -97,7 +97,7 @@ describe('getTheme', () => {
   });
 
   test('should return light if value is light even if os is dark', async () => {
-    mockedMatches.mockReturnValue(true);
+    matchMediaMock.mockReturnValue({ matches: true });
     vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightEnumValue);
 
     const theme = await appearanceUtil.getTheme();
@@ -105,7 +105,7 @@ describe('getTheme', () => {
   });
 
   test('should return custom value even if os is dark', async () => {
-    mockedMatches.mockReturnValue(true);
+    matchMediaMock.mockReturnValue({ matches: true });
     const customTheme = 'fooTheme';
     vi.mocked(window.getConfigurationValue).mockResolvedValue(customTheme);
 
@@ -114,7 +114,8 @@ describe('getTheme', () => {
   });
 
   test('should return custom value even if os is dark when matches found', async () => {
-    mockedMatches.mockReturnValue(false);
+    matchMediaMock.mockReturnValue({ matches: false });
+
     const customTheme = 'fooTheme';
     vi.mocked(window.getConfigurationValue).mockResolvedValue(customTheme);
 
