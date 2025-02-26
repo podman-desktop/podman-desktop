@@ -4,19 +4,20 @@ import type { Snippet } from 'svelte';
 import { fade, slide } from 'svelte/transition';
 import Fa from 'svelte-fa';
 
+interface Props {
+  expanded?: boolean;
+  initialized?: boolean;
+  title?: Snippet;
+  children?: Snippet;
+  onclick?: (expanded: boolean) => void;
+}
 let {
   expanded = $bindable(true),
   initialized = $bindable(true),
   title = undefined,
   children = undefined,
   onclick,
-}: {
-  expanded?: boolean;
-  initialized?: boolean;
-  title?: Snippet;
-  children?: Snippet;
-  onclick?: (expanded: boolean) => void;
-} = $props();
+}: Props = $props();
 
 function toggle(): void {
   expanded = !expanded;
