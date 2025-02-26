@@ -18,7 +18,7 @@
 
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { readable } from 'svelte/store';
+import { get, readable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -27,7 +27,7 @@ import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 
 import App from './App.svelte';
-import { lastSubmenuPages } from './stores/breadcrumb';
+import { lastPage, lastSubmenuPages } from './stores/breadcrumb';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
 const mocks = vi.hoisted(() => ({
@@ -217,4 +217,49 @@ test('receive show-release-notes event from main', async () => {
   messages.get('show-release-notes');
 
   expect(mocks.DashboardPage).toBeCalled();
+});
+
+test('leaving Dashboard Page saves it in lastPage storage', async () => {
+  navigationRegistry.set([
+    {
+      name: 'Pods',
+      icon: {},
+      link: '/pods',
+      tooltip: 'Pods',
+      type: 'entry',
+
+      get counter(): number {
+        return 0;
+      },
+    },
+    {
+      name: 'Images',
+      icon: {},
+      link: '/images',
+      tooltip: 'Images',
+      type: 'entry',
+
+      get counter(): number {
+        return 0;
+      },
+    },
+  ]);
+
+  render(App);
+
+  router.goto('/pods');
+  await tick();
+  expect(get(lastPage).name).equals('Dashboard Page');
+
+  router.goto('/images');
+  await tick();
+  expect(get(lastPage).name).equals('Pods');
+
+  router.goto('/');
+  await tick();
+  expect(get(lastPage).name).equals('Images');
+
+  router.goto('/pods');
+  await tick();
+  expect(get(lastPage).name).equals('Dashboard Page');
 });
