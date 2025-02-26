@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
+import type { ProxySettings } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Mutex } from 'async-mutex';
 import * as toml from 'smol-toml';
@@ -38,8 +38,8 @@ export class PodmanConfiguration {
 
   #registryConfiguration: RegistryConfiguration;
 
-  constructor(readonly context: ExtensionContext) {
-    this.#registryConfiguration = new RegistryConfigurationImpl(context);
+  constructor() {
+    this.#registryConfiguration = new RegistryConfigurationImpl();
   }
 
   async init(): Promise<void> {

@@ -17,10 +17,9 @@
  ***********************************************************************/
 
 import { mkdir, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
-import type { ExtensionContext } from '@podman-desktop/api';
 import { env } from '@podman-desktop/api';
 import mustache from 'mustache';
 
@@ -36,8 +35,6 @@ export interface RegistryConfiguration {
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
  */
 export class RegistryConfigurationImpl implements RegistryConfiguration {
-  constructor(private readonly context: ExtensionContext) {}
-
   // provides the path to the file being on the host
   // $HOME/.config/containers/registries.conf
   getRegistryConfFilePath(): string {
@@ -77,7 +74,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     });
 
     // write the content to a temp file inside the storage folder of the extension
-    const playbookFile = resolve(this.context.storagePath, 'podman-machine', 'playbook-setup-registry-conf-file.yml');
+    const playbookFile = resolve(tmpdir(), 'podman-desktop', 'podman-machine', 'playbook-setup-registry-conf-file.yml');
     // create the folder if it doesn't exist
     const parentFolder = dirname(playbookFile);
     await mkdir(parentFolder, { recursive: true });

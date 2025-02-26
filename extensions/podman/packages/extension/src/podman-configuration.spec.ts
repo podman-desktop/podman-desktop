@@ -18,7 +18,7 @@
 
 import * as fs from 'node:fs';
 
-import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
+import type { ProxySettings } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
@@ -46,10 +46,8 @@ class TestPodmanConfiguration extends PodmanConfiguration {
 
 let podmanConfiguration: TestPodmanConfiguration;
 
-const extensionContext = {} as unknown as ExtensionContext;
-
 beforeEach(() => {
-  podmanConfiguration = new TestPodmanConfiguration(extensionContext);
+  podmanConfiguration = new TestPodmanConfiguration();
 });
 
 afterEach(() => {

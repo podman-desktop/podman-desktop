@@ -17,9 +17,9 @@
  ***********************************************************************/
 
 import { writeFile } from 'node:fs/promises';
+// to use vi.spyOn(os, methodName)
 import * as os from 'node:os';
 
-import type { ExtensionContext } from '@podman-desktop/api';
 import { env } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -28,11 +28,8 @@ import { RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfiguration;
 
-const extensionContext = {
-  storagePath: 'fake-path',
-} as unknown as ExtensionContext;
-
 vi.mock('node:fs/promises');
+vi.mock('node:os');
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -48,12 +45,14 @@ vi.mock('@podman-desktop/api', async () => {
 });
 
 beforeEach(() => {
-  registryConfiguration = new RegistryConfigurationImpl(extensionContext);
+  registryConfiguration = new RegistryConfigurationImpl();
   vi.restoreAllMocks();
   vi.resetAllMocks();
   vi.mocked(env).isWindows = false;
   vi.mocked(env).isMac = false;
   vi.mocked(env).isLinux = false;
+  vi.spyOn(os, 'tmpdir').mockReturnValue('fake-tmp');
+  vi.spyOn(os, 'homedir').mockReturnValue('fake-homedir');
 });
 
 describe('getRegistryConfFilePath', () => {
@@ -107,7 +106,7 @@ describe('getPlaybookScriptPath', () => {
     // call the method
     const playbookPath = await registryConfiguration.getPlaybookScriptPath();
     // expect the path to be inside the extension storage path
-    expect(playbookPath).toContain(extensionContext.storagePath);
+    expect(playbookPath).toContain(os.tmpdir());
 
     // we should have written content
     expect(vi.mocked(writeFile)).toBeCalledWith(
