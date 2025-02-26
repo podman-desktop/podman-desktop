@@ -212,7 +212,9 @@ $ nvidia-ctk cdi list
 
 More information as well as troubleshooting tips can be found [on the official NVIDIA CDI guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html).
 
-4. If on a SELinux-enabled OS (e.g. Fedora family), configure SELinux policy:
+4. Configure SELinux (if applicable)
+
+On SELinux-enabled OSes, such as OSs from the Fedora family, the default policy usually disallows containers to have direct access to devices. We make sure it's allowed.
 
 Check whether SELinux is installed and enabled:
 
@@ -220,8 +222,8 @@ Check whether SELinux is installed and enabled:
 $ getenforce
 ```
 
-- If `getenforce` is not found, or its output is `Permissive` or `Disabled`, no action is need.
-- If the output is `Enforcing`, configure SELinux to allow containers device access:
+- If `getenforce` is not found or its output is `Permissive` or `Disabled`, no action is needed.
+- If the output is `Enforcing`, configure SELinux to enable device access for containers:
 
 ```sh
 $ sudo setsebool -P container_use_devices true
