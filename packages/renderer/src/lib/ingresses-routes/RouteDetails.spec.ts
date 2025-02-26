@@ -20,19 +20,24 @@ import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '/@/lib/kube/tests-helpers/init-lists';
 import { lastPage } from '/@/stores/breadcrumb';
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import * as states from '/@/stores/kubernetes-contexts-state';
 import type { V1Route } from '/@api/openshift-types';
 
 import RouteDetails from './RouteDetails.svelte';
 
-const kubernetesDeleteRouteMock = vi.fn();
-
 const route: V1Route = {
+  apiVersion: 'route.openshift.io/v1',
+  kind: 'Route',
   metadata: {
     name: 'my-route',
     namespace: 'default',
@@ -54,52 +59,80 @@ const route: V1Route = {
   },
 };
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
+  // we want to keep the original nonVerbose
+  const original = await importOriginal();
   return {
-    kubernetesCurrentContextRoutes: vi.fn(),
+    ...original,
+    listenResources: vi.fn(),
+    isKubernetesExperimentalMode: vi.fn(),
   };
 });
 
-beforeAll(() => {
-  Object.defineProperty(window, 'kubernetesDeleteRoute', { value: kubernetesDeleteRouteMock });
-  Object.defineProperty(window, 'kubernetesReadNamespacedRoute', { value: vi.fn() });
+vi.mock('/@/stores/kubernetes-contexts-state');
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  router.goto('http://localhost:3000');
 });
 
-test('Expect redirect to previous page if route is deleted', async () => {
-  const routerGotoSpy = vi.spyOn(router, 'goto');
-
-  // mock object store
-  const routes = writable<KubernetesObject[]>([route]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextRoutes = routes;
-
-  // remove route from the store when we call delete
-  kubernetesDeleteRouteMock.mockImplementation(() => {
-    routes.set([]);
+describe.each<{
+  experimental: boolean;
+  initLists: (routes: KubernetesObject[]) => initListsReturnType;
+}>([
+  {
+    experimental: false,
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextRoutes = store),
+    }),
+  },
+  {
+    experimental: true,
+    initLists: initListExperimental({ resourceName: 'routes' }),
+  },
+])('is experimental: $experimental', ({ experimental, initLists }) => {
+  beforeEach(() => {
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
   });
 
-  // define a fake lastPage so we can check where we will be redirected
-  lastPage.set({ name: 'Fake Previous', path: '/last' });
+  test('Expect redirect to previous page if route is deleted', async () => {
+    const routerGotoSpy = vi.spyOn(router, 'goto');
 
-  // render the component
-  render(RouteDetails, { name: 'my-route', namespace: 'default' });
-  expect(screen.getByText('my-route')).toBeInTheDocument();
+    // mock object store
+    const list = initLists([route]);
 
-  // grab current route
-  const currentRoute = window.location;
-  expect(currentRoute.href).toBe('http://localhost:3000/');
+    // remove route from the store when we call delete
+    vi.mocked(window.kubernetesDeleteRoute).mockImplementation(async () => {
+      list.updateResources([]);
+    });
 
-  // click on delete button
-  const deleteButton = screen.getByRole('button', { name: 'Delete Route' });
-  await fireEvent.click(deleteButton);
+    // define a fake lastPage so we can check where we will be redirected
+    lastPage.set({ name: 'Fake Previous', path: '/last' });
 
-  // check that delete method has been called
-  expect(kubernetesDeleteRouteMock).toHaveBeenCalled();
+    // render the component
+    render(RouteDetails, { name: 'my-route', namespace: 'default' });
 
-  // expect that we have called the router when page has been removed
-  // to jump to the previous page
-  expect(routerGotoSpy).toBeCalledWith('/last');
+    await vi.waitFor(() => {
+      expect(screen.getByText('my-route')).toBeInTheDocument();
+    });
 
-  // confirm updated route
-  const afterRoute = window.location;
-  expect(afterRoute.href).toBe('http://localhost:3000/last');
+    // grab current route
+    const currentRoute = window.location;
+    expect(currentRoute.href).toBe('http://localhost:3000/');
+
+    // click on delete button
+    const deleteButton = screen.getByRole('button', { name: 'Delete Route' });
+    await fireEvent.click(deleteButton);
+
+    // check that delete method has been called
+    expect(window.kubernetesDeleteRoute).toHaveBeenCalled();
+
+    // expect that we have called the router when page has been removed
+    // to jump to the previous page
+    expect(routerGotoSpy).toBeCalledWith('/last');
+
+    // confirm updated route
+    const afterRoute = window.location;
+    expect(afterRoute.href).toBe('http://localhost:3000/last');
+  });
 });
