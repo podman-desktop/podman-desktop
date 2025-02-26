@@ -18,10 +18,9 @@
 
 import { KubernetesResources } from '../model/core/types';
 import { KubernetesResourcePage } from '../model/pages/kubernetes-resource-page';
-import { PodsPage } from '../model/pages/pods-page';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
+import { deleteContainer, deleteImage, ensureCliInstalled, handleConfirmationDialog } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const clusterName: string = 'kind-cluster';
@@ -33,7 +32,7 @@ const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 const imageName: string = 'ghcr.io/podmandesktop-ci/nginx';
 const pullImageName: string = `${imageName}:latest`;
 const containerName: string = 'nginx-container';
-const podName: string = `${containerName} ${kindNode} default`;
+const podName: string = containerName;
 
 const remotePort: number = 80;
 const localPort: number = 50000;
@@ -103,16 +102,22 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
     );
     await playExpect(deployToKubernetesPage.doneButton).toBeVisible({ timeout: 45_000 });
     await deployToKubernetesPage.doneButton.click();
-    const podsPage = await navigationBar.openPods();
+
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
     await playExpect
-      .poll(async () => podsPage.deployedPodExists(podName, 'kubernetes'), { timeout: 15_000 })
+      .poll(async () => kubernetesPodsPage.getResourceRowByName(podName), { timeout: 15_000 })
       .toBeTruthy();
   });
 
-  test('Create port forwarding configuration', async ({ page }) => {
+  test('Create port forwarding configuration', async ({ page, navigationBar }) => {
     //Open pod details and create port forwarding configuration
-    const podsPage = new PodsPage(page);
-    const podDetailPage = await podsPage.openPodDetails(podName);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+    await playExpect
+      .poll(async () => kubernetesPodsPage.getResourceRowByName(podName), { timeout: 15_000 })
+      .toBeTruthy();
+    const podDetailPage = await kubernetesPodsPage.openResourceDetails(podName, KubernetesResources.Pods);
     await podDetailPage.activateTab('Summary');
     const forwardButton = page.getByRole('button', { name: `Forward...` });
     await playExpect(forwardButton).toBeVisible();
@@ -156,10 +161,7 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
     const portForwardingPage = new KubernetesResourcePage(page, KubernetesResources.PortForwarding);
     await portForwardingPage.deleteKubernetesResource(containerName);
 
-    const confirmationDialog = page.getByRole('dialog', { name: 'Confirmation' });
-    await playExpect(confirmationDialog).toBeVisible({ timeout: 10_000 });
-    const yesButton = confirmationDialog.getByRole('button', { name: 'Yes' });
-    await yesButton.click();
+    await handleConfirmationDialog(page);
   });
 
   test('Verify UI components after removal', async ({ page, navigationBar }) => {
@@ -171,8 +173,12 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
     await playExpect(noForwardingsMessage).toBeVisible();
 
     //Verify Pod details page
-    const podsPage = await navigationBar.openPods();
-    const podDetailPage = await podsPage.openPodDetails(podName);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+    await playExpect
+      .poll(async () => kubernetesPodsPage.getResourceRowByName(podName), { timeout: 15_000 })
+      .toBeTruthy();
+    const podDetailPage = await kubernetesPodsPage.openResourceDetails(podName, KubernetesResources.Pods);
     await podDetailPage.activateTab('Summary');
     const forwardButton = page.getByRole('button', { name: `Forward...` });
     await playExpect(forwardButton).toBeVisible();

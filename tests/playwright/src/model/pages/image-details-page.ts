@@ -113,9 +113,6 @@ export class ImageDetailsPage extends DetailsPage {
     await playExpect(pushToKindButton).toBeVisible();
     await pushToKindButton.click();
 
-    const confirmationDialog = this.page.getByRole('dialog', { name: 'Kind' });
-    await playExpect(confirmationDialog).toBeVisible({ timeout: 10000 });
-    const okButton = confirmationDialog.getByRole('button', { name: 'OK' });
-    await okButton.click();
+    await handleConfirmationDialog(this.page, 'Kind', true, 'OK', '', 15_000);
   }
 }
