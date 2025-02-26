@@ -76,6 +76,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e' }, () => {
+  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
   test('Pull an image and start a container', async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();
