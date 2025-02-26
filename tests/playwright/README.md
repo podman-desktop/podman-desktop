@@ -62,7 +62,8 @@ This section references how to use @podman-desktop/tests-playwright generated ar
 3. Implement your changes to the E2E tests library (it can be found under `tests/playwright`)
 4. Build the application with `pnpm build`
 5. Create the local package with `pnpm run package`, this will produce a .tgz archive
-6. In YOUR repository, update the `package.json` file to have the following contents under `devDependencies`:
+6. Set an environment variable by executing: `export PODMAN_DESKTOP_ARGS="/complete/path/to/podman-desktop-repo"` (not the current directory, two folders up)
+7. In YOUR repository, update the `package.json` file to have the following contents under `devDependencies`:
    `"@podman-desktop/tests-playwright": "file:../podman-desktop/tests/playwright"`
-7. Execute `pnpm install`, which should extract the contents of the previously built Podman Desktop into the `node_modules` folder in your repo
-8. Now, the changes you made to `@podman-desktop/tests-playwright` should be available in your project. If the process was successful, you should be able to find the classes you added on the `index.d.ts` file under `node_modules/@podman_desktop/tests_playwright/dist`
+8. Execute `pnpm install`, which should extract the contents of the previously built Podman Desktop into the `node_modules` folder in your repo
+9. Now, the changes you made to `@podman-desktop/tests-playwright` should be available in your project. If the process was successful, you should be able to find the classes you added on the `index.d.ts` file under `node_modules/@podman_desktop/tests_playwright/dist`
