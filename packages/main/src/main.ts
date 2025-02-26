@@ -21,6 +21,7 @@ import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isWindows } from '/@/util.js';
 
 import { Deferred } from './plugin/util/deferred.js';
+import { ProtocolLauncher } from './protocol-launcher.js';
 
 export type AdditionalData = {
   argv: string[];
@@ -34,10 +35,13 @@ export class Main {
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
   public mainWindowDeferred: Deferred<BrowserWindow>;
+  // TODO: should be renamed to #protocolLauncher
+  public protocolLauncher: ProtocolLauncher;
 
   constructor(app: ElectronApp) {
     this.app = app;
     this.mainWindowDeferred = new Deferred<BrowserWindow>();
+    this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
   }
 
   main(args: string[]): void {
