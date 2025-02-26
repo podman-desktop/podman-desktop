@@ -29,6 +29,7 @@ import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type { OnboardingInfo } from '/@api/onboarding';
 import type { ProviderInfo } from '/@api/provider-info';
 
+import type { Menu } from '../../../../main/src/plugin/menu-registry';
 import { providerInfos } from '../../stores/providers';
 import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelte';
 
@@ -106,6 +107,9 @@ beforeAll(() => {
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'getOsPlatform', { value: getOsPlatformMock });
+  Object.defineProperty(window, 'ResizeObserver', {
+    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
+  });
 });
 
 test('Expect to see elements regarding default provider name', async () => {
@@ -194,6 +198,42 @@ describe('provider connections', () => {
     const deleteButton = within(region).getByRole('button', { name: 'Delete' });
     expect(deleteButton).toBeInTheDocument();
     expect(deleteButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+  });
+
+  test('Expect custom action to be there', async () => {
+    //provide a single connection provider
+    const singleProvider: ProviderInfo = structuredClone(providerInfo);
+    singleProvider.containerConnections = [providerInfo.containerConnections[0]];
+    singleProvider.containerConnections[0].status = 'started';
+    providerInfos.set([singleProvider]);
+    const menus: Menu[] = [
+      { command: 'contributed-command.1', title: 'My Contributed Command 1' },
+      {
+        command: 'contributed-command.2',
+        title: 'My Contributed Command 2',
+        when: 'selectedProviderConnectionStatus.status === "stopped"',
+      },
+    ];
+    vi.mocked(window.getContributedMenus).mockResolvedValue(menus);
+    render(PreferencesResourcesRendering, {});
+
+    const kebabMenuButton = screen.getByRole('button', { name: 'kebab menu' });
+    // click on the kebab menu
+    await userEvent.click(kebabMenuButton);
+
+    // get the menu items
+    const command1 = await vi.waitFor(() => screen.getByText(/my contributed command 1/i));
+    expect(command1).toBeInTheDocument();
+
+    // This command should be hidden to the when clause
+    const command2 = screen.queryByText(/my contributed command 2/i);
+    expect(command2).not.toBeInTheDocument();
+
+    // click on it
+    await userEvent.click(command1);
+
+    // expect that command has been called
+    expect(window.executeCommand).toBeCalledWith('contributed-command.1', expect.anything());
   });
 
   test('Expect type to be reported for Podman engines', async () => {

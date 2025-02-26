@@ -10,6 +10,7 @@ import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import Donut from '/@/lib/donut/Donut.svelte';
+import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type {
@@ -20,8 +21,10 @@ import type {
 } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import { type Menu, MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { configurationProperties } from '../../stores/configurationProperties';
 import { providerInfos } from '../../stores/providers';
+import ContributionActions from '../actions/ContributionActions.svelte';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
 import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
@@ -68,7 +71,9 @@ let configurationPropertiesUnsubscribe: Unsubscriber;
 let onboardingsUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 
-onMount(() => {
+let contributionsContainerConnection: Menu[] = [];
+
+onMount(async () => {
   configurationPropertiesUnsubscribe = configurationProperties.subscribe(value => {
     properties = value;
   });
@@ -169,6 +174,8 @@ onMount(() => {
   contextsUnsubscribe = context.subscribe(value => {
     globalContext = value;
   });
+
+  contributionsContainerConnection = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER_CONNECTION);
 });
 
 function getContainerRestarting(provider: string, container: string): IConnectionRestart {
@@ -361,6 +368,10 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
       .filter(property => isPropertyValidInContext(property.when, globalContext)).length > 0
   );
 }
+
+function handleError(errorMessage: string): void {
+  console.error(errorMessage);
+}
 </script>
 
 <SettingsPage title="Resources">
@@ -539,12 +550,24 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
                 <span slot="advanced-actions" class:hidden={providers.length === 0}>
                   <Tooltip bottom tip="More Options">
-                    <DropdownMenu>
+                    <ActionsMenu
+                      dropdownMenu={true}
+                      onBeforeToggle={(): void => {
+                        globalContext?.setValue('selectedProviderConnectionType', container.type);
+                        globalContext?.setValue('selectedProviderConnectionStatus', container.status);
+                    }}>
                       <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => {router.goto(
                         `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
                           container.name,
                         ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/terminal`);}}/>
-                    </DropdownMenu>
+                      <ContributionActions
+                        args={[container]}
+                        contextPrefix="providerConnectionItem"
+                        dropdownMenu={true}
+                        contributions={contributionsContainerConnection}
+                        detailed={false}
+                        onError={handleError} />
+                    </ActionsMenu>
                   </Tooltip>
                 </span>
               </PreferencesConnectionActions>

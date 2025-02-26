@@ -31,6 +31,7 @@ export enum MenuContext {
   DASHBOARD_CONTAINER = 'dashboard/container',
   DASHBOARD_POD = 'dashboard/pod',
   DASHBOARD_COMPOSE = 'dashboard/compose',
+  DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
 }
 
 export class MenuRegistry {
