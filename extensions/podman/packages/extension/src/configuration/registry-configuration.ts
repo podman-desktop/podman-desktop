@@ -76,7 +76,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
   }
 
   registerSetupRegistryCommand(): Disposable {
-    return commands.registerCommand('podman.setupRegistry', this.setupRegistryCommandCallback);
+    return commands.registerCommand('podman.setupRegistry', () => this.setupRegistryCommandCallback());
   }
 
   async checkRegistryConfFileExistsInVm(): Promise<boolean> {

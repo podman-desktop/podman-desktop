@@ -28,6 +28,7 @@ import type { ResourceName } from '/@api/kubernetes-contexts-states';
 import {
   kubernetesCurrentContextCronJobs,
   kubernetesCurrentContextDeployments,
+  kubernetesCurrentContextJobs,
   kubernetesCurrentContextNodes,
   kubernetesCurrentContextPods,
   kubernetesCurrentContextServices,
@@ -87,6 +88,10 @@ test.each(['nodes', 'pods', 'deployments', 'services', 'cronjobs'])(
       }
       case 'cronjobs': {
         await testKubernetesStore(resourceName, kubernetesCurrentContextCronJobs);
+        break;
+      }
+      case 'jobs': {
+        await testKubernetesStore(resourceName, kubernetesCurrentContextJobs);
         break;
       }
     }
