@@ -73,7 +73,9 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+    if (process.env.ROOTFUL_MODE === 'true')
+      //Only possible on a rootful machine
+      await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
   }
 });
 
@@ -87,6 +89,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
+  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
   test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);

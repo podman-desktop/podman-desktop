@@ -63,7 +63,9 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    await createKindCluster(page, clusterName, true, 300_000);
+    if (process.env.ROOTFUL_MODE === 'true')
+      //Only possible on a rootful machine
+      await createKindCluster(page, clusterName, true, 300_000);
   }
 });
 
@@ -79,6 +81,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
+  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
   test('Prepare deployment on the cluster', async ({ navigationBar }) => {
     test.setTimeout(120_000);
     //Pull image
