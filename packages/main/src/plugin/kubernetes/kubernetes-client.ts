@@ -207,10 +207,12 @@ export class KubernetesClient {
           readonly: false,
         },
         ['kubernetes.statesExperimental']: {
-          description: 'Use new version of Kubernetes states',
+          description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
           type: 'boolean',
           default: false,
-          hidden: true,
+          experimental: {
+            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/11424',
+          },
         },
       },
     };
