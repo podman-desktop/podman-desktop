@@ -369,9 +369,7 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
-
 export let focus: string | undefined;
-
 onMount(() => {
   if (focus) {
     // Wait for the next render cycle to ensure the element exists in the DOM
@@ -388,7 +386,6 @@ onMount(() => {
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
-
 </script>
 
 <SettingsPage title="Resources">
