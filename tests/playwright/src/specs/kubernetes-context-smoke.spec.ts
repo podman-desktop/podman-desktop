@@ -46,6 +46,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Verification of kube context management', { tag: '@smoke' }, () => {
+  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
   test('Load custom kubeconfig in Preferences', async ({ navigationBar }) => {
     // open preferences page
     const settingsBar = await navigationBar.openSettings();

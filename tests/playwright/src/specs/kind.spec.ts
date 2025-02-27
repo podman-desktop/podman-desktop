@@ -54,7 +54,9 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
-    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    if (process.env.ROOTFUL_MODE === 'true')
+      //This is only needed on a rootful machine
+      await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
   } finally {
     await runner.close();
   }
