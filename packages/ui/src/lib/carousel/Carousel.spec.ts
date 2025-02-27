@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import CarouselTest from './CarouselTest.svelte';
 
-let callback: any;
+type ResizeObserverCallback = (entries: ResizeObserverEntry[], observer: ResizeObserver) => void;
+
+let callback: ResizeObserverCallback;
 
 class ResizeObserver {
-  constructor(callback1: (entries: ResizeObserverEntry[], observer: ResizeObserver) => void) {
+  constructor(callback1: ResizeObserverCallback) {
     callback = callback1;
   }
 
@@ -37,11 +37,11 @@ class ResizeObserver {
   unobserve = vi.fn();
 }
 
-beforeEach(() => {
-  (window as any).ResizeObserver = ResizeObserver;
+beforeAll(() => {
+  Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
 });
 
-afterEach(() => {
+beforeEach(() => {
   vi.resetAllMocks();
 });
 
@@ -51,7 +51,7 @@ test('carousel cards get visible when size permits', async () => {
   console.log(window.innerWidth);
   expect(card1).toBeVisible();
 
-  callback([{ contentRect: { width: 680 } }]);
+  callback([{ contentRect: { width: 680 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   await waitFor(() => {
     const card2 = screen.getByText('card 2');
@@ -61,7 +61,7 @@ test('carousel cards get visible when size permits', async () => {
   const cards = screen.queryAllByText('card 3');
   expect(cards.length).toBe(0);
 
-  callback([{ contentRect: { width: 1020 } }]);
+  callback([{ contentRect: { width: 1020 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   await waitFor(() => {
     const card3 = screen.getByText('card 3');
@@ -117,7 +117,7 @@ test('carousel left and right buttons enabled when all items does not fit into s
   expect(left).toBeEnabled();
   expect(right).toBeEnabled();
 
-  callback([{ contentRect: { width: 1020 } }]);
+  callback([{ contentRect: { width: 1020 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   await waitFor(() => {
     const card1 = screen.getByText('card 1');
