@@ -16,18 +16,7 @@ interface Props {
 
 let {
   entry,
-  command = async (): Promise<void> => {
-    // Navigate to the page
-    router.goto('/preferences/resources');
-
-    // Wait for the next render cycle to ensure the element exists in the DOM
-    requestAnimationFrame(() => {
-      const element = document.getElementById(entry.id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'auto', block: 'start' });
-      }
-    });
-  },
+  command = (): void => router.goto(`/preferences/resources?focus=${entry.id}`),
   disableTooltip = false,
 }: Props = $props();
 

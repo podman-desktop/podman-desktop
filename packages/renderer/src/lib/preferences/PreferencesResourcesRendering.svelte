@@ -361,6 +361,21 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
       .filter(property => isPropertyValidInContext(property.when, globalContext)).length > 0
   );
 }
+
+export let focus: string | undefined;
+
+onMount(() => {
+  if (focus) {
+    // Wait for the next render cycle to ensure the element exists in the DOM
+    requestAnimationFrame(() => {
+      const element = document.getElementById(focus);
+      if (element) {
+        // Auto-scroll to the element (no smooth animation)
+        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    });
+  }
+});
 </script>
 
 <SettingsPage title="Resources">
