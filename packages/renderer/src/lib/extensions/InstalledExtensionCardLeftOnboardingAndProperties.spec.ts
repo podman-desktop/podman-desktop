@@ -46,6 +46,7 @@ beforeEach(() => {
 test('Expect to have onboarding button for extension', async () => {
   const onboardingInfo: OnboardingInfo = {
     extension: 'myExtensionId',
+    removable: true,
     name: '',
     displayName: '',
     icon: '',

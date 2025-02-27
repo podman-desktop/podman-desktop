@@ -53,6 +53,8 @@ describe('an OnboardingRegistry instance exists', () => {
       contributes: {
         onboarding: {
           title: 'Get started with Podman Desktop',
+          priority: 1,
+          removable: false,
           steps: [
             {
               id: 'checkInstalledCommand',
@@ -196,6 +198,7 @@ describe('checkIdsReadability tests', () => {
     } as AnalyzedExtension;
     const onboarding = {
       title: 'Get started with Podman Desktop',
+      priority: 50,
       steps: [
         {
           id: 'welcomeViewNotOK',
@@ -263,5 +266,56 @@ describe('checkIdsReadability tests', () => {
     expect(consoleWarnMock).toBeCalledWith(
       `[myextension.id]: Missing suffix 'View' for the step 'welcomeViewNotOK' that is neither a Command, Failure or Success step`,
     );
+  });
+
+  test('onboarding list sorting by priority and removable', () => {
+    const onboardingRegistry = new OnboardingRegistry(context);
+    function registerOnboarding(id: number, removable: boolean, priority?: number): void {
+      onboardingRegistry.registerOnboarding(
+        {
+          path: `extension${id}`,
+          id: `extension.id${id}`,
+          removable,
+        } as AnalyzedExtension,
+        {
+          title: `Get started with Podman Desktop ${id}`,
+          priority,
+          enablement: '',
+          steps: [
+            {
+              id: 'welcomeViewNotOK',
+              title: `Checking for Podman installation ${id}`,
+            },
+          ],
+        },
+      );
+    }
+
+    registerOnboarding(1, false, 50);
+    registerOnboarding(2, true, 50);
+    registerOnboarding(3, false, 99);
+    registerOnboarding(4, true, 99);
+    registerOnboarding(5, false, 1);
+    registerOnboarding(6, true, 1);
+    registerOnboarding(7, false);
+    registerOnboarding(8, true);
+
+    const onboardings = onboardingRegistry.listOnboarding();
+    expect(onboardings[0]?.priority).equals(1);
+    expect(onboardings[0]?.removable).equals(false);
+    expect(onboardings[1]?.priority).equals(50);
+    expect(onboardings[1]?.removable).equals(false);
+    expect(onboardings[2]?.priority).equals(99);
+    expect(onboardings[2]?.removable).equals(false);
+    expect(onboardings[3]?.priority).toBeUndefined();
+    expect(onboardings[3]?.removable).equals(false);
+    expect(onboardings[4]?.priority).equals(1);
+    expect(onboardings[4]?.removable).equals(true);
+    expect(onboardings[5]?.priority).equals(50);
+    expect(onboardings[5]?.removable).equals(true);
+    expect(onboardings[6]?.priority).equals(99);
+    expect(onboardings[6]?.removable).equals(true);
+    expect(onboardings[7]?.priority).toBeUndefined();
+    expect(onboardings[7]?.removable).equals(true);
   });
 });

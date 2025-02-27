@@ -233,6 +233,7 @@
     },
     "onboarding": {
       "title": "Podman Setup",
+      "priority": 1,
       "steps": [
         {
           "id": "checkInstalledCommand",
