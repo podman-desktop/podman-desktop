@@ -39,6 +39,7 @@ export class JobsResourceFactory extends ResourceFactoryBase implements Resource
           verb: 'watch',
         },
         {
+          group: 'batch',
           verb: 'watch',
           resource: 'jobs',
         },
