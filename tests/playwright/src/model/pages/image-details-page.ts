@@ -38,6 +38,7 @@ export class ImageDetailsPage extends DetailsPage {
   readonly saveImageInput: Locator;
   readonly confirmSaveImages: Locator;
   readonly browseButton: Locator;
+  readonly pushButton: Locator;
 
   constructor(page: Page, name: string) {
     super(page, name);
@@ -49,6 +50,10 @@ export class ImageDetailsPage extends DetailsPage {
     });
     this.editButton = this.controlActions.getByRole('button', {
       name: 'Edit Image',
+    });
+    this.pushButton = this.controlActions.getByRole('button', {
+      name: 'Push Image',
+      exact: true,
     });
     this.summaryTab = this.tabs.getByText('Summary');
     this.historyTab = this.tabs.getByText('History');
@@ -86,6 +91,14 @@ export class ImageDetailsPage extends DetailsPage {
       await this.deleteButton.click();
       await handleConfirmationDialog(this.page);
       return new ImagesPage(this.page);
+    });
+  }
+
+  async pushImage(): Promise<void> {
+    return test.step('Push image', async () => {
+      await playExpect(this.pushButton).toBeEnabled();
+      await this.pushButton.click();
+      await handleConfirmationDialog(this.page, 'Push image', true, 'Push image', '', 60_000, true);
     });
   }
 
