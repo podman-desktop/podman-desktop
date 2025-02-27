@@ -39,6 +39,7 @@ export class CronjobsResourceFactory extends ResourceFactoryBase implements Reso
           verb: 'watch',
         },
         {
+          group: 'batch',
           verb: 'watch',
           resource: 'cronjobs',
         },
