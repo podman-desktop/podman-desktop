@@ -14,7 +14,22 @@ interface Props {
   disableTooltip?: boolean;
 }
 
-let { entry, command = (): void => router.goto('/preferences/resources'), disableTooltip = false }: Props = $props();
+let {
+  entry,
+  command = async (): Promise<void> => {
+    // Navigate to the page
+    router.goto('/preferences/resources');
+
+    // Wait for the next render cycle to ensure the element exists in the DOM
+    requestAnimationFrame(() => {
+      const element = document.getElementById(entry.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    });
+  },
+  disableTooltip = false,
+}: Props = $props();
 
 let connections = $derived.by(() => {
   if (entry.containerConnections.length > 0) {

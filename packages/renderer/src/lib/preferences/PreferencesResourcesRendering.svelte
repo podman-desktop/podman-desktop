@@ -379,6 +379,7 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 
     {#each providers as provider}
       <div
+        id={provider.id}
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
