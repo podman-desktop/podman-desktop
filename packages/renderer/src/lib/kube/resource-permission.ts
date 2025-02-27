@@ -44,7 +44,7 @@ export async function listenResourcePermitted(
 
   if (!experimental) {
     callback(true);
-    return { dispose: () => {} };
+    return { dispose: (): void => {} };
   }
 
   const unsubscribeContexts = kubernetesContexts.subscribe(value => {
@@ -58,7 +58,7 @@ export async function listenResourcePermitted(
   });
 
   return {
-    dispose: () => {
+    dispose: (): void => {
       unsubscribeContexts();
       unsubscribePermissions();
     },
