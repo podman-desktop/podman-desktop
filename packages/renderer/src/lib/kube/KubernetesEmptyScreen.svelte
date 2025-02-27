@@ -4,11 +4,11 @@ import type { ComponentProps } from 'svelte';
 
 import KubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
 
-let { icon, isPermited, ...restProps }: ComponentProps<EmptyScreen> = $props();
+let { icon, isPermitted, ...restProps }: ComponentProps<EmptyScreen> = $props();
 </script>
 
 <EmptyScreen icon={icon} {...restProps}>
-  {#if isPermited}
+  {#if isPermitted}
     <KubernetesCheckConnection />
   {/if}
 </EmptyScreen>
