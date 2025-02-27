@@ -2331,7 +2331,7 @@ test('isIncompatibleMachineOutput', () => {
 });
 
 describe('calcPodmanMachineSetting', () => {
-  const podmanConfiguration = new PodmanConfiguration();
+  const podmanConfiguration = new PodmanConfiguration({} as unknown as extensionApi.ExtensionContext);
   let originalProvider: string | undefined;
   beforeEach(() => {
     originalProvider = process.env.CONTAINERS_MACHINE_PROVIDER;

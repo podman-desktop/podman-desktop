@@ -20,24 +20,20 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CoreV1Event, KubernetesObject, V1Pod } from '@kubernetes/client-node';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import { lastPage } from '/@/stores/breadcrumb';
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import * as states from '/@/stores/kubernetes-contexts-state';
 
+import { initListExperimental, initListsNonExperimental, type initListsReturnType } from '../tests-helpers/init-lists';
 import PodDetails from './PodDetails.svelte';
 
 vi.mock('@xterm/xterm');
 vi.mock('@xterm/addon-search');
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
-  return {
-    kubernetesCurrentContextPods: vi.fn(),
-    kubernetesCurrentContextEvents: vi.fn(),
-  };
-});
+vi.mock('/@/stores/kubernetes-contexts-state');
 
 const myPod: V1Pod = {
   apiVersion: 'v1',
@@ -53,73 +49,99 @@ const myPod: V1Pod = {
   },
 };
 
-const showMessageBoxMock = vi.fn();
-const kubernetesDeletePodMock = vi.fn();
-
 beforeAll(() => {
   global.ResizeObserver = vi.fn().mockReturnValue({
     observe: vi.fn(),
     unobserve: vi.fn(),
     disconnect: vi.fn(),
   });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
+});
+
+vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
+  // we want to keep the original nonVerbose
+  const original = await importOriginal();
+  return {
+    ...original,
+    listenResources: vi.fn(),
+    isKubernetesExperimentalMode: vi.fn(),
+  };
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-
+  router.goto('http://localhost:3000');
   vi.mocked(window.kubernetesListRoutes).mockResolvedValue([]);
   vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('ns');
   vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
-  vi.mocked(window.kubernetesDeletePod).mockImplementation(kubernetesDeletePodMock);
 });
 
-test('Expect redirect to previous page if pod is deleted', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
-
-  const routerGotoSpy = vi.spyOn(router, 'goto');
-
-  // mock object stores
-  const pods = writable<KubernetesObject[]>([myPod]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPods = pods;
-  const events = writable<CoreV1Event[]>([]);
-  vi.mocked(kubeContextStore).kubernetesCurrentContextEvents = events;
-
-  // remove deployment from the store when we call delete
-  kubernetesDeletePodMock.mockImplementation(() => {
-    pods.set([]);
+describe.each<{
+  experimental: boolean;
+  initLists: (pods: KubernetesObject[], events: CoreV1Event[]) => initListsReturnType;
+}>([
+  {
+    experimental: false,
+    initLists: initListsNonExperimental({
+      onResourcesStore: store => (vi.mocked(states).kubernetesCurrentContextPods = store),
+      onEventsStore: store => (vi.mocked(states).kubernetesCurrentContextEvents = store),
+    }),
+  },
+  {
+    experimental: true,
+    initLists: initListExperimental({ resourceName: 'pods' }),
+  },
+])('is experimental: $experimental', ({ experimental, initLists }) => {
+  beforeEach(() => {
+    vi.mocked(isKubernetesExperimentalMode).mockResolvedValue(experimental);
   });
 
-  // defines a fake lastPage so we can check where we will be redirected
-  lastPage.set({ name: 'Fake Previous', path: '/last' });
+  test('Expect redirect to previous page if pod is deleted', async () => {
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
-  // render the component
-  render(PodDetails, { name: 'my-pod', namespace: 'default' });
-  expect(screen.getByText('my-pod')).toBeInTheDocument();
+    const routerGotoSpy = vi.spyOn(router, 'goto');
 
-  // grab current route
-  const currentRoute = window.location;
-  expect(currentRoute.href).toBe('http://localhost:3000/');
+    // mock object stores
+    const list = initLists([myPod], []);
 
-  // click on delete pod button
-  const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
-  expect(deleteButton).toBeInTheDocument();
-  expect(deleteButton).toBeEnabled();
+    // remove pod from the store when we call delete
+    vi.mocked(window.kubernetesDeletePod).mockImplementation(async () => {
+      list.updateResources([]);
+    });
 
-  await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    // defines a fake lastPage so we can check where we will be redirected
+    lastPage.set({ name: 'Fake Previous', path: '/last' });
 
-  // Wait for confirmation modal to disappear after clicking on delete
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // render the component
+    render(PodDetails, { name: 'my-pod', namespace: 'default' });
 
-  // check that delete method has been called
-  expect(kubernetesDeletePodMock).toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(screen.getByText('my-pod')).toBeInTheDocument();
+    });
 
-  // expect that we have called the router when page has been removed
-  // to jump to the previous page
-  expect(routerGotoSpy).toBeCalledWith('/last');
+    // grab current route
+    const currentRoute = window.location;
+    expect(currentRoute.href).toBe('http://localhost:3000/');
 
-  // grab updated route
-  const afterRoute = window.location;
-  expect(afterRoute.href).toBe('http://localhost:3000/last');
+    // click on delete pod button
+    const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
+    expect(deleteButton).toBeInTheDocument();
+    expect(deleteButton).toBeEnabled();
+
+    await fireEvent.click(deleteButton);
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
+
+    // Wait for confirmation modal to disappear after clicking on delete
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // check that delete method has been called
+    expect(window.kubernetesDeletePod).toHaveBeenCalled();
+
+    // expect that we have called the router when page has been removed
+    // to jump to the previous page
+    expect(routerGotoSpy).toBeCalledWith('/last');
+
+    // grab updated route
+    const afterRoute = window.location;
+    expect(afterRoute.href).toBe('http://localhost:3000/last');
+  });
 });

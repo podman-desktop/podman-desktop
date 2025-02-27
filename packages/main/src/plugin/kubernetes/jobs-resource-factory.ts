@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { V1CronJob, V1CronJobList } from '@kubernetes/client-node';
+import type { V1Job, V1JobList } from '@kubernetes/client-node';
 import { BatchV1Api } from '@kubernetes/client-node';
 
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
@@ -24,10 +24,10 @@ import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryBase } from './resource-factory.js';
 import { ResourceInformer } from './resource-informer.js';
 
-export class CronjobsResourceFactory extends ResourceFactoryBase implements ResourceFactory {
+export class JobsResourceFactory extends ResourceFactoryBase implements ResourceFactory {
   constructor() {
     super({
-      resource: 'cronjobs',
+      resource: 'jobs',
     });
 
     this.setPermissions({
@@ -41,7 +41,7 @@ export class CronjobsResourceFactory extends ResourceFactoryBase implements Reso
         {
           group: 'batch',
           verb: 'watch',
-          resource: 'cronjobs',
+          resource: 'jobs',
         },
       ],
     });
@@ -50,11 +50,11 @@ export class CronjobsResourceFactory extends ResourceFactoryBase implements Reso
     });
   }
 
-  createInformer(kubeconfig: KubeConfigSingleContext): ResourceInformer<V1CronJob> {
+  createInformer(kubeconfig: KubeConfigSingleContext): ResourceInformer<V1Job> {
     const namespace = kubeconfig.getNamespace();
     const apiClient = kubeconfig.getKubeConfig().makeApiClient(BatchV1Api);
-    const listFn = (): Promise<V1CronJobList> => apiClient.listNamespacedCronJob({ namespace });
-    const path = `/apis/batch/v1/namespaces/${namespace}/cronjobs`;
-    return new ResourceInformer<V1CronJob>({ kubeconfig, path, listFn, kind: 'CronJob', plural: 'cronjobs' });
+    const listFn = (): Promise<V1JobList> => apiClient.listNamespacedJob({ namespace });
+    const path = `/apis/batch/v1/namespaces/${namespace}/jobs`;
+    return new ResourceInformer<V1Job>({ kubeconfig, path, listFn, kind: 'Job', plural: 'jobs' });
   }
 }

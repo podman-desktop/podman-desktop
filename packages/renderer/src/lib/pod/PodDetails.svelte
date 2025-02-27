@@ -15,12 +15,11 @@ import PodActions from './PodActions.svelte';
 import PodDetailsInspect from './PodDetailsInspect.svelte';
 import PodDetailsKube from './PodDetailsKube.svelte';
 import PodDetailsLogs from './PodDetailsLogs.svelte';
-import PodDetailsSummary from './PodDetailsSummary.svelte';
 import type { PodInfoUI } from './PodInfoUI';
+import PodmanPodDetailsSummary from './PodmanPodDetailsSummary.svelte';
 
 export let podName: string;
 export let engineId: string;
-export let kind: string;
 
 let pod: PodInfoUI;
 let detailsPage: DetailsPage;
@@ -37,9 +36,7 @@ onMount(() => {
 
   // loading pod info
   return podsInfos.subscribe(pods => {
-    const matchingPod = pods.find(
-      podInPods => podInPods.Name === podName && podInPods.engineId === engineId && kind === podInPods.kind,
-    );
+    const matchingPod = pods.find(podInPods => podInPods.Name === podName && podInPods.engineId === engineId);
     if (matchingPod) {
       try {
         pod = podUtils.getPodInfoUI(matchingPod);
@@ -88,7 +85,7 @@ onMount(() => {
     </svelte:fragment>
     <svelte:fragment slot="content">
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <PodDetailsSummary pod={pod} />
+        <PodmanPodDetailsSummary pod={pod} />
       </Route>
       <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
         <PodDetailsLogs pod={pod} />

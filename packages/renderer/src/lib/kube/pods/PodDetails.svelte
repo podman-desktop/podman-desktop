@@ -1,19 +1,22 @@
 <script lang="ts">
-import type { V1Pod } from '@kubernetes/client-node';
+import type { CoreV1Event, KubernetesObject, V1Pod } from '@kubernetes/client-node';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
 import { kubernetesCurrentContextEvents, kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
 
 import Route from '../../../Route.svelte';
 import MonacoEditor from '../../editor/MonacoEditor.svelte';
+import type { EventUI } from '../../events/EventUI';
 import PodIcon from '../../images/PodIcon.svelte';
 import DetailsPage from '../../ui/DetailsPage.svelte';
 import StateChange from '../../ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '../../ui/Util';
 import KubeEditYaml from '../KubeEditYAML.svelte';
+import { listenResource } from '../resource-listen';
 import KubernetesTerminalBrowser from './KubernetesTerminalBrowser.svelte';
 import { PodUtils } from './pod-utils';
 import PodActions from './PodActions.svelte';
@@ -32,25 +35,40 @@ let detailsPage = $state<DetailsPage>();
 let kubePod = $state<V1Pod>();
 let kubeError = $state<string>();
 
-let events = $derived($kubernetesCurrentContextEvents.filter(ev => ev.involvedObject.uid === kubePod?.metadata?.uid));
+let events = $state<EventUI[]>([]);
+let listener: IDisposable | undefined;
 
-onMount(() => {
+onMount(async () => {
   const podUtils = new PodUtils();
-  // loading pod info
-  return kubernetesCurrentContextPods.subscribe(pods => {
-    const matchingPod = pods.find(pod => pod.metadata?.name === name && pod.metadata?.namespace === namespace);
-    if (matchingPod) {
-      try {
-        pod = podUtils.getPodUI(matchingPod);
-        loadDetails().catch((err: unknown) => console.error(`Error getting pod details ${pod?.name}`, err));
-      } catch (err) {
-        console.error(err);
+  listener = await listenResource({
+    resourceName: 'pods',
+    name,
+    namespace,
+    listenEvents: true,
+    legacyResourceStore: kubernetesCurrentContextPods,
+    legacyEventsStore: kubernetesCurrentContextEvents,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the pod has been deleted
+        detailsPage.close();
       }
-    } else if (detailsPage) {
-      // the pod has been deleted
-      detailsPage?.close();
-    }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      pod = podUtils.getPodUI(resource);
+      if (isExperimental) {
+        kubePod = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting pod details ${pod?.name}`, err));
+      }
+    },
+    onEventsUpdated: (updatedEvents: CoreV1Event[]) => {
+      events = updatedEvents;
+    },
   });
+});
+
+onDestroy(() => {
+  listener?.dispose();
 });
 
 async function loadDetails(): Promise<void> {

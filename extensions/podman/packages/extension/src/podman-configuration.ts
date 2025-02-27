@@ -36,9 +36,11 @@ const configurationRosetta = 'setting.rosetta';
 export class PodmanConfiguration {
   private mutex: Mutex = new Mutex();
 
+  #extensionContext: extensionApi.ExtensionContext;
   #registryConfiguration: RegistryConfiguration;
 
-  constructor() {
+  constructor(extensionContext: extensionApi.ExtensionContext) {
+    this.#extensionContext = extensionContext;
     this.#registryConfiguration = new RegistryConfigurationImpl();
   }
 
@@ -46,6 +48,9 @@ export class PodmanConfiguration {
     let httpProxy = undefined;
     let httpsProxy = undefined;
     let noProxy = undefined;
+
+    const disposables = await this.#registryConfiguration.init();
+    this.#extensionContext.subscriptions.push(...disposables);
 
     // we receive an update for the current proxy settings
     extensionApi.proxy.onDidUpdateProxy(async (proxySettings: ProxySettings) => {

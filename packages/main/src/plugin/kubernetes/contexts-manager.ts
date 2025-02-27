@@ -31,6 +31,7 @@ import type {
   V1DeploymentList,
   V1Ingress,
   V1IngressList,
+  V1Job,
   V1Node,
   V1NodeList,
   V1ObjectMeta,
@@ -262,6 +263,9 @@ export class ContextsManager {
         break;
       case 'cronjobs':
         informer = this.createCronJobInformer(this.kubeConfig, ns, context);
+        break;
+      case 'jobs':
+        informer = this.createJobInformer(this.kubeConfig, ns, context);
         break;
       case 'events':
         informer = this.createEventInformer(this.kubeConfig, ns, context);
@@ -514,6 +518,45 @@ export class ContextsManager {
           resources: { cronjobs: true },
           update: state =>
             (state.resources.cronjobs = state.resources.cronjobs.filter(d => d.metadata?.uid !== obj.metadata?.uid)),
+        });
+      },
+    });
+  }
+  public createJobInformer(kc: KubeConfig, namespace: string, context: KubeContext): CancellableInformer {
+    const batchV1Api = kc.makeApiClient(BatchV1Api);
+    const listFn = (): Promise<KubernetesListObject<V1Job>> => batchV1Api.listNamespacedJob({ namespace });
+    const path = `/apis/batch/v1/namespaces/${namespace}/jobs`;
+    let timer: NodeJS.Timeout | undefined;
+    let connectionDelay: NodeJS.Timeout | undefined;
+    this.setConnectionTimers('jobs', timer, connectionDelay);
+    return this.createInformer<V1Job>(kc, context, path, listFn, {
+      resource: 'jobs',
+      timer: timer,
+      backoff: this.getBackoffForContext(context.name),
+      connectionDelay: connectionDelay,
+      onAdd: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { jobs: true },
+          update: state => state.resources.jobs.push(obj),
+        });
+      },
+      onUpdate: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { jobs: true },
+          update: state => {
+            state.resources.jobs = state.resources.jobs.filter(o => o.metadata?.uid !== obj.metadata?.uid);
+            state.resources.jobs.push(obj);
+          },
+        });
+      },
+      onDelete: obj => {
+        this.states.setStateAndDispatch(context.name, {
+          currentContext: this.kubeConfig.currentContext,
+          resources: { jobs: true },
+          update: state =>
+            (state.resources.jobs = state.resources.jobs.filter(d => d.metadata?.uid !== obj.metadata?.uid)),
         });
       },
     });

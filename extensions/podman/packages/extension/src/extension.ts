@@ -1378,7 +1378,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     },
   ];
 
-  const podmanConfiguration = new PodmanConfiguration();
+  const podmanConfiguration = new PodmanConfiguration(extensionContext);
   await podmanConfiguration.init();
 
   const provider = extensionApi.provider.createProvider(providerOptions);

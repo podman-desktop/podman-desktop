@@ -56,8 +56,11 @@ test('PodmanPodDetailsSummary renders with PodInfoUI object', async () => {
 
   // Check that the rendered text is correct
   expect(screen.getByText('pod1')).toBeInTheDocument();
+  expect(screen.getByText('fakePodId')).toBeInTheDocument();
   expect(screen.getByText('3 days')).toBeInTheDocument();
+  expect(screen.getByText('fakeCId1')).toBeInTheDocument();
   expect(screen.getByText('fakeContainer1')).toBeInTheDocument();
+  expect(screen.getByText('fakeCId2')).toBeInTheDocument();
   expect(screen.getByText('fakeContainer2')).toBeInTheDocument();
   expect(screen.getAllByText('running')[0]).toBeInTheDocument();
 });

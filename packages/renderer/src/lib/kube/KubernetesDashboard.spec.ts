@@ -120,8 +120,7 @@ test('Verify basic page with cluster', async () => {
 
   const guides = screen.getByText('Explore articles and blog posts');
   expect(guides).toBeInTheDocument();
-  expect(
-    guides.parentElement?.parentElement?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild
-      ?.childElementCount,
-  ).toBe(3);
+
+  const guideCards = screen.queryAllByRole('button', { name: 'Read more' });
+  expect(guideCards).toHaveLength(3);
 });
