@@ -7,6 +7,6 @@
   "devDependencies": {
     "@podman-desktop/webview-api": "workspace:*",
     "electron": "34.3.0",
-    "vitest": "^3.0.6"
+    "vitest": "^3.0.7"
   }
 }
