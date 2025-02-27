@@ -27,8 +27,8 @@ import * as resourcesListen from '/@/lib/kube/resources-listen';
 import * as states from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable.js';
 
-import DeploymentsList from './DeploymentsList.svelte';
 import { listenResourcePermitted } from '../kube/resource-permission';
+import DeploymentsList from './DeploymentsList.svelte';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
 vi.mock('/@/lib/kube/resources-listen');
