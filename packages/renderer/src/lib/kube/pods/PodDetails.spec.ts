@@ -53,16 +53,12 @@ const myPod: V1Pod = {
   },
 };
 
-const showMessageBoxMock = vi.fn();
-const kubernetesDeletePodMock = vi.fn();
-
 beforeAll(() => {
   global.ResizeObserver = vi.fn().mockReturnValue({
     observe: vi.fn(),
     unobserve: vi.fn(),
     disconnect: vi.fn(),
   });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
 });
 
 beforeEach(() => {
@@ -71,11 +67,10 @@ beforeEach(() => {
   vi.mocked(window.kubernetesListRoutes).mockResolvedValue([]);
   vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('ns');
   vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
-  vi.mocked(window.kubernetesDeletePod).mockImplementation(kubernetesDeletePodMock);
 });
 
 test('Expect redirect to previous page if pod is deleted', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
 
@@ -86,7 +81,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   vi.mocked(kubeContextStore).kubernetesCurrentContextEvents = events;
 
   // remove deployment from the store when we call delete
-  kubernetesDeletePodMock.mockImplementation(() => {
+  vi.mocked(window.kubernetesDeletePod).mockImplementation(async () => {
     pods.set([]);
   });
 
@@ -107,13 +102,13 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   expect(deleteButton).toBeEnabled();
 
   await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce();
+  expect(window.showMessageBox).toHaveBeenCalledOnce();
 
   // Wait for confirmation modal to disappear after clicking on delete
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   // check that delete method has been called
-  expect(kubernetesDeletePodMock).toHaveBeenCalled();
+  expect(window.kubernetesDeletePod).toHaveBeenCalled();
 
   // expect that we have called the router when page has been removed
   // to jump to the previous page
