@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 - 2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import { EventStore } from './event-store';
 
-const windowEvents = ['kubernetes-resources-count', 'extension-stopped', 'extensions-started'];
+const windowEvents = ['kubernetes-active-resources-count', 'extension-stopped', 'extensions-started'];
 const windowListeners = ['extensions-already-started'];
 
 let experimentalStates: boolean | undefined = undefined;
@@ -44,19 +44,19 @@ export async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const kubernetesResourcesCount: Writable<ResourceCount[]> = writable([]);
+export const kubernetesActiveResourcesCount: Writable<ResourceCount[]> = writable([]);
 
 // use helper here as window methods are initialized after the store in tests
-const listResourcesCount = (): Promise<ResourceCount[]> => {
-  return window.kubernetesGetResourcesCount();
+const listActiveResourcesCount = (): Promise<ResourceCount[]> => {
+  return window.kubernetesGetActiveResourcesCount();
 };
 
-export const kubernetesResourcesCountStore = new EventStore<ResourceCount[]>(
-  'kubernetes resources count',
-  kubernetesResourcesCount,
+export const kubernetesActiveResourcesCountStore = new EventStore<ResourceCount[]>(
+  'kubernetes active resources count',
+  kubernetesActiveResourcesCount,
   checkForUpdate,
   windowEvents,
   windowListeners,
-  listResourcesCount,
+  listActiveResourcesCount,
 );
-kubernetesResourcesCountStore.setupWithDebounce(100, 100);
+kubernetesActiveResourcesCountStore.setupWithDebounce(100, 100);
