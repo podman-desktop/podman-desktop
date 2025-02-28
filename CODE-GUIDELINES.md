@@ -145,3 +145,13 @@ test('f2 returns true', () => {
   // expect(helpers.f1).toHaveBeenCalledOnce();
 });
 ```
+
+### screen.getBy vs screen.queryBy
+
+Calling `element = screen.getBy...` throws an error if no element is found.
+For this reason, it is not necessary to call `expect(element).toBeInTheDocument()`, as the assertion
+has already been done as part of `screen.getBy...`.
+
+It is necessary to use `element = screen.queryBy...` followed by `expect(element).not.toBeInTheDocument()`
+when checking if a component does NOT exist, as this call does not throw any error,
+but returns a `null` value if the element is not found.
