@@ -91,8 +91,10 @@ describe.each<{
   test('Expect pod empty screen', async () => {
     initObjectsList([]);
     render(PodsList);
-    const noPods = screen.getByRole('heading', { name: 'No pods' });
-    expect(noPods).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const noPods = screen.getByRole('heading', { name: 'No pods' });
+      expect(noPods).toBeInTheDocument();
+    });
   });
 
   test('Expect pods list', async () => {
@@ -156,8 +158,10 @@ describe.each<{
     initObjectsList([]);
 
     render(PodsList, { searchTerm: 'No match' });
-    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-    expect(filterButton).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+      expect(filterButton).toBeInTheDocument();
+    });
   });
 
   test('Expect user confirmation to pop up when preferences require', async () => {

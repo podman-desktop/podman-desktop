@@ -91,8 +91,10 @@ describe.each<{
   test('Expect deployment empty screen', async () => {
     initObjectsList([]);
     render(DeploymentsList);
-    const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
-    expect(noDeployments).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
+      expect(noDeployments).toBeInTheDocument();
+    });
   });
 
   test('Expect deployments list', async () => {
@@ -158,8 +160,10 @@ describe.each<{
     initObjectsList([]);
 
     render(DeploymentsList, { searchTerm: 'No match' });
-    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-    expect(filterButton).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+      expect(filterButton).toBeInTheDocument();
+    });
   });
 
   test('Expect user confirmation to pop up when preferences require', async () => {

@@ -39,6 +39,8 @@ interface Props {
   emptySnippet: Snippet;
 }
 
+let started = $state<boolean>(false);
+
 let { kinds, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
 
 let resources = $state<{ [key: string]: KubernetesObject[] | undefined }>({});
@@ -62,6 +64,7 @@ onMount(async () => {
           searchTermStore: kind.legacySearchPatternStore,
         },
         (updatedResources: KubernetesObject[]) => {
+          started = true;
           resources[kind.resource] = updatedResources;
         },
       ),
@@ -69,6 +72,7 @@ onMount(async () => {
 
     legacyUnsubscribers.push(
       kind.legacyObjectStore.subscribe(o => {
+        started = true;
         resources[kind.resource] = o;
       }),
     );
@@ -150,7 +154,7 @@ let table: Table;
       defaultSortColumn="Name">
     </Table>
 
-    {#if objects.length === 0}
+    {#if started && objects.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen
           icon={icon}
