@@ -72,6 +72,9 @@ onMount(async () => {
 
     legacyUnsubscribers.push(
       kind.legacyObjectStore.subscribe(o => {
+        if (o === undefined) {
+          return;
+        }
         started = true;
         resources[kind.resource] = o;
       }),
