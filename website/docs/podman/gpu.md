@@ -145,10 +145,12 @@ Using the GPU functionality requires a specialized Containerfile containing a [p
 FROM fedora:40
 USER 0
 
-# Install the patched mesa-krunkit drivers
 RUN dnf -y install dnf-plugins-core && \
-    dnf -y copr enable slp/mesa-krunkit && \
-    dnf -y install mesa-vulkan-drivers vulkan-loader-devel vulkan-headers vulkan-tools vulkan-loader && \
+    dnf -y install dnf-plugin-versionlock && \
+    dnf -y install mesa-vulkan-drivers vulkan-loader-devel vulkan-headers vulkan-tools vulkan-loader glslc && \
+    dnf -y copr enable slp/mesa-krunkit fedora-40-aarch64 && \
+    dnf -y downgrade mesa-vulkan-drivers.aarch64 --repo=copr:copr.fedorainfracloud.org:slp:mesa-krunkit && \
+    dnf versionlock mesa-vulkan-drivers && \
     dnf clean all
 ```
 
@@ -159,7 +161,7 @@ RUN dnf -y install dnf-plugins-core && \
 3. Verify you can see the GPU by running a test container:
 
 ```sh
-$  podman run --rm -it --device /dev/dri --name gpu-info quay.io/slopezpa/fedora-vgpu vulkaninfo | grep "GPU"
+$  podman run --rm -it --device /dev/dri --name gpu-info <gpu-container-image>  vulkaninfo | grep "GPU"
 ```
 
 Example output:

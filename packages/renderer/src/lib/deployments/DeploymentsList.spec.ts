@@ -43,19 +43,21 @@ beforeEach(() => {
 describe.each<{
   experimental: boolean;
   initMocks: () => void;
-  initObjectsList: (objects: KubernetesObject[]) => { update: (objects: KubernetesObject[]) => void };
+  initObjectsList: (objects?: KubernetesObject[]) => { update: (objects: KubernetesObject[]) => void };
 }>([
   {
     experimental: true,
     initMocks: (): void => {
       vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = writable();
     },
-    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+    initObjectsList: (objects?: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
       let callback: (resoures: KubernetesObject[]) => void;
       vi.mocked(resourcesListen.listenResources).mockImplementation(
         async (_resources, _options, cb): Promise<IDisposable> => {
           callback = cb;
-          setTimeout(() => callback(objects));
+          if (objects) {
+            setTimeout(() => callback(objects));
+          }
           return {
             dispose: (): void => {},
           };
@@ -73,7 +75,7 @@ describe.each<{
     initMocks: (): void => {
       vi.mocked(resourcesListen.listenResources).mockResolvedValue(undefined);
     },
-    initObjectsList: (objects: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
+    initObjectsList: (objects?: KubernetesObject[]): { update: (objects: KubernetesObject[]) => void } => {
       const store = writable<KubernetesObject[]>(objects);
       vi.mocked(states).kubernetesCurrentContextDeploymentsFiltered = store;
       return {
@@ -91,8 +93,27 @@ describe.each<{
   test('Expect deployment empty screen', async () => {
     initObjectsList([]);
     render(DeploymentsList);
-    const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
-    expect(noDeployments).toBeInTheDocument();
+
+    await vi.waitFor(() => {
+      const noDeployments = screen.getByRole('heading', { name: 'No deployments' });
+      expect(noDeployments).toBeInTheDocument();
+    });
+  });
+
+  test('Expect no deployment empty screen before received data', async () => {
+    const list = initObjectsList();
+    render(DeploymentsList);
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    let noDeployments = screen.queryByRole('heading', { name: 'No deployments' });
+    expect(noDeployments).not.toBeInTheDocument();
+
+    list.update([]);
+    await vi.waitFor(() => {
+      noDeployments = screen.queryByRole('heading', { name: 'No deployments' });
+      expect(noDeployments).toBeInTheDocument();
+    });
   });
 
   test('Expect deployments list', async () => {
@@ -158,8 +179,10 @@ describe.each<{
     initObjectsList([]);
 
     render(DeploymentsList, { searchTerm: 'No match' });
-    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-    expect(filterButton).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+      expect(filterButton).toBeInTheDocument();
+    });
   });
 
   test('Expect user confirmation to pop up when preferences require', async () => {

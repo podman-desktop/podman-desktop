@@ -40,8 +40,10 @@ beforeEach(() => {
 test('Expect service empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextServicesFiltered = writable<KubernetesObject[]>([]);
   render(ServicesList);
-  const noServices = screen.getByRole('heading', { name: 'No services' });
-  expect(noServices).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const noServices = screen.getByRole('heading', { name: 'No services' });
+    expect(noServices).toBeInTheDocument();
+  });
 });
 
 test('Expect services list', async () => {
@@ -73,8 +75,10 @@ test('Expect filter empty screen', async () => {
 
   render(ServicesList, { searchTerm: 'No match' });
 
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-  expect(filterButton).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+    expect(filterButton).toBeInTheDocument();
+  });
 });
 
 test('Expect user confirmation to pop up when preferences require', async () => {

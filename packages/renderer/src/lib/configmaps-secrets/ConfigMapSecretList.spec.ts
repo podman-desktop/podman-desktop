@@ -42,8 +42,10 @@ test('Expect configmap empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextConfigMapsFiltered = writable<KubernetesObject[]>([]);
   vi.mocked(states).kubernetesCurrentContextSecretsFiltered = writable<KubernetesObject[]>([]);
   render(ConfigMapSecretList);
-  const noNodes = screen.getByRole('heading', { name: 'No configmaps or secrets' });
-  expect(noNodes).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const noNodes = screen.getByRole('heading', { name: 'No configmaps or secrets' });
+    expect(noNodes).toBeInTheDocument();
+  });
 });
 
 test('Expect configmap and secrets list', async () => {

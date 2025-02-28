@@ -40,8 +40,10 @@ beforeEach(() => {
 test('Expect PVC empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextPersistentVolumeClaimsFiltered = writable<KubernetesObject[]>([]);
   render(PVCList);
-  const noPVCS = screen.getByRole('heading', { name: 'No PVCs' });
-  expect(noPVCS).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const noPVCS = screen.getByRole('heading', { name: 'No PVCs' });
+    expect(noPVCS).toBeInTheDocument();
+  });
 });
 
 test('Expect PVC list', async () => {

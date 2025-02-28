@@ -90,8 +90,10 @@ describe.each<{
   test('Expect cronjob empty screen', async () => {
     initObjectsList([]);
     render(CronJobList);
-    const noCronJobs = screen.getByRole('heading', { name: 'No cronjobs' });
-    expect(noCronJobs).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const noCronJobs = screen.getByRole('heading', { name: 'No cronjobs' });
+      expect(noCronJobs).toBeInTheDocument();
+    });
   });
 
   test('Expect cronjobs list', async () => {
@@ -130,8 +132,10 @@ describe.each<{
 
     render(CronJobList, { searchTerm: 'No match' });
 
-    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-    expect(filterButton).toBeInTheDocument();
+    await vi.waitFor(() => {
+      const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+      expect(filterButton).toBeInTheDocument();
+    });
   });
 
   test('Expect cronjob list is updated when kubernetesCurrentContextCronJobsFiltered changes', async () => {

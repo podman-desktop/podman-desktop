@@ -43,8 +43,10 @@ test('Expect ingress&routes empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextIngressesFiltered = readable<KubernetesObject[]>([]);
   vi.mocked(states).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([]);
   render(IngressesRoutesList);
-  const noIngressesNorRoutes = screen.getByRole('heading', { name: 'No ingresses or routes' });
-  expect(noIngressesNorRoutes).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const noIngressesNorRoutes = screen.getByRole('heading', { name: 'No ingresses or routes' });
+    expect(noIngressesNorRoutes).toBeInTheDocument();
+  });
 });
 
 test('Expect element in ingresses list', async () => {
@@ -113,8 +115,10 @@ test('Expect filter empty screen if no match', async () => {
 
   render(IngressesRoutesList, { searchTerm: 'No match' });
 
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-  expect(filterButton).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const filterButton = screen.getByRole('button', { name: 'Clear filter' });
+    expect(filterButton).toBeInTheDocument();
+  });
 });
 
 test('Expect status column name to be clickable / sortable', async () => {

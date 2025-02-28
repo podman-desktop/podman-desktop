@@ -409,7 +409,7 @@ describe('exec', () => {
     expect(stdout).toContain('Hello, World!');
   });
 
-  test('should run the command with privileges on flatpak Linux', async () => {
+  test('should run the command with privileges and set env variables on flatpak Linux', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
@@ -431,12 +431,15 @@ describe('exec', () => {
     } as unknown as ChildProcess);
 
     // emulate flatpak environment
-    const { stdout } = await exec.exec(command, args, { env: { FLATPAK_ID: 'true' }, isAdmin: true });
+    const { stdout } = await exec.exec(command, args, {
+      env: { FLATPAK_ID: 'true', var1: 'value1', var2: 'value2' },
+      isAdmin: true,
+    });
 
     // caller should contains the cwd provided
     expect(spawnMock).toHaveBeenCalledWith(
       'flatpak-spawn',
-      expect.arrayContaining(['--host', 'pkexec', 'echo', 'Hello, World!']),
+      expect.arrayContaining(['--host', '--env=var1=value1', '--env=var2=value2', 'pkexec', 'echo', 'Hello, World!']),
       expect.anything(),
     );
     expect(stdout).toBeDefined();
