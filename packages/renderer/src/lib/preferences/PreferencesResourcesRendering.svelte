@@ -370,18 +370,17 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 }
 
 export let focus: string | undefined;
-onMount(() => {
-  if (focus) {
-    // Wait for the next render cycle to ensure the element exists in the DOM
-    requestAnimationFrame(() => {
-      const element = document.getElementById(focus);
-      if (element) {
-        // Auto-scroll to the element (no smooth animation)
-        element.scrollIntoView({ behavior: 'auto', block: 'start' });
-      }
-    });
-  }
-});
+// Trigger scroll when the focus variable changes (i.e., when a new provider is focused)
+$: if (focus) {
+  // Wait for the next render cycle to ensure the element exists in the DOM
+  requestAnimationFrame(() => {
+    const element = document.getElementById(focus);
+    if (element) {
+      // Auto-scroll to the element (no smooth animation)
+      element.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
+}
 
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
