@@ -9,6 +9,7 @@ import {
   kubernetesCurrentContextCronJobs,
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextIngresses,
+  kubernetesCurrentContextJobs,
   kubernetesCurrentContextNodes,
   kubernetesCurrentContextPersistentVolumeClaims,
   kubernetesCurrentContextPods,
@@ -57,6 +58,7 @@ let configMapSecretCount = $derived(
   $kubernetesCurrentContextConfigMaps.length + $kubernetesCurrentContextSecrets.length,
 );
 let cronjobCount = $derived($kubernetesCurrentContextCronJobs.length);
+let jobCount = $derived($kubernetesCurrentContextJobs.length);
 
 async function openKubernetesDocumentation(): Promise<void> {
   await window.openExternal('https://podman-desktop.io/docs/kubernetes');
@@ -102,6 +104,7 @@ async function openKubernetesDocumentation(): Promise<void> {
                     <KubernetesDashboardResourceCard type='Ingresses & Routes' count={ingressRouteCount} kind='Ingress'/>
                     <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={pvcCount} kind='PersistentVolumeClaim'/>
                     <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={configMapSecretCount} kind='ConfigMap'/>
+                    <KubernetesDashboardResourceCard type='Jobs' count={jobCount} kind='Job'/>
                     <KubernetesDashboardResourceCard type='CronJobs' count={cronjobCount} kind='CronJob'/>
                 </div>
                 <!-- Graphs -->

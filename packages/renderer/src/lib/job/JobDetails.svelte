@@ -1,0 +1,102 @@
+<script lang="ts">
+import type { KubernetesObject, V1Job } from '@kubernetes/client-node';
+import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
+import { onDestroy, onMount } from 'svelte';
+import { router } from 'tinro';
+import { stringify } from 'yaml';
+
+import { listenResource } from '/@/lib/kube/resource-listen';
+import { kubernetesCurrentContextJobs } from '/@/stores/kubernetes-contexts-state';
+import type { IDisposable } from '/@api/disposable';
+
+import Route from '../../Route.svelte';
+import MonacoEditor from '../editor/MonacoEditor.svelte';
+import JobIcon from '../images/JobIcon.svelte';
+import KubeEditYAML from '../kube/KubeEditYAML.svelte';
+import DetailsPage from '../ui/DetailsPage.svelte';
+import StateChange from '../ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '../ui/Util';
+import { JobUtils } from './job-utils';
+import JobActions from './JobActions.svelte';
+import JobDetailsSummary from './JobDetailsSummary.svelte';
+import type { JobUI } from './JobUI';
+
+interface Props {
+  name: string;
+  namespace: string;
+}
+let { name, namespace }: Props = $props();
+
+let job = $state<JobUI | undefined>();
+let detailsPage = $state<DetailsPage | undefined>();
+let kubeJob = $state<V1Job | undefined>();
+let kubeError = $state<string | undefined>();
+
+let listener: IDisposable | undefined;
+
+onMount(async () => {
+  const jobUtils = new JobUtils();
+  listener = await listenResource({
+    resourceName: 'jobs',
+    name,
+    namespace,
+    listenEvents: false,
+    legacyResourceStore: kubernetesCurrentContextJobs,
+    onResourceNotFound: () => {
+      if (detailsPage) {
+        // the job has been deleted
+        detailsPage.close();
+      }
+    },
+    onResourceUpdated: (resource: KubernetesObject, isExperimental: boolean) => {
+      job = jobUtils.getJobUI(resource);
+      if (isExperimental) {
+        kubeJob = resource;
+      } else {
+        loadDetails().catch((err: unknown) => console.error(`Error getting Job details ${name}`, err));
+      }
+    },
+  });
+});
+
+onDestroy(() => {
+  listener?.dispose();
+});
+
+async function loadDetails(): Promise<void> {
+  const getKubeJob = await window.kubernetesReadNamespacedJob(name, namespace);
+  if (getKubeJob) {
+    kubeJob = getKubeJob;
+  } else {
+    kubeError = `Unable to retrieve Kubernetes details for ${name}`;
+  }
+}
+</script>
+
+{#if job}
+  <DetailsPage title={job.name} subtitle={job.namespace} bind:this={detailsPage}>
+    <StatusIcon slot="icon" icon={JobIcon} size={24} status={job.status} />
+    <svelte:fragment slot="actions">
+      <JobActions job={job} detailed={true} />
+    </svelte:fragment>
+    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+      <StateChange state={job.status} />
+    </div>
+    <svelte:fragment slot="tabs">
+      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+      <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
+      <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
+    </svelte:fragment>
+    <svelte:fragment slot="content">
+      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+        <JobDetailsSummary job={kubeJob} kubeError={kubeError} />
+      </Route>
+      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+        <MonacoEditor content={JSON.stringify(kubeJob, undefined, 2)} language="json" />
+      </Route>
+      <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
+        <KubeEditYAML content={stringify(kubeJob)} />
+      </Route>
+    </svelte:fragment>
+  </DetailsPage>
+{/if}

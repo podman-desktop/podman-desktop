@@ -46,6 +46,8 @@ import SaveImages from './lib/image/SaveImages.svelte';
 import IngressDetails from './lib/ingresses-routes/IngressDetails.svelte';
 import IngressesRoutesList from './lib/ingresses-routes/IngressesRoutesList.svelte';
 import RouteDetails from './lib/ingresses-routes/RouteDetails.svelte';
+import JobDetails from './lib/job/JobDetails.svelte';
+import JobList from './lib/job/JobList.svelte';
 import KubePlayYAML from './lib/kube/KubePlayYAML.svelte';
 import KubernetesDashboard from './lib/kube/KubernetesDashboard.svelte';
 import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
@@ -312,6 +314,12 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
           </Route>
           <Route path="/kubernetes/ingressesRoutes" breadcrumb="Ingresses & Routes" navigationHint="root">
             <IngressesRoutesList />
+          </Route>
+          <Route path="/kubernetes/jobs" breadcrumb="Jobs" navigationHint="root">
+            <JobList />
+          </Route>
+          <Route path="/kubernetes/jobs/:name/:namespace/*" breadcrumb="Job Details" let:meta navigationHint="details">
+            <JobDetails name={decodeURI(meta.params.name)} namespace={decodeURI(meta.params.namespace)} />
           </Route>
           <Route path="/kubernetes/cronjobs" breadcrumb="CronJobs" navigationHint="root">
             <CronJobList />
