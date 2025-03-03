@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -43,7 +41,7 @@ beforeAll(() => {
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
-  (window as any).executeCommand = executeCommandMock;
+  Object.defineProperty(window, 'executeCommand', { value: executeCommandMock });
 });
 
 beforeEach(() => {

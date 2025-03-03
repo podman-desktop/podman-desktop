@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -36,8 +34,8 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  (window as any).sendCustomPickItemsOnConfirmation = sendCustomPickItemsOnConfirmation;
-  (window as any).closeCustomPick = closeCustomPick;
+  Object.defineProperty(window, 'sendCustomPickItemsOnConfirmation', { value: sendCustomPickItemsOnConfirmation });
+  Object.defineProperty(window, 'closeCustomPick', { value: closeCustomPick });
 });
 
 describe('CustomPick', () => {

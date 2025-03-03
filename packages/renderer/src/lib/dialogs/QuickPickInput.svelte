@@ -145,11 +145,11 @@ const onClose = async (): Promise<void> => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function onInputChange(event: any): Promise<void> {
+async function onInputChange(event: Event): Promise<void> {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement;
   // in case of quick pick, filter the items
   if (mode === 'QuickPick') {
-    let val = event.target.value.toLowerCase();
+    let val = target.value.toLowerCase();
     quickPickFilteredItems = quickPickItems.filter(item => item.value.toLowerCase().includes(val));
     quickPickSelectedFilteredIndex = 0;
     if (quickPickFilteredItems.length > 0) {
@@ -168,7 +168,7 @@ async function onInputChange(event: any): Promise<void> {
     return;
   }
   validationError = undefined;
-  const value = event.target.value;
+  const value = target.value;
   const result = await window.sendShowInputBoxValidate(currentId, value);
   if (result) {
     validationError = result.toString();
