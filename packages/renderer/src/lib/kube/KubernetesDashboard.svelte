@@ -112,7 +112,7 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <Expandable>
                   <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
                   {#snippet title()}<div class="text-xl">Explore articles and blog posts</div>{/snippet}
-                  <div class="grid grid-cols-3 gap-4">
+                  <div class="grid grid-cols-3 gap-4 pt-2">
                     <KubernetesDashboardGuideCard title='Deploy and test Kubernetes containers using Podman Desktop' image={deployAndTestKubernetesImage} link='https://developers.redhat.com/articles/2023/06/09/deploy-and-test-kubernetes-containers-using-podman-desktop'/>
                     <KubernetesDashboardGuideCard title='Working with Kubernetes in Podman Desktop' image={workingWithKubernetesImage} link='https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop'/>
                     <KubernetesDashboardGuideCard title='Share your local podman images with the Kubernetes cluster' image={shareYourLocalProdmanImagesWithTheKubernetesImage} link='https://podman-desktop.io/blog/sharing-podman-images-with-kubernetes-cluster'/>

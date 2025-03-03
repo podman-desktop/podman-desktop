@@ -25,7 +25,7 @@ function toggle(): void {
 }
 </script>
 
-<div class="flex flex-col w-full">
+<div class="flex flex-col w-full gap-2">
   <button onclick={(): void => toggle()} aria-expanded="{expanded}">
     <div class="flex flex-row space-x-1 items-center">
       {#if expanded}
@@ -38,7 +38,7 @@ function toggle(): void {
   </button>
 {#if initialized}
 {#if expanded}
-  <div role="region" class="pt-5" transition:slide={{ duration: 250 }}>
+  <div role="region" transition:slide={{ duration: 250 }}>
     <div transition:fade={{ duration: 250 }}>
       {@render children?.()}
     </div>
