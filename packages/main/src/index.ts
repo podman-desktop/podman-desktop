@@ -56,15 +56,6 @@ app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unk
   });
 });
 
-/**
- * Shout down background process if all windows was closed
- */
-app.on('window-all-closed', () => {
-  if (!isMac()) {
-    app.quit();
-  }
-});
-
 app.once('before-quit', event => {
   if (!extensionLoader) {
     stoppedExtensions.val = true;
