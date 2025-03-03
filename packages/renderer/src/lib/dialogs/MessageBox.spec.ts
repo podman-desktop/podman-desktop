@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
@@ -36,8 +34,8 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  (window as any).sendShowMessageBoxValues = sendShowMessageBoxValuesMock;
-  (window as any).sendShowMessageBoxOnSelect = sendShowMessageBoxOnSelect;
+  Object.defineProperty(window, 'sendShowMessageBoxValues', { value: sendShowMessageBoxValuesMock });
+  Object.defineProperty(window, 'sendShowMessageBoxOnSelect', { value: sendShowMessageBoxOnSelect });
 });
 
 describe('MessageBox', () => {
