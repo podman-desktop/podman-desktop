@@ -1883,6 +1883,10 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes:getResourcesCount');
   });
 
+  contextBridge.exposeInMainWorld('kubernetesGetActiveResourcesCount', async (): Promise<ResourceCount[]> => {
+    return ipcInvoke('kubernetes:getActiveResourcesCount');
+  });
+
   contextBridge.exposeInMainWorld(
     'kubernetesGetResources',
     async (contextNames: string[], resourceName: string): Promise<KubernetesContextResources[]> => {

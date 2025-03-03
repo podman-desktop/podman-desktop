@@ -47,6 +47,7 @@ export class NodesResourceFactory extends ResourceFactoryBase implements Resourc
     this.setInformer({
       createInformer: this.createInformer,
     });
+    this.setIsActive(this.isNodeActive);
   }
 
   createInformer(kubeconfig: KubeConfigSingleContext): ResourceInformer<V1Node> {
@@ -54,5 +55,11 @@ export class NodesResourceFactory extends ResourceFactoryBase implements Resourc
     const listFn = (): Promise<V1NodeList> => apiClient.listNode();
     const path = `/api/v1/nodes`;
     return new ResourceInformer<V1Node>({ kubeconfig, path, listFn, kind: 'Node', plural: 'nodes' });
+  }
+
+  isNodeActive(node: V1Node): boolean {
+    return (
+      node.status?.conditions?.some(condition => condition.type === 'Ready' && condition.status === 'True') ?? false
+    );
   }
 }
