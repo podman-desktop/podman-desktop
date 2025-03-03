@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,4 +145,12 @@ test('Verify failure will open an error dialog', async () => {
 
   expect(showMessageBoxMock).toHaveBeenCalled();
   expect(showMessageBoxMock).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+});
+
+test('Verify that the button is disabled', () => {
+  render(KubeApplyYamlButton, { disabled: true });
+
+  const button = screen.getByRole('button', { name: 'Apply YAML' });
+  expect(button).toBeInTheDocument();
+  expect(button).toBeDisabled();
 });
