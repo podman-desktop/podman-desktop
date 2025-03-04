@@ -117,6 +117,38 @@ test('ContextsStatesDispatcher should call updateHealthStates and updatePermissi
   expect(updatePermissionsSpy).toHaveBeenCalled();
 });
 
+test('ContextsStatesDispatcher should call updateResource and updateActiveResourcesCount when onResourceUpdated event is fired', () => {
+  const manager: ContextsManagerExperimental = {
+    onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
+    onContextPermissionResult: vi.fn(),
+    onContextDelete: vi.fn(),
+    getHealthCheckersStates: vi.fn(),
+    getPermissions: vi.fn(),
+    onResourceCountUpdated: vi.fn(),
+    onResourceUpdated: vi.fn(),
+    isContextOffline: vi.fn(),
+  } as unknown as ContextsManagerExperimental;
+  const apiSender: ApiSenderType = {
+    send: vi.fn(),
+  } as unknown as ApiSenderType;
+  vi.mocked(manager.getPermissions).mockReturnValue([]);
+  const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
+  const updateResourceSpy = vi.spyOn(dispatcher, 'updateResource');
+  const updateActiveResourcesCountSpy = vi.spyOn(dispatcher, 'updateActiveResourcesCount');
+  vi.mocked(manager.getHealthCheckersStates).mockReturnValue(new Map<string, ContextHealthState>());
+  dispatcher.init();
+  expect(updateResourceSpy).not.toHaveBeenCalled();
+  expect(updateActiveResourcesCountSpy).not.toHaveBeenCalled();
+
+  vi.mocked(manager.onResourceUpdated).mockImplementation(
+    f => f({} as { contextName: string; resourceName: string }) as IDisposable,
+  );
+  dispatcher.init();
+  expect(updateResourceSpy).toHaveBeenCalled();
+  expect(updateActiveResourcesCountSpy).toHaveBeenCalled();
+});
+
 test('getContextsHealths should return the values of the map returned by manager.getHealthCheckersStates without kubeConfig', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),

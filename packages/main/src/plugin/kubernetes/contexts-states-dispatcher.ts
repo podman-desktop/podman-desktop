@@ -43,7 +43,10 @@ export class ContextsStatesDispatcher {
       this.updatePermissions();
     });
     this.manager.onResourceCountUpdated(() => this.updateResourcesCount());
-    this.manager.onResourceUpdated(event => this.updateResource(event.resourceName));
+    this.manager.onResourceUpdated(event => {
+      this.updateResource(event.resourceName);
+      this.updateActiveResourcesCount();
+    });
   }
 
   updateHealthStates(): void {
@@ -75,8 +78,16 @@ export class ContextsStatesDispatcher {
     this.apiSender.send(`kubernetes-resources-count`);
   }
 
+  updateActiveResourcesCount(): void {
+    this.apiSender.send(`kubernetes-active-resources-count`);
+  }
+
   getResourcesCount(): ResourceCount[] {
     return this.manager.getResourcesCount();
+  }
+
+  getActiveResourcesCount(): ResourceCount[] {
+    return this.manager.getActiveResourcesCount();
   }
 
   updateResource(resourceName: string): void {
