@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import KubernetesTerminal from '/@/lib/pod/KubernetesTerminal.svelte';
+import KubernetesTerminal from '/@/lib/kube/pods/terminal/KubernetesTerminal.svelte';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 
 const getConfigurationValueMock = vi.fn();

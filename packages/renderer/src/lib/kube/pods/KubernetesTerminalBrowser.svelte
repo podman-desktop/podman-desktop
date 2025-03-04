@@ -4,8 +4,8 @@ import { onMount } from 'svelte';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
-import { terminalService } from '../../pod/KubernetesTerminalService';
 import type { PodUI } from './PodUI';
+import { terminalService } from './terminal/KubernetesTerminalService';
 
 interface Props {
   pod: PodUI;
