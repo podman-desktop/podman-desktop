@@ -1,6 +1,5 @@
 <script lang="ts">
 import { ContainerGroupInfoTypeUI } from '../container/ContainerInfoUI';
-import { PodGroupInfoTypeUI } from '../pod/PodInfoUI';
 import Label from './Label.svelte';
 import ProviderInfoCircle from './ProviderInfoCircle.svelte';
 
@@ -19,7 +18,7 @@ function getProviderName(providerName: string): ProviderNameType {
       return 'podman';
     case ContainerGroupInfoTypeUI.DOCKER:
       return 'docker';
-    case PodGroupInfoTypeUI.KUBERNETES:
+    case 'kubernetes':
       return 'kubernetes';
     default:
       return undefined;

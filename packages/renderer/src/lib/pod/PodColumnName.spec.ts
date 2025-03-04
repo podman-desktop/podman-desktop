@@ -37,7 +37,6 @@ const pod: PodInfoUI = {
   created: '',
   selected: false,
   containers: [],
-  kind: 'podman',
   node: 'node1',
   namespace: 'default',
 };

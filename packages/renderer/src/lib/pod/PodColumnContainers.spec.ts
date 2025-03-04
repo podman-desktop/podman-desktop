@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ const pod: PodInfoUI = {
       Status: 'RUNNING',
     },
   ],
-  kind: 'podman',
 };
 
 test('Expect simple column styling', async () => {

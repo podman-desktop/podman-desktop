@@ -22,7 +22,6 @@ export let object: ContainerGroupInfoUI;
         Names: container.name,
         Status: container.state,
       })),
-      kind: 'podman',
     }}
     dropdownMenu={true}
     on:update />
