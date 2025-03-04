@@ -169,6 +169,7 @@ export async function handleConfirmationDialog(
   confirmationButton = 'Yes',
   cancelButton = 'Cancel',
   timeout = 10_000,
+  moreThanOneConsecutiveDialogs = false,
 ): Promise<void> {
   return test.step('Handle confirmation dialog', async () => {
     // wait for dialog to appear using waitFor
@@ -179,7 +180,14 @@ export async function handleConfirmationDialog(
       : dialog.getByRole('button', { name: cancelButton });
     await playExpect(button).toBeEnabled();
     await button.click();
-    await waitUntil(async () => !(await dialog.isVisible()), { timeout: 10_000 });
+
+    if (moreThanOneConsecutiveDialogs) {
+      const button = dialog.getByRole('button', { name: 'Done' });
+      await playExpect(button).toBeEnabled({ timeout: timeout });
+      await button.click();
+    }
+
+    await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
   });
 }
 

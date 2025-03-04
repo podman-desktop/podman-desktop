@@ -46,7 +46,7 @@ export class ImageEditPage extends BasePage {
     this.imageTag = this.editDialog.getByLabel('imageTag');
   }
 
-  async renameImage(name: string): Promise<ImagesPage> {
+  async renameImage(name: string, tag: string = ''): Promise<ImagesPage> {
     return test.step('Rename image', async () => {
       if (!name) {
         throw Error(`Provide name is invalid!`);
@@ -55,6 +55,11 @@ export class ImageEditPage extends BasePage {
       await playExpect(this.saveButton).toBeVisible();
       await this.imageName.clear();
       await this.imageName.fill(name);
+
+      if (tag) {
+        await this.imageTag.clear();
+        await this.imageTag.fill(tag);
+      }
 
       await playExpect(this.saveButton).toBeEnabled();
       await this.saveButton.click();

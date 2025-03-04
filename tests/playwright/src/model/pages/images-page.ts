@@ -71,12 +71,12 @@ export class ImagesPage extends MainPage {
     });
   }
 
-  async renameImage(oldname: string, newname: string): Promise<ImagesPage> {
+  async renameImage(oldname: string, newname: string, newtag: string = ''): Promise<ImagesPage> {
     return test.step(`Rename ${oldname} to ${newname}`, async () => {
       const imageDetailsPage = await this.openImageDetails(oldname);
       await playExpect(imageDetailsPage.heading).toContainText(oldname);
       const editImagePage = await imageDetailsPage.openEditImage();
-      return await editImagePage.renameImage(newname);
+      return await editImagePage.renameImage(newname, newtag);
     });
   }
 
