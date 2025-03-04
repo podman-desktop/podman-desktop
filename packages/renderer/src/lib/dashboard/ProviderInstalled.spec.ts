@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -61,13 +59,17 @@ class InitializationContextImpl {
 
 // fake the window.events object
 beforeAll(() => {
-  (window as any).ResizeObserver = vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() });
-  (window as any).getConfigurationValue = vi.fn().mockReturnValue(12);
-  (window as any).telemetryPage = vi.fn().mockResolvedValue(undefined);
-  (window as any).initializeProvider = vi.fn().mockResolvedValue([]);
+  // Cannot mock with vi.mocked(window.ResizeObserver)
+  // we use "global" similar to PodDetails.spec.ts implementation
+  global.ResizeObserver = vi.fn().mockReturnValue({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  });
+  vi.mocked(window.initializeProvider).mockResolvedValue([]);
   (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
+    receive: (_channel: string, func: unknown): void => {
+      (func as () => void)();
     },
   };
 });
@@ -109,7 +111,7 @@ test('Expect installed provider shows button', async () => {
 
   await userEvent.click(button);
 
-  expect((initializationContext as any).promise).toBeDefined();
+  expect((initializationContext as InitializationContextImpl).promise).toBeDefined();
   expect(window.initializeProvider).toHaveBeenCalled();
 });
 
@@ -159,10 +161,10 @@ test('Expect to see the initialize context error if provider installation fails'
 
   await userEvent.click(button);
 
-  while ((initializationContext as any).error !== 'error') {
+  while ((initializationContext as InitializationContextImpl).error !== 'error') {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
-  expect((initializationContext as any).promise).toBeDefined();
-  expect((initializationContext as any).error).toBeDefined();
+  expect((initializationContext as InitializationContextImpl).promise).toBeDefined();
+  expect((initializationContext as InitializationContextImpl).error).toBeDefined();
 });
