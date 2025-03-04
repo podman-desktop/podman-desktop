@@ -109,10 +109,14 @@ export class ImageDetailsPage extends DetailsPage {
   }
 
   async pushImageToKindCluster(): Promise<void> {
-    const pushToKindButton = this.page.getByRole('button', { name: 'Push image to Kind cluster' });
+    const kebabMenuButton = this.page.getByRole('button', { name: 'kebab menu', exact: true });
+    if ((await kebabMenuButton.count()) > 0) {
+      await kebabMenuButton.click();
+    }
+    const pushToKindButton = this.page.getByTitle('Push image to Kind Cluster');
     await playExpect(pushToKindButton).toBeVisible();
     await pushToKindButton.click();
 
-    await handleConfirmationDialog(this.page, 'Kind', true, 'OK', '', 15_000);
+    await handleConfirmationDialog(this.page, 'Kind', true, 'OK', '', 30_000);
   }
 }
