@@ -369,6 +369,19 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+export let focus: string | undefined;
+// Trigger scroll when the focus variable changes (i.e., when a new provider is focused)
+$: if (focus) {
+  // Wait for the next render cycle to ensure the element exists in the DOM
+  requestAnimationFrame(() => {
+    const element = document.getElementById(focus);
+    if (element) {
+      // Auto-scroll to the element (no smooth animation)
+      element.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
+}
+
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
@@ -390,6 +403,7 @@ function handleError(errorMessage: string): void {
 
     {#each providers as provider}
       <div
+        id={provider.id}
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
