@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,10 +73,6 @@ export class PodUtils {
       node: podinfo.node,
       namespace: podinfo.Namespace,
     };
-  }
-
-  isKubernetesPod(pod: PodInfoUI): boolean {
-    return pod.kind === 'kubernetes';
   }
 
   calculateNewPodName(existedPods?: PodInfo[]): string {
