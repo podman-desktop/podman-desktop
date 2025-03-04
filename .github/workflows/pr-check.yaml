@@ -327,6 +327,10 @@ jobs:
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      - name: Install QEMU for Multi-Arch
+        run: | 
+          sudo apt install -y qemu-user-static
+
       - name: Set cgroup_manager to 'cgroupfs' instead of systemd
         run: |
           mkdir -p ~/.config/containers
