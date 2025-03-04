@@ -51,35 +51,25 @@ beforeEach(() => {
 });
 
 describe('listenResourcePermitted', () => {
-  test('should enable apply yaml when resource is permitted', async () => {
-    let callbackCalled = false;
-    const callback = async (permitted: boolean): Promise<void> => {
-      await vi.waitFor(() => expect(permitted).toBe(true));
-      callbackCalled = true;
-    };
+  test('resource shoudl be permitted', async () => {
+    const callbackMock = vi.fn();
 
     kubernetesContexts.set([mockContext1, mockContext2]);
-
     kubernetesContextsPermissions.set([{ contextName: 'context-name2', resourceName: 'deployments', permitted: true }]);
 
-    await listenResourcePermitted('deployments', callback);
-    expect(callbackCalled).toBeTruthy();
+    await listenResourcePermitted('deployments', callbackMock);
+    expect(callbackMock).toBeCalledWith(true);
   });
 
-  test('should disable apply yaml when resource is not permitted', async () => {
-    let callbackCalled = false;
-    const callback = async (permitted: boolean): Promise<void> => {
-      await vi.waitFor(() => expect(permitted).toBe(false));
-      callbackCalled = true;
-    };
+  test('resource shoudl be not permitted', async () => {
+    const callbackMock = vi.fn();
 
     kubernetesContexts.set([mockContext1, mockContext2]);
-
     kubernetesContextsPermissions.set([
       { contextName: 'context-name2', resourceName: 'deployments', permitted: false },
     ]);
 
-    await listenResourcePermitted('deployments', callback);
-    expect(callbackCalled).toBeTruthy();
+    await listenResourcePermitted('deployments', callbackMock);
+    expect(callbackMock).toBeCalledWith(false);
   });
 });
