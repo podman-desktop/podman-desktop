@@ -244,7 +244,6 @@ export class NavigationManager {
     this.navigateTo({
       page: NavigationPage.PODMAN_POD,
       parameters: {
-        kind: kind,
         name: name,
         engineId: engineId,
       },

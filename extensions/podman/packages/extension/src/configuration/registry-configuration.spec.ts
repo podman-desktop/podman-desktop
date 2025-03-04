@@ -16,23 +16,36 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 // to use vi.spyOn(os, methodName)
 import * as os from 'node:os';
 
-import { env } from '@podman-desktop/api';
+import { commands, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RegistryConfiguration } from './registry-configuration';
-import { RegistryConfigurationImpl } from './registry-configuration';
+import type { RegistryConfigurationFile } from './registry-configuration';
+import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
-let registryConfiguration: RegistryConfiguration;
-
+let registryConfiguration: RegistryConfigurationImpl;
+vi.mock('node:fs');
 vi.mock('node:fs/promises');
-vi.mock('node:os');
+
+// need to mock some functions due to exported function getJSONMachineList using os.homedir
+vi.mock('node:os', async () => {
+  return {
+    tmpdir: vi.fn().mockReturnValue('fake-tmp'),
+    homedir: vi.fn().mockReturnValue('fake-homedir'),
+  };
+});
+vi.mock('../extension');
 
 vi.mock('@podman-desktop/api', async () => {
   return {
+    commands: {
+      registerCommand: vi.fn(),
+      executeCommand: vi.fn(),
+    },
     process: {
       exec: vi.fn(),
     },
@@ -41,11 +54,14 @@ vi.mock('@podman-desktop/api', async () => {
       isWindows: false,
       isMac: false,
     },
+    window: {
+      showQuickPick: vi.fn(),
+      showInputBox: vi.fn(),
+    },
   };
 });
 
 beforeEach(() => {
-  registryConfiguration = new RegistryConfigurationImpl();
   vi.restoreAllMocks();
   vi.resetAllMocks();
   vi.mocked(env).isWindows = false;
@@ -53,6 +69,7 @@ beforeEach(() => {
   vi.mocked(env).isLinux = false;
   vi.spyOn(os, 'tmpdir').mockReturnValue('fake-tmp');
   vi.spyOn(os, 'homedir').mockReturnValue('fake-homedir');
+  registryConfiguration = new RegistryConfigurationImpl();
 });
 
 describe('getRegistryConfFilePath', () => {
@@ -116,5 +133,154 @@ describe('getPlaybookScriptPath', () => {
       ),
       'utf-8',
     );
+  });
+});
+
+describe('init', () => {
+  const fakeDisposable = { dispose: vi.fn() };
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(registryConfiguration, 'registerSetupRegistryCommand').mockReturnValue(fakeDisposable);
+  });
+
+  test('check command is registered', async () => {
+    const disposables = await registryConfiguration.init();
+    expect(disposables).toEqual([fakeDisposable]);
+    // expect we called the method to register the command
+    expect(registryConfiguration.registerSetupRegistryCommand).toBeCalled();
+  });
+});
+
+test('registerSetupRegistryCommand', async () => {
+  registryConfiguration.registerSetupRegistryCommand();
+  expect(commands.registerCommand).toBeCalledWith('podman.setupRegistry', expect.any(Function));
+});
+
+describe('readRegistriesConfContent', async () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('file does not exist', async () => {
+    vi.spyOn(registryConfiguration, 'getRegistryConfFilePath').mockReturnValue('fake-path');
+    vi.mocked(existsSync).mockReturnValue(false);
+    const content = await registryConfiguration.readRegistriesConfContent();
+    expect(content).toStrictEqual({ registry: [] });
+  });
+
+  test('read the content', async () => {
+    vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+    vi.spyOn(registryConfiguration, 'getRegistryConfFilePath').mockReturnValue('fake-path');
+    vi.mocked(existsSync).mockReturnValue(true);
+
+    vi.mocked(readFile).mockResolvedValue('[[registry]]\nlocation = "docker.io"');
+    const content = await registryConfiguration.readRegistriesConfContent();
+    expect(content).toStrictEqual({
+      registry: [
+        {
+          location: 'docker.io',
+        },
+      ],
+    });
+    expect(registryConfiguration.saveRegistriesConfContent).toBeCalled();
+  });
+});
+
+describe('saveRegistriesConfContent', async () => {
+  test('file ', async () => {
+    const content: RegistryConfigurationFile = {
+      registry: [
+        {
+          location: 'docker.io',
+          mirror: [
+            {
+              location: 'localhost:5000',
+            },
+          ],
+        },
+      ],
+    };
+    await registryConfiguration.saveRegistriesConfContent(content);
+    expect(writeFile).toBeCalledWith(
+      expect.stringContaining('registries.conf'),
+      '[[registry]]\nlocation = "docker.io"\n\n[[registry.mirror]]\nlocation = "localhost:5000"',
+      'utf-8',
+    );
+  });
+});
+
+describe('setupRegistryCommandCallback', async () => {
+  beforeEach(() => {
+    vi.spyOn(registryConfiguration, 'displayRegistryQuickPick').mockResolvedValue();
+    vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
+  });
+
+  test('mac/Windows', async () => {
+    vi.mocked(env).isMac = true;
+    vi.mocked(env).isWindows = true;
+
+    await registryConfiguration.setupRegistryCommandCallback();
+    expect(registryConfiguration.checkRegistryConfFileExistsInVm).toBeCalled();
+    expect(registryConfiguration.displayRegistryQuickPick).toBeCalled();
+  });
+
+  test('mac/Windows fail check', async () => {
+    vi.mocked(env).isMac = true;
+    vi.mocked(env).isWindows = true;
+    vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(false);
+
+    await registryConfiguration.setupRegistryCommandCallback();
+    expect(registryConfiguration.displayRegistryQuickPick).not.toBeCalled();
+  });
+
+  test('linux', async () => {
+    vi.mocked(env).isLinux = true;
+
+    await registryConfiguration.setupRegistryCommandCallback();
+    expect(registryConfiguration.checkRegistryConfFileExistsInVm).not.toBeCalled();
+    expect(registryConfiguration.displayRegistryQuickPick).toBeCalled();
+  });
+});
+
+describe('displayRegistryQuickPick', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    // start from nothing
+    vi.spyOn(registryConfiguration, 'readRegistriesConfContent').mockResolvedValue({ registry: [] });
+    vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+  });
+
+  test('should display quick pick with registry options', async () => {
+    // first reply is we select add registry action
+    const actionQuickPickItem = { actionName: ActionEnum.ADD_REGISTRY_ACTION, label: ActionEnum.ADD_REGISTRY_ACTION };
+    vi.mocked(window.showQuickPick).mockResolvedValueOnce(actionQuickPickItem);
+    // then it's asking the location registry and we will enter docker.io
+    vi.mocked(window.showInputBox).mockResolvedValueOnce('docker.io');
+
+    // now we select the mirror action
+    const selectARegitryChoice = { entry: { location: 'docker.io' }, label: 'docker.io' };
+    vi.mocked(window.showQuickPick).mockResolvedValueOnce(selectARegitryChoice);
+    // then we say we want to use ghcr.io as mirror
+    vi.mocked(window.showInputBox).mockResolvedValueOnce('ghcr.io');
+
+    // then we say we end the configuration
+    const endQuickPickItem = { actionName: ActionEnum.END_REGISTRY_ACTION, label: ActionEnum.END_REGISTRY_ACTION };
+    vi.mocked(window.showQuickPick).mockResolvedValueOnce(endQuickPickItem);
+
+    await registryConfiguration.displayRegistryQuickPick();
+
+    // now we check what we're saving
+    expect(registryConfiguration.saveRegistriesConfContent).toBeCalledWith({
+      registry: [
+        {
+          location: 'docker.io',
+          mirror: [
+            {
+              location: 'ghcr.io',
+            },
+          ],
+        },
+      ],
+    });
   });
 });

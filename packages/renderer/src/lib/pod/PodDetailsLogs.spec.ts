@@ -32,7 +32,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-const KUBERNETES_POD: PodInfoUI = {
+const PODMAN_POD: PodInfoUI = {
   id: 'pod-id',
   shortId: 'short-id',
   name: 'fakepod',
@@ -49,27 +49,8 @@ const KUBERNETES_POD: PodInfoUI = {
       Status: 'Running',
     },
   ],
-  kind: 'kubernetes',
-};
-
-const PODMAN_POD: PodInfoUI = {
-  ...KUBERNETES_POD,
   kind: 'podman',
 };
-
-test('Kubernetes pod should use window#kubernetesReadPodLog', async () => {
-  render(PodDetailsLogs, {
-    pod: KUBERNETES_POD,
-  });
-
-  await vi.waitFor(() => {
-    expect(window.kubernetesReadPodLog).toHaveBeenCalledWith(
-      KUBERNETES_POD.name,
-      KUBERNETES_POD.containers[0].Names,
-      expect.any(Function),
-    );
-  });
-});
 
 test('Podman pod should use window#logsContainer', async () => {
   render(PodDetailsLogs, {

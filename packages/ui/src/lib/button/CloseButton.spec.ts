@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ test('Check button styling', async () => {
   expect(button).toHaveClass('p-1');
   expect(button).toHaveClass('no-underline');
   expect(button).toHaveClass('cursor-pointer');
+  expect(button).toHaveClass('outline-transparent');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
 
   const img = within(button).getByRole('img', { hidden: true });
   expect(img).toBeInTheDocument();

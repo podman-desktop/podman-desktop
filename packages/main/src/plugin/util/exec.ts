@@ -137,7 +137,11 @@ export class Exec {
     }
 
     if (env['FLATPAK_ID']) {
-      args = ['--host', command, ...(args ?? [])];
+      const customEnvVariables: string[] = [];
+      for (const envVar in options?.env) {
+        customEnvVariables.push(`--env=${envVar}=${options.env[envVar]}`);
+      }
+      args = ['--host', ...customEnvVariables, command, ...(args ?? [])];
       command = 'flatpak-spawn';
     }
 

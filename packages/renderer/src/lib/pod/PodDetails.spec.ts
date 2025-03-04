@@ -105,7 +105,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   lastPage.set({ name: 'Fake Previous', path: '/last' });
 
   // render the component
-  render(PodDetails, { podName: 'myPod', engineId: 'engine0', kind: 'podman' });
+  render(PodDetails, { podName: 'myPod', engineId: 'engine0' });
 
   // grab current route
   const currentRoute = window.location;
@@ -146,7 +146,7 @@ test('Expect redirect to logs', async () => {
   }
 
   // render the component
-  render(PodDetails, { podName: 'myPod', engineId: 'engine0', kind: 'podman' });
+  render(PodDetails, { podName: 'myPod', engineId: 'engine0' });
 
   await waitFor(() => {
     expect(routerGotoSpy).toHaveBeenCalledWith('/pods/podman/myPod/engine0/logs');

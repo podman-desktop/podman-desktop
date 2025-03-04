@@ -3,7 +3,7 @@
   "productName": "Podman Desktop",
   "repository": "https://github.com/podman-desktop/podman-desktop",
   "homepage": "https://www.podman-desktop.io",
-  "version": "1.17.0-next",
+  "version": "1.18.0-next",
   "license": "apache-2.0",
   "type": "module",
   "private": true,
@@ -208,7 +208,7 @@
     "tar": "^7.4.3",
     "tar-fs": "^3.0.8",
     "tar-stream": "^3.1.7",
-    "undici": "^7.3.0",
+    "undici": "^7.4.0",
     "win-ca": "^3.5.1",
     "winreg": "^1.2.5",
     "yaml": "^2.7.0"

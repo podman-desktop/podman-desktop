@@ -13,3 +13,10 @@ a {
   --spacing-leftnavbar: 48px;
   --spacing-leftsidebar: 170px;
 }
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}

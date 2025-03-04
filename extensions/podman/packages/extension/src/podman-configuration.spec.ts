@@ -18,7 +18,7 @@
 
 import * as fs from 'node:fs';
 
-import type { ProxySettings } from '@podman-desktop/api';
+import type { ExtensionContext, ProxySettings } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanConfiguration } from './podman-configuration';
@@ -37,6 +37,8 @@ vi.mock('@podman-desktop/api', async () => {
   };
 });
 
+const extensionContext: ExtensionContext = {} as unknown as ExtensionContext;
+
 // allows to call protected methods
 class TestPodmanConfiguration extends PodmanConfiguration {
   readContainersConfigFile(): Promise<string> {
@@ -47,7 +49,7 @@ class TestPodmanConfiguration extends PodmanConfiguration {
 let podmanConfiguration: TestPodmanConfiguration;
 
 beforeEach(() => {
-  podmanConfiguration = new TestPodmanConfiguration();
+  podmanConfiguration = new TestPodmanConfiguration(extensionContext);
 });
 
 afterEach(() => {

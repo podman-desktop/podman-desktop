@@ -1445,7 +1445,6 @@ describe('Navigation', async () => {
     expect(sendMock).toBeCalledWith('navigate', {
       page: NavigationPage.PODMAN_POD,
       parameters: {
-        kind: 'valid-kind',
         name: 'valid-name',
         engineId: 'valid-engine',
       },

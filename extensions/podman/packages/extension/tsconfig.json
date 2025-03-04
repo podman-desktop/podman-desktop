@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "lib": ["ES2017"],
+    "module": "esnext",
     "sourceMap": true,
     "rootDir": "src",
     "outDir": "dist",

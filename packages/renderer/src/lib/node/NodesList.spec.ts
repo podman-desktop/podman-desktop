@@ -41,8 +41,10 @@ test('Expect node empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextNodesFiltered = writable<KubernetesObject[]>([]);
 
   render(NodesList);
-  const noNodes = screen.getByRole('heading', { name: 'No nodes' });
-  expect(noNodes).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const noNodes = screen.getByRole('heading', { name: 'No nodes' });
+    expect(noNodes).toBeInTheDocument();
+  });
 });
 
 test('Expect nodes list', async () => {
