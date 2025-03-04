@@ -574,7 +574,7 @@ function handleError(errorMessage: string): void {
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
                 <div aria-label="Connection Version">
                   {provider.name}
-                  {provider.version ? `v${provider.version}` : ''}
+                  {container.version ?? ''}
                 </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>
