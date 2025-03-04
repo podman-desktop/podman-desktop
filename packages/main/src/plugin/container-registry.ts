@@ -29,9 +29,11 @@ import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
 import moment from 'moment';
+import { coerce, gtr } from 'semver';
 import StreamValues from 'stream-json/streamers/StreamValues.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
+import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import type {
   ContainerCreateOptions,
@@ -2432,24 +2434,59 @@ export class ContainerProviderRegistry {
     }
   }
 
+  protected async isTarPlayBuildSupported(internalProvider: InternalContainerProvider): Promise<boolean> {
+    if (!internalProvider.api || !internalProvider.libpodApi) {
+      throw new Error('No provider with a running engine');
+    }
+
+    const version = await internalProvider.api.version();
+
+    // let's nicely format it
+    const coerced = coerce(version.Version);
+    if (!coerced) throw new Error(`api version cannot be coerced ${version.Version}`);
+
+    return gtr(coerced.version, '5.3.0');
+  }
+
   async playKube(
     kubernetesYamlFilePath: string,
     selectedProvider: ProviderContainerConnectionInfo,
+    options?: {
+      build?: boolean;
+    },
   ): Promise<PlayKubeInfo> {
-    let telemetryOptions = {};
+    const telemetryOptions: Record<string, unknown> = {};
     try {
-      // grab all connections
-      const matchingContainerProvider = Array.from(this.internalProviders.values()).find(
-        containerProvider =>
-          containerProvider.connection.endpoint.socketPath === selectedProvider.endpoint.socketPath &&
-          containerProvider.connection.name === selectedProvider.name,
-      );
-      if (!matchingContainerProvider?.libpodApi) {
+      const provider = this.getMatchingContainerProvider(selectedProvider);
+      if (!provider?.libpodApi) {
         throw new Error('No provider with a running engine');
       }
-      return matchingContainerProvider.libpodApi.playKube(kubernetesYamlFilePath);
-    } catch (error) {
-      telemetryOptions = { error: error };
+
+      // if we don't build, we use the file directory
+      if (!options?.build) {
+        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+      }
+
+      // ensure build support is true, otherwise let's throw a nice user friendly error
+      const buildSupported: boolean = await this.isTarPlayBuildSupported(provider);
+      if (!buildSupported)
+        throw new Error(
+          `kube play build is not supported on ${provider.connection.name}: Podman 5.3.0 and above supports this feature`,
+        );
+
+      const kubePlay = KubePlayContext.fromFile(kubernetesYamlFilePath);
+      await kubePlay.init();
+
+      // if we have no context let's just use the the yaml
+      if (kubePlay.getBuildContexts().length === 0) {
+        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+      }
+
+      return provider.libpodApi.playKube(kubePlay.build(), {
+        build: true,
+      });
+    } catch (error: unknown) {
+      telemetryOptions['error'] = error;
       throw error;
     } finally {
       this.telemetryService.track('playKube', telemetryOptions);

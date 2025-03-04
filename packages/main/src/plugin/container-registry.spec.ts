@@ -37,6 +37,7 @@ import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
+import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ContainerCreateOptions } from '/@api/container-info.js';
@@ -423,10 +424,12 @@ vi.mock('node:fs', async () => {
 vi.mock('node:stream/promises', async () => {
   return {
     pipeline: vi.fn(),
+    readFile: vi.fn(),
   };
 });
 
 vi.mock('node:fs/promises');
+vi.mock('/@/plugin/podman/kube.js');
 
 beforeEach(() => {
   vi.mocked(apiSender.receive).mockClear();
@@ -5947,5 +5950,88 @@ describe('prune images', () => {
 
     // check we called the api
     expect(dockerProvider.api?.pruneImages).toBeCalledWith({ filters: { dangling: { false: false } } });
+  });
+});
+
+describe('kube play', () => {
+  const PODMAN_PROVIDER: InternalContainerProvider & { api: Dockerode; libpodApi: LibPod } = {
+    name: 'podman',
+    id: 'podman1',
+    api: {
+      version: vi.fn(),
+    } as unknown as Dockerode,
+    libpodApi: {
+      playKube: vi.fn(),
+    } as unknown as LibPod,
+    connection: {
+      type: 'podman',
+      name: 'podman',
+      displayName: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status: vi.fn(),
+    },
+  };
+
+  const PODMAN_523_VERSION: Dockerode.DockerVersion = {
+    Version: '5.2.3',
+    ApiVersion: '1.41',
+  } as unknown as Dockerode.DockerVersion;
+
+  const PODMAN_531_VERSION: Dockerode.DockerVersion = {
+    Version: '5.3.1',
+    ApiVersion: '1.41',
+  } as unknown as Dockerode.DockerVersion;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  test('non-supported version should throw an error', async () => {
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_523_VERSION);
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await expect(async () => {
+      await containerRegistry.playKube(
+        'dummy-file',
+        {
+          name: PODMAN_PROVIDER.name,
+          endpoint: PODMAN_PROVIDER.connection.endpoint,
+        } as unknown as ProviderContainerConnectionInfo,
+        {
+          build: true,
+        },
+      );
+    }).rejects.toThrowError('kube play build is not supported on podman: Podman 5.3.0 and above supports this feature');
+  });
+
+  test('build option false should use playKube with YAML file', async () => {
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube('dummy-file', {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+  });
+
+  test('KubePlayContext returning zero build contexts should play kube with file', async () => {
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube('dummy-file', {
+      name: PODMAN_PROVIDER.name,
+      endpoint: PODMAN_PROVIDER.connection.endpoint,
+    } as unknown as ProviderContainerConnectionInfo);
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
   });
 });

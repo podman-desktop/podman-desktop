@@ -9,7 +9,7 @@ let providerUnsubscribe: Unsubscriber;
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { V1NamespaceList } from '@kubernetes/client-node/dist/api';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -27,6 +27,7 @@ import WarningMessage from '../ui/WarningMessage.svelte';
 let runStarted = false;
 let runFinished = false;
 let runError = '';
+let kubeBuild: boolean = false;
 let runWarning = '';
 let kubernetesYamlFilePath: string | undefined = undefined;
 let hasInvalidFields = true;
@@ -81,7 +82,9 @@ async function playKubeFile(): Promise<void> {
     // depending on the user choice, do podman or kubernetes
     if (userChoice === 'podman') {
       try {
-        const result = await window.playKube(kubernetesYamlFilePath, selectedProvider);
+        const result = await window.playKube(kubernetesYamlFilePath, selectedProvider, {
+          build: kubeBuild,
+        });
 
         // remove the null values from the result
         playKubeResultRaw = JSON.stringify(removeEmptyOrNull(result), undefined, 2);
@@ -208,6 +211,10 @@ function goBackToPodsPage(): void {
           options={kubeFileDialogOptions}
           class="w-full p-2" />
       </div>
+
+      <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
+        <div>Enable build</div>
+      </Checkbox>
 
       <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Runtime</div>
 
