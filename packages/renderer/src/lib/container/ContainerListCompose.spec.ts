@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
@@ -27,40 +25,21 @@ import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import type { ContainerInfo } from '/@api/container-info';
+import type { ProviderInfo } from '/@api/provider-info';
+
 import { containersInfos } from '../../stores/containers';
 import { providerInfos } from '../../stores/providers';
 import ContainerList from './ContainerList.svelte';
 
-const listContainersMock = vi.fn();
-const getProviderInfosMock = vi.fn();
-const getContributedMenusMock = vi.fn();
-const showMessageBoxMock = vi.fn();
-
-const listPodsMock = vi.fn();
-
-const deleteContainersByLabelMock = vi.fn();
-
-// fake the window.events object
+// Mocked window methods
 beforeAll(() => {
-  (window as any).showMessageBox = showMessageBoxMock;
-  const onDidUpdateProviderStatusMock = vi.fn();
-  (window as any).onDidUpdateProviderStatus = onDidUpdateProviderStatusMock;
-  onDidUpdateProviderStatusMock.mockImplementation(() => Promise.resolve());
-  listPodsMock.mockImplementation(() => Promise.resolve([]));
-  (window as any).listContainers = listContainersMock;
-  (window as any).listPods = listPodsMock;
-  (window as any).getProviderInfos = getProviderInfosMock;
-  (window as any).deleteContainersByLabel = deleteContainersByLabelMock;
-  const listViewsContributionsMock = vi.fn();
-  (window as any).listViewsContributions = listViewsContributionsMock;
-  (window as any).getContributedMenus = getContributedMenusMock;
-
-  listViewsContributionsMock.mockResolvedValue([]);
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.listViewsContributions).mockResolvedValue([]);
 
   (window.events as unknown) = {
-    receive: (_channel: string, func: any): void => {
-      func();
+    receive: (_channel: string, func: unknown): void => {
+      (func as () => void)();
     },
   };
 });
@@ -76,10 +55,8 @@ test('Expect no container engines being displayed', async () => {
   expect(noEngine).toBeInTheDocument();
 });
 
-test('Delete a group of compose containers succesfully', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
-  getProviderInfosMock.mockResolvedValue([
+test('Delete a group of compose containers successfully', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
       status: 'started',
@@ -90,7 +67,7 @@ test('Delete a group of compose containers succesfully', async () => {
           status: 'started',
         },
       ],
-    },
+    } as ProviderInfo,
   ]);
 
   const groupName = 'compose-group';
@@ -104,7 +81,7 @@ test('Delete a group of compose containers succesfully', async () => {
       engineId: 'podman',
       engineType: 'podman',
       ImageID: 'dummy-image-id',
-    },
+    } as unknown as ContainerInfo,
     {
       Id: 'container2',
       Image: 'docker.io/kindest/node:foobar',
@@ -114,9 +91,9 @@ test('Delete a group of compose containers succesfully', async () => {
       engineId: 'podman',
       engineType: 'podman',
       ImageID: 'dummy-image-id',
-    },
+    } as unknown as ContainerInfo,
   ];
-  listContainersMock.mockResolvedValue(mockedContainers);
+  vi.mocked(window.listContainers).mockResolvedValue(mockedContainers);
 
   // Send over custom events to simulate PD being started
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
@@ -127,7 +104,6 @@ test('Delete a group of compose containers succesfully', async () => {
   while (get(containersInfos).length === 0) {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
-
   while (get(providerInfos).length === 0) {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
@@ -144,11 +120,11 @@ test('Delete a group of compose containers succesfully', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   // wait deleteContainerMock is called
-  while (deleteContainersByLabelMock.mock.calls.length === 0) {
+  while (vi.mocked(window.deleteContainersByLabel).mock.calls.length === 0) {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   // Expect deleteContainerMock to be called / successfully clicked
-  expect(deleteContainersByLabelMock).toBeCalledWith('podman', 'com.docker.compose.project', groupName);
-  expect(deleteContainersByLabelMock).toBeCalledTimes(1);
+  expect(window.deleteContainersByLabel).toBeCalledWith('podman', 'com.docker.compose.project', groupName);
+  expect(window.deleteContainersByLabel).toBeCalledTimes(1);
 });
