@@ -73,15 +73,23 @@ export function getOptions(proxy: Proxy, secure: boolean, certificates: Certific
   return options;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createHttpPatch(originals: typeof http | typeof https, proxy: Proxy, certificates: Certificates): any {
+type Patched = (
+  url?: string | nodeurl.URL | null,
+  options?: http.RequestOptions | null,
+  callback?: (res: http.IncomingMessage) => void,
+) => http.ClientRequest;
+
+export function createHttpPatch(
+  originals: typeof http | typeof https,
+  proxy: Proxy,
+  certificates: Certificates,
+): { get: Patched; request: Patched } {
   return {
     get: patch(originals.get, certificates),
     request: patch(originals.request, certificates),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function patch(original: typeof http.get, certificates: Certificates): any {
+  function patch(original: typeof http.get, certificates: Certificates): Patched {
     function patched(
       url?: string | nodeurl.URL | null,
       options?: http.RequestOptions | null,
@@ -140,8 +148,7 @@ export function createHttpPatch(originals: typeof http | typeof https, proxy: Pr
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createHttpPatchedModules(proxy: Proxy, certificates: Certificates): any {
+export function createHttpPatchedModules(proxy: Proxy, certificates: Certificates): Record<string, object> {
   const res = {
     http: { ...http, ...createHttpPatch(http, proxy, certificates) },
     https: { ...https, ...createHttpPatch(https, proxy, certificates) },
