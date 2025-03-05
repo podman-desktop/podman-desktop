@@ -42,6 +42,7 @@ vi.mock('tinro', () => {
 
 const providerMock = {
   name: 'provider1',
+  id: 'provider1-id',
   containerConnections: [],
   kubernetesConnections: [],
   status: 'ready' as ProviderStatus,
@@ -59,7 +60,7 @@ test('Provider widget takes user to /preferences/resources on click by default',
   expect(widget).toBeInTheDocument();
 
   await userEvent.click(widget);
-  expect(router.goto).toBeCalledWith('/preferences/resources');
+  expect(router.goto).toBeCalledWith(`/preferences/resources?focus=${providerMock.id}`);
 });
 
 test('Expect the prop command to be used when it is passed with the entry', async () => {
