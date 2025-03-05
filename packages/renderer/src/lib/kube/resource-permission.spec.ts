@@ -47,12 +47,12 @@ const mockContext2: KubeContext = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
 });
 
 describe('listenResourcePermitted', () => {
   test('resource shoudl be permitted', async () => {
     const callbackMock = vi.fn();
+    vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
 
     kubernetesContexts.set([mockContext1, mockContext2]);
     kubernetesContextsPermissions.set([{ contextName: 'context-name2', resourceName: 'deployments', permitted: true }]);
@@ -63,6 +63,7 @@ describe('listenResourcePermitted', () => {
 
   test('resource shoudl be not permitted', async () => {
     const callbackMock = vi.fn();
+    vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
 
     kubernetesContexts.set([mockContext1, mockContext2]);
     kubernetesContextsPermissions.set([
@@ -71,5 +72,18 @@ describe('listenResourcePermitted', () => {
 
     await listenResourcePermitted('deployments', callbackMock);
     expect(callbackMock).toBeCalledWith(false);
+  });
+
+  test('shopuld be permitted if kubernetes experimental is not enabled', async () => {
+    const callbackMock = vi.fn();
+    vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(false);
+
+    kubernetesContexts.set([mockContext1, mockContext2]);
+    kubernetesContextsPermissions.set([
+      { contextName: 'context-name2', resourceName: 'deployments', permitted: false },
+    ]);
+
+    await listenResourcePermitted('deployments', callbackMock);
+    expect(callbackMock).toBeCalledWith(true);
   });
 });
