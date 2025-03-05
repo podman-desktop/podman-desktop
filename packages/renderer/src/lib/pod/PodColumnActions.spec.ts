@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,6 @@ test('Expect action buttons', async () => {
     created: '',
     selected: false,
     containers: [],
-    kind: 'podman',
   };
 
   render(PodColumnActions, { object: pod });
@@ -79,7 +78,6 @@ test('Expect error message', async () => {
     created: '',
     selected: false,
     containers: [],
-    kind: 'podman',
     actionError: 'Pod failed',
   };
 
