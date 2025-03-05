@@ -170,7 +170,7 @@
     "lint-staged": "^15.4.3",
     "minimist": "^1.2.8",
     "msw": "^2.7.3",
-    "prettier": "^3.5.2",
+    "prettier": "^3.5.3",
     "proxy": "^2.2.0",
     "typescript": "5.6.3",
     "typescript-eslint": "^8.24.1",
@@ -208,7 +208,7 @@
     "tar": "^7.4.3",
     "tar-fs": "^3.0.8",
     "tar-stream": "^3.1.7",
-    "undici": "^7.3.0",
+    "undici": "^7.4.0",
     "win-ca": "^3.5.1",
     "winreg": "^1.2.5",
     "yaml": "^2.7.0"

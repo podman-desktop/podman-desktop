@@ -61,6 +61,7 @@ test('Check title and content are visible by default', async () => {
   const title = screen.getByText('Title');
   expect(title).toBeVisible();
   expect(title.parentElement?.parentElement).toHaveAttribute('aria-expanded', 'true');
+  expect(title.parentElement?.parentElement?.parentElement).toHaveClass('gap-2');
 
   expect(screen.queryByText('Content')).toBeInTheDocument();
 });

@@ -419,7 +419,6 @@ const config = {
             position: 'left',
             label: 'Documentation',
           },
-          { to: '/features', label: 'Features', position: 'left' },
           {
             type: 'custom-telemetryLink',
             position: 'left',
@@ -427,9 +426,18 @@ const config = {
             eventPath: '/download',
             eventTitle: 'navigation-download',
           },
-          { to: '/extend', label: 'Extend', position: 'left' },
+          { to: '/community', label: 'Community', position: 'left' },
+          {
+            type: 'dropdown',
+            label: 'Resources',
+            position: 'left',
+            items: [
+              { to: '/features', label: 'Features' },
+              { to: '/tutorial', label: 'Tutorials' },
+              { to: '/extend', label: 'Extend' },
+            ],
+          },
           { to: '/blog', label: 'Blog', position: 'left' },
-          { to: '/tutorial', label: 'Tutorials', position: 'left' },
           {
             href: 'https://github.com/podman-desktop/podman-desktop',
             className: 'header-github-link',

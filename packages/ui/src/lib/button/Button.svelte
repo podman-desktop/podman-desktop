@@ -69,7 +69,8 @@ $: {
 
 <button
   type="button"
-  class="relative {padding} box-border whitespace-nowrap select-none transition-all {classes} {$$props.class ?? ''}"
+  class="relative {padding} box-border whitespace-nowrap select-none transition-all outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] {classes} {$$props.class ??
+    ''}"
   class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected}
   class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected}
   class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected}
