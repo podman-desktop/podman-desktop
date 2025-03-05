@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024 - 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ export class ResourceFactoryBase {
   #resource: string;
   #permissions: ResourcePermissionsFactory | undefined;
   #informer: ResourceInformerFactory | undefined;
+  #isActive: undefined | ((resource: KubernetesObject) => boolean);
 
   constructor(options: {
     resource: string;
@@ -60,6 +61,11 @@ export class ResourceFactoryBase {
     return this;
   }
 
+  setIsActive(isActive: (resource: KubernetesObject) => boolean): ResourceFactoryBase {
+    this.#isActive = isActive;
+    return this;
+  }
+
   get resource(): string {
     return this.#resource;
   }
@@ -70,6 +76,10 @@ export class ResourceFactoryBase {
 
   get informer(): ResourceInformerFactory | undefined {
     return this.#informer;
+  }
+
+  get isActive(): undefined | ((resource: KubernetesObject) => boolean) {
+    return this.#isActive;
   }
 
   copyWithSlicedPermissions(): ResourceFactory {
@@ -89,6 +99,8 @@ export interface ResourceFactory {
   get resource(): string;
   permissions?: ResourcePermissionsFactory;
   informer?: ResourceInformerFactory;
+  // isActive returns true if `resource` is considered active
+  isActive?: (resource: KubernetesObject) => boolean;
   copyWithSlicedPermissions(): ResourceFactory;
 }
 

@@ -18,7 +18,7 @@
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isWindows } from '/@/util.js';
+import { isMac, isWindows } from '/@/util.js';
 
 import { Deferred } from './plugin/util/deferred.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -85,6 +85,21 @@ export class Main {
      */
     if (isWindows()) {
       this.app.setAppUserModelId(this.app.name);
+    }
+
+    /**
+     * Setup {@link ElectronApp.on} listeners
+     */
+    this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('window-all-closed')} event
+   * Shout down background process if all windows was closed
+   */
+  protected onWindowAllClosed(): void {
+    if (!isMac()) {
+      this.app.quit();
     }
   }
 }

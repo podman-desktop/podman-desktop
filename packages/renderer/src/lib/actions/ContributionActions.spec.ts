@@ -30,9 +30,9 @@ beforeAll(() => {
   executeCommand.mockImplementation(() => {});
 
   (window.events as unknown) = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    receive: (_channel: string, func: any): void => {
-      func();
+    receive: (_channel: string, func: unknown): void => {
+      // Cast to function before calling
+      (func as () => void)();
     },
   };
 });

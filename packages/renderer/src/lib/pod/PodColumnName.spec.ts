@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,36 +66,4 @@ test('Expect clicking works', async () => {
   fireEvent.click(text);
 
   expect(routerGotoSpy).toBeCalledWith('/pods/podman/my-pod/podman/');
-});
-
-test('Expect kubernetes pod information', async () => {
-  const fakeKubernetesInfo: PodInfoUI = {
-    id: 'pod-id',
-    shortId: 'short-id',
-    name: 'my-pod',
-    engineId: 'kubernetes',
-    engineName: '',
-    status: '',
-    age: '',
-    created: '',
-    selected: false,
-    containers: [],
-    kind: 'kubernetes',
-    node: 'node1',
-    namespace: 'customnamespace',
-  };
-
-  render(PodColumnName, { object: fakeKubernetesInfo });
-
-  const id = screen.getByText('customnamespace');
-  expect(id).toBeInTheDocument();
-
-  const node = screen.getByText('node1');
-  expect(node).toBeInTheDocument();
-});
-
-test('Do not expect undefined anywhere on the page', async () => {
-  render(PodColumnName, { object: pod });
-
-  expect(screen.queryByText('undefined')).not.toBeInTheDocument();
 });
