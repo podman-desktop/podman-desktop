@@ -4,13 +4,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 
 import SolidKubeIcon from '../images/SolidKubeIcon.svelte';
 
-interface Props {
-  disabled?: boolean;
-}
-
-let { disabled = false }: Props = $props();
-
-let inProgress = $state(false);
+let inProgress = false;
 
 async function kubeApply(): Promise<void> {
   let contextName = await window.kubernetesGetCurrentContextName();
@@ -82,4 +76,4 @@ async function kubeApply(): Promise<void> {
 }
 </script>
 
-<Button on:click={kubeApply} {disabled} title="Apply YAML" icon={SolidKubeIcon} inProgress={inProgress}>Apply YAML</Button>
+<Button on:click={kubeApply} title="Apply YAML" icon={SolidKubeIcon} inProgress={inProgress}>Apply YAML</Button>
