@@ -37,9 +37,11 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  (window as any).sendShowQuickPickValues = sendShowQuickPickValuesMock;
-  (window as any).sendShowInputBoxValue = sendShowInputBoxValueMock;
-  (window as any).sendShowQuickPickOnSelect = sendShowQuickPickOnSelectMock.mockResolvedValue(undefined);
+  Object.defineProperty(window, 'sendShowQuickPickValues', { value: sendShowQuickPickValuesMock });
+  Object.defineProperty(window, 'sendShowInputBoxValue', { value: sendShowInputBoxValueMock });
+  Object.defineProperty(window, 'sendShowQuickPickOnSelect', {
+    value: sendShowQuickPickOnSelectMock.mockResolvedValue(undefined),
+  });
 });
 
 describe('QuickPickInput', () => {
