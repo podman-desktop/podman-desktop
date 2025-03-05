@@ -32,7 +32,7 @@ let fullName: string;
 const registryName: string = 'GitHub';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
-  runner.setVideoAndTraceName('pull-image-e2e');
+  runner.setVideoAndTraceName('push-image-e2e');
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
