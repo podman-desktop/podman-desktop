@@ -30,6 +30,7 @@ export async function listenResourcePermitted(
   let contextName = '';
   let permissions: ContextPermission[] = [];
 
+  // After each change in contexts or permissions recompute
   const computePermission = (): void => {
     const permission = permissions.find(
       permission => permission.contextName === contextName && permission.resourceName === resourceName,
@@ -42,16 +43,19 @@ export async function listenResourcePermitted(
     callback(permission.permitted);
   };
 
+  // If is kubernetes experimental disabled, all resources should be permitted
   if (!experimental) {
     callback(true);
     return { dispose: (): void => {} };
   }
 
+  // Subscribe to kubernetes contexts
   const unsubscribeContexts = kubernetesContexts.subscribe(value => {
     contextName = value.find(c => c.currentContext)?.name ?? '';
     computePermission();
   });
 
+  // Subscribe to kubernetes permissions
   const unsubscribePermissions = kubernetesContextsPermissions.subscribe(newPermissions => {
     permissions = newPermissions;
     computePermission();
