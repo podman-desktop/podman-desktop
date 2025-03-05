@@ -577,7 +577,7 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
             aria-label="Properties Information">
             {#each configurationKeys as configurationKey}
               <div class="mb-2.5">
-                <div class="flex flex-row items-center h-[30px]">
+                <div class="flex flex-row items-center h-fit">
                   {#if configurationKey.description}
                     {configurationKey.description}:
                   {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}
