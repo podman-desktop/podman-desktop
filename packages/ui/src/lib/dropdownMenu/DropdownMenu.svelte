@@ -24,7 +24,6 @@ function handleEscape({ key }: KeyboardEvent): void {
   }
 }
 
-let clientY: number;
 let clientX: number;
 
 function toggleMenu(): void {
@@ -40,7 +39,6 @@ function onWindowClick(e: any): void {
 
 function onButtonClick(e: MouseEvent): void {
   // keep track of the cursor position
-  clientY = e.clientY;
   clientX = e.clientX;
   toggleMenu();
 }
@@ -66,7 +64,7 @@ function onButtonClick(e: MouseEvent): void {
 
     <!-- Dropdown menu for all other actions -->
     {#if showMenu}
-      <DropDownMenuItems clientY={clientY} clientX={clientX}><slot /></DropDownMenuItems>
+      <DropDownMenuItems clientX={clientX}><slot /></DropDownMenuItems>
     {/if}
   </div>
 {/if}
