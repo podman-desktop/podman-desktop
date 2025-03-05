@@ -53,15 +53,13 @@ test.afterAll(async ({ runner, page }) => {
 test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
 test.describe.serial('Push image to container registry', { tag: '@smoke' }, () => {
-  fullName = `${registryUrl}/${registryUsername}/test-image`;
-
   test('Add registry', async ({ navigationBar, page }) => {
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
     const registryPage = await settingsBar.openTabPage(RegistriesPage);
     await playExpect(registryPage.heading).toBeVisible();
 
-    await registryPage.createRegistry(`${registryUrl}`, registryUsername, registryPswdSecret);
+    await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
     const registryBox = registryPage.registriesTable.getByLabel('GitHub');
     const username = registryBox.getByText(registryUsername);
@@ -84,6 +82,8 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
   test('Rename image', async ({ page }) => {
     let imagesPage = new ImagesPage(page);
     await playExpect(imagesPage.heading).toBeVisible();
+
+    fullName = `${registryUrl}/${registryUsername}/test-image`;
 
     imagesPage = await imagesPage.renameImage(helloContainer, fullName, 'latest');
     await playExpect(imagesPage.heading).toBeVisible();
