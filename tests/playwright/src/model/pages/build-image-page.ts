@@ -113,6 +113,10 @@ export class BuildImagePage extends BasePage {
     return test.step('Uncheck all checkboxes', async () => {
       await this.showAllArchOptions();
       for (const button of await this.platformRegion.getByRole('button').all()) {
+        const buttonText = (await button.textContent()) ?? '';
+        if (buttonText.trim() === 'New platform' || buttonText.trim() === 'Less Options...') {
+          continue;
+        }
         const checkbox = button.getByRole('checkbox');
         try {
           await playExpect(checkbox).toBeVisible();
@@ -121,7 +125,7 @@ export class BuildImagePage extends BasePage {
           await button.click();
           await playExpect(checkbox).not.toBeChecked();
         } catch {
-          console.log(`Checkbox for button "${await button.textContent()}" is already unchecked or does not exist.`);
+          console.log(`Checkbox for button "${buttonText.trim()}" is already unchecked.`);
         }
       }
     });
