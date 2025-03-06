@@ -18,6 +18,7 @@
 
 import { KubernetesResources } from '../model/core/types';
 import { KubernetesResourcePage } from '../model/pages/kubernetes-resource-page';
+import { canRunKindTests } from '../setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
 import {
@@ -63,8 +64,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    if (process.env.ROOTFUL_MODE === 'true')
-      //Only possible on a rootful machine
+    if (!canRunKindTests)
+      //This test can't run on a windows rootless machine
       await createKindCluster(page, clusterName, true, 300_000);
   }
 });
@@ -81,7 +82,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
-  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
+  test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
   test('Prepare deployment on the cluster', async ({ navigationBar }) => {
     test.setTimeout(120_000);
     //Pull image

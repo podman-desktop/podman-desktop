@@ -1,0 +1,33 @@
+/**********************************************************************
+ * Copyright (C) 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import { isLinux, isMac, isWindows } from '../utility/platform';
+
+export function setupKind(): boolean[] {
+  const rootfulMode = process.env.ROOTFUL_MODE === 'true'; // undefined or "false" => false
+  const runKindTests = process.env.RUN_KIND_TESTS === 'true';
+  return [rootfulMode, runKindTests];
+}
+
+export function canRunKindTests(): boolean {
+  const [rootfulMode, runKindTests] = setupKind();
+  // to run the kind tests there are 2 options:
+  // 1-the OS is linux or mac + runKindTests == true
+  // 2-the OS is windows, the podman machine is rootful
+  return ((isLinux || isMac) && runKindTests) || (isWindows && rootfulMode);
+}

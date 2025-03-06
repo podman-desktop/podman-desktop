@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
+import { canRunKindTests } from '../setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
 import {
@@ -73,8 +74,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    if (process.env.ROOTFUL_MODE === 'true')
-      //Only possible on a rootful machine
+    if (!canRunKindTests)
+      //This test can't run on a windows rootless machine
       await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
   }
 });
@@ -89,7 +90,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
-  test.skip(process.env.ROOTFUL_MODE !== 'true', 'This test should only run on a rootful machine');
+  test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
   test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
