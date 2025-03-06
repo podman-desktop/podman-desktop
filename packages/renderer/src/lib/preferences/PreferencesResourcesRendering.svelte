@@ -50,6 +50,9 @@ import {
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];
 let providers: ProviderInfo[] = [];
+let containerConnectionStatus = new Map<string, IConnectionStatus>();
+let providerInstallationInProgress = new Map<string, boolean>();
+let extensionOnboardingEnablement = new Map<string, string>();
 $: containerConnectionStatus = new Map<string, IConnectionStatus>();
 $: providerInstallationInProgress = new Map<string, boolean>();
 $: extensionOnboardingEnablement = new Map<string, string>();

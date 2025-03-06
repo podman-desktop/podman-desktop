@@ -21,6 +21,7 @@ let providerConnections: ProviderContainerConnectionInfo[] = [];
 let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
 let inProgress = false;
 
+let loadDisabled = false;
 $: loadDisabled = !selectedProvider || archivesToLoad.length === 0;
 
 onMount(async () => {

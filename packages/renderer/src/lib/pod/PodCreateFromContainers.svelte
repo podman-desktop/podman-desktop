@@ -20,7 +20,7 @@ import WarningMessage from '../ui/WarningMessage.svelte';
 let podCreation: PodCreation;
 let createInProgress = false;
 let createError: string | undefined = undefined;
-$: mapPortExposed = new Map<number, { exposed: boolean; container: string }>();
+let mapPortExposed = new Map<number, { exposed: boolean; container: string }>();
 let containersPorts: { containers: string[]; ports: number[] }[];
 $: containersPorts = [];
 
@@ -30,6 +30,7 @@ $: providerConnections = providers
   .flat()
   .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
 $: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
 let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
 $: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;

@@ -18,6 +18,7 @@ export let onUpdate: (update: PodUI) => void = update => {
   dispatch('update', update);
 };
 
+let openingKubernetesUrls = new Map();
 $: openingKubernetesUrls = new Map();
 
 onMount(async () => {

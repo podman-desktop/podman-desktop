@@ -19,7 +19,8 @@ export let setNoLogs: () => void;
 export let noLog: boolean;
 let logsTerminal: Terminal;
 
-$: noLogs = !!noLog;
+$: noLog = !!noLog;
+let noLogs = !!noLog;
 
 // Log
 let logsXtermDiv: HTMLDivElement;
