@@ -97,7 +97,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () => {
-  test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
+  test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
   test('Kubernetes Nodes test', async ({ page }) => {
     await checkKubernetesResourceState(page, KubernetesResources.Nodes, KIND_NODE, KubernetesResourceState.Running);
   });

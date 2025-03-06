@@ -90,7 +90,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
-  test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
+  test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
   test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);

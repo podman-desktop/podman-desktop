@@ -91,7 +91,7 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
       });
     });
   test.describe('Kind cluster validation tests', () => {
-    test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
+    test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
@@ -135,7 +135,7 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   });
   test.describe('Kind cluster operations - Details', () => {
-    test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
+    test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
