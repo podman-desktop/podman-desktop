@@ -135,7 +135,6 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   });
   test.describe('Kind cluster operations - Details', () => {
-    console.log('todo:remove this');
     test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
