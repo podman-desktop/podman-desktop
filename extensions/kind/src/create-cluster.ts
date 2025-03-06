@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -208,7 +208,10 @@ export async function createCluster(
         token,
       },
     );
-    if (ingressController) {
+
+    // If a configFile was provided, we will not be creating the ingress controller, as specifying a configFile
+    // will ignore all form options below.
+    if (!configFile && ingressController) {
       logger?.log('Creating ingress controller resources');
       await setupIngressController(clusterName);
     }
