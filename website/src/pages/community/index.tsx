@@ -86,14 +86,22 @@ export default function Home(): JSX.Element {
                 <li>
                   <a href={useBaseUrl('/tutorial')}>Tutorials</a>: Step-by-step guides to get started.
                 </li>
+                <li>
+                  <a href="https://github.com/podman-desktop/community/blob/main/presentations/README.md">
+                    Presentations
+                  </a>
+                  &nbsp;&&nbsp;
+                  <a href="https://github.com/podman-desktop/community/blob/main/demos/README.md">Demos</a>: Check out
+                  presentations and demos and add your own!
+                </li>
               </ul>
             </div>
 
             <div>
               <h3 className="text-xl mb-2">3. Attend Community Events</h3>
               <p className="dark:text-gray-700">
-                Join us at upcoming meetups, webinars, and conferences. Stay tuned for announcements on our{' '}
-                <a href={useBaseUrl('/blog')}>blog</a>.
+                Join us for upcoming <a href="https://github.com/podman-desktop/community/issues/3">meetups</a>,
+                webinars, and conferences.
               </p>
             </div>
           </div>
