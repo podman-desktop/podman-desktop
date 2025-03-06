@@ -18,7 +18,7 @@ export let onUpdate: (update: PodUI) => void = update => {
   dispatch('update', update);
 };
 
-$: openingKubernetesUrls = new Map();
+let openingKubernetesUrls = new Map();
 
 onMount(async () => {
   const ns = await window.kubernetesGetCurrentNamespace();

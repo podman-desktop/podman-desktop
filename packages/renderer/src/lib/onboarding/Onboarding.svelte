@@ -63,7 +63,7 @@ $: onboardingItems = onboardings;
 let activeStep: ActiveOnboardingStep;
 let activeStepContent: OnboardingStepItem[][];
 
-$: executing = false;
+let executing = false;
 let globalContext: ContextUI;
 let displayCancelSetup = false;
 
