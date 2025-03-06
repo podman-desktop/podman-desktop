@@ -130,3 +130,9 @@ test('class props should be propagated to button', async () => {
   const widget = getByRole('button', { name: 'provider1' });
   expect(widget).toHaveClass('potatoes');
 });
+
+test('Epect tooltip to show Update available text if the provider has an update', () => {
+  providerMock.updateInfo = { version: '1.1.0' };
+  render(ProviderWidget, { entry: providerMock });
+  expect(screen.getByText('Update available')).toBeInTheDocument();
+});

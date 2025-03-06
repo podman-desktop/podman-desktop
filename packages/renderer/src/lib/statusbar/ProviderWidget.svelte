@@ -38,11 +38,17 @@ let connections = $derived.by(() => {
     <div class="flex flex-col">
       {#each connections as connection}
         <div class="flex flex-row items-center h-fit">
-          <ProviderWidgetStatus status={connection.status} class="mr-1 mt-1"/>
+          <ProviderWidgetStatus status={connection.status} class="mr-1"/>
           <ProviderWidgetStatusStyle status={connection.status}/>
           : {connection.name}
         </div>
       {/each}
+      {#if entry.updateInfo?.version}
+        <div class="flex flex-row items-center h-fit">
+          <ProviderWidgetStatus status="Update available" class="mr-1"/>
+          Update available
+        </div>
+      {/if}
     </div>
   </div>
   <button
