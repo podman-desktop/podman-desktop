@@ -132,17 +132,6 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.description).toBeDefined();
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.type).toBe('string');
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe('icon + title');
-});
-
-test('Icon + Title should be default', () => {
-  vi.resetAllMocks();
-  const appearanceInit = new AppearanceInit(configurationRegistry);
-  appearanceInit.init();
-
-  expect(configurationRegistry.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistry.registerConfigurations).mock.calls[0]?.[0][0];
-
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
     AppearanceSettings.IconAndTitle,
   );
