@@ -145,5 +145,7 @@ test('Icon should be default if not in dev env', () => {
   expect(configurationRegistry.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistry.registerConfigurations).mock.calls[0]?.[0][0];
 
-  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe('icon');
+  expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
+    AppearanceSettings.IconAndTitle,
+  );
 });
