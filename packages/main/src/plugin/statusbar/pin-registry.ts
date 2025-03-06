@@ -103,7 +103,7 @@ export class PinRegistry implements IDisposable {
           properties: {
             [STATUS_BAR_PIN_CONSTANTS.PINNED_CONFIGURATION_PROPERTY]: {
               description: 'pinned items in the status bar',
-              type: ['string'],
+              type: 'array',
               hidden: true,
               default: ['podman'],
             },
