@@ -77,6 +77,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e' }, () => {
+  console.log('todo:remove this');
   test.skip(!canRunKindTests, "This test can't run on a windows rootless machine");
   test('Pull an image and start a container', async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
