@@ -108,3 +108,9 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   expect(screen.getByText(': connection 2')).toBeInTheDocument();
   expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });
+
+test('Epect tooltip to show Update available text if the provider has an update', () => {
+  providerMock.updateInfo = { version: '1.1.0' };
+  render(ProviderWidget, { entry: providerMock });
+  expect(screen.getByText('Update available')).toBeInTheDocument();
+});
