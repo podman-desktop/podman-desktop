@@ -21,5 +21,5 @@ onDestroy(() => {
 });
 </script>
 
-<KubernetesEmptyScreen icon={DeploymentIcon} isPermitted={deploymentsPermitted} title={deploymentsPermitted ? 'No deployments' : 'Deployments not accessible'} message="Try switching to a different context or namespace" />
+<KubernetesEmptyScreen icon={DeploymentIcon} title={deploymentsPermitted ? 'No deployments' : 'Deployments not accessible'} message="Try switching to a different context or namespace" />
 
