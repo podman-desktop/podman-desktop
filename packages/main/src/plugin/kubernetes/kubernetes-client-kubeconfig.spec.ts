@@ -23,6 +23,7 @@ import type { ApiSenderType } from '../api.js';
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
+import type { Exec } from '../util/exec.js';
 import { KubernetesClient } from './kubernetes-client.js';
 
 // WARNING: Do not import anything from kubernetes-client.spec.ts
@@ -71,8 +72,8 @@ describe('context tests', () => {
       send: apiSendMock,
       receive: vi.fn(),
     };
-
-    const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
+    const exec = {} as Exec;
+    const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry, exec);
 
     client.setUsers(originalUsers);
     client.setClusters(originalClusters);

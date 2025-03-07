@@ -20,6 +20,7 @@ import type { Cluster, KubernetesObject, ObjectCache } from '@kubernetes/client-
 import { KubeConfig } from '@kubernetes/client-node';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { Exec } from '../util/exec.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
 import {
@@ -27,7 +28,9 @@ import {
   type ContextPermissionsRequest,
   type ContextResourcePermission,
 } from './context-permissions-checker.js';
+import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
+import { ContextsPreflightChecker } from './contexts-preflight-checker.js';
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryBase } from './resource-factory.js';
@@ -101,6 +104,10 @@ class TestContextsManagerExperimental extends ContextsManagerExperimental {
   public override stopMonitoring(contextName: string): void {
     return super.stopMonitoring(contextName);
   }
+
+  public override async preflightChecks(event: DispatcherEvent): Promise<void> {
+    return super.preflightChecks(event);
+  }
 }
 
 const context1 = {
@@ -148,6 +155,7 @@ const kcWithContext2asDefault = {
 
 vi.mock('./context-health-checker.js');
 vi.mock('./context-permissions-checker.js');
+vi.mock('./contexts-preflight-checker.js');
 
 let kcWith2contexts: KubeConfig;
 
@@ -191,6 +199,56 @@ beforeEach(() => {
   vi.mocked(ContextPermissionsChecker).mockClear();
 });
 
+describe('preflight checker is called', () => {
+  let kc: KubeConfig;
+  let manager: TestContextsManagerExperimental;
+  const checkerMock = vi.fn();
+
+  beforeEach(() => {
+    kc = new KubeConfig();
+    kc.loadFromOptions(kcWith2contexts);
+
+    vi.mocked(ContextHealthChecker).mockImplementation(
+      () =>
+        ({
+          start: vi.fn(),
+          dispose: vi.fn(),
+          onStateChange: vi.fn(),
+          onReachable: vi.fn(),
+        }) as unknown as ContextHealthChecker,
+    );
+    vi.mocked(ContextsPreflightChecker).mockImplementation(
+      () =>
+        ({
+          check: checkerMock,
+        }) as unknown as ContextsPreflightChecker,
+    );
+    const exec = {} as Exec;
+    manager = new TestContextsManagerExperimental(exec);
+  });
+
+  test('when contexts are added', async () => {
+    await manager.update(kc);
+    expect(checkerMock).toHaveBeenCalledTimes(2);
+    expect(checkerMock).toHaveBeenCalledWith('context1', expect.anything());
+    expect(checkerMock).toHaveBeenCalledWith('context2', expect.anything());
+  });
+
+  test('when a context is updated', async () => {
+    await manager.update(kc);
+    expect(checkerMock).toHaveBeenCalledTimes(2);
+
+    checkerMock.mockClear();
+
+    kcWith2contexts.users[0]!.certFile = 'file';
+    kc.loadFromOptions(kcWith2contexts);
+    await manager.update(kc);
+    expect(checkerMock).toHaveBeenCalledTimes(1);
+
+    expect(checkerMock).toHaveBeenCalledWith('context1', expect.anything());
+  });
+});
+
 describe('HealthChecker is built and start is called for each context the first time', async () => {
   let kc: KubeConfig;
   let manager: TestContextsManagerExperimental;
@@ -222,7 +280,8 @@ describe('HealthChecker is built and start is called for each context the first 
           isForContext: vi.fn(),
         }) as unknown as ContextPermissionsChecker,
     );
-    manager = new TestContextsManagerExperimental();
+    const exec = {} as Exec;
+    manager = new TestContextsManagerExperimental(exec);
   });
 
   test('when context is not reachable', async () => {
@@ -295,7 +354,8 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           onPermissionResult: onPermissionResultMock,
         }) as unknown as ContextPermissionsChecker,
     );
-    manager = new TestContextsManagerExperimental();
+    const exec = {} as Exec;
+    manager = new TestContextsManagerExperimental(exec);
   });
 
   test('permissions are correctly dispatched', async () => {
@@ -716,7 +776,8 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
 test('nothing is done when called again and kubeconfig does not change', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -747,7 +808,8 @@ test('nothing is done when called again and kubeconfig does not change', async (
 test('HealthChecker is built and start is called for each context being changed', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -780,7 +842,8 @@ test('HealthChecker is built and start is called for each context being changed'
 test('HealthChecker, PermissionsChecker and informers are disposed for each context being removed', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const healthStartMock = vi.fn();
   const healthDisposeMock = vi.fn();
@@ -854,7 +917,8 @@ test('HealthChecker, PermissionsChecker and informers are disposed for each cont
 test('getHealthCheckersStates calls getState for each health checker', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -897,7 +961,8 @@ test('getHealthCheckersStates calls getState for each health checker', async () 
 test('getPermissions calls getPermissions for each permissions checker', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -948,7 +1013,8 @@ test('getPermissions calls getPermissions for each permissions checker', async (
 test('dispose calls dispose for each health checker', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -973,7 +1039,8 @@ test('dispose calls dispose for each health checker', async () => {
 test('dispose calls dispose for each permissions checker', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
 
   const startMock = vi.fn();
   const disposeMock = vi.fn();
@@ -1026,7 +1093,8 @@ test('dispose calls dispose for each permissions checker', async () => {
 test('only current context is monitored', async () => {
   const kc = new KubeConfig();
   kc.loadFromOptions(kcWith2contexts);
-  const manager = new TestContextsManagerExperimental();
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
   vi.spyOn(manager, 'startMonitoring');
   vi.spyOn(manager, 'stopMonitoring');
   await manager.update(kc);

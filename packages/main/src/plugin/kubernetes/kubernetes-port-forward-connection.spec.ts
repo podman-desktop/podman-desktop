@@ -33,6 +33,8 @@ import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { type IDisposable } from '/@/plugin/types/disposable.js';
 import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
+import type { Exec } from '../util/exec.js';
+
 const mockKubeConfig = {
   makeApiClient: vi.fn(),
 };
@@ -165,8 +167,9 @@ describe('PortForwardConnectionService', () => {
   let service: TestablePortForwardConnectionService;
 
   beforeEach(() => {
+    const exec = {} as Exec;
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
+      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry, exec),
     );
     global.fetch = vi.fn();
     mockKubeConfig.makeApiClient.mockImplementation(api => {
@@ -239,8 +242,9 @@ describe('PortForwardConnectionService', () => {
       },
     );
 
+    const exec = {} as Exec;
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
+      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry, exec),
     );
 
     const createdServer = service.createServer(forwardSetup as never);

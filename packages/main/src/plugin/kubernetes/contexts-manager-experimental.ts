@@ -26,6 +26,7 @@ import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-trou
 
 import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
+import type { Exec } from '../util/exec.js';
 import { ConfigmapsResourceFactory } from './configmaps-resource-factory.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
@@ -34,6 +35,7 @@ import { ContextPermissionsChecker } from './context-permissions-checker.js';
 import { ContextResourceRegistry } from './context-resource-registry.js';
 import type { CurrentChangeEvent, DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
+import { ContextsPreflightChecker } from './contexts-preflight-checker.js';
 import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
 import { EventsResourceFactory } from './events-resource-factory.js';
@@ -67,6 +69,7 @@ export class ContextsManagerExperimental {
   #permissionsCheckers: ContextPermissionsChecker[];
   #informers: ContextResourceRegistry<ResourceInformer<KubernetesObject>>;
   #objectCaches: ContextResourceRegistry<ObjectCache<KubernetesObject>>;
+  #contextsPreflightChecker: ContextsPreflightChecker;
 
   #onContextHealthStateChange = new Emitter<ContextHealthState>();
   onContextHealthStateChange: Event<ContextHealthState> = this.#onContextHealthStateChange.event;
@@ -86,7 +89,7 @@ export class ContextsManagerExperimental {
   #onResourceCountUpdated = new Emitter<{ contextName: string; resourceName: string }>();
   onResourceCountUpdated: Event<{ contextName: string; resourceName: string }> = this.#onResourceCountUpdated.event;
 
-  constructor() {
+  constructor(readonly exec: Exec) {
     this.#resourceFactoryHandler = new ResourceFactoryHandler();
     for (const resourceFactory of this.getResourceFactories()) {
       this.#resourceFactoryHandler.add(resourceFactory);
@@ -96,7 +99,10 @@ export class ContextsManagerExperimental {
     this.#permissionsCheckers = [];
     this.#informers = new ContextResourceRegistry<ResourceInformer<KubernetesObject>>();
     this.#objectCaches = new ContextResourceRegistry<ObjectCache<KubernetesObject>>();
+    this.#contextsPreflightChecker = new ContextsPreflightChecker(exec);
     this.#dispatcher = new ContextsDispatcher();
+    this.#dispatcher.onAdd(this.preflightChecks.bind(this));
+    this.#dispatcher.onUpdate(this.preflightChecks.bind(this));
     this.#dispatcher.onUpdate(this.onUpdate.bind(this));
     this.#dispatcher.onDelete(this.onDelete.bind(this));
     this.#dispatcher.onDelete((state: DispatcherEvent) => this.#onContextDelete.fire(state));
@@ -122,6 +128,10 @@ export class ContextsManagerExperimental {
 
   async update(kubeconfig: KubeConfig): Promise<void> {
     this.#dispatcher.update(kubeconfig);
+  }
+
+  protected async preflightChecks(event: DispatcherEvent): Promise<void> {
+    await this.#contextsPreflightChecker.check(event.contextName, event.config);
   }
 
   private async onUpdate(event: DispatcherEvent): Promise<void> {
