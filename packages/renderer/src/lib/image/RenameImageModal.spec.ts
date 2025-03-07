@@ -215,4 +215,36 @@ describe('RenameImageModel', () => {
       expect(window.deleteImage).not.toHaveBeenCalled();
     });
   });
+
+  test('Expect error message if image name is cleared after it was initially prefilled', async () => {
+    render(RenameImageModal, {
+      imageInfoToRename: imageInfo,
+      closeCallback,
+    });
+
+    expect(screen.queryByText('Please enter a value')).not.toBeInTheDocument();
+
+    const imageName = screen.getByLabelText('Image Name');
+    expect((imageName as HTMLInputElement).value).toBe(imageInfo.name);
+
+    await userEvent.clear(imageName);
+
+    expect(await screen.findByText('Please enter a value')).toBeInTheDocument();
+  });
+
+  test('Expect error message if image tag is cleared after it was initially prefilled', async () => {
+    render(RenameImageModal, {
+      imageInfoToRename: imageInfo,
+      closeCallback,
+    });
+
+    expect(screen.queryByText('Please enter a value')).not.toBeInTheDocument();
+
+    const imageTag = screen.getByLabelText('Image Tag');
+    expect((imageTag as HTMLInputElement).value).toBe(imageInfo.tag);
+
+    await userEvent.clear(imageTag);
+
+    expect(await screen.findByText('Please enter a value')).toBeInTheDocument();
+  });
 });

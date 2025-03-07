@@ -12,6 +12,17 @@ export let imageInfoToRename: ImageInfoUI;
 
 let imageName = '';
 let imageTag = '';
+
+let imageNameErrorMessage = '';
+let imageTagErrorMessage = '';
+
+$: {
+  imageNameErrorMessage = imageName === '' ? 'Please enter a value' : '';
+}
+$: {
+  imageTagErrorMessage = imageTag === '' ? 'Please enter a value' : '';
+}
+
 onMount(async () => {
   if (imageInfoToRename.name !== '<none>') {
     imageName = imageInfoToRename.name;
@@ -24,26 +35,6 @@ function disableSave(name: string, tag: string): boolean {
   const currentName = `${imageInfoToRename.name}:${imageInfoToRename.tag}`;
 
   return name.trim() === '' || tag.trim() === '' || inputName === currentName;
-}
-
-let imageNameErrorMessage = '';
-function validateImageName(event: Event): void {
-  let inputName = event.target instanceof Input ? event.target.value : undefined;
-  if (inputName === undefined || inputName.trim() === '') {
-    imageNameErrorMessage = 'Please enter a value';
-  } else {
-    imageNameErrorMessage = '';
-  }
-}
-
-let imageTagErrorMessage = '';
-function validateImageTag(event: Event): void {
-  let inputName = event.target instanceof Input ? event.target.value : undefined;
-  if (inputName === undefined || inputName.trim() === '') {
-    imageTagErrorMessage = 'Please enter a value';
-  } else {
-    imageTagErrorMessage = '';
-  }
 }
 
 async function renameImage(imageName: string, imageTag: string): Promise<void> {
@@ -84,7 +75,6 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
       name="imageName"
       id="imageName"
       placeholder="Enter image name (e.g. quay.io/namespace/my-image-name)"
-      on:input={validateImageName}
       aria-invalid={imageNameErrorMessage !== ''}
       aria-label="imageName"
       required />
@@ -98,7 +88,6 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
       name="imageTag"
       id="imageTag"
       placeholder="Enter image tag (e.g. latest)"
-      on:input={validateImageTag}
       aria-invalid={imageTagErrorMessage !== ''}
       aria-label="imageTag"
       required />
