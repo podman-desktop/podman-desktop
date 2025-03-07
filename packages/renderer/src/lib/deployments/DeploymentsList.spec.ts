@@ -27,10 +27,12 @@ import * as resourcesListen from '/@/lib/kube/resources-listen';
 import * as states from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable.js';
 
+import { listenResourcePermitted } from '../kube/resource-permission';
 import DeploymentsList from './DeploymentsList.svelte';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
 vi.mock('/@/lib/kube/resources-listen');
+vi.mock('../kube/resource-permission');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -91,6 +93,7 @@ describe.each<{
   });
 
   test('Expect deployment empty screen', async () => {
+    vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
     initObjectsList([]);
     render(DeploymentsList);
 
