@@ -25,7 +25,7 @@ import {
   verifyLocalPortResponse,
   verifyPortForwardingConfiguration,
 } from '../utility/kubernetes';
-import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
+import { deleteContainer, deleteImage, ensureCliInstalled, handleConfirmationDialog } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const clusterName: string = 'kind-cluster';
@@ -131,6 +131,8 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
   test('Delete configuration', async ({ page }) => {
     const portForwardingPage = new KubernetesResourcePage(page, KubernetesResources.PortForwarding);
     await portForwardingPage.deleteKubernetesResource(containerName);
+
+    await handleConfirmationDialog(page);
   });
 
   test('Verify UI components after removal', async ({ page, navigationBar }) => {
