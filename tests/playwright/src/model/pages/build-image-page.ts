@@ -38,7 +38,6 @@ export class BuildImagePage extends BasePage {
   readonly amd64checkbox: Locator;
   readonly archMoreOptionsButton: Locator;
   readonly archLessOptionsButton: Locator;
-  readonly logs: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -60,7 +59,6 @@ export class BuildImagePage extends BasePage {
     this.amd64checkbox = this.platformRegion.getByLabel('Intel and AMD x86_64 systems');
     this.archMoreOptionsButton = this.platformRegion.getByRole('button', { name: 'Show more options' });
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
-    this.logs = page.getByRole('term');
   }
 
   async buildImage(
@@ -162,9 +160,9 @@ export class BuildImagePage extends BasePage {
   }
 
   async validateBuildLogs(): Promise<void> {
-    await playExpect(this.logs).toBeVisible();
-    const logsMessage = this.logs.locator('.xterm-rows');
-    const logRows = await logsMessage.locator('div:has(span)').all();
+    const logs = this.page.locator('.xterm-rows');
+    await playExpect(logs).toBeVisible();
+    const logRows = await logs.locator('div:has(span)').all();
 
     await Promise.all(
       logRows.map(async logRow => {
