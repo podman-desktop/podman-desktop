@@ -73,31 +73,28 @@ export function getOptions(proxy: Proxy, secure: boolean, certificates: Certific
   return options;
 }
 
-type Patched = (
-  url?: string | nodeurl.URL | null,
-  options?: http.RequestOptions | null,
-  callback?: (res: http.IncomingMessage) => void,
-) => http.ClientRequest;
-
 export function createHttpPatch(
   originals: typeof http | typeof https,
   proxy: Proxy,
   certificates: Certificates,
-): { get: Patched; request: Patched } {
+): { get: typeof http.get; request: typeof http.get } {
   return {
     get: patch(originals.get, certificates),
     request: patch(originals.request, certificates),
   };
 
-  function patch(original: typeof http.get, certificates: Certificates): Patched {
+  function patch(original: typeof http.get, certificates: Certificates): typeof http.get {
     function patched(
-      url?: string | nodeurl.URL | null,
-      options?: http.RequestOptions | null,
+      url?: string | nodeurl.URL | http.RequestOptions,
+      options?: http.RequestOptions | ((res: http.IncomingMessage) => void),
       callback?: (res: http.IncomingMessage) => void,
     ): http.ClientRequest {
       if (proxy?.isEnabled()) {
-        if (typeof url !== 'string' && !url?.searchParams) {
-          callback = <any>options; // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (
+          (url instanceof nodeurl.URL && !url?.searchParams) ||
+          (typeof url !== 'string' && typeof url === 'object' && !(url instanceof nodeurl.URL))
+        ) {
+          callback = options as (res: http.IncomingMessage) => void;
           options = url;
           url = undefined;
         }
@@ -119,7 +116,7 @@ export function createHttpPatch(
         }
 
         if (url) {
-          const parsed = typeof url === 'string' ? new nodeurl.URL(url) : url;
+          const parsed = typeof url === 'object' && url instanceof nodeurl.URL ? url : new nodeurl.URL(url);
           const urlOptions = {
             protocol: parsed.protocol,
             hostname: parsed.hostname.lastIndexOf('[', 0) === 0 ? parsed.hostname.slice(1, -1) : parsed.hostname,
@@ -148,7 +145,10 @@ export function createHttpPatch(
   }
 }
 
-export function createHttpPatchedModules(proxy: Proxy, certificates: Certificates): Record<string, object> {
+export function createHttpPatchedModules(
+  proxy: Proxy,
+  certificates: Certificates,
+): { http: typeof http; https: typeof https; 'node:http': typeof http; 'node:https': typeof https } {
   const res = {
     http: { ...http, ...createHttpPatch(http, proxy, certificates) },
     https: { ...https, ...createHttpPatch(https, proxy, certificates) },
