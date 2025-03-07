@@ -402,9 +402,13 @@ declare module '@podman-desktop/api' {
      */
     vmTypeDisplayName?: string;
     /**
-     * the remote may be different from the client version
+     * The Container Provider Connection may have a specific version
+     * that differ from the client/host.
+     *
+     * This is common when dealing with remote host, such as Podman Machines.
      */
-    version?(): string | undefined;
+    version?: string;
+    onDidUpdateVersion?: Event<string>;
   }
 
   export interface PodCreatePortOptions {
