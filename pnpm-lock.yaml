@@ -639,8 +639,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
       eslint-plugin-svelte:
-        specifier: ^3.0.2
-        version: 3.0.2(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
+        specifier: ^3.0.3
+        version: 3.0.3(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
@@ -751,8 +751,8 @@ importers:
         specifier: ^8.24.1
         version: 8.24.1(@typescript-eslint/parser@8.24.1(eslint@9.21.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.21.0(jiti@2.4.2))(typescript@5.6.3)
       eslint-plugin-svelte:
-        specifier: ^3.0.2
-        version: 3.0.2(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
+        specifier: ^3.0.3
+        version: 3.0.3(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
       jsdom:
         specifier: ^26.0.0
         version: 26.0.0
@@ -853,8 +853,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       eslint-plugin-svelte:
-        specifier: ^3.0.2
-        version: 3.0.2(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
+        specifier: ^3.0.3
+        version: 3.0.3(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5)
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
@@ -6332,9 +6332,9 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-svelte@3.0.2:
-    resolution: {integrity: sha512-+0QglmWNryvXXxRQKzLF3i+AreTsueCw7PBb0nGVBq+F9HoYqAjQeJ/9N6vFAtjMjK3wgsETrLVyBKPdeufN6Q==}
-    engines: {node: ^18.20.4 || ^20.18.0 || >=22.10.0}
+  eslint-plugin-svelte@3.0.3:
+    resolution: {integrity: sha512-R7HSKkLN33P6WwYhVbO+5xPT0YIpO+YAZfWxow7I1IvjVgZOxuI7zReqxFL3B7F028u16Megx+hn8SEXDNcDvw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
       svelte: ^3.37.0 || ^4.0.0 || ^5.0.0
@@ -18725,7 +18725,7 @@ snapshots:
       semver: 7.7.1
       typescript: 5.6.3
 
-  eslint-plugin-svelte@3.0.2(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5):
+  eslint-plugin-svelte@3.0.3(eslint@9.21.0(jiti@2.4.2))(svelte@5.22.5):
     dependencies:
       '@eslint-community/eslint-utils': 4.4.1(eslint@9.21.0(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.0
