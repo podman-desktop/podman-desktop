@@ -20,7 +20,12 @@ import { KubernetesResources } from '../model/core/types';
 import { KubernetesResourcePage } from '../model/pages/kubernetes-resource-page';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, ensureCliInstalled, handleConfirmationDialog } from '../utility/operations';
+import {
+  configurePortForwarding,
+  verifyLocalPortResponse,
+  verifyPortForwardingConfiguration,
+} from '../utility/kubernetes';
+import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const clusterName: string = 'kind-cluster';
@@ -110,58 +115,22 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
       .toBeTruthy();
   });
 
-  test('Create port forwarding configuration', async ({ page, navigationBar }) => {
+  test('Create port forwarding configuration', async ({ page }) => {
     //Open pod details and create port forwarding configuration
-    const kubernetesBar = await navigationBar.openKubernetes();
-    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
-    await playExpect
-      .poll(async () => kubernetesPodsPage.getResourceRowByName(podName), { timeout: 15_000 })
-      .toBeTruthy();
-    const podDetailPage = await kubernetesPodsPage.openResourceDetails(podName, KubernetesResources.Pods);
-    await podDetailPage.activateTab('Summary');
-    const forwardButton = page.getByRole('button', { name: `Forward...` });
-    await playExpect(forwardButton).toBeVisible();
-    await forwardButton.click();
-
-    const openInBrowserButton = page.getByRole('button', { name: 'Open', exact: true });
-    const removeConfigurationButton = page.getByRole('button', { name: 'Remove' });
-    await playExpect(openInBrowserButton).toBeVisible({ timeout: 10_000 });
-    await playExpect(removeConfigurationButton).toBeVisible();
+    await configurePortForwarding(page, KubernetesResources.Pods, podName);
   });
 
   test('Verify new local port response', async () => {
-    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
-    const blob: Blob = await response.blob();
-    const text: string = await blob.text();
-    playExpect(text).toContain(responseMessage);
+    await verifyLocalPortResponse(forwardAddress, responseMessage);
   });
 
-  test('Verify Kubernetes port forwarding page', async ({ navigationBar }) => {
-    const kubernetesBar = await navigationBar.openKubernetes();
-    const portForwardingPage = await kubernetesBar.openTabPage(KubernetesResources.PortForwarding);
-    await playExpect(portForwardingPage.heading).toBeVisible();
-    const configurationRow = portForwardingPage.getResourceRowByName(containerName);
-    await playExpect(configurationRow).toBeVisible();
-
-    const localPortCell = await portForwardingPage.geAttributeByRow(
-      configurationRow,
-      'Local Port',
-      KubernetesResources.PortForwarding,
-    );
-    const remotePortCell = await portForwardingPage.geAttributeByRow(
-      configurationRow,
-      'Remote Port',
-      KubernetesResources.PortForwarding,
-    );
-    playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
-    playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
+  test('Verify Kubernetes port forwarding page', async ({ page }) => {
+    await verifyPortForwardingConfiguration(page, containerName, localPort, remotePort);
   });
 
   test('Delete configuration', async ({ page }) => {
     const portForwardingPage = new KubernetesResourcePage(page, KubernetesResources.PortForwarding);
     await portForwardingPage.deleteKubernetesResource(containerName);
-
-    await handleConfirmationDialog(page);
   });
 
   test('Verify UI components after removal', async ({ page, navigationBar }) => {
@@ -185,9 +154,6 @@ test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' 
   });
 
   test('Verify link response after removal', async () => {
-    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
-    const blob: Blob = await response.blob();
-    const text: string = await blob.text();
-    playExpect(text).toContain(responseMessage); //expect to contain to pass until #11210 is resolved
+    await verifyLocalPortResponse(forwardAddress, responseMessage); //expect to contain to pass until #11210 is resolved
   });
 });
