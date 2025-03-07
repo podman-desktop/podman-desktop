@@ -40,7 +40,7 @@ let skipTests: boolean = false;
 const hypervisor = process.env.GHA_HYPERVISOR ?? '';
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
-  runner.setVideoAndTraceName('pull-image-e2e');
+  runner.setVideoAndTraceName('image-manifest-smoke-e2e');
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
@@ -96,7 +96,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           '..',
           'resources',
           'alphine-hello',
-          'alphine-hello-containerfile',
+          'alphine-hello.containerfile',
         );
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
 
@@ -107,14 +107,14 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
             contextDirectory,
             architectures,
           );
-        } catch {
+        } catch (error) {
           skipTests = true;
           await deleteImageManifest(page, manifestNameComplex);
           if (isWindows && isCI && hypervisor === 'wsl') {
             console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
             test.fail();
           } else {
-            throw new Error('Failed to build image manifest');
+            throw error;
           }
         }
 
@@ -124,7 +124,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(2);
       });
       test('Check Manifest details', async () => {
-        if (skipTests) test.skip();
+        test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
 
         const imageDetailsPage = await imagesPage.openImageDetails(manifestNameComplex);
         await Promise.all(
@@ -136,7 +136,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await imageDetailsPage.backLink.click();
       });
       test('Delete Manifest', async ({ page }) => {
-        if (skipTests) test.skip();
+        test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
 
         await deleteImageManifest(page, manifestNameComplex);
       });

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,10 +97,7 @@ export class BuildImagePage extends BasePage {
       await this.buildButton.click();
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
-
-      const logs = await this.getBuildLogs();
-      await playExpect.poll(async () => logs).not.toContain('Error');
-
+      await this.validateBuildLogs();
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -164,19 +161,15 @@ export class BuildImagePage extends BasePage {
     }
   }
 
-  async getBuildLogs(): Promise<string[]> {
+  async validateBuildLogs(): Promise<void> {
     await playExpect(this.logs).toBeVisible();
     const logsMessage = this.logs.locator('.xterm-rows');
     const logRows = await logsMessage.locator('div:has(span)').all();
 
-    const logs = await Promise.all(
+    await Promise.all(
       logRows.map(async logRow => {
-        const logRowString = await logRow.textContent();
-        console.log(logRowString);
-        return logRowString + '\n';
+        await playExpect.poll(async () => logRow.textContent()).not.toContain('Error');
       }),
     );
-
-    return logs;
   }
 }

@@ -16,7 +16,9 @@
 #  * SPDX-License-Identifier: Apache-2.0
 #  ***********************************************************************/
 
-#!/bin/sh
-echo "Hello There!"
-/bin/sh
+FROM ghcr.io/linuxcontainers/alpine
+RUN echo $PATH
+COPY echo_and_run.sh /usr/bin/
+RUN ls -al /usr/bin/echo_and_run.sh
+ENTRYPOINT ["echo_and_run.sh"]
  
