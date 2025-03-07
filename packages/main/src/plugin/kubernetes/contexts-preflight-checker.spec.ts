@@ -187,4 +187,11 @@ test('PreflightCheckRegistry', () => {
       results: [],
     },
   ]);
+  registry.delete('ctx1');
+  expect(registry.getAll()).toEqual([
+    {
+      contextName: 'ctx2',
+      results: [],
+    },
+  ]);
 });

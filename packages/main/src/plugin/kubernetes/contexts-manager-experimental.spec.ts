@@ -249,6 +249,45 @@ describe('preflight checker is called', () => {
   });
 });
 
+test('preflight check results are deleted for deleted context', async () => {
+  const checkerMock = vi.fn();
+  const deleteMock = vi.fn();
+
+  const kc = new KubeConfig();
+  kc.loadFromOptions(kcWith2contexts);
+
+  vi.mocked(ContextHealthChecker).mockImplementation(
+    () =>
+      ({
+        start: vi.fn(),
+        dispose: vi.fn(),
+        onStateChange: vi.fn(),
+        onReachable: vi.fn(),
+      }) as unknown as ContextHealthChecker,
+  );
+  vi.mocked(ContextsPreflightChecker).mockImplementation(
+    () =>
+      ({
+        check: checkerMock,
+        delete: deleteMock,
+      }) as unknown as ContextsPreflightChecker,
+  );
+  const exec = {} as Exec;
+  const manager = new TestContextsManagerExperimental(exec);
+
+  await manager.update(kc);
+
+  const kc1 = {
+    contexts: [kcWith2contexts.contexts[1]],
+    clusters: [kcWith2contexts.clusters[1]],
+    users: [kcWith2contexts.users[1]],
+    currentContext: undefined,
+  } as unknown as KubeConfig;
+  kc.loadFromOptions(kc1);
+  await manager.update(kc);
+  expect(deleteMock).toHaveBeenCalled();
+});
+
 describe('HealthChecker is built and start is called for each context the first time', async () => {
   let kc: KubeConfig;
   let manager: TestContextsManagerExperimental;

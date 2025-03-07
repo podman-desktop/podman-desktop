@@ -47,6 +47,10 @@ export class ContextsPreflightChecker {
     await this.frelightCheckUserExecCommand(contextName, config);
   }
 
+  delete(contextName: string): void {
+    this.#registry.delete(contextName);
+  }
+
   getResults(): PreflightCheckContextResults[] {
     return this.#registry.getAll();
   }
@@ -101,6 +105,10 @@ export class PreflightCheckRegistry {
 
   public addResult(contextName: string, result: PreflightCheckResult): void {
     this.#registry.set(contextName, [...(this.#registry.get(contextName) ?? []), result]);
+  }
+
+  public delete(contextName: string): void {
+    this.#registry.delete(contextName);
   }
 
   getAll(): PreflightCheckContextResults[] {

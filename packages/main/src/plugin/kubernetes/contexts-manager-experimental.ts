@@ -103,6 +103,9 @@ export class ContextsManagerExperimental {
     this.#dispatcher = new ContextsDispatcher();
     this.#dispatcher.onAdd(this.preflightChecks.bind(this));
     this.#dispatcher.onUpdate(this.preflightChecks.bind(this));
+    this.#dispatcher.onDelete((event: DispatcherEvent): void => {
+      this.#contextsPreflightChecker.delete(event.contextName);
+    });
     this.#dispatcher.onUpdate(this.onUpdate.bind(this));
     this.#dispatcher.onDelete(this.onDelete.bind(this));
     this.#dispatcher.onDelete((state: DispatcherEvent) => this.#onContextDelete.fire(state));
