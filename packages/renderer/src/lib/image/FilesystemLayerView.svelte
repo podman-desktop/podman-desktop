@@ -37,7 +37,7 @@ function getColor(tree: FilesystemNode<ImageFile>): string {
   }
   return '';
 }
-$: expanded = expansionState.get(label) ?? false;
+let expanded = expansionState.get(label) ?? false;
 const toggleExpansion = (): void => {
   expanded = !expanded;
   expansionState.set(label, expanded);

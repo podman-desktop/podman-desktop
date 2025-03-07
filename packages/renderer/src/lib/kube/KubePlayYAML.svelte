@@ -51,6 +51,7 @@ $: providerConnections = providers
   // keep only podman providers as it is not supported by docker
   .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
 $: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
 let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
 $: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;

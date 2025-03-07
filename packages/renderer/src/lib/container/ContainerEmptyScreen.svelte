@@ -8,7 +8,7 @@ export let runningOnly: boolean;
 export let stoppedOnly: boolean;
 const helloImage: string = 'quay.io/podman/hello:latest';
 
-$: inProgress = false;
+let inProgress = false;
 $: title = getTitle(runningOnly, stoppedOnly);
 $: messageCommandLine = getMessageCommandLine(stoppedOnly);
 $: messageButton = getMessageButton(stoppedOnly);

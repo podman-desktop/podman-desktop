@@ -22,6 +22,7 @@ let outputTarget = '';
 let outputUri: Uri;
 let exportedError = '';
 let inProgress = false;
+let invalidFields = false;
 $: invalidFields = invalidName || invalidFolder;
 
 onMount(() => {
