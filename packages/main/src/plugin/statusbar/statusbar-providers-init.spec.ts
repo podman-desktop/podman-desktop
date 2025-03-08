@@ -15,7 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
