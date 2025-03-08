@@ -26,6 +26,7 @@ import { createNavigationKubernetesCronJobsEntry } from './kubernetes/navigation
 import { createNavigationKubernetesDashboardEntry } from './kubernetes/navigation-registry-k8s-dashboard.svelte';
 import { createNavigationKubernetesDeploymentsEntry } from './kubernetes/navigation-registry-k8s-deployments.svelte';
 import { createNavigationKubernetesIngressesRoutesEntry } from './kubernetes/navigation-registry-k8s-ingresses-routes.svelte';
+import { createNavigationKubernetesJobsEntry } from './kubernetes/navigation-registry-k8s-jobs.svelte';
 import { createNavigationKubernetesNodesEntry } from './kubernetes/navigation-registry-k8s-nodes.svelte';
 import { createNavigationKubernetesPersistentVolumeEntry } from './kubernetes/navigation-registry-k8s-persistent-volume.svelte';
 import { createNavigationKubernetesPodsEntry } from './kubernetes/navigation-registry-k8s-pods.svelte';
@@ -49,6 +50,7 @@ export function createNavigationKubernetesGroup(): NavigationRegistryEntry {
   newItems.push(createNavigationKubernetesIngressesRoutesEntry());
   newItems.push(createNavigationKubernetesPersistentVolumeEntry());
   newItems.push(createNavigationKubernetesConfigMapSecretsEntry());
+  newItems.push(createNavigationKubernetesJobsEntry());
   newItems.push(createNavigationKubernetesCronJobsEntry());
   newItems.push(createNavigationKubernetesPortForwardEntry());
   kubernetesNavigationGroupItems = newItems;
