@@ -401,6 +401,14 @@ declare module '@podman-desktop/api' {
      * the vmTypeDisplayName property cannot be set if vmType is undefined
      */
     vmTypeDisplayName?: string;
+    /**
+     * The Container Provider Connection may have a specific version
+     * that differ from the client/host.
+     *
+     * This is common when dealing with remote host, such as Podman Machines.
+     */
+    version?: string;
+    onDidUpdateVersion?: Event<string>;
   }
 
   export interface PodCreatePortOptions {
