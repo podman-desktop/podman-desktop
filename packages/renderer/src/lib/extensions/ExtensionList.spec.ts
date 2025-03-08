@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
 
@@ -32,7 +32,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-export const aFakeExtension: CatalogExtension = {
+const aFakeExtension: CatalogExtension = {
   id: 'idAInstalled',
   publisherName: 'FooPublisher',
   shortDescription: 'this is short A',
@@ -58,7 +58,7 @@ export const aFakeExtension: CatalogExtension = {
   ],
 };
 
-export const bFakeExtension: CatalogExtension = {
+const bFakeExtension: CatalogExtension = {
   id: 'idB',
   publisherName: 'FooPublisher',
   shortDescription: 'this is short B',
@@ -168,4 +168,19 @@ test('Expect to see empty screens on both pages', async () => {
 
   title = screen.getByText(`No extensions matching 'foo' found`);
   expect(title).toBeInTheDocument();
+});
+
+test('Expect to see local extensions tab content', async () => {
+  catalogExtensionInfos.set([]);
+  extensionInfos.set([]);
+
+  render(ExtensionList);
+
+  // select the local extensions tab
+  const localModeTab = screen.getByRole('button', { name: 'Local extensions' });
+  await fireEvent.click(localModeTab);
+
+  // expect to see empty screen
+  const emptyText = screen.getByText('Please enable development mode feature in the preferences');
+  expect(emptyText).toBeInTheDocument();
 });
