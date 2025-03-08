@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,6 +115,29 @@ test('expect cluster to be created using config file', async () => {
     expect.objectContaining({ provider: 'docker' }),
   );
   expect(telemetryLogErrorMock).not.toBeCalled();
+  expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+});
+
+test('expect cluster to not call setupIngressController function when supplying config file', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Supply the configuration file
+  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to NOT be called
   expect(extensionApi.kubernetes.createResources).not.toBeCalled();
 });
 
