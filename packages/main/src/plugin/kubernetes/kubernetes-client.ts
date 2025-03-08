@@ -89,6 +89,7 @@ import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import { Uri } from '../types/uri.js';
+import type { Exec as UtilExec } from '../util/exec.js';
 import { ContextsManager } from './contexts-manager.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';
@@ -185,6 +186,7 @@ export class KubernetesClient {
     private readonly configurationRegistry: ConfigurationRegistry,
     private readonly fileSystemMonitoring: FilesystemMonitoring,
     private readonly telemetry: Telemetry,
+    private readonly exec: UtilExec,
   ) {
     this.kubeConfig = new KubeConfig();
     this.contextsState = new ContextsManager(this.apiSender);
@@ -236,7 +238,7 @@ export class KubernetesClient {
 
     const statesExperimental = kubernetesConfiguration.get<boolean>('statesExperimental');
     if (statesExperimental) {
-      const manager = new ContextsManagerExperimental();
+      const manager = new ContextsManagerExperimental(this.exec);
       this.contextsState = manager;
       this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
       this.contextsStatesDispatcher.init();

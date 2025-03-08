@@ -57,6 +57,7 @@ import { Emitter } from '../events/emitter.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import { Uri } from '../types/uri.js';
+import type { Exec as UtilExec } from '../util/exec.js';
 import type { PodCreationSource, ScalableControllerType } from './kubernetes-client.js';
 import { KubernetesClient } from './kubernetes-client.js';
 import { ResizableTerminalWriter } from './kubernetes-exec-transmitter.js';
@@ -256,7 +257,8 @@ class TestKubernetesClient extends KubernetesClient {
 }
 
 function createTestClient(namespace?: string): TestKubernetesClient {
-  const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
+  const exec = {} as UtilExec;
+  const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry, exec);
   if (namespace) {
     client.setCurrentNamespace(namespace);
   }
@@ -466,7 +468,14 @@ test('Check connection to Kubernetes cluster', async () => {
   vi.mocked(clientNode.Health).mockReturnValue({
     readyz: vi.fn().mockResolvedValue(true),
   } as unknown as clientNode.Health);
-  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
+  const exec = {} as UtilExec;
+  const client = new KubernetesClient(
+    {} as ApiSenderType,
+    configurationRegistry,
+    fileSystemMonitoring,
+    telemetry,
+    exec,
+  );
   const result = await client.checkConnection();
   expect(result).toBeTruthy();
 });
@@ -476,7 +485,14 @@ test('Check connection to Kubernetes cluster in error', async () => {
     readyz: vi.fn().mockRejectedValue(undefined),
   } as unknown as clientNode.Health);
 
-  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
+  const exec = {} as UtilExec;
+  const client = new KubernetesClient(
+    {} as ApiSenderType,
+    configurationRegistry,
+    fileSystemMonitoring,
+    telemetry,
+    exec,
+  );
   const result = await client.checkConnection();
   expect(result).toBeFalsy();
 });
@@ -488,7 +504,14 @@ test('Check update with empty kubeconfig file', async () => {
   // provide empty kubeconfig file
   readFileMock.mockResolvedValue('');
 
-  const client = new KubernetesClient({} as ApiSenderType, configurationRegistry, fileSystemMonitoring, telemetry);
+  const exec = {} as UtilExec;
+  const client = new KubernetesClient(
+    {} as ApiSenderType,
+    configurationRegistry,
+    fileSystemMonitoring,
+    telemetry,
+    exec,
+  );
   await client.refresh();
   expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('is empty. Skipping'));
 });

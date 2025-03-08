@@ -500,7 +500,13 @@ export class PluginSystem {
     const fileSystemMonitoring = new FilesystemMonitoring();
     const customPickRegistry = new CustomPickRegistry(apiSender);
     const onboardingRegistry = new OnboardingRegistry(context);
-    const kubernetesClient = new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
+    const kubernetesClient = new KubernetesClient(
+      apiSender,
+      configurationRegistry,
+      fileSystemMonitoring,
+      telemetry,
+      exec,
+    );
     await kubernetesClient.init();
     const closeBehaviorConfiguration = new CloseBehavior(configurationRegistry);
     await closeBehaviorConfiguration.init();
