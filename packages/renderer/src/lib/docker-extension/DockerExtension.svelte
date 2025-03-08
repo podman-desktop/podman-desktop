@@ -33,8 +33,7 @@ window.events?.receive('dev-tools:open-extension', (extensionId: unknown) => {
   const extensionElement = document.getElementById(`dd-webview-${extensionId}`);
 
   if (extensionElement) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (extensionElement as any).openDevTools();
+    (extensionElement as Electron.WebviewTag).openDevTools();
   }
 });
 </script>
