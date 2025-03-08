@@ -297,7 +297,7 @@ describe('MacOS platform tests', () => {
       } else if (args?.[0] === '-getsecurewebproxy') {
         return { stdout: 'Server:\nPort: 0\nEnabled: No' } as RunResult;
       } else if (args?.[0] === '-getproxybypassdomains') {
-        return { stdout: '*.internal' } as RunResult;
+        return { stdout: 'localhost\n127.0.0.1\n*.internal\nfoobar.example.com' } as RunResult;
       }
       throw new Error('Unsupported call');
     });
@@ -305,6 +305,6 @@ describe('MacOS platform tests', () => {
     expect(settings).toBeDefined();
     expect(settings?.httpProxy).toBeUndefined();
     expect(settings?.httpsProxy).toBeUndefined();
-    expect(settings?.noProxy).toBe('*.internal');
+    expect(settings?.noProxy).toBe('localhost,127.0.0.1,internal,foobar.example.com');
   });
 });
