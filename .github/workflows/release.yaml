@@ -149,7 +149,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - uses: actions/setup-python@v5
@@ -225,7 +225,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -283,7 +283,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: create the pnpm store from the dependencies
         run: |
-          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:20 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
+          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:22 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
           # now the store is in the pnpm-store directory
           # create a tarball of the store
           echo "Creating the archive store-cache-pnpm-${{ matrix.arch }}.tgz"

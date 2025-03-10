@@ -125,7 +125,7 @@ importers:
         version: 1.9.4
       '@commitlint/cli':
         specifier: ^19.8.0
-        version: 19.8.0(@types/node@20.17.24)(typescript@5.6.3)
+        version: 19.8.0(@types/node@22.13.10)(typescript@5.6.3)
       '@commitlint/config-conventional':
         specifier: ^19.8.0
         version: 19.8.0
@@ -178,8 +178,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/node':
-        specifier: ^20
-        version: 20.17.24
+        specifier: ^22
+        version: 22.13.10
       '@types/tar':
         specifier: ^6.1.13
         version: 6.1.13
@@ -197,10 +197,10 @@ importers:
         version: 8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)
       '@vitest/coverage-v8':
         specifier: ^3.0.6
-        version: 3.0.6(vitest@3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
+        version: 3.0.6(vitest@3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
       '@vitest/eslint-plugin':
         specifier: ^1.1.31
-        version: 1.1.31(@typescript-eslint/utils@8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)(vitest@3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
+        version: 1.1.31(@typescript-eslint/utils@8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)(vitest@3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
@@ -208,8 +208,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 34.3.0
-        version: 34.3.0
+        specifier: 35.0.1
+        version: 35.0.1
       electron-builder:
         specifier: '25.1'
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8(dmg-builder@25.1.8))
@@ -269,7 +269,7 @@ importers:
         version: 15.4.3
       msw:
         specifier: ^2.7.3
-        version: 2.7.3(@types/node@20.17.24)(typescript@5.6.3)
+        version: 2.7.3(@types/node@22.13.10)(typescript@5.6.3)
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -287,10 +287,10 @@ importers:
         version: 13.12.0
       vite:
         specifier: ^6.2.1
-        version: 6.2.1(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+        version: 6.2.1(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       vitest:
         specifier: ^3.0.6
-        version: 3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+        version: 3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       xvfb-maybe:
         specifier: ^0.2.1
         version: 0.2.1
@@ -557,8 +557,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 34.3.0
-        version: 34.3.0
+        specifier: 35.0.1
+        version: 35.0.1
       vitest:
         specifier: ^3.0.6
         version: 3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.7.2))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
@@ -901,8 +901,8 @@ importers:
         specifier: ^20
         version: 20.17.24
       electron:
-        specifier: 34.3.0
-        version: 34.3.0
+        specifier: 35.0.1
+        version: 35.0.1
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -3999,9 +3999,6 @@ packages:
   '@types/node@20.17.13':
     resolution: {integrity: sha512-RNf+4dEeV69PIvyp++4IKM2vnLXtmp/JovfeQm5P5+qpKb6wHoH7INywLdZ7z+gVX46kgBP/fwJJvZYaHxtdyw==}
 
-  '@types/node@20.17.19':
-    resolution: {integrity: sha512-LEwC7o1ifqg/6r2gn9Dns0f1rhK+fPFDoMiceTJ6kWmVk6bgXBI/9IOWfVan4WiAavK9pIVWdX0/e3J+eEUh5A==}
-
   '@types/node@20.17.24':
     resolution: {integrity: sha512-d7fGCyB96w9BnWQrOsJtpyiSaBcAYYr75bnK6ZRjDbql2cGLj/3GsL5OYmLPNq76l7Gf2q4Rv9J2o6h5CrD9sA==}
 
@@ -6047,8 +6044,8 @@ packages:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
     engines: {node: '>=18'}
 
-  electron@34.3.0:
-    resolution: {integrity: sha512-I238qRnYTAsuwJ/rS7HGaFNY4NNKAcjX8nlj7mnNmj1TK3z4HvNoD1r7Zud81DYDFx8AITuLd76EPrEnnfF9Bg==}
+  electron@35.0.1:
+    resolution: {integrity: sha512-iQonj6lnPhqfqha2KXx6LzV1dnu6UPTCWK+b7f9Zvg828umGemi22DKbcJ3/q+Opn7iUVTWyqp9z1JQqkIi6OA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -12730,11 +12727,11 @@ snapshots:
   '@colors/colors@1.5.0':
     optional: true
 
-  '@commitlint/cli@19.8.0(@types/node@20.17.24)(typescript@5.6.3)':
+  '@commitlint/cli@19.8.0(@types/node@22.13.10)(typescript@5.6.3)':
     dependencies:
       '@commitlint/format': 19.8.0
       '@commitlint/lint': 19.8.0
-      '@commitlint/load': 19.8.0(@types/node@20.17.24)(typescript@5.6.3)
+      '@commitlint/load': 19.8.0(@types/node@22.13.10)(typescript@5.6.3)
       '@commitlint/read': 19.8.0
       '@commitlint/types': 19.8.0
       tinyexec: 0.3.2
@@ -12781,7 +12778,7 @@ snapshots:
       '@commitlint/rules': 19.8.0
       '@commitlint/types': 19.8.0
 
-  '@commitlint/load@19.8.0(@types/node@20.17.24)(typescript@5.6.3)':
+  '@commitlint/load@19.8.0(@types/node@22.13.10)(typescript@5.6.3)':
     dependencies:
       '@commitlint/config-validator': 19.8.0
       '@commitlint/execute-rule': 19.8.0
@@ -12789,7 +12786,7 @@ snapshots:
       '@commitlint/types': 19.8.0
       chalk: 5.4.1
       cosmiconfig: 9.0.0(typescript@5.6.3)
-      cosmiconfig-typescript-loader: 6.1.0(@types/node@20.17.24)(cosmiconfig@9.0.0(typescript@5.6.3))(typescript@5.6.3)
+      cosmiconfig-typescript-loader: 6.1.0(@types/node@22.13.10)(cosmiconfig@9.0.0(typescript@5.6.3))(typescript@5.6.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -14334,6 +14331,7 @@ snapshots:
       '@inquirer/type': 3.0.4(@types/node@20.17.24)
     optionalDependencies:
       '@types/node': 20.17.24
+    optional: true
 
   '@inquirer/confirm@5.1.6(@types/node@22.13.10)':
     dependencies:
@@ -14354,6 +14352,7 @@ snapshots:
       yoctocolors-cjs: 2.1.2
     optionalDependencies:
       '@types/node': 20.17.24
+    optional: true
 
   '@inquirer/core@10.1.7(@types/node@22.13.10)':
     dependencies:
@@ -14373,6 +14372,7 @@ snapshots:
   '@inquirer/type@3.0.4(@types/node@20.17.24)':
     optionalDependencies:
       '@types/node': 20.17.24
+    optional: true
 
   '@inquirer/type@3.0.4(@types/node@22.13.10)':
     optionalDependencies:
@@ -15498,20 +15498,20 @@ snapshots:
 
   '@types/adm-zip@0.5.7':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/aria-query@5.0.4': {}
 
   '@types/asn1@0.2.4':
     dependencies:
-      '@types/node': 20.17.13
+      '@types/node': 22.13.10
 
   '@types/aws-lambda@8.10.147': {}
 
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/bonjour@3.5.13':
     dependencies:
@@ -15521,7 +15521,7 @@ snapshots:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 20.17.19
+      '@types/node': 22.13.10
       '@types/responselike': 1.0.3
 
   '@types/connect-history-api-fallback@1.5.4':
@@ -15531,11 +15531,11 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/conventional-commits-parser@5.0.1':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/cookie@0.6.0': {}
 
@@ -15662,13 +15662,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/ssh2': 1.15.4
 
   '@types/dockerode@3.3.33':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/ssh2': 1.15.4
 
   '@types/eslint-scope@3.7.7':
@@ -15689,7 +15689,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/qs': 6.9.17
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -15710,7 +15710,7 @@ snapshots:
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/geojson@7946.0.16': {}
 
@@ -15754,7 +15754,7 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 20.17.19
+      '@types/node': 22.13.10
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -15770,7 +15770,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       form-data: 4.0.1
 
   '@types/node-forge@1.3.11':
@@ -15784,10 +15784,6 @@ snapshots:
       undici-types: 5.26.5
 
   '@types/node@20.17.13':
-    dependencies:
-      undici-types: 6.19.8
-
-  '@types/node@20.17.19':
     dependencies:
       undici-types: 6.19.8
 
@@ -15805,7 +15801,7 @@ snapshots:
 
   '@types/plist@3.0.5':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       xmlbuilder: 15.1.1
     optional: true
 
@@ -15847,20 +15843,20 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 20.17.19
+      '@types/node': 22.13.10
 
   '@types/retry@0.12.0': {}
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 22.13.10
 
   '@types/semver@7.5.8': {}
 
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -15869,7 +15865,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/send': 0.17.4
 
   '@types/sockjs@0.3.36':
@@ -15889,29 +15885,29 @@ snapshots:
 
   '@types/stream-buffers@3.0.7':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/stream-chain@2.1.0':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/stream-json@1.7.8':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/stream-chain': 2.1.0
 
   '@types/tar-fs@2.0.4':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       '@types/tar-stream': 3.1.3
 
   '@types/tar-stream@3.1.3':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/tar@6.1.13':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       minipass: 4.2.8
 
   '@types/tough-cookie@4.0.5': {}
@@ -15934,7 +15930,7 @@ snapshots:
 
   '@types/ws@8.5.13':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -15944,7 +15940,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.17.19
+      '@types/node': 22.13.10
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.24.1(@typescript-eslint/parser@8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)':
@@ -16116,7 +16112,7 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@vitest/coverage-v8@3.0.6(vitest@3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
+  '@vitest/coverage-v8@3.0.6(vitest@3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -16130,17 +16126,17 @@ snapshots:
       std-env: 3.8.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+      vitest: 3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/eslint-plugin@1.1.31(@typescript-eslint/utils@8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)(vitest@3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
+  '@vitest/eslint-plugin@1.1.31(@typescript-eslint/utils@8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)(vitest@3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
     dependencies:
       '@typescript-eslint/utils': 8.24.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.6.3)
       eslint: 9.22.0(jiti@2.4.2)
     optionalDependencies:
       typescript: 5.6.3
-      vitest: 3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+      vitest: 3.0.6(@types/debug@4.1.12)(@types/node@22.13.10)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
 
   '@vitest/expect@2.0.5':
     dependencies:
@@ -16156,14 +16152,14 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.0.6(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(vite@6.2.1(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
+  '@vitest/mocker@3.0.6(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(vite@6.2.1(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
     dependencies:
       '@vitest/spy': 3.0.6
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
       msw: 2.7.3(@types/node@20.17.24)(typescript@5.6.3)
-      vite: 6.2.1(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+      vite: 6.2.1(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
 
   '@vitest/mocker@3.0.6(msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3))(vite@6.2.1(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))':
     dependencies:
@@ -17442,9 +17438,9 @@ snapshots:
     dependencies:
       layout-base: 2.0.1
 
-  cosmiconfig-typescript-loader@6.1.0(@types/node@20.17.24)(cosmiconfig@9.0.0(typescript@5.6.3))(typescript@5.6.3):
+  cosmiconfig-typescript-loader@6.1.0(@types/node@22.13.10)(cosmiconfig@9.0.0(typescript@5.6.3))(typescript@5.6.3):
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       cosmiconfig: 9.0.0(typescript@5.6.3)
       jiti: 2.4.2
       typescript: 5.6.3
@@ -18280,10 +18276,10 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.0.0
 
-  electron@34.3.0:
+  electron@35.0.1:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 20.17.19
+      '@types/node': 22.13.10
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -21644,6 +21640,7 @@ snapshots:
       typescript: 5.6.3
     transitivePeerDependencies:
       - '@types/node'
+    optional: true
 
   msw@2.7.3(@types/node@22.13.10)(typescript@5.6.3):
     dependencies:
@@ -21669,7 +21666,6 @@ snapshots:
       typescript: 5.6.3
     transitivePeerDependencies:
       - '@types/node'
-    optional: true
 
   msw@2.7.3(@types/node@22.13.10)(typescript@5.7.2):
     dependencies:
@@ -23034,7 +23030,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.0
+      '@babel/runtime': 7.26.9
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -24740,7 +24736,7 @@ snapshots:
   vitest@3.0.6(@types/debug@4.1.12)(@types/node@20.17.24)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0):
     dependencies:
       '@vitest/expect': 3.0.6
-      '@vitest/mocker': 3.0.6(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(vite@6.2.1(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
+      '@vitest/mocker': 3.0.6(msw@2.7.3(@types/node@20.17.24)(typescript@5.6.3))(vite@6.2.1(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
       '@vitest/pretty-format': 3.0.6
       '@vitest/runner': 3.0.6
       '@vitest/snapshot': 3.0.6
