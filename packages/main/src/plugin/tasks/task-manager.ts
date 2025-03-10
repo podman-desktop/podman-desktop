@@ -139,7 +139,7 @@ export class TaskManager {
   }): Task {
     this.taskId++;
 
-    const task = new TaskImpl(`task-${this.taskId}`, options?.title ? options.title : `Task ${this.taskId}`);
+    const task = new TaskImpl(`task-${this.taskId}`, options?.title ?? `Task ${this.taskId}`);
     task.action = options?.action;
     task.cancellable = options?.cancellable ?? false;
     if (task.cancellable && !options?.cancellationTokenSourceId) {

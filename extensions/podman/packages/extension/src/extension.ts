@@ -285,9 +285,9 @@ async function doUpdateMachines(
     const userModeNetworking = extensionApi.env.isWindows ? !!machine.UserModeNetworking : true;
     podmanMachinesInfo.set(machine.Name, {
       name: machine.Name,
-      memory: machineInfo?.memory ? machineInfo.memory : Number(machine.Memory),
-      cpus: machineInfo?.cpus ? machineInfo.cpus : machine.CPUs,
-      diskSize: machineInfo?.diskSize ? machineInfo.diskSize : Number(machine.DiskSize),
+      memory: machineInfo?.memory ?? Number(machine.Memory),
+      cpus: machineInfo?.cpus ?? machine.CPUs,
+      diskSize: machineInfo?.diskSize ?? Number(machine.DiskSize),
       userModeNetworking: userModeNetworking,
       cpuUsage: machineInfo?.cpuIdle !== undefined ? 100 - machineInfo?.cpuIdle : 0,
       diskUsage:
