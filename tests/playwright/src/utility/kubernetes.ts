@@ -195,23 +195,25 @@ export async function configurePortForwarding(
   resourceType: KubernetesResources,
   resourceName: string,
 ): Promise<void> {
-  const navigationBar = new NavigationBar(page);
+  return test.step(`Configure port forwarding for ${resourceName} ${resourceType} k8s resource`, async () => {
+    const navigationBar = new NavigationBar(page);
 
-  const kubernetesBar = await navigationBar.openKubernetes();
-  const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
-  await playExpect
-    .poll(async () => kubernetesResourcePage.getResourceRowByName(resourceName), { timeout: 15_000 })
-    .toBeTruthy();
-  const kubernetesResourceDetailsPage = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
-  await kubernetesResourceDetailsPage.activateTab('Summary');
-  const forwardButton = page.getByRole('button', { name: `Forward...` });
-  await playExpect(forwardButton).toBeVisible();
-  await forwardButton.click();
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
+    await playExpect
+      .poll(async () => kubernetesResourcePage.getResourceRowByName(resourceName), { timeout: 15_000 })
+      .toBeTruthy();
+    const kubernetesResourceDetailsPage = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
+    await kubernetesResourceDetailsPage.activateTab('Summary');
+    const forwardButton = page.getByRole('button', { name: `Forward...` });
+    await playExpect(forwardButton).toBeVisible();
+    await forwardButton.click();
 
-  const openInBrowserButton = page.getByRole('button', { name: 'Open', exact: true });
-  const removeConfigurationButton = page.getByRole('button', { name: 'Remove' });
-  await playExpect(openInBrowserButton).toBeVisible({ timeout: 10_000 });
-  await playExpect(removeConfigurationButton).toBeVisible();
+    const openInBrowserButton = page.getByRole('button', { name: 'Open', exact: true });
+    const removeConfigurationButton = page.getByRole('button', { name: 'Remove' });
+    await playExpect(openInBrowserButton).toBeVisible({ timeout: 10_000 });
+    await playExpect(removeConfigurationButton).toBeVisible();
+  });
 }
 
 export async function verifyPortForwardingConfiguration(
@@ -220,30 +222,34 @@ export async function verifyPortForwardingConfiguration(
   localPort: number,
   remotePort: number,
 ): Promise<void> {
-  const navigationBar = new NavigationBar(page);
-  const kubernetesBar = await navigationBar.openKubernetes();
-  const portForwardingPage = await kubernetesBar.openTabPage(KubernetesResources.PortForwarding);
-  await playExpect(portForwardingPage.heading).toBeVisible();
-  const configurationRow = portForwardingPage.getResourceRowByName(configurationName);
-  await playExpect(configurationRow).toBeVisible();
+  return test.step(`Verify port forwarding for ${configurationName} configuration: local port ${localPort}, remote port ${remotePort}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const portForwardingPage = await kubernetesBar.openTabPage(KubernetesResources.PortForwarding);
+    await playExpect(portForwardingPage.heading).toBeVisible();
+    const configurationRow = portForwardingPage.getResourceRowByName(configurationName);
+    await playExpect(configurationRow).toBeVisible();
 
-  const localPortCell = await portForwardingPage.geAttributeByRow(
-    configurationRow,
-    'Local Port',
-    KubernetesResources.PortForwarding,
-  );
-  const remotePortCell = await portForwardingPage.geAttributeByRow(
-    configurationRow,
-    'Remote Port',
-    KubernetesResources.PortForwarding,
-  );
-  playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
-  playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
+    const localPortCell = await portForwardingPage.geAttributeByRow(
+      configurationRow,
+      'Local Port',
+      KubernetesResources.PortForwarding,
+    );
+    const remotePortCell = await portForwardingPage.geAttributeByRow(
+      configurationRow,
+      'Remote Port',
+      KubernetesResources.PortForwarding,
+    );
+    playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
+    playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
+  });
 }
 
 export async function verifyLocalPortResponse(forwardAddress: string, responseMessage: string): Promise<void> {
-  const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
-  const blob: Blob = await response.blob();
-  const text: string = await blob.text();
-  playExpect(text).toContain(responseMessage);
+  return test.step('Verify local port response', async () => {
+    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
+    const blob: Blob = await response.blob();
+    const text: string = await blob.text();
+    playExpect(text).toContain(responseMessage);
+  });
 }
