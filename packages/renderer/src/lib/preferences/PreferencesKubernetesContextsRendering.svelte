@@ -201,10 +201,6 @@ async function connect(contextName: string): Promise<void> {
     }
   });
 }
-
-function toHtmlParagraphs(s: string): string {
-  return '<p>' + s.replaceAll('\n', '</p><p>') + '</p>';
-}
 </script>
 
 <SettingsPage title="Kubernetes Contexts">
@@ -324,8 +320,10 @@ function toHtmlParagraphs(s: string): string {
                       <div class="ml-1 text-xs text-[var(--pd-status-dead)]" aria-label="Error">
                         <Tooltip>
                           <div>ERROR</div>
-                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                          <div slot="tip" class="p-2">{@html toHtmlParagraphs(context.errorMessage)}</div>
+                          <div slot="tip" class="p-2">
+                            {#each context.errorMessage.split('\n').filter(l => l) as line}
+                              <p>{line}</p>
+                            {/each}
                         </Tooltip>
                       </div>
                     {:else}
