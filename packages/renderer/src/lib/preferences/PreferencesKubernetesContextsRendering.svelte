@@ -32,6 +32,7 @@ interface KubeContextWithStates extends KubeContext {
   podsPermitted: boolean;
   deploymentsPermitted: boolean;
   notPermittedHelp?: string;
+  errorMessage?: string;
 }
 
 const currentContextName = $derived($kubernetesContexts.find(c => c.currentContext)?.name);
@@ -51,6 +52,7 @@ const kubernetesContextsWithStates: KubeContextWithStates[] = $derived(
       deploymentsCount: getResourcesCount(kubeContext.name, 'deployments', experimentalStates),
       podsPermitted: getResourcePermitted(kubeContext.name, 'pods', experimentalStates),
       deploymentsPermitted: getResourcePermitted(kubeContext.name, 'deployments', experimentalStates),
+      errorMessage: getErrorMessage(kubeContext.name, experimentalStates),
     }))
     .map(kubeContext => ({
       ...kubeContext,
@@ -117,6 +119,12 @@ function isContextReachable(contextName: string, experimental: boolean): boolean
     );
   }
   return $kubernetesContextsState.get(contextName)?.reachable ?? false;
+}
+
+function getErrorMessage(contextName: string, experimental: boolean): string | undefined {
+  if (experimental) {
+    return $kubernetesContextsHealths.find(contextHealth => contextHealth.contextName === contextName)?.errorMessage;
+  }
 }
 
 function isContextOffline(contextName: string, experimental: boolean): boolean {
@@ -192,6 +200,10 @@ async function connect(contextName: string): Promise<void> {
       $kubernetesContexts = setKubeUIContextError($kubernetesContexts, contextName, e);
     }
   });
+}
+
+function toHtmlParagraphs(s: string): string {
+  return '<p>' + s.replaceAll('\n', '</p><p>') + '</p>';
 }
 </script>
 
@@ -307,14 +319,25 @@ async function connect(contextName: string): Promise<void> {
               {:else}
                 <div class="flex flex-col space-y-2">
                   <div class="flex flex-row pt-2">
-                    <div class="w-3 h-3 rounded-full bg-[var(--pd-status-disconnected)]"></div>
-                    <div class="ml-1 text-xs text-[var(--pd-status-disconnected)]" aria-label="Context Unreachable">
-                      {#if context.isKnown}
-                        UNREACHABLE
-                      {:else}
-                        UNKNOWN
-                      {/if}
-                    </div>
+                    {#if context.errorMessage}
+                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-dead)]"></div>
+                      <div class="ml-1 text-xs text-[var(--pd-status-dead)]" aria-label="Error">
+                        <Tooltip>
+                          <div>ERROR</div>
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                          <div slot="tip" class="p-2">{@html toHtmlParagraphs(context.errorMessage)}</div>
+                        </Tooltip>
+                      </div>
+                    {:else}
+                      <div class="w-3 h-3 rounded-full bg-[var(--pd-status-disconnected)]"></div>
+                      <div class="ml-1 text-xs text-[var(--pd-status-disconnected)]" aria-label="Context Unreachable">
+                        {#if context.isKnown}
+                          UNREACHABLE
+                        {:else}
+                          UNKNOWN
+                        {/if}
+                      </div>
+                    {/if}
                     {#if context.isBeingChecked}
                       <div class="ml-1"><Spinner size="12px"></Spinner></div>
                     {/if}                    

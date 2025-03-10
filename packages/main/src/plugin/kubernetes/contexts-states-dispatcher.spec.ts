@@ -173,13 +173,20 @@ test('getContextsHealths should return the values of the map returned by manager
     checking: false,
     reachable: true,
   };
+  const context3State = {
+    contextName: 'context3',
+    checking: false,
+    reachable: false,
+    errorMessage: 'an error',
+  };
   const value = new Map<string, ContextHealthState>([
     ['context1', { ...context1State, kubeConfig: {} as unknown as KubeConfigSingleContext }],
     ['context2', { ...context2State, kubeConfig: {} as unknown as KubeConfigSingleContext }],
+    ['context3', { ...context3State, kubeConfig: {} as unknown as KubeConfigSingleContext }],
   ]);
   vi.mocked(manager.getHealthCheckersStates).mockReturnValue(value);
   const result = dispatcher.getContextsHealths();
-  expect(result).toEqual([context1State, context2State]);
+  expect(result).toEqual([context1State, context2State, context3State]);
 });
 
 test('updateHealthStates should call apiSender.send with kubernetes-contexts-healths', () => {
