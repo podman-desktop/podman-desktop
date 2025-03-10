@@ -240,8 +240,8 @@ export async function verifyPortForwardingConfiguration(
       'Remote Port',
       KubernetesResources.PortForwarding,
     );
-    playExpect(Number(await localPortCell.textContent())).toEqual(localPort);
-    playExpect(Number(await remotePortCell.textContent())).toEqual(remotePort);
+    playExpect(Number(await localPortCell.textContent())).toBe(localPort);
+    playExpect(Number(await remotePortCell.textContent())).toBe(remotePort);
   });
 }
 
