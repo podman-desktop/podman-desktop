@@ -95,9 +95,15 @@ export interface DeviceMapping {
   PathOnHost: string;
 }
 
+export interface HostConfigPortBinding {
+  [port: string]: {
+    HostPort?: string;
+    HostIp?: string;
+  }[];
+}
+
 export interface HostConfig {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PortBindings?: any;
+  PortBindings?: HostConfigPortBinding;
   Binds?: string[];
   AutoRemove?: boolean;
   SecurityOpt?: string[];

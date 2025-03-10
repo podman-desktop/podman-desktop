@@ -2084,7 +2084,13 @@ export class ContainerProviderRegistry {
       portmappings = [];
       for (const [key, value] of Object.entries(options.HostConfig?.PortBindings)) {
         const keyAsNumber = parseInt(key);
-        if (Array.isArray(value) && 'HostPort' in value[0] && !isNaN(keyAsNumber)) {
+        if (
+          Array.isArray(value) &&
+          value[0] &&
+          'HostPort' in value[0] &&
+          !isNaN(keyAsNumber) &&
+          value[0].HostPort !== undefined
+        ) {
           const valueAsNumber = parseInt(value[0].HostPort);
           if (!isNaN(valueAsNumber)) {
             portmappings.push({
