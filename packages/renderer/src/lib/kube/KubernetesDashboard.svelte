@@ -34,6 +34,7 @@ import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.s
 import KubernetesEmptyPage from './KubernetesEmptyPage.svelte';
 import shareYourLocalProdmanImagesWithTheKubernetesImage from './ShareYourLocalPodmanImagesWithTheKubernetes.png';
 import workingWithKubernetesImage from './WorkingWithKubernetes.png';
+import { showFeedbackDialog } from '/@/stores/feedbackForm';
 
 interface ExtendedKubernetesObject extends KubernetesObject {
   spec: {
@@ -95,6 +96,11 @@ onMount(async () => {
   disposable = await listenActiveResourcesCount((activeResourcesCounts: ResourceCount[]): void => {
     kubernetesActiveResourcesCountExperimental = activeResourcesCounts;
   });
+  // If experimental mode is enabled
+  if (isKubernetesExperimentalModeStore) {
+    // Show the feedback dialog after 3 minutes
+    setTimeout(() => showFeedbackDialog('kubernetes.statesExperimental'), 180000);
+  }
 });
 
 onDestroy(() => {
