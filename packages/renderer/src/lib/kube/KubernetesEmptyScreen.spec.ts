@@ -19,11 +19,19 @@
 import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 import * as uiSvelte from '@podman-desktop/ui-svelte';
 import { render } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
 
 import KubernetesEmptyScreen from './KubernetesEmptyScreen.svelte';
+import { listenResourcePermitted } from './resource-permission';
+
+vi.mock('./resource-permission');
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
+});
 
 test('KubernetesCheckConnection is called', async () => {
   const kubernetesCheckConnectionSpy = vi.spyOn(kubernetesCheckConnection, 'default');
