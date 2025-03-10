@@ -20,6 +20,15 @@ import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
+export type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
+
+export interface DropdownType {
+  heading: string;
+  buttons: string[];
+}
+
+export type ButtonsType = string | DropdownType;
+
 /**
  * Options to configure the behavior of the message box UI.
  */
@@ -39,7 +48,7 @@ export interface MessageBoxOptions {
   /**
    * Text for buttons.
    */
-  buttons?: string[];
+  buttons?: ButtonsType[];
   /**
    * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning'.
    */
@@ -52,10 +61,15 @@ export interface MessageBoxOptions {
    * The (optional) index of the button to be used to cancel the dialog.
    */
   cancelId?: number;
+  /**
+   * An additional (optional) markdown description
+   */
+  footerMarkdownDescription?: string;
 }
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
+  option?: RemindOption;
 }
 
 export class MessageBox {
@@ -84,6 +98,7 @@ export class MessageBox {
       type: options.type,
       defaultId: options.defaultId,
       cancelId: options.cancelId,
+      footerMarkdownDescription: options.footerMarkdownDescription,
     };
 
     // need to send the options to the frontend
@@ -109,7 +124,11 @@ export class MessageBox {
   }
 
   // this method is called by the frontend when the user selected a button
-  async onDidSelectButton(id: number, selectedIndex: number | undefined): Promise<void> {
+  async onDidSelectButton(
+    id: number,
+    selectedIndex: number | undefined,
+    selectedOption: RemindOption | undefined,
+  ): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 
@@ -118,6 +137,7 @@ export class MessageBox {
       // grab item
       const val: MessageBoxReturnValue = {
         response: selectedIndex,
+        option: selectedOption,
       };
       // resolve the promise
       callback.resolve(val);
