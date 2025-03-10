@@ -274,7 +274,6 @@ export default [
       'svelte/no-immutable-reactive-statements': 'off',
       'svelte/require-store-reactive-access': 'off',
       'svelte/no-reactive-literals': 'off',
-      'svelte/infinite-reactive-loop': 'off',
     },
   },
 

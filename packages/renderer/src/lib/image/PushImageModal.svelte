@@ -69,9 +69,13 @@ function callback(name: string, data: string): void {
 }
 
 let isAuthenticatedForThisImage = false;
+function updateIsAuthenticated(val: boolean): void {
+  isAuthenticatedForThisImage = val;
+}
+
 $: window
   .hasAuthconfigForImage(imageInfoToPush.name)
-  .then(result => (isAuthenticatedForThisImage = result))
+  .then(result => updateIsAuthenticated(result))
   .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageInfoToPush.id}`, err));
 </script>
 

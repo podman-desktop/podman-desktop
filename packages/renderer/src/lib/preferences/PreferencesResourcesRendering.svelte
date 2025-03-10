@@ -206,6 +206,10 @@ $: configurationKeys = properties
   .sort((a, b) => (a?.id ?? '').localeCompare(b?.id ?? ''));
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
+function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
+  tmpProviderContainerConfiguration = value;
+}
+
 $: Promise.all(
   providers.map(async provider => {
     const providerContainer = await Promise.all(
@@ -230,7 +234,7 @@ $: Promise.all(
     return providerContainer.flat();
   }),
 )
-  .then(value => (tmpProviderContainerConfiguration = value.flat()))
+  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
   .catch((err: unknown) => console.error('Error collecting providers', err));
 
 $: providerContainerConfiguration = tmpProviderContainerConfiguration

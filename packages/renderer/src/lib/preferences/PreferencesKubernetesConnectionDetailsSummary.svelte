@@ -11,6 +11,10 @@ export let providerInternalId: string | undefined = undefined;
 export let kubernetesConnectionInfo: ProviderKubernetesConnectionInfo | undefined = undefined;
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
+function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
+  tmpProviderContainerConfiguration = value;
+}
+
 $: Promise.all(
   properties.map(async configurationKey => {
     return {
@@ -26,7 +30,7 @@ $: Promise.all(
     };
   }),
 )
-  .then(value => (tmpProviderContainerConfiguration = value.flat()))
+  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
   .catch((err: unknown) => console.error('Error collecting providers', err));
 
 $: providerConnectionConfiguration = tmpProviderContainerConfiguration.filter(
