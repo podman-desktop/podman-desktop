@@ -41,7 +41,7 @@ export interface MessageBoxOptions {
    */
   buttons?: string[];
   /**
-   * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning'.
+   * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning' | 'feedback'.
    */
   type?: string;
   /**
