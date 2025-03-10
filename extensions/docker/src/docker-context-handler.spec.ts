@@ -218,10 +218,9 @@ describe('getContexts', () => {
       } as fs.Dirent,
     ]);
 
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce('invalid JSON');
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(
-      JSON.stringify({ Name: 'bar', Endpoints: { docker: { Host: 'foo' } } }),
-    );
+    const spyReadFile = vi.spyOn(fs.promises, 'readFile');
+    spyReadFile.mockResolvedValueOnce('invalid JSON');
+    spyReadFile.mockResolvedValueOnce(JSON.stringify({ Name: 'bar', Endpoints: { docker: { Host: 'foo' } } }));
 
     const contexts = await dockerContextHandler.getContexts();
 
@@ -247,8 +246,9 @@ describe('getContexts', () => {
       } as fs.Dirent,
     ]);
 
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(JSON.stringify({ Name: 'foo' }));
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(JSON.stringify({ Name: 'bar' }));
+    const spyReadFile = vi.spyOn(fs.promises, 'readFile');
+    spyReadFile.mockResolvedValueOnce(JSON.stringify({ Name: 'foo' }));
+    spyReadFile.mockResolvedValueOnce(JSON.stringify({ Name: 'bar' }));
 
     const contexts = await dockerContextHandler.getContexts();
 
@@ -269,9 +269,10 @@ describe('getContexts', () => {
         name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
       } as fs.Dirent,
     ]);
+    const spyReadFile = vi.spyOn(fs.promises, 'readFile');
 
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(JSON.stringify({ Name: 'foo' }));
-    vi.spyOn(fs.promises, 'readFile').mockResolvedValueOnce(JSON.stringify({ Name: 'bar' }));
+    spyReadFile.mockResolvedValueOnce(JSON.stringify({ Name: 'foo' }));
+    spyReadFile.mockResolvedValueOnce(JSON.stringify({ Name: 'bar' }));
 
     const contexts = await dockerContextHandler.getContexts();
 
