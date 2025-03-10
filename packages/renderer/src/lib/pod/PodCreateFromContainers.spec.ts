@@ -156,7 +156,7 @@ const containerInspectInfo: ContainerInspectInfo = {
     PortBindings: {
       9090: [
         {
-          HostPort: 8383,
+          HostPort: '8383',
           HostIp: '',
         },
       ],
