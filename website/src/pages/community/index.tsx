@@ -1,5 +1,6 @@
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import CommunityBanner from '@site/src/components/CommunityBanner';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
 import React from 'react';
@@ -10,6 +11,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout title={siteConfig.title} description="Podman Desktop Community page">
       <TailWindThemeSelector />
+      <CommunityBanner />
 
       <main className="max-w-4xl mx-auto p-6 ">
         <section className="mb-8">
