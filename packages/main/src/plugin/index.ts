@@ -1153,7 +1153,7 @@ export class PluginSystem {
         callbackId: number,
         platform?: string,
       ): Promise<void> => {
-        return commandRegistry.executeCommand(
+        await commandRegistry.executeCommand(
           'pullImage',
           providerContainerConnectionInfo,
           imageName,
@@ -1518,12 +1518,7 @@ export class PluginSystem {
 
     this.ipcHandle(
       'status-bar:executeStatusBarEntryCommand',
-      async (
-        _,
-        command: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        args: any[],
-      ): Promise<void> => {
+      async (_, command: string, args: unknown[]): Promise<void> => {
         await commandRegistry.executeCommand(command, args);
       },
     );

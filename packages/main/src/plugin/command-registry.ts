@@ -33,10 +33,8 @@ export interface RawCommand {
 }
 
 export interface CommandHandler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  callback: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  thisArg: any;
+  callback: (...args: unknown[]) => unknown;
+  thisArg: unknown;
 }
 
 export class CommandRegistry {
@@ -54,7 +52,7 @@ export class CommandRegistry {
   private commandPaletteCommands = new Map<string, RawCommand[]>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
+  registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: unknown): Disposable {
     if (this.commands.has(command)) {
       throw new Error(`command '${command}' already exists`);
     }
@@ -68,9 +66,8 @@ export class CommandRegistry {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async executeCommand<T = unknown>(commandId: string, ...args: any[]): Promise<T> {
-    const telemetryOptions = { commandId: commandId };
+  async executeCommand(commandId: string, ...args: unknown[]): Promise<unknown> {
+    const telemetryOptions: { commandId: string; error?: unknown } = { commandId: commandId };
     try {
       // command is on node world, just execute it
       if (this.commands.has(commandId)) {
@@ -82,9 +79,8 @@ export class CommandRegistry {
 
       // should try to execute on client side
       throw new Error('Unknown command: ' + commandId);
-    } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (telemetryOptions as any).error = err;
+    } catch (err: unknown) {
+      telemetryOptions.error = err;
       throw err;
     } finally {
       this.telemetry.track('executeCommand', telemetryOptions);

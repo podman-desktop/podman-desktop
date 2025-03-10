@@ -793,9 +793,8 @@ export class ExtensionLoader {
         disposables.push(registration);
         return registration;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      executeCommand<T = unknown>(commandId: string, ...args: any[]): PromiseLike<T> {
-        return commandRegistry.executeCommand(commandId, ...args);
+      executeCommand<T = unknown>(commandId: string, ...args: unknown[]): Promise<T> {
+        return commandRegistry.executeCommand(commandId, ...args) as Promise<T>;
       },
     };
 
