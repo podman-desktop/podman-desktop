@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: test-deployment-resource
-        image: quay.io/podman-desktop-demo/podify-demo-backend:v1
+        image: ghcr.io/podmandesktop-ci/nginx
         ports:
         - containerPort: 80
  
