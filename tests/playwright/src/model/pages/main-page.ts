@@ -119,18 +119,12 @@ export abstract class MainPage extends BasePage {
     });
   }
 
-  async getRowByName(name: string): Promise<Locator | undefined> {
+  async getRowByName(name: string, exact = true): Promise<Locator | undefined> {
     return test.step(`Get row from ${this.title} page table by name: ${name}`, async () => {
-      let locator: Locator;
-
-      if (this.title === 'volumes') {
-        locator = this.page.getByRole('row').and(this.page.getByLabel(name)).first();
-      } else {
-        locator = this.page
-          .getByRole('row')
-          .and(this.page.getByLabel(name, { exact: true }))
-          .first();
-      }
+      const locator = this.page
+        .getByRole('row')
+        .and(this.page.getByLabel(name, { exact: exact }))
+        .first();
 
       return (await locator.count()) > 0 ? locator : undefined;
     });

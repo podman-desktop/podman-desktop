@@ -80,7 +80,7 @@ export class VolumesPage extends MainPage {
   }
 
   async getVolumeRowByName(name: string): Promise<Locator | undefined> {
-    return this.getRowByName(name);
+    return this.getRowByName(name, false);
   }
 
   protected async volumeExists(name: string): Promise<boolean> {
