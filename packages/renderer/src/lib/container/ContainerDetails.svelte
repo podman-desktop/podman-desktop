@@ -48,7 +48,7 @@ onMount(() => {
       window
         .getContainerInspect(container.engineId, container.id)
         .then(inspect => {
-          displayTty = (inspect.Config.Tty || false) && (inspect.Config.OpenStdin || false);
+          displayTty = (inspect.Config.Tty ?? false) && (inspect.Config.OpenStdin ?? false);
           // if we comes with a / redirect to /logs or to /tty if tty is supported
           if (currentRouterPath.endsWith('/')) {
             if (displayTty) {

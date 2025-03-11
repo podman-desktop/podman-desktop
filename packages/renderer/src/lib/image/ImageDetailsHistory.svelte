@@ -12,7 +12,7 @@ onMount(async () => {
   // grab inspect result from the container
   const historyResult = await window.getImageHistory(image.engineId, image.id);
   // keep only instructions
-  const instructions = historyResult.map(item => item.CreatedBy || 'None');
+  const instructions = historyResult.map(item => item.CreatedBy ?? 'None');
   history = instructions.join('\n');
 });
 </script>
