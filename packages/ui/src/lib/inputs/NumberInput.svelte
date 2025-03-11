@@ -90,7 +90,7 @@ function onIncrement(e: MouseEvent): void {
 </script>
 
 <Input
-  class={$$props.class || ''}
+  class={$$props.class ?? ''}
   inputClass="text-center"
   name={name}
   bind:value={valueAsString}

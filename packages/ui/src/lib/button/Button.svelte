@@ -80,7 +80,7 @@ $: {
   aria-label={$$props['aria-label']}
   on:click
   disabled={disabled || inProgress}>
-  {#if icon || inProgress}
+  {#if icon ?? inProgress}
     <div
       class="flex flex-row p-0 m-0 bg-transparent justify-center items-center space-x-[4px]"
       class:py-[3px]={!$$slots.default}>

@@ -26,7 +26,7 @@ function onClick(
 }
 </script>
 
-<label class="flex flex-row items-center {$$props.class || ''}">
+<label class="flex flex-row items-center {$$props.class ?? ''}">
   <div class="relative p-2 self-start" class:mt-0.5={$$slots.default} class:mr-1={$$slots.default}>
     <div
       class="grid absolute left-0 top-0"

@@ -668,7 +668,7 @@ export class ContainerProviderRegistry {
               engineId: provider.id,
               isManifest,
               Id: image.Digest ? `sha256:${image.Id}` : image.Id,
-              Digest: image.Digest || `sha256:${image.Id}`,
+              Digest: image.Digest ?? `sha256:${image.Id}`,
             };
 
             // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest

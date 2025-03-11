@@ -37,7 +37,7 @@ async function onClear(): Promise<void> {
 
 <div class="flex flex-col grow">
   <div
-    class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {$$props.class ||
+    class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {$$props.class ??
       ''}"
     class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={enabled}
     class:focus-within:bg-[var(--pd-input-field-focused-bg)]={enabled}

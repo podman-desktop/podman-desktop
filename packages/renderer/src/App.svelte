@@ -155,7 +155,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
           <DashboardPage />
         </Route>
         <Route path="/containers" breadcrumb="Containers" navigationHint="root">
-          <ContainerList searchTerm={meta.query.filter || ''} />
+          <ContainerList searchTerm={meta.query.filter ?? ''} />
         </Route>
         <Route path="/containers/:id/*" let:meta firstmatch>
           <Route path="/export" breadcrumb="Export Container">
