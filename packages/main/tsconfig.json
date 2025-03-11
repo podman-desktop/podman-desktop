@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "node16",
+    "module": "NodeNext",
     "target": "esnext",
     "sourceMap": false,
     "moduleResolution": "node16",

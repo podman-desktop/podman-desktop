@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import {
   type RecommendedRegistryExtensionDetails,
 } from '/@/plugin/recommendations/recommendations-api.js';
 
-import { default as recommendations } from '../../../../../recommendations.json';
+import recommendations from '../../../../../recommendations.json' with { type: 'json' };
 import { RecommendationsSettings } from './recommendations-settings.js';
 
 export class RecommendationsRegistry {

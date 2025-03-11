@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import * as osLocale from 'os-locale';
 
 import type { FeedbackProperties } from '/@api/feedback.js';
 
-import { default as telemetry } from '../../../../../telemetry.json';
+import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { stoppedExtensions } from '../../util.js';
 import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import type { Event } from '../events/emitter.js';

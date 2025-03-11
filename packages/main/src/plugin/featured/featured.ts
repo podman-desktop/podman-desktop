@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import type { CatalogFetchableExtension } from '/@/plugin/extension/catalog/exte
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
 
-import { featured as featuredJSONFile } from '../../../../../featured.json';
+import featuredJSONFile from '../../../../../featured.json' with { type: 'json' };
 
 /**
  * Manages the Featured extensions
@@ -40,7 +40,7 @@ export class Featured {
 
   // Get content of the file using the import field/resolveJsonModule
   readFeaturedJson(): FeaturedExtensionJSON[] {
-    return featuredJSONFile as FeaturedExtensionJSON[];
+    return featuredJSONFile.featured as FeaturedExtensionJSON[];
   }
 
   /**
