@@ -225,9 +225,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
 
   test(`Checking pods under containers`, async ({ navigationBar }) => {
     const containers = await navigationBar.openContainers();
-    await playExpect
-      .poll(async () => containers.containerExists(`${podToRun} (pod)`), { timeout: 10_000 })
-      .toBeTruthy();
+    await playExpect.poll(async () => containers.containerExists(podToRun), { timeout: 10_000 }).toBeTruthy();
     await playExpect
       .poll(async () => containers.containerExists(`${backendContainer}-podified`), { timeout: 10_000 })
       .toBeTruthy();

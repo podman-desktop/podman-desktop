@@ -33,7 +33,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const backendContainerName = 'backend-1';
 const frontendContainerName = 'frontend-1';
-const composeContainer = 'resources (compose)';
+const composeContainer = 'resources';
 const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
 const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
 
