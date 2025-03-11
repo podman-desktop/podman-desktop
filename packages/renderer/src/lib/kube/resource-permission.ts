@@ -20,10 +20,9 @@ import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-perm
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import type { IDisposable } from '/@api/disposable';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
-import type { ResourceName } from '/@api/kubernetes-contexts-states';
 
 export async function listenResourcePermitted(
-  resourceName: ResourceName,
+  resourceName: string,
   callback: (permitted: boolean) => void,
 ): Promise<IDisposable> {
   const experimental = (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
