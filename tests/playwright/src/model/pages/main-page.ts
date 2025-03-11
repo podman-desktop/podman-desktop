@@ -121,6 +121,19 @@ export abstract class MainPage extends BasePage {
 
   async getRowByName(name: string): Promise<Locator | undefined> {
     return test.step(`Get row from ${this.title} page table by name: ${name}`, async () => {
+      if (this.title === 'volumes') {
+        const rows = await this.getAllTableRows();
+
+        for (let i = rows.length - 1; i >= 0; i--) {
+          const cellLocator = rows[i].getByRole('cell').nth(3).getByText(name, { exact: true });
+
+          if ((await cellLocator.count()) > 0) {
+            return rows[i];
+          }
+        }
+        return undefined;
+      }
+
       const locator = this.page
         .getByRole('row')
         .and(this.page.getByLabel(name, { exact: true }))
