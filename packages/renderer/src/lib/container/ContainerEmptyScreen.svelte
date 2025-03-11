@@ -9,7 +9,7 @@ export let stoppedOnly: boolean;
 const helloImage: string = 'quay.io/podman/hello:latest';
 
 let inProgress = false;
-$: inProgress = false;
+
 $: title = getTitle(runningOnly, stoppedOnly);
 $: messageCommandLine = getMessageCommandLine(stoppedOnly);
 $: messageButton = getMessageButton(stoppedOnly);

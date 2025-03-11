@@ -64,7 +64,6 @@ let activeStep: ActiveOnboardingStep;
 let activeStepContent: OnboardingStepItem[][];
 
 let executing = false;
-$: executing = false;
 let globalContext: ContextUI;
 let displayCancelSetup = false;
 

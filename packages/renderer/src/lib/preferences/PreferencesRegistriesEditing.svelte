@@ -27,9 +27,6 @@ export let showNewRegistryForm = false;
 // at this moment it should be `podman`, but later can be any
 let defaultProviderSourceName: string;
 
-// List of suggested registries to show
-let suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
-
 // List of registries to keep track of hidden / unhidden inputs
 let listedSuggestedRegistries: boolean[] = [];
 
@@ -50,10 +47,6 @@ onMount(async () => {
     defaultProviderSourceName = providerSourceNames[0];
   }
 });
-
-$: {
-  suggestedRegistries;
-}
 
 function markRegistryAsModified(registry: containerDesktopAPI.Registry): void {
   setPasswordForRegistryVisible(registry, false);

@@ -53,17 +53,12 @@ let providers: ProviderInfo[] = [];
 let containerConnectionStatus = new Map<string, IConnectionStatus>();
 let providerInstallationInProgress = new Map<string, boolean>();
 let extensionOnboardingEnablement = new Map<string, string>();
-$: containerConnectionStatus = new Map<string, IConnectionStatus>();
-$: providerInstallationInProgress = new Map<string, boolean>();
-$: extensionOnboardingEnablement = new Map<string, string>();
-
 let isStatusUpdated = false;
 let displayInstallModal = false;
 let providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
 let doExecuteAfterInstallation: () => void;
-let preflightChecks: CheckStatus[] = [];
 
-$: preflightChecks = [];
+let preflightChecks: CheckStatus[] = [];
 
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
 let restartingQueue: IConnectionRestart[] = [];
