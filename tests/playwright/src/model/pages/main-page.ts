@@ -121,7 +121,7 @@ export abstract class MainPage extends BasePage {
 
   async getRowByName(name: string): Promise<Locator | undefined> {
     return test.step(`Get row from ${this.title} page table by name: ${name}`, async () => {
-      let locator: Locator | undefined;
+      let locator: Locator;
 
       if (this.title === 'volumes') {
         locator = this.page.getByRole('row').and(this.page.getByLabel(name)).first();
@@ -132,7 +132,7 @@ export abstract class MainPage extends BasePage {
           .first();
       }
 
-      return (await locator?.count()) > 0 ? locator : undefined;
+      return (await locator.count()) > 0 ? locator : undefined;
     });
   }
 
