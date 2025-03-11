@@ -91,32 +91,6 @@ export abstract class MainPage extends BasePage {
     return await (await this.getTable()).getByRole('row').all();
   }
 
-  async getRowFromTableByName(name: string): Promise<Locator | undefined> {
-    return test.step(`Get row from ${this.title} page table by name: ${name}`, async () => {
-      if (await this.pageIsEmpty()) {
-        return undefined;
-      }
-
-      try {
-        const rows = await this.getAllTableRows();
-        for (let i = rows.length - 1; i >= 0; i--) {
-          const nameCell = await rows[i].getByRole('cell').nth(3).getByText(name, { exact: true }).count();
-          if (nameCell) {
-            return rows[i];
-          } else if (this.title === 'containers') {
-            const subRow = await rows[i].getByLabel(name, { exact: true }).count();
-            if (subRow) {
-              return rows[i];
-            }
-          }
-        }
-      } catch (err) {
-        console.log(`Exception caught on ${this.title} page with message: ${err}`);
-      }
-      return undefined;
-    });
-  }
-
   async getRowsFromTableByStatus(status: string): Promise<Locator[]> {
     return test.step(`Get rows from ${this.title} page table by status: ${status}`, async () => {
       await waitUntil(async () => await this.rowsAreVisible(), {

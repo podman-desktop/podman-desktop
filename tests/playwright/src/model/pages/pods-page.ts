@@ -52,7 +52,7 @@ export class PodsPage extends MainPage {
   }
 
   async getPodRowByName(name: string): Promise<Locator | undefined> {
-    return this.getRowFromTableByName(name);
+    return this.getRowByName(name);
   }
 
   async podExists(name: string): Promise<boolean> {

@@ -128,7 +128,7 @@ export class ImagesPage extends MainPage {
   }
 
   async getImageRowByName(name: string): Promise<Locator | undefined> {
-    return this.getRowFromTableByName(name);
+    return this.getRowByName(name);
   }
 
   private async imageExists(name: string): Promise<boolean> {
