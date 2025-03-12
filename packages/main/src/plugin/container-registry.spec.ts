@@ -154,6 +154,7 @@ const fakeContainerInspectInfo: Dockerode.ContainerInspectInfo = {
       Propagation: '',
       RW: true,
       Source: 'source',
+      Type: 'bind',
     },
   ],
   HostConfig: {
