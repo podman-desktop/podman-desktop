@@ -33,8 +33,8 @@ import { waitForPodmanMachineStartup } from '../utility/wait';
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
 const imageNameSimple: string = 'manifest-test-simple';
 const imageNameComplex: string = 'manifest-test-complex';
-const manifestNameSimple: string = `localhost/${imageNameSimple} (manifest)`;
-const manifestNameComplex: string = `localhost/${imageNameComplex} (manifest)`;
+const manifestLabelSimple: string = `localhost/${imageNameSimple}`;
+const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,13 +73,15 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
         imagesPage = await buildImagePage.buildImage(imageNameSimple, dockerfilePath, contextDirectory, architectures);
-        await playExpect.poll(async () => await imagesPage.waitForImageExists(manifestNameSimple)).toBeTruthy();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 30_000), { timeout: 0 })
+          .toBeTruthy();
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(4);
-        await imagesPage.toggleImageManifest(manifestNameSimple);
+        await imagesPage.toggleImageManifest(manifestLabelSimple);
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(2);
       });
       test('Check Manifest details', async () => {
-        const imageDetailsPage = await imagesPage.openImageDetails(manifestNameSimple);
+        const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
 
         await Promise.all(
           architectures.map(async architecture => {
@@ -90,7 +92,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await imageDetailsPage.backLink.click();
       });
       test('Delete Manifest', async ({ page }) => {
-        await deleteImageManifest(page, manifestNameSimple);
+        await deleteImageManifest(page, manifestLabelSimple);
       });
     });
   test.describe
@@ -119,7 +121,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           );
         } catch (error) {
           skipTests = true;
-          await deleteImageManifest(page, manifestNameComplex);
+          await deleteImageManifest(page, manifestLabelComplex);
           if (isWindows && provider === 'Wsl') {
             console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
             test.fail();
@@ -128,15 +130,17 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           }
         }
 
-        await playExpect.poll(async () => await imagesPage.waitForImageExists(manifestNameComplex)).toBeTruthy();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 30_000), { timeout: 0 })
+          .toBeTruthy();
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(4);
-        await imagesPage.toggleImageManifest(manifestNameComplex);
+        await imagesPage.toggleImageManifest(manifestLabelComplex);
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(2);
       });
       test('Check Manifest details', async () => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
 
-        const imageDetailsPage = await imagesPage.openImageDetails(manifestNameComplex);
+        const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
         await Promise.all(
           architectures.map(async architecture => {
             await playExpect(imageDetailsPage.tabContent).toContainText(architecture);
@@ -148,7 +152,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
       test('Delete Manifest', async ({ page }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
 
-        await deleteImageManifest(page, manifestNameComplex);
+        await deleteImageManifest(page, manifestLabelComplex);
       });
     });
 });
