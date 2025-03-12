@@ -172,7 +172,7 @@
     "msw": "^2.7.3",
     "prettier": "^3.5.3",
     "proxy": "^2.2.0",
-    "typescript": "5.6.3",
+    "typescript": "5.8.2",
     "typescript-eslint": "^8.26.1",
     "validator": "^13.12.0",
     "vite": "^6.2.1",
