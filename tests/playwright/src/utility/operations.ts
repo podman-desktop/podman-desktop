@@ -378,13 +378,3 @@ export async function untagImagesFromPodman(name: string, tag: string = ''): Pro
     }
   });
 }
-
-export async function deleteImageManifest(page: Page, manifestName: string): Promise<void> {
-  const navigationBar = new NavigationBar(page);
-  const imagesPage = await navigationBar.openImages();
-
-  await imagesPage.deleteImageManifest(manifestName);
-  await playExpect.poll(async () => await imagesPage.waitForImageDelete(manifestName)).toBeTruthy();
-  await imagesPage.deleteAllUnusedImages();
-  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 }).toBe(0);
-}

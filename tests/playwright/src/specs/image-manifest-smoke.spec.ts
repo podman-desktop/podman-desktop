@@ -19,12 +19,15 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { Page } from '@playwright/test';
+
 import { ArchitectureType } from '../model/core/platforms';
 import type { ImagesPage } from '../model/pages/images-page';
+import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
+import { ResourcesPage } from '../model/pages/resources-page';
+import { NavigationBar } from '../model/workbench/navigation';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteImageManifest } from '../utility/operations';
 import { isWindows } from '../utility/platform';
-import { getProviderLabel } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
@@ -45,7 +48,11 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
-  provider = await getProviderLabel(page);
+  const settingsBar = await navigationBar.openSettings();
+  await settingsBar.openTabPage(ResourcesPage);
+
+  const podmanResourceCard = new ResourceConnectionCardPage(page, 'podman');
+  provider = await podmanResourceCard.getConnectionInfoByLabel('Connection Type');
 
   imagesPage = await navigationBar.openImages();
 });
@@ -145,3 +152,13 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
       });
     });
 });
+
+async function deleteImageManifest(page: Page, manifestName: string): Promise<void> {
+  const navigationBar = new NavigationBar(page);
+  await navigationBar.openImages();
+
+  await imagesPage.deleteImageManifest(manifestName);
+  await playExpect.poll(async () => await imagesPage.waitForImageDelete(manifestName)).toBeTruthy();
+  await imagesPage.deleteAllUnusedImages();
+  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 }).toBe(0);
+}

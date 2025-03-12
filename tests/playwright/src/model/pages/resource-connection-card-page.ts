@@ -56,4 +56,8 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
       await button.click();
     });
   }
+
+  public async getConnectionInfoByLabel(label: string): Promise<string> {
+    return (await this.card.getByLabel(label, { exact: true }).textContent()) ?? '';
+  }
 }
