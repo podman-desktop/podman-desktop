@@ -1,4 +1,8 @@
 <script lang="ts">
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from '@podman-desktop/ui-svelte';
+import Fa from 'svelte-fa';
+
 import KubernetesIcon from './KubernetesIcon.svelte';
 
 interface Props {
@@ -6,9 +10,10 @@ interface Props {
   activeCount?: number;
   count: number;
   kind: string;
+  permitted: boolean;
 }
 
-let { type, activeCount, count, kind }: Props = $props();
+let { type, activeCount, count, kind, permitted }: Props = $props();
 
 async function openLink(): Promise<void> {
   try {
@@ -19,19 +24,24 @@ async function openLink(): Promise<void> {
 }
 </script>
 
-<button class="flex flex-col gap-4 p-4 bg-[var(--pd-content-card-carousel-card-bg)] hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] rounded-md" onclick={openLink}>
-  <div class="text-[var(--pd-invert-content-card-text)] font-semibold text-start">{type}</div>
+<button class="flex flex-col gap-4 p-4 bg-[var(--pd-content-card-carousel-card-bg)] hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] rounded-md" class:opacity-60={!permitted} onclick={openLink}>
+  <div class="text-start">
+    <span class="text-[var(--pd-invert-content-card-text)] font-semibold">{type}</span>
+    {#if !permitted}
+      <span class="ml-1"><Tooltip class="" tip={`${type} are not accessible`}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip></span>
+    {/if}
+  </div>
   <div class="grid grid-cols-{activeCount !== undefined ? '3' : '2'} gap-4 w-full grow items-end">
     <div class="justify-self-center text-[var(--pd-button-primary-bg)]"><KubernetesIcon kind={kind} size='40'/></div>
     {#if activeCount !== undefined}
     <div class="flex flex-col">
       <span class="text-[var(--pd-invert-content-card-text)]">Active</span>
-      <div class="text-2xl text-[var(--pd-invert-content-card-text)]" aria-label="{type} active count">{activeCount}</div>
+      <div class="text-2xl text-[var(--pd-invert-content-card-text)]" aria-label="{type} active count">{#if permitted}{activeCount}{:else}-{/if}</div>
     </div>
     {/if}
     <div class="flex flex-col">
       <span class="text-[var(--pd-invert-content-card-text)]">Total</span>
-      <div class="text-2xl text-[var(--pd-invert-content-card-text)]" aria-label="{type} count">{count}</div>
+      <div class="text-2xl text-[var(--pd-invert-content-card-text)]" aria-label="{type} count">{#if permitted}{count}{:else}-{/if}</div>
     </div>
   </div>
 </button>
