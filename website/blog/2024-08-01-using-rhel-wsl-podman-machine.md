@@ -51,7 +51,7 @@ On the **Image output** page, select the following:
 :::warning
 
 Although the RHEL 10 (Beta) option is available in the **Release**, please note that it is incompatible with
-WSL as the time of writing. The WSL kernel does not support ntftables.
+At the time of writing, the WSL kernel does not support nftables.
 
 :::
 
