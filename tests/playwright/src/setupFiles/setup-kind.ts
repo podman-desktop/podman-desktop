@@ -26,8 +26,9 @@ export function setupKind(): boolean[] {
 
 export function canRunKindTests(): boolean {
   const [rootfulMode, runKindTests] = setupKind();
-  // to run the kind tests there are 2 options:
-  // 1-the OS is linux or mac + runKindTests == true
-  // 2-the OS is windows, the podman machine is rootful
-  return ((isLinux || isMac) && runKindTests) || (isWindows && rootfulMode);
+  // to run the kind tests there are 3 options:
+  // 1-the runKindTest envvar is defined and true
+  // 2-the OS is linux or mac
+  // 3-the OS is windows + the podman machine is rootful
+  return runKindTests || isLinux || isMac || (isWindows && rootfulMode);
 }

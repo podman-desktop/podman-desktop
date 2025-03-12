@@ -41,6 +41,8 @@ const CONTAINER_START_PARAMS: ContainerInteractiveParams = {
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(350_000);
   runner.setVideoAndTraceName('deploy-to-k8s-e2e');
@@ -77,7 +79,6 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Deploy a container to the Kind cluster', { tag: '@k8s_e2e' }, () => {
-  test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
   test('Pull an image and start a container', async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();

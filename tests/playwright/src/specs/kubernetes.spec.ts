@@ -62,6 +62,8 @@ const SECRET_POD_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'k
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(350_000);
   runner.setVideoAndTraceName('kubernetes-e2e');
@@ -81,9 +83,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    if (!canRunKindTests)
-      //This test can't run on a windows rootless machine
-      await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
   }
 });
 
@@ -97,7 +97,6 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () => {
-  test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
   test('Kubernetes Nodes test', async ({ page }) => {
     await checkKubernetesResourceState(page, KubernetesResources.Nodes, KIND_NODE, KubernetesResourceState.Running);
   });

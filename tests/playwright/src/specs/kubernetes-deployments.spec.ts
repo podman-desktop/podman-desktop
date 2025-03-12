@@ -55,6 +55,8 @@ const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'k
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(350_000);
   runner.setVideoAndTraceName('kubernetes-edit-yaml');
@@ -74,9 +76,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
       useIngressController: false,
     });
   } else {
-    if (!canRunKindTests)
-      //This test can't run on a windows rootless machine
-      await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
   }
 });
 
@@ -90,7 +90,6 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe.serial('Kubernetes deployment resource E2E Test', { tag: '@k8s_e2e' }, () => {
-  test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
   test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);

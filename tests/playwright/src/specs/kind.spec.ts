@@ -45,6 +45,8 @@ let kindResourceCard: ResourceConnectionCardPage;
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('kind-e2e');
   await welcomePage.handleWelcomePage(true);
@@ -55,9 +57,7 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
-    if (!canRunKindTests)
-      //This is not needed on a windows rootless machine
-      await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
   } finally {
     await runner.close();
   }
@@ -91,7 +91,6 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
       });
     });
   test.describe('Kind cluster validation tests', () => {
-    test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
@@ -135,7 +134,6 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   });
   test.describe('Kind cluster operations - Details', () => {
-    test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
     test('Create a Kind cluster', async ({ page }) => {
       test.setTimeout(CLUSTER_CREATION_TIMEOUT);
       if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
