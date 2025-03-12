@@ -25,8 +25,8 @@ import { expect, test } from 'vitest';
 import NodeIcon from '../images/NodeIcon.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
 
-test('Verify basic card format', async () => {
-  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Pod' };
+test('Verify basic card format when resource permitted', async () => {
+  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Pod', permitted: true };
   render(KubernetesDashboardResourceCard, params);
 
   const type = screen.getByText(params.type);
@@ -40,8 +40,20 @@ test('Verify basic card format', async () => {
   expect(count).toHaveClass('text-[var(--pd-invert-content-card-text)]');
 });
 
-test('Expect clicking works', async () => {
-  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Service' };
+test('Verify basic card format when resource not permitted', async () => {
+  const params = { type: 'a type', Icon: NodeIcon, count: 0, kind: 'Pod', permitted: false };
+  render(KubernetesDashboardResourceCard, params);
+
+  const button = screen.getByRole('button');
+  expect(button).toBeInTheDocument();
+  expect(button).toHaveClass('opacity-60');
+
+  const count = screen.queryByText(params.count);
+  expect(count).not.toBeInTheDocument();
+});
+
+test.each([true, false])('Expect clicking works when permitted is %s', async permitted => {
+  const params = { type: 'a type', Icon: NodeIcon, count: 4, kind: 'Service', permitted };
   render(KubernetesDashboardResourceCard, params);
 
   const type = screen.getByText(params.type);
