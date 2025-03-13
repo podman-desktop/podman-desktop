@@ -104,12 +104,13 @@ describe.each<{
   });
 
   test('Expect no deployment empty screen before received data', async () => {
+    vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
     const list = initObjectsList();
     render(DeploymentsList);
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    let noDeployments = screen.queryByRole('heading', { name: 'No deployments' });
+    let noDeployments = await vi.waitFor(() => screen.queryByRole('heading', { name: 'No deployments' }));
     expect(noDeployments).not.toBeInTheDocument();
 
     list.update([]);
