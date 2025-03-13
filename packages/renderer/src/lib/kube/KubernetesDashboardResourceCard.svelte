@@ -25,10 +25,10 @@ async function openLink(): Promise<void> {
 </script>
 
 <button class="flex flex-col gap-4 p-4 bg-[var(--pd-content-card-carousel-card-bg)] hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] rounded-md" class:opacity-60={!permitted} onclick={openLink}>
-  <div class="text-start">
-    <span class="text-[var(--pd-invert-content-card-text)] font-semibold">{type}</span>
+  <div class="text-start flex">
+    <span class="text-[var(--pd-invert-content-card-text)] font-semibold grow">{type}</span>
     {#if !permitted}
-      <span class="ml-1"><Tooltip class="" tip={`${type} are not accessible`}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip></span>
+      <span class="ml-1"><Tooltip bottom={true} class="" tip={`${type} are not accessible`}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip></span>
     {/if}
   </div>
   <div class="grid grid-cols-{activeCount !== undefined ? '3' : '2'} gap-4 w-full grow items-end">
