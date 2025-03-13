@@ -14,7 +14,11 @@ interface Props {
   disableTooltip?: boolean;
 }
 
-let { entry, command = (): void => router.goto('/preferences/resources'), disableTooltip = false }: Props = $props();
+let {
+  entry,
+  command = (): void => router.goto(`/preferences/resources?focus=${entry.id}`),
+  disableTooltip = false,
+}: Props = $props();
 
 let connections = $derived.by(() => {
   if (entry.containerConnections.length > 0) {
