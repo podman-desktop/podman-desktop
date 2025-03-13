@@ -19,12 +19,23 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
+import { listenResourcePermitted } from '../resource-permission';
 import PodEmptyScreen from './PodEmptyScreen.svelte';
 
+vi.mock('../resource-permission');
+
 test('Expect pod empty screen', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   render(PodEmptyScreen);
   const noPods = screen.getByRole('heading', { name: 'No pods' });
+  expect(noPods).toBeInTheDocument();
+});
+
+test('Expect pod empty screen not accessible', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  render(PodEmptyScreen);
+  const noPods = screen.getByRole('heading', { name: 'Pods not accessible' });
   expect(noPods).toBeInTheDocument();
 });

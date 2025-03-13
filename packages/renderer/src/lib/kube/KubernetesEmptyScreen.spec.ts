@@ -43,15 +43,17 @@ test('EmptyScreen is called with properties', async () => {
   const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
   render(KubernetesEmptyScreen, {
     icon: faRefresh,
-    title: 'A TITLE',
     message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: ['No deployments', 'No pods'],
+    titleNotPermitted: ['Deployments not accessible', 'Pods not accessible'],
   });
   expect(emptyScreenSpy).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
       icon: faRefresh,
-      title: 'A TITLE',
       message: 'A MESSAGE',
+      title: 'No deployments\nNo pods',
     }),
   );
 });
