@@ -6,7 +6,7 @@ import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
 <KubernetesEmptyScreen
   icon={IngressRouteIcon}
   resources={['ingresses', 'routes']}
-  titleEmpty={['No ingresses', 'No routes']}
-  titleNotPermitted={['Ingresses not accessible', 'Routes not accessible']}
+  titleEmpty='No ingresses or routes'
+  titleNotPermitted='Ingresses and routes not accessible'
   message="Try switching to a different context or namespace" />
 

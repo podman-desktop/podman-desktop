@@ -29,7 +29,7 @@ vi.mock('../kube/resource-permission');
 test('Expect deployment empty screen', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   render(IngressRouteEmptyScreen);
-  const noDeployments = screen.getByRole('heading', { name: 'No ingresses\nNo routes' });
+  const noDeployments = await vi.waitFor(() => screen.getByRole('heading', { name: 'No ingresses or routes' }));
   expect(noDeployments).toBeInTheDocument();
 });
 
@@ -37,7 +37,7 @@ test('Expect deployment empty screen not accessible', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
   render(IngressRouteEmptyScreen);
   const noDeployments = await vi.waitFor(() =>
-    screen.getByRole('heading', { name: 'Ingresses not accessible\nRoutes not accessible' }),
+    screen.getByRole('heading', { name: 'Ingresses and routes not accessible' }),
   );
   expect(noDeployments).toBeInTheDocument();
 });

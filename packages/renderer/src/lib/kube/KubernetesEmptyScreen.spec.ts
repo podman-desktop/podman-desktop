@@ -30,7 +30,6 @@ vi.mock('./resource-permission');
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
 });
 
 test('KubernetesCheckConnection is called', async () => {
@@ -40,20 +39,103 @@ test('KubernetesCheckConnection is called', async () => {
 });
 
 test('EmptyScreen is called with properties', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
   render(KubernetesEmptyScreen, {
     icon: faRefresh,
     message: 'A MESSAGE',
     resources: ['deployments', 'pods'],
-    titleEmpty: ['No deployments', 'No pods'],
-    titleNotPermitted: ['Deployments not accessible', 'Pods not accessible'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
   });
   expect(emptyScreenSpy).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
       icon: faRefresh,
       message: 'A MESSAGE',
-      title: 'No deployments\nNo pods',
+      title: 'No deployments or no pods',
+    }),
+  );
+});
+
+test('EmptyScreen is called with two resources, one of them is not permitted', async () => {
+  vi.mocked(listenResourcePermitted)
+    .mockImplementationOnce(vi.fn((_, callback) => callback(true)))
+    .mockImplementationOnce(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'No deployments or no pods',
+    }),
+  );
+});
+
+test('EmptyScreen is called with two not permitted resources', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'Deployments or pods not accessible',
+    }),
+  );
+});
+
+test('EmptyScreen is called with one permitted resource', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments'],
+    titleEmpty: 'No deployments',
+    titleNotPermitted: 'Deployments are not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'No deployments',
+    }),
+  );
+});
+
+test('EmptyScreen is called with one not permitted resource', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments'],
+    titleEmpty: 'No deployments',
+    titleNotPermitted: 'Deployments are not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'Deployments are not accessible',
     }),
   );
 });

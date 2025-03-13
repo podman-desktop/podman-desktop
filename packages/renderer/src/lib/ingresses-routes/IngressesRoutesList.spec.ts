@@ -44,7 +44,7 @@ test('Expect ingress&routes empty screen', async () => {
   vi.mocked(states).kubernetesCurrentContextRoutesFiltered = readable<KubernetesObject[]>([]);
   render(IngressesRoutesList);
   await vi.waitFor(() => {
-    const noIngressesNorRoutes = screen.getByRole('heading', { name: 'No ingresses\nNo routes' });
+    const noIngressesNorRoutes = screen.getByRole('heading', { name: 'No ingresses or routes' });
     expect(noIngressesNorRoutes).toBeInTheDocument();
   });
 });
