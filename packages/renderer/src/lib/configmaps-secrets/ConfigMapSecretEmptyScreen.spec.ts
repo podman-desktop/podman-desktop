@@ -33,9 +33,11 @@ test('Expect configmap empty screen', async () => {
   expect(noNodes).toBeInTheDocument();
 });
 
-test('Expect configmap empty screen not accessinble', async () => {
+test('Expect configmap empty screen not accessible', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
   render(ConfigMapSecretEmptyScreen);
-  const noNodes = screen.getByRole('heading', { name: 'Configmaps not accessible\nSecrets not accessible' });
+  const noNodes = await vi.waitFor(() =>
+    screen.getByRole('heading', { name: 'Configmaps not accessible\nSecrets not accessible' }),
+  );
   expect(noNodes).toBeInTheDocument();
 });

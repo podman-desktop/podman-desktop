@@ -36,6 +36,8 @@ test('Expect deployment empty screen', async () => {
 test('Expect deployment empty screen not accessible', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
   render(IngressRouteEmptyScreen);
-  const noDeployments = screen.getByRole('heading', { name: 'Ingresses not accessible\nRoutes not accessible' });
+  const noDeployments = await vi.waitFor(() =>
+    screen.getByRole('heading', { name: 'Ingresses not accessible\nRoutes not accessible' }),
+  );
   expect(noDeployments).toBeInTheDocument();
 });
