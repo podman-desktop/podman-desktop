@@ -330,7 +330,7 @@ jobs:
 
       # Enables multi-architecture support for building multi-arch manifests
       - name: Install QEMU for Multi-Arch
-        run: | 
+        run: |
           sudo apt install -y qemu-user-static
 
       - name: Set cgroup_manager to 'cgroupfs' instead of systemd
@@ -401,8 +401,9 @@ jobs:
       - name: Evaluate changes in files
         id: pnpm_changed
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD > changes.txt
+          BASE_REF="${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || 'main' }}"
+          git fetch origin ${BASE_REF}
+          git diff --name-only origin/${BASE_REF} HEAD > changes.txt
           if grep -q  -e 'pnpm-lock.yaml' -e 'pr-check.yaml' changes.txt; then
             echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
           else
