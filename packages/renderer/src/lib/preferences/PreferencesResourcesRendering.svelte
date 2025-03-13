@@ -57,7 +57,6 @@ let isStatusUpdated = false;
 let displayInstallModal = false;
 let providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
 let doExecuteAfterInstallation: () => void;
-
 let preflightChecks: CheckStatus[] = [];
 
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
