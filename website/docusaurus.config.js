@@ -485,7 +485,7 @@ const config = {
               },
               {
                 label: 'Current Sprint',
-                href: 'https://github.com/orgs/containers/projects/4/views/8',
+                href: 'https://github.com/orgs/podman-desktop/projects/4/views/3',
               },
             ],
           },
