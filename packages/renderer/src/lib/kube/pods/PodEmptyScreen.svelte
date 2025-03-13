@@ -5,5 +5,7 @@ import KubernetesEmptyScreen from '/@/lib/kube/KubernetesEmptyScreen.svelte';
 
 <KubernetesEmptyScreen
   icon={PodIcon}
-  title="No pods"
+  resources={['pods']}
+  titleEmpty={['No pods']}
+  titleNotPermitted={['Pods not accessible']}
   message="Try switching to a different context or namespace" />

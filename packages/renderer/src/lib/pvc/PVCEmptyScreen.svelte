@@ -3,4 +3,4 @@ import PVCIcon from '../images/PVCIcon.svelte';
 import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
 </script>
 
-<KubernetesEmptyScreen icon={PVCIcon} title="No PVCs" message="Try switching to a different context or namespace" />
+<KubernetesEmptyScreen icon={PVCIcon} resources={['persistentvolumeclaims']} titleEmpty={['No PVCs']} titleNotPermitted={['PVCs not accessible']} message="Try switching to a different context or namespace" />
