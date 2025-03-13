@@ -166,8 +166,8 @@ importers:
         specifier: ^0.5.7
         version: 0.5.7
       '@types/dockerode':
-        specifier: ^3.3.33
-        version: 3.3.33
+        specifier: ^3.3.35
+        version: 3.3.35
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -3921,8 +3921,8 @@ packages:
   '@types/docker-modem@3.0.6':
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
 
-  '@types/dockerode@3.3.33':
-    resolution: {integrity: sha512-7av8lVOhkW7Xd11aZTSq5zhdpyNraldXwQR0pxUCiSNTvIzsP86KrFrmrZgxtrXD2Zrtzwt4H6OYLbATONWzWg==}
+  '@types/dockerode@3.3.35':
+    resolution: {integrity: sha512-P+DCMASlsH+QaKkDpekKrP5pLls767PPs+/LrlVbKnEnY5tMpEUa2C6U4gRsdFZengOqxdCIqy16R22Q3pLB6Q==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -15730,7 +15730,7 @@ snapshots:
       '@types/node': 22.13.10
       '@types/ssh2': 1.15.4
 
-  '@types/dockerode@3.3.33':
+  '@types/dockerode@3.3.35':
     dependencies:
       '@types/docker-modem': 3.0.6
       '@types/node': 22.13.10
