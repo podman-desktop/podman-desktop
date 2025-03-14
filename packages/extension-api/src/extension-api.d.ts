@@ -2688,6 +2688,12 @@ declare module '@podman-desktop/api' {
     PathOnHost: string;
   }
 
+  export interface HostConfigPortBinding {
+    [port: string]: {
+      HostPort?: string;
+      HostIp?: string;
+    }[];
+  }
   interface HostConfig {
     AutoRemove?: boolean;
     Binds?: string[];
@@ -2697,7 +2703,7 @@ declare module '@podman-desktop/api' {
       Config: unknown;
     };
     NetworkMode?: string;
-    PortBindings?: unknown;
+    PortBindings?: HostConfigPortBinding;
     RestartPolicy?: HostRestartPolicy;
     VolumeDriver?: string;
     VolumesFrom?: unknown;
