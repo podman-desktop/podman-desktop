@@ -63,6 +63,9 @@ class TestContextsManagerExperimental extends ContextsManagerExperimental {
               dispose: informerDisposeMock,
             } as unknown as ResourceInformer<KubernetesObject>;
           },
+        })
+        .setIsActive((resource: KubernetesObject): boolean => {
+          return 'activeField' in resource && resource.activeField === true;
         }),
       new ResourceFactoryBase({
         resource: 'resource2',
@@ -636,6 +639,44 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           contextName: 'context2',
           resourceName: 'resource1',
           count: 2,
+        },
+      ]);
+    });
+
+    test('getActiveResourcesCount', async () => {
+      vi.mocked(ContextPermissionsChecker).mockImplementation(
+        () =>
+          ({
+            start: permissionsStartMock,
+            onPermissionResult: onPermissionResultMock,
+            contextName: 'ctx1',
+          }) as unknown as ContextPermissionsChecker,
+      );
+      const listMock = vi.fn();
+      startMock.mockReturnValue({
+        list: listMock,
+        get: vi.fn(),
+      } as ObjectCache<KubernetesObject>);
+      listMock.mockReturnValue([
+        {
+          activeField: true,
+        },
+        {
+          activeField: false,
+        },
+      ]);
+      await manager.update(kc);
+      const counts = manager.getActiveResourcesCount();
+      expect(counts).toEqual([
+        {
+          contextName: 'context1',
+          resourceName: 'resource1',
+          count: 1,
+        },
+        {
+          contextName: 'context2',
+          resourceName: 'resource1',
+          count: 1,
         },
       ]);
     });

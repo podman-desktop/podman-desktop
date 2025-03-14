@@ -155,3 +155,17 @@ has already been done as part of `screen.getBy...`.
 It is necessary to use `element = screen.queryBy...` followed by `expect(element).not.toBeInTheDocument()`
 when checking if a component does NOT exist, as this call does not throw any error,
 but returns a `null` value if the element is not found.
+
+### Testing style attribute
+
+When we need to ensure a given style is applied to an HTMLElement, we should be using [tohavestyle](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tohavestyle)
+
+#### Examples
+
+```ts
+const { getByText } = render(<MyComponent>);
+
+const text = getByText('text in the page');
+// [Good]
+expect(text).toHaveStyle({ color: '#FFFFF'});
+```

@@ -50,17 +50,14 @@ import {
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];
 let providers: ProviderInfo[] = [];
-$: containerConnectionStatus = new Map<string, IConnectionStatus>();
-$: providerInstallationInProgress = new Map<string, boolean>();
-$: extensionOnboardingEnablement = new Map<string, string>();
-
+let containerConnectionStatus = new Map<string, IConnectionStatus>();
+let providerInstallationInProgress = new Map<string, boolean>();
+let extensionOnboardingEnablement = new Map<string, string>();
 let isStatusUpdated = false;
 let displayInstallModal = false;
 let providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
 let doExecuteAfterInstallation: () => void;
 let preflightChecks: CheckStatus[] = [];
-
-$: preflightChecks = [];
 
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
 let restartingQueue: IConnectionRestart[] = [];
@@ -206,6 +203,10 @@ $: configurationKeys = properties
   .sort((a, b) => (a?.id ?? '').localeCompare(b?.id ?? ''));
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
+function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
+  tmpProviderContainerConfiguration = value;
+}
+
 $: Promise.all(
   providers.map(async provider => {
     const providerContainer = await Promise.all(
@@ -230,7 +231,7 @@ $: Promise.all(
     return providerContainer.flat();
   }),
 )
-  .then(value => (tmpProviderContainerConfiguration = value.flat()))
+  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
   .catch((err: unknown) => console.error('Error collecting providers', err));
 
 $: providerContainerConfiguration = tmpProviderContainerConfiguration

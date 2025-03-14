@@ -71,12 +71,12 @@ export class ImagesPage extends MainPage {
     });
   }
 
-  async renameImage(oldname: string, newname: string): Promise<ImagesPage> {
+  async renameImage(oldname: string, newname: string, newtag: string = ''): Promise<ImagesPage> {
     return test.step(`Rename ${oldname} to ${newname}`, async () => {
       const imageDetailsPage = await this.openImageDetails(oldname);
       await playExpect(imageDetailsPage.heading).toContainText(oldname);
       const editImagePage = await imageDetailsPage.openEditImage();
-      return await editImagePage.renameImage(newname);
+      return await editImagePage.renameImage(newname, newtag);
     });
   }
 
@@ -128,7 +128,7 @@ export class ImagesPage extends MainPage {
   }
 
   async getImageRowByName(name: string): Promise<Locator | undefined> {
-    return this.getRowFromTableByName(name);
+    return this.getRowByName(name);
   }
 
   private async imageExists(name: string): Promise<boolean> {
@@ -220,5 +220,28 @@ export class ImagesPage extends MainPage {
       }
       return count;
     });
+  }
+
+  async toggleImageManifest(manifestName: string): Promise<void> {
+    const manifest = await this.getImageRowByName(manifestName);
+    if (!manifest) {
+      throw new Error(`Manifest with name "${manifestName}" not found`);
+    }
+
+    const extendManifestButton = manifest.getByRole('cell').nth(0).getByRole('button');
+    await playExpect(extendManifestButton).toBeEnabled();
+    await extendManifestButton.click();
+  }
+
+  async deleteImageManifest(manifestName: string): Promise<void> {
+    const manifest = await this.getImageRowByName(manifestName);
+    if (!manifest) {
+      throw new Error(`Manifest with name "${manifestName}" not found`);
+    }
+
+    const deleteManifestButton = manifest.getByRole('button', { name: 'Delete Manifest' });
+    await playExpect(deleteManifestButton).toBeEnabled();
+    await deleteManifestButton.click();
+    await handleConfirmationDialog(this.page);
   }
 }

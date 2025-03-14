@@ -196,7 +196,7 @@ async function deployToKube(): Promise<void> {
                   {
                     name: portName,
                     port: port.hostPort,
-                    protocol: port.protocol || 'TCP',
+                    protocol: port.protocol ?? 'TCP',
                     targetPort: port.containerPort,
                   },
                 ],

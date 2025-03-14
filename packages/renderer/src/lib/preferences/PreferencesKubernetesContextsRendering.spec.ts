@@ -82,6 +82,17 @@ const mockContext4: KubeContext = {
   },
 };
 
+const mockContext5: KubeContext = {
+  name: 'context-name5',
+  cluster: 'cluster-name5',
+  user: 'user-name5',
+  namespace: 'namespace-name5',
+  clusterInfo: {
+    name: 'cluster-name5',
+    server: 'https://server-name5',
+  },
+};
+
 const kubernetesGetCurrentContextNameMock = vi.fn();
 
 const showMessageBoxMock = vi.fn();
@@ -95,7 +106,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  kubernetesContexts.set([mockContext1, mockContext2, mockContext3, mockContext4]);
+  kubernetesContexts.set([mockContext1, mockContext2, mockContext3, mockContext4, mockContext5]);
   vi.clearAllMocks();
 });
 
@@ -188,6 +199,7 @@ describe.each([
       undefinedCounts: true,
       permissions: true,
       offline: true,
+      errorMessage: true,
     },
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
@@ -235,6 +247,13 @@ describe.each([
           checking: false,
           offline: true,
         },
+        {
+          contextName: 'context-name5',
+          reachable: false,
+          checking: false,
+          offline: false,
+          errorMessage: 'an error',
+        },
       ]);
       kubernetesContextsPermissions.set([
         {
@@ -278,6 +297,7 @@ describe.each([
       undefinedCounts: false,
       permissions: false,
       offline: false,
+      errorMessage: false,
     },
     initMocks: (): void => {
       const state: Map<string, ContextGeneralState> = new Map();
@@ -364,6 +384,13 @@ describe.each([
 
     if (implemented.offline) {
       expect(within(context4).queryByText('CONNECTION LOST')).toBeInTheDocument();
+    }
+
+    if (implemented.errorMessage) {
+      const context5 = screen.getAllByRole('row')[4];
+      expect(within(context5).queryByText('ERROR')).toBeInTheDocument();
+      expect(within(context5).queryByText('PODS')).not.toBeInTheDocument();
+      expect(within(context5).queryByText('DEPLOYMENTS')).not.toBeInTheDocument();
     }
   });
 

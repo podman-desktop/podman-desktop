@@ -343,16 +343,24 @@ test('Create Kubernetes resources with v1 resource should return ok', async () =
     read: readMock,
     create: createMock,
   });
-  await client.createResources('dummy', [{ apiVersion: 'v1', kind: 'Namespace' }]);
+  await client.createResources('dummy', [{ apiVersion: 'v1', kind: 'Namespace', metadata: { name: 'n1' } }]);
   expect(createMock).toHaveBeenCalled();
   expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', { action: 'create', manifestsSize: 1 });
 });
 
 describe.each([
-  { manifest: { apiVersion: 'apps/v1', kind: 'Deployment' }, namespace: undefined, expectedNamespace: 'default' },
-  { manifest: { apiVersion: 'apps/v1', kind: 'Deployment' }, namespace: 'defaultns', expectedNamespace: 'defaultns' },
   {
-    manifest: { apiVersion: 'apps/v1', kind: 'Deployment', metadata: { namespace: 'demons' } },
+    manifest: { apiVersion: 'apps/v1', kind: 'Deployment', metadata: { name: 'n1' } },
+    namespace: undefined,
+    expectedNamespace: 'default',
+  },
+  {
+    manifest: { apiVersion: 'apps/v1', kind: 'Deployment', metadata: { name: 'n1' } },
+    namespace: 'defaultns',
+    expectedNamespace: 'defaultns',
+  },
+  {
+    manifest: { apiVersion: 'apps/v1', kind: 'Deployment', metadata: { name: 'n1', namespace: 'demons' } },
     namespace: undefined,
     expectedNamespace: 'demons',
   },
@@ -384,17 +392,17 @@ describe.each([
 
 describe.each([
   {
-    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress' },
+    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { name: 'n1' } },
     namespace: undefined,
     expectedNamespace: 'default',
   },
   {
-    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress' },
+    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { name: 'n1' } },
     namespace: 'defaultns',
     expectedNamespace: 'defaultns',
   },
   {
-    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { namespace: 'demons' } },
+    manifest: { apiVersion: 'networking.k8s.io/v1', kind: 'Ingress', metadata: { name: 'n1', namespace: 'demons' } },
     namespace: undefined,
     expectedNamespace: 'demons',
   },
@@ -426,17 +434,17 @@ describe.each([
 
 describe.each([
   {
-    manifest: { apiVersion: 'group/v1', kind: 'Namespace' },
+    manifest: { apiVersion: 'group/v1', kind: 'Namespace', metadata: { name: 'n1' } },
     namespace: undefined,
     expectedNamespace: 'default',
   },
   {
-    manifest: { apiVersion: 'group/v1', kind: 'Namespace' },
+    manifest: { apiVersion: 'group/v1', kind: 'Namespace', metadata: { name: 'n1' } },
     namespace: 'defaultns',
     expectedNamespace: 'defaultns',
   },
   {
-    manifest: { apiVersion: 'group/v1', kind: 'Namespace', metadata: { namespace: 'demons' } },
+    manifest: { apiVersion: 'group/v1', kind: 'Namespace', metadata: { name: 'n1', namespace: 'demons' } },
     namespace: undefined,
     expectedNamespace: 'demons',
   },
@@ -903,7 +911,7 @@ test('Expect apply with empty yaml should throw error', async () => {
 
 test('Expect apply should create if object does not exist', async () => {
   const client = createTestClient('default');
-  const manifests = { kind: test, metadata: { annotations: test } } as unknown as KubernetesObject;
+  const manifests = { kind: test, metadata: { name: 'n1', annotations: test } } as unknown as KubernetesObject;
   const createdObj = { kind: 'created' };
   vi.spyOn(client, 'loadManifestsFromFile').mockResolvedValue([manifests]);
   makeApiClientMock.mockReturnValue({
@@ -918,7 +926,7 @@ test('Expect apply should create if object does not exist', async () => {
 
 test('Expect apply should patch if object exists', async () => {
   const client = createTestClient('default');
-  const manifests = { kind: test, metadata: { annotations: test } } as unknown as KubernetesObject;
+  const manifests = { kind: test, metadata: { name: 'n1', annotations: test } } as unknown as KubernetesObject;
   const patchedObj = { kind: 'patched' };
   vi.spyOn(client, 'loadManifestsFromFile').mockResolvedValue([manifests]);
   const patchMock = vi.fn();
@@ -936,7 +944,7 @@ test('Expect apply should patch if object exists', async () => {
 
 test('Expect apply should patch with specific field manager', async () => {
   const client = createTestClient('default');
-  const manifests = { kind: test, metadata: { annotations: test } } as unknown as KubernetesObject;
+  const manifests = { kind: test, metadata: { name: 'n1', annotations: test } } as unknown as KubernetesObject;
   const patchedObj = { kind: 'patched' };
   vi.spyOn(client, 'loadManifestsFromFile').mockResolvedValue([manifests]);
   const patchMock = vi.fn();
@@ -951,7 +959,7 @@ test('Expect apply should patch with specific field manager', async () => {
 
 test('Expect apply should work with multiple files', async () => {
   const client = createTestClient('default');
-  const manifests = { kind: test, metadata: { annotations: test } } as unknown as KubernetesObject;
+  const manifests = { kind: test, metadata: { name: 'n1', annotations: test } } as unknown as KubernetesObject;
   const createdObjs = [{ kind: 'created' }, { kind: 'created' }];
   let count = 0;
   vi.spyOn(client, 'loadManifestsFromFile').mockResolvedValue([manifests]);

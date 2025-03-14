@@ -22,9 +22,9 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import { terminalService } from '../../pod/KubernetesTerminalService';
 import KubernetesTerminalBrowser from './KubernetesTerminalBrowser.svelte';
 import type { PodUI } from './PodUI';
+import { terminalService } from './terminal/KubernetesTerminalService';
 
 vi.mock('@xterm/xterm', () => {
   return {

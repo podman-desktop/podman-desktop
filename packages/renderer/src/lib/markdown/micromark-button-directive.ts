@@ -55,7 +55,7 @@ export function button(d: Directive): void {
     this.tag('</div>');
 
     // Add any labels and close the button
-    this.raw(d.label || '');
+    this.raw(d.label ?? '');
     this.tag('</button>');
   } else {
     // If href is passed in, make this an anchor tag but make it look like a button
@@ -73,7 +73,7 @@ export function button(d: Directive): void {
 
     // Add the closing tags + labels (if any)
     this.tag('>');
-    this.raw(d.label || '');
+    this.raw(d.label ?? '');
     this.tag('</a>');
   }
 }

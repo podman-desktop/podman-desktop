@@ -55,6 +55,6 @@ export function link(d: Directive): boolean {
 
   // Close the tags and add the label (if any)
   this.tag('>');
-  this.raw(d.label || '');
+  this.raw(d.label ?? '');
   this.tag('</a>');
 }

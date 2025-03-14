@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderImages } from '@podman-desktop/api';

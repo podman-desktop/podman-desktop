@@ -211,3 +211,39 @@ test('onReadiness is called with false when readyz is rejected with a generic er
     reachable: false,
   });
 });
+
+test('onReadiness is called with false when readyz is rejected with a noent error', async () => {
+  const readyzMock = vi.fn();
+  vi.mocked(Health).mockImplementation(
+    () =>
+      ({
+        readyz: readyzMock,
+      }) as unknown as Health,
+  );
+
+  const hc = new ContextHealthChecker(config);
+  const onStateChangeCB = vi.fn();
+  hc.onStateChange(onStateChangeCB);
+
+  const enoentErr: NodeJS.ErrnoException = new Error('enoent error');
+  enoentErr.code = 'ENOENT';
+  enoentErr.path = '/path/to/command';
+  readyzMock.mockRejectedValue(enoentErr);
+  await hc.start();
+  expect(onStateChangeCB).toHaveBeenCalledWith({
+    kubeConfig: config,
+    contextName: 'context1',
+    checking: true,
+    reachable: false,
+  });
+  const state = {
+    kubeConfig: config,
+    contextName: 'context1',
+    checking: false,
+    reachable: false,
+    errorMessage: `Command not found: /path/to/command.
+Please verify this command is installed, and specify its full path in your kubeconfig file.`,
+  };
+  expect(onStateChangeCB).toHaveBeenCalledWith(state);
+  expect(hc.getState()).toEqual(state);
+});

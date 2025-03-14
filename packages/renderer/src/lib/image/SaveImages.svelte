@@ -17,7 +17,7 @@ let outputPath: string | undefined = undefined;
 let singleItemMode = false;
 let invalidOutputPath = true;
 let inProgress = false;
-
+let saveDisabled = false;
 $: saveDisabled = !outputPath || imagesToSave.length === 0;
 
 onMount(async () => {

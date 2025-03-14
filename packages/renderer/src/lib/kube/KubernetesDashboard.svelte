@@ -1,14 +1,19 @@
 <script lang="ts">
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { Expandable, Link } from '@podman-desktop/ui-svelte';
+import { onDestroy, onMount } from 'svelte';
 
+import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { containersInfos } from '/@/stores/containers';
+import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
+import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import {
   kubernetesCurrentContextConfigMaps,
   kubernetesCurrentContextCronJobs,
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextIngresses,
+  kubernetesCurrentContextJobs,
   kubernetesCurrentContextNodes,
   kubernetesCurrentContextPersistentVolumeClaims,
   kubernetesCurrentContextPods,
@@ -17,9 +22,12 @@ import {
   kubernetesCurrentContextServices,
   kubernetesCurrentContextState,
 } from '/@/stores/kubernetes-contexts-state';
+import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
+import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
+import type { IDisposable } from '/@api/disposable';
 import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
+import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
-import { kubernetesContexts } from '../../stores/kubernetes-contexts';
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
@@ -35,6 +43,8 @@ interface ExtendedKubernetesObject extends KubernetesObject {
 
 let noContexts = $derived($kubernetesCurrentContextState.error === NO_CURRENT_CONTEXT_ERROR);
 let currentContextName = $derived($kubernetesContexts.find(context => context.currentContext)?.name);
+
+// Stores and states for non-experimental mode
 let nodeCount = $derived($kubernetesCurrentContextNodes.length);
 let activeNodeCount = $derived(
   $containersInfos.filter(
@@ -51,12 +61,117 @@ let activeDeploymentsCount = $derived(
 );
 let podCount = $derived($kubernetesCurrentContextPods.length);
 let serviceCount = $derived($kubernetesCurrentContextServices.length);
-let ingressRouteCount = $derived($kubernetesCurrentContextIngresses.length + $kubernetesCurrentContextRoutes.length);
+let ingressCount = $derived($kubernetesCurrentContextIngresses.length);
+let routeCount = $derived($kubernetesCurrentContextRoutes.length);
 let pvcCount = $derived($kubernetesCurrentContextPersistentVolumeClaims.length);
-let configMapSecretCount = $derived(
-  $kubernetesCurrentContextConfigMaps.length + $kubernetesCurrentContextSecrets.length,
-);
+let configMapCount = $derived($kubernetesCurrentContextConfigMaps.length);
+let secretCount = $derived($kubernetesCurrentContextSecrets.length);
 let cronjobCount = $derived($kubernetesCurrentContextCronJobs.length);
+let jobCount = $derived($kubernetesCurrentContextJobs.length);
+
+// state for experimental mode
+let kubernetesActiveResourcesCountExperimental = $state<ResourceCount[]>([]);
+
+let disposable: IDisposable | undefined;
+
+// permissions - experimental mode only
+// we check for *not* permitted resources, to support legacy mode
+// condition may be inverted when legacy mode is removed
+const notPermittedResources = $derived(
+  !$isKubernetesExperimentalModeStore
+    ? []
+    : $kubernetesContextsPermissions
+        .filter(p => p.contextName === currentContextName)
+        .filter(p => p.permitted === false)
+        .map(p => p.resourceName),
+);
+
+function isPermitted(notPermittedResources: string[], resourceName: string): boolean {
+  return !notPermittedResources.includes(resourceName);
+}
+
+onMount(async () => {
+  // listen active resources for experimental mode
+  disposable = await listenActiveResourcesCount((activeResourcesCounts: ResourceCount[]): void => {
+    kubernetesActiveResourcesCountExperimental = activeResourcesCounts;
+  });
+});
+
+onDestroy(() => {
+  disposable?.dispose();
+});
+
+// get data in compatible format, from experimental mode data
+function getCountsForContext(
+  contextName: string | undefined,
+  storeValue: ResourceCount[],
+  initialValue: { [key: string]: number },
+): { [key: string]: number } {
+  return storeValue.reduce(
+    (acc, resourceCount) => {
+      if (resourceCount.contextName === contextName) {
+        acc[resourceCount.resourceName] = resourceCount.count;
+      }
+      return acc;
+    },
+    { ...initialValue },
+  );
+}
+
+// common to experimental and non-experimental modes
+const initialCounts: { [key: string]: number } = {
+  nodes: 0,
+  deployments: 0,
+  pods: 0,
+  services: 0,
+  ingresses: 0,
+  routes: 0,
+  persistentvolumeclaims: 0,
+  configmaps: 0,
+  secrets: 0,
+  jobs: 0,
+  cronjobs: 0,
+};
+
+const counts = $derived.by(() => {
+  if ($isKubernetesExperimentalModeStore === undefined) {
+    return initialCounts;
+  } else if ($isKubernetesExperimentalModeStore) {
+    return getCountsForContext(currentContextName, $kubernetesResourcesCount, initialCounts);
+  } else {
+    return {
+      nodes: nodeCount,
+      deployments: deploymentCount,
+      pods: podCount,
+      services: serviceCount,
+      ingresses: ingressCount,
+      routes: routeCount,
+      persistentvolumeclaims: pvcCount,
+      configmaps: configMapCount,
+      secrets: secretCount,
+      jobs: jobCount,
+      cronjobs: cronjobCount,
+    };
+  }
+});
+
+const initialActiveCounts: { [key: string]: number } = {
+  nodes: 0,
+  deployments: 0,
+};
+
+const activeCounts = $derived.by(() => {
+  if ($isKubernetesExperimentalModeStore === undefined) {
+    return initialActiveCounts;
+  } else if ($isKubernetesExperimentalModeStore) {
+    return getCountsForContext(currentContextName, kubernetesActiveResourcesCountExperimental, initialActiveCounts);
+  } else {
+    return {
+      nodes: activeNodeCount,
+      deployments: activeDeploymentsCount,
+    };
+  }
+});
 
 async function openKubernetesDocumentation(): Promise<void> {
   await window.openExternal('https://podman-desktop.io/docs/kubernetes');
@@ -95,14 +210,15 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <!-- Metrics - non-collapsible -->
                 <div class="text-xl pt-2">Metrics</div>
                 <div class="grid grid-cols-4 gap-4">
-                    <KubernetesDashboardResourceCard type='Nodes' activeCount={activeNodeCount} count={nodeCount} kind='Node'/>
-                    <KubernetesDashboardResourceCard type='Deployments' activeCount={activeDeploymentsCount} count={deploymentCount} kind='Deployment'/>
-                    <KubernetesDashboardResourceCard type='Pods' count={podCount} kind='Pod'/>
-                    <KubernetesDashboardResourceCard type='Services' count={serviceCount} kind='Service'/>
-                    <KubernetesDashboardResourceCard type='Ingresses & Routes' count={ingressRouteCount} kind='Ingress'/>
-                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={pvcCount} kind='PersistentVolumeClaim'/>
-                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={configMapSecretCount} kind='ConfigMap'/>
-                    <KubernetesDashboardResourceCard type='CronJobs' count={cronjobCount} kind='CronJob'/>
+                    <KubernetesDashboardResourceCard type='Nodes' activeCount={activeCounts.nodes} count={counts.nodes} permitted={isPermitted(notPermittedResources, 'nodes')} kind='Node'/>
+                    <KubernetesDashboardResourceCard type='Deployments' activeCount={activeCounts.deployments} count={counts.deployments} permitted={isPermitted(notPermittedResources, 'deployments')} kind='Deployment'/>
+                    <KubernetesDashboardResourceCard type='Pods' count={counts.pods} permitted={isPermitted(notPermittedResources, 'pods')} kind='Pod'/>
+                    <KubernetesDashboardResourceCard type='Services' count={counts.services} permitted={isPermitted(notPermittedResources, 'services')} kind='Service'/>
+                    <KubernetesDashboardResourceCard type='Ingresses & Routes' count={counts.ingresses + counts.routes} permitted={isPermitted(notPermittedResources, 'ingresses') || isPermitted(notPermittedResources, 'routes')} kind='Ingress'/>
+                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={counts.persistentvolumeclaims} permitted={isPermitted(notPermittedResources, 'persistentvolumeclaims')} kind='PersistentVolumeClaim'/>
+                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={counts.configmaps + counts.secrets} permitted={isPermitted(notPermittedResources, 'configmaps') || isPermitted(notPermittedResources, 'secrets')} kind='ConfigMap'/>
+                    <KubernetesDashboardResourceCard type='Jobs' count={counts.jobs} permitted={isPermitted(notPermittedResources, 'jobs')} kind='Job'/>
+                    <KubernetesDashboardResourceCard type='CronJobs' count={counts.cronjobs} permitted={isPermitted(notPermittedResources, 'cronjobs')} kind='CronJob'/>
                 </div>
                 <!-- Graphs -->
                 
@@ -112,7 +228,7 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <Expandable>
                   <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
                   {#snippet title()}<div class="text-xl">Explore articles and blog posts</div>{/snippet}
-                  <div class="grid grid-cols-3 gap-4">
+                  <div class="grid grid-cols-3 gap-4 pt-2">
                     <KubernetesDashboardGuideCard title='Deploy and test Kubernetes containers using Podman Desktop' image={deployAndTestKubernetesImage} link='https://developers.redhat.com/articles/2023/06/09/deploy-and-test-kubernetes-containers-using-podman-desktop'/>
                     <KubernetesDashboardGuideCard title='Working with Kubernetes in Podman Desktop' image={workingWithKubernetesImage} link='https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop'/>
                     <KubernetesDashboardGuideCard title='Share your local podman images with the Kubernetes cluster' image={shareYourLocalProdmanImagesWithTheKubernetesImage} link='https://podman-desktop.io/blog/sharing-podman-images-with-kubernetes-cluster'/>

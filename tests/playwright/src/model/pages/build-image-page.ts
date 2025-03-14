@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { archType } from '../../utility/platform';
 import { ArchitectureType } from '../core/platforms';
 import { BasePage } from './base-page';
 import { ImagesPage } from './images-page';
@@ -35,6 +36,8 @@ export class BuildImagePage extends BasePage {
   readonly amd64Button: Locator;
   readonly arm64checkbox: Locator;
   readonly amd64checkbox: Locator;
+  readonly archMoreOptionsButton: Locator;
+  readonly archLessOptionsButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -54,13 +57,15 @@ export class BuildImagePage extends BasePage {
     this.amd64Button = this.platformRegion.getByLabel('linux/amd64');
     this.arm64checkbox = this.platformRegion.getByLabel('ARM® aarch64 systems');
     this.amd64checkbox = this.platformRegion.getByLabel('Intel and AMD x86_64 systems');
+    this.archMoreOptionsButton = this.platformRegion.getByRole('button', { name: 'Show more options' });
+    this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
   }
 
   async buildImage(
     imageName: string,
     containerFilePath: string,
     contextDirectory: string,
-    archType: string = ArchitectureType.Default,
+    archType: string[] = [ArchitectureType.Default],
     timeout = 120000,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
@@ -76,18 +81,12 @@ export class BuildImagePage extends BasePage {
         await this.imageNameInput.pressSequentially(imageName, { delay: 50 });
       }
 
-      if (archType !== ArchitectureType.Default) {
-        await this.uncheckedAllCheckboxes();
+      if (!archType.includes(ArchitectureType.Default)) {
+        await this.uncheckDefaultCheckbox();
+        await this.showAllArchOptions();
 
-        switch (archType) {
-          case ArchitectureType.ARM64:
-            await this.arm64Button.click();
-            await playExpect(this.arm64checkbox).toBeChecked();
-            break;
-          case ArchitectureType.AMD64:
-            await this.amd64Button.click();
-            await playExpect(this.amd64checkbox).toBeChecked();
-            break;
+        for (const architecture of archType) {
+          await this.checkArchCheckbox(architecture);
         }
       }
 
@@ -96,6 +95,7 @@ export class BuildImagePage extends BasePage {
       await this.buildButton.click();
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
+      await this.validateBuildLogs();
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -106,14 +106,68 @@ export class BuildImagePage extends BasePage {
 
   async uncheckedAllCheckboxes(): Promise<void> {
     return test.step('Uncheck all checkboxes', async () => {
-      if (await this.arm64checkbox.isChecked()) {
+      await this.showAllArchOptions();
+      for (const button of await this.platformRegion.getByRole('button').all()) {
+        const buttonText = (await button.textContent()) ?? '';
+        if (buttonText.trim() === 'New platform' || buttonText.trim() === 'Less Options...') {
+          continue;
+        }
+        const checkbox = button.getByRole('checkbox');
+        try {
+          await playExpect(checkbox).toBeVisible();
+          await playExpect(checkbox).toBeChecked();
+          await playExpect(button).toBeEnabled();
+          await button.click();
+          await playExpect(checkbox).not.toBeChecked();
+        } catch {
+          console.log(`Checkbox for button "${buttonText.trim()}" is already unchecked.`);
+        }
+      }
+    });
+  }
+
+  private async checkArchCheckbox(archType: string): Promise<void> {
+    return test.step(`Check ${archType} checkbox`, async () => {
+      const archTypeButton = this.platformRegion.getByLabel('linux/' + archType);
+      await playExpect(archTypeButton).toBeEnabled();
+      await archTypeButton.click();
+      const checkbox = archTypeButton.getByRole('checkbox');
+      await playExpect(checkbox).toBeChecked();
+    });
+  }
+
+  async uncheckDefaultCheckbox(): Promise<void> {
+    return test.step('Uncheck default checkbox', async () => {
+      if (archType === 'arm64') {
+        await playExpect(this.arm64checkbox).toBeChecked();
         await this.arm64Button.click();
         await playExpect(this.arm64checkbox).not.toBeChecked();
-      }
-      if (await this.amd64checkbox.isChecked()) {
+      } else {
+        await playExpect(this.amd64checkbox).toBeChecked();
         await this.amd64Button.click();
         await playExpect(this.amd64checkbox).not.toBeChecked();
       }
     });
+  }
+
+  private async showAllArchOptions(): Promise<void> {
+    if ((await this.archMoreOptionsButton.count()) > 0) {
+      await playExpect(this.archMoreOptionsButton).toBeEnabled();
+      await this.archMoreOptionsButton.click();
+    } else {
+      await playExpect(this.archLessOptionsButton).toBeEnabled();
+    }
+  }
+
+  async validateBuildLogs(): Promise<void> {
+    const logs = this.page.locator('.xterm-rows');
+    await playExpect(logs).toBeVisible();
+    const logRows = await logs.locator('div:has(span)').all();
+
+    await Promise.all(
+      logRows.map(async logRow => {
+        await playExpect.poll(async () => logRow.textContent()).not.toContain('Error');
+      }),
+    );
   }
 }

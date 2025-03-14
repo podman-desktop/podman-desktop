@@ -27,7 +27,7 @@ async function onShowHide(): Promise<void> {
 </script>
 
 <Input
-  class={$$props.class || ''}
+  class={$$props.class ?? ''}
   id="password-{id}"
   name="password-{id}"
   placeholder="password"

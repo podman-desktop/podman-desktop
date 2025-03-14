@@ -20,6 +20,7 @@ import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
+import { canRunKindTests } from '../setupFiles/setup-kind';
 import {
   checkClusterResources,
   createKindCluster,
@@ -43,6 +44,8 @@ let kindResourceCard: ResourceConnectionCardPage;
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
+
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
 
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('kind-e2e');

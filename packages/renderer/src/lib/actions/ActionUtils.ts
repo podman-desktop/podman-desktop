@@ -16,8 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isSerializable(value: any): boolean {
+function isSerializable(value: unknown): boolean {
   switch (typeof value) {
     case 'string':
     case 'number':

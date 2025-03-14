@@ -48,6 +48,13 @@ On the **Image output** page, select the following:
 - From the **Select target environments** option, select **WSL - Windows Subsystem for Linux (**`.tar.gz`**)**.
 - Click **Next**.
 
+:::warning
+
+Although the RHEL 10 (Beta) option is available in the **Release**, please note that it is incompatible with
+At the time of writing, the WSL kernel does not support nftables.
+
+:::
+
 On the **Register** page, select **Automatically register and enable advanced capabilities.**
 
 - From the dropdown menu, choose an activation key to use for the image. See [Creating an activation key](https://access.redhat.com/documentation/en-us/subscription_central/2023/html/getting_started_with_activation_keys_on_the_hybrid_cloud_console/assembly-creating-managing-activation-keys#proc-creating-act-keys-console_).

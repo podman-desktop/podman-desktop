@@ -22,7 +22,7 @@ export let imageID: string;
 export let engineId: string;
 export let base64RepoTag: string;
 
-let globalContext: ContextUI;
+let globalContext: ContextUI | undefined;
 let viewContributions: ViewInfoUI[] = [];
 let allImages: ImageInfo[];
 

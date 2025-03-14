@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@ test('Check primary button styling', async () => {
   expect(button).toHaveClass('border-none');
   expect(button).toHaveClass('py-[5px]');
   expect(button).toHaveClass('text-[var(--pd-button-text)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('outline-transparent');
 });
 
 test('Check disabled/in-progress primary button styling', async () => {
@@ -74,6 +76,8 @@ test('Check secondary button styling', async () => {
   expect(button).toHaveClass('hover:bg-[var(--pd-button-secondary-hover)]');
   expect(button).toHaveClass('hover:border-[var(--pd-button-secondary-hover)]');
   expect(button).toHaveClass('hover:text-[var(--pd-button-text)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('outline-transparent');
 });
 
 test('Check danger button styling', async () => {
@@ -90,6 +94,8 @@ test('Check danger button styling', async () => {
   expect(button).toHaveClass('text-[var(--pd-button-danger-text)]');
   expect(button).toHaveClass('hover:bg-[var(--pd-button-danger-hover-bg)]');
   expect(button).toHaveClass('hover:text-[var(--pd-button-danger-hover-text)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('outline-transparent');
 });
 
 test('Check disabled/in-progress secondary button styling', async () => {
@@ -117,6 +123,8 @@ test('Check link button styling', async () => {
   expect(button).toHaveClass('py-[5px]');
   expect(button).toHaveClass('hover:bg-[var(--pd-button-link-hover-bg)]');
   expect(button).toHaveClass('text-[var(--pd-button-link-text)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('outline-transparent');
 });
 
 test('Check disabled/in-progress link button styling', async () => {
@@ -140,6 +148,8 @@ test('Check tab button styling', async () => {
   expect(button).toHaveClass('border-[var(--pd-button-tab-border)]');
   expect(button).toHaveClass('pb-1');
   expect(button).toHaveClass('text-[var(--pd-button-tab-text)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('outline-transparent');
 });
 
 test('Check selected tab button styling', async () => {

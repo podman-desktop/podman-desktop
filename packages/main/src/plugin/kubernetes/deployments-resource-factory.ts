@@ -48,6 +48,7 @@ export class DeploymentsResourceFactory extends ResourceFactoryBase implements R
     this.setInformer({
       createInformer: this.createInformer,
     });
+    this.setIsActive(this.isDeploymentActive);
   }
 
   createInformer(kubeconfig: KubeConfigSingleContext): ResourceInformer<V1Deployment> {
@@ -56,5 +57,9 @@ export class DeploymentsResourceFactory extends ResourceFactoryBase implements R
     const listFn = (): Promise<V1DeploymentList> => apiClient.listNamespacedDeployment({ namespace });
     const path = `/apis/apps/v1/namespaces/${namespace}/deployments`;
     return new ResourceInformer<V1Deployment>({ kubeconfig, path, listFn, kind: 'Deployment', plural: 'deployments' });
+  }
+
+  isDeploymentActive(deployment: V1Deployment): boolean {
+    return (deployment.spec?.replicas ?? 0) > 0;
   }
 }

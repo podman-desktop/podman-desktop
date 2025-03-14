@@ -59,7 +59,7 @@ jobs:
             if [ git rev-parse -q --verify "$githubTag" ]; then
               echo "Tag '$githubTag' exists, skipping..."
               exit 1;
-            else 
+            else
               echo "Tag '$githubTag' does not exist yet, continue"
             fi
 
@@ -122,7 +122,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Execute pnpm

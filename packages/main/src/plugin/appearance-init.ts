@@ -51,7 +51,7 @@ export class AppearanceInit {
           description: 'Select icon and title or just icon for navigation icons',
           type: 'string',
           enum: [AppearanceSettings.IconAndTitle, AppearanceSettings.Icon],
-          default: import.meta.env.DEV ? AppearanceSettings.IconAndTitle : AppearanceSettings.Icon,
+          default: AppearanceSettings.IconAndTitle,
         },
       },
     };

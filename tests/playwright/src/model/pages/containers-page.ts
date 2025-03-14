@@ -118,7 +118,7 @@ export class ContainersPage extends MainPage {
   }
 
   async getContainerRowByName(name: string): Promise<Locator | undefined> {
-    return this.getRowFromTableByName(name);
+    return this.getRowByName(name);
   }
 
   async uncheckAllContainers(): Promise<void> {
