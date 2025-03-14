@@ -39,10 +39,9 @@ beforeAll(() => {
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
-
   (window.events as unknown) = {
-    receive: (_channel: string, func: unknown): void => {
-      (func as () => void)();
+    receive: (_channel: string, func: () => void): void => {
+      func();
     },
   };
 });
