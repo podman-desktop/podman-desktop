@@ -162,6 +162,8 @@ const config = {
       '--filesystem=home',
       // Read podman socket
       '--filesystem=xdg-run/podman:create',
+      // Read/write containers directory access (ability to save the application preferences)
+      '--filesystem=xdg-run/containers:create',
       // Read docker socket
       '--filesystem=/run/docker.sock',
       // Allow communication with network
