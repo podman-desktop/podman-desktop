@@ -31,7 +31,7 @@
     "@storybook/test": "^8.6.4",
     "@sveltejs/package": "^2.3.10",
     "@sveltejs/vite-plugin-svelte": "5.0.3",
-    "@tailwindcss/vite": "^4.0.13",
+    "@tailwindcss/vite": "^4.0.14",
     "@tsconfig/svelte": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "autoprefixer": "^10.4.21",
@@ -45,7 +45,7 @@
     "storybook-dark-mode": "^4.0.2",
     "svelte": "5.23.0",
     "svelte-check": "^4.1.5",
-    "tailwindcss": "^4.0.13",
+    "tailwindcss": "^4.0.14",
     "typescript": "^5.8.2",
     "vite": "^6.2.1",
     "vitest": "^3.0.8"
