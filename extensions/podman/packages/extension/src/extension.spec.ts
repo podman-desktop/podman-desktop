@@ -29,7 +29,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as compatibilityModeLib from './compatibility-mode';
 import {
-  checkDisguisedPodmanSocket,
   initCheckAndRegisterUpdate,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
@@ -1610,18 +1609,6 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
-});
-
-test('checkDisguisedPodmanSocket: does not run updateWarnings when called with Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).not.toBeCalled();
-});
-
-test('checkDisguisedPodmanSocket: runs updateWarnings when called not on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = false;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).toBeCalled();
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {
