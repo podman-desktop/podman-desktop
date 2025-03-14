@@ -1,21 +1,9 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import Link from '@docusaurus/Link';
-import useBaseUrl from '@docusaurus/useBaseUrl';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
-import {
-  faCertificate,
-  faCloudArrowDown,
-  faCogs,
-  faDiagramProject,
-  faGaugeHigh,
-  faGears,
-  faRocket,
-  faRotateRight,
-} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
-import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
 import CommunityBanner from '../components/CommunityBanner';
@@ -63,9 +51,11 @@ function DownloadClientLinks(): JSX.Element {
     otherButton = (
       <div>
         <Link
-          className="underline font-semibold hover:underline ml-4 inline-flex py-2 px-6 my-4  focus:outline-hidden text-lg"
+          className="basis-1/3 py-2 rounded-lg dark:text-gray-400 text-gray-900 dark:bg-zinc-700/25 text-center items-center"
           to="/downloads">
-          Other downloads
+          <FontAwesomeIcon size="4x" icon={faApple} className="my-4" />
+          <FontAwesomeIcon size="4x" icon={faLinux} className="my-4" />
+          <FontAwesomeIcon size="4x" icon={faWindows} className="my-4" />
         </Link>
       </div>
     );
@@ -129,7 +119,7 @@ function Hero(): JSX.Element {
           <img
             className="sm:w-full md:w-full lg:w-10/12"
             alt="Podman Desktop home page"
-            src="img/features/homepage.webp"
+            src="img/features/homepage.png"
           />
         </div>
       </div>
@@ -147,38 +137,148 @@ function SectionTitle(props: Readonly<{ name: string }>): JSX.Element {
   );
 }
 
-function KeepUpToDate(): JSX.Element {
+function FAQ(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="update" />
+          <SectionTitle name="FAQ" />
 
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Install and keep up to date <span className="font-bold">Podman</span>
+          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
+            FAQ
           </h2>
         </div>
 
-        <div className="flex flex-col w-full text-center">
-          <div className="mx-10">
-            <FontAwesomeIcon size="3x" icon={faRotateRight} className="ml-2 mb-4 text-gray-900 dark:text-gray-300" />
-          </div>
-          <div className="flex flex-col items-center">
+        <div className="flex flex-col w-full text-left">
+          <h2 className="max-w-lg mb-6 font-sans text-2xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+            <span className="font-bold">Is Podman Desktop free? </span>
+          </h2>
+          <div className="flex flex-col items-left">
             <p className="leading-relaxed text-base">
-              Install Podman and other dependencies directly from Podman Desktop if not yet installed.
+              Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License (LGPL).
+              This means that it is freely available for use, modification, and distribution by anyone, without charge
+              or licensing fees. Users can download and use Podman Desktop at no cost, making it accessible to
+              individuals and organizations alike.
             </p>
-            <p className="leading-relaxed text-base">Check for updates and get notified about new changes.</p>
-            <p className="leading-relaxed text-base">
-              Available on{' '}
-              <a href="/downloads/windows" className="text-purple-600 dark:text-purple-400" target="_blank">
-                Windows
-              </a>{' '}
-              and{' '}
-              <a href="/downloads/macos" className="text-purple-600 dark:text-purple-400" target="_blank">
-                macOS
-              </a>
-              !
-            </p>
+            <div className="flex flex-col w-full text-left">
+              <h2 className="max-w-lg mb-6 font-sans text-2xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                <span className="font-bold">Is Podman Desktop suitable for enterprise use? </span>
+              </h2>
+              <div className="flex flex-col items-left">
+                <p className="leading-relaxed text-base">
+                  Yes, Podman Desktop is designed to meet the needs of enterprise users, offering several security
+                  features:
+                </p>
+                <ul className="list-disc list-inside space-y-2 dark:text-gray-700">
+                  <li>
+                    <strong>VPN and Proxy Support</strong>: Supports various VPN configurations and proxy settings,
+                    allowing organizations to secure their container environments by controlling network traffic and
+                    enforcing access policies.
+                  </li>
+                  <li>
+                    <strong>Image Registry Management</strong>: Provides integration with popular image registries,
+                    enabling centralized management of container images and ensuring secure storage and distribution
+                    practices.
+                  </li>
+                  <li>
+                    <strong>Air-Gapped Installation</strong>: Supports isolated installations for highly secured
+                    environments, allowing organizations to deploy container runtimes without direct internet access
+                    while maintaining essential functionality.
+                  </li>
+                  <li>
+                    <strong>Container Isolation</strong>: As a daemonless container engine, Podman Desktop runs
+                    containers directly on the host system, reducing potential attack surfaces and improving overall
+                    security posture.
+                  </li>
+                  <li>
+                    <strong>Access Controls</strong>: Offers fine-grained control over user permissions and resource
+                    allocation, ensuring that sensitive tasks are performed only by authorized users and within
+                    designated constraints.
+                  </li>
+                </ul>
+                <p>
+                  These features make Podman Desktop an attractive choice for enterprises seeking a container management
+                  solution that aligns with their stringent security requirements.
+                </p>
+                <div className="flex flex-col w-full text-left">
+                  <h2 className="max-w-lg mb-6 font-sans text-2xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                    <span className="font-bold">How do I get involved in the project? </span>
+                  </h2>
+                  <div className="flex flex-col items-left"></div>
+                  <p className="leading-relaxed text-base">You can contribute in various ways:</p>
+                  <ul className="list-disc list-inside space-y-2 dark:text-gray-700">
+                    <li>
+                      <strong>Reporting issues</strong>: If you encounter bugs or have suggestions for improvements, you
+                      can report them on the{' '}
+                      <a href="https://github.com/podman-desktop/podman-desktop/issues">GitHub issue tracker</a>. Be
+                      sure to provide detailed information and steps to reproduce the issue.
+                    </li>
+                    <li>
+                      <strong>Working on issues</strong>: You can browse the{' '}
+                      <a href="https://github.com/podman-desktop/podman-desktop/issues">issue tracker</a> and contribute
+                      by fixing bugs or implementing new features. This involves forking the repository, making changes,
+                      and submitting pull requests.
+                    </li>
+                    <li>
+                      <strong>Contributing code</strong>: Beyond addressing existing issues, you can propose and
+                      contribute entirely new features or enhancements to Podman Desktop's functionality, user
+                      interface, or integrations with other tools. Learn more about{' '}
+                      <a href="https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md">
+                        how to contribute
+                      </a>
+                      .
+                    </li>
+                    <li>
+                      <strong>Contributing plug-ins</strong>: Feel like there is an integration missing? You can
+                      contribute your own plug-in functionality for Podman Desktop.{' '}
+                      <a href="https://podman-desktop.io/blog/extensions-introduction">Check out the guide</a>.
+                    </li>
+                    <li>
+                      <strong>Improving documentation</strong>: Clear and comprehensive documentation is essential. You
+                      can contribute by improving existing documentation, adding new guides, or creating tutorials.
+                    </li>
+                    <li>
+                      <strong>Providing website contributions</strong>: The Podman Desktop website{' '}
+                      <a href="https://podman-desktop.io/">Podman Desktop website</a> is also open source. You can
+                      contribute to its content, design, or translations.
+                    </li>
+                    <li>
+                      <strong>Becoming an Adopter</strong>: If you are a happy user, we’d love to know and share the
+                      word. Consider adding yourself or your organization to the{' '}
+                      <a href="https://github.com/podman-desktop/podman-desktop/blob/main/ADOPTERS.md">
+                        list of adopters
+                      </a>{' '}
+                      with a pull request.
+                    </li>
+                  </ul>
+                  <p>
+                    Before you start contributing, it's helpful to familiarize yourself with the{' '}
+                    <a href="https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md">
+                      project's contribution guidelines
+                    </a>{' '}
+                    and code architecture. These resources provide valuable information on coding style, testing
+                    procedures, and the overall development process. You can also join #podman-desktop on the Kubernetes
+                    Slack to connect with other contributors and get help.
+                  </p>
+                </div>
+                <div className="flex flex-col w-full text-left">
+                  <h2 className="max-w-lg mb-6 font-sans text-2xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                    <span className="font-bold">Does Podman Desktop support Compose? </span>
+                  </h2>
+                  <div className="flex flex-col items-left"></div>
+                  <p className="leading-relaxed text-base">
+                    Yes, Podman Desktop supports Compose files, allowing users to manage multi-container applications
+                    using familiar tools and workflows. By leveraging the `podman compose` command or integrating with
+                    existing Docker Compose setups, developers can seamlessly transition between Docker and Podman
+                    environments without sacrificing productivity. This compatibility ensures a smooth learning curve
+                    for those accustomed to working with Compose while taking advantage of the benefits offered by
+                    Podman Desktop. We recommend developers leverage Podman's native support for Kubernetes objects,
+                    such as Pods, Deployments, and Services, to ease their transition into the Kubernetes ecosystem
+                    while still enjoying the simplicity and benefits of a container management solution like Podman.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -186,78 +286,66 @@ function KeepUpToDate(): JSX.Element {
   );
 }
 
-function Extensibility(): JSX.Element {
+function Feedback(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="extensibility" />
+          <SectionTitle name="feedback" />
 
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Bring new features to Podman Desktop with extensions
+          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
+            What People Are Saying ✨
           </h2>
         </div>
 
-        <div className="flex flex-col w-full text-center">
-          <div className="flex flex-col items-center">
-            <p className="text-base lg:w-2/3 text-center mx-auto">
-              Podman Desktop is built around extension points. You can easily create a new extension using our pre-made
-              templates, easy-to-use API and UI components. Integrate your own tools into Podman Desktop with ease to
-              enrich with your own developer tools and experiences.
-            </p>
-            <ul className="list-disc list-inside text-center">
-              <li>
-                Explore our{' '}
-                <Link title="catalog of extensions" to="/extensions">
-                  catalog of extensions
-                </Link>
-                .
-              </li>
-              <li>
-                Learn to{' '}
-                <Link title="develop your own extensions" to="/docs/extensions/developing">
-                  develop your own extensions
-                </Link>
-                .
-              </li>
-              <li>
-                Want to use a Docker Desktop extension? Extensions such as{' '}
-                <Link title="trivy" to="https://github.com/aquasecurity/trivy-docker-extension">
-                  Trivy
-                </Link>{' '}
-                work out of the box with Podman Desktop.
-              </li>
-            </ul>
-          </div>
-
-          <ThemedImage
-            className="sm:w-full md:w-full lg:w-10/12 sm:pl-8 md:pl-12 lg:pl-24 text-center"
-            alt="Reuse Docker Desktop extensions"
-            sources={{
-              light: useBaseUrl('img/ddextensions/dd-support.png'),
-              dark: useBaseUrl('img/ddextensions/dd-support.png'),
-            }}
-          />
-
-          <div className="flex flex-col items-center">
-            <Link
-              title="Extend Podman Desktop"
-              className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-              to="/extend">
-              <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-                Learn More
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  className="w-4 h-4 ml-2"
-                  viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
+        <div className="container px-5 pb-5 mx-auto">
+          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
+            <div className="p-4 md:w-1/4 flex">
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  @johnt, John T
+                </h2>
+                <p className="leading-relaxed text-base">
+                  Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker
+                  daemon headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers
+                </p>
               </div>
-            </Link>
+            </div>
+
+            <div className="p-4 md:w-1/4 flex">
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  @mariam, Mariam P
+                </h2>
+                <p className="leading-relaxed text-base">
+                  Switched to #PodmanDesktop for local container development, and wow—so much easier to manage than
+                  expected. Seamless UI, great integration, and no root daemon. A game-changer!
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 md:w-1/4 flex">
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  @Tonyb, Tony B
+                </h2>
+                <p className="leading-relaxed text-base">
+                  Tried #PodmanDesktop and was surprised at how easy it was to transition from Docker. The UI is
+                  intuitive, and the ability to run rootless containers is a massive win for security!
+                </p>
+              </div>
+            </div>
+            <div className="p-4 md:w-1/4 flex">
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  @saurabh, Saurabh J
+                </h2>
+                <p className="leading-relaxed text-base">
+                  Finally, a container tool that respects system resources! Podman Desktop gives me full control without
+                  the bloat. Love how well it integrates with Kubernetes too. 🔥 #K8s #Containers
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -265,68 +353,73 @@ function Extensibility(): JSX.Element {
   );
 }
 
-function Configure(): JSX.Element {
+function Manymorefeatures(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="Configure" />
-
           <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Multiple configuration options
+            And Many More Features ✨
           </h2>
         </div>
 
         <div className="container px-5 pb-5 mx-auto">
           <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
+            <div className="p-4 md:w-1/5 flex">
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Registries</h2>
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Learning Center
+                </h2>
                 <p className="leading-relaxed text-base">
-                  <a href="/docs/containers/registries">Manage OCI registries. Add/edit/delete registries.</a>
+                  Demystify complex topics and expand knowledge of crucial technologies and components, through
+                  tutorials, videos, and documentation resources.
                 </p>
               </div>
             </div>
 
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
+            <div className="p-4 md:w-1/5 flex">
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Proxy</h2>
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Extensions
+                </h2>
                 <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Configure your proxy settings.</a>
+                  Podman Desktop extends its capabilities through extensions, allowing developers to tailor the tool to
+                  their unique needs and eventually build their own solutions.
                 </p>
               </div>
             </div>
 
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
+            <div className="p-4 md:w-1/6 flex">
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Resources Utilization
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  GPU Acceleration
                 </h2>
-                <p className="leading-relaxed text-base">Configure CPU/Memory/Disk of Podman machines.</p>
+                <p className="leading-relaxed text-base">
+                  To support any of your local AI development workflows, Podman Desktop enables GPU acceleration and
+                  optimizes performance when running models with containers locally.
+                </p>
               </div>
             </div>
 
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
+            <div className="p-4 md:w-1/5 flex">
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Container Engines
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Multi-arch Support
                 </h2>
                 <p className="leading-relaxed text-base">
-                  <a href="/docs/onboarding/containers">
-                    Handle multiple container engines at the same time: Podman, Docker.
-                  </a>
+                  Cross-platform multi-architecture support, to build and run containers for multiple hardware
+                  platforms, from ARM to x86_64.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 md:w-1/5 flex">
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Enterprise Ready
+                </h2>
+                <p className="leading-relaxed text-base">
+                  Extensive integrations, including VPN and Proxy support for secure networking configurations,
+                  streamlined image registry management, and options for air-gapped installations.
                 </p>
               </div>
             </div>
@@ -337,121 +430,30 @@ function Configure(): JSX.Element {
   );
 }
 
-function EnterpriseReady(): JSX.Element {
+function JoinCommunity(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font py-24">
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="enterprise" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Enterprise ready
-          </h2>
-        </div>
-        <div className="container px-5 pb-5 mx-auto">
-          <h1 className="sm:text-3xl text-2xl font-medium title-font text-center text-gray-900 dark:text-gray-100 mb-20">
-            Match configuration options.
-          </h1>
-          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCertificate} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Code signing</h2>
-
-                <p className="leading-relaxed text-base">
-                  <a href="/downloads">Signed binaries for both macOS and Windows</a>
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCloudArrowDown} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100  text-lg title-font font-medium mb-2">Proxy</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Configure proxy within the tool. Avoid any painful files to edit.</a>
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Registries</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Manage OCI registries. Add/edit/delete registries.</a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function RunAnywhere(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font">
+    <section className="flex rounded-lg mx-auto text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Available on Windows, Mac and Linux
+          <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-3xl md:mx-auto">
+            A Community-Driven Project Designed for Developers
           </h2>
           <p className="text-base text-gray-900 md:text-lg dark:text-gray-400">
-            Use the same UI across different operating systems
+            Built by a community of developers and shaped by user feedback, Podman Desktop offers a vendor-neutral
+            platform that empowers Containers and Kubernetes workflows without lock-in. Trusted as part of the CNCF, it
+            delivers flexibility, reliability, and innovation tailored for developers.
           </p>
         </div>
         <div className="flex flex-wrap w-full justify-center">
           <Link
-            title="Download for Windows"
-            className="p-4 w-11/12 md:w-1/2 lg:w-1/3 no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white"
-            to="/downloads/windows">
+            title="Join community"
+            className="p-4 w-11/12 md:w-1/2 lg:w-1/2 no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white"
+            to="/community">
             <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faWindows} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> Windows</h2>
-              </div>
-
               <div className="grow">
                 <div className="grow w-full">
-                  <p className="text-base text-center">exe or setup.exe</p>
+                  <p className="text-base text-center">Interested to join the Tribe?</p>
                 </div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            title="Download for macOS"
-            className="no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white p-4 w-11/12 md:w-1/2 lg:w-1/3"
-            to="/downloads/macos">
-            <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faApple} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> macOS</h2>
-              </div>
-              <div className="grow w-full">
-                <p className="text-base text-center">arm64, x64 or unified dmg</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            title="Download for Linux"
-            className="no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white p-4 w-11/12 md:w-1/2 lg:w-1/3"
-            to="/downloads/linux">
-            <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faLinux} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> Linux</h2>
-              </div>
-              <div className="grow">
-                <p className="text-base text-center">Flatpak or AMD64 binary (tar.gz)</p>
               </div>
             </div>
           </Link>
@@ -466,106 +468,100 @@ function MainFeatures(): JSX.Element {
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="features" />
+          <SectionTitle name="Essential features for containers" />
 
           <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Build, run and manage containers
+            Simplify Container Management and Boost Developer Productivity
           </h2>
+          <p className="text-base font-normal font-bold text-gray-900 md:text-lg dark:text-gray-400">
+            Podman Desktop enhances developer productivity by integrating with popular container runtime, registries,
+            and developer tools, making it easier to handle containeriozed applications locally. Whether you are
+            building, debugging, or deploying, Podman Desktop provides robust features and seamless controls, empowering
+            you to work smarter and faster with containers.
+          </p>
+        </div>
+        <div className="container px-5 mx-auto flex flex-wrap">
+          <div className="flex flex-col text-left w-full mb-5">
+            <Link
+              title="Read the Docs"
+              className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
+              to="/docs/containers">
+              <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
+                Read the Docs
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  className="w-4 h-4 ml-2"
+                  viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </Link>
+          </div>
         </div>
         <div className="container px-5 pb-5 mx-auto">
           <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGears} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/2 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/graphical.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Build</h2>
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Intuitive Graphical Interface
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/building-an-image">
-                    <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Build images from Containerfile or Dockerfile
-                  </a>
+                  Podman Desktop provides a simple and user-friendly interface for managing Podman Desktop provides a
+                  simple and user-friendly interface for managing manually handling container configurations.
                 </p>
               </div>
             </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faRocket} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/2 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/container.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Run</h2>
-
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Containers with Security
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/pulling-an-image">
-                    <FontAwesomeIcon icon={faDiagramProject} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Pull images from remote registries
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/starting-a-container">
-                    <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Start / Stop / Restart containers
-                  </a>
+                  Podman is a secure container runtime through its focus on daemonless, rootless containers, SELinux
+                  support, network policy enforcement, immutable containers. This ensures robust security foundations
+                  for running Linux containers and Kubernetes workloads.
                 </p>
               </div>
             </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGaugeHigh} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/2 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-800 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/platforms.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Inspect</h2>
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Cross-Platform Support
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Get a terminal in your container
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Inspect logs
+                  Available on Linux®, macOS, and Windows, Podman Desktop lets developers create, manage, and delete
+                  containers without the need for complex scripting or manual intervention.
                 </p>
               </div>
             </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faDiagramProject} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/2 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-800 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/certified container.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Push</h2>
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Built with Container Standards
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/pushing-an-image-to-a-registry">
-                    <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Push images to OCI registries
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Deploy & Test images on Kubernetes
+                  Podman supports industry-standard container technologies like OCI and Compose. This compatibility
+                  ensures a smooth transition without disrupting existing workflows or requiring extensive retooling.
                 </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <Link
-            title="Discover More"
-            className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-            to="/features">
-            <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-              Discover More
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                className="w-4 h-4 ml-2"
-                viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Link>
         </div>
       </div>
     </section>
@@ -577,83 +573,100 @@ function Pods(): JSX.Element {
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="features" />
+          <SectionTitle name="Crafted for Kubernetes" />
 
           <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Work with Pods and Kubernetes
+            Streamline Kubernetes workflows
           </h2>
+          <p className="text-base font-normal font-bold text-gray-900 md:text-lg dark:text-gray-400">
+            Podman Desktop isn't just a container manager; it's built with Kubernetes at its core. This deep integration
+            means seamless workflows for developers. Work with Podman's native Kubernetes support or effortlessly spin
+            up local Kind or Minikube clusters, bridge to remote environments, and manage your Kubernetes deployments
+            directly through Podman Desktop's intuitive graphical interface. Inspect, configure, and orchestrate your
+            pods, services, and deployments with ease, making Kubernetes management both powerful and user-friendly.
+          </p>
+          <div className="container px-5 mx-auto flex flex-wrap">
+            <div className="flex flex-col text-right w-full mb-5">
+              <Link
+                title="Read the Docs"
+                className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
+                to="/docs/kubernetes">
+                <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
+                  Read the Docs
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    className="w-4 h-4 ml-2"
+                    viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
         <div className="container px-5 pb-5 mx-auto">
           <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/2 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGears} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/4 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/developtest.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Working with pods
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Develop and Test
                 </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faDiagramProject} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/containers/creating-a-pod">Create Pods from existing containers</a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Create, start, inspect and manage pods
+                  Iterate faster with streamlined workflows enabling developers to develop locally and reducing
+                  turnarounds cycles.
                 </p>
               </div>
             </div>
-            <div className="p-4 md:w-1/2 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGaugeHigh} className="w-6 h-6 " />
+            <div className="p-4 md:w-1/4 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/grow.svg"></img>
               </div>
               <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Working with Kubernetes
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Grow Your Skills at Your Pace
                 </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Play Kubernetes YAML directly with Podman Engine
+                  Start with containers and seamlessly transition to Kubernetes concepts with Podman capabilities.
+                  Podman Desktop makes learning and adopting Kubernetes easy.
                 </p>
+              </div>
+            </div>
+            <div className="p-4 md:w-1/4 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/troubleshoot1.svg"></img>
+              </div>
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Manage your clusters
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Generate Kubernetes YAML from pods
+                  Whether working natively with Kubernetes objects or managing local or remote clusters, Podman Desktop
+                  streamlines your workflows with its intuitive graphical interface.
                 </p>
+              </div>
+            </div>
+            <div className="p-4 md:w-1/4 flex">
+              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full text-purple-700 mb-4 shrink-0">
+                <img className="w-12 h-12 " src="../img/features/troubleshoot2.svg"></img>
+              </div>
+              <div className="grow pl-6">
+                <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-2xl md:mx-auto">
+                  Troubleshoot with Ease
+                </h2>
                 <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/kubernetes/deploying-a-pod-to-kubernetes">
-                    Deploy to existing Kubernetes environments
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/kind">Running Kubernetes on your workstation with Kind and Podman</a>
+                  Directly access logs, metrics and debug tools with Podman Desktop intuitive graphical interface to
+                  resolve issues efficiently.
                 </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <Link
-            title="Discover More"
-            className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-            to="/features">
-            <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-              Discover More
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                className="w-4 h-4 ml-2"
-                viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Link>
         </div>
       </div>
     </section>
@@ -668,13 +681,12 @@ export default function Home(): JSX.Element {
       <TailWindThemeSelector />
       <CommunityBanner />
       <Hero />
-      <RunAnywhere />
+      <JoinCommunity />
       <MainFeatures />
       <Pods />
-      <Configure />
-      <Extensibility />
-      <KeepUpToDate />
-      <EnterpriseReady />
+      <Manymorefeatures />
+      <Feedback />
+      <FAQ />
     </Layout>
   );
 }
