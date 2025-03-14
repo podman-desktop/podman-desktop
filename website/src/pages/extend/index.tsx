@@ -45,15 +45,58 @@ export default function Home(): JSX.Element {
                 </li>
               </ul>
             </div>
+
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
-              Extend capabilities with Podman Desktop extensions
+              What are Extensions?
             </h1>
             <p>
-              Podman Desktop leverages a variety of extensions to manage different container engines effectively.
-              Discover and add new extensions to adapt Podman Desktop to your specific needs, whether it's managing
-              containers or integrating new tools. This flexibility supports a broad range of container engines, such as
-              Podman, Docker, or Lima, enhancing your development workflow.
+              Extensions in Podman Desktop allow users to enhance and customize their container management experience.
+              They enable new functionalities such as:
             </p>
+            <ul className="list-disc list-inside text-center mx-auto max-w-3xl">
+              <li>Adding support for different container engines like Docker, Lima, or Kubernetes.</li>
+              <li>Providing command-line integrations with tools like Helm or Kubectl.</li>
+              <li>Introducing UI elements such as custom actions, badges, views, and workflows.</li>
+              <li>Automating tasks and integrating with external services.</li>
+            </ul>
+
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+              Getting Started with Extensions
+            </h1>
+            <p>
+              You can easily extend the capabilities of Podman Desktop by installing or developing extensions. Here’s
+              how:
+            </p>
+            <h2 className="text-2xl font-semibold mt-6">1. Install Extensions</h2>
+            <p>
+              Browse the{' '}
+              <a href={useBaseUrl('/extensions')} className="text-blue-500">
+                Extensions Catalog
+              </a>{' '}
+              to find and install pre-built extensions.
+            </p>
+
+            <h2 className="text-2xl font-semibold mt-6">2. Develop Your Own Extension</h2>
+            <p>
+              Want to create something new? Check out our guide on{' '}
+              <a href={useBaseUrl('/docs/extensions/developing')} className="text-blue-500">
+                Developing an Extension
+              </a>{' '}
+              to learn how to build and contribute your own.
+            </p>
+
+            <h2 className="text-2xl font-semibold mt-6">3. Publish Your Extension</h2>
+            <p>
+              Share your extension with the community by publishing it to the catalog. Learn more about the process{' '}
+              <a href={useBaseUrl('/docs/extensions/publish')} className="text-blue-500">
+                here
+              </a>
+              .
+            </p>
+
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+              Visualizing Extension Capabilities
+            </h1>
             <ThemedImage
               className="py-4"
               alt="Extensibility diagram"
@@ -64,12 +107,12 @@ export default function Home(): JSX.Element {
             />
 
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
-              Extend capabilities with Docker Desktop extensions
+              Extend Podman Desktop with Docker Desktop Extensions
             </h1>
             <p>
-              Utilizing Docker Desktop UI extensions, Podman Desktop is equipped with a wrapper that intercepts API
-              calls, enabling seamless integration and extension of its capabilities. Add Docker Desktop extensions to
-              enhance the functionality of Podman Desktop with innovative features.
+              Podman Desktop can also leverage Docker Desktop UI extensions through a built-in wrapper that intercepts
+              API calls, making integration seamless. Use Docker Desktop extensions to further enhance Podman Desktop’s
+              capabilities.
             </p>
             <ThemedImage
               className="py-4"
