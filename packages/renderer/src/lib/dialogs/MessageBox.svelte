@@ -1,12 +1,13 @@
 <script lang="ts">
 import { faCircle, faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
-import { faCircleExclamation, faInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, type ButtonType } from '@podman-desktop/ui-svelte';
+import { faCircleExclamation, faInfo, faTriangleExclamation, faArrowUpRightFromSquare, faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
+import { Button, Dropdown, DropdownMenu, Expandable, Input, type ButtonType } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
+import { remindLater, type RemindOption } from '/@/stores/feedbackForm';
 
 let currentId = 0;
 let title: string;
@@ -19,6 +20,8 @@ let defaultId: number;
 let buttonOrder: number[];
 
 let display = false;
+
+const githubFeedbackLink = 'https://github.com/podman-desktop/podman-desktop/discussions/10533'
 
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
@@ -38,6 +41,10 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
     buttons = ['OK'];
   }
   type = options?.type;
+
+  if (type === 'feedback') {
+    
+  }
 
   buttonOrder = Array.from(buttons, (value, index) => index);
 
@@ -104,10 +111,15 @@ function getButtonType(b: boolean): ButtonType {
     return 'secondary';
   }
 }
+
+async function remindChanged(val: RemindOption): Promise<void> {
+  remindLater(val);
+  await onClose();
+}
 </script>
 
 {#if display}
-  <Dialog title={title} on:close={onClose}>
+  <Dialog title={title} on:close={onClose} overflowVisible={type === 'feedback'}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
@@ -126,19 +138,42 @@ function getButtonType(b: boolean): ButtonType {
     <svelte:fragment slot="content">
       <div class="leading-5 whitespace-pre-wrap" aria-label="Dialog Message">{message}</div>
 
-      {#if detail}
-        <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>
+      {#if type === 'feedback'}
+        <div class="pt-4 flex justify-center space-x-4" aria-label="Dialog Details">
+          <button aria-label="thumb-up" onclick={async () => await window.openExternal(githubFeedbackLink)}>
+            <i class="fa-solid fa-thumbs-up fa-3x"></i>
+          </button>
+          <button aria-label="thumb-down" onclick={async () => await window.openExternal(githubFeedbackLink)}>
+            <i class="fa-solid fa-thumbs-down fa-3x"></i>
+          </button>
+        </div>
+      {:else}
+        {#if detail}
+          <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>
+        {/if}
       {/if}
     </svelte:fragment>
 
     <svelte:fragment slot="buttons">
-      {#each buttonOrder as i}
-        {#if i === cancelId}
-          <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
-        {:else}
-          <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i]}</Button>
-        {/if}
-      {/each}
+      {#if type === 'feedback'}
+        <Dropdown
+          ariaLabel="remindMeLaterDropdown"
+          name="Remind me later"
+          value="Remind me later"
+          onChange={val => remindChanged(val as RemindOption)}
+          options={[{value: "tomorrow", label: "Remind me tomorrow"}, {value: "inTwoDays", label: "Remind me in 2 days"}, {value: "never", label: "Don't show again"}]}/>
+          
+        <Button padding="px-3 py-1" icon={faArrowUpRightFromSquare} on:click={async () => await window.openExternal(githubFeedbackLink)}>Share feedback on GitHub</Button>
+      {:else}
+        {#each buttonOrder as i}
+          {#if i === cancelId}
+            <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
+          {:else}
+            <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i]}</Button>
+          {/if}
+        {/each}
+      {/if}
+      
     </svelte:fragment>
   </Dialog>
 {/if}

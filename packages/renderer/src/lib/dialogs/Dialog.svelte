@@ -3,6 +3,7 @@ import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher } from 'svelte';
 
 export let title: string;
+export let overflowVisible: boolean = false;
 
 const dispatch = createEventDispatcher();
 
@@ -11,7 +12,7 @@ export let onclose: () => void = () => {
 };
 </script>
 
-<Modal name={title} on:close={onclose}>
+<Modal name={title} on:close={onclose} {overflowVisible}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     <slot name="icon" />
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>
