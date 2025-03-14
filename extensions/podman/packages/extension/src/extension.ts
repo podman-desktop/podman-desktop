@@ -55,7 +55,7 @@ import {
   LoggerDelegator,
   VMTYPE,
 } from './util';
-import { getDisguisedPodmanInformation, getSocketPath, isDisguisedPodman } from './warnings';
+import { getSocketPath, isDisguisedPodman } from './warnings';
 
 type StatusHandler = (name: string, event: extensionApi.ProviderConnectionStatus) => void;
 
@@ -1384,7 +1384,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const provider = extensionApi.provider.createProvider(providerOptions);
 
   // Check on initial setup
-  await checkDisguisedPodmanSocket(provider);
+  await checkDisguisedPodmanSocket();
 
   // Update the status of the provider if the socket is changed, created or deleted
   disguisedPodmanSocketWatcher = setupDisguisedPodmanSocketWatcher(provider, getSocketPath());
@@ -2262,7 +2262,7 @@ function setupDisguisedPodmanSocketWatcher(
 
   // Add the check to the listeners as well to make sure we check on podman status change as well
   listeners.add(() => {
-    checkDisguisedPodmanSocket(provider).catch((error: unknown) => {
+    checkDisguisedPodmanSocket().catch((error: unknown) => {
       console.error('Error while checking disguised podman socket', error);
     });
   });
@@ -2275,7 +2275,7 @@ function setupDisguisedPodmanSocketWatcher(
   // only trigger if the watched file is the socket file
   const updateSocket = async (uri: extensionApi.Uri): Promise<void> => {
     if (uri.fsPath === socketFile) {
-      await checkDisguisedPodmanSocket(provider);
+      await checkDisguisedPodmanSocket();
     }
   };
 
@@ -2294,7 +2294,7 @@ function setupDisguisedPodmanSocketWatcher(
   return socketWatcher;
 }
 
-export async function checkDisguisedPodmanSocket(provider: extensionApi.Provider): Promise<void> {
+export async function checkDisguisedPodmanSocket(): Promise<void> {
   // Check to see if the socket is disguised or not. If it is, we'll push a warning up
   // to the plugin library to the let the provider know that there is a warning
   const disguisedCheck = await isDisguisedPodman();
@@ -2304,17 +2304,6 @@ export async function checkDisguisedPodmanSocket(provider: extensionApi.Provider
 
   // If it's disguised on startup, set the enable-docker-compatibility setting accordingly
   await extensionApi.configuration.getConfiguration('podman').update(configurationCompatibilityMode, disguisedCheck);
-
-  // If isDisguisedPodmanSocket is true, we'll push a warning up to the plugin library with getDisguisedPodmanWarning()
-  // If isDisguisedPodmanSocket is false, we'll push an empty array up to the plugin library to clear the warning
-  // as we have no other warnings to display (or implemented)
-
-  // NOTE: LINUX SUPPORT
-  // Linux does not support compatibility mode button, so do not sending the warning
-  if (!extensionApi.env.isLinux) {
-    const retrievedWarnings = isDisguisedPodmanSocket ? [] : [getDisguisedPodmanInformation()];
-    provider.updateWarnings(retrievedWarnings);
-  }
 }
 
 // Shortform for getting the compatibility mode setting
