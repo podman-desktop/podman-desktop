@@ -35,15 +35,10 @@ export class CLIToolsPage extends SettingsPage {
     super(page, 'CLI Tools');
     this.main = page.getByRole('region', { name: 'CLI Tools' }); //check name
     this.header = this.main.getByRole('region', { name: 'Header' });
-    this.heading = this.header.getByRole('heading', {
-      name: 'CLI Tools',
-      exact: true,
-    });
+    this.heading = this.header.getByRole('heading', { name: 'CLI Tools', exact: true });
     this.content = this.main.getByRole('region', { name: 'Content' });
     this.toolsTable = this.content.getByRole('table', { name: 'cli-tools' });
-    this.dropDownDialog = page.getByRole('dialog', {
-      name: 'drop-down-dialog',
-    });
+    this.dropDownDialog = page.getByRole('dialog', { name: 'drop-down-dialog' });
     this.versionInputField = this.dropDownDialog.getByRole('textbox');
   }
 
@@ -60,7 +55,11 @@ export class CLIToolsPage extends SettingsPage {
   }
 
   public getUpdateButton(toolName: string): Locator {
-    return this.getToolRow(toolName).getByLabel('Update', { exact: true });
+    return this.getToolRow(toolName).getByRole('button', { name: 'Update available', exact: true });
+  }
+
+  public getDowngradeButton(toolName: string): Locator {
+    return this.getToolRow(toolName).getByRole('button', { name: 'Upgrade/Downgrade', exact: true });
   }
 
   public getVersionSelectionButton(version: string): Locator {
@@ -96,6 +95,52 @@ export class CLIToolsPage extends SettingsPage {
       } catch {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
+
+      return this;
+    });
+  }
+
+  public async downgradeTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
+    return test.step(`Downgrade ${toolName}`, async () => {
+      const currentVersion = await this.getCurrentToolVersion(toolName);
+      if (!currentVersion) {
+        throw new Error(`Tool ${toolName} is not installed`);
+      }
+
+      if ((await this.getDowngradeButton(toolName).count()) === 0) {
+        console.log(`Tool ${toolName} is already in a downgraded version`);
+        return this;
+      }
+
+      if (!version) {
+        version = await this.getLatestVersionNumber();
+      }
+
+      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
+      await this.getVersionSelectionButton(version).click();
+
+      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBe(version);
+      return this;
+    });
+  }
+
+  public async updateTool(toolName: string, timeout = 60_000): Promise<this> {
+    return test.step(`Update ${toolName}`, async () => {
+      const currentVersion = await this.getCurrentToolVersion(toolName);
+      if (!currentVersion) {
+        throw new Error(`Tool ${toolName} is not installed`);
+      }
+
+      if ((await this.getUpdateButton(toolName).count()) === 0) {
+        console.log(`Tool ${toolName} is already on latest`);
+        return this;
+      }
+
+      await playExpect(this.getUpdateButton(toolName)).toBeEnabled();
+      await this.getUpdateButton(toolName).click();
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .not.toBe(currentVersion);
 
       return this;
     });
