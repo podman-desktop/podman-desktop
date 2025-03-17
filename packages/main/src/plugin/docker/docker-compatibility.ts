@@ -22,7 +22,7 @@ import Dockerode from 'dockerode';
 
 import { isMac, isWindows } from '/@/util.js';
 import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
-import { ExperimentalSettings } from '/@api/docker-compatibility-info.js';
+import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info.js';
 
 import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import type { LibPod } from '../dockerode/libpod-dockerode.js';
@@ -32,7 +32,8 @@ export class DockerCompatibility {
   static readonly WINDOWS_NPIPE = '//./pipe/docker_engine';
   static readonly UNIX_SOCKET_PATH = '/var/run/docker.sock';
 
-  static readonly ENABLED_FULL_KEY = `${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`;
+  static readonly ENABLED_FULL_KEY =
+    `${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`;
 
   #configurationRegistry: ConfigurationRegistry;
 
@@ -45,17 +46,14 @@ export class DockerCompatibility {
 
   init(): void {
     const dockerCompatibilityConfiguration: IConfigurationNode = {
-      id: 'preferences.experimental.dockerCompatibility',
-      title: 'Experimental (Docker Compatibility)',
+      id: 'preferences.dockerCompatibility',
+      title: 'Docker Compatibility',
       type: 'object',
       properties: {
         [DockerCompatibility.ENABLED_FULL_KEY]: {
           description: 'Enable the section for Docker compatibility.',
           type: 'boolean',
           default: false,
-          experimental: {
-            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10769',
-          },
         },
       },
     };
