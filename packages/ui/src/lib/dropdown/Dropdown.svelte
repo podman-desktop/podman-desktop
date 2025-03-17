@@ -4,7 +4,7 @@ import { onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 interface Option {
-  value: unknown;
+  value: string;
   label: string;
 }
 
@@ -23,9 +23,9 @@ let {
 }: {
   id?: string;
   name?: string;
-  value?: unknown;
+  value?: string;
   disabled?: boolean;
-  onChange?: (val: unknown) => void;
+  onChange?: (val: string) => void;
   options?: Option[];
   class?: string;
   ariaInvalid?: boolean | 'grammar' | 'spelling';
@@ -48,7 +48,7 @@ onMount(() => {
 });
 
 $effect(() => {
-  selectLabel = options.find(o => o.value === value)?.label ?? (typeof value === 'string' ? (value as string) : '');
+  selectLabel = options.find(o => o.value === value)?.label ?? value ?? '';
 });
 
 function onKeyDown(e: KeyboardEvent): void {
@@ -131,7 +131,7 @@ function onEnter(i: number): void {
   highlightIndex = i;
 }
 
-function onSelect(e: Event, newValue: unknown): void {
+function onSelect(e: Event, newValue: string): void {
   onChange(newValue);
   value = newValue;
   close();

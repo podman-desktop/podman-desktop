@@ -90,7 +90,10 @@ test('expect dropdown onchange to be propagated', async () => {
   // ensure the component has provided on onChange method
   expect(onChange).toBeDefined();
   // simulate user selected the provider container connection
-  onChange?.(options?.[0].value);
+  const value = options?.[0].value;
+  if (!value) throw new Error('undefined value for option at index 0');
+
+  onChange?.(value);
 
   expect(onchange).toHaveBeenCalledWith(CONTAINER_CONNECTION_INFO);
 });
@@ -110,7 +113,10 @@ test('expect binding to properly work', async () => {
   let alert = queryByRole('alert');
   expect(alert).toBeNull();
 
-  onChange?.(options?.[0].value);
+  const value = options?.[0].value;
+  if (!value) throw new Error('undefined value for option at index 0');
+
+  onChange?.(value);
 
   alert = await vi.waitFor(() => {
     return getByRole('alert');
