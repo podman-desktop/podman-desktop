@@ -371,14 +371,16 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 }
 
 export let focus: string | undefined;
-export let highlightID: string | undefined;
+let highlightID: string | undefined;
 
 $: if (focus) {
-  highlightID = focus;
-  const element = document.getElementById(focus);
-  if (element) {
-    element.scrollIntoView({ behavior: 'auto', block: 'start' });
-  }
+  requestAnimationFrame(() => {
+    highlightID = focus;
+    const element = document.getElementById(focus);
+    if (element) {
+      element.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
 }
 
 function getClassForProvider(providerId: string): string {

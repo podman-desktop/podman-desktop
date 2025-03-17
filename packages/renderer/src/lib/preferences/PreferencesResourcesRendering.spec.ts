@@ -141,7 +141,6 @@ test('Expect to see elements regarding foo provider', async () => {
 });
 
 test('Expect to scroll to the focused element if focus prop is provided', async () => {
-  // Mock the scrollIntoView function
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   const customProviderInfo: ProviderInfo = {
     ...providerInfo,
