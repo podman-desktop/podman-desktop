@@ -384,18 +384,24 @@ declare module '@podman-desktop/api' {
     ): Promise<void>;
   }
 
+  export interface MachineProviderConnection {
+    name: string;
+    lifecycle?: ProviderConnectionLifecycle;
+    status(): ProviderConnectionStatus;
+  }
+
+  export interface SSHProviderConnection extends MachineProviderConnection {
+    shellAccess?: ProviderConnectionShellAccess;
+  }
+
   export interface ContainerProviderConnectionEndpoint {
     socketPath: string;
   }
 
-  export interface ContainerProviderConnection {
-    name: string;
+  export interface ContainerProviderConnection extends SSHProviderConnection {
     displayName?: string;
     type: 'docker' | 'podman';
     endpoint: ContainerProviderConnectionEndpoint;
-    shellAccess?: ProviderConnectionShellAccess;
-    lifecycle?: ProviderConnectionLifecycle;
-    status(): ProviderConnectionStatus;
     vmType?: string;
     /**
      * the vmTypeDisplayName property cannot be set if vmType is undefined
@@ -518,11 +524,8 @@ declare module '@podman-desktop/api' {
   export interface KubernetesProviderConnectionEndpoint {
     apiURL: string;
   }
-  export interface KubernetesProviderConnection {
-    name: string;
+  export interface KubernetesProviderConnection extends MachineProviderConnection {
     endpoint: KubernetesProviderConnectionEndpoint;
-    lifecycle?: ProviderConnectionLifecycle;
-    status(): ProviderConnectionStatus;
   }
 
   // common set of options for creating a provider
