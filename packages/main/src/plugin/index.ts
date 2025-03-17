@@ -181,6 +181,7 @@ import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
+import { PinRegistry } from './statusbar/pin-registry.js';
 import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
 import type { StatusBarEntryDescriptor } from './statusbar/statusbar-registry.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
@@ -681,6 +682,9 @@ export class PluginSystem {
       apiSender,
     );
     extensionDevelopmentFolders.init();
+
+    const pinRegistry = new PinRegistry(commandRegistry, apiSender, configurationRegistry, providerRegistry);
+    pinRegistry.init();
 
     this.extensionLoader = new ExtensionLoader(
       commandRegistry,
@@ -3017,6 +3021,18 @@ export class PluginSystem {
         return kubernetesClient.getTroubleshootingInformation();
       },
     );
+
+    this.ipcHandle('statusbar:pin:get-options', async (): Promise<Array<PinOption>> => {
+      return pinRegistry.getOptions();
+    });
+
+    this.ipcHandle('statusbar:pin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.pin(optionId);
+    });
+
+    this.ipcHandle('statusbar:unpin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.unpin(optionId);
+    });
 
     const dockerDesktopInstallation = new DockerDesktopInstallation(
       apiSender,
