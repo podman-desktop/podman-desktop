@@ -28,6 +28,7 @@ export interface ContextHealthState {
   contextName: string;
   checking: boolean;
   reachable: boolean;
+  errorMessage?: string;
 }
 
 export interface ContextHealthCheckOptions {
@@ -97,6 +98,14 @@ export class ContextHealthChecker implements Disposable {
           checking: false,
           reachable: false,
         };
+        if (this.isNoEntryException(err)) {
+          let desc = `Command not found: ${err.path}.\nPlease verify this command is installed, and specify its full path in your kubeconfig file.`;
+          const config = this.#kubeConfig.getKubeConfig();
+          if (config.users[0]?.exec && config.users[0].exec.command === err.path && config.users[0].exec.installHint) {
+            desc += `\n${config.users[0].exec.installHint}`;
+          }
+          this.#currentState.errorMessage = desc;
+        }
         this.#onStateChange.fire(this.#currentState);
       }
     }
@@ -114,5 +123,9 @@ export class ContextHealthChecker implements Disposable {
 
   private isAbortError(err: unknown): boolean {
     return err instanceof Error && err.name === 'AbortError';
+  }
+
+  private isNoEntryException(err: unknown): err is NodeJS.ErrnoException {
+    return err instanceof Error && 'code' in err && err.code === 'ENOENT';
   }
 }

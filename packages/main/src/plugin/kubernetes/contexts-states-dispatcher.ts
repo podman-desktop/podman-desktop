@@ -61,6 +61,7 @@ export class ContextsStatesDispatcher {
         checking: health.checking,
         reachable: health.reachable,
         offline: this.manager.isContextOffline(contextName),
+        errorMessage: health.errorMessage,
       });
     }
     return value;

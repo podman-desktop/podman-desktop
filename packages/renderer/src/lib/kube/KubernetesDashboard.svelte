@@ -6,6 +6,7 @@ import { onDestroy, onMount } from 'svelte';
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import { containersInfos } from '/@/stores/containers';
+import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import {
   kubernetesCurrentContextConfigMaps,
@@ -72,6 +73,22 @@ let jobCount = $derived($kubernetesCurrentContextJobs.length);
 let kubernetesActiveResourcesCountExperimental = $state<ResourceCount[]>([]);
 
 let disposable: IDisposable | undefined;
+
+// permissions - experimental mode only
+// we check for *not* permitted resources, to support legacy mode
+// condition may be inverted when legacy mode is removed
+const notPermittedResources = $derived(
+  !$isKubernetesExperimentalModeStore
+    ? []
+    : $kubernetesContextsPermissions
+        .filter(p => p.contextName === currentContextName)
+        .filter(p => p.permitted === false)
+        .map(p => p.resourceName),
+);
+
+function isPermitted(notPermittedResources: string[], resourceName: string): boolean {
+  return !notPermittedResources.includes(resourceName);
+}
 
 onMount(async () => {
   // listen active resources for experimental mode
@@ -193,15 +210,15 @@ async function openKubernetesDocumentation(): Promise<void> {
                 <!-- Metrics - non-collapsible -->
                 <div class="text-xl pt-2">Metrics</div>
                 <div class="grid grid-cols-4 gap-4">
-                    <KubernetesDashboardResourceCard type='Nodes' activeCount={activeCounts.nodes} count={counts.nodes} kind='Node'/>
-                    <KubernetesDashboardResourceCard type='Deployments' activeCount={activeCounts.deployments} count={counts.deployments} kind='Deployment'/>
-                    <KubernetesDashboardResourceCard type='Pods' count={counts.pods} kind='Pod'/>
-                    <KubernetesDashboardResourceCard type='Services' count={counts.services} kind='Service'/>
-                    <KubernetesDashboardResourceCard type='Ingresses & Routes' count={counts.ingresses + counts.routes} kind='Ingress'/>
-                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={counts.persistentvolumeclaims} kind='PersistentVolumeClaim'/>
-                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={counts.configmaps + counts.secrets} kind='ConfigMap'/>
-                    <KubernetesDashboardResourceCard type='Jobs' count={counts.jobs} kind='Job'/>
-                    <KubernetesDashboardResourceCard type='CronJobs' count={counts.cronjobs} kind='CronJob'/>
+                    <KubernetesDashboardResourceCard type='Nodes' activeCount={activeCounts.nodes} count={counts.nodes} permitted={isPermitted(notPermittedResources, 'nodes')} kind='Node'/>
+                    <KubernetesDashboardResourceCard type='Deployments' activeCount={activeCounts.deployments} count={counts.deployments} permitted={isPermitted(notPermittedResources, 'deployments')} kind='Deployment'/>
+                    <KubernetesDashboardResourceCard type='Pods' count={counts.pods} permitted={isPermitted(notPermittedResources, 'pods')} kind='Pod'/>
+                    <KubernetesDashboardResourceCard type='Services' count={counts.services} permitted={isPermitted(notPermittedResources, 'services')} kind='Service'/>
+                    <KubernetesDashboardResourceCard type='Ingresses & Routes' count={counts.ingresses + counts.routes} permitted={isPermitted(notPermittedResources, 'ingresses') || isPermitted(notPermittedResources, 'routes')} kind='Ingress'/>
+                    <KubernetesDashboardResourceCard type='Persistent Volume Claims' count={counts.persistentvolumeclaims} permitted={isPermitted(notPermittedResources, 'persistentvolumeclaims')} kind='PersistentVolumeClaim'/>
+                    <KubernetesDashboardResourceCard type='ConfigMaps & Secrets' count={counts.configmaps + counts.secrets} permitted={isPermitted(notPermittedResources, 'configmaps') || isPermitted(notPermittedResources, 'secrets')} kind='ConfigMap'/>
+                    <KubernetesDashboardResourceCard type='Jobs' count={counts.jobs} permitted={isPermitted(notPermittedResources, 'jobs')} kind='Job'/>
+                    <KubernetesDashboardResourceCard type='CronJobs' count={counts.cronjobs} permitted={isPermitted(notPermittedResources, 'cronjobs')} kind='CronJob'/>
                 </div>
                 <!-- Graphs -->
                 

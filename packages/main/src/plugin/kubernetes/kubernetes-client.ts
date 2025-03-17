@@ -116,8 +116,21 @@ interface ContextsManagerInterface {
   refreshContextState(contextName: string): Promise<void>;
 }
 
-interface KubernetesObjectWithKind extends KubernetesObject {
+interface V1ObjectMetaWithName extends V1ObjectMeta {
+  name: string;
+}
+
+function isV1ObjectMetaWithName(m: unknown): m is V1ObjectMetaWithName {
+  return !!m && typeof m === 'object' && 'name' in m;
+}
+
+interface KubernetesObjectWithKindAndName extends KubernetesObject {
   kind: string;
+  metadata: V1ObjectMetaWithName;
+}
+
+function isKubernetesObjectWithKindAndName(o: unknown): o is KubernetesObjectWithKindAndName {
+  return !!o && typeof o === 'object' && 'kind' in o && 'metadata' in o && isV1ObjectMetaWithName(o['metadata']);
 }
 
 const OPENSHIFT_PROJECT_API_GROUP = 'project.openshift.io';
@@ -1179,9 +1192,7 @@ export class KubernetesClient {
       const ctx = new KubeConfig();
       ctx.loadFromFile(this.kubeconfigPath);
       ctx.currentContext = context;
-      const validSpecs = manifests.filter(
-        s => !!s && typeof s === 'object' && 'kind' in s,
-      ) as KubernetesObjectWithKind[];
+      const validSpecs = manifests.filter(s => isKubernetesObjectWithKindAndName(s));
 
       const client = ctx.makeApiClient(KubernetesObjectApi);
       const created: KubernetesObject[] = [];

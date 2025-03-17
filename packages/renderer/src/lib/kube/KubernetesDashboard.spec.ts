@@ -25,11 +25,13 @@ import { readable, writable } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
+import * as kubernetesPermissions from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import * as kubernetesExperimental from '/@/stores/kubernetes-experimental';
 import * as kubernetesReourcesCount from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
+import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
@@ -53,6 +55,8 @@ vi.mock('/@/stores/kubernetes-experimental');
 vi.mock('/@/stores/kubernetes-resources-count');
 
 vi.mock('/@/lib/kube/active-resources-count-listen');
+
+vi.mock('/@/stores/kubernetes-context-permission');
 
 const openExternalMock = vi.fn();
 
@@ -165,6 +169,8 @@ describe('with current context', () => {
     });
 
     test('counts and active counts', async () => {
+      const permissions = writable<ContextPermission[]>([]);
+      vi.mocked(kubernetesPermissions).kubernetesContextsPermissions = permissions;
       vi.mocked(listenActiveResourcesCount).mockImplementation(
         async (f: (activeResourcesCounts: ResourceCount[]) => void) => {
           f([
@@ -236,6 +242,7 @@ describe('with current context', () => {
           count: 11,
           kind: 'Pod',
           type: 'Pods',
+          permitted: true,
         }),
       );
       expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
@@ -245,6 +252,7 @@ describe('with current context', () => {
           count: 12,
           kind: 'Deployment',
           type: 'Deployments',
+          permitted: true,
         }),
       );
       expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
@@ -254,6 +262,7 @@ describe('with current context', () => {
           count: 4,
           kind: 'Node',
           type: 'Nodes',
+          permitted: true,
         }),
       );
       expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
@@ -262,6 +271,7 @@ describe('with current context', () => {
           count: 3,
           kind: 'Ingress',
           type: 'Ingresses & Routes',
+          permitted: true,
         }),
       );
       expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
@@ -270,6 +280,82 @@ describe('with current context', () => {
           count: 8,
           kind: 'ConfigMap',
           type: 'ConfigMaps & Secrets',
+          permitted: true,
+        }),
+      );
+    });
+
+    test('permissions', async () => {
+      const permissions = writable<ContextPermission[]>([
+        {
+          contextName: 'context-name',
+          resourceName: 'nodes',
+          permitted: false,
+        },
+      ]);
+      vi.mocked(kubernetesPermissions).kubernetesContextsPermissions = permissions;
+      vi.mocked(listenActiveResourcesCount).mockImplementation(
+        async (f: (activeResourcesCounts: ResourceCount[]) => void) => {
+          f([
+            {
+              contextName: 'context-name',
+              resourceName: 'deployments',
+              count: 2,
+            },
+            {
+              contextName: 'context-name',
+              resourceName: 'nodes',
+              count: 0,
+            },
+          ]);
+          return {
+            dispose: (): void => {},
+          };
+        },
+      );
+
+      vi.mocked(kubernetesReourcesCount).kubernetesResourcesCount = writable<ResourceCount[]>([
+        {
+          contextName: 'context-name',
+          resourceName: 'pods',
+          count: 11,
+        },
+        {
+          contextName: 'context-name',
+          resourceName: 'nodes',
+          count: 0,
+        },
+      ]);
+      render(KubernetesDashboard);
+
+      expect(KubernetesDashboardResourceCard).toHaveBeenCalledTimes(9);
+      expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          count: 11,
+          kind: 'Pod',
+          type: 'Pods',
+          permitted: true,
+        }),
+      );
+      expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          activeCount: 2,
+          count: 0,
+          kind: 'Deployment',
+          type: 'Deployments',
+          permitted: true,
+        }),
+      );
+      expect(KubernetesDashboardResourceCard).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          activeCount: 0,
+          count: 0,
+          kind: 'Node',
+          type: 'Nodes',
+          permitted: false,
         }),
       );
     });
