@@ -83,7 +83,7 @@ function onDidChangeConfigurationCallback(e: Event): void {
   {#each $navigationRegistry as navigationRegistryItem}
     {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
       <!-- This is a group, list all items from the entry -->
-      {#each navigationRegistryItem.items as item}
+      {#each navigationRegistryItem.items as item (item.name)}
         <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
       {/each}
     {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
