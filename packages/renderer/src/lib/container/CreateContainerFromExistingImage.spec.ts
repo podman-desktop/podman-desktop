@@ -22,8 +22,9 @@ import type { ImageInfo, ProviderStatus } from '@podman-desktop/api';
 import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import type { ImageSearchResult } from '/@api/image-registry';
@@ -87,22 +88,6 @@ vi.mock('tinro', () => {
   };
 });
 
-beforeEach(() => {
-  vi.resetAllMocks();
-  vi.mocked(window.listImages).mockResolvedValue(localImageList);
-  vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
-  window.HTMLElement.prototype.scrollIntoView = vi.fn();
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
-});
-
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
   name: 'test',
@@ -130,7 +115,24 @@ const providerInfo = {
   images: undefined,
   installationSupport: undefined,
 } as unknown as ProviderInfo;
-providerInfos.set([providerInfo]);
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.listImages).mockResolvedValue(localImageList);
+  vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  Object.defineProperty(window, 'matchMedia', {
+    value: () => {
+      return {
+        matches: false,
+        addListener: (): void => {},
+        removeListener: (): void => {},
+      };
+    },
+  });
+
+  providerInfos.set([providerInfo]);
+});
 
 test('Expect that textbox and two buttons show up when page opened', async () => {
   render(CreateContainerFromExistingImage);
@@ -232,4 +234,75 @@ test('Expect no user input to show only local images', async () => {
   const list = screen.getByRole('row');
   const items = within(list).getAllByRole('button');
   expect(items.length).toBe(6);
+});
+
+describe('container connections', () => {
+  // create a dummy multi connection provider
+  const MULTI_CONNECTIONS: ProviderInfo = {
+    ...providerInfo,
+    containerConnections: Array.from({ length: 5 }).map((_, index) => ({
+      ...pInfo,
+      name: `connection-${index}`,
+      displayName: `Connection ${index}`,
+      endpoint: {
+        socketPath: `socket-${index}`,
+      },
+    })),
+  };
+
+  test('single container connection should not display the container engine dropdown', async () => {
+    // ensure we only have one container connections in the store
+    const providers = get(providerInfos);
+    const containerConnections = providers.map(provider => provider.containerConnections).flat();
+
+    expect(containerConnections).toHaveLength(1);
+
+    const { queryByRole } = render(CreateContainerFromExistingImage);
+    const dropdown = queryByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeNull();
+  });
+
+  test('multiple container connection should display a dropdown', async () => {
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    const { getByRole } = render(CreateContainerFromExistingImage);
+    const dropdown = getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+  });
+
+  test('dropdown should be disabled while pulling', async () => {
+    // mock no local image
+    vi.mocked(window.searchImageInRegistry).mockResolvedValue([]);
+
+    providerInfos.set([MULTI_CONNECTIONS]);
+
+    const { getByRole, getByPlaceholderText } = render(CreateContainerFromExistingImage);
+
+    // Ensure the dropdown is enabled
+    const dropdown = getByRole('button', { name: 'Container Engine' });
+    expect(dropdown).toBeEnabled();
+
+    // Get the input of the Typeahead
+    const inputBox = await vi.waitFor(() => {
+      return getByPlaceholderText('Select or enter an image to run');
+    });
+    expect(inputBox).toBeInTheDocument();
+
+    // type fedora
+    await userEvent.type(inputBox, 'fedora');
+
+    // Get the run button and click on it
+    const runBtn = getByRole('button', { name: 'Pull Image and Run' });
+    expect(runBtn).toBeEnabled();
+
+    const { promise } = Promise.withResolvers<void>();
+    vi.mocked(window.pullImage).mockReturnValue(promise);
+
+    await userEvent.click(runBtn);
+
+    // the dropdown should be disabled while we are pulling the image
+    await vi.waitFor(() => {
+      expect(dropdown).toBeDisabled();
+    });
+  });
 });
