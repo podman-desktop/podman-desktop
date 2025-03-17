@@ -371,22 +371,42 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 }
 
 export let focus: string | undefined;
-// Trigger scroll when the focus variable changes (i.e., when a new provider is focused)
+export let highlightID: string | undefined;
+
 $: if (focus) {
-  // Wait for the next render cycle to ensure the element exists in the DOM
-  requestAnimationFrame(() => {
-    const element = document.getElementById(focus);
-    if (element) {
-      // Auto-scroll to the element (no smooth animation)
-      element.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
-  });
+  highlightID = focus;
+  const element = document.getElementById(focus);
+  if (element) {
+    element.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
+}
+
+function getClassForProvider(providerId: string): string {
+  return highlightID === providerId ? 'highlight' : '';
 }
 
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
 </script>
+
+<style>
+  @keyframes fadeOutline {
+    0% {
+      outline: 2px solid var(--pd-link); /* Start with the custom property color */
+      outline-offset: 2px;
+    }
+    100% {
+      outline: 2px solid rgba(255, 0, 0, 0); /* Fade the outline to fully transparent */
+      outline-offset: 2px;
+    }
+  }
+
+  .highlight {
+    animation: fadeOutline 0.5s ease-in-out forwards;
+  }
+</style>
+
 
 <SettingsPage title="Resources">
   <span slot="subtitle" class:hidden={providers.length === 0}>
@@ -405,7 +425,7 @@ function handleError(errorMessage: string): void {
     {#each providers as provider}
       <div
         id={provider.id}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex {getClassForProvider(provider.id)}"
         role="region"
         aria-label={provider.id}>
         <div role="region" aria-label="Provider Setup">
