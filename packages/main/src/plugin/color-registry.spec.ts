@@ -28,7 +28,7 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import type { ColorDefinition } from '/@api/color-info.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
-import colorPalette from '../../../../tailwind-color-palette.json';
+import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
 import { ColorRegistry } from './color-registry.js';
 

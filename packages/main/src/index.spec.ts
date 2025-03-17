@@ -21,12 +21,7 @@ import { app, BrowserWindow, Menu, Tray } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
-import {
-  handleAdditionalProtocolLauncherArgs,
-  handleOpenUrl,
-  mainWindowDeferred,
-  sanitizeProtocolForExtension,
-} from './index.js';
+import { mainWindowDeferred } from './index.js';
 import type { ConfigurationRegistry, IConfigurationChangeEvent } from './plugin/configuration-registry.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
@@ -275,85 +270,4 @@ test('app-ready event with activate event', async () => {
 
   // and Menu.setApplicationMenu
   expect(vi.mocked(Menu.setApplicationMenu)).toHaveBeenCalled();
-});
-
-test('should send the URL to open when mainWindow is created', async () => {
-  handleOpenUrl('podman-desktop:extension/my.extension');
-
-  // wait sendMock being called
-  await vi.waitFor(() => expect(fakeWindow.webContents.send).toHaveBeenCalled());
-
-  expect(fakeWindow.webContents.send).toHaveBeenCalledWith('podman-desktop-protocol:install-extension', 'my.extension');
-});
-
-test('should send the URL to open when mainWindow is created with :// format', async () => {
-  handleOpenUrl('podman-desktop://extension/my.extension');
-
-  // wait sendMock being called
-  await vi.waitFor(() =>
-    expect(fakeWindow.webContents.send).toHaveBeenCalledWith(
-      'podman-desktop-protocol:install-extension',
-      'my.extension',
-    ),
-  );
-});
-
-test('should not send the URL for invalid URLs', async () => {
-  handleOpenUrl('podman-desktop:foobar');
-
-  // expect an error
-  expect(consoleLogMock).toHaveBeenCalledWith(
-    'url podman-desktop:foobar does not start with podman-desktop:extension/, skipping.',
-  );
-  expect(vi.mocked(fakeWindow.webContents.send)).not.toHaveBeenCalled();
-});
-
-test('should handle podman-desktop:extension/ URL on Windows', async () => {
-  vi.spyOn(util, 'isWindows').mockReturnValue(true);
-
-  handleAdditionalProtocolLauncherArgs(['podman-desktop:extension/my.extension']);
-
-  // expect handleOpenUrl not be called
-  await vi.waitFor(() =>
-    expect(fakeWindow.webContents.send).toHaveBeenCalledWith(
-      'podman-desktop-protocol:install-extension',
-      'my.extension',
-    ),
-  );
-});
-
-test('should handle podman-desktop://extension/my.extension format URL on Windows', async () => {
-  vi.spyOn(util, 'isWindows').mockReturnValue(true);
-
-  handleAdditionalProtocolLauncherArgs(['podman-desktop://extension/my.extension']);
-
-  // expect handleOpenUrl not be called
-  await vi.waitFor(() =>
-    expect(fakeWindow.webContents.send).toHaveBeenCalledWith(
-      'podman-desktop-protocol:install-extension',
-      'my.extension',
-    ),
-  );
-});
-
-test('should not do anything with podman-desktop:extension/ URL on OS different than Windows', async () => {
-  vi.spyOn(util, 'isWindows').mockReturnValue(false);
-
-  // spy .promise field of mainWindowDeferred
-  const spyWindowDefferedPromise = vi.spyOn(mainWindowDeferred, 'promise', 'get');
-  handleAdditionalProtocolLauncherArgs(['podman-desktop:extension/my.extension']);
-
-  // no called on it
-  expect(spyWindowDefferedPromise).not.toHaveBeenCalled();
-});
-
-test('handle sanitizeProtocolForExtension', () => {
-  const fakeLink = 'podman-desktop://extension/my.extension';
-  const sanitizedLink = 'podman-desktop:extension/my.extension';
-  expect(sanitizeProtocolForExtension(fakeLink)).toEqual(sanitizedLink);
-});
-
-test('handle sanitizeProtocolForExtension noop', () => {
-  const sanitizedLink = 'podman-desktop:extension/my.extension';
-  expect(sanitizeProtocolForExtension(sanitizedLink)).toEqual(sanitizedLink);
 });

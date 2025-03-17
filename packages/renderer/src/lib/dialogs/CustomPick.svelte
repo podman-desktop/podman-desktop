@@ -22,8 +22,7 @@ let minHeight = '';
 let display = false;
 
 // used to keep track of if the item section is opened or closed (true: close, false: open)
-let itemSectionHiddenStatus: Map<number, boolean>;
-$: itemSectionHiddenStatus = new Map<number, boolean>();
+let itemSectionHiddenStatus = new Map<number, boolean>();
 
 onMount(() => {
   // handle the showCustomPick events

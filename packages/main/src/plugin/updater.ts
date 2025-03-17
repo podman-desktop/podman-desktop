@@ -38,7 +38,7 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux } from '/@/util.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
-import { homepage, repository } from '../../../../package.json';
+import rootPackage from '../../../../package.json' with { type: 'json' };
 import type { ApiSenderType } from './api.js';
 import type { TaskManager } from './tasks/task-manager.js';
 
@@ -81,10 +81,10 @@ export class Updater {
     }
 
     const urlVersionFormat = version.split('.', 2).join('.');
-    let notesURL = `${homepage}/blog/podman-desktop-release-${urlVersionFormat}`;
+    let notesURL = `${rootPackage.homepage}/blog/podman-desktop-release-${urlVersionFormat}`;
     https.get(notesURL, res => {
       if (res.statusCode !== 200) {
-        notesURL = `${repository}/releases/tag/v${version}`;
+        notesURL = `${rootPackage.repository}/releases/tag/v${version}`;
       }
       shell.openExternal(notesURL).catch(console.error);
     });
@@ -107,12 +107,12 @@ export class Updater {
 
     const urlVersionFormat = version.split('.', 2).join('.');
 
-    const notesURL = `${homepage}/release-notes/${urlVersionFormat}.json`;
+    const notesURL = `${rootPackage.homepage}/release-notes/${urlVersionFormat}.json`;
     let response = await fetch(notesURL);
     if (!response.ok) {
-      response = await fetch(`${repository}/releases/tag/v${version}`);
+      response = await fetch(`${rootPackage.repository}/releases/tag/v${version}`);
       if (response.ok) {
-        return { releaseNotesAvailable: false, notesURL: `${repository}/releases/tag/v${version}` };
+        return { releaseNotesAvailable: false, notesURL: `${rootPackage.repository}/releases/tag/v${version}` };
       } else {
         return { releaseNotesAvailable: false, notesURL: '' };
       }
@@ -120,7 +120,7 @@ export class Updater {
       const notesInfo = await response.json();
       return {
         releaseNotesAvailable: true,
-        notesURL: `${homepage}/blog/podman-desktop-release-${urlVersionFormat}`,
+        notesURL: `${rootPackage.homepage}/blog/podman-desktop-release-${urlVersionFormat}`,
         notes: notesInfo,
       };
     }

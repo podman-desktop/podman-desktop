@@ -1397,6 +1397,9 @@ export class ExtensionLoader {
         await this.navigationManager.navigateToPods();
       },
       navigateToPod: async (kind: string, name: string, engineId: string): Promise<void> => {
+        if (kind === 'kubernetes') {
+          throw new Error(`Use 'kubernetes' route to navigate to Kubernetes pods.`);
+        }
         await this.navigationManager.navigateToPod(kind, name, engineId);
       },
       navigateToContribution: async (name: string): Promise<void> => {

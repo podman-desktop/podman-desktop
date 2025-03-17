@@ -423,8 +423,12 @@ describe('Contributions', () => {
       const fedoraOld = screen.getByRole('cell', { name: 'fedora my-custom-badge 123456789012 old' });
       expect(fedoraOld).toBeInTheDocument();
 
+      const badge = within(fedoraOld).getByText('my-custom-badge');
+
       // check background color
-      expect(fedoraOld.innerHTML).contain('background-color: #ff00ff');
+      expect(badge).toHaveStyle({
+        'background-color': '#ff00ff',
+      });
     },
   );
 });

@@ -17,6 +17,7 @@ export let onValidation = (_value: number, _error?: string): void => {};
 
 let minimumEnabled: boolean;
 let maximumEnabled: boolean;
+let valueAsString: string | undefined = undefined;
 $: valueAsString = value !== undefined ? String(value) : undefined;
 
 $: if (valueAsString !== undefined || disabled) {
@@ -90,7 +91,7 @@ function onIncrement(e: MouseEvent): void {
 </script>
 
 <Input
-  class={$$props.class || ''}
+  class={$$props.class ?? ''}
   inputClass="text-center"
   name={name}
   bind:value={valueAsString}

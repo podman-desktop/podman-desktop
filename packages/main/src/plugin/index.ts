@@ -944,8 +944,11 @@ export class PluginSystem {
         _listener,
         yamlFilePath: string,
         selectedProvider: ProviderContainerConnectionInfo,
+        options?: {
+          build?: boolean;
+        },
       ): Promise<PlayKubeInfo> => {
-        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider);
+        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
       },
     );
     this.ipcHandle(
@@ -2680,6 +2683,10 @@ export class PluginSystem {
 
     this.ipcHandle('kubernetes:getResourcesCount', async (_listener): Promise<ResourceCount[]> => {
       return kubernetesClient.getResourcesCount();
+    });
+
+    this.ipcHandle('kubernetes:getActiveResourcesCount', async (_listener): Promise<ResourceCount[]> => {
+      return kubernetesClient.getActiveResourcesCount();
     });
 
     this.ipcHandle(

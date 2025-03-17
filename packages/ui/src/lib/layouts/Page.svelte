@@ -17,7 +17,7 @@ export let inProgress: boolean = false;
 let showBreadcrumb = breadcrumbLeftPart ?? breadcrumbRightPart;
 let detailSlot: HTMLDivElement;
 let observer: MutationObserver;
-$: heightOfDetail = 0;
+let heightOfDetail = 0;
 
 onMount(() => {
   observer = new MutationObserver(() => updateHeight());

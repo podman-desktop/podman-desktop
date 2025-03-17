@@ -57,6 +57,7 @@ let devices: { host: string; container: string; read: boolean; write: boolean; m
 
 let invalidName = false;
 let invalidPorts = false;
+let invalidFields: boolean = false;
 $: invalidFields = invalidName || invalidPorts;
 
 // auto remove the container on exit

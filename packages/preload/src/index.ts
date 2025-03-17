@@ -356,8 +356,11 @@ export function initExposure(): void {
     async (
       relativeContainerfilePath: string,
       selectedProvider: ProviderContainerConnectionInfo,
+      options?: {
+        build?: boolean;
+      },
     ): Promise<PlayKubeInfo> => {
-      return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider);
+      return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);
     },
   );
 
@@ -1881,6 +1884,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('kubernetesGetResourcesCount', async (): Promise<ResourceCount[]> => {
     return ipcInvoke('kubernetes:getResourcesCount');
+  });
+
+  contextBridge.exposeInMainWorld('kubernetesGetActiveResourcesCount', async (): Promise<ResourceCount[]> => {
+    return ipcInvoke('kubernetes:getActiveResourcesCount');
   });
 
   contextBridge.exposeInMainWorld(

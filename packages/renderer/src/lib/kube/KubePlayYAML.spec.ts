@@ -230,3 +230,48 @@ test('expect runtime boxes have the correct selection borders', async () => {
   expect(kubeOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
   expect(kubeOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
 });
+
+test('build checkbox should be disabled by default', async () => {
+  setup();
+  const { getByRole } = render(KubePlayYAML, {});
+
+  const checkbox = await vi.waitFor(() => {
+    const element = getByRole('checkbox', { name: 'Enable build' });
+    expect(element).toBeInstanceOf(HTMLInputElement);
+    return element;
+  });
+
+  expect(checkbox).not.toBeChecked();
+});
+
+test('build checkbox checked should propagate to window#kubePlay', async () => {
+  setup();
+  const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+  const checkbox = await vi.waitFor(() => {
+    const element = getByRole('checkbox', { name: 'Enable build' });
+    expect(element).toBeInstanceOf(HTMLInputElement);
+    return element;
+  });
+
+  // check
+  await userEvent.click(checkbox);
+
+  const browseButton = getByLabelText('browse');
+  expect(browseButton).toBeInTheDocument();
+  await userEvent.click(browseButton);
+
+  // Simulate clicking the "Play" button
+  const playButton = screen.getByRole('button', { name: 'Play' });
+  expect(playButton).toBeInTheDocument();
+  await userEvent.click(playButton);
+
+  // ensure the play kube function was called with the appropriate options
+  expect(window.playKube).toHaveBeenCalledWith(
+    'Containerfile',
+    expect.anything(),
+    expect.objectContaining({
+      build: true,
+    }),
+  );
+});

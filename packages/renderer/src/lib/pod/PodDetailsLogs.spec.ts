@@ -49,7 +49,6 @@ const PODMAN_POD: PodInfoUI = {
       Status: 'Running',
     },
   ],
-  kind: 'podman',
 };
 
 test('Podman pod should use window#logsContainer', async () => {

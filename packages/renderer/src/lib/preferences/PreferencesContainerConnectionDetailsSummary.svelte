@@ -14,6 +14,11 @@ export let providerInternalId: string | undefined = undefined;
 export let containerConnectionInfo: ProviderContainerConnectionInfo | undefined = undefined;
 
 let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
+
+function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
+  tmpProviderContainerConfiguration = value;
+}
+
 $: Promise.all(
   properties.map(async configurationKey => {
     return {
@@ -29,7 +34,7 @@ $: Promise.all(
     };
   }),
 )
-  .then(value => (tmpProviderContainerConfiguration = value.flat()))
+  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
   .catch((err: unknown) => console.error('Error collecting providers', err));
 
 $: providerContainerConfiguration = tmpProviderContainerConfiguration.filter(

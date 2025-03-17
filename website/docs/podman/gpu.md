@@ -198,38 +198,38 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
 
 3. Generate the CDI Specification file for Podman:
 
-This file is saved either to /etc/cdi or /var/run/cdi on your Linux distribution and is used for Podman to detect your GPU(s).
+   This file is saved either to /etc/cdi or /var/run/cdi on your Linux distribution and is used for Podman to detect your GPU(s).
 
-Generate the CDI file:
+   Generate the CDI file:
 
-```sh
-$ nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-```
+   ```sh
+   $ nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+   ```
 
-Check the list of generated devices:
+   Check the list of generated devices:
 
-```sh
-$ nvidia-ctk cdi list
-```
+   ```sh
+   $ nvidia-ctk cdi list
+   ```
 
-More information as well as troubleshooting tips can be found [on the official NVIDIA CDI guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html).
+   More information as well as troubleshooting tips can be found [on the official NVIDIA CDI guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html).
 
 4. Configure SELinux (if applicable)
 
-On SELinux-enabled OSes, such as OSs from the Fedora family, the default policy usually disallows containers to have direct access to devices. We make sure it's allowed.
+   On SELinux-enabled OSes, such as OSs from the Fedora family, the default policy usually disallows containers to have direct access to devices. We make sure it's allowed.
 
-Check whether SELinux is installed and enabled:
+   Check whether SELinux is installed and enabled:
 
-```sh
-$ getenforce
-```
+   ```sh
+   $ getenforce
+   ```
 
-- If `getenforce` is not found or its output is `Permissive` or `Disabled`, no action is needed.
-- If the output is `Enforcing`, configure SELinux to enable device access for containers:
+   - If `getenforce` is not found or its output is `Permissive` or `Disabled`, no action is needed.
+   - If the output is `Enforcing`, configure SELinux to enable device access for containers:
 
-```sh
-$ sudo setsebool -P container_use_devices true
-```
+     ```sh
+     $ sudo setsebool -P container_use_devices true
+     ```
 
 #### Verification
 

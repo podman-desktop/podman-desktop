@@ -30,7 +30,7 @@ function onInput(event: Event): void {
   <Input
     id={id}
     name={name}
-    class={$$props.class || ''}
+    class={$$props.class ?? ''}
     bind:value={value}
     on:input={onInput}
     on:keypress

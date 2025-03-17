@@ -27,7 +27,7 @@ onMount(() => {
 <!-- svelte-ignore a11y-missing-attribute -->
 <!-- svelte-ignore a11y-interactive-supports-focus -->
 <a
-  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {$$props.class ||
+  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {$$props.class ??
     ''}"
   on:click={onclick}
   role="link"

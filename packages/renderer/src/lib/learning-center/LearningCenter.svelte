@@ -1,11 +1,10 @@
 <script lang="ts">
-import { Carousel } from '@podman-desktop/ui-svelte';
+import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 
 import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
-import { fadeSlide } from '../ui/animations';
 import GuideCard from './GuideCard.svelte';
 
 let guides: Guide[] = $state([]);
@@ -35,35 +34,19 @@ onDestroy(() => {
   onDidChangeConfiguration.removeEventListener(CONFIGURATION_KEY, listener);
 });
 
-async function toggle(): Promise<void> {
-  expanded = !expanded;
+async function toggle(expanded: boolean): Promise<void> {
   await window.updateConfigurationValue(CONFIGURATION_KEY, expanded);
 }
 </script>
 
 <div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
-  <div>
-    <button onclick={toggle} aria-expanded="{expanded}">
-      <div class="flex flex-row space-x-2 items-center text-[var(--pd-content-card-header-text)]">
-        {#if expanded}
-          <i class="fas fa-chevron-down"></i>
-        {:else}
-          <i class="fas fa-chevron-right"></i>
-        {/if}
-        <p class="text-lg font-semibold">Learning Center</p>
-      </div>
-    </button>
-  </div>
-
-  {#if initialized}
-  {#if expanded}
-    <div role="region" class="mt-5">
-      <div transition:fadeSlide={{ duration: 250 }}>
-        <Carousel cards={guides} let:card>
-          <GuideCard guide={card as Guide} />
-        </Carousel>
-      </div>
+  <Expandable bind:initialized bind:expanded onclick={toggle}>
+    <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
+    {#snippet title()}<div class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Learning Center</div>{/snippet}
+    <div class="pt-2">
+      <Carousel cards={guides} let:card>
+        <GuideCard guide={card as Guide} />
+      </Carousel>
     </div>
-  {/if}
-  {/if}
+  </Expandable>
 </div>

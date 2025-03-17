@@ -21,6 +21,7 @@ let providerConnections: ProviderContainerConnectionInfo[] = [];
 let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
 let inProgress = false;
 
+let importDisabled = false;
 $: importDisabled = !selectedProvider || containersToImport.length === 0;
 
 onMount(async () => {

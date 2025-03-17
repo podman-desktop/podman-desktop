@@ -18,7 +18,7 @@ import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
-import PodmanAILabBanner from '../components/PodmanAILabBanner';
+import CommunityBanner from '../components/CommunityBanner';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TelemetryLink } from '../components/TelemetryLink';
 
@@ -666,7 +666,7 @@ export default function Home(): JSX.Element {
       title="Podman Desktop - Containers and Kubernetes"
       description="Podman Desktop - An open source graphical tool for developing on containers and Kubernetes">
       <TailWindThemeSelector />
-      <PodmanAILabBanner />
+      <CommunityBanner />
       <Hero />
       <RunAnywhere />
       <MainFeatures />

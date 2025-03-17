@@ -251,7 +251,7 @@ export default [
   },
 
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts'],
 
     languageOptions: {
       parser: svelteParser,
@@ -267,6 +267,10 @@ export default [
       'unicorn/prefer-node-protocol': 'off',
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
+      'svelte/no-useless-children-snippet': 'off',
+      'svelte/require-each-key': 'off',
+      'svelte/require-store-reactive-access': 'off',
+      'svelte/no-reactive-literals': 'off',
     },
   },
 

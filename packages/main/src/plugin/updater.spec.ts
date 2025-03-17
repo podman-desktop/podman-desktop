@@ -69,8 +69,10 @@ vi.mock('https', () => ({
 }));
 
 vi.mock('../../../../package.json', () => ({
-  homepage: 'appHomepage',
-  repository: 'appRepo',
+  default: {
+    homepage: 'appHomepage',
+    repository: 'appRepo',
+  },
 }));
 
 const messageBoxMock = {

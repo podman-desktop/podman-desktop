@@ -176,6 +176,24 @@ export class ContextsManagerExperimental {
     }));
   }
 
+  // getActiveResourcesCount returns the count of filtered resources for each context/resource
+  // when isActive is declared for a resource, and filtered with isActive
+  getActiveResourcesCount(): ResourceCount[] {
+    return this.#objectCaches
+      .getAll()
+      .map(informer => {
+        const isActive = this.#resourceFactoryHandler.getResourceFactoryByResourceName(informer.resourceName)?.isActive;
+        return isActive
+          ? {
+              contextName: informer.contextName,
+              resourceName: informer.resourceName,
+              count: informer.value.list().filter(isActive).length,
+            }
+          : undefined;
+      })
+      .filter(f => !!f);
+  }
+
   getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
     return this.#objectCaches.getForContextsAndResource(contextNames, resourceName).map(({ contextName, value }) => {
       return {

@@ -33,7 +33,7 @@ import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dock
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import type { PodmanListImagesOptions } from '/@api/image-info.js';
 
-import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json';
+import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 
 let server: SetupServerApi | undefined = undefined;
 

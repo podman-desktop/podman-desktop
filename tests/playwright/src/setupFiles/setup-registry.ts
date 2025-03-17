@@ -29,5 +29,5 @@ export function setupRegistry(): string[] {
 
 export function canTestRegistry(): boolean {
   const [registry, username, passwd] = setupRegistry();
-  return !!(registry && registry !== '' && username && username !== '' && passwd && passwd !== '');
+  return !!registry && !!username && !!passwd;
 }

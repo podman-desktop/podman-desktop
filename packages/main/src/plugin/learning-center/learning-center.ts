@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { default as guidesJson } from './guides.json';
+import guidesJson from './guides.json' with { type: 'json' };
 import type { Guide } from './learning-center-api.js';
 
 export function downloadGuideList(): Guide[] {

@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import '@testing-library/jest-dom/vitest';
+
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -108,7 +110,10 @@ describe('backgrounds', () => {
 
     const card = screen.getByLabelText('Recommended extension');
     expect(card).toBeDefined();
-    expect(card.attributes.getNamedItem('style')?.value).toBe('background: linear-gradient(#fff, #000);');
+
+    expect(card).toHaveStyle({
+      'background-image': 'linear-gradient(#fff, #000)',
+    });
   });
 
   test('expect image background for dark theme', async () => {
@@ -120,9 +125,9 @@ describe('backgrounds', () => {
 
     const card = screen.getByLabelText('Recommended extension');
     expect(card).toBeDefined();
-    expect(card.attributes.getNamedItem('style')?.value).toBe(
-      'background-image: url("data:image/png;base64-image-dark");',
-    );
+    expect(card).toHaveStyle({
+      'background-image': 'url("data:image/png;base64-image-dark")',
+    });
   });
 
   test('expect image background for light theme', async () => {
@@ -134,9 +139,9 @@ describe('backgrounds', () => {
 
     const card = screen.getByLabelText('Recommended extension');
     expect(card).toBeDefined();
-    expect(card.attributes.getNamedItem('style')?.value).toBe(
-      'background-image: url("data:image/png;base64-image-light");',
-    );
+    expect(card).toHaveStyle({
+      'background-image': 'url("data:image/png;base64-image-light")',
+    });
   });
 });
 

@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { App as ElectronApp } from 'electron';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 import { Main } from './main.js';
 
@@ -34,6 +34,7 @@ const ELECTRON_APP_MOCK: ElectronApp = {
   requestSingleInstanceLock: vi.fn(),
   setAppUserModelId: vi.fn(),
   quit: vi.fn(),
+  on: vi.fn(),
 } as unknown as ElectronApp;
 
 let PROCESS_EXIT_ORIGINAL: typeof process.exit;
@@ -86,4 +87,65 @@ test('on windows setAppUserModelId should be called', async () => {
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith(ELECTRON_APP_MOCK.name);
+});
+
+// Utility type definition for {@link ElectronApp.on} and {@link WebContents.on}
+type Listener = (...args: unknown[]) => void;
+
+/**
+ * Utility function to get listener register in {@link ELECTRON_APP_MOCK.on}
+ * @remarks cannot found any way to properly infer type based on event value (see https://github.com/microsoft/TypeScript/issues/53439)
+ * @param event
+ */
+function findElectronAppListener(event: string): Listener | undefined {
+  expect(ELECTRON_APP_MOCK.on).toHaveBeenCalledWith(event, expect.any(Function));
+  return vi.mocked(ELECTRON_APP_MOCK.on).mock.calls.find(([mEvent]) => mEvent === event)?.[1];
+}
+
+/**
+ * Based on {@link findElectronAppListener}, throw an error if the result is undefined
+ * @param event
+ */
+function getElectronAppListener(event: string): Listener {
+  const listener = findElectronAppListener(event);
+  if (!listener) throw new Error(`cannot found listener for event ${event}`);
+  return listener;
+}
+
+describe('ElectronApp#on window-all-closed', () => {
+  let code: Main;
+  beforeEach(() => {
+    code = new Main(ELECTRON_APP_MOCK);
+    code.main([]);
+  });
+
+  test('listener should be registered on init', () => {
+    expect(ELECTRON_APP_MOCK.on).toHaveBeenCalledWith('window-all-closed', expect.any(Function));
+  });
+
+  test('listener should be a valid function', () => {
+    const listener = findElectronAppListener('window-all-closed');
+    expect(listener).toBeDefined();
+    expect(listener).toBeInstanceOf(Function);
+  });
+
+  test('listener should not call ElectronApp#quit on mac', () => {
+    vi.mocked(isMac).mockReturnValue(true);
+
+    const listener = getElectronAppListener('window-all-closed');
+    listener();
+
+    expect(ELECTRON_APP_MOCK.quit).not.toHaveBeenCalled();
+  });
+
+  test.each(['windows', 'linux'])('listener should not call ElectronApp#quit on %s', platform => {
+    vi.mocked(isMac).mockReturnValue(false);
+    vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+    vi.mocked(isLinux).mockReturnValue(platform === 'linux');
+
+    const listener = getElectronAppListener('window-all-closed');
+    listener();
+
+    expect(ELECTRON_APP_MOCK.quit).toHaveBeenCalledOnce();
+  });
 });

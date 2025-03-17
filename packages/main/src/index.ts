@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,72 +44,16 @@ podmanDesktopMain.main(process.argv);
 // TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
 export const mainWindowDeferred = podmanDesktopMain.mainWindowDeferred;
 
-// if arg starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
-export function sanitizeProtocolForExtension(url: string): string {
-  if (url.startsWith('podman-desktop://extension/')) {
-    url = url.replace('podman-desktop://extension/', 'podman-desktop:extension/');
-  }
-
-  return url;
-}
-
-export const handleAdditionalProtocolLauncherArgs = (args: ReadonlyArray<string>): void => {
-  // On Windows protocol handler will call the app with '<url>' args
-  // on macOS it's done with 'open-url' event
-  if (isWindows()) {
-    // now search if we have 'open-url' in the list of args and give it to the handler
-    for (const arg of args) {
-      const analyzedArg = sanitizeProtocolForExtension(arg);
-      if (analyzedArg.startsWith('podman-desktop:extension/')) {
-        handleOpenUrl(analyzedArg);
-      }
-    }
-  }
-};
-
-export const handleOpenUrl = (url: string): void => {
-  // if the url starts with podman-desktop:extension/<id>
-  // we need to install the extension
-
-  // if url starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
-  url = sanitizeProtocolForExtension(url);
-
-  if (!url.startsWith('podman-desktop:extension/')) {
-    console.log(`url ${url} does not start with podman-desktop:extension/, skipping.`);
-    return;
-  }
-  // grab the extension id
-  const extensionId = url.substring('podman-desktop:extension/'.length);
-
-  // wait that the window is ready
-  podmanDesktopMain.mainWindowDeferred.promise
-    .then(w => {
-      w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
-    })
-    .catch((error: unknown) => {
-      console.error('Error sending open-url event to webcontents', error);
-    });
-};
-
 // do not use _args as it may contain additional arguments
 app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unknown) => {
   // if we are on Windows, we need to handle the protocol
   if (isWindows() && additionalData && (additionalData as AdditionalData).argv) {
-    handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
+    podmanDesktopMain.protocolLauncher.handleAdditionalProtocolLauncherArgs((additionalData as AdditionalData).argv);
   }
 
   restoreWindow().catch((error: unknown) => {
     console.error('Error restoring window', error);
   });
-});
-
-/**
- * Shout down background process if all windows was closed
- */
-app.on('window-all-closed', () => {
-  if (!isMac()) {
-    app.quit();
-  }
 });
 
 app.once('before-quit', event => {
@@ -139,7 +83,7 @@ app.on('will-finish-launching', () => {
   app.on('open-url', (event, url) => {
     event.preventDefault();
     // delegate to the handler
-    handleOpenUrl(url);
+    podmanDesktopMain.protocolLauncher.handleOpenUrl(url);
   });
 });
 

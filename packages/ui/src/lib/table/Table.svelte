@@ -39,6 +39,7 @@ $: selectedItemsNumber = row.info.selectable
   : 0;
 
 // do we need to unselect all checkboxes if we don't have all items being selected ?
+let selectedAllCheckboxes = false;
 $: selectedAllCheckboxes = row.info.selectable
   ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
     data

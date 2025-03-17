@@ -18,6 +18,7 @@
 
 import { ContainerState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
+import { canRunKindTests } from '../setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deployContainerToCluster } from '../utility/kubernetes';
@@ -39,6 +40,8 @@ const CONTAINER_START_PARAMS: ContainerInteractiveParams = {
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
+
+test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(350_000);

@@ -21,5 +21,6 @@ import * as os from 'node:os';
 export const isLinux = os.platform() === 'linux';
 export const isMac = os.platform() === 'darwin';
 export const isWindows = os.platform() === 'win32';
+export const archType = os.arch();
 
 export const isCI = process.env.CI ? process.env.CI === 'true' : false;

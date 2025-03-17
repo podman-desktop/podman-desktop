@@ -25,11 +25,12 @@ import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import learningCenter from '../../../../main/src/plugin/learning-center/guides.json';
 import LearningCenter from './LearningCenter.svelte';
 
-vi.mock('../ui/animations', () => ({
-  fadeSlide: (): {
-    delay: number;
-    duration: number;
-  } => ({
+vi.mock('svelte/transition', () => ({
+  slide: (): { delay: number; duration: number } => ({
+    delay: 0,
+    duration: 0,
+  }),
+  fade: (): { delay: number; duration: number } => ({
     delay: 0,
     duration: 0,
   }),

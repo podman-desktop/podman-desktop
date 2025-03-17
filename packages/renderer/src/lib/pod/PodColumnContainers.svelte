@@ -11,12 +11,6 @@ function openContainersFromPod(pod: PodInfoUI): void {
 }
 </script>
 
-<!-- If this is podman, make the dots clickable as it'll take us to the container menu 
-this does not work if you click on a kubernetes type pod -->
-{#if object.kind === 'podman'}
-  <button class:cursor-pointer={object.containers.length > 0} on:click={(): void => openContainersFromPod(object)}>
-    <Dots containers={object.containers} />
-  </button>
-{:else}
+<button class:cursor-pointer={object.containers.length > 0} on:click={(): void => openContainersFromPod(object)}>
   <Dots containers={object.containers} />
-{/if}
+</button>

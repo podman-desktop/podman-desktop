@@ -21,7 +21,7 @@ import { cp, readFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { RequestConfig } from '@docker/extension-api-client-types/dist/v1';
+import type { v1 } from '@docker/extension-api-client-types';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
@@ -227,7 +227,7 @@ export class DockerDesktopInstallation {
 
     ipcMain.handle(
       'docker-desktop-adapter:extensionVMServiceRequest',
-      async (_event: IpcMainInvokeEvent, port: string, config: RequestConfig): Promise<unknown> => {
+      async (_event: IpcMainInvokeEvent, port: string, config: v1.RequestConfig): Promise<unknown> => {
         return this.handleExtensionVMServiceRequest(port, config);
       },
     );
@@ -263,7 +263,7 @@ export class DockerDesktopInstallation {
     return methodName as Method;
   }
 
-  protected async handleExtensionVMServiceRequest(port: string, config: RequestConfig): Promise<unknown> {
+  protected async handleExtensionVMServiceRequest(port: string, config: v1.RequestConfig): Promise<unknown> {
     // use got library
     try {
       const method: Method = this.asGotMethod(config.method);

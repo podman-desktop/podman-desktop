@@ -13,8 +13,15 @@ import TabItem from '@theme/TabItem';
 
 With Podman Desktop, you can customize the Docker compatibility feature. If you want to run your Docker applications on a Podman engine, you can enable the feature.
 
-<Tabs>
-   <TabItem value="macOS" label="macOS" className="markdown">
+<Tabs groupId="operating-systems">
+<TabItem value="win" label="Windows" className="markdown">
+
+The binding between the Podman machine and the system socket is not known. So, Podman Desktop displays only the server information on the Docker Compatibility page.
+
+![system socket details on Windows](img/system-socket-details-windows.png)
+
+</TabItem>
+<TabItem value="macOS" label="macOS" className="markdown">
 
 Podman Desktop uses the `podman-mac-helper` utility to automatically link the Docker socket to the Podman machine. This utility provides a compatibility layer that allows you to:
 
@@ -24,13 +31,6 @@ Podman Desktop uses the `podman-mac-helper` utility to automatically link the Do
 Podman Desktop provides information about the Podman machine that emulates the Docker socket on the Docker Compatibility page. Click the **Podman details** icon to view the details of the Podman machine.
 
 ![system socket details on macOS](img/system-socket-details-macOS.png)
-
-</TabItem>
-<TabItem value="win" label="Windows" className="markdown">
-
-The binding between the Podman machine and the system socket is not known. So, Podman Desktop displays only the server information on the Docker Compatibility page.
-
-![system socket details on Windows](img/system-socket-details-windows.png)
 
 </TabItem>
 <TabItem value="linux" label="Linux" className="markdown">
@@ -48,8 +48,32 @@ The binding between the Podman machine and the system socket is not known. So, P
 
 - [A running Podman machine](/docs/podman/creating-a-podman-machine).
 
-<Tabs>
-   <TabItem value="macOS" label="macOS" className="markdown">
+<Tabs groupId="operating-systems">
+<TabItem value="win" label="Windows" className="markdown">
+
+#### Procedure
+
+- Perform one of the following steps:
+
+  - Go to **Settings > Experimental**, and click the toggle button.
+  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
+
+  A Docker Compatibility section is added to the list of **Settings**.
+
+#### Verification
+
+Perform any of the following steps:
+
+- Run the following command to check the output returns the Podman version rather than the Docker version:
+
+  ```shell-session
+  $ docker info --format=json | jq -r .ServerVersion
+  ```
+
+- Run the `docker context list` command to check that the Docker CLI context is set to the default value `npipe:////./pipe/docker_engine`.
+
+</TabItem>
+<TabItem value="macOS" label="macOS" className="markdown">
 
 #### Procedure
 
@@ -66,7 +90,7 @@ The binding between the Podman machine and the system socket is not known. So, P
      ![enable toggle button - Experimental](img/enable-using-experimental.png)
    - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
      ![enable toggle button - Preferences](img/enable-using-preferences.png)
-     A Docker Compatibilty section is added to the list of **Settings**.
+     A Docker Compatibility section is added to the list of **Settings**.
 
 #### Verification
 
@@ -93,30 +117,6 @@ Perform any of the following steps:
 - Run the `docker context list` command to check that the Docker CLI context is set to `unix:///var/run/docker.sock`.
 
 </TabItem>
-<TabItem value="win" label="Windows" className="markdown">
-
-#### Procedure
-
-- Perform one of the following steps:
-
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-
-  A Docker Compatibilty section is added to the list of **Settings**.
-
-#### Verification
-
-Perform any of the following steps:
-
-- Run the following command to check the output returns the Podman version rather than the Docker version:
-
-  ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
-  ```
-
-- Run the `docker context list` command to check that the Docker CLI context is set to the default value `npipe:////./pipe/docker_engine`.
-
-</TabItem>
 <TabItem value="linux" label="Linux" className="markdown">
 
 #### Procedure
@@ -126,7 +126,7 @@ Perform any of the following steps:
   - Go to **Settings > Experimental**, and click the toggle button.
   - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
 
-  A Docker Compatibilty section is added to the list of **Settings**.
+  A Docker Compatibility section is added to the list of **Settings**.
 
 #### Verification
 
@@ -149,8 +149,28 @@ Perform any of the following steps:
 
 - [A running Podman machine](/docs/podman/creating-a-podman-machine).
 
-<Tabs>
-   <TabItem value="macOS" label="macOS" className="markdown">
+<Tabs groupId="operating-systems">
+<TabItem value="win" label="Windows" className="markdown">
+
+#### Procedure
+
+- Perform one of the following steps:
+
+  - Go to **Settings > Experimental**, and click the toggle button.
+  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
+
+  The Docker Compatibility section is removed from the list of **Settings**.
+
+#### Verification
+
+- Run the following command to check the output returns the Docker version rather than the Podman version:
+
+  ```shell-session
+  $ docker info --format=json | jq -r .ServerVersion
+  ```
+
+</TabItem>
+<TabItem value="macOS" label="macOS" className="markdown">
 
 #### Procedure
 
@@ -165,7 +185,7 @@ Perform any of the following steps:
    - Go to **Settings > Experimental**, and click the toggle button.
    - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
 
-   The Docker Compatibilty section is removed from the list of **Settings**.
+   The Docker Compatibility section is removed from the list of **Settings**.
 
 #### Verification
 
@@ -190,26 +210,6 @@ Perform any of the following steps:
   ```
 
 </TabItem>
-<TabItem value="win" label="Windows" className="markdown">
-
-#### Procedure
-
-- Perform one of the following steps:
-
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-
-  The Docker Compatibilty section is removed from the list of **Settings**.
-
-#### Verification
-
-- Run the following command to check the output returns the Docker version rather than the Podman version:
-
-  ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
-  ```
-
-</TabItem>
 <TabItem value="linux" label="Linux" className="markdown">
 
 #### Procedure
@@ -219,7 +219,7 @@ Perform any of the following steps:
   - Go to **Settings > Experimental**, and click the toggle button.
   - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
 
-  The Docker Compatibilty section is removed from the list of **Settings**.
+  The Docker Compatibility section is removed from the list of **Settings**.
 
 #### Verification
 

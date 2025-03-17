@@ -24,4 +24,8 @@ export interface ContextHealth {
   reachable: boolean;
   // is one of the informers marked offline (disconnect after being connected, the cache still being populated)
   offline: boolean;
+  // description in case of error (other than health check)
+  // currently detected errors:
+  // - user.exec.command not found
+  errorMessage?: string;
 }
