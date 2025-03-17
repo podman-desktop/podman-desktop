@@ -66,7 +66,7 @@ import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
 import type { ImageFilesInfo } from '/@api/image-files-info';
-import type { ImageInfo } from '/@api/image-info';
+import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry';
 import type { KubeContext } from '/@api/kubernetes-context';
@@ -261,8 +261,8 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (): Promise<ImageInfo[]> => {
-    return ipcInvoke('container-provider-registry:listImages');
+  contextBridge.exposeInMainWorld('listImages', async (options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+    return ipcInvoke('container-provider-registry:listImages', options);
   });
 
   contextBridge.exposeInMainWorld('listVolumes', async (fetchUsage = true): Promise<VolumeListInfo[]> => {

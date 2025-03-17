@@ -88,7 +88,7 @@ import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
 import type { ImageFilesInfo } from '/@api/image-files-info.js';
-import type { ImageInfo } from '/@api/image-info.js';
+import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
@@ -772,9 +772,12 @@ export class PluginSystem {
     this.ipcHandle('container-provider-registry:listSimpleContainers', async (): Promise<SimpleContainerInfo[]> => {
       return containerProviderRegistry.listSimpleContainers();
     });
-    this.ipcHandle('container-provider-registry:listImages', async (): Promise<ImageInfo[]> => {
-      return containerProviderRegistry.podmanListImages();
-    });
+    this.ipcHandle(
+      'container-provider-registry:listImages',
+      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.podmanListImages(options);
+      },
+    );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
       return containerProviderRegistry.listPods();
     });
