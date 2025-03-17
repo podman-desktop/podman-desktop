@@ -95,10 +95,10 @@ onDestroy(() => {
       <StatusBarItem entry={entry} />
     {/each}
     {#if experimentalProvidersStatusBar}
-      {#each containerProviders as entry}
+      {#each containerProviders as entry (entry.id)}
         <ProviderWidget entry={entry}/>
       {/each}
-      {#each kubernetesProviders as entry}
+      {#each kubernetesProviders as entry (entry.id)}
         <ProviderWidget entry={entry}/>
       {/each}
     {/if}

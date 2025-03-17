@@ -31,7 +31,7 @@ let connections = $derived.by(() => {
 <Tooltip top class="mb-[20px]">
   <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
-      {#each connections as connection}
+      {#each connections as connection (connection.name)}
         <div class="flex flex-row items-center h-fit">
           <ProviderWidgetStatus status={connection.status} class="mr-1 mt-1"/>
           <ProviderWidgetStatusStyle status={connection.status}/>

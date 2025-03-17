@@ -35,7 +35,7 @@ function getModeAttributes(mode: string): { color: string; icon: IconDefinition 
 </script>
 
 <div class="flex flex-row gap-1">
-  {#each object.accessModes as mode}
+  {#each object.accessModes as mode (mode)}
     <Label name={mode}>
       <Fa size="1x" icon={getModeAttributes(mode).icon} class={getModeAttributes(mode).color} />
     </Label>
