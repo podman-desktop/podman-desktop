@@ -22,7 +22,8 @@ import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as extensionObj from './extension';
+import * as extensionObj from '../extension';
+import { releaseNotes } from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import type { Installer, PodmanInfo, UpdateCheck } from './podman-install';
 import {
@@ -35,7 +36,6 @@ import {
   WSLVersionCheck,
 } from './podman-install';
 import * as podmanInstallObj from './podman-install';
-import { releaseNotes } from './podman5.json';
 import * as utils from './util';
 
 const originalConsoleError = console.error;
@@ -123,7 +123,7 @@ vi.mock('@podman-desktop/api', async () => {
   };
 });
 
-vi.mock('./util', async () => {
+vi.mock(import('./util'), async () => {
   return {
     getAssetsFolder: vi.fn().mockReturnValue(''),
     runCliCommand: vi.fn(),

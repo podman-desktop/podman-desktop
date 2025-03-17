@@ -32,19 +32,19 @@ import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
-import { getSocketCompatibility } from './compatibility-mode';
 import { KrunkitHelper } from './helpers/krunkit-helper';
 import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-helper';
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
-import type { InstalledPodman } from './podman-cli';
-import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import { PodmanConfiguration } from './podman-configuration';
-import { HyperVCheck, PodmanInstall, WSL2Check, WSLVersionCheck } from './podman-install';
-import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
-import { RegistrySetup } from './registry-setup';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
+import { getSocketCompatibility } from './utils/compatibility-mode';
+import type { InstalledPodman } from './utils/podman-cli';
+import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
+import { PodmanConfiguration } from './utils/podman-configuration';
+import { HyperVCheck, PodmanInstall, WSL2Check, WSLVersionCheck } from './utils/podman-install';
+import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
+import { RegistrySetup } from './utils/registry-setup';
 import {
   appConfigDir,
   appHomeDir,
@@ -54,8 +54,8 @@ import {
   getProviderLabel,
   LoggerDelegator,
   VMTYPE,
-} from './util';
-import { getDisguisedPodmanInformation, getSocketPath, isDisguisedPodman } from './warnings';
+} from './utils/util';
+import { getDisguisedPodmanInformation, getSocketPath, isDisguisedPodman } from './utils/warnings';
 
 type StatusHandler = (name: string, event: extensionApi.ProviderConnectionStatus) => void;
 

@@ -23,12 +23,12 @@ import { promisify } from 'node:util';
 import * as extensionApi from '@podman-desktop/api';
 import { compare, compareVersions } from 'compare-versions';
 
-import { BaseCheck, OrCheck, SequenceCheck } from './checks/base-check';
-import { getDetectionChecks } from './checks/detection-checks';
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './checks/macos-checks';
-import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
-import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
-import type { MachineJSON } from './extension';
+import { BaseCheck, OrCheck, SequenceCheck } from '../checks/base-check';
+import { getDetectionChecks } from '../checks/detection-checks';
+import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
+import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
+import type { MachineJSON } from '../extension';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
@@ -40,11 +40,11 @@ import {
   ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
-} from './extension';
-import { WslHelper } from './helpers/wsl-helper';
+} from '../extension';
+import { WslHelper } from '../helpers/wsl-helper';
+import * as podman5JSON from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import * as podman5JSON from './podman5.json';
 import { getPowerShellClient } from './powershell';
 import { getAssetsFolder, normalizeWSLOutput } from './util';
 
