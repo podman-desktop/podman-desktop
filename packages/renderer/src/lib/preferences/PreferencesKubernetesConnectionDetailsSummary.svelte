@@ -45,7 +45,7 @@ $: providerConnectionConfiguration = tmpProviderContainerConfiguration.filter(
         <span class="font-semibold min-w-[150px]">Name</span>
         <span aria-label={kubernetesConnectionInfo.name}>{kubernetesConnectionInfo.name}</span>
       </div>
-      {#each providerConnectionConfiguration as connectionSetting}
+      {#each providerConnectionConfiguration as connectionSetting (connectionSetting.id)}
         <div class="flex flex-row mt-5">
           <span class="font-semibold min-w-[150px]">{connectionSetting.description}</span>
           <span>{connectionSetting.value}</span>

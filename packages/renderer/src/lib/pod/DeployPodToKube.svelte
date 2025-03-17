@@ -481,7 +481,7 @@ function updateKubeResult(): void {
           aria-label="Select a Port"
           required>
           <option value="" disabled selected>Select a port</option>
-          {#each containerPortArray as port}
+          {#each containerPortArray as port (port)}
             <option value={port}>{port}</option>
           {/each}
         </select>

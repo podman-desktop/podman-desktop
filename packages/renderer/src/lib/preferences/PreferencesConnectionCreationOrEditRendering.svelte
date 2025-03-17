@@ -573,7 +573,7 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
             onsubmit={preventDefault(handleOnSubmit)}
             bind:this={formEl}
             aria-label="Properties Information">
-            {#each configurationKeys as configurationKey}
+            {#each configurationKeys as configurationKey (configurationKey.id)}
               <div class="mb-2.5">
                 <div class="flex flex-row items-center h-fit">
                   {#if configurationKey.description}

@@ -264,7 +264,7 @@ function navigateToContainers(): void {
               aria-label="Exposed ports">All selected ports will be exposed:</span>
           </div>
           <div class="bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
-            {#each [...mapPortExposed] as [port, value]}
+            {#each [...mapPortExposed] as [port, value] (port)}
               <div class="p-2 flex flex-row align-items text-sm text-[var(--pd-content-card-text)]">
                 <Checkbox
                   class="pt-0.5 mr-5"

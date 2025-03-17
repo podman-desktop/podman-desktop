@@ -26,7 +26,7 @@ let lastItem = (a: unknown[], i: number): boolean => i === a.length - 1;
     <hr class="grow flex w-max h-[2px] bg-[var(--pd-modal-header-text)] border-0" />
   </div>
   <div class="w-full">
-    {#each tasks as task, index}
+    {#each tasks as task, index (task.id)}
       <TaskManagerItem task={task} />
       <!-- only if there are more items-->
       {#if !lastItem(tasks, index)}

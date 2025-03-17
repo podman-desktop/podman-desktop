@@ -321,7 +321,7 @@ async function connect(contextName: string): Promise<void> {
                         <Tooltip>
                           <div>ERROR</div>
                           <div slot="tip" class="p-2">
-                            {#each context.errorMessage.split('\n').filter(l => l) as line}
+                            {#each context.errorMessage.split('\n').filter(l => l) as line (line)}
                               <p>{line}</p>
                             {/each}
                         </Tooltip>
