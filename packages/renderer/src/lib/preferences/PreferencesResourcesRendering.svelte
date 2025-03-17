@@ -373,7 +373,7 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 export let focus: string | undefined;
 let highlightID: string | undefined;
 
-$: if (focus) {
+$: if (focus && focus !== highlightID) {
   requestAnimationFrame(() => {
     highlightID = focus;
     const element = document.getElementById(focus);
@@ -395,11 +395,11 @@ function handleError(errorMessage: string): void {
 <style>
   @keyframes fadeOutline {
     0% {
-      outline: 2px solid var(--pd-link); /* Start with the custom property color */
+      outline: 2px solid var(--pd-link);
       outline-offset: 2px;
     }
     100% {
-      outline: 2px solid rgba(255, 0, 0, 0); /* Fade the outline to fully transparent */
+      outline: 2px solid rgba(255, 0, 0, 0);
       outline-offset: 2px;
     }
   }
