@@ -21,7 +21,7 @@ export let artifact: V1PersistentVolumeClaimStatus | undefined;
     <tr>
       <Cell>Access Modes</Cell>
       <Cell>
-        {#each artifact.accessModes as mode}
+        {#each artifact.accessModes as mode (mode)}
           <div>{mode}</div>
         {/each}
       </Cell>
@@ -33,7 +33,7 @@ export let artifact: V1PersistentVolumeClaimStatus | undefined;
       <Cell>
         <table>
           <tbody>
-            {#each Object.entries(artifact.capacity) as [resource, quantity]}
+            {#each Object.entries(artifact.capacity) as [resource, quantity] (resource)}
               <tr>
                 <Cell>{resource}: {quantity}</Cell>
               </tr>

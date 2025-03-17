@@ -51,7 +51,7 @@ async function ondetails(extensionId: string): Promise<void> {
       {/if}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 justify-center">
 
-      {#each $providerInfos.filter(p => p.kubernetesProviderConnectionCreation) as provider}
+      {#each $providerInfos.filter(p => p.kubernetesProviderConnectionCreation) as provider (provider.id)}
         {@const label = `${provider.kubernetesProviderConnectionCreationButtonTitle ?? 'Create new'}`}
       <div class="rounded-xl p-5 text-left bg-[var(--pd-content-card-bg)] ">
 

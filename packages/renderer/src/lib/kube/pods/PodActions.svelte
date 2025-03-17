@@ -99,7 +99,7 @@ if (dropdownMenu) {
         icon={faExternalLinkSquareAlt}
         hidden={dropdownMenu}
         shownAsMenuActionItem={true}>
-        {#each Array.from(openingKubernetesUrls) as [routeName, routeHost]}
+        {#each Array.from(openingKubernetesUrls) as [routeName, routeHost] (routeName)}
           <ListItemButtonIcon
             title="Open {routeName}"
             onClick={(): Promise<void>  => window.openExternal(routeHost)}

@@ -38,7 +38,7 @@ if (pod?.status?.startTime) {
           <tr>
             <td class="py-2 px-4">Labels</td>
             <td class="py-2 px-4">
-              {#each Object.entries(pod.metadata?.labels || {}) as [key, value]}
+              {#each Object.entries(pod.metadata?.labels || {}) as [key, value] (key)}
                 <div>{key}: {value}</div>
               {/each}
             </td>
@@ -48,7 +48,7 @@ if (pod?.status?.startTime) {
           <tr>
             <td class="py-2 px-4">Annotations</td>
             <td class="py-2 px-4">
-              {#each Object.entries(pod.metadata?.annotations || {}) as [key, value]}
+              {#each Object.entries(pod.metadata?.annotations || {}) as [key, value] (key)}
                 <div>{key}: {value}</div>
               {/each}
             </td>
@@ -95,7 +95,7 @@ if (pod?.status?.startTime) {
           <tr>
             <td class="py-2 px-4 text-lg pl-1 font-semibold text-[var(--pd-table-body-text-sub-secondary)]" colspan="2">Containers</td>
           </tr>
-          {#each pod.spec.containers as container}
+          {#each pod.spec.containers as container (container.name)}
             <tr>
               <td class="py-2 px-4 text-md pl-2 font-semibold text-[var(--pd-table-body-text-sub-secondary)]" colspan="2">{container.name}</td>
             </tr>
@@ -122,7 +122,7 @@ if (pod?.status?.startTime) {
               <tr>
                 <td class="py-2 px-4">Environment Variables</td>
                 <td class="py-2 px-4">
-                  {#each container.env ? container.env.map(e => `${e.name}: ${e.value}`) : [] as env}
+                  {#each container.env ? container.env.map(e => `${e.name}: ${e.value}`) : [] as env (env)}
                     <div>{env}</div>
                   {/each}
                 </td>
@@ -142,7 +142,7 @@ if (pod?.status?.startTime) {
           <tr>
             <td class="py-2 px-4 text-lg pl-1 font-semibold text-[var(--pd-table-body-text-sub-secondary)]" colspan="2">Volumes</td>
           </tr>
-          {#each pod.spec.volumes as volume}
+          {#each pod.spec.volumes as volume (volume.name)}
             <KubeVolumeArtifact artifact={volume} />
           {/each}
         {/if}
