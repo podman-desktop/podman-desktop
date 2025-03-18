@@ -22,7 +22,7 @@ import Dockerode from 'dockerode';
 
 import { isMac, isWindows } from '/@/util.js';
 import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
-import { ExperimentalSettings } from '/@api/docker-compatibility-info.js';
+import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info.js';
 
 import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import type { LibPod } from '../dockerode/libpod-dockerode.js';
@@ -32,7 +32,8 @@ export class DockerCompatibility {
   static readonly WINDOWS_NPIPE = '//./pipe/docker_engine';
   static readonly UNIX_SOCKET_PATH = '/var/run/docker.sock';
 
-  static readonly ENABLED_FULL_KEY = `${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`;
+  static readonly ENABLED_FULL_KEY =
+    `${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`;
 
   #configurationRegistry: ConfigurationRegistry;
 
