@@ -117,7 +117,7 @@ class TestKubernetesClient extends KubernetesClient {
     return super.createWatchObject();
   }
 
-  public setCurrentNamespace(namespace: string): void {
+  public setInitialNamespace(namespace: string): void {
     this.currentNamespace = namespace;
   }
 
@@ -258,7 +258,7 @@ class TestKubernetesClient extends KubernetesClient {
 function createTestClient(namespace?: string): TestKubernetesClient {
   const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
   if (namespace) {
-    client.setCurrentNamespace(namespace);
+    client.setInitialNamespace(namespace);
   }
   return client;
 }
@@ -520,6 +520,31 @@ test('test that blank kubeconfig path will be set to default one', async () => {
   const kubeconfigPath = Uri.file(resolve(homedir(), '.kube', 'config'));
   // Should be default kubeconfigpath
   expect(setKubeconfigSpy).toBeCalledWith(kubeconfigPath);
+});
+
+test('test that setting current namespace updates namespace but not kubeconfig', async () => {
+  const initialNS = 'fooNS';
+  const client = createTestClient(initialNS);
+
+  KubeConfig.prototype.contexts = [
+    {
+      name: 'foo',
+      cluster: 'cluster',
+      namespace: initialNS,
+      user: 'user',
+    },
+  ];
+  KubeConfig.prototype.loadFromOptions = vi.fn();
+
+  const newNS = 'new-ns';
+  await client.setCurrentNamespace(newNS);
+
+  // current namespace is changed and event is triggered
+  expect(client.getCurrentNamespace()).toEqual(newNS);
+  expect(apiSenderSendMock).toHaveBeenCalledWith('kubernetes-context-update');
+
+  // but context namespace is unchanged
+  expect(client.getContexts()[0]?.namespace).toEqual(initialNS);
 });
 
 test('should throw error if cannot call the cluster (readNamespacedDeployment reject)', async () => {
