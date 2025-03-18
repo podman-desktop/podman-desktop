@@ -644,11 +644,6 @@ class WinMemoryCheck extends BaseCheck {
   }
 }
 
-async function isVirtualMachineAvailable(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isVirtualMachineAvailable();
-}
-
 async function isUserAdmin(): Promise<boolean> {
   const client = await getPowerShellClient();
   return client.isUserAdmin();
@@ -672,9 +667,14 @@ async function isHyperVRunning(): Promise<boolean> {
 export class VirtualMachinePlatformCheck extends BaseCheck {
   title = 'Virtual Machine Platform Enabled';
 
+  protected async isVirtualMachineAvailable(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isVirtualMachineAvailable();
+  }
+
   async execute(): Promise<extensionApi.CheckResult> {
     try {
-      const result = await isVirtualMachineAvailable();
+      const result = await this.isVirtualMachineAvailable();
       if (result) {
         return this.createSuccessfulResult();
       }
