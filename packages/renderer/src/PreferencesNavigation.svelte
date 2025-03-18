@@ -5,7 +5,7 @@ import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
+import { ExperimentalSettings } from '/@api/docker-compatibility-info';
 
 import { configurationProperties } from './stores/configurationProperties';
 
@@ -28,7 +28,7 @@ let experimentalSection: boolean = $state(false);
 
 function updateDockerCompatibility(): void {
   window
-    .getConfigurationValue<boolean>(`${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`)
+    .getConfigurationValue<boolean>(`${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`)
     .then(result => {
       if (result !== undefined) {
         dockerCompatibilityEnabled = result;
@@ -36,7 +36,7 @@ function updateDockerCompatibility(): void {
     })
     .catch((err: unknown) =>
       console.error(
-        `Error getting configuration value ${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`,
+        `Error getting configuration value ${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`,
         err,
       ),
     );
