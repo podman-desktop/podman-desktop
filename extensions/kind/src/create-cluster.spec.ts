@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ vi.mock('node:fs', () => ({
     mkdtemp: vi.fn(),
     rm: vi.fn(),
   },
+  readFileSync: vi.fn(),
 }));
 
 vi.mock('@podman-desktop/api', async () => {
@@ -116,6 +117,104 @@ test('expect cluster to be created using config file', async () => {
   );
   expect(telemetryLogErrorMock).not.toBeCalled();
   expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+});
+
+test('expect cluster to not call setupIngressController function when supplying config file and ingress is set to no', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Supply the configuration file
+  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to NOT be called
+  expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+});
+
+test('expect cluster to call ingress controller setup when ingress is set to yes AND a config is supplied', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Supply the configuration file
+  await createCluster(
+    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to be called
+  expect(extensionApi.kubernetes.createResources).toBeCalled();
+
+  // Expect createResources to be called with `kind-kind` as the namespace since we are using a "fake"
+  // config file and there was no name supplied, so it should be using the default
+  expect(extensionApi.kubernetes.createResources).toBeCalledWith('kind-kind', expect.anything());
+});
+
+test('expect cluster to use "name: foobar" within the yaml file when supplying a config file', async () => {
+  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Mock the fs readFileSync function to return a fake yaml file
+  vi.mocked(fs.readFileSync).mockReturnValue(`
+    apiVersion: kind.x-k8s.io/v1alpha4
+    kind: Cluster
+    name: foobar
+    nodes:
+    - role: control-plane
+    - role: worker
+    - role: worker
+  `);
+
+  // Supply the configuration file
+  await createCluster(
+    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to be called
+  expect(extensionApi.kubernetes.createResources).toBeCalled();
+
+  // Expect `kind-foobar` to appear as the kind name in the createResources call
+  expect(extensionApi.kubernetes.createResources).toBeCalledWith('kind-foobar', expect.anything());
 });
 
 test('expect cluster to be created with ingress', async () => {
