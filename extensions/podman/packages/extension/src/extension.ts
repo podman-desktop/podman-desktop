@@ -1420,19 +1420,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     const compatibilityEnabled = socketCompatibilityMode.isEnabled();
     extensionApi.context.setValue(PODMAN_DOCKER_COMPAT_ENABLE_KEY, compatibilityEnabled);
 
-    // Create a status bar item to show the status of compatibility mode as well as
-    // create a command so when you can disable / enable compatibility mode
-    const statusBarItem = extensionApi.window.createStatusBarItem();
-    statusBarItem.text = 'Docker Compatibility';
-    statusBarItem.command = 'podman.socketCompatibilityMode';
-
-    // Use tooltip text from class
-    statusBarItem.tooltip = socketCompatibilityMode.tooltipText();
-
-    statusBarItem.iconClass = 'fa fa-plug';
-    statusBarItem.show();
-    extensionContext.subscriptions.push(statusBarItem);
-
     // Create a modal dialog to ask the user if they want to enable or disable compatibility mode
     const command = extensionApi.commands.registerCommand('podman.socketCompatibilityMode', async () => {
       // Manually check to see if the socket is disguised (this will be called when pressing the status bar item)
@@ -1460,8 +1447,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           await switchCompatibilityMode(false);
         }
       }
-      // Use tooltip text from class
-      statusBarItem.tooltip = socketCompatibilityMode.tooltipText();
     });
 
     // Push the results of the command so we can unload it later
