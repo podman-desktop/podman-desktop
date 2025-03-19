@@ -44,6 +44,10 @@ test('Expect simple column styling', async () => {
   const name = screen.getByText(node.name);
   expect(name).toBeInTheDocument();
   expect(name).toHaveClass('text-[var(--pd-table-body-text-highlight)]');
+  expect(name).toHaveClass('overflow-hidden');
+  expect(name).toHaveClass('text-ellipsis');
+
+  expect(name.parentElement).toHaveClass('text-left');
 });
 
 test('Expect namespaced column styling', async () => {
@@ -52,9 +56,16 @@ test('Expect namespaced column styling', async () => {
   const name = screen.getByText(deployment.name);
   expect(name).toBeInTheDocument();
   expect(name).toHaveClass('text-[var(--pd-table-body-text-highlight)]');
+  expect(name).toHaveClass('overflow-hidden');
+  expect(name).toHaveClass('text-ellipsis');
+
+  expect(name.parentElement).toHaveClass('text-left');
 
   const namespace = screen.getByText(deployment.namespace);
   expect(namespace).toBeInTheDocument();
+  expect(namespace).toHaveClass('text-[var(--pd-table-body-text)]');
+  expect(namespace).toHaveClass('overflow-hidden');
+  expect(namespace).toHaveClass('text-ellipsis');
 });
 
 test('Expect clicking works', async () => {

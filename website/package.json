@@ -52,9 +52,9 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.14",
     "typedoc": "^0.28.0",
-    "typedoc-plugin-markdown": "^4.5.0",
+    "typedoc-plugin-markdown": "^4.5.1",
     "typescript": "^5.8.2",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.9"
   },
   "browserslist": {
     "production": [">0.5%", "not dead", "not op_mini all"],

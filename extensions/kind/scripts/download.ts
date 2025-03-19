@@ -19,14 +19,19 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Octokit } from '@octokit/rest';
-import type { OctokitOptions, ReposGetContentResponseData, OctokitResponse } from '@octokit/core/dist-types/types';
+import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
+import type { OctokitResponse } from '@octokit/types';
+import type { OctokitOptions } from '@octokit/core/dist-types/types';
+type ReposGetContentResponseData = RestEndpointMethodTypes['repos']['getContent']['response']['data'] & {
+  encoding?: string;
+  content?: string;
+}; // these are not mentioned in the openapi-schema but in its example
 
 const CONTOUR_ORG = 'projectcontour';
 const CONTOUR_REPO = 'contour';
 const CONTOUR_DEPLOY_FILE = 'contour.yaml';
 const CONTOUR_DEPLOY_PATH = 'examples/render';
-const CONTOUR_VERSION = 'v1.30.1';
+const CONTOUR_VERSION = 'v1.30.2';
 
 const octokitOptions: OctokitOptions = {};
 if (process.env.GITHUB_TOKEN) {

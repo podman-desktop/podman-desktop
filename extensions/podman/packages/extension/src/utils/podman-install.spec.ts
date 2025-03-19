@@ -22,20 +22,19 @@ import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as extensionObj from './extension';
+import * as extensionObj from '../extension';
+import { releaseNotes } from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import type { Installer, PodmanInfo, UpdateCheck } from './podman-install';
 import {
   getBundledPodmanVersion,
   HyperVCheck,
   PodmanInstall,
-  VirtualMachinePlatformCheck,
   WinInstaller,
   WSL2Check,
   WSLVersionCheck,
 } from './podman-install';
 import * as podmanInstallObj from './podman-install';
-import { releaseNotes } from './podman5.json';
 import * as utils from './util';
 
 const originalConsoleError = console.error;
@@ -123,7 +122,7 @@ vi.mock('@podman-desktop/api', async () => {
   };
 });
 
-vi.mock('./util', async () => {
+vi.mock(import('./util'), async () => {
   return {
     getAssetsFolder: vi.fn().mockReturnValue(''),
     runCliCommand: vi.fn(),
@@ -317,57 +316,6 @@ test('expect winMemory preflight check return failure result if the machine has 
   expect(result.docLinksDescription).toBeUndefined();
   expect(result.docLinks).toBeUndefined();
   expect(result.fixCommand).toBeUndefined();
-});
-
-test('expect winVirtualMachine preflight check return successful result if the virtual machine platform feature is enabled', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({
-      stdout: 'VirtualMachinePlatform',
-      stderr: '',
-      command: 'command',
-    }),
-  );
-
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
-  const result = await winVirtualMachinePlatformCheck.execute();
-  expect(extensionApi.process.exec).toBeCalledWith(expect.anything(), expect.arrayContaining([expect.anything()]), {
-    encoding: 'utf16le',
-  });
-  expect(result.successful).toBeTruthy();
-});
-
-test('expect winVirtualMachine preflight check return successful result if the virtual machine platform feature is disabled', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({
-      stdout: 'some message',
-      stderr: '',
-      command: 'command',
-    }),
-  );
-
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
-  const result = await winVirtualMachinePlatformCheck.execute();
-  expect(result.description).equal('Virtual Machine Platform should be enabled to be able to run Podman.');
-  expect(result.docLinksDescription).equal('Learn about how to enable the Virtual Machine Platform feature:');
-  expect(result.docLinks?.[0].url).equal(
-    'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-  );
-  expect(result.docLinks?.[0].title).equal('Enable Virtual Machine Platform');
-});
-
-test('expect winVirtualMachine preflight check return successful result if there is an error when checking if virtual machine platform feature is enabled', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
-    throw new Error();
-  });
-
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
-  const result = await winVirtualMachinePlatformCheck.execute();
-  expect(result.description).equal('Virtual Machine Platform should be enabled to be able to run Podman.');
-  expect(result.docLinksDescription).equal('Learn about how to enable the Virtual Machine Platform feature:');
-  expect(result.docLinks?.[0].url).equal(
-    'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-  );
-  expect(result.docLinks?.[0].title).equal('Enable Virtual Machine Platform');
 });
 
 test('expect WSLVersion preflight check return fail result if wsl --version command fails its execution', async () => {

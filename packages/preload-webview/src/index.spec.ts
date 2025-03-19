@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -38,9 +36,11 @@ beforeEach(() => {
 });
 
 test('check call constructor with correct web id by parsing window.location.search', () => {
-  (window as any).location = {
-    search: '?webviewId=123',
-  };
+  Object.defineProperty(window, 'location', {
+    value: {
+      search: '?webviewId=123',
+    },
+  });
 
   init();
 
@@ -49,9 +49,11 @@ test('check call constructor with correct web id by parsing window.location.sear
 });
 
 test('check error if invalid window.location.search', () => {
-  (window as any).location = {
-    search: '',
-  };
+  Object.defineProperty(window, 'location', {
+    value: {
+      search: '',
+    },
+  });
 
   // expect failure as webviewId is not defined
   expect(() => init()).toThrow('The webviewId is not defined');

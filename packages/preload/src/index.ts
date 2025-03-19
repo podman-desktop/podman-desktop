@@ -66,7 +66,7 @@ import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
 import type { ImageFilesInfo } from '/@api/image-files-info';
-import type { ImageInfo } from '/@api/image-info';
+import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry';
 import type { KubeContext } from '/@api/kubernetes-context';
@@ -92,6 +92,7 @@ import type {
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
+import type { PinOption } from '/@api/status-bar/pin-option';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
@@ -261,8 +262,8 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('listImages', async (): Promise<ImageInfo[]> => {
-    return ipcInvoke('container-provider-registry:listImages');
+  contextBridge.exposeInMainWorld('listImages', async (options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+    return ipcInvoke('container-provider-registry:listImages', options);
   });
 
   contextBridge.exposeInMainWorld('listVolumes', async (fetchUsage = true): Promise<VolumeListInfo[]> => {
@@ -2435,6 +2436,18 @@ export function initExposure(): void {
       return ipcInvoke('kubernetes:getTroubleshootingInformation');
     },
   );
+
+  contextBridge.exposeInMainWorld('getStatusBarPinOptions', async (): Promise<Array<PinOption>> => {
+    return ipcInvoke('statusbar:pin:get-options');
+  });
+
+  contextBridge.exposeInMainWorld('pinStatusBar', async (optionId: string): Promise<void> => {
+    return ipcInvoke('statusbar:pin', optionId);
+  });
+
+  contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
+    return ipcInvoke('statusbar:unpin', optionId);
+  });
 }
 
 // expose methods

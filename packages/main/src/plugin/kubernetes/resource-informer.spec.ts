@@ -25,7 +25,7 @@ import type {
   User,
   V1ObjectMeta,
 } from '@kubernetes/client-node';
-import { DELETE, ERROR, KubeConfig, UPDATE } from '@kubernetes/client-node';
+import { ApiException, DELETE, ERROR, KubeConfig, UPDATE } from '@kubernetes/client-node';
 import { expect, test, vi } from 'vitest';
 
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';
@@ -214,7 +214,7 @@ test('ResourceInformer should fire onOffline event is informer fails', async () 
   const onOfflineCB = vi.fn();
   onCB.mockImplementation((e: string, f) => {
     if (e === ERROR) {
-      f('an error');
+      f(new ApiException(500, 'an error', {}, {}));
     }
   });
   informer.onOffline(onOfflineCB);
@@ -222,9 +222,40 @@ test('ResourceInformer should fire onOffline event is informer fails', async () 
   expect(onOfflineCB).toHaveBeenCalledWith({
     kubeconfig,
     offline: true,
-    reason: 'an error',
+    reason: `Error: HTTP-Code: 500
+Message: an error
+Body: {}
+Headers: {}`,
     resourceName: 'myresources',
   });
+});
+
+test('ResourceInformer should not fire onOffline event is informer fails with a 404 error', async () => {
+  const kc = new KubeConfig();
+  kc.loadFromOptions(kcWith2contexts);
+  const listFn = vi.fn();
+  const kubeconfig = new KubeConfigSingleContext(kc, contexts[0]!);
+  const informer = new TestResourceInformer<MyResource>({
+    kubeconfig,
+    path: '/a/path',
+    listFn,
+    kind: 'MyResource',
+    plural: 'myresources',
+  });
+  const onCB = vi.fn();
+  vi.spyOn(informer, 'getListWatch').mockReturnValue({
+    on: onCB,
+    start: vi.fn().mockResolvedValue({}),
+  } as unknown as ListWatch<MyResource>);
+  const onOfflineCB = vi.fn();
+  onCB.mockImplementation((e: string, f) => {
+    if (e === ERROR) {
+      f(new ApiException(404, 'an error', {}, {}));
+    }
+  });
+  informer.onOffline(onOfflineCB);
+  informer.start();
+  expect(onOfflineCB).not.toHaveBeenCalled();
 });
 
 test('reconnect should do nothing if there is no error', async () => {
