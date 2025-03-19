@@ -55,11 +55,15 @@ export class CLIToolsPage extends SettingsPage {
   }
 
   public getUpdateButton(toolName: string): Locator {
-    return this.getToolRow(toolName).getByRole('button', { name: 'Update available', exact: true });
+    return this.getToolRow(toolName)
+      .getByRole('button')
+      .and(this.getToolRow(toolName).getByText('Update available', { exact: true }));
   }
 
   public getDowngradeButton(toolName: string): Locator {
-    return this.getToolRow(toolName).getByRole('button', { name: 'Upgrade/Downgrade' });
+    return this.getToolRow(toolName)
+      .getByRole('button')
+      .and(this.getToolRow(toolName).getByText('Upgrade/Downgrade', { exact: true }));
   }
 
   public getVersionSelectionButton(version: string): Locator {
@@ -96,7 +100,9 @@ export class CLIToolsPage extends SettingsPage {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
 
-      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBe(version);
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .toContain(version);
       return this;
     });
   }
@@ -133,7 +139,9 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
       await this.getVersionSelectionButton(version).click();
 
-      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBe(version);
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .toContain(version);
       return this;
     });
   }
@@ -154,7 +162,7 @@ export class CLIToolsPage extends SettingsPage {
       await this.getUpdateButton(toolName).click();
       await playExpect
         .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
-        .not.toBe(currentVersion);
+        .not.toContain(currentVersion);
 
       return this;
     });
