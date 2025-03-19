@@ -19,12 +19,12 @@
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { isMac } from '../utility/platform';
+import { isLinux, isMac } from '../utility/platform';
 
 let settingsBar: SettingsBar;
 let cliToolsPage: CLIToolsPage;
 
-test.skip(!!isMac, 'Admin permission request prompt is displayed on macOS');
+test.skip(!!isLinux || !!isMac, 'Tests suite should not run on Linux or Mac platform');
 
 test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
   runner.setVideoAndTraceName('cli-tools-e2e');
