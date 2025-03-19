@@ -304,7 +304,7 @@ export async function ensureCliInstalled(
     await playExpect(cliToolsPage.getToolRow(resourceName)).toBeVisible({ timeout: 10_000 });
 
     if (!(await cliToolsPage.getCurrentToolVersion(resourceName))) {
-      await cliToolsPage.installTool(resourceName, version);
+      await cliToolsPage.installTool(resourceName, version, timeout);
     }
 
     await playExpect

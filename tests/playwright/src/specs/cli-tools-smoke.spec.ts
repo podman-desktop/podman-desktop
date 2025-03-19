@@ -16,12 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { test } from '../utility/fixtures';
+import { CLIToolsPage } from '../model/pages/cli-tools-page';
+import { expect as playExpect, test } from '../utility/fixtures';
 import { ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 test.beforeAll(async ({ runner, page, welcomePage }) => {
-  runner.setVideoAndTraceName('kind-e2e');
+  runner.setVideoAndTraceName('cli-tools-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
 });
@@ -31,11 +32,19 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Kind installation', () => {
-    test('Install Kind CLI', async ({ page, navigationBar }) => {
+  .serial('CLI tools tests', () => {
+    test('Install -> downgrade -> uninstall', async ({ page, navigationBar }) => {
       const settingsBar = await navigationBar.openSettings();
       await settingsBar.cliToolsTab.click();
 
+      const cliToolsPage = new CLIToolsPage(page);
+      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
+
       await ensureCliInstalled(page, 'Kind');
+      await cliToolsPage.downgradeTool('Kind');
+      await cliToolsPage.uninstallTool('Kind');
+      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
     });
   });

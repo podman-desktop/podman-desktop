@@ -59,7 +59,7 @@ export class CLIToolsPage extends SettingsPage {
   }
 
   public getDowngradeButton(toolName: string): Locator {
-    return this.getToolRow(toolName).getByRole('button', { name: 'Upgrade/Downgrade', exact: true });
+    return this.getToolRow(toolName).getByRole('button', { name: 'Upgrade/Downgrade' });
   }
 
   public getVersionSelectionButton(version: string): Locator {
@@ -76,7 +76,7 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
-  public async installTool(toolName: string, version: string = ''): Promise<this> {
+  public async installTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
     return test.step(`Install ${toolName}`, async () => {
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
@@ -96,6 +96,16 @@ export class CLIToolsPage extends SettingsPage {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
 
+      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBe(version);
+      return this;
+    });
+  }
+
+  public async uninstallTool(toolName: string): Promise<this> {
+    return test.step(`Uninstall ${toolName}`, async () => {
+      await playExpect(this.getUninstallButton(toolName)).toBeEnabled();
+      await this.getUninstallButton(toolName).click();
+      await handleConfirmationDialog(this.page, 'Uninstall');
       return this;
     });
   }
@@ -111,6 +121,10 @@ export class CLIToolsPage extends SettingsPage {
         console.log(`Tool ${toolName} is already in a downgraded version`);
         return this;
       }
+
+      await playExpect(this.getDowngradeButton(toolName)).toBeEnabled();
+      await this.getDowngradeButton(toolName).click();
+      await playExpect(this.dropDownDialog).toBeVisible();
 
       if (!version) {
         version = await this.getLatestVersionNumber();
