@@ -19,8 +19,7 @@
 import { type Locator, type Page } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '/@/utility/operations';
-
+import { handleConfirmationDialog } from '../../utility/operations';
 import { BasePage } from './base-page';
 
 export class TasksPage extends BasePage {
