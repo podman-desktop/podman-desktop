@@ -213,7 +213,7 @@ export async function createCluster(
     // Create ingress controller resources depending on whether a configFile was provided or not
 
     if (ingressController && configFile) {
-      const configClusterName = getClusterNameFromConfigFile(configFile);
+      const configClusterName = await getClusterNameFromConfigFile(configFile);
       logger?.log('Creating ingress controller from config file namespace: ', configClusterName);
       await setupIngressController(configClusterName);
     } else if (ingressController) {
@@ -243,8 +243,8 @@ export async function createCluster(
 
 // Function reads a path name, opens the yaml file and returns "name" from the kind configuration file
 // if no name is provided, we just use 'kind' which is the default.
-function getClusterNameFromConfigFile(configFilePath: string): string {
-  const configFile = fs.readFileSync(configFilePath, 'utf8');
+async function getClusterNameFromConfigFile(configFilePath: string): Promise<string> {
+  const configFile = await fs.promises.readFile(configFilePath, 'utf8');
 
   // We use parseAllDocument as there may be "multiple" yaml documents in the file,
   // we simply get the first name we find.

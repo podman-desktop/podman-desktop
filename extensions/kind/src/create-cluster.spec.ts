@@ -29,6 +29,7 @@ import { getKindPath, getMemTotalInfo } from './util';
 vi.mock('node:fs', () => ({
   promises: {
     writeFile: vi.fn(),
+    readFile: vi.fn(),
     mkdtemp: vi.fn(),
     rm: vi.fn(),
   },
@@ -87,7 +88,7 @@ test('expect error is cli returns non zero exit code', async () => {
 
 test('expect cluster to be created', async () => {
   vi.mocked(getKindPath).mockReturnValue('/kind/path');
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  (extensionApi.process.exec as Mock).mockResolvedValue({} as extensionApi.RunResult);
   await createCluster({}, '', telemetryLoggerMock);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
@@ -103,7 +104,7 @@ test('expect cluster to be created', async () => {
 });
 
 test('expect cluster to be created using config file', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -120,7 +121,7 @@ test('expect cluster to be created using config file', async () => {
 });
 
 test('expect cluster to not call setupIngressController function when supplying config file and ingress is set to no', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -143,7 +144,7 @@ test('expect cluster to not call setupIngressController function when supplying 
 });
 
 test('expect cluster to call ingress controller setup when ingress is set to yes AND a config is supplied', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -175,7 +176,7 @@ test('expect cluster to call ingress controller setup when ingress is set to yes
 });
 
 test('expect cluster to use "name: foobar" within the yaml file when supplying a config file', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -183,15 +184,16 @@ test('expect cluster to use "name: foobar" within the yaml file when supplying a
   };
 
   // Mock the fs readFileSync function to return a fake yaml file
-  vi.mocked(fs.readFileSync).mockReturnValue(`
+  vi.mocked(fs.promises.readFile).mockResolvedValue(
+    `
     apiVersion: kind.x-k8s.io/v1alpha4
     kind: Cluster
     name: foobar
     nodes:
     - role: control-plane
     - role: worker
-    - role: worker
-  `);
+    - role: worker`,
+  );
 
   // Supply the configuration file
   await createCluster(
@@ -218,7 +220,7 @@ test('expect cluster to use "name: foobar" within the yaml file when supplying a
 });
 
 test('expect cluster to be created with ingress', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -234,7 +236,7 @@ test('expect cluster to be created with ingress', async () => {
 });
 
 test('expect cluster to be created with ports as strings', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -271,7 +273,7 @@ test('expect cluster to be created with ports as strings', async () => {
 });
 
 test('expect cluster to be created with ports as numbers', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -310,7 +312,7 @@ test('expect cluster to be created with ports as numbers', async () => {
 test('expect error if Kubernetes reports error', async () => {
   const error = new Error('Kubernetes error');
   try {
-    (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
     const logger = {
       log: vi.fn(),
       error: vi.fn(),
