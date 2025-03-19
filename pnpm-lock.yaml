@@ -639,8 +639,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
       eslint-plugin-svelte:
-        specifier: ^3.3.1
-        version: 3.3.1(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
+        specifier: ^3.3.2
+        version: 3.3.2(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
@@ -751,8 +751,8 @@ importers:
         specifier: ^8.26.1
         version: 8.26.1(@typescript-eslint/parser@8.26.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.22.0(jiti@2.4.2))(typescript@5.8.2)
       eslint-plugin-svelte:
-        specifier: ^3.3.1
-        version: 3.3.1(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
+        specifier: ^3.3.2
+        version: 3.3.2(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
       jsdom:
         specifier: ^26.0.0
         version: 26.0.0
@@ -853,8 +853,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       eslint-plugin-svelte:
-        specifier: ^3.3.1
-        version: 3.3.1(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
+        specifier: ^3.3.2
+        version: 3.3.2(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2)
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
@@ -6519,8 +6519,8 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-svelte@3.3.1:
-    resolution: {integrity: sha512-5p3JGBMautDKtQdNmHkp33akcssAqZObV955UREa8v1thDDRG6sCj8gQMztQRRDFJiGsBdWgLWEB5HrdKg5B2w==}
+  eslint-plugin-svelte@3.3.2:
+    resolution: {integrity: sha512-b2IJ2w0hJw5M3mj4aBLc6Gk6nMG3LFecUuPYV628G8Je/8ewJb80LR8fwTX9gOlqykTBNM18IGL7Hkz8K+WLkQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
@@ -18814,7 +18814,7 @@ snapshots:
       semver: 7.7.1
       typescript: 5.8.2
 
-  eslint-plugin-svelte@3.3.1(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2):
+  eslint-plugin-svelte@3.3.2(eslint@9.22.0(jiti@2.4.2))(svelte@5.23.2):
     dependencies:
       '@eslint-community/eslint-utils': 4.5.1(eslint@9.22.0(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.0
