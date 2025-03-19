@@ -371,9 +371,9 @@ function onContainerConnectionChange(): void {
           resultItems={values}
           compare={sortResults}
           onChange={async (s: string): Promise<void> => {
-          validateImageName(s);
-          await resolveShortname();
-          await searchLatestTag();
+            validateImageName(s);
+            await resolveShortname();
+            await searchLatestTag();
         }}
           onEnter={onEnterOperation}
           disabled={pullFinished || pullInProgress}
