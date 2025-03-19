@@ -20,7 +20,6 @@ import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { isMac } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
 
 let settingsBar: SettingsBar;
 let cliToolsPage: CLIToolsPage;
@@ -28,7 +27,6 @@ let cliToolsPage: CLIToolsPage;
 test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
   runner.setVideoAndTraceName('cli-tools-e2e');
   await welcomePage.handleWelcomePage(true);
-  await waitForPodmanMachineStartup(page);
 
   settingsBar = await navigationBar.openSettings();
   await settingsBar.cliToolsTab.click();
