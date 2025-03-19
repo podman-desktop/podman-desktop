@@ -17,14 +17,29 @@
  ***********************************************************************/
 
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
+import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { ensureCliInstalled } from '../utility/operations';
+import { isMac } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
-test.beforeAll(async ({ runner, page, welcomePage }) => {
+let settingsBar: SettingsBar;
+let cliToolsPage: CLIToolsPage;
+
+test.skip(!!isMac, 'Admin permission request prompt is displayed on macOS');
+
+test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
   runner.setVideoAndTraceName('cli-tools-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+
+  settingsBar = await navigationBar.openSettings();
+  await settingsBar.cliToolsTab.click();
+
+  cliToolsPage = new CLIToolsPage(page);
+  await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+  await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+  await cliToolsPage.uninstallTool('Kind');
+  await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
 });
 
 test.afterAll(async ({ runner }) => {
@@ -33,17 +48,16 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('CLI tools tests', () => {
-    test('Install -> downgrade -> uninstall', async ({ page, navigationBar }) => {
-      const settingsBar = await navigationBar.openSettings();
-      await settingsBar.cliToolsTab.click();
-
-      const cliToolsPage = new CLIToolsPage(page);
-      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
-      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
-      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
-
-      await ensureCliInstalled(page, 'Kind');
+    test('Install -> downgrade -> uninstall', async () => {
+      await cliToolsPage.installTool('Kind');
       await cliToolsPage.downgradeTool('Kind');
+      await cliToolsPage.uninstallTool('Kind');
+      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
+    });
+
+    test('Install old version -> upgrade -> uninstall', async () => {
+      await cliToolsPage.installToolWithSecondLatestVersion('Kind');
+      await cliToolsPage.updateTool('Kind');
       await cliToolsPage.uninstallTool('Kind');
       await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
     });
