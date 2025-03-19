@@ -25,8 +25,6 @@ import { waitForPodmanMachineStartup } from '../utility/wait';
 let settingsBar: SettingsBar;
 let cliToolsPage: CLIToolsPage;
 
-test.skip(!!isMac, 'Admin permission request prompt is displayed on macOS');
-
 test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
   runner.setVideoAndTraceName('cli-tools-e2e');
   await welcomePage.handleWelcomePage(true);
@@ -47,6 +45,8 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('CLI tools tests', { tag: '@smoke' }, () => {
+  test.skip(!!isMac, 'Admin permission request prompt is displayed on macOS');
+
   test('Install -> downgrade -> uninstall', async () => {
     await cliToolsPage.installTool('Kind');
     await cliToolsPage.downgradeTool('Kind');
