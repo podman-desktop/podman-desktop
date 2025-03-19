@@ -269,7 +269,6 @@ export default [
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-useless-children-snippet': 'off',
       'svelte/require-each-key': 'off',
-      'svelte/require-store-reactive-access': 'off',
       'svelte/no-reactive-literals': 'error',
     },
   },
