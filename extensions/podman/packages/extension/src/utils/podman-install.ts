@@ -26,6 +26,7 @@ import { compare, compareVersions } from 'compare-versions';
 import { BaseCheck, OrCheck, SequenceCheck } from '../checks/base-check';
 import { getDetectionChecks } from '../checks/detection-checks';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
+import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import type { MachineJSON } from '../extension';
@@ -662,34 +663,6 @@ async function isHyperVInstalled(): Promise<boolean> {
 async function isHyperVRunning(): Promise<boolean> {
   const client = await getPowerShellClient();
   return client.isHyperVRunning();
-}
-
-export class VirtualMachinePlatformCheck extends BaseCheck {
-  title = 'Virtual Machine Platform Enabled';
-
-  protected async isVirtualMachineAvailable(): Promise<boolean> {
-    const client = await getPowerShellClient();
-    return client.isVirtualMachineAvailable();
-  }
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const result = await this.isVirtualMachineAvailable();
-      if (result) {
-        return this.createSuccessfulResult();
-      }
-    } catch (err) {
-      // ignore error, this means that VirtualMachinePlatform not enabled
-    }
-    return this.createFailureResult({
-      description: 'Virtual Machine Platform should be enabled to be able to run Podman.',
-      docLinksDescription: 'Learn about how to enable the Virtual Machine Platform feature:',
-      docLinks: {
-        url: 'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-        title: 'Enable Virtual Machine Platform',
-      },
-    });
-  }
 }
 
 export class WSL2Check extends BaseCheck {
