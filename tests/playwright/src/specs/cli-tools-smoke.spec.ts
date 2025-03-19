@@ -46,19 +46,18 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('CLI tools tests', () => {
-    test('Install -> downgrade -> uninstall', async () => {
-      await cliToolsPage.installTool('Kind');
-      await cliToolsPage.downgradeTool('Kind');
-      await cliToolsPage.uninstallTool('Kind');
-      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
-    });
-
-    test('Install old version -> upgrade -> uninstall', async () => {
-      await cliToolsPage.installToolWithSecondLatestVersion('Kind');
-      await cliToolsPage.updateTool('Kind');
-      await cliToolsPage.uninstallTool('Kind');
-      await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
-    });
+test.describe.serial('CLI tools tests', { tag: '@smoke' }, () => {
+  test('Install -> downgrade -> uninstall', async () => {
+    await cliToolsPage.installTool('Kind');
+    await cliToolsPage.downgradeTool('Kind');
+    await cliToolsPage.uninstallTool('Kind');
+    await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
   });
+
+  test('Install old version -> upgrade -> uninstall', async () => {
+    await cliToolsPage.installToolWithSecondLatestVersion('Kind');
+    await cliToolsPage.updateTool('Kind');
+    await cliToolsPage.uninstallTool('Kind');
+    await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
+  });
+});
