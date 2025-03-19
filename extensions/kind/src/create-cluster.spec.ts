@@ -88,7 +88,7 @@ test('expect error is cli returns non zero exit code', async () => {
 
 test('expect cluster to be created', async () => {
   vi.mocked(getKindPath).mockReturnValue('/kind/path');
-  (extensionApi.process.exec as Mock).mockResolvedValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   await createCluster({}, '', telemetryLoggerMock);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
