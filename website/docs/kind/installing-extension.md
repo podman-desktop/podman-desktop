@@ -27,3 +27,9 @@ The Kind extension provides the capability of creating a local Kubernetes cluste
 The following video provides a complete guide on creating a single-node cluster:
 
 <ReactPlayer playing playsinline controls url='https://github.com/containers/podman-desktop-media/raw/refs/heads/kind/video/cluster-creation-kind.mp4' width='100%' height='100%' />
+
+:::note
+
+If you are running Podman Desktop in a Linux system host and enabling the Contour ingress controller, you need to ensure that the `ip_tables` module is loaded, otherwise the `envoy` pod will fail to insert an iptable rule that it needs in order to be deployed (`/usr/sbin/iptables -t nat -S CNI-HOSTPORT-SETMARK 1 --wait`). To accomplish that, run the command `sudo modprobe ip_tables` to enable the required module, and then the command `lsmod | grep ip_tables` to check if it is enabled.
+
+:::

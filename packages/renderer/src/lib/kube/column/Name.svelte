@@ -17,13 +17,13 @@ async function openDetails(): Promise<void> {
 }
 </script>
 
-<button class="hover:cursor-pointer flex flex-col max-w-full" onclick={openDetails}>
-  <div class="text-[var(--pd-table-body-text-highlight)] max-w-full overflow-hidden text-ellipsis">
+<button class="hover:cursor-pointer flex flex-col max-w-full text-left" onclick={openDetails}>
+  <div class="text-[var(--pd-table-body-text-highlight)] overflow-hidden text-ellipsis">
     {object.name}
   </div>
-  <div class="flex flex-row text-sm gap-1">
-    {#if isNamespaced(object)}
-      <div class="font-extra-light text-[var(--pd-table-body-text)]">{object.namespace}</div>
-    {/if}
-  </div>
+  {#if isNamespaced(object)}
+    <div class="text-[var(--pd-table-body-text)] font-extra-light text-sm overflow-hidden text-ellipsis">
+      {object.namespace}
+    </div>
+  {/if}
 </button>

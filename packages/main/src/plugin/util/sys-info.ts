@@ -18,7 +18,7 @@
 
 import { arch, platform, release, version } from 'node:os';
 
-import { isLinux, isMac, isWindows } from '/@/util.js';
+import { isFreeBSD, isLinux, isMac, isWindows } from '/@/util.js';
 
 export abstract class SystemInfo {
   abstract getSystemName(): string;
@@ -73,6 +73,16 @@ class DarwinInfo extends SystemInfo {
   }
 }
 
+class FreeBSDInfo extends SystemInfo {
+  /**
+   * Just like on Darwin, the os#version call on FreeBSD gives too much
+   * extraneous information
+   */
+  override getSystemName(): string {
+    return `FreeBSD ${release()} - ${arch()}`;
+  }
+}
+
 export function getSystemInfo(): SystemInfo {
   if (isWindows()) {
     return new WindowsInfo();
@@ -80,6 +90,8 @@ export function getSystemInfo(): SystemInfo {
     return new DarwinInfo();
   } else if (isLinux()) {
     return new LinuxInfo();
+  } else if (isFreeBSD()) {
+    return new FreeBSDInfo();
   }
   throw new Error(`unknown platform: ${platform()}`);
 }

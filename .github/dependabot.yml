@@ -60,3 +60,10 @@ updates:
         patterns:
           - "@vitest/*"
           - "vitest"
+      typedoc:
+        applies-to: version-updates
+        patterns:
+          - "typedoc"
+          - "typedoc-plugin-markdown"
+          - "docusaurus-plugin-typedoc"
+

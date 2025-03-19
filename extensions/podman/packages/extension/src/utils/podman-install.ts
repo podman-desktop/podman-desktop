@@ -23,12 +23,13 @@ import { promisify } from 'node:util';
 import * as extensionApi from '@podman-desktop/api';
 import { compare, compareVersions } from 'compare-versions';
 
-import { BaseCheck, OrCheck, SequenceCheck } from './checks/base-check';
-import { getDetectionChecks } from './checks/detection-checks';
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from './checks/macos-checks';
-import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
-import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
-import type { MachineJSON } from './extension';
+import { BaseCheck, OrCheck, SequenceCheck } from '../checks/base-check';
+import { getDetectionChecks } from '../checks/detection-checks';
+import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
+import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
+import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
+import type { MachineJSON } from '../extension';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
@@ -40,11 +41,11 @@ import {
   ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
-} from './extension';
-import { WslHelper } from './helpers/wsl-helper';
+} from '../extension';
+import { WslHelper } from '../helpers/wsl-helper';
+import * as podman5JSON from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import * as podman5JSON from './podman5.json';
 import { getPowerShellClient } from './powershell';
 import { getAssetsFolder, normalizeWSLOutput } from './util';
 
@@ -644,11 +645,6 @@ class WinMemoryCheck extends BaseCheck {
   }
 }
 
-async function isVirtualMachineAvailable(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isVirtualMachineAvailable();
-}
-
 async function isUserAdmin(): Promise<boolean> {
   const client = await getPowerShellClient();
   return client.isUserAdmin();
@@ -667,29 +663,6 @@ async function isHyperVInstalled(): Promise<boolean> {
 async function isHyperVRunning(): Promise<boolean> {
   const client = await getPowerShellClient();
   return client.isHyperVRunning();
-}
-
-export class VirtualMachinePlatformCheck extends BaseCheck {
-  title = 'Virtual Machine Platform Enabled';
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const result = await isVirtualMachineAvailable();
-      if (result) {
-        return this.createSuccessfulResult();
-      }
-    } catch (err) {
-      // ignore error, this means that VirtualMachinePlatform not enabled
-    }
-    return this.createFailureResult({
-      description: 'Virtual Machine Platform should be enabled to be able to run Podman.',
-      docLinksDescription: 'Learn about how to enable the Virtual Machine Platform feature:',
-      docLinks: {
-        url: 'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-        title: 'Enable Virtual Machine Platform',
-      },
-    });
-  }
 }
 
 export class WSL2Check extends BaseCheck {

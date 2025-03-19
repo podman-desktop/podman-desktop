@@ -19,8 +19,8 @@
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, expect, test, vi } from 'vitest';
 
+import * as extension from '../extension';
 import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
-import * as extension from './extension';
 
 vi.mock('@podman-desktop/api', () => {
   return {
@@ -208,7 +208,7 @@ test('darwin: test promptRestart IS NOT ran when findRunningMachine returns unde
   });
 
   // Mock that findRunningMachine returns undefined
-  vi.mock('./extension', () => {
+  vi.mock('./../extension', () => {
     return {
       findRunningMachine: (): Promise<void> => {
         return Promise.resolve();

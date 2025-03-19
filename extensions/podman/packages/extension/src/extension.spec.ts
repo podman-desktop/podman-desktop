@@ -27,22 +27,21 @@ import { Disposable } from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as compatibilityModeLib from './compatibility-mode';
 import {
-  checkDisguisedPodmanSocket,
   initCheckAndRegisterUpdate,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
   setWSLEnabled,
 } from './extension';
 import * as extension from './extension';
-import type { InstalledPodman } from './podman-cli';
-import * as podmanCli from './podman-cli';
-import { PodmanConfiguration } from './podman-configuration';
-import type { UpdateCheck } from './podman-install';
-import { PodmanInstall } from './podman-install';
-import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './util';
-import * as util from './util';
+import * as compatibilityModeLib from './utils/compatibility-mode';
+import type { InstalledPodman } from './utils/podman-cli';
+import * as podmanCli from './utils/podman-cli';
+import { PodmanConfiguration } from './utils/podman-configuration';
+import type { UpdateCheck } from './utils/podman-install';
+import { PodmanInstall } from './utils/podman-install';
+import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
+import * as util from './utils/util';
 
 const config: Configuration = {
   get: () => {
@@ -321,11 +320,10 @@ vi.mock('./helpers/podman-info-helper', async () => {
   };
 });
 
-vi.mock('./util', async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const actual = await vi.importActual<typeof import('./util')>('./util');
+vi.mock(import('./utils/util'), async importOriginal => {
+  const original = await importOriginal();
   return {
-    ...actual,
+    ...original,
     isMac: vi.fn(),
     isWindows: vi.fn(),
     getAssetsFolder: vi.fn(),
@@ -1610,18 +1608,6 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
-});
-
-test('checkDisguisedPodmanSocket: does not run updateWarnings when called with Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).not.toBeCalled();
-});
-
-test('checkDisguisedPodmanSocket: runs updateWarnings when called not on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = false;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).toBeCalled();
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {

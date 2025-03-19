@@ -5,6 +5,8 @@ import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
 
 <KubernetesEmptyScreen
   icon={ConfigMapSecretIcon}
-  title="No configmaps or secrets"
+  resources={['configmaps', 'secrets']}
+  titleEmpty='No configmaps or secrets'
+  titleNotPermitted='Configmaps and secrets not accessible'
   message="Try switching to a different context or namespace" />
 

@@ -26,7 +26,7 @@ const navItems: Writable<number> = getContext('nav-items');
 $: tooltipText = counter ? `${tooltip} (${counter})` : tooltip;
 
 onMount(() => {
-  inSection = navItems !== undefined;
+  inSection = $navItems !== undefined;
   navItems?.update(i => i + 1);
 });
 onDestroy(() => {

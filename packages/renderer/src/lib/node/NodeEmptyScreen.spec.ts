@@ -21,6 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { listenResourcePermitted } from '../kube/resource-permission';
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 
 const mocks = vi.hoisted(() => ({
@@ -28,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   getCurrentKubeContextState: vi.fn(),
 }));
 
+vi.mock('../kube/resource-permission');
 vi.mock('../../stores/kubernetes-contexts-state', () => ({
   kubernetesCurrentContextState: {
     subscribe: mocks.subscribeMock,
@@ -43,8 +45,16 @@ beforeEach(() => {
 });
 
 test('Expect deployment empty screen', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   render(NodeEmptyScreen);
   const noNodes = screen.getByRole('heading', { name: 'No nodes' });
+  expect(noNodes).toBeInTheDocument();
+});
+
+test('Expect deployment empty screen not accessible', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  render(NodeEmptyScreen);
+  const noNodes = screen.getByRole('heading', { name: 'Nodes not accessible' });
   expect(noNodes).toBeInTheDocument();
 });
 

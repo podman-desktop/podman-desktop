@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum ExperimentalSettings {
+export enum DockerCompatibilitySettings {
   SectionName = 'dockerCompatibility',
   Enabled = 'enabled',
 }

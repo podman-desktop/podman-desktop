@@ -18,4 +18,4 @@ function getText(state: ContextGeneralState | undefined): string {
 $: text = getText($kubernetesCurrentContextState);
 </script>
 
-<KubernetesEmptyScreen icon={NodeIcon} title="No nodes" message={text} />
+<KubernetesEmptyScreen icon={NodeIcon} resources={['nodes']} titleEmpty='No nodes' titleNotPermitted='Nodes not accessible' message={text} />

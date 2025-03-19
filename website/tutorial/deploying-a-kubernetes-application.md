@@ -91,9 +91,8 @@ This YAML configuration creates a service named `my-nginx` to expose the Nginx d
 4. Click **OK**.
 5. View the newly created `my-nginx` deployment on the same page.
    ![new deployment](img/new-deployment.png)
-6. Restart the Podman Desktop application.
-7. Go to **Pods** from the left navigation pane.
-8. View the two newly created `my-nginx` pods.
+6. Click **Pods** in the Kubernetes explorer.
+7. View the created `my-nginx` pods.
    ![new running pods](img/running-pods.png)
 
 ## Creating a service

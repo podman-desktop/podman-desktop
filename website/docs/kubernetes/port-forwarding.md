@@ -46,9 +46,9 @@ spec:
    1. Set the **Runtime** field to `Kubernetes cluster`.
       ![set runtime field](img/play-a-yaml-file.png)
    1. Click **Play** and then **Done**.
-   1. View the newly created pod that runs on a Kubernetes cluster on the same page.
+   1. Go to **Kubernetes > Pods** to view the created Kubernetes pod.
       ![view the newly created pod](img/new-kubernetes-pod.png)
-   1. Click the name of the pod and select the **Summary** tab.
+   1. Click the name of the pod and view the **Summary** tab.
 
 1. Click the **Forward...** button corresponding to the port you want to use for port forwarding.
    ![forward button](img/forward-button.png)
@@ -65,17 +65,17 @@ spec:
 
 You can stop port forwarding by using one of the following ways:
 
-**_Use the component page_**
+**_Use the Pods or Services page_**
 
-1. Go to the **Pods** or **Kubernetes > Services** page.
-1. Click the name of the Kubernetes pod or service for which you want to stop port fowarding.
+1. Go to the **Kubernetes > Pods** or **Kubernetes > Services** page.
+1. Click the name of the Kubernetes pod or service for which you want to stop port forwarding.
 1. Click **Remove** in the Summary tab. The entry is removed from the **Kubernetes > Port Forwarding** page.
    ![using component page](img/stop-port-forwarding-pod.png)
 
 **_Use the Port Forwarding page_**
 
 1. Go to the **Kubernetes > Port Forwarding** page.
-1. Click the **Delete** icon corresponding to the pod or servivce for which you want to stop port forwarding. The entry is removed from the page.
+1. Click the **Delete** icon corresponding to the pod or service for which you want to stop port forwarding. The entry is removed from the page.
    ![using port forwarding page](img/delete-icon-on-port-forwarding-page.png)
 
 #### Verification
