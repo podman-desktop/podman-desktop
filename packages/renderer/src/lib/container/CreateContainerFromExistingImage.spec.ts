@@ -236,6 +236,18 @@ test('Expect no user input to show only local images', async () => {
   expect(items.length).toBe(6);
 });
 
+test('window#listImages should not be call without a selected container connection', async () => {
+  const { getByPlaceholderText } = render(CreateContainerFromExistingImage);
+
+  const inputBox = getByPlaceholderText('Select or enter an image to run');
+  expect(inputBox).toBeEnabled();
+
+  expect(window.listImages).toHaveBeenCalledOnce();
+  expect(window.listImages).toHaveBeenCalledWith({
+    provider: pInfo,
+  });
+});
+
 describe('container connections', () => {
   // create a dummy multi connection provider
   const MULTI_CONNECTIONS: ProviderInfo = {

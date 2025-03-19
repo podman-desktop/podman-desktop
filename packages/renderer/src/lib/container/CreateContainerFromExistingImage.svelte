@@ -165,6 +165,7 @@ async function gotoManageRegistries(): Promise<void> {
 }
 
 onMount(() => {
+  // Select default connection
   if (!selectedProviderConnection) {
     selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
   }
@@ -303,6 +304,9 @@ async function buildContainerFromImage(): Promise<void> {
 }
 
 async function searchFunction(value: string): Promise<void> {
+  // do not search for images if no connection is selected
+  if (!selectedProviderConnection) return;
+
   value = value.trim();
   const localImagesValues = await searchLocalImages(value);
   const remoteImagesValues = await searchImages(value);
