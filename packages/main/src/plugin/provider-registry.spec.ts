@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import type { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { LifecycleContextImpl } from './lifecycle-context.js';
-import type { ProviderImpl } from './provider-impl.js';
+import type { ProviderImpl, VmProviderConnection } from './provider-impl.js';
 import { ProviderRegistry } from './provider-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
@@ -389,6 +389,26 @@ describe('a Kubernetes provider is registered', async () => {
     // status changed, do not send event
     vi.advanceTimersByTime(20_000);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+  });
+});
+
+test('should register vm provider', async () => {
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: VmProviderConnection = {
+    name: 'connection',
+    lifecycle: undefined,
+    status: () => 'started',
+  };
+
+  providerRegistry.registerVmConnection(provider, connection);
+
+  expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerVmProviderConnection', {
+    name: 'connection',
+    total: 1,
   });
 });
 

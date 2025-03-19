@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ import type { ContainerProviderRegistry } from './container-registry.js';
 import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { LifecycleContextImpl, LoggerImpl } from './lifecycle-context.js';
-import { ProviderImpl } from './provider-impl.js';
+import { ProviderImpl, type VmProviderConnection } from './provider-impl.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -79,6 +79,16 @@ export type ContainerConnectionProviderLifecycleListener = (
   providerInfo: ProviderInfo,
   providerContainerConnectionInfo: ProviderContainerConnectionInfo,
 ) => void;
+
+/*
+ * to be exposed in extension-api.d.ts
+ */
+export interface RegisterVmConnectionEvent {
+  providerId: string;
+}
+export interface UnregisterVmConnectionEvent {
+  providerId: string;
+}
 
 /**
  * Manage creation of providers and their lifecycle.
@@ -99,7 +109,7 @@ export class ProviderRegistry {
   private autostartEngine: AutostartEngine | undefined = undefined;
 
   private connectionLifecycleContexts: Map<
-    ContainerProviderConnection | KubernetesProviderConnection,
+    ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection,
     LifecycleContextImpl
   > = new Map();
   private listeners: ProviderEventListener[];
@@ -107,6 +117,7 @@ export class ProviderRegistry {
   private containerConnectionLifecycleListeners: ContainerConnectionProviderLifecycleListener[];
 
   protected kubernetesProviders: Map<string, KubernetesProviderConnection> = new Map();
+  private vmProviders: Map<string, VmProviderConnection> = new Map();
 
   private readonly _onDidUpdateProvider = new Emitter<ProviderEvent>();
   readonly onDidUpdateProvider: Event<ProviderEvent> = this._onDidUpdateProvider.event;
@@ -133,9 +144,15 @@ export class ProviderRegistry {
   readonly onDidUnregisterKubernetesConnection: Event<UnregisterKubernetesConnectionEvent> =
     this._onDidUnregisterKubernetesConnection.event;
 
+  private readonly _onDidUnregisterVmConnection = new Emitter<UnregisterVmConnectionEvent>();
+  readonly onDidUnregisterVmConnection: Event<UnregisterVmConnectionEvent> = this._onDidUnregisterVmConnection.event;
+
   private readonly _onDidRegisterKubernetesConnection = new Emitter<RegisterKubernetesConnectionEvent>();
   readonly onDidRegisterKubernetesConnection: Event<RegisterKubernetesConnectionEvent> =
     this._onDidRegisterKubernetesConnection.event;
+
+  private readonly _onDidRegisterVmConnection = new Emitter<RegisterVmConnectionEvent>();
+  readonly onDidRegisterVmConnection: Event<RegisterVmConnectionEvent> = this._onDidRegisterVmConnection.event;
 
   private readonly _onDidRegisterContainerConnection = new Emitter<RegisterContainerConnectionEvent>();
   readonly onDidRegisterContainerConnection: Event<RegisterContainerConnectionEvent> =
@@ -1177,6 +1194,12 @@ export class ProviderRegistry {
     this._onDidRegisterKubernetesConnection.fire({ providerId: provider.id });
   }
 
+  onDidRegisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {
+    this.connectionLifecycleContexts.set(vmProviderConnection, new LifecycleContextImpl());
+    this.apiSender.send('provider-register-vm-connection', { name: vmProviderConnection.name });
+    this._onDidRegisterVmConnection.fire({ providerId: provider.id });
+  }
+
   onDidChangeContainerProviderConnectionStatus(
     provider: ProviderImpl,
     containerConnection: ContainerProviderConnection,
@@ -1212,6 +1235,11 @@ export class ProviderRegistry {
   ): void {
     this.apiSender.send('provider-unregister-kubernetes-connection', { name: kubernetesProviderConnection.name });
     this._onDidUnregisterKubernetesConnection.fire({ providerId: provider.id });
+  }
+
+  onDidUnregisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {
+    this.apiSender.send('provider-unregister-vm-connection', { name: vmProviderConnection.name });
+    this._onDidUnregisterVmConnection.fire({ providerId: provider.id });
   }
 
   onDidUpdateProviderStatus(providerId: string, callback: (providerInfo: ProviderInfo) => void): void {
@@ -1269,6 +1297,33 @@ export class ProviderRegistry {
     return Disposable.create(() => {
       clearInterval(timer);
       this.kubernetesProviders.delete(id);
+      this.apiSender.send('provider-change', {});
+    });
+  }
+
+  registerVmConnection(provider: Provider, vmProviderConnection: VmProviderConnection): Disposable {
+    const providerName = vmProviderConnection.name;
+    const id = `${provider.id}.${providerName}`;
+    this.vmProviders.set(id, vmProviderConnection);
+    this.telemetryService.track('registerVmProviderConnection', {
+      name: vmProviderConnection.name,
+      total: this.vmProviders.size,
+    });
+
+    let previousStatus = vmProviderConnection.status();
+
+    // track the status of the provider
+    const timer = setInterval(() => {
+      const newStatus = vmProviderConnection.status();
+      if (newStatus !== previousStatus) {
+        this.apiSender.send('provider-change', {});
+        previousStatus = newStatus;
+      }
+    }, 2000);
+
+    // listen to events
+    return Disposable.create(() => {
+      clearInterval(timer);
       this.apiSender.send('provider-change', {});
     });
   }
