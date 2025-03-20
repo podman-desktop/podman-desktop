@@ -22,15 +22,14 @@ import { fileURLToPath } from 'node:url';
 import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
+import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { test } from '../utility/fixtures';
+import { expect, test } from '../utility/fixtures';
 import {
   checkKubernetesResourceState,
-  configurePortForwarding,
   createKubernetesResource,
   deleteKubernetesResource,
   verifyLocalPortResponse,
-  verifyPortForwardingConfiguration,
 } from '../utility/kubernetes';
 import { ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -41,23 +40,25 @@ const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
 const RESOURCE_NAME: string = 'kind';
 const KUBERNETES_CONTEXT = `kind-${CLUSTER_NAME}`;
 const KUBERNETES_NAMESPACE = 'default';
+
 const DEPLOYMENT_NAME = 'test-deployment-resource';
 const SERVICE_NAME = 'test-service-resource';
+const INGERSS_NAME = 'test-ingress-resource';
 const KUBERNETES_RUNTIME = {
   runtime: PlayYamlRuntime.Kubernetes,
   kubernetesContext: KUBERNETES_CONTEXT,
   kubernetesNamespace: KUBERNETES_NAMESPACE,
 };
-
-const REMOTE_PORT: number = 8080;
-const LOCAL_PORT: number = 50000;
-const FORWARD_ADRESS: string = `http://localhost:${LOCAL_PORT}/`;
-const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${DEPLOYMENT_NAME}.yaml`);
 const SERVICE_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SERVICE_NAME}.yaml`);
+const INGRESS_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${INGERSS_NAME}.yaml`);
+
+const FORWARD_ADRESS: string = `http://localhost:9090/`;
+const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
+
+let detailsPage: ContainerDetailsPage;
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
@@ -83,6 +84,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   } else {
     await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
   }
+
+  detailsPage = new ContainerDetailsPage(page, KIND_NODE);
 });
 
 test.afterAll(async ({ runner, page }) => {
@@ -94,7 +97,19 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }, () => {
+test.describe.serial('Kubernetes newtworking E2E tests', { tag: '@k8s_e2e' }, () => {
+  test('Check Ingress controller pods status', async ({ navigationBar }) => {
+    test.setTimeout(160_000);
+    const containersPage = await navigationBar.openContainers();
+    await expect.poll(async () => containersPage.getContainerRowByName(KIND_NODE)).toBeTruthy();
+    await containersPage.openContainersDetails(KIND_NODE);
+    await detailsPage.activateTab('Terminal');
+
+    await monitorPodStatusInLogs('envoy', 'Running', '2/2');
+    await monitorPodStatusInLogs('contour', 'Running', '1/1');
+    await monitorPodStatusInLogs('contour-certgen', 'Completed', '0/1');
+  });
+
   test('Create and verify a running Kubernetes deployment', async ({ page }) => {
     test.setTimeout(80_000);
     await createKubernetesResource(
@@ -113,7 +128,6 @@ test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }
     );
   });
   test('Create and verify a running Kubernetes service', async ({ page }) => {
-    test.setTimeout(80_000);
     await createKubernetesResource(
       page,
       KubernetesResources.Services,
@@ -126,18 +140,50 @@ test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }
       KubernetesResources.Services,
       SERVICE_NAME,
       KubernetesResourceState.Running,
-      80_000,
+      10_000,
     );
   });
-
-  test('Verify service functionality via port forwarding', async ({ page }) => {
-    await configurePortForwarding(page, KubernetesResources.Services, SERVICE_NAME);
-    await verifyPortForwardingConfiguration(page, SERVICE_NAME, LOCAL_PORT, REMOTE_PORT);
+  test('Create and verify a running Kubernetes ingress', async ({ page }) => {
+    await createKubernetesResource(
+      page,
+      KubernetesResources.IngeressesRoutes,
+      INGERSS_NAME,
+      INGRESS_YAML_PATH,
+      KUBERNETES_RUNTIME,
+    );
+    await checkKubernetesResourceState(
+      page,
+      KubernetesResources.IngeressesRoutes,
+      INGERSS_NAME,
+      KubernetesResourceState.Running,
+      10_000,
+    );
+  });
+  test(`Verify the availability of the ${SERVICE_NAME} service.`, async () => {
     await verifyLocalPortResponse(FORWARD_ADRESS, RESPONSE_MESSAGE);
   });
   test('Delete Kubernetes resources', async ({ page }) => {
-    await deleteKubernetesResource(page, KubernetesResources.PortForwarding, SERVICE_NAME);
+    await deleteKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGERSS_NAME);
     await deleteKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME);
     await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
   });
 });
+
+async function monitorPodStatusInLogs(podName: string, podStatus: string, replicas: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        await detailsPage.executeCommandInTerminal('kubectl get pods -n projectcontour');
+        const controllerPods = await detailsPage.retrieveTerminalLog();
+        await detailsPage.executeCommandInTerminal('clear');
+
+        const matchingPod = controllerPods.find(
+          row => row.includes(podName) && row.includes(podStatus) && row.includes(replicas),
+        );
+
+        return matchingPod ?? '';
+      },
+      { timeout: 120_000 },
+    )
+    .toContain(podStatus);
+}

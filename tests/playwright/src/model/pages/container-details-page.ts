@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly imageLink: Locator;
   readonly deployButton: Locator;
   readonly startButton: Locator;
+  readonly containerTerminal: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -50,6 +51,7 @@ export class ContainerDetailsPage extends DetailsPage {
       name: 'Start Container',
       exact: true,
     });
+    this.containerTerminal = this.tabContent.locator('.xterm-screen');
   }
 
   async getState(): Promise<string> {
@@ -96,5 +98,26 @@ export class ContainerDetailsPage extends DetailsPage {
       await this.deployButton.click();
       return new DeployToKubernetesPage(this.page);
     });
+  }
+
+  async executeCommandInTerminal(command: string): Promise<void> {
+    await playExpect(this.containerTerminal).toBeVisible();
+    await this.containerTerminal.click();
+    await this.page.keyboard.insertText(command);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async retrieveTerminalLog(): Promise<string[]> {
+    await playExpect(this.containerTerminal).toBeVisible();
+    // Wait for a short period to ensure the response is fully received
+    await this.page.waitForTimeout(2000);
+    const terminalOutputRows = await this.containerTerminal.locator('div:has(span)').all();
+    const log: string[] = [];
+    await Promise.all(
+      terminalOutputRows.map(async row => {
+        log.push((await row.textContent()) ?? '');
+      }),
+    );
+    return log;
   }
 }
