@@ -33,7 +33,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui-stress'] }, () => {
-  test(`Verification of ` + (numberOfObjects + 2) + ` images`, async ({ navigationBar }) => {
+  test(`Verification of ${numberOfObjects + 2} images`, async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
     const images = await navigationBar.openImages();
@@ -47,7 +47,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     }
   });
 
-  test(`Verification of ` + 3 * numberOfObjects + ` containers`, async ({ navigationBar }) => {
+  test(`Verification of  ${3 * numberOfObjects} containers`, async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
     const containers = await navigationBar.openContainers();
@@ -63,7 +63,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     }
   });
 
-  test(`Verification of ` + numberOfObjects + ` pods`, async ({ navigationBar }) => {
+  test(`Verification of ${numberOfObjects} pods`, async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
     const pods = await navigationBar.openPods();
