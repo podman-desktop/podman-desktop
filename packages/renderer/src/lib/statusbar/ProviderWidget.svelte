@@ -12,9 +12,15 @@ interface Props {
   entry: ProviderInfo;
   command?: () => void;
   disableTooltip?: boolean;
+  class?: string;
 }
 
-let { entry, command = (): void => router.goto('/preferences/resources'), disableTooltip = false }: Props = $props();
+let {
+  entry,
+  command = (): void => router.goto('/preferences/resources'),
+  disableTooltip = false,
+  class: className,
+}: Props = $props();
 
 let connections = $derived.by(() => {
   if (entry.containerConnections.length > 0) {
@@ -42,10 +48,10 @@ let connections = $derived.by(() => {
   </div>
   <Button
     on:click={command}
-    class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent"
+    class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent {className}"
     aria-label={entry.name}
     padding="px-2 py-1">
-    
+
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
       <ProviderWidgetStatus entry={entry} />
     {/if}

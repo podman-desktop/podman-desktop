@@ -108,3 +108,13 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   expect(screen.getByText(': connection 2')).toBeInTheDocument();
   expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });
+
+test('class props should be propagated to button', async () => {
+  const { getByRole } = render(ProviderWidget, {
+    entry: providerMock,
+    class: 'potatoes',
+  });
+
+  const widget = getByRole('button', { name: 'provider1' });
+  expect(widget).toHaveClass('potatoes');
+});
