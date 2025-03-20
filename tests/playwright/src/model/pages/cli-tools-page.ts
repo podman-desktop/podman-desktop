@@ -163,7 +163,7 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.dropDownDialog).toBeVisible();
 
       if (!version) {
-        version = await this.getLatestVersionNumber();
+        version = await this.getSecondLatestVersionNumber();
       }
 
       await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
