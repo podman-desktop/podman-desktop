@@ -140,6 +140,21 @@ test('Expect to see elements regarding foo provider', async () => {
   expect(button).toHaveTextContent('Connect ...');
 });
 
+test('Expect to scroll to the focused element if focus prop is provided', async () => {
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  const customProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    id: 'test-provider',
+    name: 'Test Provider',
+  };
+  providerInfos.set([customProviderInfo]);
+  render(PreferencesResourcesRendering, { focus: 'test-provider' });
+  await vi.waitFor(() => {
+    // Check if scrollIntoView was called
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+  });
+});
+
 test('Expect to see elements regarding podman provider', async () => {
   providerInfos.set([providerInfo]);
   render(PreferencesResourcesRendering, {});
