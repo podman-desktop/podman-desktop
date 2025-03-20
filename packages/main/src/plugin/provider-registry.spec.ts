@@ -64,9 +64,13 @@ class TestProviderRegistry extends ProviderRegistry {
   getKubernetesProviders(): Map<string, KubernetesProviderConnection> {
     return this.kubernetesProviders;
   }
+  getVmProviders(): Map<string, VmProviderConnection> {
+    return this.vmProviders;
+  }
 }
 
 beforeEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
   vi.restoreAllMocks();
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
@@ -392,23 +396,109 @@ describe('a Kubernetes provider is registered', async () => {
   });
 });
 
-test('should register vm provider', async () => {
-  const provider = providerRegistry.createProvider('id', 'name', {
-    id: 'internal',
-    name: 'internal',
-    status: 'installed',
+describe('registerVmProviderConnection is called on ProviderImpl', async () => {
+  let provider: ProviderImpl;
+  let connection: VmProviderConnection;
+  let disposable: Disposable;
+
+  beforeEach(() => {
+    provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    }) as ProviderImpl;
+
+    connection = {
+      name: 'connection',
+      lifecycle: undefined,
+      status: (): ProviderConnectionStatus => 'started',
+    };
+
+    vi.spyOn(providerRegistry, 'registerVmConnection');
+    vi.spyOn(providerRegistry, 'onDidRegisterVmConnectionCallback');
+    vi.spyOn(providerRegistry, 'onDidUnregisterVmConnectionCallback');
+    disposable = provider.registerVmProviderConnection(connection);
   });
-  const connection: VmProviderConnection = {
-    name: 'connection',
-    lifecycle: undefined,
-    status: () => 'started',
-  };
 
-  providerRegistry.registerVmConnection(provider, connection);
+  test('registerVmConnection is called on registry and provider added to set', async () => {
+    expect(providerRegistry.registerVmConnection).toHaveBeenCalled();
+    expect(providerRegistry.onDidRegisterVmConnectionCallback).toHaveBeenCalled();
+    expect(provider.vmConnections).toHaveLength(1);
+  });
 
-  expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerVmProviderConnection', {
-    name: 'connection',
-    total: 1,
+  test('should be removed from set when disposed', async () => {
+    disposable.dispose();
+    expect(provider.vmConnections).toHaveLength(0);
+    expect(providerRegistry.onDidUnregisterVmConnectionCallback).toHaveBeenCalled();
+  });
+});
+
+describe('a vm provider is registered', async () => {
+  let provider: Provider;
+  let disposable: Disposable;
+  let connection: VmProviderConnection;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    connection = {
+      name: 'connection',
+      lifecycle: undefined,
+      status: (): ProviderConnectionStatus => 'started',
+    };
+
+    disposable = providerRegistry.registerVmConnection(provider, connection);
+  });
+
+  test('should send telemetry and be added to registry', async () => {
+    expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerVmProviderConnection', {
+      name: 'connection',
+      total: 1,
+    });
+
+    expect(providerRegistry.getVmProviders().keys()).toContain('internal.connection');
+  });
+
+  test('should be removed from registry when disposed', async () => {
+    disposable.dispose();
+    expect(providerRegistry.getVmProviders().keys()).not.toContain('internal.connection');
+  });
+
+  test('should send provider-change when status of vm changes', async () => {
+    // status unchanged, do not send event
+    vi.advanceTimersByTime(2005);
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    connection.status = (): ProviderConnectionStatus => 'stopped';
+
+    // status changed, send event
+    vi.advanceTimersByTime(2000);
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should send provider-change when vm provider disposed', async () => {
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    disposable.dispose();
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should not send provider-change when vm provider disposed and status changes', async () => {
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    disposable.dispose();
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+    apiSenderSendMock.mockClear();
+    connection.status = (): ProviderConnectionStatus => 'stopped';
+
+    // status changed, do not send event
+    vi.advanceTimersByTime(20_000);
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
   });
 });
 
