@@ -52,13 +52,19 @@ import { ProviderRegistry } from './provider-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
-let providerRegistry: ProviderRegistry;
+let providerRegistry: TestProviderRegistry;
 let autostartEngine: AutostartEngine;
 
 const telemetryTrackMock = vi.fn();
 const apiSenderSendMock = vi.fn();
 
 let containerRegistry: ContainerProviderRegistry;
+
+class TestProviderRegistry extends ProviderRegistry {
+  getKubernetesProviders(): Map<string, KubernetesProviderConnection> {
+    return this.kubernetesProviders;
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -75,7 +81,7 @@ beforeEach(() => {
     isApiAttached: vi.fn(),
     onApiAttached: vi.fn(),
   } as unknown as ContainerProviderRegistry;
-  providerRegistry = new ProviderRegistry(apiSender, containerRegistry, telemetry);
+  providerRegistry = new TestProviderRegistry(apiSender, containerRegistry, telemetry);
   autostartEngine = {
     registerProvider: vi.fn(),
   } as unknown as AutostartEngine;
@@ -314,26 +320,75 @@ test('expect isProviderContainerConnection returns false with a ProviderKubernet
   expect(res).toBe(false);
 });
 
-test('should register kubernetes provider', async () => {
-  const provider = providerRegistry.createProvider('id', 'name', {
-    id: 'internal',
-    name: 'internal',
-    status: 'installed',
+describe('a Kubernetes provider is registered', async () => {
+  let provider: Provider;
+  let disposable: Disposable;
+  let connection: KubernetesProviderConnection;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    connection = {
+      name: 'connection',
+      endpoint: {
+        apiURL: 'url',
+      },
+      lifecycle: undefined,
+      status: (): ProviderConnectionStatus => 'started',
+    };
+
+    disposable = providerRegistry.registerKubernetesConnection(provider, connection);
   });
-  const connection: KubernetesProviderConnection = {
-    name: 'connection',
-    endpoint: {
-      apiURL: 'url',
-    },
-    lifecycle: undefined,
-    status: () => 'started',
-  };
 
-  providerRegistry.registerKubernetesConnection(provider, connection);
+  test('should send telemetry and be added to registry', async () => {
+    expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerKubernetesProviderConnection', {
+      name: 'connection',
+      total: 1,
+    });
 
-  expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerKubernetesProviderConnection', {
-    name: 'connection',
-    total: 1,
+    expect(providerRegistry.getKubernetesProviders().keys()).toContain('internal.connection');
+  });
+
+  test('should be removed from registry when disposed', async () => {
+    disposable.dispose();
+    expect(providerRegistry.getKubernetesProviders().keys()).not.toContain('internal.connection');
+  });
+
+  test('should send provider-change when status of vm changes', async () => {
+    // status unchanged, do not send event
+    vi.advanceTimersByTime(2005);
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    connection.status = (): ProviderConnectionStatus => 'stopped';
+
+    // status changed, send event
+    vi.advanceTimersByTime(2000);
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should send provider-change when Kubernetes provider disposed', async () => {
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    disposable.dispose();
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should not send provider-change when Kubernetes provider disposed and status changes', async () => {
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
+
+    disposable.dispose();
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+    apiSenderSendMock.mockClear();
+    connection.status = (): ProviderConnectionStatus => 'stopped';
+
+    // status changed, do not send event
+    vi.advanceTimersByTime(20_000);
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
   });
 });
 

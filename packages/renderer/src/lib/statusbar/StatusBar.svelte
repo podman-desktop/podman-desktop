@@ -3,20 +3,15 @@ import { onDestroy, onMount } from 'svelte';
 
 import TaskIndicator from '/@/lib/statusbar/TaskIndicator.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import { providerInfos } from '/@/stores/providers';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
 
 import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statusbar-registry';
-import ProviderWidget from './ProviderWidget.svelte';
+import Providers from './Providers.svelte';
 import StatusBarItem from './StatusBarItem.svelte';
 
 let leftEntries: StatusBarEntry[] = $state([]);
 let rightEntries: StatusBarEntry[] = $state([]);
-
-let containerProviders = $derived($providerInfos.filter(provider => provider.containerConnections.length > 0));
-
-let kubernetesProviders = $derived($providerInfos.filter(provider => provider.kubernetesConnections.length > 0));
 
 let experimentalTaskStatusBar: boolean = $state(false);
 let experimentalProvidersStatusBar: boolean = $state(false);
@@ -95,12 +90,7 @@ onDestroy(() => {
       <StatusBarItem entry={entry} />
     {/each}
     {#if experimentalProvidersStatusBar}
-      {#each containerProviders as entry}
-        <ProviderWidget entry={entry}/>
-      {/each}
-      {#each kubernetesProviders as entry}
-        <ProviderWidget entry={entry}/>
-      {/each}
+      <Providers/>
     {/if}
   </div>
   <div class="flex flex-wrap flex-row-reverse gap-x-1.5 h-full place-self-end">

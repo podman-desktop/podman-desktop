@@ -106,7 +106,7 @@ export class ProviderRegistry {
   private lifecycleListeners: ProviderLifecycleListener[];
   private containerConnectionLifecycleListeners: ContainerConnectionProviderLifecycleListener[];
 
-  private kubernetesProviders: Map<string, KubernetesProviderConnection> = new Map();
+  protected kubernetesProviders: Map<string, KubernetesProviderConnection> = new Map();
 
   private readonly _onDidUpdateProvider = new Emitter<ProviderEvent>();
   readonly onDidUpdateProvider: Event<ProviderEvent> = this._onDidUpdateProvider.event;
@@ -1268,6 +1268,7 @@ export class ProviderRegistry {
     // listen to events
     return Disposable.create(() => {
       clearInterval(timer);
+      this.kubernetesProviders.delete(id);
       this.apiSender.send('provider-change', {});
     });
   }

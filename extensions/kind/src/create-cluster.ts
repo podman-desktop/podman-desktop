@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,8 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
   if (configFile) {
     records.push({
       type: 'warning',
-      record: 'By specifying a config file, all other options will be ignored.',
+      record:
+        'By specifying a config file, all other options will be ignored except for ingress controller deployment.',
     });
   }
 
@@ -208,8 +209,15 @@ export async function createCluster(
         token,
       },
     );
-    if (ingressController) {
-      logger?.log('Creating ingress controller resources');
+
+    // Create ingress controller resources depending on whether a configFile was provided or not
+
+    if (ingressController && configFile) {
+      const configClusterName = await getClusterNameFromConfigFile(configFile);
+      logger?.log('Creating ingress controller from config file namespace: ', configClusterName);
+      await setupIngressController(configClusterName);
+    } else if (ingressController) {
+      logger?.log('Creating ingress controller resources on namespace: ', clusterName);
       await setupIngressController(clusterName);
     }
   } catch (error) {
@@ -231,4 +239,23 @@ export async function createCluster(
     // delete temporary directory/file
     await fs.promises.rm(tmpDirectory, { recursive: true });
   }
+}
+
+// Function reads a path name, opens the yaml file and returns "name" from the kind configuration file
+// if no name is provided, we just use 'kind' which is the default.
+async function getClusterNameFromConfigFile(configFilePath: string): Promise<string> {
+  const configFile = await fs.promises.readFile(configFilePath, 'utf8');
+
+  // We use parseAllDocument as there may be "multiple" yaml documents in the file,
+  // we simply get the first name we find.
+  const documents = parseAllDocuments(configFile);
+  for (const doc of documents) {
+    const config = doc.toJSON();
+    if (config && typeof config === 'object' && 'name' in config && typeof config.name === 'string') {
+      return config.name;
+    }
+  }
+
+  // If no name is found, we return the default name
+  return 'kind';
 }
