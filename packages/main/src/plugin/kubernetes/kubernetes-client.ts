@@ -1189,12 +1189,12 @@ export class KubernetesClient {
     }
 
     try {
-      const ctx = new KubeConfig();
-      ctx.loadFromFile(this.kubeconfigPath);
-      ctx.currentContext = context;
+      const configCopy = new KubeConfig();
+      configCopy.loadFromString(this.kubeConfig.exportConfig());
+      configCopy.currentContext = context;
       const validSpecs = manifests.filter(s => isKubernetesObjectWithKindAndName(s));
 
-      const client = ctx.makeApiClient(KubernetesObjectApi);
+      const client = configCopy.makeApiClient(KubernetesObjectApi);
       const created: KubernetesObject[] = [];
       for (const spec of validSpecs) {
         // this is to convince TypeScript that metadata exists

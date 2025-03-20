@@ -322,7 +322,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  KubeConfig.prototype.loadFromFile = vi.fn();
+  KubeConfig.prototype.loadFromString = vi.fn();
+  KubeConfig.prototype.exportConfig = vi.fn();
   KubeConfig.prototype.makeApiClient = makeApiClientMock;
   KubeConfig.prototype.getContextObject = getContextObjectMock;
   KubeConfig.prototype.currentContext = 'context';
