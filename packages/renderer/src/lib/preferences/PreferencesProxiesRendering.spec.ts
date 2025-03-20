@@ -27,10 +27,18 @@ import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
 import { ProxyState } from '/@api/proxy';
 
 // mock the ui library
-vi.mock(import('@podman-desktop/ui-svelte'));
+vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    Dropdown: vi.fn(),
+  };
+});
 
 beforeEach(() => {
   vi.resetAllMocks();
+
+  vi.mocked(window.getProviderInfos).mockResolvedValue([]);
 });
 
 describe('dropdown', () => {
