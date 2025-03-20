@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Button, Tooltip } from '@podman-desktop/ui-svelte';
+import { Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import type { ProviderInfo } from '/@api/provider-info';
@@ -33,7 +33,6 @@ let connections = $derived.by(() => {
 });
 </script>
 
-<div >
 <Tooltip top class="mb-[20px]">
   <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
@@ -46,12 +45,10 @@ let connections = $derived.by(() => {
       {/each}
     </div>
   </div>
-  <Button
-    on:click={command}
-    class="rounded-none gap-1 flex h-full min-w-fit items-center hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative text-base text-[var(--pd-button-text)] bg-transparent {className}"
-    aria-label={entry.name}
-    padding="px-2 py-1">
-
+  <button
+    onclick={command}
+    class="px-1 py-px flex flex-row h-full items-center gap-1 min-w-fit hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative {className}"
+    aria-label={entry.name}>
     {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
       <ProviderWidgetStatus entry={entry} />
     {/if}
@@ -61,6 +58,5 @@ let connections = $derived.by(() => {
     {#if entry.name}
       <span class="whitespace-nowrap h-fit">{entry.name}</span>
     {/if}
-  </Button>
+  </button>
 </Tooltip>
-</div>
