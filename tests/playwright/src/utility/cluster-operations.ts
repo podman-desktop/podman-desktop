@@ -36,7 +36,7 @@ export async function createKindCluster(
   clusterName: string,
   usedefaultOptions: boolean,
   timeout: number = 300_000,
-  { pathToYaml, providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {},
+  { providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {},
 ): Promise<void> {
   return test.step('Create Kind cluster', async () => {
     const navigationBar = new NavigationBar(page);
@@ -62,7 +62,6 @@ export async function createKindCluster(
       await createKindClusterPage.createClusterParametrized(
         clusterName,
         {
-          pathToYaml: pathToYaml,
           providerType: providerType,
           httpPort: httpPort,
           httpsPort: httpsPort,

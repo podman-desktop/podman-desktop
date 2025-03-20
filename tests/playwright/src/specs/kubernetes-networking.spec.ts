@@ -24,7 +24,7 @@ import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
 import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { expect, test } from '../utility/fixtures';
+import { expect as playExpect, test } from '../utility/fixtures';
 import {
   checkKubernetesResourceState,
   createKubernetesResource,
@@ -101,7 +101,7 @@ test.describe.serial('Kubernetes newtworking E2E tests', { tag: '@k8s_e2e' }, ()
   test('Check Ingress controller pods status', async ({ navigationBar }) => {
     test.setTimeout(160_000);
     const containersPage = await navigationBar.openContainers();
-    await expect.poll(async () => containersPage.getContainerRowByName(KIND_NODE)).toBeTruthy();
+    await playExpect.poll(async () => containersPage.getContainerRowByName(KIND_NODE)).toBeTruthy();
     await containersPage.openContainersDetails(KIND_NODE);
     await detailsPage.activateTab('Terminal');
 
@@ -170,7 +170,7 @@ test.describe.serial('Kubernetes newtworking E2E tests', { tag: '@k8s_e2e' }, ()
 });
 
 async function monitorPodStatusInLogs(podName: string, podStatus: string, replicas: string): Promise<void> {
-  await expect
+  await playExpect
     .poll(
       async () => {
         await detailsPage.executeCommandInTerminal('kubectl get pods -n projectcontour');

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,26 +96,5 @@ export class ContainerDetailsPage extends DetailsPage {
       await this.deployButton.click();
       return new DeployToKubernetesPage(this.page);
     });
-  }
-
-  async executeCommandInTerminal(command: string): Promise<void> {
-    await playExpect(this.terminal).toBeVisible();
-    await this.terminal.click();
-    await this.page.keyboard.insertText(command);
-    await this.page.keyboard.press('Enter');
-  }
-
-  async retrieveTerminalLog(): Promise<string[]> {
-    await playExpect(this.terminal).toBeVisible();
-    // Wait for a short period to ensure the response is fully received
-    await this.page.waitForTimeout(2000);
-    const terminalOutputRows = await this.terminal.locator('div:has(span)').all();
-    const log: string[] = [];
-    await Promise.all(
-      terminalOutputRows.map(async row => {
-        log.push((await row.textContent()) ?? '');
-      }),
-    );
-    return log;
   }
 }
