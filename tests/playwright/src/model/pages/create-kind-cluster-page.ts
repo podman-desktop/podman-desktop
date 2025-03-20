@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   readonly httpPort: Locator;
   readonly httpsPort: Locator;
   readonly containerImage: Locator;
-  readonly pathToKindConfigFile: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -45,9 +44,6 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
     this.httpPort = this.clusterPropertiesInformation.getByLabel('HTTP Port');
     this.httpsPort = this.clusterPropertiesInformation.getByLabel('HTTPS Port');
     this.containerImage = this.clusterPropertiesInformation.getByPlaceholder('Leave empty for using latest.');
-    this.pathToKindConfigFile = this.clusterPropertiesInformation.getByRole('textbox', {
-      name: 'Custom path to Kind config file (Default is blank)',
-    });
   }
 
   public async createClusterDefault(clusterName: string = 'kind-cluster', timeout?: number): Promise<void> {
