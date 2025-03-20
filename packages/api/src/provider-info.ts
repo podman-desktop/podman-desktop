@@ -50,6 +50,12 @@ export interface ProviderKubernetesConnectionInfo {
   lifecycleMethods?: LifecycleMethod[];
 }
 
+export interface ProviderVmConnectionInfo {
+  name: string;
+  status: ProviderConnectionStatus;
+  lifecycleMethods?: LifecycleMethod[];
+}
+
 export interface ProviderInfo {
   internalId: string;
   id: string;

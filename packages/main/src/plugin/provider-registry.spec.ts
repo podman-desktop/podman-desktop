@@ -41,6 +41,7 @@ import type {
   PreflightChecksCallback,
   ProviderContainerConnectionInfo,
   ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
 import type { ApiSenderType } from './api.js';
@@ -48,7 +49,7 @@ import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { LifecycleContextImpl } from './lifecycle-context.js';
 import type { ProviderImpl, VmProviderConnection } from './provider-impl.js';
-import { ProviderRegistry } from './provider-registry.js';
+import { ProviderRegistry, type UpdateVmConnectionEvent } from './provider-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -127,6 +128,31 @@ test('should initialize provider if there is kubernetes connection provider', as
   } else {
     assert.fail('providerInternalId not initialized');
   }
+});
+
+test('should initialize provider if there is VM connection provider', async () => {
+  const providerInternalId = '0';
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+
+  const initializeMock = vi.fn();
+  (provider as ProviderImpl).setVmProviderConnectionFactory({
+    initialize: initializeMock,
+  });
+
+  await providerRegistry.initializeProvider(providerInternalId);
+
+  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+    name: 'internal',
+    status: 'installed',
+  });
+
+  expect(initializeMock).toHaveBeenCalled();
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-create', '0');
 });
 
 test('should send version event if update', async () => {
@@ -626,6 +652,102 @@ describe('should send events when starting a container connection', async () => 
   });
 });
 
+test('should send events when starting a Kubernetes connection', async () => {
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderKubernetesConnectionInfo = {
+    name: 'connection',
+    endpoint: { apiURL: 'endpoint' },
+    status: 'started',
+  };
+
+  provider.registerKubernetesProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    endpoint: {
+      apiURL: 'endpoint',
+    },
+    status() {
+      return 'started';
+    },
+  });
+
+  const onDidUpdateKubernetesConnectionMock = vi.fn<(e: UpdateVmConnectionEvent) => void>();
+  providerRegistry.onDidUpdateKubernetesConnection(onDidUpdateKubernetesConnectionMock);
+
+  await providerRegistry.startProviderConnection('0', connection);
+
+  expect(startMock).toBeCalled();
+  expect(stopMock).not.toBeCalled();
+  expect(onDidUpdateKubernetesConnectionMock).toHaveBeenCalledOnce();
+  expect(onDidUpdateKubernetesConnectionMock).toHaveBeenNthCalledWith(
+    1,
+    expect.objectContaining({
+      connection: expect.objectContaining({
+        name: connection.name,
+      }),
+      status: 'started',
+    }),
+  );
+  const event = onDidUpdateKubernetesConnectionMock.mock.calls[0]?.[0];
+  expect(event?.connection.status()).toEqual('started');
+});
+
+test('should send events when starting a VM connection', async () => {
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderVmConnectionInfo = {
+    name: 'connection',
+    status: 'started',
+  };
+
+  (provider as ProviderImpl).registerVmProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    status() {
+      return 'started';
+    },
+  });
+
+  const onDidUpdateVmConnectionMock = vi.fn<(e: UpdateVmConnectionEvent) => void>();
+  providerRegistry.onDidUpdateVmConnection(onDidUpdateVmConnectionMock);
+
+  await providerRegistry.startProviderConnection('0', connection);
+
+  expect(startMock).toBeCalled();
+  expect(stopMock).not.toBeCalled();
+  expect(onDidUpdateVmConnectionMock).toHaveBeenCalledOnce();
+  expect(onDidUpdateVmConnectionMock).toHaveBeenNthCalledWith(
+    1,
+    expect.objectContaining({
+      connection: expect.objectContaining({
+        name: connection.name,
+      }),
+      status: 'started',
+    }),
+  );
+  const event = onDidUpdateVmConnectionMock.mock.calls[0]?.[0];
+  expect(event?.connection.status()).toEqual('started');
+});
+
 describe('when auto-starting a container connection', async () => {
   let connection: ProviderContainerConnectionInfo;
   let provider: Provider;
@@ -893,6 +1015,104 @@ test('should send events when stopping a container connection', async () => {
   expect(onAfterDidUpdateContainerConnectionCalled).toBeTruthy();
 });
 
+test('should send events when stopping a Kubernetes connection', async () => {
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderKubernetesConnectionInfo = {
+    name: 'connection',
+    endpoint: {
+      apiURL: 'endpoint1',
+    },
+    status: 'stopped',
+  };
+
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+  const onDidUpdateKubernetesConnectionMock = vi.fn<(e: UpdateVmConnectionEvent) => void>();
+
+  provider.registerKubernetesProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    endpoint: {
+      apiURL: 'endpoint1',
+    },
+    status() {
+      return 'stopped';
+    },
+  });
+
+  providerRegistry.onDidUpdateKubernetesConnection(onDidUpdateKubernetesConnectionMock);
+
+  await providerRegistry.stopProviderConnection('0', connection);
+
+  expect(stopMock).toBeCalled();
+  expect(startMock).not.toBeCalled();
+  expect(onDidUpdateKubernetesConnectionMock).toHaveBeenCalledOnce();
+  expect(onDidUpdateKubernetesConnectionMock).toHaveBeenNthCalledWith(
+    1,
+    expect.objectContaining({
+      connection: expect.objectContaining({
+        name: connection.name,
+      }),
+      status: 'stopped',
+    }),
+  );
+  const event = onDidUpdateKubernetesConnectionMock.mock.calls[0]?.[0];
+  expect(event?.connection.status()).toEqual('stopped');
+});
+
+test('should send events when stopping a VM connection', async () => {
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderVmConnectionInfo = {
+    name: 'connection',
+    status: 'stopped',
+  };
+
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+  const onDidUpdateVmConnectionMock = vi.fn<(e: UpdateVmConnectionEvent) => void>();
+
+  (provider as ProviderImpl).registerVmProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    status() {
+      return 'stopped';
+    },
+  });
+
+  providerRegistry.onDidUpdateVmConnection(onDidUpdateVmConnectionMock);
+
+  await providerRegistry.stopProviderConnection('0', connection);
+
+  expect(stopMock).toBeCalled();
+  expect(startMock).not.toBeCalled();
+  expect(onDidUpdateVmConnectionMock).toHaveBeenCalledOnce();
+  expect(onDidUpdateVmConnectionMock).toHaveBeenNthCalledWith(
+    1,
+    expect.objectContaining({
+      connection: expect.objectContaining({
+        name: connection.name,
+      }),
+      status: 'stopped',
+    }),
+  );
+  const event = onDidUpdateVmConnectionMock.mock.calls[0]?.[0];
+  expect(event?.connection.status()).toEqual('stopped');
+});
+
 test('runAutostartContainer should start container and send event', async () => {
   const provider = providerRegistry.createProvider('id', 'name', {
     id: 'internal',
@@ -1020,6 +1240,58 @@ test('should retrieve context of kubernetes provider', async () => {
       },
       endpoint: {
         apiURL: 'url',
+      },
+      status() {
+        return 'stopped';
+      },
+    });
+
+    const context = providerRegistry.getMatchingConnectionLifecycleContext('0', connection);
+    expect(context instanceof LifecycleContextImpl).toBeTruthy();
+
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
+});
+
+test('should retrieve context of VM provider', async () => {
+  let providerInternalId: string | undefined;
+
+  apiSenderSendMock.mockImplementation((_message, data) => {
+    providerInternalId = data;
+  });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+
+  let initalizeCalled = false;
+  (provider as ProviderImpl).setVmProviderConnectionFactory({
+    initialize: async () => {
+      initalizeCalled = true;
+    },
+  });
+
+  expect(providerInternalId).toBeDefined();
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId!);
+
+    const connection: ProviderVmConnectionInfo = {
+      name: 'connection',
+      status: 'stopped',
+    };
+
+    const startMock = vi.fn();
+    const stopMock = vi.fn();
+    (provider as ProviderImpl).registerVmProviderConnection({
+      name: 'connection',
+      lifecycle: {
+        start: startMock,
+        stop: stopMock,
       },
       status() {
         return 'stopped';

@@ -18,14 +18,17 @@
 
 import type {
   Auditor,
+  CancellationToken,
   ContainerProviderConnection,
   ContainerProviderConnectionFactory,
   Event,
   KubernetesProviderConnection,
   KubernetesProviderConnectionFactory,
+  Logger,
   Provider,
   ProviderAutostart,
   ProviderCleanup,
+  ProviderConnectionFactory,
   ProviderConnectionLifecycle,
   ProviderConnectionShellAccess,
   ProviderConnectionStatus,
@@ -56,6 +59,13 @@ export interface VmProviderConnection {
   status(): ProviderConnectionStatus;
 }
 
+// create a Vm provider
+// to be exposed in extension-api.d.ts
+export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
+}
+
 export class ProviderImpl implements Provider, IDisposable {
   private containerProviderConnections: Set<ContainerProviderConnection>;
   private containerProviderConnectionsStatuses: Map<string, ProviderConnectionStatus>;
@@ -64,6 +74,7 @@ export class ProviderImpl implements Provider, IDisposable {
   // optional factory
   private _containerProviderConnectionFactory: ContainerProviderConnectionFactory | undefined = undefined;
   private _kubernetesProviderConnectionFactory: KubernetesProviderConnectionFactory | undefined = undefined;
+  private _vmProviderConnectionFactory: VmProviderConnectionFactory | undefined = undefined;
 
   private _connectionAuditor: Auditor | undefined = undefined;
 
@@ -123,6 +134,10 @@ export class ProviderImpl implements Provider, IDisposable {
 
   get kubernetesProviderConnectionFactory(): KubernetesProviderConnectionFactory | undefined {
     return this._kubernetesProviderConnectionFactory;
+  }
+
+  get vmProviderConnectionFactory(): VmProviderConnectionFactory | undefined {
+    return this._vmProviderConnectionFactory;
   }
 
   get containerProviderConnectionFactory(): ContainerProviderConnectionFactory | undefined {
@@ -244,6 +259,18 @@ export class ProviderImpl implements Provider, IDisposable {
       this.kubernetesProviderConnections.delete(kubernetesProviderConnection);
       disposable.dispose();
       this.providerRegistry.onDidUnregisterKubernetesConnectionCallback(this, kubernetesProviderConnection);
+    });
+  }
+
+  setVmProviderConnectionFactory(
+    vmProviderConnectionFactory: VmProviderConnectionFactory,
+    connectionAuditor?: Auditor,
+  ): Disposable {
+    this._vmProviderConnectionFactory = vmProviderConnectionFactory;
+    this._connectionAuditor = connectionAuditor;
+    return Disposable.create(() => {
+      this._vmProviderConnectionFactory = undefined;
+      this._connectionAuditor = undefined;
     });
   }
 
