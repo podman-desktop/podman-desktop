@@ -43,7 +43,7 @@ test.afterAll(async ({ runner }) => {
 toolsToTest.forEach(tool => {
   test.describe
     .serial('CLI tools tests', () => {
-      test.beforeEach(async ({ navigationBar, page }) => {
+      test.beforeAll(async ({ navigationBar, page }) => {
         settingsBar = await navigationBar.openSettings();
         await settingsBar.cliToolsTab.click();
 
