@@ -31,7 +31,6 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly imageLink: Locator;
   readonly deployButton: Locator;
   readonly startButton: Locator;
-  readonly containerTerminal: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -51,7 +50,6 @@ export class ContainerDetailsPage extends DetailsPage {
       name: 'Start Container',
       exact: true,
     });
-    this.containerTerminal = this.tabContent.locator('.xterm-screen');
   }
 
   async getState(): Promise<string> {
@@ -101,17 +99,17 @@ export class ContainerDetailsPage extends DetailsPage {
   }
 
   async executeCommandInTerminal(command: string): Promise<void> {
-    await playExpect(this.containerTerminal).toBeVisible();
-    await this.containerTerminal.click();
+    await playExpect(this.terminal).toBeVisible();
+    await this.terminal.click();
     await this.page.keyboard.insertText(command);
     await this.page.keyboard.press('Enter');
   }
 
   async retrieveTerminalLog(): Promise<string[]> {
-    await playExpect(this.containerTerminal).toBeVisible();
+    await playExpect(this.terminal).toBeVisible();
     // Wait for a short period to ensure the response is fully received
     await this.page.waitForTimeout(2000);
-    const terminalOutputRows = await this.containerTerminal.locator('div:has(span)').all();
+    const terminalOutputRows = await this.terminal.locator('div:has(span)').all();
     const log: string[] = [];
     await Promise.all(
       terminalOutputRows.map(async row => {
