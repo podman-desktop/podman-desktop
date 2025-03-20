@@ -20,42 +20,52 @@ import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { isLinux, isMac } from '../utility/platform';
+import { waitForPodmanMachineStartup } from '../utility/wait';
 
 let settingsBar: SettingsBar;
 let cliToolsPage: CLIToolsPage;
+const tools = process.env.CLI_TOOLS;
+const allTools = ['Kind', 'Compose', 'kubectl'];
+const toolsToTest = tools === 'all' ? allTools : tools ? tools.split(',') : ['Kind'];
 
 test.skip(!!isLinux || !!isMac, 'Tests suite should not run on Linux or Mac platform');
 
-test.beforeAll(async ({ runner, page, welcomePage, navigationBar }) => {
+test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('cli-tools-e2e');
   await welcomePage.handleWelcomePage(true);
-
-  settingsBar = await navigationBar.openSettings();
-  await settingsBar.cliToolsTab.click();
-
-  cliToolsPage = new CLIToolsPage(page);
-  await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
-  await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
-  await cliToolsPage.uninstallTool('Kind');
-  await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
+  await waitForPodmanMachineStartup(page);
 });
 
 test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('CLI tools tests', { tag: '@smoke' }, () => {
-  test('Install -> downgrade -> uninstall', async () => {
-    await cliToolsPage.installTool('Kind');
-    await cliToolsPage.downgradeTool('Kind');
-    await cliToolsPage.uninstallTool('Kind');
-    await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
-  });
+toolsToTest.forEach(tool => {
+  test.describe
+    .serial('CLI tools tests', () => {
+      test.beforeEach(async ({ navigationBar, page }) => {
+        settingsBar = await navigationBar.openSettings();
+        await settingsBar.cliToolsTab.click();
 
-  test('Install old version -> upgrade -> uninstall', async () => {
-    await cliToolsPage.installToolWithSecondLatestVersion('Kind');
-    await cliToolsPage.updateTool('Kind');
-    await cliToolsPage.uninstallTool('Kind');
-    await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion('Kind')).toBeFalsy();
-  });
+        cliToolsPage = new CLIToolsPage(page);
+        await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+        await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+        await cliToolsPage.uninstallTool(tool);
+        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+      });
+
+      test(`Install ${tool} -> downgrade -> uninstall`, async () => {
+        await cliToolsPage.installTool(tool);
+        await cliToolsPage.downgradeTool(tool);
+        await cliToolsPage.uninstallTool(tool);
+        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+      });
+
+      test(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
+        await cliToolsPage.installToolWithSecondLatestVersion(tool);
+        await cliToolsPage.updateTool(tool);
+        await cliToolsPage.uninstallTool(tool);
+        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+      });
+    });
 });
