@@ -5,7 +5,7 @@ let dropDownHeight: number;
 let dropDownWidth: number;
 let dropDownElement: HTMLElement;
 
-const STATUS_BAR_HEIGHT = 24;
+const STATUS_BAR_HEIGHT = 26;
 
 function updateMenuLocation(): void {
   dropDownElement.style.top = `${window.innerHeight - dropDownHeight - STATUS_BAR_HEIGHT}px`;
@@ -20,7 +20,7 @@ onMount(() => {
 onDestroy(() => window.removeEventListener('resize', updateMenuLocation));
 </script>
 
-<div 
+<div
   bind:offsetHeight={dropDownHeight}
   bind:offsetWidth={dropDownWidth}
   bind:this={dropDownElement}
