@@ -33,7 +33,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui-stress'] }, () => {
-  test(`Verification of ` + numberOfObjects + 2 + ` images`, async ({ navigationBar }) => {
+  test(`Verification of ` + (numberOfObjects + 2) + ` images`, async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
     const images = await navigationBar.openImages();
