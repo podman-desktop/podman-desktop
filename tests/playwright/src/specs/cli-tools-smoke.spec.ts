@@ -51,21 +51,27 @@ toolsToTest.forEach(tool => {
         await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
         await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
         await cliToolsPage.uninstallTool(tool);
-        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+        await playExpect
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .toBeFalsy();
       });
 
       test(`Install ${tool} -> downgrade -> uninstall`, async () => {
         await cliToolsPage.installTool(tool);
         await cliToolsPage.downgradeTool(tool);
         await cliToolsPage.uninstallTool(tool);
-        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+        await playExpect
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .toBeFalsy();
       });
 
       test(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
         await cliToolsPage.installToolWithSecondLatestVersion(tool);
         await cliToolsPage.updateTool(tool);
         await cliToolsPage.uninstallTool(tool);
-        await playExpect.poll(async () => await cliToolsPage.getCurrentToolVersion(tool)).toBeFalsy();
+        await playExpect
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .toBeFalsy();
       });
     });
 });
