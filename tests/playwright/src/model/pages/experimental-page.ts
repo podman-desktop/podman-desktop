@@ -25,6 +25,7 @@ export class ExperimentalPage extends SettingsPage {
   readonly heading: Locator;
   readonly enableAllExperimentalFeaturesCheckbox: Locator;
   readonly enableAllExperimentalFeaturesButton: Locator;
+  readonly dockerCompatibilityCheckbox: Locator;
 
   constructor(page: Page) {
     super(page, 'Experimental');
@@ -33,6 +34,9 @@ export class ExperimentalPage extends SettingsPage {
       .getByRole('checkbox')
       .and(this.content.locator('#input-experimental-enable-all'));
     this.enableAllExperimentalFeaturesButton = this.enableAllExperimentalFeaturesCheckbox.locator('..');
+    this.dockerCompatibilityCheckbox = this.content.getByRole('checkbox', {
+      name: 'Enable the section for Docker compatibility.',
+    });
   }
 
   public async enableAllExperimentalFeatures(): Promise<void> {

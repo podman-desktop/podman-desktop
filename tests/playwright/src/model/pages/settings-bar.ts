@@ -57,7 +57,7 @@ export class SettingsBar {
   }
 
   public getPreferencesLinkLocator(label: string): Locator {
-    return this.settingsNavBar.getByRole('link', { name: label });
+    return this.settingsNavBar.getByRole('link', { name: label, exact: true });
   }
 
   public async expandPreferencesTab(): Promise<void> {
