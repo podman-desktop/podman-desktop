@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,18 @@ const providerMock = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+});
+
+test('Check basic styling', async () => {
+  render(ProviderWidget, { entry: providerMock });
+
+  const widget = screen.getByRole('button', { name: 'provider1' });
+  expect(widget).toBeInTheDocument();
+  expect(widget).toHaveClass('items-center');
+  expect(widget).toHaveClass('hover:bg-[var(--pd-statusbar-hover-bg)]');
+  expect(widget).toHaveClass('hover:cursor-pointer');
+  expect(widget).toHaveClass('relative');
+  expect(widget.ariaLabel).toEqual(providerMock.name);
 });
 
 test('Provider widget takes user to /preferences/resources on click by default', async () => {
