@@ -682,10 +682,17 @@ export class ProviderRegistry {
     return this.getProviderConnectionInfo(connection) as ProviderKubernetesConnectionInfo;
   }
 
+  public getProviderVmConnectionInfo(connection: VmProviderConnection): ProviderVmConnectionInfo {
+    return this.getProviderConnectionInfo(connection) as ProviderVmConnectionInfo;
+  }
+
   private getProviderConnectionInfo(
-    connection: ContainerProviderConnection | KubernetesProviderConnection,
-  ): ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo {
-    let providerConnection: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
+    connection: ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection,
+  ): ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | ProviderVmConnectionInfo {
+    let providerConnection:
+      | ProviderContainerConnectionInfo
+      | ProviderKubernetesConnectionInfo
+      | ProviderVmConnectionInfo;
     if (this.isContainerConnection(connection)) {
       providerConnection = {
         name: connection.name,
@@ -702,13 +709,18 @@ export class ProviderRegistry {
             }
           : undefined,
       };
-    } else {
+    } else if (this.isKubernetesConnection(connection)) {
       providerConnection = {
         name: connection.name,
         status: connection.status(),
         endpoint: {
           apiURL: connection.endpoint.apiURL,
         },
+      };
+    } else {
+      providerConnection = {
+        name: connection.name,
+        status: connection.status(),
       };
     }
     if (connection.lifecycle) {
@@ -737,6 +749,9 @@ export class ProviderRegistry {
     const kubernetesConnections: ProviderKubernetesConnectionInfo[] = provider.kubernetesConnections.map(connection => {
       return this.getProviderKubernetesConnectionInfo(connection);
     });
+    const vmConnections: ProviderVmConnectionInfo[] = provider.vmConnections.map(connection => {
+      return this.getProviderVmConnectionInfo(connection);
+    });
 
     // container connection factory ?
     let containerProviderConnectionInitialization = false;
@@ -748,6 +763,12 @@ export class ProviderRegistry {
     let kubernetesProviderConnectionCreation = false;
     if (provider?.kubernetesProviderConnectionFactory?.create) {
       kubernetesProviderConnectionCreation = true;
+    }
+
+    // VM connection factory ?
+    let vmProviderConnectionCreation = false;
+    if (provider?.vmProviderConnectionFactory?.create) {
+      vmProviderConnectionCreation = true;
     }
 
     // container connection factory ?
@@ -766,10 +787,19 @@ export class ProviderRegistry {
       provider.kubernetesProviderConnectionFactory?.creationDisplayName;
     const kubernetesProviderConnectionCreationButtonTitle =
       provider.kubernetesProviderConnectionFactory?.creationButtonTitle;
-    const emptyConnectionMarkdownDescription = provider.emptyConnectionMarkdownDescription;
     if (provider?.kubernetesProviderConnectionFactory?.initialize) {
       kubernetesProviderConnectionInitialization = true;
     }
+
+    // VM connection factory ?
+    let vmProviderConnectionInitialization = false;
+    const vmProviderConnectionCreationDisplayName = provider.vmProviderConnectionFactory?.creationDisplayName;
+    const vmProviderConnectionCreationButtonTitle = provider.vmProviderConnectionFactory?.creationButtonTitle;
+    if (provider?.vmProviderConnectionFactory?.initialize) {
+      vmProviderConnectionInitialization = true;
+    }
+
+    const emptyConnectionMarkdownDescription = provider.emptyConnectionMarkdownDescription;
 
     // handle installation
     let installationSupport = false;
@@ -790,15 +820,20 @@ export class ProviderRegistry {
       name: provider.name,
       containerConnections,
       kubernetesConnections,
+      vmConnections,
       status: provider.status,
       containerProviderConnectionCreation,
       kubernetesProviderConnectionCreation,
+      vmProviderConnectionCreation,
       containerProviderConnectionInitialization,
       containerProviderConnectionCreationDisplayName,
       containerProviderConnectionCreationButtonTitle,
       kubernetesProviderConnectionInitialization,
       kubernetesProviderConnectionCreationDisplayName,
       kubernetesProviderConnectionCreationButtonTitle,
+      vmProviderConnectionInitialization,
+      vmProviderConnectionCreationDisplayName,
+      vmProviderConnectionCreationButtonTitle,
       emptyConnectionMarkdownDescription,
       links: provider.links,
       detectionChecks: provider.detectionChecks,
@@ -1054,7 +1089,15 @@ export class ProviderRegistry {
   isContainerConnection(
     connection: ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection,
   ): connection is ContainerProviderConnection {
-    return (connection as ContainerProviderConnection).endpoint.socketPath !== undefined;
+    return (connection as ContainerProviderConnection).endpoint?.socketPath !== undefined;
+  }
+
+  isKubernetesConnection(
+    connection: ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection,
+  ): connection is KubernetesProviderConnection {
+    return (
+      !this.isContainerConnection(connection) && (connection as ContainerProviderConnection).endpoint !== undefined
+    );
   }
 
   async startProviderConnection(
