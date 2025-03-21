@@ -15,7 +15,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
     <tr>
       <Cell>Access Modes</Cell>
       <Cell>
-        {#each artifact.accessModes as mode}
+        {#each artifact.accessModes as mode (mode)}
           <div>{mode}</div>
         {/each}
       </Cell>
@@ -40,7 +40,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
         <Cell>
           <table>
             <tbody>
-              {#each Object.entries(artifact.resources.requests) as [resourceType, quantity]}
+              {#each Object.entries(artifact.resources.requests) as [resourceType, quantity] (resourceType)}
                 <tr>
                   <Cell>{resourceType}: {quantity}</Cell>
                 </tr>
@@ -57,7 +57,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
       <Cell>
         <table>
           <tbody>
-            {#each Object.entries(artifact.resources.limits) as [resourceType, quantity]}
+            {#each Object.entries(artifact.resources.limits) as [resourceType, quantity] (resourceType)}
               <tr>
                 <Cell>{resourceType}: {quantity}</Cell>
               </tr>
@@ -74,7 +74,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
         <Cell>
           <table>
             <tbody>
-              {#each Object.entries(artifact.selector.matchLabels) as [label, value]}
+              {#each Object.entries(artifact.selector.matchLabels) as [label, value] (label)}
                 <tr>
                   <Cell>Match Label: {label}</Cell>
                   <Cell>{value}</Cell>

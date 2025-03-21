@@ -38,7 +38,7 @@ let { kind, artifact, resourceName, namespace }: Props = $props();
     <tr>
       <Cell>Environment Variables</Cell>
       <Cell>
-        {#each artifact.env ? artifact.env.map(e => `${e.name}: ${e.value}`) : [] as env}
+        {#each artifact.env ? artifact.env.map(e => `${e.name}: ${e.value}`) : [] as env (env)}
           <div>{env}</div>
         {/each}
       </Cell>

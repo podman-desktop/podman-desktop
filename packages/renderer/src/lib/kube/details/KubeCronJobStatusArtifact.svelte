@@ -31,7 +31,7 @@ let { artifact }: Props = $props();
       <tr>
         <Cell>Active Jobs</Cell>
         <Cell>
-              {#each artifact.active as job}
+              {#each artifact.active as job (job.name)}
                   {job.name}
                   <br />
               {/each}

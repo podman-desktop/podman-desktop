@@ -21,7 +21,7 @@ export let artifact: V1NodeSpec | undefined;
     <tr>
       <Cell>Pod CIDRs</Cell>
       <Cell>
-        {#each artifact.podCIDRs as cidr}
+        {#each artifact.podCIDRs as cidr (cidr)}
           <div>{cidr}</div>
         {/each}
       </Cell>
