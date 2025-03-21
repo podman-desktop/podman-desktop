@@ -36,6 +36,11 @@ let connections = $derived.by(() => {
 <Tooltip top class="mb-[20px]">
   <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
+      {#if entry.updateInfo?.version}
+        <div class="flex flex-row h-fit pb-1">
+          Update available
+        </div>
+      {/if}
       {#each connections as connection}
         <div class="flex flex-row items-center h-fit">
           <ProviderWidgetStatus status={connection.status} class="mr-1"/>
@@ -43,12 +48,6 @@ let connections = $derived.by(() => {
           : {connection.name}
         </div>
       {/each}
-      {#if entry.updateInfo?.version}
-        <div class="flex flex-row items-center h-fit">
-          <ProviderWidgetStatus status="Update available" class="mr-1"/>
-          Update available
-        </div>
-      {/if}
     </div>
   </div>
   <button
