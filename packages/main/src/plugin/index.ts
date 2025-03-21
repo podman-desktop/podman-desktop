@@ -2648,6 +2648,10 @@ export class PluginSystem {
       return kubernetesClient.getCurrentNamespace();
     });
 
+    this.ipcHandle('kubernetes-client:setCurrentNamespace', async (_listener, namespace: string): Promise<void> => {
+      return kubernetesClient.setCurrentNamespace(namespace);
+    });
+
     this.ipcHandle(
       'kubernetes-client:deleteContext',
       async (_listener, contextName: string): Promise<KubernetesContext[]> => {

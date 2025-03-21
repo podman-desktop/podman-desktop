@@ -1906,6 +1906,10 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes-client:getCurrentNamespace');
   });
 
+  contextBridge.exposeInMainWorld('kubernetesSetCurrentNamespace', async (namespace: string): Promise<void> => {
+    return ipcInvoke('kubernetes-client:setCurrentNamespace', namespace);
+  });
+
   contextBridge.exposeInMainWorld(
     'kubernetesListNamespacedPod',
     async (namespace: string, fieldSelector?: string, labelSelector?: string): Promise<V1PodList> => {

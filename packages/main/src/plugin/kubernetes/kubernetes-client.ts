@@ -990,6 +990,35 @@ export class KubernetesClient {
     }
   }
 
+  // setCurrentNamespace changes the current namespace without updating the kubeconfig file
+  async setCurrentNamespace(namespace: string): Promise<void> {
+    // Set the new namespace and clear cached data
+    this.currentNamespace = namespace;
+
+    this.#execs.forEach(entry => entry.conn.close());
+    this.#execs.clear();
+
+    // Update state with a copy of the kubeConfig with only the current namespace changed
+    const newConfig = new KubeConfig();
+    newConfig.loadFromOptions({
+      contexts: this.kubeConfig.contexts.map(ctx =>
+        ctx.name !== this.kubeConfig.currentContext
+          ? ctx
+          : {
+              name: ctx.name,
+              cluster: ctx.cluster,
+              namespace: namespace,
+              user: ctx.user,
+            },
+      ),
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.kubeConfig.currentContext,
+    });
+    await this.contextsState.update(newConfig);
+    this.apiSender.send('kubernetes-context-update');
+  }
+
   // Check that we can connect to the cluster and return a Promise<boolean> of true or false depending on the result.
   // We will check via the health check on the cluster of the current context, with a short timeout.
   async checkConnection(): Promise<boolean> {
