@@ -136,7 +136,8 @@ onDestroy(() => {
     <svelte:fragment slot="subtitle">
       {#if image.badges.length}
         <div class="flex flex-row">
-          {#each image.badges as badge}
+          {#each image.badges as badge (badge.label)}
+          {console.log(image.badges)}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>

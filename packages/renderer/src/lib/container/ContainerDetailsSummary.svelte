@@ -78,7 +78,7 @@ if (container.groupInfo.created) {
       </DetailsCell>
       <DetailsCell>
         {#if labelsDropdownOpen}
-          {#each Object.entries(container.labels) as [key, value]}
+          {#each Object.entries(container.labels) as [key, value] (key)}
             {key}: {value}
             <br />
           {/each}
