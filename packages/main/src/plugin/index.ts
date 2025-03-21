@@ -172,7 +172,7 @@ import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
-import type { MessageBoxOptions, MessageBoxReturnValue } from './message-box.js';
+import type { MessageBoxOptions, MessageBoxReturnValue, RemindOption } from './message-box.js';
 import { MessageBox } from './message-box.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
@@ -1894,8 +1894,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'showMessageBox:onSelect',
-      async (_listener, id: number, index: number | undefined): Promise<void> => {
-        return messageBox.onDidSelectButton(id, index);
+      async (_listener, id: number, index: number | undefined, option: RemindOption | undefined): Promise<void> => {
+        return messageBox.onDidSelectButton(id, index, option);
       },
     );
 

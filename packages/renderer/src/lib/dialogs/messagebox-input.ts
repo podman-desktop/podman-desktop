@@ -16,12 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ButtonType } from '../../../../main/src/plugin/message-box';
+
 export interface MessageBoxOptions {
   id: number;
   title: string;
   message: string;
   detail?: string;
-  buttons?: string[];
+  buttons?: ButtonType[];
   type?: string;
   defaultId?: number;
   cancelId?: number;
