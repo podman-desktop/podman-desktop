@@ -13,6 +13,7 @@ interface Props {
   command?: () => void;
   disableTooltip?: boolean;
   class?: string;
+  tooltipTopRight?: boolean;
 }
 
 let {
@@ -20,6 +21,7 @@ let {
   command = (): void => router.goto('/preferences/resources'),
   disableTooltip = false,
   class: className,
+  tooltipTopRight = false,
 }: Props = $props();
 
 let connections = $derived.by(() => {
@@ -33,7 +35,7 @@ let connections = $derived.by(() => {
 });
 </script>
 
-<Tooltip top class="mb-[20px]">
+<Tooltip top={!tooltipTopRight} topRight={tooltipTopRight} class="mb-[20px]">
   <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
       {#each connections as connection}
