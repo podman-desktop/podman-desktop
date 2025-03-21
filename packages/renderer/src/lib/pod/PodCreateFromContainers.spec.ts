@@ -60,6 +60,9 @@ const providerInfo: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
   extensionId: '',
   cleanupSupport: false,
+  vmConnections: [],
+  vmProviderConnectionCreation: false,
+  vmProviderConnectionInitialization: false,
 };
 
 const podCreation: PodCreation = {

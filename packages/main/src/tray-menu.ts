@@ -79,6 +79,7 @@ export class TrayMenu {
             status: 'unknown',
             containerConnections: [],
             kubernetesConnections: [],
+            vmConnections: [],
             lifecycleMethods: [],
             detectionChecks: [],
             version: '',
@@ -88,8 +89,10 @@ export class TrayMenu {
             installationSupport: false,
             containerProviderConnectionCreation: false,
             kubernetesProviderConnectionCreation: false,
+            vmProviderConnectionCreation: false,
             containerProviderConnectionInitialization: false,
             kubernetesProviderConnectionInitialization: false,
+            vmProviderConnectionInitialization: false,
             cleanupSupport: false,
             extensionId: '',
           });
