@@ -86,6 +86,7 @@ test('provider with container connection should be displayed', () => {
   expect(ProviderWidget).toHaveBeenCalledOnce();
   expect(ProviderWidget).toHaveBeenCalledWith(expect.anything(), {
     entry: CONTAINER_PROVIDER_MOCK,
+    tooltipTopRight: true,
   });
 });
 
@@ -99,5 +100,21 @@ test('provider with kubernetes connection should be displayed', () => {
   expect(ProviderWidget).toHaveBeenCalledOnce();
   expect(ProviderWidget).toHaveBeenCalledWith(expect.anything(), {
     entry: KUBERNETES_PROVIDER_MOCK,
+    tooltipTopRight: true,
+  });
+});
+
+test('Expect first provider to have a top right tooltip', () => {
+  providerInfos.set([CONTAINER_PROVIDER_MOCK, KUBERNETES_PROVIDER_MOCK]);
+
+  render(Providers);
+
+  expect(ProviderWidget).toHaveBeenNthCalledWith(1, expect.anything(), {
+    entry: CONTAINER_PROVIDER_MOCK,
+    tooltipTopRight: true,
+  });
+  expect(ProviderWidget).toHaveBeenNthCalledWith(2, expect.anything(), {
+    entry: KUBERNETES_PROVIDER_MOCK,
+    tooltipTopRight: false,
   });
 });
