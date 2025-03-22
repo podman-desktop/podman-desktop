@@ -26,9 +26,5 @@ setTemplate(template);
     {#snippet title()}
       Title
     {/snippet}
-    <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
-    {#snippet children()}
-      Children
-    {/snippet}
   </Expandable>
 </Story>
