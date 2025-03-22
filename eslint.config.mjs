@@ -267,7 +267,7 @@ export default [
       'unicorn/prefer-node-protocol': 'off',
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
-      'svelte/no-useless-children-snippet': 'off',
+      'svelte/no-useless-children-snippet': 'error',
       'svelte/require-each-key': 'off',
       'svelte/no-reactive-literals': 'error',
     },
