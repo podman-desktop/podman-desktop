@@ -420,6 +420,61 @@ describe('a Kubernetes provider is registered', async () => {
     vi.advanceTimersByTime(20_000);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
   });
+
+  test('should retrieve provider info for Kubernetes provider without factory', async () => {
+    provider.registerKubernetesProviderConnection({
+      name: 'conn1',
+      endpoint: { apiURL: 'url' },
+      status: () => 'stopped',
+    });
+
+    const provider1 = providerRegistry.getProviderInfo('0');
+
+    expect(provider1).toBeDefined();
+
+    expect(provider1?.id).toBe('internal');
+    expect(provider1?.name).toBe('internal');
+    expect(provider1?.extensionId).toBe('id');
+
+    expect(provider1?.kubernetesConnections).toHaveLength(1);
+    expect(provider1?.kubernetesConnections[0]?.name).toEqual('conn1');
+    expect(provider1?.kubernetesConnections[0]?.endpoint?.apiURL).toEqual('url');
+    expect(provider1?.kubernetesConnections[0]?.status).toEqual('stopped');
+    expect(provider1?.kubernetesProviderConnectionCreation).toBeFalsy();
+    expect(provider1?.kubernetesProviderConnectionInitialization).toBeFalsy();
+    expect(provider1?.kubernetesProviderConnectionCreationButtonTitle).toBeUndefined();
+    expect(provider1?.kubernetesProviderConnectionCreationDisplayName).toBeUndefined();
+  });
+
+  test('should retrieve provider info for Kubernetes provider with factory', async () => {
+    provider.registerKubernetesProviderConnection({
+      name: 'conn1',
+      endpoint: { apiURL: 'url' },
+      status: () => 'stopped',
+    });
+    provider.setKubernetesProviderConnectionFactory({
+      create: async () => {},
+      initialize: async () => {},
+      creationButtonTitle: 'my create',
+      creationDisplayName: 'my display name',
+    });
+    const provider1 = providerRegistry.getProviderInfo('0');
+
+    expect(provider1).toBeDefined();
+
+    expect(provider1?.id).toBe('internal');
+    expect(provider1?.name).toBe('internal');
+    expect(provider1?.extensionId).toBe('id');
+
+    expect(provider1?.kubernetesConnections).toHaveLength(1);
+    expect(provider1?.kubernetesConnections[0]?.name).toEqual('conn1');
+    expect(provider1?.kubernetesConnections[0]?.endpoint?.apiURL).toEqual('url');
+    expect(provider1?.kubernetesConnections[0]?.status).toEqual('stopped');
+    expect(provider1?.kubernetesProviderConnectionCreation).toBeTruthy();
+    expect(provider1?.kubernetesProviderConnectionInitialization).toBeTruthy();
+    expect(provider1?.kubernetesProviderConnectionCreationButtonTitle).toBe('my create');
+    expect(provider1?.kubernetesProviderConnectionCreationDisplayName).toBe('my display name');
+  });
 });
 
 describe('registerVmProviderConnection is called on ProviderImpl', async () => {
@@ -525,6 +580,57 @@ describe('a vm provider is registered', async () => {
     // status changed, do not send event
     vi.advanceTimersByTime(20_000);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should retrieve provider info for VM provider without factory', async () => {
+    (provider as ProviderImpl).registerVmProviderConnection({
+      name: 'conn1',
+      status: () => 'stopped',
+    });
+
+    const provider1 = providerRegistry.getProviderInfo('0');
+
+    expect(provider1).toBeDefined();
+
+    expect(provider1?.id).toBe('internal');
+    expect(provider1?.name).toBe('internal');
+    expect(provider1?.extensionId).toBe('id');
+
+    expect(provider1?.vmConnections).toHaveLength(1);
+    expect(provider1?.vmConnections[0]?.name).toEqual('conn1');
+    expect(provider1?.vmConnections[0]?.status).toEqual('stopped');
+    expect(provider1?.vmProviderConnectionCreation).toBeFalsy();
+    expect(provider1?.vmProviderConnectionInitialization).toBeFalsy();
+    expect(provider1?.vmProviderConnectionCreationButtonTitle).toBeUndefined();
+    expect(provider1?.vmProviderConnectionCreationDisplayName).toBeUndefined();
+  });
+
+  test('should retrieve provider info for VM provider with factory', async () => {
+    (provider as ProviderImpl).registerVmProviderConnection({
+      name: 'conn1',
+      status: () => 'stopped',
+    });
+    (provider as ProviderImpl).setVmProviderConnectionFactory({
+      create: async () => {},
+      initialize: async () => {},
+      creationButtonTitle: 'my create',
+      creationDisplayName: 'my display name',
+    });
+    const provider1 = providerRegistry.getProviderInfo('0');
+
+    expect(provider1).toBeDefined();
+
+    expect(provider1?.id).toBe('internal');
+    expect(provider1?.name).toBe('internal');
+    expect(provider1?.extensionId).toBe('id');
+
+    expect(provider1?.vmConnections).toHaveLength(1);
+    expect(provider1?.vmConnections[0]?.name).toEqual('conn1');
+    expect(provider1?.vmConnections[0]?.status).toEqual('stopped');
+    expect(provider1?.vmProviderConnectionCreation).toBeTruthy();
+    expect(provider1?.vmProviderConnectionInitialization).toBeTruthy();
+    expect(provider1?.vmProviderConnectionCreationButtonTitle).toBe('my create');
+    expect(provider1?.vmProviderConnectionCreationDisplayName).toBe('my display name');
   });
 });
 

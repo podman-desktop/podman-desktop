@@ -50,6 +50,9 @@ const containerProviderInfo: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
   extensionId: '',
   cleanupSupport: false,
+  vmConnections: [],
+  vmProviderConnectionCreation: false,
+  vmProviderConnectionInitialization: false,
 };
 
 const containerConnection: ProviderContainerConnectionInfo = {
