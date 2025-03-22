@@ -78,7 +78,10 @@ export async function deleteKubernetesResource(
     const kubernetesBar = await navigationBar.openKubernetes();
     const pvcsPage = await kubernetesBar.openTabPage(resourceType);
     await pvcsPage.deleteKubernetesResource(resourceName);
-    await handleConfirmationDialog(page);
+    //There is no a confirmation dialog when deleting a Ingress resource: https://github.com/podman-desktop/podman-desktop/issues/11751
+    if (resourceType !== KubernetesResources.IngeressesRoutes) {
+      await handleConfirmationDialog(page);
+    }
     await playExpect(pvcsPage.getResourceRowByName(resourceName)).not.toBeVisible({ timeout: 30_000 });
   });
 }
