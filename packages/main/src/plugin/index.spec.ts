@@ -433,12 +433,21 @@ describe.each<{
     methodName: 'createKubernetesProviderConnection',
   },
 ])('$handler', async ({ handler, methodName }) => {
-  test('createTask is called', async () => {
-    vi.spyOn(TaskManager.prototype, 'createTask');
+  let originalTask: Task;
+
+  beforeEach(() => {
+    originalTask = {
+      status: 'in-progress',
+      error: '',
+    } as unknown as Task;
+    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
     vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
     vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
       name: 'provider1',
     } as ProviderInfo);
+  });
+
+  test('createTask is called', async () => {
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
@@ -451,6 +460,8 @@ describe.each<{
     }
     expect(params.title).toEqual(`Creating provider1 provider`);
     expect(params.action?.name).toEqual(`Open task`);
+
+    // check that action.execute passed to createTask is calling navigateToProviderTask
     const execute = params.action?.execute;
     expect(execute).toBeDefined();
     if (!execute) {
@@ -462,15 +473,6 @@ describe.each<{
   });
 
   test(`${methodName} is called and is resolved`, async () => {
-    const originalTask = {
-      status: 'in-progress',
-      error: '',
-    } as unknown as Task;
-    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
-    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
-    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
-      name: 'provider1',
-    } as ProviderInfo);
     vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
@@ -490,15 +492,6 @@ describe.each<{
   });
 
   test(`${methodName} is called and is rejected`, async () => {
-    const originalTask = {
-      status: 'in-progress',
-      error: '',
-    } as unknown as Task;
-    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
-    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
-    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
-      name: 'provider1',
-    } as ProviderInfo);
     const rejectError = new Error('an error');
     vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
