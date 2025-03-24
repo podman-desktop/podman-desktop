@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023, 2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ export class AppearanceInit {
     this.configurationRegistry.registerConfigurations([appearanceConfiguration]);
 
     this.configurationRegistry.onDidChangeConfiguration(async e => {
-      if (e.key === APPEARANCE_FULL_KEY) {
+      if (e.key === APPEARANCE_FULL_KEY && typeof e.value === 'string') {
         this.updateNativeTheme(e.value);
       }
     });

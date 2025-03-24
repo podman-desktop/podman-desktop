@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,7 @@ export type IConfigurationPropertySchemaType =
 
 export interface IConfigurationChangeEvent {
   key: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
+  value: unknown;
   scope: containerDesktopAPI.ConfigurationScope;
 }
 
@@ -58,8 +57,7 @@ export interface IConfigurationPropertyRecordedSchema extends IConfigurationProp
 export interface IConfigurationPropertySchema {
   id?: string;
   type?: IConfigurationPropertySchemaType | IConfigurationPropertySchemaType[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default?: any;
+  default?: unknown;
   group?: string;
   description?: string;
   placeholder?: string;
@@ -124,8 +122,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this._onDidChangeConfigurationAPI.event;
 
   // Contains the value of the current configuration
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private configurationValues: Map<string, any>;
+  private configurationValues: Map<string, { [key: string]: unknown }>;
 
   constructor(
     private apiSender: ApiSenderType,
@@ -155,7 +152,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     }
 
     const settingsRawContent = fs.readFileSync(settingsFile, 'utf-8');
-    let configData: unknown;
+    let configData: { [key: string]: unknown };
     try {
       configData = JSON.parse(settingsRawContent);
     } catch (error) {
@@ -194,6 +191,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   doRegisterConfigurations(configurations: IConfigurationNode[], notify?: boolean): string[] {
     const properties: string[] = [];
+    // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
       for (const key in configuration.properties) {
         properties.push(key);
@@ -208,12 +206,15 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
         }
 
         // register default if not yet set
-        if (
-          configProperty.default &&
-          this.isDefaultScope(configProperty.scope) &&
-          this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)[key] === undefined
-        ) {
-          this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)[key] = configProperty.default;
+        const configurationValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE);
+        if (configurationValue !== undefined) {
+          if (
+            configProperty.default &&
+            this.isDefaultScope(configProperty.scope) &&
+            configurationValue[key] === undefined
+          ) {
+            configurationValue[key] = configProperty.default;
+          }
         }
         if (!configProperty.scope) {
           configProperty.scope = CONFIGURATION_DEFAULT_SCOPE;
@@ -286,8 +287,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   async updateConfigurationValue(
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
     if (Array.isArray(scope)) {
@@ -314,8 +314,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   async updateSingleScopeConfigurationValue(
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     scope?: containerDesktopAPI.ConfigurationScope,
   ): Promise<void> {
     // extract parent key with first name before first . notation
@@ -388,7 +387,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
       // if the current value is the enum being removed, need to switch back to the previous element
       // current scope
-      const currentValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)[key];
+      const currentValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)?.[key];
 
       if (values.some(val => val === currentValue)) {
         this.updateConfigurationValue(key, valueWhenRemoved).catch((e: unknown) =>
