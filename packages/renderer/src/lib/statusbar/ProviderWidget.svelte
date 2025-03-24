@@ -2,9 +2,9 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import IconImage from '../appearance/IconImage.svelte';
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 import ProviderWidgetStatusStyle from './ProviderWidgetStatusStyle.svelte';
 
@@ -45,18 +45,9 @@ let connections = $derived.by(() => {
       {/each}
     </div>
   </div>
-  <button
+  <ProviderButton
+    class={className}
+    provider={entry}
     onclick={command}
-    class="px-1 py-px flex flex-row h-full items-center gap-1 min-w-fit hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative {className}"
-    aria-label={entry.name}>
-    {#if entry.containerConnections.length > 0 || entry.kubernetesConnections.length > 0 || entry.status }
-      <ProviderWidgetStatus entry={entry} />
-    {/if}
-    {#if entry.images.icon}
-      <IconImage image={entry.images.icon} class="max-h-3 grayscale" alt={entry.name}></IconImage>
-    {/if}
-    {#if entry.name}
-      <span class="whitespace-nowrap h-fit">{entry.name}</span>
-    {/if}
-  </button>
+  />
 </Tooltip>
