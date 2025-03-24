@@ -86,6 +86,10 @@ test('Expect simple column styling - pod', async () => {
 
   const text = screen.getByText(`${pod.name} (pod)`);
   expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('overflow-hidden');
+  expect(text).toHaveClass('text-ellipsis');
+
+  expect(text.parentElement).toHaveClass('text-left');
 });
 
 test('Expect simple column styling - compose', async () => {
@@ -93,6 +97,10 @@ test('Expect simple column styling - compose', async () => {
 
   const text = screen.getByText(`${compose.name} (compose)`);
   expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('overflow-hidden');
+  expect(text).toHaveClass('text-ellipsis');
+
+  expect(text.parentElement).toHaveClass('text-left');
 });
 
 test('Expect clicking works - container', async () => {
