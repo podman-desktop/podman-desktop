@@ -2343,7 +2343,7 @@ export class PluginSystem {
           tokenId,
           title: `Creating ${providerName ?? 'Container'} provider`,
           navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
-          execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) =>
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
             providerRegistry.createContainerProviderConnection(internalProviderId, params, logger, token),
           executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });
@@ -2377,7 +2377,7 @@ export class PluginSystem {
           tokenId,
           title: `Creating ${providerName ?? 'Kubernetes'} provider`,
           navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
-          execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) =>
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
             providerRegistry.createKubernetesProviderConnection(internalProviderId, params, logger, token),
           executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });

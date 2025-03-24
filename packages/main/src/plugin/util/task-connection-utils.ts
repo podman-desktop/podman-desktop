@@ -22,25 +22,25 @@ import type { CancellationTokenRegistry } from '/@/plugin/cancellation-token-reg
 import type { LoggerWithEnd } from '/@/plugin/index.js';
 import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
 
-interface Dependencies {
+interface TaskConnectionUtilsParams {
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd;
   cancellationTokenRegistry: CancellationTokenRegistry;
   taskManager: TaskManager;
 }
 
-export interface Options {
+export interface TaskOptions {
   loggerId: string;
-  tokenId: number | undefined;
+  tokenId?: number;
   title: string;
   navigateToTask: () => Promise<void>;
-  execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) => Promise<void>;
+  execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) => Promise<void>;
   executeErrorMsg: (err: unknown) => string;
 }
 
 export class TaskConnectionUtils {
-  constructor(protected dependencies: Dependencies) {}
+  constructor(protected dependencies: TaskConnectionUtilsParams) {}
 
-  public async withTask(options: Options): Promise<void> {
+  public async withTask(options: TaskOptions): Promise<void> {
     const logger = this.dependencies.getLogHandler('provider-registry:taskConnection-onData', options.loggerId);
     let token;
     if (options.tokenId) {
@@ -58,19 +58,15 @@ export class TaskConnectionUtils {
       },
     });
 
-    return options
-      .execute(logger, token)
-      .then(result => {
-        task.status = 'success';
-        return result;
-      })
-      .catch((err: unknown) => {
-        task.error = options.executeErrorMsg(err);
-        logger.error(err);
-        throw err;
-      })
-      .finally(() => {
-        logger.onEnd();
-      });
+    try {
+      await options.execute(logger, token);
+      task.status = 'success';
+    } catch (err: unknown) {
+      task.error = options.executeErrorMsg(err);
+      logger.error(err);
+      throw err;
+    } finally {
+      logger.onEnd();
+    }
   }
 }

@@ -24,7 +24,7 @@ import type { LoggerWithEnd } from '../index.js';
 import { TaskImpl } from '../tasks/task-impl.js';
 import type { TaskManager } from '../tasks/task-manager.js';
 import type { Task } from '../tasks/tasks.js';
-import type { Options } from './task-connection-utils.js';
+import type { TaskOptions } from './task-connection-utils.js';
 import { TaskConnectionUtils } from './task-connection-utils.js';
 
 let originalTask: Task;
@@ -66,7 +66,7 @@ beforeEach(() => {
 });
 
 test('createTask is called', async () => {
-  const options: Options = {
+  const options: TaskOptions = {
     loggerId: 'logger1',
     tokenId: 42,
     title: 'a title',
@@ -98,7 +98,7 @@ test('createTask is called', async () => {
 });
 
 test(`options.execute is called and is resolved`, async () => {
-  const options: Options = {
+  const options: TaskOptions = {
     loggerId: 'logger1',
     tokenId: 42,
     title: 'a title',
@@ -121,7 +121,7 @@ test(`options.execute is called and is resolved`, async () => {
 test(`options.execute is called and is rejected`, async () => {
   const rejectError = new Error('an error');
 
-  const options: Options = {
+  const options: TaskOptions = {
     loggerId: 'logger1',
     tokenId: 42,
     title: 'a title',
