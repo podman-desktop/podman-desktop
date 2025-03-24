@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,4 +176,11 @@ test('value of hidden select component is updated based on Dropdown value', asyn
   hiddenInput = screen.getByLabelText('hidden input');
   expect(hiddenInput).toBeInTheDocument();
   expect(hiddenInput).toHaveValue('a');
+});
+
+test('Left snippet is renderered', async () => {
+  render(DropdownTest);
+
+  const left = screen.getByText('Left:');
+  expect(left).toBeInTheDocument();
 });

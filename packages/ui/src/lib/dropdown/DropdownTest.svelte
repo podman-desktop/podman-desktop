@@ -6,4 +6,7 @@ import Dropdown from './Dropdown.svelte';
   <option value="a">A</option>
   <option value="b">B</option>
   <option value="c">C</option>
+  {#snippet left()}
+  Left:
+  {/snippet}
 </Dropdown>
