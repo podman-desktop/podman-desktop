@@ -23,11 +23,12 @@ import { tmpdir } from 'node:os';
 import type { PullEvent } from '@podman-desktop/api';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
+import type { ProviderInfo } from '/@api/provider-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
@@ -37,9 +38,14 @@ import type { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
 import type { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
 import type { MessageBox } from './message-box.js';
+import { NavigationManager } from './navigation/navigation-manager.js';
+import { ProviderRegistry } from './provider-registry.js';
+import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
+import type { Task } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
 import { Deferred } from './util/deferred.js';
 import { HttpServer } from './webview/webview-registry.js';
@@ -412,4 +418,105 @@ test('ipcMain.handle returns caught error as objects message property if it is n
 
   const handleReturn = await handle(undefined, '1');
   expect(handleReturn.error).toEqual({ message: nonErrorInstance });
+});
+
+describe.each<{
+  handler: string;
+  methodName: 'createContainerProviderConnection' | 'createKubernetesProviderConnection';
+}>([
+  {
+    handler: 'provider-registry:createContainerProviderConnection',
+    methodName: 'createContainerProviderConnection',
+  },
+  {
+    handler: 'provider-registry:createKubernetesProviderConnection',
+    methodName: 'createKubernetesProviderConnection',
+  },
+])('$handler', async ({ handler, methodName }) => {
+  test('createTask is called', async () => {
+    vi.spyOn(TaskManager.prototype, 'createTask');
+    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
+    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
+      name: 'provider1',
+    } as ProviderInfo);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    await handle(undefined, 'internal1', { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
+    const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
+    if (!params) {
+      // this is already expected
+      throw new Error('param should be defined');
+    }
+    expect(params.title).toEqual(`Creating provider1 provider`);
+    expect(params.action?.name).toEqual(`Open task`);
+    const execute = params.action?.execute;
+    expect(execute).toBeDefined();
+    if (!execute) {
+      throw new Error('execute should be defined');
+    }
+    execute(new TaskImpl('task1id', 'task1name'));
+    expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledOnce();
+    expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
+  });
+
+  test(`${methodName} is called and is resolved`, async () => {
+    const originalTask = {
+      status: 'in-progress',
+      error: '',
+    } as unknown as Task;
+    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
+    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
+    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
+      name: 'provider1',
+    } as ProviderInfo);
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(undefined, 'internal1', { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
+    expect(result).toEqual({ result: undefined });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).not.toHaveBeenCalled();
+    expect(originalTask.status).toEqual('success');
+    expect(originalTask.error).toEqual('');
+  });
+
+  test(`${methodName} is called and is rejected`, async () => {
+    const originalTask = {
+      status: 'in-progress',
+      error: '',
+    } as unknown as Task;
+    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
+    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
+    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
+      name: 'provider1',
+    } as ProviderInfo);
+    const rejectError = new Error('an error');
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(undefined, 'internal1', { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
+    expect(result).toEqual({
+      error: rejectError,
+    });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).toHaveBeenCalledWith(rejectError);
+    expect(originalTask.status).toEqual('in-progress');
+    expect(originalTask.error).toEqual('Something went wrong while trying to create provider: Error: an error');
+  });
 });

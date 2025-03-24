@@ -2320,6 +2320,47 @@ export class PluginSystem {
       },
     );
 
+    const withTaskConnection = async (options: {
+      loggerId: string;
+      tokenId: number | undefined;
+      title: string;
+      navigateToTask: () => Promise<void>;
+      execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) => Promise<void>;
+      executeErrorMsg: (err: unknown) => string;
+    }): Promise<void> => {
+      const logger = this.getLogHandler('provider-registry:taskConnection-onData', options.loggerId);
+      let token;
+      if (options.tokenId) {
+        const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(options.tokenId);
+        token = tokenSource?.token;
+      }
+
+      const task = taskManager.createTask({
+        title: options.title,
+        action: {
+          name: 'Open task',
+          execute: () => {
+            options.navigateToTask().catch((err: unknown) => console.error(err));
+          },
+        },
+      });
+
+      return options
+        .execute(logger, token)
+        .then(result => {
+          task.status = 'success';
+          return result;
+        })
+        .catch((err: unknown) => {
+          task.error = options.executeErrorMsg(err);
+          logger.error(err);
+          throw err;
+        })
+        .finally(() => {
+          logger.onEnd();
+        });
+    };
+
     this.ipcHandle(
       'provider-registry:createContainerProviderConnection',
       async (
@@ -2330,40 +2371,16 @@ export class PluginSystem {
         tokenId: number | undefined,
         taskId: number | undefined,
       ): Promise<void> => {
-        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
-        let token;
-        if (tokenId) {
-          const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
-          token = tokenSource?.token;
-        }
-
         const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
-        const task = taskManager.createTask({
+        return withTaskConnection({
+          loggerId,
+          tokenId,
           title: `Creating ${providerName ?? 'Container'} provider`,
-          action: {
-            name: 'Open task',
-            execute: () => {
-              navigationManager
-                .navigateToProviderTask(internalProviderId, taskId)
-                .catch((err: unknown) => console.error(err));
-            },
-          },
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) =>
+            providerRegistry.createContainerProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });
-
-        return providerRegistry
-          .createContainerProviderConnection(internalProviderId, params, logger, token)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((err: unknown) => {
-            task.error = `Something went wrong while trying to create provider: ${err}`;
-            logger.error(err);
-            throw err;
-          })
-          .finally(() => {
-            logger.onEnd();
-          });
       },
     );
 
@@ -2388,40 +2405,16 @@ export class PluginSystem {
         tokenId: number | undefined,
         taskId: number | undefined,
       ): Promise<void> => {
-        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
-        let token;
-        if (tokenId) {
-          const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
-          token = tokenSource?.token;
-        }
-
         const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
-        const task = taskManager.createTask({
+        return withTaskConnection({
+          loggerId,
+          tokenId,
           title: `Creating ${providerName ?? 'Kubernetes'} provider`,
-          action: {
-            name: 'Open task',
-            execute: () => {
-              navigationManager
-                .navigateToProviderTask(internalProviderId, taskId)
-                .catch((err: unknown) => console.error(err));
-            },
-          },
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token: containerDesktopAPI.CancellationToken | undefined) =>
+            providerRegistry.createKubernetesProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });
-
-        return providerRegistry
-          .createKubernetesProviderConnection(internalProviderId, params, logger, token)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((err: unknown) => {
-            task.error = `Something went wrong while trying to create provider: ${err}`;
-            logger.error(err);
-            throw err;
-          })
-          .finally(() => {
-            logger.onEnd();
-          });
       },
     );
 
