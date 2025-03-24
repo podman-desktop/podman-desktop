@@ -32,8 +32,9 @@ export class KubernetesResourcePage extends MainPage {
     });
   }
 
-  getResourceRowByName(resourceName: string): Locator {
+  async getResourceRowByName(resourceName: string, timeout: number = 70_000): Promise<Locator> {
     const resourceRow = this.content.getByRole('row', { name: resourceName });
+    await resourceRow.waitFor({ state: 'visible', timeout: timeout });
     return resourceRow;
   }
 
@@ -48,7 +49,7 @@ export class KubernetesResourcePage extends MainPage {
     resourceType: KubernetesResources,
   ): Promise<KubernetesResourceDetailsPage> {
     return test.step(`Open ${resourceType}: ${resourceName} details`, async () => {
-      const resourceRow = this.getResourceRowByName(resourceName);
+      const resourceRow = await this.getResourceRowByName(resourceName);
       if (resourceRow === undefined) {
         throw Error(`Resource: ${resourceName} does not exist`);
       }
@@ -69,7 +70,7 @@ export class KubernetesResourcePage extends MainPage {
 
   async deleteKubernetesResource(resourceName: string): Promise<void> {
     return test.step(`Delete ${resourceName}`, async () => {
-      const resourceRow = this.getResourceRowByName(resourceName);
+      const resourceRow = await this.getResourceRowByName(resourceName);
       const deleteButton = resourceRow.getByRole('button', {
         name: 'Delete',
         exact: false,

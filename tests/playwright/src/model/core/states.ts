@@ -60,4 +60,5 @@ export enum KubernetesResourceState {
   Running = 'RUNNING',
   Stopped = 'STOPPED',
   Unknown = 'UNKNOWN',
+  Succeeded = 'SUCCEEDED',
 }

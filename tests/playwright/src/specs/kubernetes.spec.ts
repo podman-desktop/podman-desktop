@@ -30,6 +30,7 @@ import {
   checkKubernetesResourceState,
   createKubernetesResource,
   deleteKubernetesResource,
+  waitForKubernetesResourceAvailability,
 } from '../utility/kubernetes';
 import { deletePod, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -45,6 +46,8 @@ const PVC_POD_NAME = 'test-pod-pvcs';
 const CONFIGMAP_NAME = 'test-configmap-resource';
 const SECRET_NAME = 'test-secret-resource';
 const SECRET_POD_NAME = 'test-pod-configmaps-secrets';
+const CRONJOB_RESOURCE_NAME = 'test-cronjob-resource';
+
 const KUBERNETES_RUNTIME = {
   runtime: PlayYamlRuntime.Kubernetes,
   kubernetesContext: KUBERNETES_CONTEXT,
@@ -58,6 +61,14 @@ const PVC_POD_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kube
 const CONFIGMAP_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${CONFIGMAP_NAME}.yaml`);
 const SECRET_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SECRET_NAME}.yaml`);
 const SECRET_POD_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SECRET_POD_NAME}.yaml`);
+const CRONJOB_YAML_PATH = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  'resources',
+  'kubernetes',
+  `${CRONJOB_RESOURCE_NAME}.yaml`,
+);
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
@@ -164,6 +175,44 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await deletePod(page, SECRET_POD_NAME);
         await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, SECRET_NAME);
         await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, CONFIGMAP_NAME);
+      });
+    });
+  test.describe
+    .serial('Cronjobs lifecycle test', () => {
+      test('Create and verify a running Kubernetes service', async ({ page }) => {
+        await createKubernetesResource(
+          page,
+          KubernetesResources.Cronjobs,
+          CRONJOB_RESOURCE_NAME,
+          CRONJOB_YAML_PATH,
+          KUBERNETES_RUNTIME,
+        );
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Cronjobs,
+          CRONJOB_RESOURCE_NAME,
+          KubernetesResourceState.Running,
+        );
+      });
+      test('Validate Job and Pod execution from CronJob', async ({ page }) => {
+        test.setTimeout(80_000);
+        await waitForKubernetesResourceAvailability(page, KubernetesResources.Jobs, CRONJOB_RESOURCE_NAME);
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Jobs,
+          CRONJOB_RESOURCE_NAME,
+          KubernetesResourceState.Running,
+        );
+        await waitForKubernetesResourceAvailability(page, KubernetesResources.Pods, CRONJOB_RESOURCE_NAME);
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Pods,
+          CRONJOB_RESOURCE_NAME,
+          KubernetesResourceState.Succeeded,
+        );
+      });
+      test('Delete CronJob resource', async ({ page }) => {
+        await deleteKubernetesResource(page, KubernetesResources.Cronjobs, CRONJOB_RESOURCE_NAME);
       });
     });
 });

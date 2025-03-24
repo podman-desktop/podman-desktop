@@ -33,7 +33,7 @@ export class KubernetesBar {
   }
 
   public async openTabPage(kubernetesResource: KubernetesResources): Promise<KubernetesResourcePage> {
-    const resource = this.kubernetesNavBar.getByRole('link', { name: kubernetesResource });
+    const resource = this.kubernetesNavBar.getByRole('link', { name: kubernetesResource, exact: true });
     await resource.click();
 
     switch (kubernetesResource) {

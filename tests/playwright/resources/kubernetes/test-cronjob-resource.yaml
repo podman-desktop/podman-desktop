@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: test-cronjob-resource
+spec:
+  schedule: "*/1 * * * *"
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: test-cronjob-container
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - "echo Hello from CronJob!"
+          restartPolicy: OnFailure
+
