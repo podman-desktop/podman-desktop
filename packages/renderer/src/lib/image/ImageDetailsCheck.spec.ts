@@ -73,8 +73,8 @@ test('expect to display wait message before to receive results', async () => {
   });
 
   await vi.waitFor(() => {
-    const msg = screen.getByText(content => content.includes('Image analysis in progress'));
-    expect(msg).toBeInTheDocument();
+    const msg = screen.getByRole('status', { name: 'Analysis Status' });
+    expect(msg).toHaveTextContent('Image analysis in progress');
   });
 });
 
@@ -113,8 +113,8 @@ test('expect to cancel when clicking the Cancel button', async () => {
   });
 
   await vi.waitFor(() => {
-    const msg = screen.getByText(content => content.includes('Image analysis canceled'));
-    expect(msg).toBeInTheDocument();
+    const msg = screen.getByRole('status', { name: 'Analysis Status' });
+    expect(msg).toHaveTextContent('Image analysis canceled');
   });
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
@@ -193,8 +193,8 @@ test('expect to not cancel again when destroying the component after manual canc
   });
 
   await vi.waitFor(() => {
-    const msg = screen.getByText(content => content.includes('Image analysis canceled'));
-    expect(msg).toBeInTheDocument();
+    const msg = screen.getByRole('status', { name: 'Analysis Status' });
+    expect(msg).toHaveTextContent('Image analysis canceled');
   });
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
@@ -240,12 +240,12 @@ test('expect to display results from image checker provider', async () => {
   });
 
   await vi.waitFor(() => {
-    const msg = screen.getByText(content => content.includes('Image analysis complete'));
-    expect(msg).toBeInTheDocument();
+    const msg = screen.getByRole('status', { name: 'Analysis Status' });
+    expect(msg).toHaveTextContent('Image analysis complete');
   });
 
   await vi.waitFor(() => {
-    const cell = screen.getByText('check1');
+    const cell = screen.getByRole('row', { name: 'check1' });
     expect(cell).toBeInTheDocument();
   });
 });
@@ -286,7 +286,7 @@ test('expect to not cancel when destroying the component after displaying result
   });
 
   await vi.waitFor(() => {
-    const cell = screen.getByText('check1');
+    const cell = screen.getByRole('row', { name: 'check1' });
     expect(cell).toBeInTheDocument();
   });
 

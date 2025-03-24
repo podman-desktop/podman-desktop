@@ -25,14 +25,22 @@ import { describe, expect, test } from 'vitest';
 import type { CheckUI, ProviderUI } from './ProviderResultPage';
 import ProviderResultPage from './ProviderResultPage.svelte';
 
+function findTargetRow(text: string): HTMLElement | undefined {
+  const rows = screen.getAllByRole('row');
+  // use the textContent to find the row
+  const targetRow = rows.find(row => row.textContent?.replace(/\s+/g, ' ').trim() === text);
+  return targetRow;
+}
+
 function checkResultDisplayed(result: CheckUI): void {
-  const res = screen.getByRole('row', { name: result.check.name + ' Reported by ' + result.provider.label });
-  expect(res).toBeInTheDocument();
+  const targetRow = findTargetRow(result.check.name + ' Reported by ' + result.provider.label);
+  expect(targetRow).toBeDefined();
 }
 
 function checkResultNotDisplayed(result: CheckUI): void {
-  const res = screen.queryByRole('row', { name: result.check.name + ' Reported by ' + result.provider.label });
-  expect(res).not.toBeInTheDocument();
+  const targetRow = findTargetRow(result.check.name + ' Reported by ' + result.provider.label);
+
+  expect(targetRow).toBeUndefined();
 }
 
 describe('test ProviderResultPage', async () => {
