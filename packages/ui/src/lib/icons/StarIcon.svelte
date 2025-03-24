@@ -1,12 +1,20 @@
 <script lang="ts">
-export let size = '40';
+let {
+  size = '40',
+  class: className,
+  style,
+}: {
+  size: string;
+  class?: string;
+  style?: string;
+} = $props();
 </script>
 
 <svg
   width={size}
   height={size}
-  class={$$props.class}
-  style={$$props.style}
+  class={className}
+  style={style}
   viewBox="4.336 0.105 1.745 1.66"
   version="1.1"
   xml:space="preserve"
