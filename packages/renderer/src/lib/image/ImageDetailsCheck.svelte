@@ -137,11 +137,11 @@ async function handleAbort(): Promise<void> {
     <div class="w-full flex mb-4 space-x-4">
       <Fa size="1.5x" icon={faStethoscope} />
       {#if aborted}
-        <span>Image analysis canceled</span>
+        <span aria-label="Analysis Canceled">Image analysis canceled</span>
       {:else if remainingProviders > 0}
-        <span>Image analysis in progress...</span>
+        <span aria-label="Analysis In Progress">Image analysis in progress...</span>
       {:else}
-        <span>Image analysis complete</span>
+        <span aria-label="Analysis Complete">Image analysis complete</span>
       {/if}
     </div>
     {#if remainingProviders > 0}

@@ -108,8 +108,8 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
     {@render headerInfo()}
   </div>
   <div class="mb-2 flex flex-row pr-12 pb-2">
-    <span class="grow">Checkers</span>
-    <div>
+    <span class="grow" aria-label="Checkers">Checkers</span>
+    <div aria-label="Severity Filters">
       <ToggleButtonGroup>
         <ToggleButton
           selected={true}
@@ -150,18 +150,18 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
     <div class="h-full overflow-y-auto w-1/3">
       {#each providers as provider}
         <div role="row" class="rounded-lg bg-[var(--pd-content-bg)] mb-4 p-4 flex flex-col">
-          <div class="flex flex-row items-center">
-            <span class="grow">{provider.info.label}</span>
+          <div class="flex flex-row items-center" aria-label="{provider.info.label}">
+            <span class="grow" aria-label="Provider Starting State">{provider.info.label}</span>
             {#if provider.state === 'running'}
               <Spinner size="12"></Spinner>
             {/if}
             {#if provider.state === 'failed'}
-              <span class="text-[var(--pd-state-error)] mt-1">
+              <span class="text-[var(--pd-state-error)] mt-1" aria-label="Provider Failed State">
                 <Fa size="1.1x" icon={faExclamationTriangle} />
               </span>
             {/if}
             {#if provider.state === 'canceled'}
-              <span class="text-[var(--pd-modal-text)]">
+              <span class="text-[var(--pd-modal-text)]" aria-label="Provider Canceled State">
                 <Fa size="1.1x" icon={faCircleMinus} />
               </span>
             {/if}
@@ -173,10 +173,10 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
             {/if}
           </div>
           {#if provider.error}
-            <div class="text-[var(--pd-state-error)] text-sm">{provider.error}</div>
+            <div class="text-[var(--pd-state-error)] text-sm" aria-label="Provider Error">{provider.error}</div>
           {/if}
           {#if provider.state === 'canceled'}
-            <div class="text-[var(--pd-content-text)] text-sm">Canceled by user</div>
+            <div class="text-[var(--pd-content-text)] text-sm" aria-label="Provider Canceled">Canceled by user</div>
           {/if}
         </div>
       {/each}
@@ -191,7 +191,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
           class:border-l-[var(--pd-severity-medium)]={result.check.severity === 'medium'}
           class:border-l-[var(--pd-severity-low)]={result.check.severity === 'low'}
           class:border-l-[var(--pd-state-success)]={result.check.status === 'success'}>
-          <div class="flex flex-row space-x-2">
+          <div class="flex flex-row space-x-2" aria-label="Check Result">
             <span
               class:text-[var(--pd-state-error)]={result.check.severity === 'critical'}
               class:text-[var(--pd-state-warning)]={result.check.severity === 'high'}
@@ -201,10 +201,10 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
               ><Fa size="1.1x" class="mt-1" icon={getIcon(result.check)} />
             </span>
             <div class="font-bold">{result.check.name}</div>
-            <div class="text-[var(--pd-content-text)] text-sm grow text-right">Reported by {result.provider.label}</div>
+            <div class="text-[var(--pd-content-text)] text-sm grow text-right" aria-label="Reporting Provider">Reported by {result.provider.label}</div>
           </div>
           {#if result.check.markdownDescription}
-            <div class="mt-4">{result.check.markdownDescription}</div>
+            <div class="mt-4" aria-label="Check Message">{result.check.markdownDescription}</div>
           {/if}
         </div>
       {/each}
