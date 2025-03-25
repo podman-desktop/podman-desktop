@@ -28,7 +28,7 @@ let preflightChecks: CheckStatus[] = [];
       </div>
       {#if detectionChecks.length > 0}
         <div class="flex flex-col mt-5 px-5 pt-5 pb-0 rounded-lg bg-[var(--pd-invert-content-card-bg)]">
-          {#each detectionChecks as detectionCheck}
+          {#each detectionChecks as detectionCheck (detectionCheck)}
             <div class="flex flex-col">
               <p class="mb-4 items-center list-inside">{detectionCheck.status ? '✅' : '❌'} {detectionCheck.name}</p>
               {#if detectionCheck.details}
