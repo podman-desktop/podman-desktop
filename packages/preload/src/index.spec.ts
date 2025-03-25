@@ -249,4 +249,18 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     // check the result
     expect(result).toEqual(undefined);
   });
+
+  test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const createVmProviderConnectionExposure = getInMainWorld('createVmProviderConnection');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await createVmProviderConnectionExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
 });
