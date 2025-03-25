@@ -15,7 +15,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
 </script>
 
 {#if errorRecords && errorRecords.length > 0}
-  {#each errorRecords as record}
+  {#each errorRecords as record (record)}
     <div
       class="bg-[var(--pd-content-bg)] text-[var(--pd-state-error)] border-t-2 border-[var(--pd-state-error)] p-4 mb-2"
       role="alert"
@@ -33,7 +33,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
 {/if}
 
 {#if warningRecords && warningRecords.length > 0}
-  {#each warningRecords as record}
+  {#each warningRecords as record (record)}
     <div
       class="bg-[var(--pd-content-bg)] text-[var(--pd-state-warning)] border-t-2 border-[var(--pd-state-warning)] p-4 mb-2"
       role="alert"
@@ -51,7 +51,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
 {/if}
 
 {#if infoRecords && infoRecords.length > 0}
-  {#each infoRecords as record}
+  {#each infoRecords as record (record)}
     <div
       class="bg-[var(--pd-content-bg)] border-t-2 border-[var(--pd-state-info)] p-4 mb-2"
       role="alert"

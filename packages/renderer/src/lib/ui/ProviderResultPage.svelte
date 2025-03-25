@@ -148,7 +148,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
   </div>
   <div class="h-full flex flex-row space-x-8">
     <div class="h-full overflow-y-auto w-1/3">
-      {#each providers as provider}
+      {#each providers as provider (provider.info.id)}
         <div role="row" class="rounded-lg bg-[var(--pd-content-bg)] mb-4 p-4 flex flex-col">
           <div class="flex flex-row items-center">
             <span class="grow">{provider.info.label}</span>
@@ -182,7 +182,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
       {/each}
     </div>
     <div class="h-full w-full pr-4 overflow-y-scroll pb-16">
-      {#each filtered as result}
+      {#each filtered as result (result)}
         <div
           role="row"
           class="rounded-r-lg bg-[var(--pd-content-bg)] mb-4 mr-4 p-4 border-l-2"
