@@ -21,7 +21,7 @@
 import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
 import type { IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
@@ -82,209 +82,160 @@ test('build Api Sender', () => {
   expect(received.length).toBe(2);
 });
 
-test('openDialog', async () => {
+describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initExposure', () => {
   // store the exposeInMainWorld calls
   const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
-
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
 
   // store the ipcRenderer.on calls
   const ipcRendererOnCalls: Map<string, (event: IpcRendererEvent, ...args: unknown[]) => void> = new Map();
 
-  vi.mocked(ipcRenderer.on).mockImplementation(
-    (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
-      ipcRendererOnCalls.set(eventName, listener);
-      return {} as IpcRenderer;
-    },
-  );
-  // call init exposure
-  initExposure();
+  beforeEach(() => {
+    exposeInMainWorldCalls.clear();
+    ipcRendererOnCalls.clear();
 
-  // mock ipcRenderer.invoke
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
+    vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
+      (funcName: string, func: (...args: unknown[]) => unknown) => {
+        exposeInMainWorldCalls.set(funcName, func);
+      },
+    );
 
-  // grab openDialog exposure
-  const openDialogExposure = exposeInMainWorldCalls.get('openDialog');
-  expect(openDialogExposure).toBeDefined();
+    vi.mocked(ipcRenderer.on).mockImplementation(
+      (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
+        ipcRendererOnCalls.set(eventName, listener);
+        return {} as IpcRenderer;
+      },
+    );
 
-  // get the 'dialog:open-save-dialog-response'
-  const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-  expect(dialogOpenSaveDialogResponse).toBeDefined();
+    initExposure();
+  });
 
-  // call the exposure
-  const openDialogOptions: OpenDialogOptions = {
-    title: 'MyCustomTitle',
-  };
+  test('openDialog', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
-  // send the response after the call
-  setTimeout(() => {
-    dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', ['file1', 'file2']);
-  }, 100);
+    // grab openDialog exposure
+    const openDialogExposure = exposeInMainWorldCalls.get('openDialog');
+    expect(openDialogExposure).toBeDefined();
 
-  const result = await openDialogExposure?.(openDialogOptions);
+    // get the 'dialog:open-save-dialog-response'
+    const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
+    expect(dialogOpenSaveDialogResponse).toBeDefined();
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    // call the exposure
+    const openDialogOptions: OpenDialogOptions = {
+      title: 'MyCustomTitle',
+    };
 
-  // check the result
-  expect(result).toEqual(['file1', 'file2']);
-});
+    // send the response after the call
+    setTimeout(() => {
+      dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', ['file1', 'file2']);
+    }, 100);
 
-test('saveDialog', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+    const result = await openDialogExposure?.(openDialogOptions);
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-  // store the ipcRenderer.on calls
-  const ipcRendererOnCalls: Map<string, (event: IpcRendererEvent, ...args: unknown[]) => void> = new Map();
+    // check the result
+    expect(result).toEqual(['file1', 'file2']);
+  });
 
-  vi.mocked(ipcRenderer.on).mockImplementation(
-    (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
-      ipcRendererOnCalls.set(eventName, listener);
-      return {} as IpcRenderer;
-    },
-  );
-  // call init exposure
-  initExposure();
+  test('saveDialog', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
-  // mock ipcRenderer.invoke
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
+    // grab openDialog exposure
+    const saveDialogExposure = exposeInMainWorldCalls.get('saveDialog');
+    expect(saveDialogExposure).toBeDefined();
 
-  // grab openDialog exposure
-  const saveDialogExposure = exposeInMainWorldCalls.get('saveDialog');
-  expect(saveDialogExposure).toBeDefined();
+    // get the 'dialog:open-save-dialog-response'
+    const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
+    expect(dialogOpenSaveDialogResponse).toBeDefined();
 
-  // get the 'dialog:open-save-dialog-response'
-  const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-  expect(dialogOpenSaveDialogResponse).toBeDefined();
+    // call the exposure
+    const saveDialogOptions: SaveDialogOptions = {
+      title: 'MyCustomTitle',
+    };
 
-  // call the exposure
-  const saveDialogOptions: SaveDialogOptions = {
-    title: 'MyCustomTitle',
-  };
+    // send the response after the call
+    setTimeout(() => {
+      dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', 'file1');
+    }, 100);
 
-  // send the response after the call
-  setTimeout(() => {
-    dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', 'file1');
-  }, 100);
+    const result = await saveDialogExposure?.(saveDialogOptions);
 
-  const result = await saveDialogExposure?.(saveDialogOptions);
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    // check the result
+    expect(result).toEqual('file1');
+  });
 
-  // check the result
-  expect(result).toEqual('file1');
-});
+  test('getKubernetesPortForwards', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: [] });
 
-test('getKubernetesPortForwards', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+    // grab getKubernetesPortForwards exposure
+    const getKubernetesPortForwardsExposure = exposeInMainWorldCalls.get('getKubernetesPortForwards');
+    expect(getKubernetesPortForwardsExposure).toBeDefined();
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+    const result = await getKubernetesPortForwardsExposure?.();
 
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: [] });
-  // call init exposure
-  initExposure();
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-  // grab getKubernetesPortForwards exposure
-  const getKubernetesPortForwardsExposure = exposeInMainWorldCalls.get('getKubernetesPortForwards');
-  expect(getKubernetesPortForwardsExposure).toBeDefined();
+    // check the result
+    expect(result).toEqual([]);
+  });
 
-  const result = await getKubernetesPortForwardsExposure?.();
+  test('createKubernetesPortForward', async () => {
+    const userPortForward: ForwardConfig = {
+      id: 'fake-id',
+      namespace: 'kubernetes',
+      name: 'service',
+      kind: WorkloadKind.SERVICE,
+      forward: {
+        localPort: 50_050,
+        remotePort: 88,
+      },
+    };
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
 
-  // check the result
-  expect(result).toEqual([]);
-});
+    // grab createKubernetesPortForward exposure
+    const createKubernetesPortForwardExposure = exposeInMainWorldCalls.get('createKubernetesPortForward');
+    expect(createKubernetesPortForwardExposure).toBeDefined();
 
-test('createKubernetesPortForward', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+    const result = await createKubernetesPortForwardExposure?.(userPortForward);
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-  const userPortForward: ForwardConfig = {
-    id: 'fake-id',
-    namespace: 'kubernetes',
-    name: 'service',
-    kind: WorkloadKind.SERVICE,
-    forward: {
-      localPort: 50_050,
-      remotePort: 88,
-    },
-  };
+    // check the result
+    expect(result).toEqual(userPortForward);
+  });
 
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
-  // call init exposure
-  initExposure();
+  test('deleteKubernetesPortForward', async () => {
+    const userPortForward: ForwardConfig = {
+      id: 'fake-id',
+      namespace: 'kubernetes',
+      name: 'service',
+      kind: WorkloadKind.SERVICE,
+      forward: {
+        localPort: 50_050,
+        remotePort: 88,
+      },
+    };
 
-  // grab createKubernetesPortForward exposure
-  const createKubernetesPortForwardExposure = exposeInMainWorldCalls.get('createKubernetesPortForward');
-  expect(createKubernetesPortForwardExposure).toBeDefined();
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
 
-  const result = await createKubernetesPortForwardExposure?.(userPortForward);
+    // grab createKubernetesPortForward exposure
+    const deleteKubernetesPortForwardExposure = exposeInMainWorldCalls.get('deleteKubernetesPortForward');
+    expect(deleteKubernetesPortForwardExposure).toBeDefined();
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    const result = await deleteKubernetesPortForwardExposure?.(userPortForward);
 
-  // check the result
-  expect(result).toEqual(userPortForward);
-});
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-test('deleteKubernetesPortForward', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
-
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
-
-  const userPortForward: ForwardConfig = {
-    id: 'fake-id',
-    namespace: 'kubernetes',
-    name: 'service',
-    kind: WorkloadKind.SERVICE,
-    forward: {
-      localPort: 50_050,
-      remotePort: 88,
-    },
-  };
-
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
-  // call init exposure
-  initExposure();
-
-  // grab createKubernetesPortForward exposure
-  const deleteKubernetesPortForwardExposure = exposeInMainWorldCalls.get('deleteKubernetesPortForward');
-  expect(deleteKubernetesPortForwardExposure).toBeDefined();
-
-  const result = await deleteKubernetesPortForwardExposure?.(userPortForward);
-
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
-
-  // check the result
-  expect(result).toEqual(undefined);
+    // check the result
+    expect(result).toEqual(undefined);
+  });
 });
