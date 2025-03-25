@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import test, { type Locator, type Page } from '@playwright/test';
+import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import { waitUntil } from '../../utility/wait';
 import { BasePage } from './base-page';
@@ -32,6 +32,7 @@ export abstract class DetailsPage extends BasePage {
   readonly resourceName: string;
   readonly heading: Locator;
   readonly breadcrumb: Locator;
+  readonly terminal: Locator;
 
   constructor(page: Page, resourceName: string) {
     super(page);
@@ -46,6 +47,7 @@ export abstract class DetailsPage extends BasePage {
     this.closeButton = this.breadcrumb.getByRole('button', { name: 'Close' });
     this.backLink = this.breadcrumb.getByRole('link', { name: 'Back' });
     this.pageName = this.breadcrumb.getByRole('region', { name: 'Page Name' });
+    this.terminal = this.tabContent.locator('.xterm-screen');
   }
 
   async activateTab(tabName: string): Promise<this> {
@@ -57,5 +59,26 @@ export abstract class DetailsPage extends BasePage {
       await tabItem.click();
       return this;
     });
+  }
+
+  async executeCommandInTerminal(command: string): Promise<void> {
+    await playExpect(this.terminal).toBeVisible();
+    await this.terminal.click();
+    await this.page.keyboard.insertText(command);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async retrieveTerminalLog(): Promise<string[]> {
+    await playExpect(this.terminal).toBeVisible();
+    // Wait for a short while to ensure that the terminal output is fully loaded
+    await this.page.waitForTimeout(2000);
+    const terminalOutputRows = await this.terminal.locator('div:has(span)').all();
+    const log: string[] = [];
+    await Promise.all(
+      terminalOutputRows.map(async row => {
+        log.push((await row.textContent()) ?? '');
+      }),
+    );
+    return log;
   }
 }
