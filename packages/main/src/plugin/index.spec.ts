@@ -422,7 +422,7 @@ test('ipcMain.handle returns caught error as objects message property if it is n
 
 describe.each<{
   handler: string;
-  methodName: 'createContainerProviderConnection' | 'createKubernetesProviderConnection';
+  methodName: 'createContainerProviderConnection' | 'createKubernetesProviderConnection' | 'createVmProviderConnection';
 }>([
   {
     handler: 'provider-registry:createContainerProviderConnection',
@@ -431,6 +431,10 @@ describe.each<{
   {
     handler: 'provider-registry:createKubernetesProviderConnection',
     methodName: 'createKubernetesProviderConnection',
+  },
+  {
+    handler: 'provider-registry:createVmProviderConnection',
+    methodName: 'createVmProviderConnection',
   },
 ])('$handler', async ({ handler, methodName }) => {
   let originalTask: Task;

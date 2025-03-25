@@ -1009,6 +1009,30 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'createVmProviderConnection',
+    async (
+      internalProviderId: string,
+      params: { [key: string]: unknown },
+      key: symbol,
+      keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
+      tokenId: number | undefined,
+      taskId: number | undefined,
+    ): Promise<void> => {
+      onDataCallbacksTaskConnectionId++;
+      onDataCallbacksTaskConnectionKeys.set(onDataCallbacksTaskConnectionId, key);
+      onDataCallbacksTaskConnectionLogs.set(onDataCallbacksTaskConnectionId, keyLogger);
+      return ipcInvoke(
+        'provider-registry:createVmProviderConnection',
+        internalProviderId,
+        params,
+        onDataCallbacksTaskConnectionId,
+        tokenId,
+        taskId,
+      );
+    },
+  );
+
   ipcRenderer.on(
     'provider-registry:taskConnection-onData',
     (_, onDataCallbacksTaskConnectionId: number, channel: string, data: string[]) => {

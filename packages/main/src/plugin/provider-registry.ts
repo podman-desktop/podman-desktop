@@ -990,6 +990,21 @@ export class ProviderRegistry {
     return provider.kubernetesProviderConnectionFactory.create(params, logHandler, token);
   }
 
+  async createVmProviderConnection(
+    internalProviderId: string,
+    params: { [key: string]: unknown },
+    logHandler: Logger,
+    token?: CancellationToken,
+  ): Promise<void> {
+    // grab the correct provider
+    const provider = this.getMatchingProvider(internalProviderId);
+
+    if (!provider.vmProviderConnectionFactory?.create) {
+      throw new Error('The provider does not support VM connection creation');
+    }
+    return provider.vmProviderConnectionFactory.create(params, logHandler, token);
+  }
+
   // helper method
   protected getMatchingContainerConnectionFromProvider(
     internalProviderId: string,

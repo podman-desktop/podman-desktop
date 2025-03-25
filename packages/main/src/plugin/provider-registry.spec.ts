@@ -20,6 +20,7 @@
 
 import type {
   AutostartContext,
+  CancellationToken,
   CheckResult,
   ContainerProviderConnection,
   InstallCheck,
@@ -605,32 +606,53 @@ describe('a vm provider is registered', async () => {
     expect(provider1?.vmProviderConnectionCreationDisplayName).toBeUndefined();
   });
 
-  test('should retrieve provider info for VM provider with factory', async () => {
-    (provider as ProviderImpl).registerVmProviderConnection({
-      name: 'conn1',
-      status: () => 'stopped',
-    });
-    (provider as ProviderImpl).setVmProviderConnectionFactory({
-      create: async () => {},
-      initialize: async () => {},
+  test('should fail when creating VM provider connection without factory', async () => {
+    const params = { key1: 'value1', key2: 42 };
+    const logHandler = {} as Logger;
+    const token = {} as CancellationToken;
+    await expect(() => providerRegistry.createVmProviderConnection('0', params, logHandler, token)).rejects.toThrow();
+  });
+
+  describe('factory is set', () => {
+    const factory = {
+      create: vi.fn(),
+      initialize: vi.fn(),
       creationButtonTitle: 'my create',
       creationDisplayName: 'my display name',
+    };
+    beforeEach(() => {
+      (provider as ProviderImpl).registerVmProviderConnection({
+        name: 'conn1',
+        status: () => 'stopped',
+      });
+      (provider as ProviderImpl).setVmProviderConnectionFactory(factory);
     });
-    const provider1 = providerRegistry.getProviderInfo('0');
 
-    expect(provider1).toBeDefined();
+    test('should retrieve provider info for VM provider with factory', async () => {
+      const provider1 = providerRegistry.getProviderInfo('0');
 
-    expect(provider1?.id).toBe('internal');
-    expect(provider1?.name).toBe('internal');
-    expect(provider1?.extensionId).toBe('id');
+      expect(provider1).toBeDefined();
 
-    expect(provider1?.vmConnections).toHaveLength(1);
-    expect(provider1?.vmConnections[0]?.name).toEqual('conn1');
-    expect(provider1?.vmConnections[0]?.status).toEqual('stopped');
-    expect(provider1?.vmProviderConnectionCreation).toBeTruthy();
-    expect(provider1?.vmProviderConnectionInitialization).toBeTruthy();
-    expect(provider1?.vmProviderConnectionCreationButtonTitle).toBe('my create');
-    expect(provider1?.vmProviderConnectionCreationDisplayName).toBe('my display name');
+      expect(provider1?.id).toBe('internal');
+      expect(provider1?.name).toBe('internal');
+      expect(provider1?.extensionId).toBe('id');
+
+      expect(provider1?.vmConnections).toHaveLength(1);
+      expect(provider1?.vmConnections[0]?.name).toEqual('conn1');
+      expect(provider1?.vmConnections[0]?.status).toEqual('stopped');
+      expect(provider1?.vmProviderConnectionCreation).toBeTruthy();
+      expect(provider1?.vmProviderConnectionInitialization).toBeTruthy();
+      expect(provider1?.vmProviderConnectionCreationButtonTitle).toBe('my create');
+      expect(provider1?.vmProviderConnectionCreationDisplayName).toBe('my display name');
+    });
+
+    test('should create VM provider connection', async () => {
+      const params = { key1: 'value1', key2: 42 };
+      const logHandler = {} as Logger;
+      const token = {} as CancellationToken;
+      await providerRegistry.createVmProviderConnection('0', params, logHandler, token);
+      expect(factory.create).toHaveBeenCalledWith(params, logHandler, token);
+    });
   });
 });
 

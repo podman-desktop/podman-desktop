@@ -2384,6 +2384,29 @@ export class PluginSystem {
       },
     );
 
+    this.ipcHandle(
+      'provider-registry:createVmProviderConnection',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        internalProviderId: string,
+        params: { [key: string]: unknown },
+        loggerId: string,
+        tokenId: number | undefined,
+        taskId: number | undefined,
+      ): Promise<void> => {
+        const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
+        return taskConnectionUtils.withTask({
+          loggerId,
+          tokenId,
+          title: `Creating ${providerName ?? 'VM'} provider`,
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
+            providerRegistry.createVmProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
+        });
+      },
+    );
+
     this.ipcHandle('kubernetes-client:createPod', async (_listener, namespace: string, pod: V1Pod): Promise<V1Pod> => {
       return kubernetesClient.createPod(namespace, pod);
     });
