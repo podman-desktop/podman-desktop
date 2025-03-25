@@ -148,8 +148,8 @@ test('Expect saveImages function called with tagged images', async () => {
   } as ImageInfoUI;
   // custom tag (not latest)
   const imageInfo3: ImageInfoUI = {
-    id: 'id1',
-    shortId: 'id1',
+    id: 'id3',
+    shortId: 'id3',
     tag: '123',
     name: 'quay.io/podman/hello',
     engineId: 'engine',
