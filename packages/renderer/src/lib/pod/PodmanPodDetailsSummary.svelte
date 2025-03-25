@@ -56,7 +56,7 @@ function navigateToLogs(container: PodInfoContainerUI): void {
       {#each pod.containers as container}
         <tr>
           <DetailsSubtitle>
-            <Link on:click={(): void => navigateToLogs(container)}>
+            <Link onclick={(): void => navigateToLogs(container)}>
               {container.Names}
             </Link>
           </DetailsSubtitle>

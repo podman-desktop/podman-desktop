@@ -195,7 +195,7 @@ async function openKubernetesDocumentation(): Promise<void> {
             <div>Here you can manage and interact with Kubernetes clusters with features like connecting to clusters, and
               viewing workloads like deployments and services.</div>
             <div>Get up and running by clicking one of the menu items!</div>
-            <div><Link class="place-self-start" on:click={openKubernetesDocumentation}>Kubernetes documentation</Link></div>
+            <div><Link class="place-self-start" onclick={openKubernetesDocumentation}>Kubernetes documentation</Link></div>
           </div>
         </Expandable>
        </div>

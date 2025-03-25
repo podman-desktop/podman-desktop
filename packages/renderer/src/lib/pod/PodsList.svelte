@@ -183,7 +183,7 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 
   <svelte:fragment slot="tabs">
     <div class="flex flex-col gap-3">
-      <div class="self-center text-[var(--pd-table-body-text)]">Looking for pods running on a Kubernetes cluster? We have moved them to the <Link on:click={openKubePods}>Kubernetes &gt; Pods</Link> page.</div>
+      <div class="self-center text-[var(--pd-table-body-text)]">Looking for pods running on a Kubernetes cluster? We have moved them to the <Link onclick={openKubePods}>Kubernetes &gt; Pods</Link> page.</div>
 
       <div class="flex flex-row">
         <Button

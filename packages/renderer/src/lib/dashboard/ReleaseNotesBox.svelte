@@ -89,7 +89,7 @@ onDestroy(async () => {
           </div>
         {/if}
         <div class="flex flex-row justify-end items-center gap-3 mt-2">
-          <Link on:click={openReleaseNotes}>Learn more</Link>
+          <Link onclick={openReleaseNotes}>Learn more</Link>
           <Button on:click={updatePodmanDesktop} hidden={!$updateAvailable} icon={faCircleArrowUp}>Update</Button>
         </div>
       </div>
@@ -100,7 +100,7 @@ onDestroy(async () => {
         <p class="text-[var(--pd-content-card-header-text)] font-bold text-lg w-full items-center">
           Release notes are currently unavailable, please check again later
           {#if notesURL}
-            or try this <Link on:click={openReleaseNotes}>link</Link>
+            or try this <Link onclick={openReleaseNotes}>link</Link>
           {/if}
         </p>
         <CloseButton on:click={onClose} />

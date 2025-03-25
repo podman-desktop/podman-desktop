@@ -445,7 +445,7 @@ function updateKubeResult(): void {
         title="Use Restricted Security Context"
         required>
         Update Kubernetes manifest to respect the Pod security <Link
-          on:click={(): Promise<void> =>
+          onclick={(): Promise<void> =>
             window.openExternal('https://kubernetes.io/docs/concepts/security/pod-security-standards#restricted')}
           >restricted profile</Link
         >.</Checkbox>
@@ -570,7 +570,7 @@ function updateKubeResult(): void {
                 class="text-sm"
                 aria-label="Open in OpenShift Console"
                 icon={faExternalLink}
-                on:click={openOpenshiftConsole}>Open in OpenShift console</Link>
+                onclick={openOpenshiftConsole}>Open in OpenShift console</Link>
             </div>
           {/if}
         </div>
@@ -613,7 +613,7 @@ function updateKubeResult(): void {
               {#each createdRoutes as createdRoute}
                 <li class="pt-2">
                   Port {createdRoute.spec.port?.targetPort} is reachable with route
-                  <Link on:click={async (): Promise<void> => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>
+                  <Link onclick={async (): Promise<void> => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>
                 </li>
               {/each}
             </ul>
