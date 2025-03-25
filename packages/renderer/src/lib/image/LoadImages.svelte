@@ -103,7 +103,7 @@ async function loadImages(): Promise<void> {
         <div class="flex flex-col grow pl-2">Image Archives</div>
       </div>
     {/if}
-    {#each archivesToLoad as archiveToLoad, index}
+    {#each archivesToLoad as archiveToLoad, index (`${archiveToLoad}-${index}`)}
       <div class="flex flex-row justify-center w-full py-1">
         <Input bind:value={archiveToLoad} aria-label="archive path" readonly={true} />
         <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} />

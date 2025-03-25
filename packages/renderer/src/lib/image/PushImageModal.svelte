@@ -97,7 +97,7 @@ $: window
           : 'outline-[var(--pd-state-warning)]'} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
         name="imageChoice"
         bind:value={selectedImageTag}>
-        {#each imageTags as imageTag}
+        {#each imageTags as imageTag, index (`${imageTag}-${index}`)}
           <option value={imageTag}>{imageTag}</option>
         {/each}
       </select>

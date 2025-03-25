@@ -697,7 +697,7 @@ const envDialogOptions: OpenDialogOptions = {
               <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Volumes:</label>
               <!-- Display the list of volumes -->
-              {#each volumeMounts as volumeMount, index}
+              {#each volumeMounts as volumeMount, index (volumeMount)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="volumeMount.{index}"
@@ -724,7 +724,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalContainerName"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Port mapping:</label>
-              {#each exposedPorts as port, index}
+              {#each exposedPorts as port, index (`${port}-${index}`)}
                 <div class="flex flex-row justify-center items-center w-full">
                   <span
                     class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
@@ -747,7 +747,7 @@ const envDialogOptions: OpenDialogOptions = {
                 Add custom port mapping
               </Button>
               <!-- Display the list of existing hostContainerPortMappings -->
-              {#each hostContainerPortMappings as hostContainerPortMapping, index}
+              {#each hostContainerPortMappings as hostContainerPortMapping, index (hostContainerPortMapping)}
                 <div class="flex flex-row justify-center w-full py-1">
                   <Input
                     bind:value={hostContainerPortMapping.hostPort.port}
@@ -769,7 +769,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment variables:</label>
               <!-- Display the list of existing environment variables -->
-              {#each environmentVariables as environmentVariable, index}
+              {#each environmentVariables as environmentVariable, index (environmentVariable)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
 
@@ -795,7 +795,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment files:</label>
               <!-- Display the list of existing environment files -->
-              {#each environmentFiles as environmentFile, index}
+              {#each environmentFiles as environmentFile, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="filePath.{index}"
@@ -890,7 +890,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalDevices"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Devices:</label>
               <!-- Display the list of existing devices -->
-              {#each devices as device, index}
+              {#each devices as device, index (device)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
                     bind:value={device.host}
@@ -947,7 +947,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Security options (security-opt):</label>
               <!-- Display the list of existing security options -->
-              {#each securityOpts as securityOpt, index}
+              {#each securityOpts as securityOpt, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
                     bind:value={securityOpt}
@@ -977,7 +977,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add to the container (CapAdd):</label>
               <!-- Display the list of existing capAdd -->
-              {#each capAdds as capAdd, index}
+              {#each capAdds as capAdd, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={capAdd} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
@@ -994,7 +994,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Drop from the container (CapDrop):</label>
               <!-- Display the list of existing capDrop -->
-              {#each capDrops as capDrop, index}
+              {#each capDrops as capDrop, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={capDrop} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
@@ -1035,7 +1035,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Custom DNS server(s):</label>
 
-              {#each dnsServers as dnsServer, index}
+              {#each dnsServers as dnsServer, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={dnsServer} placeholder="IP Address" class="ml-2" />
 
@@ -1057,7 +1057,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add extra hosts (appends to /etc/hosts file):</label>
               <!-- Display the list of extra hosts -->
-              {#each extraHosts as extraHost, index}
+              {#each extraHosts as extraHost, index (extraHost)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={extraHost.host} placeholder="Hostname" class="ml-2" />
 
@@ -1104,7 +1104,7 @@ const envDialogOptions: OpenDialogOptions = {
                     disabled={networkingMode !== 'choice-network'}
                     name="networkingModeUserNetwork"
                     bind:value={networkingModeUserNetwork}>
-                    {#each engineNetworks as network}
+                    {#each engineNetworks as network (network.Id)}
                       <option value={network.Id}
                         >{network.Name} (used by {Object.keys(network.Containers ?? {}).length} containers)</option>
                     {/each}
@@ -1121,7 +1121,7 @@ const envDialogOptions: OpenDialogOptions = {
                     disabled={networkingMode !== 'choice-container'}
                     name="networkingModeUserContainer"
                     bind:value={networkingModeUserContainer}>
-                    {#each engineContainers as container}
+                    {#each engineContainers as container (container.id)}
                       <option value={container.id}>{container.name} ({container.shortId})</option>
                     {/each}
                   </Dropdown>

@@ -55,7 +55,7 @@ onMount(async () => {
     <tr>
       <Title>Manifest Details</Title>
     </tr>
-    {#each manifestDetails.manifests as manifest}
+    {#each manifestDetails.manifests as manifest (manifest.digest)}
       <tr>
         <Subtitle>{imageUtils.getShortId(manifest.digest)}</Subtitle>
       </tr>
@@ -82,7 +82,7 @@ onMount(async () => {
         <Cell>{imageUtils.getHumanSize(manifest.size)}</Cell>
       </tr>
       {#if manifest.urls}
-        {#each manifest.urls as url}
+        {#each manifest.urls as url, index (`${url}-${index}`)}
           <tr>
             <Cell>URL</Cell>
             <Cell>{url}</Cell>
