@@ -183,4 +183,5 @@ test('Left snippet is renderered', async () => {
 
   const left = screen.getByText('Left:');
   expect(left).toBeInTheDocument();
+  expect(left.parentElement).toHaveClass('bg-[var(--pd-input-field-bg)]');
 });

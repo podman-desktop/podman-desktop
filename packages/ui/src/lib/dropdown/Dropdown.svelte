@@ -189,7 +189,6 @@ function onWindowClick(e: Event): void {
   aria-label={ariaLabel}
   aria-invalid={ariaInvalid}
   bind:this={comp}>
-  {@render left?.()}
   <button
     class="flex flex-row w-full outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] items-center text-start"
     class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
@@ -202,6 +201,7 @@ function onWindowClick(e: Event): void {
     name={name}
     onclick={toggleOpen}
     onkeydown={onKeyDown}>
+    {@render left?.()}
     <span class="grow">{selectLabel}</span>
     <div
       class:text-[var(--pd-input-field-stroke)]={!disabled}
