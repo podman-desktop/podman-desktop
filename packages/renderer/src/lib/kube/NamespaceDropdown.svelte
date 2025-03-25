@@ -4,11 +4,11 @@ import { Dropdown } from '@podman-desktop/ui-svelte';
 import { kubernetesCurrentContextState } from '/@/stores/kubernetes-contexts-state';
 
 let namespacesPromise = $derived.by(async () => {
-  return $kubernetesCurrentContextState.reachable ? await window.kubernetesListNamespaces() : undefined;
+  return $kubernetesCurrentContextState?.reachable ? await window.kubernetesListNamespaces() : undefined;
 });
 
 let currentNamespacePromise = $derived.by(async () => {
-  return $kubernetesCurrentContextState.reachable ? await window.kubernetesGetCurrentNamespace() : '';
+  return $kubernetesCurrentContextState?.reachable ? await window.kubernetesGetCurrentNamespace() : '';
 });
 
 async function handleNamespaceChange(value: unknown): Promise<void> {
@@ -24,7 +24,7 @@ async function handleNamespaceChange(value: unknown): Promise<void> {
   name="namespace"
   class="w-56 max-w-56"
   value={currentNamespace}
-  disabled={!$kubernetesCurrentContextState.reachable}
+  disabled={!$kubernetesCurrentContextState?.reachable}
   onChange={handleNamespaceChange}
   options={namespaces?.items?.map(namespace => ({
     label: namespace.metadata?.name ?? '',
