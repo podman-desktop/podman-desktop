@@ -89,6 +89,24 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
   // store the ipcRenderer.on calls
   const ipcRendererOnCalls: Map<string, (event: IpcRendererEvent, ...args: unknown[]) => void> = new Map();
 
+  const getInMainWorld = (s: string): ((...args: unknown[]) => unknown) => {
+    const exposure = exposeInMainWorldCalls.get(s);
+    expect(exposure).toBeDefined();
+    if (!exposure) {
+      throw new Error('should be defined');
+    }
+    return exposure;
+  };
+
+  const getRendererOn = (s: string): ((event: IpcRendererEvent, ...args: unknown[]) => void) => {
+    const exposure = ipcRendererOnCalls.get(s);
+    expect(exposure).toBeDefined();
+    if (!exposure) {
+      throw new Error('should be defined');
+    }
+    return exposure;
+  };
+
   beforeEach(() => {
     exposeInMainWorldCalls.clear();
     ipcRendererOnCalls.clear();
@@ -113,12 +131,10 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
     // grab openDialog exposure
-    const openDialogExposure = exposeInMainWorldCalls.get('openDialog');
-    expect(openDialogExposure).toBeDefined();
+    const openDialogExposure = getInMainWorld('openDialog');
 
     // get the 'dialog:open-save-dialog-response'
-    const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-    expect(dialogOpenSaveDialogResponse).toBeDefined();
+    const dialogOpenSaveDialogResponse = getRendererOn('dialog:open-save-dialog-response');
 
     // call the exposure
     const openDialogOptions: OpenDialogOptions = {
@@ -127,10 +143,10 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
 
     // send the response after the call
     setTimeout(() => {
-      dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', ['file1', 'file2']);
+      dialogOpenSaveDialogResponse({} as IpcRendererEvent, '0', ['file1', 'file2']);
     }, 100);
 
-    const result = await openDialogExposure?.(openDialogOptions);
+    const result = await openDialogExposure(openDialogOptions);
 
     // check we invoke ipcRenderer.invoke
     expect(ipcRenderer.invoke).toBeCalled();
@@ -143,12 +159,10 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
     // grab openDialog exposure
-    const saveDialogExposure = exposeInMainWorldCalls.get('saveDialog');
-    expect(saveDialogExposure).toBeDefined();
+    const saveDialogExposure = getInMainWorld('saveDialog');
 
     // get the 'dialog:open-save-dialog-response'
-    const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-    expect(dialogOpenSaveDialogResponse).toBeDefined();
+    const dialogOpenSaveDialogResponse = getRendererOn('dialog:open-save-dialog-response');
 
     // call the exposure
     const saveDialogOptions: SaveDialogOptions = {
@@ -157,10 +171,10 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
 
     // send the response after the call
     setTimeout(() => {
-      dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', 'file1');
+      dialogOpenSaveDialogResponse({} as IpcRendererEvent, '0', 'file1');
     }, 100);
 
-    const result = await saveDialogExposure?.(saveDialogOptions);
+    const result = await saveDialogExposure(saveDialogOptions);
 
     // check we invoke ipcRenderer.invoke
     expect(ipcRenderer.invoke).toBeCalled();
@@ -173,10 +187,9 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: [] });
 
     // grab getKubernetesPortForwards exposure
-    const getKubernetesPortForwardsExposure = exposeInMainWorldCalls.get('getKubernetesPortForwards');
-    expect(getKubernetesPortForwardsExposure).toBeDefined();
+    const getKubernetesPortForwardsExposure = getInMainWorld('getKubernetesPortForwards');
 
-    const result = await getKubernetesPortForwardsExposure?.();
+    const result = await getKubernetesPortForwardsExposure();
 
     // check we invoke ipcRenderer.invoke
     expect(ipcRenderer.invoke).toBeCalled();
@@ -200,10 +213,9 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
 
     // grab createKubernetesPortForward exposure
-    const createKubernetesPortForwardExposure = exposeInMainWorldCalls.get('createKubernetesPortForward');
-    expect(createKubernetesPortForwardExposure).toBeDefined();
+    const createKubernetesPortForwardExposure = getInMainWorld('createKubernetesPortForward');
 
-    const result = await createKubernetesPortForwardExposure?.(userPortForward);
+    const result = await createKubernetesPortForwardExposure(userPortForward);
 
     // check we invoke ipcRenderer.invoke
     expect(ipcRenderer.invoke).toBeCalled();
@@ -227,10 +239,9 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
 
     // grab createKubernetesPortForward exposure
-    const deleteKubernetesPortForwardExposure = exposeInMainWorldCalls.get('deleteKubernetesPortForward');
-    expect(deleteKubernetesPortForwardExposure).toBeDefined();
+    const deleteKubernetesPortForwardExposure = getInMainWorld('deleteKubernetesPortForward');
 
-    const result = await deleteKubernetesPortForwardExposure?.(userPortForward);
+    const result = await deleteKubernetesPortForwardExposure(userPortForward);
 
     // check we invoke ipcRenderer.invoke
     expect(ipcRenderer.invoke).toBeCalled();
