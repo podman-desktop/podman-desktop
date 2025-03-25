@@ -91,7 +91,7 @@ async function ondetails(extensionId: string): Promise<void> {
       showInstalled={false} />
 
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
-     Want to learn more about Kubernetes on Podman Desktop? <Link on:click={(): Promise<void> => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
+     Want to learn more about Kubernetes on Podman Desktop? <Link onclick={(): Promise<void> => window.openExternal(kubernetesExternalDocs)}>Check out our documentation.</Link>
     </div>
   </div>
 </div>

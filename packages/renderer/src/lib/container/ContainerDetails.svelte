@@ -73,7 +73,7 @@ onMount(() => {
     <svelte:fragment slot="subtitle">
       <Link
         aria-label="Image Details"
-        on:click={(): void => {
+        onclick={(): void => {
           if (container.imageHref) {
             router.goto(container.imageHref);
           }
