@@ -34,7 +34,7 @@ function getSizesText(layer: ImageFilesystemLayerUI): string {
 }
 </script>
 
-{#each layers as layer (layer.id)}
+{#each layers as layer}
   {@const sizesText = getSizesText(layer)}
   <button
     on:click={(): void => onLayerSelected(layer)}

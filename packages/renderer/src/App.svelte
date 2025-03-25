@@ -134,7 +134,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
       {#if meta.url.startsWith('/preferences')}
         <PreferencesNavigation meta={meta} />
       {/if}
-      {#each $navigationRegistry.filter(item => item.type === 'submenu') as navigationRegistryItem (navigationRegistryItem)}
+      {#each $navigationRegistry.filter(item => item.type === 'submenu') as navigationRegistryItem, index (`${navigationRegistryItem.name}-${index}`)}
         {#if meta.url.startsWith(navigationRegistryItem.link) && navigationRegistryItem.items?.length}
           <SubmenuNavigation meta={meta} title={navigationRegistryItem.tooltip} link={navigationRegistryItem.link} items={navigationRegistryItem.items} />
         {/if}

@@ -8,7 +8,7 @@ export let provider: ProviderInfo;
 
 {#if provider.links.length > 0}
   <div class="mt-2 flex relative w-full content-stretch items-center flex-row justify-around grow flex-nowrap">
-    {#each provider.links as link (link)}
+    {#each provider.links as link, index (`${link.url}-${index}`)}
       {#if link.group === undefined}
         <Link class="text-base" on:click={(): Promise<void> => window.openExternal(link.url)}>
           {link.title}

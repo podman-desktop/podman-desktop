@@ -27,7 +27,7 @@ function goToAuthPage(): void {
 }
 </script>
 
-{#each recommendedRegistriesToInstall as registry (registry.id)}
+{#each recommendedRegistriesToInstall as registry}
   <div class="text-[var(--pd-state-warning)] flex flex-row min-h-10 items-center pt-2 space-x-2">
     {#if !registry.isInstalled}
       <FeaturedExtensionDownload extension={registry.extensionDetails} />

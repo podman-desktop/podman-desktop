@@ -63,7 +63,7 @@ test('Expect that featured extensions are displayed', async () => {
 
   const featuredExtension3: FeaturedExtension = {
     builtin: true,
-    id: 'foo.bar2',
+    id: 'foo.bar',
     displayName: 'Bar',
     description: 'FooBar not fetchable description',
     icon: 'data:image/png;base64,bar',

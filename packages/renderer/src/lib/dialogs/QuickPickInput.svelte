@@ -355,7 +355,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
             {/if}
           {/if}
         {:else if mode === 'QuickPick'}
-          {#each quickPickFilteredItems as item, i (item)}
+          {#each quickPickFilteredItems as item, i (`${item.value}-${i}`)}
             <div class="flex w-full flex-row  {i === quickPickSelectedFilteredIndex
                   ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}">

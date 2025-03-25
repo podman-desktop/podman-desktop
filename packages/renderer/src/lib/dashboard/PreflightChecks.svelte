@@ -12,7 +12,7 @@ async function openLink(url: string): Promise<void> {
 
 {#if preflightChecks.length > 0}
   <div class="flex flex-col w-full p-2 rounded-lg bg-[var(--pd-invert-content-card-bg)]">
-    {#each preflightChecks as preCheck (preCheck)}
+    {#each preflightChecks as preCheck, index (`${preCheck.name}-${index}`)}
       <div class="flex flex-col">
         <div class="mb-4 flex flex-row">
           {#if preCheck.successful === undefined}
@@ -37,7 +37,7 @@ async function openLink(url: string): Promise<void> {
           {/if}
           {#if preCheck.docLinks}
             See:
-            {#each preCheck.docLinks as link (link)}
+            {#each preCheck.docLinks as link, index (`${link.url}-${index}`)}
               <Link aria-label="precheck-link" on:click={async (): Promise<void> => await openLink(link.url)}>{link.title}</Link>
             {/each}
           {/if}

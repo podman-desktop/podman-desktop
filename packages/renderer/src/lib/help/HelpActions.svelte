@@ -41,7 +41,7 @@ async function onClick(action?: ItemAction): Promise<void> {
 <div bind:this={outsideWindow}>
   {#if showMenu}
     <HelpMenu>
-      {#each Items as item (item)}
+      {#each Items as item, index (`${item.title}-${index}`)}
       <DropdownMenu.Item
         title={item.title}
         tooltip={item.tooltip}

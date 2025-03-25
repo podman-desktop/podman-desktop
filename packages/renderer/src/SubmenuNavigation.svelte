@@ -29,7 +29,7 @@ if (!pages[title]) {
     </div>
   </div>
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
-    {#each items ?? [] as item (item)}
+    {#each items ?? [] as item, index (`${item.name}-${index}`)}
       <SettingsNavItem title={item.tooltip} href={item.link} selected={meta.url.startsWith(item.link)} onClick={(): string => pages[title] = item.link}
       ></SettingsNavItem>
     {/each}
