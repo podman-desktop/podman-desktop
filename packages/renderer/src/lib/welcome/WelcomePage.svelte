@@ -116,7 +116,7 @@ function startOnboardingQueue(): void {
               <div>Choose the extensions to include:</div>
             </div>
             <div aria-label="providerList" class="grid grid-cols-3 gap-3">
-              {#each onboardingProviders as onboarding}
+              {#each onboardingProviders as onboarding (onboarding)}
                 <div
                   class="rounded-md bg-[var(--pd-content-card-bg)] flex flex-row justify-between border-2 p-4 {onboarding.selected
                     ? 'border-[var(--pd-content-card-border-selected)]'

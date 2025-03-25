@@ -202,7 +202,7 @@ function toggleChildren(name: string | undefined): void {
             on:click={toggleAll} />
         </div>
       {/if}
-      {#each columns as column}
+      {#each columns as column (column)}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
@@ -266,7 +266,7 @@ function toggleChildren(name: string | undefined): void {
                 on:click={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
-          {#each columns as column}
+          {#each columns as column (column)}
             <div
               class="whitespace-nowrap {column.info.align === 'right'
                 ? 'justify-self-end'
@@ -303,7 +303,7 @@ function toggleChildren(name: string | undefined): void {
                     disabledTooltip={row.info.disabledText} />
                 </div>
               {/if}
-              {#each columns as column}
+              {#each columns as column (column)}
                 <div
                   class="whitespace-nowrap {column.info.align === 'right'
                     ? 'justify-self-end'
