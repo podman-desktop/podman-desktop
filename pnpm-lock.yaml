@@ -283,8 +283,8 @@ importers:
         specifier: ^8.27.0
         version: 8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
       validator:
-        specifier: ^13.12.0
-        version: 13.12.0
+        specifier: ^13.15.0
+        version: 13.15.0
       vite:
         specifier: ^6.2.2
         version: 6.2.2(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
@@ -581,8 +581,8 @@ importers:
         specifier: ^0.6.12
         version: 0.6.12
       validator:
-        specifier: ^13.12.0
-        version: 13.12.0
+        specifier: ^13.15.0
+        version: 13.15.0
     devDependencies:
       '@fortawesome/fontawesome-free':
         specifier: ^6.7.2
@@ -1722,6 +1722,10 @@ packages:
 
   '@babel/runtime@7.26.10':
     resolution: {integrity: sha512-2WJMeRQPHKSPemqk/awGrAiuFfzBmOIPXKizAsVhWH9YJqLZ0H+HS4c8loHGgW6utJ3E/ejXQUsiGaQy2NZ9Fw==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.27.0':
+    resolution: {integrity: sha512-VtPOkrdPHZsKc/clNqyi9WUA8TINkZ4cGk63UUE3u4pmB2k+ZMQRDuIOagv8UVd6j7k0T3+RRIb7beKTebNbcw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.25.9':
@@ -11355,8 +11359,8 @@ packages:
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
 
-  validator@13.12.0:
-    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
+  validator@13.15.0:
+    resolution: {integrity: sha512-36B2ryl4+oL5QxZ3AzD0t5SsMNGvTtQHpjgFO5tbNxfXbMFkY822ktCDe1MnlqV3301QQI9SLHDNJokDI+Z9pA==}
     engines: {node: '>= 0.10'}
 
   value-equal@1.0.1:
@@ -12718,6 +12722,10 @@ snapshots:
       regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.26.10':
+    dependencies:
+      regenerator-runtime: 0.14.1
+
+  '@babel/runtime@7.27.0':
     dependencies:
       regenerator-runtime: 0.14.1
 
@@ -15126,7 +15134,7 @@ snapshots:
 
   '@slorber/react-helmet-async@1.3.0(react-dom@18.3.1(react@18.2.0))(react@18.2.0)':
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 18.2.0
@@ -19795,7 +19803,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23008,7 +23016,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -24554,7 +24562,7 @@ snapshots:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
 
-  validator@13.12.0: {}
+  validator@13.15.0: {}
 
   value-equal@1.0.1: {}
 

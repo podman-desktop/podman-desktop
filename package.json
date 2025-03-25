@@ -174,7 +174,7 @@
     "proxy": "^2.2.0",
     "typescript": "5.8.2",
     "typescript-eslint": "^8.27.0",
-    "validator": "^13.12.0",
+    "validator": "^13.15.0",
     "vite": "^6.2.2",
     "vitest": "^3.0.9",
     "xvfb-maybe": "^0.2.1"
