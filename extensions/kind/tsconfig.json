@@ -7,10 +7,10 @@
     "resolveJsonModule": true,
     "lib": ["ES2017", "webworker"],
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDirs": ["src", "scripts"],
     "outDir": "dist",
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src", "types/*.d.ts", "../../types/**/*.d.ts"]
+  "include": ["src", "types/*.d.ts", "../../types/**/*.d.ts", "scripts"]
 }

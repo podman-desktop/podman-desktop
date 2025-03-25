@@ -4,7 +4,7 @@
     "lib": ["ES2017"],
     "module": "esnext",
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDirs": ["src", "scripts"],
     "outDir": "dist",
     "target": "esnext",
     "moduleResolution": "Node",
@@ -13,5 +13,5 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
-  "include": ["src", "types/*.d.ts"]
+  "include": ["src", "types/*.d.ts", "scripts"]
 }

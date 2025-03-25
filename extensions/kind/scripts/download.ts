@@ -62,6 +62,7 @@ async function download(tagVersion: string, repoPath: string, fileName: string):
   });
   let buffer;
 
+  if (!manifests.data.content) return;
   if (manifests.data.encoding && manifests.data.encoding === 'base64') {
     buffer = Buffer.from(manifests.data.content, 'base64');
   } else {
