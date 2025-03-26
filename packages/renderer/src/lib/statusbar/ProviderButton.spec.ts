@@ -68,7 +68,7 @@ test('provider with an image should render it', async () => {
   );
 });
 
-test('left slot should be renderer if defined', async () => {
+test('left slot should be rendered if defined', async () => {
   const left = vi.fn();
   render(ProviderButton, {
     provider: PROVIDER_MOCK,
