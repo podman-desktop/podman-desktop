@@ -13,12 +13,7 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
-import type {
-  CheckStatus,
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import { type Menu, MenuContext } from '../../../../main/src/plugin/menu-registry';
@@ -145,6 +140,34 @@ onMount(async () => {
           }
         }
       });
+      provider.vmConnections.forEach(connection => {
+        const vmConnectionName = getProviderConnectionName(provider, connection);
+        connectionNames.push(vmConnectionName);
+        // update the map only if the container state is different from last time
+        if (
+          !containerConnectionStatus.has(vmConnectionName) ||
+          containerConnectionStatus.get(vmConnectionName)?.status !== connection.status
+        ) {
+          isStatusUpdated = true;
+          const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
+          if (containerToRestart) {
+            containerConnectionStatus.set(vmConnectionName, {
+              inProgress: true,
+              action: 'restart',
+              status: connection.status,
+            });
+            startConnectionProvider(provider, connection, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
+              console.error(`Error starting connection provider ${connection.name}`, err),
+            );
+          } else {
+            containerConnectionStatus.set(vmConnectionName, {
+              inProgress: false,
+              action: undefined,
+              status: connection.status,
+            });
+          }
+        }
+      });
     });
     // if a machine has been deleted we need to clean its old stored status
     containerConnectionStatus.forEach((v, k) => {
@@ -245,7 +268,7 @@ $: providerContainerConfiguration = tmpProviderContainerConfiguration
 
 function updateContainerStatus(
   provider: ProviderInfo,
-  containerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  containerConnectionInfo: ProviderConnectionInfo,
   action?: string,
   error?: string,
   inProgress?: boolean,
@@ -276,7 +299,7 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
 
 async function startConnectionProvider(
   provider: ProviderInfo,
-  containerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  containerConnectionInfo: ProviderConnectionInfo,
   loggerHandlerKey: symbol,
 ): Promise<void> {
   await window.startProviderConnectionLifecycle(
@@ -420,19 +443,23 @@ function handleError(errorMessage: string): void {
                 </Button>
               {:else}
                 <div class="flex flex-row justify-around">
-                  {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation}
+                  {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
                     {@const providerDisplayName =
                       (provider.containerProviderConnectionCreation
                         ? (provider.containerProviderConnectionCreationDisplayName ?? undefined)
                         : provider.kubernetesProviderConnectionCreation
                           ? provider.kubernetesProviderConnectionCreationDisplayName
-                          : undefined) ?? provider.name}
+                          : provider.vmProviderConnectionCreation 
+                            ? provider.vmProviderConnectionCreationDisplayName
+                            : undefined) ?? provider.name}
                     {@const buttonTitle =
                       (provider.containerProviderConnectionCreation
                         ? (provider.containerProviderConnectionCreationButtonTitle ?? undefined)
                         : provider.kubernetesProviderConnectionCreation
                           ? provider.kubernetesProviderConnectionCreationButtonTitle
-                          : undefined) ?? 'Create new'}
+                          : provider.vmProviderConnectionCreation
+                            ? provider.vmProviderConnectionCreationButtonTitle
+                            : undefined) ?? 'Create new'}
                     <!-- create new provider button -->
                     <Tooltip bottom tip="Create new {providerDisplayName}">
                       <Button
@@ -469,7 +496,7 @@ function handleError(errorMessage: string): void {
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
             message={provider.emptyConnectionMarkdownDescription}
-            hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0} />
+            hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container}
             {@const peerProperties = new PeerProperties()}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
@@ -601,7 +628,7 @@ function handleError(errorMessage: string): void {
               <div class="font-semibold">
                 {kubeConnection.name}
               </div>
-              <div class="flex mt-1">
+              <div class="flex mt-1" aria-label="Connection Status">
                 <ConnectionStatus status={kubeConnection.status} />
               </div>
               <div class="mt-2">
@@ -619,6 +646,35 @@ function handleError(errorMessage: string): void {
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
             </div>
           {/each}
+          {#each provider.vmConnections as vmConnection}
+          <div class="px-5 py-2 w-[240px]" role="region" aria-label={vmConnection.name}>
+            <div class="float-right">
+              <Tooltip bottom tip="{provider.name} details">
+                <button
+                  aria-label="{provider.name} details"
+                  type="button"
+                  on:click={(): void =>
+                    router.goto(
+                      `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/summary`,
+                    )}>
+                  <Fa icon={faArrowUpRightFromSquare} />
+                </button>
+              </Tooltip>
+            </div>
+            <div class="font-semibold">
+              {vmConnection.name}
+            </div>
+            <div class="flex mt-1" aria-label="Connection Status">
+              <ConnectionStatus status={vmConnection.status} />
+            </div>            
+            <PreferencesConnectionActions
+              provider={provider}
+              connection={vmConnection}
+              connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
+              updateConnectionStatus={updateContainerStatus}
+              addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+          </div>
+        {/each}
         </div>
       </div>
     {/each}
