@@ -4,13 +4,13 @@ import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Tooltip from '../tooltip/Tooltip.svelte';
+import type { AriaLabelAttribute } from './ErrorMessage';
 
-interface Props {
+interface Props extends AriaLabelAttribute {
   error: string;
   icon?: boolean;
   wrapMessage?: boolean;
   class?: string;
-  'aria-label'?: string;
 }
 
 let { error, icon = false, wrapMessage = false, class: className, 'aria-label': ariaLabel }: Props = $props();
