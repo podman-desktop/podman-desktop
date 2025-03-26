@@ -19,9 +19,7 @@ let { provider, onclick, left, class: className }: Props = $props();
   on:click={onclick}
   class="px-1 py-px flex flex-row h-full items-center gap-1 min-w-fit hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative {className}"
   aria-label={provider.name}>
-  {#if left}
-    {@render left()}
-  {/if}
+  {@render left?.()}
   {#if provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.status }
     <ProviderWidgetStatus entry={provider} />
   {/if}
