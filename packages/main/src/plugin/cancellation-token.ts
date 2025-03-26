@@ -56,9 +56,7 @@ export class CancellationTokenImpl implements extensionApi.CancellationToken {
     if (this._isCancellationRequested) {
       return shortcutEvent;
     }
-    if (!this.emitter) {
-      this.emitter = new Emitter<unknown>();
-    }
+    this.emitter ??= new Emitter<unknown>();
     return this.emitter.event;
   }
 
@@ -74,10 +72,8 @@ export class CancellationTokenSource {
   private _token?: CancellationTokenImpl = undefined;
 
   get token(): extensionApi.CancellationToken {
-    if (!this._token) {
-      // be lazy and create the token only when actually needed
-      this._token = new CancellationTokenImpl();
-    }
+    // be lazy and create the token only when actually needed
+    this._token ??= new CancellationTokenImpl();
     return this._token;
   }
 

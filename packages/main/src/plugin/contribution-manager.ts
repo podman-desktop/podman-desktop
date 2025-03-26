@@ -333,9 +333,7 @@ export class ContributionManager {
   async waitForRunningState(composeDirectory: string, projectName: string, maxWait?: number): Promise<void> {
     // compute current date
     const startDate = new Date();
-    if (!maxWait) {
-      maxWait = 30 * 1000; // 30s
-    }
+    maxWait ??= 30 * 1000; // 30s
 
     const endDate = new Date(startDate.getTime() + maxWait).getTime();
 
@@ -623,9 +621,7 @@ export class ContributionManager {
         // apply restart policy if not specified
         service.deploy = service.deploy ?? {};
         service.deploy.restart_policy = service.deploy.restart_policy ?? {};
-        if (!service.deploy.restart_policy.condition) {
-          service.deploy.restart_policy.condition = 'always';
-        }
+        service.deploy.restart_policy.condition ??= 'always';
 
         // add the volume from the podman-desktop-socket (only if not inside the service itself)
         if (serviceKey !== PODMAN_DESKTOP_SOCKET_SERVICE) {

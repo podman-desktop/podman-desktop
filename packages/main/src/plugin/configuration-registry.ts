@@ -216,9 +216,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
             configurationValue[key] = configProperty.default;
           }
         }
-        if (!configProperty.scope) {
-          configProperty.scope = CONFIGURATION_DEFAULT_SCOPE;
-        }
+        configProperty.scope ??= CONFIGURATION_DEFAULT_SCOPE;
         this.configurationProperties[key] = configProperty;
       }
       this.configurationContributors.push(configuration);
@@ -326,9 +324,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     if (scope === CONFIGURATION_DEFAULT_SCOPE) {
       this.saveDefault();
     }
-    if (!scope) {
-      scope = CONFIGURATION_DEFAULT_SCOPE;
-    }
+    scope ??= CONFIGURATION_DEFAULT_SCOPE;
     const event = { key, value, scope };
     this._onDidChangeConfiguration.fire(event);
     // notify renderer

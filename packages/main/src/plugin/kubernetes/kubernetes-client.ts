@@ -465,9 +465,7 @@ export class KubernetesClient {
         console.trace('unable to list namespaces', error);
       }
     }
-    if (!namespace) {
-      namespace = 'default';
-    }
+    namespace ??= 'default';
     return namespace;
   }
 
@@ -1204,9 +1202,7 @@ export class KubernetesClient {
         delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'];
         spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec);
 
-        if (!spec.metadata.namespace) {
-          spec.metadata.namespace = namespace ?? DEFAULT_NAMESPACE;
-        }
+        spec.metadata.namespace ??= namespace ?? DEFAULT_NAMESPACE;
         try {
           // try to get the resource, if it does not exist an error will be thrown and we will
           // end up in the catch block

@@ -242,9 +242,7 @@ export class Exec {
 }
 
 export function getInstallationPath(envPATH?: string): string {
-  if (!envPATH) {
-    envPATH = process.env['PATH'];
-  }
+  envPATH ??= process.env['PATH'];
 
   if (isWindows()) {
     return `c:\\Program Files\\RedHat\\Podman;${envPATH}`;

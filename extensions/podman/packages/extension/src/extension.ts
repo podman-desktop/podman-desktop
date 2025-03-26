@@ -2144,9 +2144,7 @@ export async function createMachine(
       telemetryRecords.imagePath = 'embedded';
     }
   }
-  if (!telemetryRecords.imagePath) {
-    telemetryRecords.imagePath = 'default';
-  }
+  telemetryRecords.imagePath ??= 'default';
 
   const installedPodman = await getPodmanInstallation();
   const version = installedPodman?.version;

@@ -14,9 +14,7 @@ onMount(async () => {
 
   // get the color
   let singleColor = await appearanceUtil.getImage(color);
-  if (!singleColor) {
-    singleColor = '';
-  }
+  singleColor ??= '';
 
   if (singleColor?.startsWith('#')) {
     customStyle = `background-color: ${singleColor};`;

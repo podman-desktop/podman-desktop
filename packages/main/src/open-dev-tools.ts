@@ -30,9 +30,7 @@ export class OpenDevTools {
       >('OpenDevTools');
 
       // undocked mode by default
-      if (!openDevToolsConfiguration) {
-        openDevToolsConfiguration = 'undocked';
-      }
+      openDevToolsConfiguration ??= 'undocked';
 
       // open dev tools if not none
       if (openDevToolsConfiguration !== 'none') {

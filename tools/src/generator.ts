@@ -149,9 +149,7 @@ export class Generator {
       }
       title = title.substring(index + 1).trim();
       category = DEFAULT_MAPPINGS.get(category);
-      if (!category) {
-        category = DEFAULT_CATEGORY;
-      }
+      category ??= DEFAULT_CATEGORY;
       return { category, title };
     } else {
       return { category: DEFAULT_CATEGORY, title };

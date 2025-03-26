@@ -103,9 +103,7 @@ export function createHttpPatch(
           options = undefined;
         }
 
-        if (!options) {
-          options = {};
-        }
+        options ??= {};
 
         if (options.socketPath) {
           return original(options, callback);

@@ -230,9 +230,7 @@ async function createWindow(): Promise<BrowserWindow> {
 export async function createNewWindow(): Promise<BrowserWindow> {
   let window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
 
-  if (window === undefined) {
-    window = await createWindow();
-  }
+  window ??= await createWindow();
   return window;
 }
 

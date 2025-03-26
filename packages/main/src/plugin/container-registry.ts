@@ -834,12 +834,10 @@ export class ContainerProviderRegistry {
             volumeInfo.containersUsage = containersUsingThisVolume;
 
             // no usage data, set to -1 for size and 0 for refCount
-            if (!volumeInfo.UsageData) {
-              volumeInfo.UsageData = {
-                Size: -1,
-                RefCount: 0,
-              };
-            }
+            volumeInfo.UsageData ??= {
+              Size: -1,
+              RefCount: 0,
+            };
             // defines the refCount
             volumeInfo.UsageData.RefCount = volumeInfo.containersUsage.length;
 

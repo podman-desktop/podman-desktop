@@ -198,9 +198,7 @@ export class ExtensionsCatalog {
       const httpsProxyUrl = proxy?.httpsProxy;
 
       if (httpProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.http = new HttpProxyAgent({
             keepAlive: true,
@@ -215,9 +213,7 @@ export class ExtensionsCatalog {
         }
       }
       if (httpsProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.https = new HttpsProxyAgent({
             keepAlive: true,
