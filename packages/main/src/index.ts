@@ -17,7 +17,7 @@
  ***********************************************************************/
 import dns from 'node:dns';
 
-import { app, ipcMain, Menu, Tray } from 'electron';
+import { app, ipcMain, Menu, net, protocol, Tray } from 'electron';
 
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -38,7 +38,7 @@ import { isMac, isWindows, stoppedExtensions } from './util.js';
 let extensionLoader: ExtensionLoader | undefined;
 
 // Main startup
-const podmanDesktopMain = new Main(app);
+const podmanDesktopMain = new Main(app, net, protocol);
 podmanDesktopMain.main(process.argv);
 
 // TODO: remove when index.spec.ts tests are migrated in podmanDesktopMain-main.spec
