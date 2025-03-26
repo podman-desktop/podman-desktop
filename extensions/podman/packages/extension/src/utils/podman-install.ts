@@ -21,10 +21,11 @@ import * as path from 'node:path';
 import { promisify } from 'node:util';
 
 import * as extensionApi from '@podman-desktop/api';
-import { compare, compareVersions } from 'compare-versions';
+import { compare } from 'compare-versions';
 
 import { BaseCheck, OrCheck, SequenceCheck } from '../checks/base-check';
 import { getDetectionChecks } from '../checks/detection-checks';
+import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
@@ -802,87 +803,5 @@ export class WSLVersionCheck extends BaseCheck {
       description: `WSL version should be >= ${this.minVersion}.`,
       docLinksDescription: `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
     });
-  }
-}
-
-export class HyperVCheck extends BaseCheck {
-  title = 'Hyper-V installed';
-  static readonly PODMAN_MINIMUM_VERSION_FOR_HYPERV = '5.2.0';
-
-  constructor(private installationPreflightMode: boolean = false) {
-    super();
-  }
-
-  async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient();
-    return client.isUserAdmin();
-  }
-
-  async isPodmanDesktopElevated(): Promise<boolean> {
-    const client = await getPowerShellClient();
-    return client.isRunningElevated();
-  }
-
-  async isHyperVInstalled(): Promise<boolean> {
-    const client = await getPowerShellClient();
-    return client.isHyperVInstalled();
-  }
-
-  async isHyperVRunning(): Promise<boolean> {
-    const client = await getPowerShellClient();
-    return client.isHyperVRunning();
-  }
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    // if the hyperv check is called as an installation preflight we skip the podman version check
-    if (!this.installationPreflightMode && !(await this.isPodmanVersionSupported())) {
-      return this.createFailureResult({
-        description: `Hyper-V is only supported with podman version >= ${HyperVCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV}.`,
-      });
-    }
-    if (!(await this.isUserAdmin())) {
-      return this.createFailureResult({
-        description: 'You must have administrative rights to run Hyper-V Podman machines',
-        docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    if (!(await this.isPodmanDesktopElevated())) {
-      return this.createFailureResult({
-        description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
-      });
-    }
-    if (!(await this.isHyperVInstalled())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not installed on your system.',
-        docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    if (!(await this.isHyperVRunning())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not running on your system.',
-        docLinksDescription: 'call sc start vmms in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    return this.createSuccessfulResult();
-  }
-
-  private async isPodmanVersionSupported(): Promise<boolean> {
-    const installedPodman = await getPodmanInstallation();
-    if (installedPodman?.version) {
-      return compareVersions(installedPodman?.version, HyperVCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
-    }
-    return false;
   }
 }
