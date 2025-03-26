@@ -1,16 +1,16 @@
 <script lang="ts">
 import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { onMount } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
 import Fa from 'svelte-fa';
 
 import Tooltip from '../tooltip/Tooltip.svelte';
 
-interface Props {
+interface Props extends HTMLAttributes<HTMLElement> {
   error: string;
   icon?: boolean;
   wrapMessage?: boolean;
   class?: string;
-  'aria-label'?: string;
 }
 
 let { error, icon = false, wrapMessage = false, class: className, 'aria-label': ariaLabel }: Props = $props();
