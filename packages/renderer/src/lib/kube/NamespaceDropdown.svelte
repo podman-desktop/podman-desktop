@@ -13,7 +13,11 @@ let currentNamespacePromise = $derived.by(async () => {
 
 async function handleNamespaceChange(value: unknown): Promise<void> {
   const namespace = String(value);
-  await window.kubernetesSetCurrentNamespace(namespace);
+  try {
+    await window.kubernetesSetCurrentNamespace(namespace);
+  } finally {
+    await window.telemetryTrack('kubernetes.set.namespace');
+  }
 }
 </script>
 

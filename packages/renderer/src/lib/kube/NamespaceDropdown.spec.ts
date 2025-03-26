@@ -110,4 +110,5 @@ test('Expect clicking works', async () => {
   await fireEvent.click(item);
 
   await waitFor(() => expect(window.kubernetesSetCurrentNamespace).toHaveBeenCalledWith(secondNS));
+  expect(window.telemetryTrack).toHaveBeenCalledWith('kubernetes.set.namespace');
 });
