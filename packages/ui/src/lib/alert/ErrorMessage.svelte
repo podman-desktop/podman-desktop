@@ -5,12 +5,18 @@ import Fa from 'svelte-fa';
 
 import Tooltip from '../tooltip/Tooltip.svelte';
 
-export let error: string;
-export let icon = false;
-export let wrapMessage = false;
-let customClassWidth = '';
-let left = false;
-let top = false;
+interface Props {
+  error: string;
+  icon?: boolean;
+  wrapMessage?: boolean;
+  class?: string;
+}
+
+let { error, icon = false, wrapMessage = false, class: className }: Props = $props();
+
+let customClassWidth = $state('');
+let left = $state(false);
+let top = $state(false);
 
 onMount(() => {
   if (wrapMessage) {
@@ -25,12 +31,12 @@ onMount(() => {
 {#if icon}
   {#if error !== undefined && error !== ''}
     <Tooltip left={left} top={top} tip={error} class={customClassWidth}>
-      <Fa size="1.1x" class="cursor-pointer text-[var(--pd-state-error)] {$$props.class}" icon={faExclamationCircle} />
+      <Fa size="1.1x" class="cursor-pointer text-[var(--pd-state-error)] {className}" icon={faExclamationCircle} />
     </Tooltip>
   {/if}
 {:else}
   <div
-    class="text-[var(--pd-state-error)] p-1 flex flex-row items-center {$$props.class}"
+    class="text-[var(--pd-state-error)] p-1 flex flex-row items-center {className}"
     class:opacity-0={error === undefined || error === ''}>
     <Fa size="1.1x" class="cursor-pointer text-[var(--pd-state-error)]" icon={faExclamationCircle} />
     <div role="alert" aria-label="Error Message Content" class="ml-2">{error}</div>
