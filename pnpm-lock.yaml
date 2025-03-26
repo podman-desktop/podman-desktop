@@ -187,8 +187,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       '@types/validator':
-        specifier: ^13.12.2
-        version: 13.12.2
+        specifier: ^13.12.3
+        version: 13.12.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.27.0
         version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
@@ -621,8 +621,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/validator':
-        specifier: ^13.12.2
-        version: 13.12.2
+        specifier: ^13.12.3
+        version: 13.12.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.27.0
         version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
@@ -4308,8 +4308,8 @@ packages:
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
-  '@types/validator@13.12.2':
-    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
+  '@types/validator@13.12.3':
+    resolution: {integrity: sha512-2ipwZ2NydGQJImne+FhNdhgRM37e9lCev99KnqkbFHd94Xn/mErARWI1RSLem1QA19ch5kOhzIZd7e8CA2FI8g==}
 
   '@types/verror@1.10.11':
     resolution: {integrity: sha512-RlDm9K7+o5stv0Co8i8ZRGxDbrTxhJtgjqjFyVh/tXQyl/rYtTKlnTvZ88oSTeYREWurwx20Js4kTuKCsFkUtg==}
@@ -16126,7 +16126,7 @@ snapshots:
 
   '@types/uuid@9.0.8': {}
 
-  '@types/validator@13.12.2': {}
+  '@types/validator@13.12.3': {}
 
   '@types/verror@1.10.11':
     optional: true
