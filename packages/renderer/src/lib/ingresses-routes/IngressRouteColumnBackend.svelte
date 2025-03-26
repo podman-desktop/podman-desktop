@@ -11,6 +11,6 @@ let { object }: Props = $props();
 const ingressRouteUtils = new IngressRouteUtils();
 </script>
 
-{#each ingressRouteUtils.getBackends(object) as backend (backend)}
+{#each ingressRouteUtils.getBackends(object) as backend, index (`${backend}-${index}`)}
   <div class="text-[var(--pd-table-body-text)]">{backend}</div>
 {/each}

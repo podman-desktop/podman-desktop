@@ -30,7 +30,7 @@ function getAgeAndCount(event: EventUI): string {
         <tr>
           <th align="left">Type</th><th align="left">Reason</th><th align="left">Age</th><th align="left">From</th><th align="left">Message</th>
         </tr>
-        {#each sortedEvents as event}
+        {#each sortedEvents as event, index (`${event.message}-${index}`)}
           <tr>
             <td>{event.type}</td>
             <td>{event.reason}</td>
