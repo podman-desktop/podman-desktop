@@ -39,8 +39,8 @@ async function toggle(expanded: boolean): Promise<void> {
 }
 </script>
 
-{#snippet card(guide: unknown)}
-<GuideCard guide={guide as Guide} />
+{#snippet card(guide: Guide)}
+  <GuideCard guide={guide} />
 {/snippet}
 
 

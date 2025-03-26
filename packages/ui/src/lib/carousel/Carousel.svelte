@@ -1,14 +1,14 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { onDestroy, onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
-interface Props {
-  cards: unknown[];
+interface Props<T> {
+  cards: T[];
   cardWidth?: number;
-  card: Snippet<[unknown]>;
+  card: Snippet<[T]>;
 }
-let { cards, card, cardWidth = 340 }: Props = $props();
+let { cards, card, cardWidth = 340 }: Props<T> = $props();
 
 let resizeObserver: ResizeObserver;
 
