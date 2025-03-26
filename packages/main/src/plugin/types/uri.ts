@@ -78,7 +78,7 @@ export class Uri {
     authority ??= this._authority;
     path ??= this._path;
     query ??= this._query;
-    fragment = this._fragment;
+    fragment ??= this._fragment;
 
     if (
       scheme === this.scheme &&
