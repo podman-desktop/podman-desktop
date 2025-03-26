@@ -19,6 +19,9 @@ const CONFIGURATION_KEY = `${ExperimentalTasksSettings.SectionName}.${Experiment
 // keep a local copy of the tasks with their toast id
 const currentTasks: TaskInfoWithToastId[] = $state([]);
 
+// stores a list of long-duration tasks (60+ seconds) that have been completed and showed
+const showedAgainTasks: TaskInfoWithToastId[] = $state([]);
+
 // is that the configuration is enabled or not, will be updated by configuration
 let enabled = $state(false);
 
@@ -50,11 +53,23 @@ function handleTasks(tasks: TaskInfo[]): void {
       // replace the task in the currentTasks
       currentTasks.splice(currentTasks.indexOf(currentTask), 1, { ...taskInfo, toastId: currentTask.toastId });
       toast.set(currentTask.toastId, createToastOptions(taskInfo));
+
+      const time = Date.now();
+      // The task is completed, was running for at least 60s and is not in already showed tasks
+      if (
+        taskInfo.state === 'completed' &&
+        time >= taskInfo.started + 60000 &&
+        !showedAgainTasks.find(currentTask => currentTask.id === taskInfo.id)
+      ) {
+        displayNewToast(taskInfo);
+      }
+      showedAgainTasks.push(currentTask);
     }
   }
 
   // remove from currentTasks all the items from deletedTasks
   for (const taskInfo of toDeleteTasks) {
+    showedAgainTasks.splice(showedAgainTasks.indexOf(taskInfo), 1);
     currentTasks.splice(currentTasks.indexOf(taskInfo), 1);
     toast.pop(taskInfo.toastId);
   }
@@ -73,7 +88,6 @@ function createToastOptions(taskInfo: TaskInfo): SvelteToastOptions {
       sendIdTo: 'toastId',
     },
     dismissable: false,
-    initial: 0,
   };
 }
 
