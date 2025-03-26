@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { fireEvent, render } from '@testing-library/svelte';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PreferencesProxiesRendering from '/@/lib/preferences/PreferencesProxiesRendering.svelte';
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
@@ -81,15 +81,18 @@ describe('dropdown', () => {
     expect(Dropdown).toHaveBeenCalled();
     const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
 
+    const label = PROXY_LABELS.get(ProxyState.PROXY_MANUAL);
+    assert(label, 'proxy state label for manual should be defined');
+
     expect(onChange).toBeDefined();
-    onChange?.(PROXY_LABELS.get(ProxyState.PROXY_MANUAL));
+    onChange?.(label);
 
     // dropdown component should have been updated with proxy manual value
     await vi.waitFor(() => {
       expect(Dropdown).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          value: PROXY_LABELS.get(ProxyState.PROXY_MANUAL),
+          value: label,
         }),
       );
     });
@@ -104,15 +107,18 @@ describe('dropdown', () => {
     expect(Dropdown).toHaveBeenCalled();
     const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
 
+    const label = PROXY_LABELS.get(ProxyState.PROXY_MANUAL);
+    assert(label, 'proxy state label for manual should be defined');
+
     expect(onChange).toBeDefined();
-    onChange?.(PROXY_LABELS.get(ProxyState.PROXY_MANUAL));
+    onChange?.(label);
 
     // dropdown component should have been updated with proxy manual value
     await vi.waitFor(() => {
       expect(Dropdown).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          value: PROXY_LABELS.get(ProxyState.PROXY_MANUAL),
+          value: label,
         }),
       );
     });
