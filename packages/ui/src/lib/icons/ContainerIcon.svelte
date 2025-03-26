@@ -1,15 +1,11 @@
 <script lang="ts">
-let {
-  size = '40',
-  solid = false,
-  class: className,
-  style,
-}: {
+interface Props {
   size?: string;
   solid?: boolean;
   class?: string;
   style?: string;
-} = $props();
+}
+let { size = '40', solid = false, class: className, style }: Props = $props();
 </script>
 
 <svg
