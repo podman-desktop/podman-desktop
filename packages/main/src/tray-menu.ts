@@ -422,7 +422,7 @@ export class TrayMenu {
     }
     window?.show();
     if (isMac()) {
-      app.dock.show().catch((error: unknown) => {
+      app.dock?.show()?.catch((error: unknown) => {
         console.error('Error while showing dock', error);
       });
     }
