@@ -10,9 +10,10 @@ interface Props {
   icon?: boolean;
   wrapMessage?: boolean;
   class?: string;
+  'aria-label'?: string;
 }
 
-let { error, icon = false, wrapMessage = false, class: className }: Props = $props();
+let { error, icon = false, wrapMessage = false, class: className, 'aria-label': ariaLabel }: Props = $props();
 
 let customClassWidth = $state('');
 let left = $state(false);
@@ -39,6 +40,6 @@ onMount(() => {
     class="text-[var(--pd-state-error)] p-1 flex flex-row items-center {className}"
     class:opacity-0={error === undefined || error === ''}>
     <Fa size="1.1x" class="cursor-pointer text-[var(--pd-state-error)]" icon={faExclamationCircle} />
-    <div role="alert" aria-label="Error Message Content" class="ml-2">{error}</div>
+    <div role="alert" aria-label={ariaLabel ?? 'Error Message Content'} class="ml-2">{error}</div>
   </div>
 {/if}
