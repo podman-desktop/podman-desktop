@@ -67,3 +67,17 @@ test('provider with an image should render it', async () => {
     }),
   );
 });
+
+test('left slot should be renderer if defined', async () => {
+  const left = vi.fn();
+  render(ProviderButton, {
+    provider: PROVIDER_MOCK,
+    onclick: vi.fn(),
+    class: 'potatoes',
+    left,
+  });
+
+  await vi.waitFor(() => {
+    expect(left).toHaveBeenCalled();
+  });
+});
