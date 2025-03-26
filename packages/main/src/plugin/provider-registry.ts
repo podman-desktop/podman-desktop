@@ -53,6 +53,7 @@ import type {
   LifecycleMethod,
   PreflightChecksCallback,
   ProviderCleanupActionInfo,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -688,11 +689,8 @@ export class ProviderRegistry {
 
   private getProviderConnectionInfo(
     connection: ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection,
-  ): ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | ProviderVmConnectionInfo {
-    let providerConnection:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo;
+  ): ProviderConnectionInfo {
+    let providerConnection: ProviderConnectionInfo;
     if (this.isContainerConnection(connection)) {
       providerConnection = {
         name: connection.name,
@@ -897,11 +895,7 @@ export class ProviderRegistry {
 
   getMatchingConnectionLifecycleContext(
     internalId: string,
-    providerContainerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo
-      | ContainerProviderConnection,
+    providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): LifecycleContextImpl {
     const connection = this.getMatchingConnectionFromProvider(internalId, providerContainerConnectionInfo);
 
@@ -1063,11 +1057,7 @@ export class ProviderRegistry {
 
   getMatchingConnectionFromProvider(
     internalProviderId: string,
-    providerContainerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo
-      | ContainerProviderConnection,
+    providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection {
     if (this.isProviderContainerConnection(providerContainerConnectionInfo)) {
       return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
@@ -1079,21 +1069,13 @@ export class ProviderRegistry {
   }
 
   isProviderContainerConnection(
-    connection:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo
-      | ContainerProviderConnection,
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
     return (connection as ProviderContainerConnectionInfo).endpoint?.socketPath !== undefined;
   }
 
   isProviderKubernetesConnectionInfo(
-    connection:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo
-      | ContainerProviderConnection,
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderKubernetesConnectionInfo {
     return (
       !this.isProviderContainerConnection(connection) &&
@@ -1117,10 +1099,7 @@ export class ProviderRegistry {
 
   async startProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider
@@ -1189,7 +1168,7 @@ export class ProviderRegistry {
 
   async editProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     params: { [key: string]: unknown },
     logHandler?: Logger,
     token?: CancellationToken,
@@ -1222,10 +1201,7 @@ export class ProviderRegistry {
 
   async stopProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ProviderVmConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider
@@ -1296,7 +1272,7 @@ export class ProviderRegistry {
 
   async deleteProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider

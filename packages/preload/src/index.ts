@@ -85,6 +85,7 @@ import type { V1Route } from '/@api/openshift-types';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -1140,7 +1141,7 @@ export function initExposure(): void {
     'startProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {
@@ -1160,7 +1161,7 @@ export function initExposure(): void {
     'stopProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {
@@ -1180,7 +1181,7 @@ export function initExposure(): void {
     'editProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       params: { [key: string]: unknown },
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
@@ -1206,7 +1207,7 @@ export function initExposure(): void {
     'deleteProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {

@@ -108,6 +108,7 @@ import type { V1Route } from '/@api/openshift-types.js';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -2172,7 +2173,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({
@@ -2208,7 +2209,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({
@@ -2244,7 +2245,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         params: { [key: string]: any },
         loggerId: string,
@@ -2290,7 +2291,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({

@@ -56,6 +56,11 @@ export interface ProviderVmConnectionInfo {
   lifecycleMethods?: LifecycleMethod[];
 }
 
+export type ProviderConnectionInfo =
+  | ProviderContainerConnectionInfo
+  | ProviderKubernetesConnectionInfo
+  | ProviderVmConnectionInfo;
+
 export interface ProviderInfo {
   internalId: string;
   id: string;
