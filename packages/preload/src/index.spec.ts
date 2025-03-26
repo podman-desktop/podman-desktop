@@ -263,4 +263,60 @@ describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initEx
     taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
     expect(logger).toHaveBeenCalledWith('key1', 'log', data);
   });
+
+  test('logger passed to startProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const startProviderConnectionLifecycleExposure = getInMainWorld('startProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await startProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to stopProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const stopProviderConnectionLifecycleExposure = getInMainWorld('stopProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await stopProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to editProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const editProviderConnectionLifecycleExposure = getInMainWorld('editProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await editProviderConnectionLifecycleExposure('internal', {}, {}, 'key1', logger, 'token1', 'task1');
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][4];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to deleteProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const deleteProviderConnectionLifecycleExposure = getInMainWorld('deleteProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await deleteProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
 });

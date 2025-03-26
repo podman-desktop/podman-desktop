@@ -517,3 +517,212 @@ describe.each<{
     expect(originalTask.error).toEqual('Something went wrong while trying to create provider: Error: an error');
   });
 });
+
+describe.each<{
+  handler: string;
+  methodName: 'startProviderConnection' | 'stopProviderConnection' | 'deleteProviderConnection';
+  expectedTitle: string;
+  expectedActionName: string;
+  expectedError: string;
+}>([
+  {
+    handler: 'provider-registry:startProviderConnectionLifecycle',
+    methodName: 'startProviderConnection',
+    expectedTitle: 'Starting name1',
+    expectedActionName: 'Go to task >',
+    expectedError: 'Something went wrong while starting container provider: Error: an error',
+  },
+  {
+    handler: 'provider-registry:stopProviderConnectionLifecycle',
+    methodName: 'stopProviderConnection',
+    expectedTitle: 'Stopping name1',
+    expectedActionName: 'Go to task >',
+    expectedError: 'Something went wrong while stopping container provider: Error: an error',
+  },
+  {
+    handler: 'provider-registry:deleteProviderConnectionLifecycle',
+    methodName: 'deleteProviderConnection',
+    expectedTitle: 'Deleting name1',
+    expectedActionName: 'Go to resources',
+    expectedError: 'Something went wrong while trying to delete name1',
+  },
+])('$handler', async ({ handler, methodName, expectedTitle, expectedActionName, expectedError }) => {
+  let originalTask: Task;
+
+  beforeEach(() => {
+    originalTask = {
+      status: 'in-progress',
+      error: '',
+    } as unknown as Task;
+    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
+    vi.spyOn(NavigationManager.prototype, 'navigateToResources');
+  });
+
+  test('createTask is called', async () => {
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
+    const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
+    if (!params) {
+      // this is already expected
+      throw new Error('param should be defined');
+    }
+    expect(params.title).toEqual(expectedTitle);
+    expect(params.action?.name).toEqual(expectedActionName);
+
+    // check that action.execute passed to createTask is calling navigateToProviderTask
+    const execute = params.action?.execute;
+    expect(execute).toBeDefined();
+    if (!execute) {
+      throw new Error('execute should be defined');
+    }
+    execute(new TaskImpl('task1id', 'task1name'));
+    expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
+  });
+
+  test(`${methodName} is called and is resolved`, async () => {
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
+    expect(result).toEqual({ result: undefined });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).not.toHaveBeenCalled();
+    expect(originalTask.status).toEqual('success');
+    expect(originalTask.error).toEqual('');
+  });
+
+  test(`${methodName} is called and is rejected`, async () => {
+    const rejectError = new Error('an error');
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
+    expect(result).toEqual({
+      error: rejectError,
+    });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).toHaveBeenCalledWith(rejectError);
+    expect(originalTask.status).toEqual('in-progress');
+    expect(originalTask.error).toEqual(expectedError);
+  });
+});
+
+describe.each<{
+  handler: string;
+  methodName: 'editProviderConnection';
+}>([
+  {
+    handler: 'provider-registry:editProviderConnectionLifecycle',
+    methodName: 'editProviderConnection',
+  },
+])('$handler', async ({ handler, methodName }) => {
+  let originalTask: Task;
+
+  beforeEach(() => {
+    originalTask = {
+      status: 'in-progress',
+      error: '',
+    } as unknown as Task;
+    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
+    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
+  });
+
+  test('createTask is called', async () => {
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    await handle(undefined, 'internal1', { name: 'name1' }, { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
+    const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
+    if (!params) {
+      // this is already expected
+      throw new Error('param should be defined');
+    }
+    expect(params.title).toEqual('Creating name1 provider');
+    expect(params.action?.name).toEqual(`Open task`);
+
+    // check that action.execute passed to createTask is calling navigateToProviderTask
+    const execute = params.action?.execute;
+    expect(execute).toBeDefined();
+    if (!execute) {
+      throw new Error('execute should be defined');
+    }
+    execute(new TaskImpl('task1id', 'task1name'));
+    expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledOnce();
+    expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
+  });
+
+  test(`${methodName} is called and is resolved`, async () => {
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(
+      undefined,
+      'internal1',
+      { name: 'name1' },
+      { key1: 'value1', key2: 42 },
+      'logger1',
+      'token1',
+      'task1',
+    );
+    expect(result).toEqual({ result: undefined });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).not.toHaveBeenCalled();
+    expect(originalTask.status).toEqual('success');
+    expect(originalTask.error).toEqual('');
+  });
+
+  test(`${methodName} is called and is rejected`, async () => {
+    const rejectError = new Error('an error');
+    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    const onEndMock = vi.fn();
+    const errorMock = vi.fn();
+    vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
+      onEnd: onEndMock,
+      error: errorMock,
+    } as unknown as LoggerWithEnd);
+    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+    const handle = handlers.get(handler);
+    expect(handle).not.equal(undefined);
+    const result = await handle(
+      undefined,
+      'internal1',
+      { name: 'name1' },
+      { key1: 'value1', key2: 42 },
+      'logger1',
+      'token1',
+      'task1',
+    );
+    expect(result).toEqual({
+      error: rejectError,
+    });
+    expect(onEndMock).toHaveBeenCalled();
+    expect(errorMock).toHaveBeenCalledWith(rejectError);
+    expect(originalTask.status).toEqual('in-progress');
+    expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+  });
+});
