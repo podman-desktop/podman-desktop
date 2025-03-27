@@ -84,6 +84,7 @@ export * from './model/pages/run-image-page';
 export * from './model/pages/settings-bar';
 export * from './model/pages/settings-page';
 export * from './model/pages/tasks-page';
+export * from './model/pages/troubleshooting-page';
 export * from './model/pages/welcome-page';
 export * from './model/workbench/navigation';
 export * from './model/workbench/status-bar';
