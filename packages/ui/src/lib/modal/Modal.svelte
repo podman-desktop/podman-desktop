@@ -13,7 +13,7 @@ let {
   onclose = (): void => {
     dispatch('close');
   },
-} = $props();
+}: { name?: string; top?: boolean; ignoreFocusOut?: boolean; onclose?: () => void } = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
