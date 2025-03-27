@@ -250,7 +250,7 @@ function dragMe(node: HTMLElement): void {
                           </div>
                         {/if}
 
-                        {#each innerItem.sections as section, i (`${section.title}-${i}`)}
+                        {#each innerItem.sections as section, i (i)}
                           <div
                             class="flex justify-center py-2 text-xs font-bold group-[.is-selected]:bg-[var(--pd-tab-highlight)] group-hover:bg-[var(--pd-tab-highlight)] border-x-2 border-transparent group-hover:border-[var(--pd-tab-highlight)]
                     bg-[var(--pd-label-bg)]">

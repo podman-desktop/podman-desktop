@@ -132,7 +132,7 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="buttons">
-      {#each buttonOrder as i (i)}
+      {#each buttonOrder as i, index (index)}
         {#if i === cancelId}
           <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
         {:else}
