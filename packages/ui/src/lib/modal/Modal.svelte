@@ -6,12 +6,14 @@ import { tabWithinParent } from '../utils/dialog-utils';
 const dispatch = createEventDispatcher();
 
 let modal: HTMLDivElement;
-export let name = 'drop-down-dialog';
-export let top: boolean = false;
-export let ignoreFocusOut: boolean = false;
-export let onclose: () => void = () => {
-  dispatch('close');
-};
+let {
+  name = 'drop-down-dialog',
+  top = false,
+  ignoreFocusOut = false,
+  onclose = (): void => {
+    dispatch('close');
+  },
+} = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
