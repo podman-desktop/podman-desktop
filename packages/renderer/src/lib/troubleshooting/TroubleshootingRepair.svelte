@@ -9,7 +9,7 @@ import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte'
 export let providers: ProviderInfo[] = [];
 </script>
 
-<div class="flex flex-col w-full bg-[var(--pd-content-card-bg)] p-4 rounded-lg">
+<div class="flex flex-col w-full bg-[var(--pd-content-card-bg)] p-4 rounded-lg" role="region" aria-label="Repair">
   <div class="flex flex-row w-full pb-2 items-center">
     <Fa size="1.5x" class="pr-2" icon={faWrench} />
     <div class="text-xl" aria-label="Repair">Repair</div>

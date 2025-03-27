@@ -33,7 +33,7 @@ async function reconnectContainerProviders(): Promise<void> {
     icon={faPlug}>
     Reconnect providers
   </Button>
-  <div role="status" class="mx-2">{reconnectResult}</div>
+  <div role="status" class="mx-2" aria-label="Reconnect Providers">{reconnectResult}</div>
   {#if reconnectError}
     <ErrorMessage class="mx-2" error={reconnectError} />
   {/if}
