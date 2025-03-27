@@ -82,7 +82,7 @@ onMount(async () => {
         <Cell>{imageUtils.getHumanSize(manifest.size)}</Cell>
       </tr>
       {#if manifest.urls}
-        {#each manifest.urls as url, index (`${url}-${index}`)}
+        {#each manifest.urls as url, index (index)}
           <tr>
             <Cell>URL</Cell>
             <Cell>{url}</Cell>

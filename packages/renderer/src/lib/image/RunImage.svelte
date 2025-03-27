@@ -697,7 +697,7 @@ const envDialogOptions: OpenDialogOptions = {
               <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Volumes:</label>
               <!-- Display the list of volumes -->
-              {#each volumeMounts as volumeMount, index (volumeMount)}
+              {#each volumeMounts as volumeMount, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="volumeMount.{index}"
@@ -724,7 +724,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalContainerName"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Port mapping:</label>
-              {#each exposedPorts as port, index (`${port}-${index}`)}
+              {#each exposedPorts as port, index (index)}
                 <div class="flex flex-row justify-center items-center w-full">
                   <span
                     class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
@@ -747,7 +747,7 @@ const envDialogOptions: OpenDialogOptions = {
                 Add custom port mapping
               </Button>
               <!-- Display the list of existing hostContainerPortMappings -->
-              {#each hostContainerPortMappings as hostContainerPortMapping, index (hostContainerPortMapping)}
+              {#each hostContainerPortMappings as hostContainerPortMapping, index (index)}
                 <div class="flex flex-row justify-center w-full py-1">
                   <Input
                     bind:value={hostContainerPortMapping.hostPort.port}
@@ -769,7 +769,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment variables:</label>
               <!-- Display the list of existing environment variables -->
-              {#each environmentVariables as environmentVariable, index (environmentVariable)}
+              {#each environmentVariables as environmentVariable, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
 
@@ -890,7 +890,7 @@ const envDialogOptions: OpenDialogOptions = {
                 for="modalDevices"
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Devices:</label>
               <!-- Display the list of existing devices -->
-              {#each devices as device, index (device)}
+              {#each devices as device, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
                     bind:value={device.host}
@@ -1057,7 +1057,7 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add extra hosts (appends to /etc/hosts file):</label>
               <!-- Display the list of extra hosts -->
-              {#each extraHosts as extraHost, index (extraHost)}
+              {#each extraHosts as extraHost, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={extraHost.host} placeholder="Hostname" class="ml-2" />
 

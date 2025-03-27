@@ -133,7 +133,7 @@ function addCard(item: { value: string }): void {
 
 <div class="flex flex-col" role="region" aria-label="Build Platform Options">
   <div class="flex flex-row gap-x-4 gap-y-4 flex-wrap">
-    {#each sortedCards as card, index (`${card.title}-${index}`)}
+    {#each sortedCards as card, index (index)}
       <BuildImageFromContainerfileCard
         title={card.title}
         isDefault={card.isDefault}
@@ -156,7 +156,7 @@ function addCard(item: { value: string }): void {
   {:else}
     <div class="flex flex-col pt-4">
       <div class="flex flex-row gap-x-4 flex-wrap gap-y-4">
-        {#each advancedCards as card, index (`${card.title}-${index}`)}
+        {#each advancedCards as card, index (index)}
           <BuildImageFromContainerfileCard
             title={card.title}
             isDefault={card.isDefault}

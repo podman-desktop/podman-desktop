@@ -127,7 +127,7 @@ async function importContainers(): Promise<void> {
         <div class="flex flex-col w-2/4 mr-2.5">Image Name when importing (e.g quay.io/podman/hello)</div>
       </div>
     {/if}
-    {#each containersToImport as containerToImport, index (containerToImport)}
+    {#each containersToImport as containerToImport, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
         <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly={true} />
         <Input
