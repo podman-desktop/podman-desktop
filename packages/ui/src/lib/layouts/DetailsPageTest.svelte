@@ -9,10 +9,10 @@ import DetailsPage from './DetailsPage.svelte';
   breadcrumbRightPart="bcRight"
   breadcrumbTitle="bcTitle">
 
-  <svelte:fragment slot="content">My content slot</svelte:fragment>
-  <svelte:fragment slot="tabs">My tabs slot</svelte:fragment>
-  <svelte:fragment slot="icon">My icon slot</svelte:fragment>
-  <svelte:fragment slot="subtitle">My subtitle slot</svelte:fragment>
-  <svelte:fragment slot="actions">My actions slot</svelte:fragment>
-  <svelte:fragment slot="detail">My detail slot</svelte:fragment>
+  {#snippet contentSnippet()}My content slot{/snippet}
+  {#snippet tabsSnippet()}My tabs slot{/snippet}
+  {#snippet iconSnippet()}My icon slot{/snippet}
+  {#snippet subtitleSnippet()}My subtitle slot{/snippet}
+  {#snippet actionsSnippet()}My actions slot{/snippet}
+  {#snippet detailSnippet()}My detail slot{/snippet}
 </DetailsPage>
