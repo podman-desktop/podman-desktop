@@ -604,12 +604,14 @@ export class ProviderRegistry {
     }
 
     const provider = this.getMatchingProvider(providerInternalId);
-    let connection: ContainerProviderConnection | KubernetesProviderConnection | undefined;
+    let connection: ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection | undefined;
 
     if (provider.containerConnections && provider.containerConnections.length > 0) {
       connection = provider.containerConnections[0];
     } else if (provider.kubernetesConnections && provider.kubernetesConnections.length > 0) {
       connection = provider.kubernetesConnections[0];
+    } else if (provider.vmConnections && provider.vmConnections.length > 0) {
+      connection = provider.vmConnections[0];
     }
 
     if (!connection) {

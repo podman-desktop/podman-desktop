@@ -1982,6 +1982,26 @@ describe('startProvider', () => {
     await providerRegistry.startProvider((provider as ProviderImpl).internalId);
     expect(startMock).toBeCalled();
   });
+
+  test('if the provider has one VM connection with the start lifecycle, execute the start action', async () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    const startMock = vi.fn();
+    (provider as ProviderImpl).registerVmProviderConnection({
+      name: 'connection',
+      lifecycle: {
+        start: startMock,
+      },
+      status() {
+        return 'stopped';
+      },
+    });
+    await providerRegistry.startProvider((provider as ProviderImpl).internalId);
+    expect(startMock).toBeCalled();
+  });
 });
 
 describe('shellInProviderConnection', () => {
