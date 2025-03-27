@@ -21,10 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
-import ComplexTable from '/@/lib/table/ComplexTable.svelte';
+import TestComplexTable from './TestComplexTable.svelte';
 
 test('complex table should have expected number of rows', async () => {
-  const { getAllByRole } = render(ComplexTable, {
+  const { getAllByRole } = render(TestComplexTable, {
     people: [
       {
         name: 'Charlie',
@@ -50,7 +50,7 @@ test('complex table should have expected number of rows', async () => {
 });
 
 test('expect rounded class to be used for children-less row', async () => {
-  const { getAllByRole } = render(ComplexTable, {
+  const { getAllByRole } = render(TestComplexTable, {
     people: [
       {
         name: 'Charlie',
@@ -71,7 +71,7 @@ test('expect rounded class to be used for children-less row', async () => {
 });
 
 test('expect rounded TOP class to be used for row with children', async () => {
-  const { getAllByRole } = render(ComplexTable, {
+  const { getAllByRole } = render(TestComplexTable, {
     people: [
       {
         name: 'Charlie',
@@ -96,7 +96,7 @@ test('expect rounded TOP class to be used for row with children', async () => {
 });
 
 test('expect rounded BOTTOM class to be used for the last children of a row', async () => {
-  const { getAllByRole } = render(ComplexTable, {
+  const { getAllByRole } = render(TestComplexTable, {
     people: [
       {
         name: 'Charlie',
