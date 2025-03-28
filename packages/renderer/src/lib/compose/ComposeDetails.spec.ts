@@ -244,7 +244,7 @@ test('Compose details inspect is clickable and loadable', async () => {
       ImageID: 'sha256:dummy-image-id',
     },
     {
-      Id: 'sha256:1234567890123',
+      Id: 'sha256:1234567890124',
       Image: 'sha256:123',
       Names: ['foo2'],
       Status: 'Running',
