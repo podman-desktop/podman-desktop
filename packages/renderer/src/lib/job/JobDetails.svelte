@@ -75,19 +75,25 @@ async function loadDetails(): Promise<void> {
 
 {#if job}
   <DetailsPage title={job.name} subtitle={job.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={JobIcon} size={24} status={job.status} />
-    <svelte:fragment slot="actions">
-      <JobActions job={job} detailed={true} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={job.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if job}<StatusIcon icon={JobIcon} size={24} status={job.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if job}<JobActions job={job} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if job}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={job.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <JobDetailsSummary job={kubeJob} kubeError={kubeError} />
       </Route>
@@ -97,6 +103,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeJob)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

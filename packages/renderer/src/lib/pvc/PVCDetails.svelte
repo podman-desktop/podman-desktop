@@ -75,19 +75,25 @@ async function loadDetails(): Promise<void> {
 
 {#if pvc}
   <DetailsPage title={pvc.name} subtitle={pvc.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={PVCIcon} size={24} status={pvc.status} />
-    <svelte:fragment slot="actions">
-      <PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI | undefined => (pvc = pvc)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={pvc.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if pvc}<StatusIcon icon={PVCIcon} size={24} status={pvc.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if pvc}<PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI | undefined => (pvc = pvc)} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if pvc}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={pvc.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <PVCDetailsSummary pvc={kubePVC} kubeError={kubeError} />
       </Route>
@@ -97,6 +103,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubePVC)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}
