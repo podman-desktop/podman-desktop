@@ -30,7 +30,7 @@ async function refresh(): Promise<void> {
   <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
     <h2 class="mt-2">Health Checks</h2>
     <div class="flex flex-col space-y-4">
-    {#each info?.healthCheckers ?? [] as healthchecker}
+    {#each info?.healthCheckers ?? [] as healthchecker, index (index)}
       <ul>
         <li><b>{healthchecker.contextName}</b></li>
         <li>checking: {healthchecker.checking}</li>
@@ -41,7 +41,7 @@ async function refresh(): Promise<void> {
 
     <h2 class="mt-2">Permission Checks</h2>
     <div class="flex flex-col space-y-4">
-      {#each info?.permissionCheckers ?? [] as permissionChecker}
+      {#each info?.permissionCheckers ?? [] as permissionChecker, index (index)}
         <ul>
           <li><b>{permissionChecker.contextName} / {permissionChecker.resourceName}</b></li>
           <li>permitted: {permissionChecker.permitted}</li>
@@ -52,7 +52,7 @@ async function refresh(): Promise<void> {
 
     <h2 class="mt-2">Informers</h2>
     <div class="flex flex-col space-y-4">
-    {#each info?.informers ?? [] as informer}
+    {#each info?.informers ?? [] as informer, index (index)}
       <ul>
         <li><b>{informer.contextName} / {informer.resourceName}</b></li>
         <li>is offline: {informer.isOffline}</li>

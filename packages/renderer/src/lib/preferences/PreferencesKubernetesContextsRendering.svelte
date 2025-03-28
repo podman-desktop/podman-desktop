@@ -220,7 +220,7 @@ async function connect(contextName: string): Promise<void> {
         Go to Resources
       </Button>
     </EmptyScreen>
-    {#each kubernetesContextsWithStates as context}
+    {#each kubernetesContextsWithStates as context, index (index)}
       <!-- If current context, use lighter background -->
       <div
         role="row"
@@ -321,7 +321,7 @@ async function connect(contextName: string): Promise<void> {
                         <Tooltip>
                           <div>ERROR</div>
                           <div slot="tip" class="p-2">
-                            {#each context.errorMessage.split('\n').filter(l => l) as line (line)}
+                            {#each context.errorMessage.split('\n').filter(l => l) as line, index (index)}
                               <p>{line}</p>
                             {/each}
                         </Tooltip>

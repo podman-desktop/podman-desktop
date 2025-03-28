@@ -89,12 +89,12 @@ onDestroy(() => {
     {#if experimentalProvidersStatusBar}
       <Providers/>
     {/if}
-    {#each leftEntries as entry}
+    {#each leftEntries as entry, index (index)}
       <StatusBarItem entry={entry} />
     {/each}
   </div>
   <div class="flex flex-wrap flex-row-reverse gap-x-1.5 h-full place-self-end">
-    {#each rightEntries as entry}
+    {#each rightEntries as entry, index (index)}
       <StatusBarItem entry={entry} />
     {/each}
     {#if experimentalTaskStatusBar}

@@ -247,7 +247,7 @@ function navigateToContainers(): void {
             aria-label="Containers">Containers to replicate to the pod:</span>
         </div>
         <div class="w-full bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
-          {#each podCreation.containers as container, index}
+          {#each podCreation.containers as container, index (container.id)}
             <div class="p-2 flex flex-row items-center text-[var(--pd-content-card-text)]">
               <div class="w-10"><StatusIcon icon={ContainerIcon} status="STOPPED" /></div>
               <div class="w-16 pl-3">{index + 1}.</div>
