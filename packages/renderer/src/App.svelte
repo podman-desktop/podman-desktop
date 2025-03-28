@@ -5,7 +5,6 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
-import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation';
 import type { NavigationRequest } from '/@api/navigation-request';
 
@@ -82,7 +81,7 @@ import WelcomePage from './lib/welcome/WelcomePage.svelte';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import Route from './Route.svelte';
 import { lastSubmenuPages } from './stores/breadcrumb';
-import { kubernetesCurrentContextState } from './stores/kubernetes-contexts-state';
+import { noKubernetesCurrentContext } from './stores/kubernetes-no-current-context';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
@@ -252,7 +251,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
         <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
           <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
-        {#if $kubernetesCurrentContextState.error === NO_CURRENT_CONTEXT_ERROR}
+        {#if $noKubernetesCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
             <KubernetesDashboard />
           </Route>
