@@ -1429,6 +1429,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
+
+    // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
+    // extension activation so that the user isn't constantly prompted with the error message.
+    // only on macOS
+    if (extensionApi.env.isMac) {
+      await checkAndNotifyDisguisedPodman();
+    }
   }
 
   const doAutoStart = async (
@@ -2230,5 +2237,28 @@ export function updateWSLHyperVEnabledContextValue(value: boolean): void {
   if (wslAndHypervEnabledContextValue !== value) {
     wslAndHypervEnabledContextValue = value;
     extensionApi.context.setValue(WSL_HYPERV_ENABLED_KEY, value);
+  }
+}
+
+// Check that the socket is indeed a disguised podman socket, if it is NOT, we should
+// alert the user that compatibility was not ran.
+async function checkAndNotifyDisguisedPodman(): Promise<void> {
+  const socketCompatibilityMode = getSocketCompatibility();
+
+  // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
+  if (!socketCompatibilityMode.isEnabled()) {
+    return;
+  }
+
+  // Proceed with alerting.
+  const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+  // If the socket is not disguised, we should alert the user that compatibility was not ran.
+  if (!isDisguisedPodmanSocket) {
+    extensionApi.window.showNotification({
+      body: `The Docker socket is not disguised as a Podman socket. Please check any tools that may be overriding /var/run/docker.sock and re-enable compatibility mode.`, 
+      type: 'error',
+      highlight: true,
+    })
   }
 }

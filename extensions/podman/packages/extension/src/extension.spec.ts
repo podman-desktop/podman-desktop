@@ -42,6 +42,7 @@ import type { UpdateCheck } from './utils/podman-install';
 import { PodmanInstall } from './utils/podman-install';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
 import * as util from './utils/util';
+import { isDisguisedPodman } from './utils/warnings';
 
 const config: Configuration = {
   get: () => {
@@ -3211,4 +3212,107 @@ test('activate and autostart should not duplicate machines ', async () => {
   // should be only 1 but we allow some more calls (if there is not a check to check during the autostart it would be 100+ calls)
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
+});
+
+describe('macOS: tests for notifying if disguised podman socket fails / passes', () => {
+  let contextMock: extensionApi.ExtensionContext;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    contextMock = {
+      subscriptions: [],
+      secrets: {
+        delete: vi.fn(),
+        get: vi.fn(),
+        onDidChange: vi.fn(),
+        store: vi.fn(),
+      },
+    } as unknown as extensionApi.ExtensionContext;
+
+    // Mock the get compatibility functionality.
+    // we will always assuming it's "disabled" for the tests
+    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
+      isEnabled: vi.fn().mockReturnValue(true),
+      enable: vi.fn().mockReturnValue(true),
+      disable: vi.fn(),
+      details: '',
+      tooltipText: (): string => {
+        return '';
+      },
+    });
+
+    vi.mock('./utils/warnings');
+  });
+
+  test('when isDisguisedPodman is true, error message should NOT be shown', async () => {
+    // macOS only
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    // Mock "isDisguisedPodman" to return true to indicate a failed socket
+    vi.mocked(isDisguisedPodman).mockImplementation(async () => true);
+
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Check that isDisguisedPodman was called
+    expect(isDisguisedPodman).toBeCalled();
+
+    // Check that the error message is NOT shown
+    expect(extensionApi.window.showErrorMessage).not.toBeCalled();
+  });
+
+  test('when isDisguisedPodman is false, error message should be shown', async () => {
+    // macOS only
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    // Mock "isDisguisedPodman" to return false to indicate a failed socket
+    vi.mocked(isDisguisedPodman).mockImplementation(async () => false);
+
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Check that isDisguisedPodman was called
+    expect(isDisguisedPodman).toBeCalled();
+
+    // Check that the error message is shown
+    expect(extensionApi.window.showErrorMessage).toBeCalledWith(
+      "Podman isn't running in Docker compatibility mode, even though it’s enabled. Another tool may be using /var/run/docker.sock. Check your system and re-enable Docker compatibility if needed.",
+      'OK',
+    );
+  });
+
+  test('do not show error message OR call function if on linux', async () => {
+    // linux
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = true;
+
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Expect that isDisguisedPodman was NOT called
+    expect(isDisguisedPodman).not.toBeCalled();
+
+    expect(extensionApi.window.showErrorMessage).not.toBeCalled();
+  });
+
+  test('do not show error message OR call function if on windows', async () => {
+    // windows
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(extensionApi.env).isWindows = true;
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Expect that isDisguisedPodman was NOT called
+    expect(isDisguisedPodman).not.toBeCalled();
+
+    expect(extensionApi.window.showErrorMessage).not.toBeCalled();
+  });
 });
