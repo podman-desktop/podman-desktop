@@ -39,7 +39,7 @@ export let artifact: V1NodeSpec | undefined;
       <Cell>
         <table>
           <tbody>
-            {#each artifact.taints as taint (taint.key)}
+            {#each artifact.taints as taint, index (index)}
               <tr>
                 <Cell>{taint.key}</Cell>
                 <Cell>Effect: {taint.effect}, Value: {taint.value ?? 'N/A'}</Cell>
