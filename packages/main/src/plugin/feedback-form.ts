@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ButtonsType } from '../../../../main/src/plugin/message-box';
+import type { IDisposable } from '/@api/disposable.js';
 
-export interface MessageBoxOptions {
-  id: number;
-  title: string;
-  message: string;
-  detail?: string;
-  buttons?: ButtonsType[];
-  type?: string;
-  defaultId?: number;
-  cancelId?: number;
-  footerMarkdownDescription?: string;
+import type { ApiSenderType } from './api.js';
+import type { CommandRegistry } from './command-registry.js';
+
+export class FeedbackForm implements IDisposable {
+  #disposables: IDisposable[] = [];
+
+  constructor(
+    private commandRegistry: CommandRegistry,
+    private apiSender: ApiSenderType,
+  ) {}
+
+  dispose(): void {
+    this.#disposables.forEach(disposable => disposable.dispose());
+    this.#disposables = [];
+  }
+
+  init(): void {
+    this.#disposables.push(
+      this.commandRegistry.registerCommand('openWebsite', args => {
+        if (args) {
+          this.apiSender.send('openWebsite', args);
+        }
+      }),
+    );
+  }
 }
