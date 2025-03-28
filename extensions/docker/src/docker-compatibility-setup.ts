@@ -56,6 +56,7 @@ export class DockerCompatibilitySetup {
         if (contextName) {
           try {
             await this.#dockerContextHandler.switchContext(contextName);
+            await this.refreshContextList();
           } catch (error: unknown) {
             console.error('error while switching the context', error);
           }
