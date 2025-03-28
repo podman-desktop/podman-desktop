@@ -75,19 +75,25 @@ async function loadDetails(): Promise<void> {
 
 {#if cronjob}
   <DetailsPage title={cronjob.name} subtitle={cronjob.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={CronJobIcon} size={24} status={cronjob.status} />
-    <svelte:fragment slot="actions">
-      <CronJobActions cronjob={cronjob} detailed={true} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={cronjob.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if cronjob}<StatusIcon icon={CronJobIcon} size={24} status={cronjob.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if cronjob}<CronJobActions cronjob={cronjob} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if cronjob}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={cronjob.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <CronJobDetailsSummary cronjob={kubeCronJob} kubeError={kubeError} />
       </Route>
@@ -97,6 +103,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeCronJob)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

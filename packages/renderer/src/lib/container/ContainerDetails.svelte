@@ -69,8 +69,10 @@ onMount(() => {
 
 {#if container}
   <DetailsPage title={container.name} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={ContainerIcon} size={24} status={container.state} />
-    <svelte:fragment slot="subtitle">
+    {#snippet iconSnippet()}
+      <StatusIcon icon={ContainerIcon} size={24} status={container.state} />
+    {/snippet}
+    {#snippet subtitleSnippet()}
       <Link
         aria-label="Image Details"
         on:click={(): void => {
@@ -78,8 +80,8 @@ onMount(() => {
             router.goto(container.imageHref);
           }
         }}>{container.shortImage}</Link>
-    </svelte:fragment>
-    <svelte:fragment slot="actions">
+    {/snippet}
+    {#snippet actionsSnippet()}
       <div class="flex items-center w-5">
         {#if container.actionError}
           <ErrorMessage error={container.actionError} icon wrapMessage />
@@ -88,12 +90,14 @@ onMount(() => {
         {/if}
       </div>
       <ContainerActions container={container} detailed={true} on:update={(): ContainerInfoUI => (container = container)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={container.state} />
-      <ContainerStatistics container={container} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {/snippet}
+    {#snippet detailSnippet()}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        <StateChange state={container.state} />
+        <ContainerStatistics container={container} />
+      </div>
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
@@ -108,8 +112,8 @@ onMount(() => {
       {#if displayTty}
         <Tab title="Tty" selected={isTabSelected($router.path, 'tty')} url={getTabUrl($router.path, 'tty')} />
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <ContainerDetailsSummary container={container} />
       </Route>
@@ -128,6 +132,6 @@ onMount(() => {
       <Route path="/tty" breadcrumb="Tty" navigationHint="tab">
         <ContainerDetailsTtyTerminal container={container} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

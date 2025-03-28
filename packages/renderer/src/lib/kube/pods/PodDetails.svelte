@@ -83,14 +83,18 @@ async function loadDetails(): Promise<void> {
 
 {#if pod}
   <DetailsPage title={pod.name} subtitle={pod.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={PodIcon} size={24} status={pod.status} />
-    <svelte:fragment slot="actions">
-      <PodActions pod={pod} detailed={true} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={pod.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if pod}<StatusIcon icon={PodIcon} size={24} status={pod.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if pod}<PodActions pod={pod} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        {#if pod}<StateChange state={pod.status} />{/if}
+      </div>
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
@@ -99,23 +103,25 @@ async function loadDetails(): Promise<void> {
           title="Terminal"
           selected={isTabSelected($router.path, 'k8s-terminal')}
           url={getTabUrl($router.path, 'k8s-terminal')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <PodDetailsSummary pod={kubePod} kubeError={kubeError} events={events} />
-      </Route>
-      <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
-        <PodDetailsLogs pod={pod} />
-      </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-        <MonacoEditor content={JSON.stringify(kubePod, undefined, 2)} language="json" />
-      </Route>
-      <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
-        <KubeEditYaml content={stringify(kubePod)} />
-      </Route>
-      <Route path="/k8s-terminal" breadcrumb="Terminal" navigationHint="tab">
-        <KubernetesTerminalBrowser pod={pod} />
-      </Route>
-    </svelte:fragment>
+    {/snippet}
+    {#snippet contentSnippet()}
+      {#if pod}
+        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+          <PodDetailsSummary pod={kubePod} kubeError={kubeError} events={events} />
+        </Route>
+        <Route path="/logs" breadcrumb="Logs" navigationHint="tab">
+          <PodDetailsLogs pod={pod} />
+        </Route>
+        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+          <MonacoEditor content={JSON.stringify(kubePod, undefined, 2)} language="json" />
+        </Route>
+        <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
+          <KubeEditYaml content={stringify(kubePod)} />
+        </Route>
+        <Route path="/k8s-terminal" breadcrumb="Terminal" navigationHint="tab">
+          <KubernetesTerminalBrowser pod={pod} />
+        </Route>
+      {/if}
+    {/snippet}
   </DetailsPage>
 {/if}

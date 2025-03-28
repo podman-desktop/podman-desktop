@@ -77,13 +77,15 @@ async function loadDetails(): Promise<void> {
 
 {#if node}
   <DetailsPage title={node.name} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={NodeIcon} size={24} status={node.status} />
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if node}<StatusIcon icon={NodeIcon} size={24} status={node.status} />{/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <NodeDetailsSummary node={kubeNode} kubeError={kubeError} events={events} />
       </Route>
@@ -93,6 +95,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeNode)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

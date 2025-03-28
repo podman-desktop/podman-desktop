@@ -67,25 +67,29 @@ onMount(() => {
     titleDetail={imageMetadataInfo.shortId}
     subtitle={imageMetadataInfo.tag}
     bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={ManifestIcon} size={24} status={imageMetadataInfo.status} />
-    <svelte:fragment slot="subtitle">
-      {#if imageMetadataInfo.badges.length}
+    {#snippet iconSnippet()}
+      {#if imageMetadataInfo}<StatusIcon icon={ManifestIcon} size={24} status={imageMetadataInfo.status} />{/if}
+    {/snippet}
+    {#snippet subtitleSnippet()}
+      {#if imageMetadataInfo?.badges.length}
         <div class="flex flex-row">
           {#each imageMetadataInfo.badges as badge}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Add "actions" here in the future. -->
-    <svelte:fragment slot="tabs">
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <ImageDetailsSummary image={imageMetadataInfo} />
-      </Route>
-    </svelte:fragment>
+    {/snippet}
+    {#snippet contentSnippet()}
+      {#if imageMetadataInfo}
+        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+          <ImageDetailsSummary image={imageMetadataInfo} />
+        </Route>
+      {/if}
+    {/snippet}
   </DetailsPage>
 {/if}

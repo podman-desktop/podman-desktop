@@ -1,14 +1,41 @@
 <script lang="ts">
+import type { Snippet } from 'svelte';
+
 import Page from './Page.svelte';
 
-export let title: string;
-export let titleDetail: string | undefined = undefined;
-export let subtitle: string | undefined = undefined;
-export let breadcrumbLeftPart: string | undefined = undefined;
-export let breadcrumbRightPart: string | undefined = undefined;
-export let breadcrumbTitle: string | undefined = '';
-export let onclose: () => void = () => {};
-export let onbreadcrumbClick: () => void = () => {};
+interface Props {
+  title: string;
+  titleDetail?: string;
+  subtitle?: string;
+  breadcrumbLeftPart?: string;
+  breadcrumbRightPart?: string;
+  breadcrumbTitle?: string;
+  onclose?: () => void;
+  onbreadcrumbClick?: () => void;
+  contentSnippet?: Snippet;
+  tabsSnippet?: Snippet;
+  iconSnippet?: Snippet;
+  subtitleSnippet?: Snippet;
+  actionsSnippet?: Snippet;
+  detailSnippet?: Snippet;
+}
+
+const {
+  title,
+  titleDetail = undefined,
+  subtitle = undefined,
+  breadcrumbLeftPart = undefined,
+  breadcrumbRightPart = undefined,
+  breadcrumbTitle = '',
+  onclose = (): void => {},
+  onbreadcrumbClick = (): void => {},
+  contentSnippet,
+  tabsSnippet,
+  iconSnippet,
+  subtitleSnippet,
+  actionsSnippet,
+  detailSnippet,
+}: Props = $props();
 </script>
 
 <Page
@@ -21,21 +48,21 @@ export let onbreadcrumbClick: () => void = () => {};
   onclose={onclose}
   onbreadcrumbClick={onbreadcrumbClick}>
   <div slot="content" class="h-full bg-[var(--pd-details-bg)] min-h-0">
-    <slot name="content" />
+    {@render contentSnippet?.()}
   </div>
   <div slot="tabs" class="flex flex-row px-2">
-    <slot name="tabs" />
+    {@render tabsSnippet?.()}
   </div>
   <svelte:fragment slot="icon">
-    <slot name="icon" />
+    {@render iconSnippet?.()}
   </svelte:fragment>
   <svelte:fragment slot="subtitle">
-    <slot name="subtitle" />
+    {@render subtitleSnippet?.()}
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    <slot name="actions" />
+    {@render actionsSnippet?.()}
   </svelte:fragment>
   <svelte:fragment slot="detail">
-    <slot name="detail" />
+    {@render detailSnippet?.()}
   </svelte:fragment>
 </Page>

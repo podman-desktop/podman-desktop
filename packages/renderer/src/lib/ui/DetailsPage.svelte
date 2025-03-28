@@ -1,12 +1,34 @@
 <script lang="ts">
 import { DetailsPage } from '@podman-desktop/ui-svelte';
+import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { currentPage, lastPage } from '../../stores/breadcrumb';
 
-export let title: string;
-export let titleDetail: string | undefined = undefined;
-export let subtitle: string | undefined = undefined;
+interface Props {
+  title: string;
+  titleDetail?: string;
+  subtitle?: string;
+
+  contentSnippet?: Snippet;
+  tabsSnippet?: Snippet;
+  iconSnippet?: Snippet;
+  subtitleSnippet?: Snippet;
+  actionsSnippet?: Snippet;
+  detailSnippet?: Snippet;
+}
+
+const {
+  title,
+  titleDetail = undefined,
+  subtitle = undefined,
+  contentSnippet: localContentSnippet,
+  tabsSnippet: localTabsSnippet,
+  iconSnippet: localIconSnippet,
+  subtitleSnippet: localSubtitleSnippet,
+  actionsSnippet: localActionsSnippet,
+  detailSnippet: localDetailSnippet,
+}: Props = $props();
 
 export function close(): void {
   router.goto($lastPage.path);
@@ -22,10 +44,11 @@ export function close(): void {
   breadcrumbTitle="Go back to {$lastPage.name}"
   onclose={close}
   onbreadcrumbClick={close}>
-  <slot slot="icon" name="icon" />
-  <slot slot="subtitle" name="subtitle" />
-  <slot slot="actions" name="actions" />
-  <slot slot="detail" name="detail" />
-  <slot slot="tabs" name="tabs" />
-  <slot slot="content" name="content" />
+
+  {#snippet iconSnippet()}{@render localIconSnippet?.()}{/snippet}
+  {#snippet subtitleSnippet()}{@render localSubtitleSnippet?.()}{/snippet}
+  {#snippet actionsSnippet()}{@render localActionsSnippet?.()}{/snippet}
+  {#snippet detailSnippet()}{@render localDetailSnippet?.()}{/snippet}
+  {#snippet tabsSnippet()}{@render localTabsSnippet?.()}{/snippet}
+  {#snippet contentSnippet()}{@render localContentSnippet?.()}{/snippet}
 </DetailsPage>
