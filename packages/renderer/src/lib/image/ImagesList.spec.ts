@@ -420,7 +420,7 @@ describe('Contributions', () => {
 
       // check badge is being added
 
-      const fedoraOld = screen.getByRole('cell', { name: 'fedora my-custom-badge 123456789012 old' });
+      const fedoraOld = screen.getByRole('cell', { name: 'fedora badge-my-custom-badge 123456789012 old' });
       expect(fedoraOld).toBeInTheDocument();
 
       const badge = within(fedoraOld).getByText('my-custom-badge');
