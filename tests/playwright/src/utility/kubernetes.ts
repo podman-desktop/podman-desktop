@@ -253,3 +253,36 @@ export async function verifyLocalPortResponse(forwardAddress: string, responseMe
     playExpect(text).toContain(responseMessage);
   });
 }
+
+export async function monitorPodStatusInClusterContainer(
+  page: Page,
+  containerName: string,
+  command: string,
+  podName: string,
+  podStatus: string,
+  replicas: string,
+  timeout: number = 160_000,
+): Promise<void> {
+  const navigationBar = new NavigationBar(page);
+  const containersPage = await navigationBar.openContainers();
+  await playExpect.poll(async () => containersPage.getContainerRowByName(containerName)).toBeTruthy();
+  const detailsPage = await containersPage.openContainersDetails(containerName);
+  await detailsPage.activateTab('Terminal');
+
+  await playExpect
+    .poll(
+      async () => {
+        await detailsPage.executeCommandInTerminal(command);
+        const controllerPods = await detailsPage.retrieveTerminalLog();
+        await detailsPage.executeCommandInTerminal('clear');
+
+        const matchingPod = controllerPods.find(
+          row => row.includes(podName) && row.includes(podStatus) && row.includes(replicas),
+        );
+
+        return matchingPod ?? '';
+      },
+      { timeout: timeout },
+    )
+    .toContain(podStatus);
+}

@@ -16,25 +16,19 @@
 #  * SPDX-License-Identifier: Apache-2.0
 #  ***********************************************************************/
 
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: test-deployment-resource
-  labels:
-    app: test-deployment-resource
+  name: test-ingress-resource
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: test-deployment-resource
-  template:
-    metadata:
-      labels:
-        app: test-deployment-resource
-    spec:
-      containers:
-      - name: test-deployment-resource
-        image: ghcr.io/podmandesktop-ci/nginx
-        ports:
-        - containerPort: 80
- 
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: test-service-resource
+            port:
+              number: 8080
+  
