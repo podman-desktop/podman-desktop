@@ -124,7 +124,6 @@ test('Expect subtitle is defined and cut', async () => {
 
 test('props and slots should be displayed', () => {
   render(DetailsPageTest);
-  screen.logTestingPlaygroundURL();
   screen.getByText('my-title');
   screen.getByText('my-details');
   screen.getByText('my-subtitle');
