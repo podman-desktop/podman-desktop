@@ -25,10 +25,9 @@ export let classStyle = '';
   bottomRight={bottomRight}
   left={left}
   class={classStyle}>
-  <slot />
-  <svelte:fragment slot="tip">
+  {#snippet tipSnippet()}
     {#if tipSlot}
       {tipSlot}
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </Tooltip>
