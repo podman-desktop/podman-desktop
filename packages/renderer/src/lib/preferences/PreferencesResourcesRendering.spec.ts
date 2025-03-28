@@ -18,10 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderConnectionStatus } from '@podman-desktop/api';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
@@ -35,6 +36,12 @@ import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelt
 
 const defaultContainerConnectionName = 'machine-default';
 const secondaryContainerConnectionName = 'podman-machine-secondary';
+
+const defaultKubernetesConnectionName = 'kluster-default';
+const secondaryKubernetesConnectionName = 'kluster-secondary';
+
+const defaultVmConnectionName = 'vm-default';
+const secondaryVmConnectionName = 'vm-secondary';
 
 const providerInfo: ProviderInfo = {
   id: 'podman',
@@ -115,32 +122,535 @@ beforeAll(() => {
   });
 });
 
-test('Expect to see elements regarding default provider name', async () => {
-  // clone providerInfo and change id to foo
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Create new foo-provider' });
-  expect(button).toBeInTheDocument();
-  // expect default create title
-  expect(button).toHaveTextContent('Create new ...');
+beforeEach(() => {
+  onboardingList.set([]);
 });
 
-test('Expect to see elements regarding foo provider', async () => {
-  // clone providerInfo and change id to foo
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  customProviderInfo.containerProviderConnectionCreationDisplayName = 'foo';
-  customProviderInfo.containerProviderConnectionCreationButtonTitle = 'Connect';
-  providerInfos.set([customProviderInfo]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Create new foo' });
-  expect(button).toBeInTheDocument();
-  // expect custom create title
-  expect(button).toHaveTextContent('Connect ...');
+describe.each<{
+  label: string;
+  providerInfo: ProviderInfo;
+  setDisplayName: (info: ProviderInfo, displayName?: string) => void;
+  setButtonTitle: (info: ProviderInfo, buttonTitle?: string) => void;
+  setConnectionStatus: (info: ProviderInfo, n: number, status: ProviderConnectionStatus) => void;
+  defaultName: string;
+}>([
+  {
+    label: 'container connections',
+    setDisplayName: (info: ProviderInfo, displayName?: string): void => {
+      info.containerProviderConnectionCreationDisplayName = displayName;
+    },
+    setButtonTitle: (info: ProviderInfo, buttonTitle?: string): void => {
+      info.containerProviderConnectionCreationButtonTitle = buttonTitle;
+    },
+    setConnectionStatus: (info: ProviderInfo, n: number, status: ProviderConnectionStatus): void => {
+      info.containerConnections[n].status = status;
+    },
+    defaultName: defaultContainerConnectionName,
+    providerInfo: {
+      id: 'podman',
+      name: 'podman',
+      extensionId: 'id',
+      images: {
+        icon: 'img',
+      },
+      status: 'started',
+      warnings: [],
+      containerProviderConnectionCreation: true,
+      detectionChecks: [],
+      containerConnections: [
+        {
+          name: defaultContainerConnectionName,
+          displayName: defaultContainerConnectionName,
+          status: 'started',
+          endpoint: {
+            socketPath: 'socket',
+          },
+          lifecycleMethods: ['start', 'stop', 'delete'],
+          type: 'podman',
+          vmType: {
+            id: 'libkrun',
+            name: 'libkrun',
+          },
+        },
+        {
+          name: secondaryContainerConnectionName,
+          displayName: 'Dummy Secondary Connection',
+          status: 'stopped',
+          endpoint: {
+            socketPath: 'socket',
+          },
+          lifecycleMethods: ['start', 'stop', 'delete'],
+          type: 'podman',
+          vmType: {
+            id: 'wsl',
+            name: 'wsl',
+          },
+        },
+      ],
+      installationSupport: false,
+      internalId: '0',
+      kubernetesConnections: [],
+      kubernetesProviderConnectionCreation: false,
+      vmConnections: [],
+      vmProviderConnectionCreation: false,
+      vmProviderConnectionInitialization: false,
+      links: [],
+      containerProviderConnectionInitialization: false,
+      containerProviderConnectionCreationDisplayName: 'Podman machine',
+      kubernetesProviderConnectionInitialization: false,
+      cleanupSupport: false,
+    },
+  },
+  {
+    label: 'kubernetes connections',
+    setDisplayName: (info: ProviderInfo, displayName?: string): void => {
+      info.kubernetesProviderConnectionCreationDisplayName = displayName;
+    },
+    setButtonTitle: (info: ProviderInfo, buttonTitle?: string): void => {
+      info.kubernetesProviderConnectionCreationButtonTitle = buttonTitle;
+    },
+    setConnectionStatus: (info: ProviderInfo, n: number, status: ProviderConnectionStatus): void => {
+      info.kubernetesConnections[n].status = status;
+    },
+    defaultName: defaultKubernetesConnectionName,
+    providerInfo: {
+      id: 'kube',
+      name: 'kube-provider',
+      extensionId: 'id',
+      images: {
+        icon: 'img',
+      },
+      status: 'started',
+      warnings: [],
+      containerProviderConnectionCreation: false,
+      detectionChecks: [],
+      kubernetesConnections: [
+        {
+          name: defaultKubernetesConnectionName,
+          status: 'started',
+          endpoint: {
+            apiURL: 'url',
+          },
+          lifecycleMethods: ['start', 'stop', 'delete'],
+        },
+        {
+          name: secondaryKubernetesConnectionName,
+          status: 'stopped',
+          endpoint: {
+            apiURL: 'url',
+          },
+          lifecycleMethods: ['start', 'stop', 'delete'],
+        },
+      ],
+      installationSupport: false,
+      internalId: '0',
+      containerConnections: [],
+      kubernetesProviderConnectionCreation: true,
+      vmConnections: [],
+      vmProviderConnectionCreation: false,
+      vmProviderConnectionInitialization: false,
+      links: [],
+      containerProviderConnectionInitialization: false,
+      kubernetesProviderConnectionCreationDisplayName: 'Kluster',
+      kubernetesProviderConnectionInitialization: false,
+      cleanupSupport: false,
+    },
+  },
+  {
+    label: 'VM connections',
+    setDisplayName: (info: ProviderInfo, displayName?: string): void => {
+      info.vmProviderConnectionCreationDisplayName = displayName;
+    },
+    setButtonTitle: (info: ProviderInfo, buttonTitle?: string): void => {
+      info.vmProviderConnectionCreationButtonTitle = buttonTitle;
+    },
+    setConnectionStatus: (info: ProviderInfo, n: number, status: ProviderConnectionStatus): void => {
+      info.vmConnections[n].status = status;
+    },
+    defaultName: defaultVmConnectionName,
+    providerInfo: {
+      id: 'vm',
+      name: 'vm-provider',
+      extensionId: 'id',
+      images: {
+        icon: 'img',
+      },
+      status: 'started',
+      warnings: [],
+      containerProviderConnectionCreation: false,
+      detectionChecks: [],
+      vmConnections: [
+        {
+          name: defaultVmConnectionName,
+          status: 'started',
+          lifecycleMethods: ['start', 'stop', 'delete'],
+        },
+        {
+          name: secondaryVmConnectionName,
+          status: 'stopped',
+          lifecycleMethods: ['start', 'stop', 'delete'],
+        },
+      ],
+      installationSupport: false,
+      internalId: '0',
+      containerConnections: [],
+      kubernetesProviderConnectionCreation: false,
+      kubernetesConnections: [],
+      vmProviderConnectionCreation: true,
+      vmProviderConnectionInitialization: false,
+      links: [],
+      containerProviderConnectionInitialization: false,
+      kubernetesProviderConnectionInitialization: false,
+      cleanupSupport: false,
+    },
+  },
+])(`$label`, ({ label: _label, setDisplayName, setButtonTitle, setConnectionStatus, providerInfo, defaultName }) => {
+  test('Expect to see elements regarding default provider name', async () => {
+    // clone providerInfo and change id to foo
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Create new foo-provider' });
+    expect(button).toBeInTheDocument();
+    // expect default create title
+    expect(button).toHaveTextContent('Create new ...');
+  });
+
+  test('Expect to see elements regarding foo provider', async () => {
+    // clone providerInfo and change id to foo
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    setDisplayName(customProviderInfo, 'foo');
+    setButtonTitle(customProviderInfo, 'Connect');
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Create new foo' });
+    expect(button).toBeInTheDocument();
+    // expect custom create title
+    expect(button).toHaveTextContent('Connect ...');
+  });
+
+  describe('provider connections', () => {
+    test('Expect to have two container connection region', () => {
+      providerInfos.set([providerInfo]);
+      const { getAllByLabelText } = render(PreferencesResourcesRendering, {});
+
+      const statuses = getAllByLabelText('Connection Status');
+      expect(statuses.length).toBe(2);
+    });
+
+    test('Expect to be start, delete actions enabled and stop, restart disabled when container stopped', async () => {
+      const customProviderInfo: ProviderInfo = { ...providerInfo };
+      setConnectionStatus(customProviderInfo, 0, 'stopped');
+      providerInfos.set([customProviderInfo]);
+      const { getByRole } = render(PreferencesResourcesRendering, {});
+
+      // get the region containing the content for the default connection
+      const region = getByRole('region', { name: defaultName });
+
+      const startButton = within(region).getByRole('button', { name: 'Start' });
+      expect(startButton).toBeInTheDocument();
+      expect(!startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const stopButton = within(region).getByRole('button', { name: 'Stop' });
+      expect(stopButton).toBeInTheDocument();
+      expect(stopButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const restartButton = within(region).getByRole('button', { name: 'Restart' });
+      expect(restartButton).toBeInTheDocument();
+      expect(restartButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const deleteButton = within(region).getByRole('button', { name: 'Delete' });
+      expect(deleteButton).toBeInTheDocument();
+      expect(!deleteButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+    });
+
+    test('Expect to be start, delete actions disabled and stop, restart enabled when container running', async () => {
+      const customProviderInfo: ProviderInfo = { ...providerInfo };
+      setConnectionStatus(customProviderInfo, 0, 'started');
+      providerInfos.set([customProviderInfo]);
+      const { getByRole } = render(PreferencesResourcesRendering, {});
+
+      // get the region containing the content for the default connection
+      const region = getByRole('region', { name: defaultName });
+
+      const startButton = within(region).getByRole('button', { name: 'Start' });
+      expect(startButton).toBeInTheDocument();
+      expect(startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const stopButton = within(region).getByRole('button', { name: 'Stop' });
+      expect(stopButton).toBeInTheDocument();
+      expect(!stopButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const restartButton = within(region).getByRole('button', { name: 'Restart' });
+      expect(restartButton).toBeInTheDocument();
+      expect(!restartButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      const deleteButton = within(region).getByRole('button', { name: 'Delete' });
+      expect(deleteButton).toBeInTheDocument();
+      expect(deleteButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+    });
+
+    test('click restart when connection is running', async () => {
+      const customProviderInfo: ProviderInfo = { ...providerInfo };
+      setConnectionStatus(customProviderInfo, 0, 'started');
+      providerInfos.set([customProviderInfo]);
+      const { getByRole } = render(PreferencesResourcesRendering, {});
+
+      // get the region containing the content for the default connection
+      const region = getByRole('region', { name: defaultName });
+
+      const restartButton = within(region).getByRole('button', { name: 'Restart' });
+      expect(restartButton).toBeInTheDocument();
+      expect(!restartButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      await userEvent.click(restartButton);
+      setConnectionStatus(customProviderInfo, 0, 'stopped');
+      providerInfos.set([customProviderInfo]);
+      expect(vi.mocked(window.startProviderConnectionLifecycle)).toHaveBeenCalled();
+    });
+  });
+
+  test('Expect to redirect to create New page if provider is installed', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Create new foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // telemetry sent
+    expect(window.telemetryTrack).toBeCalledWith('createNewProviderConnectionPageRequested', {
+      providerId: customProviderInfo.id,
+      name: customProviderInfo.name,
+    });
+    // redirect to create new page
+    expect(router.goto).toHaveBeenCalledWith(`/preferences/provider/${customProviderInfo.internalId}`);
+  });
+
+  test('Expect to display the dialog if missing requirements for installation', async () => {
+    const installPreflightMock = vi.fn().mockResolvedValue(false);
+    const installProviderMock = vi.fn().mockResolvedValue(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).runInstallPreflightChecks = installPreflightMock;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).installProvider = installProviderMock;
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    // change name of the provider
+    customProviderInfo.status = 'not-installed';
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Create new foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // provider is not installed, it checks the requirements, something fails and the dialog about missing reqs is shown
+    expect(installPreflightMock).toBeCalled();
+    expect(installProviderMock).not.toHaveBeenCalled();
+    const modal = screen.getByLabelText('install provider');
+    expect(modal).toBeInTheDocument();
+  });
+
+  test('Expect to directly install the provider if requirements are met', async () => {
+    const installPreflightMock = vi.fn().mockResolvedValue(true);
+    const installProviderMock = vi.fn().mockResolvedValue(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).runInstallPreflightChecks = installPreflightMock;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).installProvider = installProviderMock;
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    // change name of the provider
+    customProviderInfo.status = 'not-installed';
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Create new foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // all requirements are met so the installProvider function is called
+    expect(installPreflightMock).toBeCalled();
+    expect(installProviderMock).toBeCalled();
+  });
+
+  test('Expect to redirect to onboarding page if setup button is clicked', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'not-installed';
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+
+    const onboarding: OnboardingInfo = {
+      extension: 'id',
+      removable: true,
+      steps: [],
+      title: 'onboarding',
+      enablement: 'true',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+    };
+    onboardingList.set([onboarding]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // redirect to create new page
+    expect(router.goto).toHaveBeenCalledWith(`/preferences/onboarding/id`);
+  });
+
+  test('Expect setup button to appear even if provider status is set to unknown and enablement is true', async () => {
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'unknown';
+    customProviderInfo.name = 'foobar';
+    providerInfos.set([customProviderInfo]);
+
+    // Onboarding is enabled
+    const onboarding: OnboardingInfo = {
+      extension: 'id',
+      removable: true,
+      steps: [],
+      title: 'onboarding',
+      enablement: 'true',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+    };
+    onboardingList.set([onboarding]);
+    render(PreferencesResourcesRendering, {});
+
+    // Expect the setup button to appear
+    const button = screen.getByRole('button', { name: 'Setup foobar' });
+    expect(button).toBeInTheDocument();
+  });
+
+  test('Expect to redirect to extension preferences page if onboarding is disabled and the cog button is clicked', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'installed';
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+
+    configurationProperties.set([
+      {
+        parentId: 'preferences.id',
+        title: 'record',
+        placeholder: 'Example: text',
+        description: 'record-description',
+        extension: {
+          id: 'extension',
+        },
+        hidden: false,
+        id: 'extension.format.prop',
+        type: 'string',
+        format: 'file',
+        scope: CONFIGURATION_DEFAULT_SCOPE,
+      },
+    ]);
+
+    const onboarding: OnboardingInfo = {
+      extension: 'id',
+      removable: true,
+      steps: [],
+      title: 'onboarding',
+      enablement: 'false',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+    };
+    onboardingList.set([onboarding]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // redirect to create new page
+    expect(router.goto).toHaveBeenCalledWith('/preferences/default/preferences.id');
+  });
+
+  test('Expect to not have cog icon button if provider has no active onboarding nor configurations', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'installed';
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    configurationProperties.set([]);
+
+    const onboarding: OnboardingInfo = {
+      extension: 'id',
+      removable: true,
+      steps: [],
+      title: 'onboarding',
+      enablement: 'false',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+    };
+    onboardingList.set([onboarding]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
+    expect(button).not.toBeInTheDocument();
+  });
+
+  test('Expect to not have cog icon button if provider has no onboarding nor configurations', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'installed';
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+    configurationProperties.set([]);
+
+    onboardingList.set([]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
+    expect(button).not.toBeInTheDocument();
+  });
+
+  test('Expect to redirect to extension onboarding page if onboarding is enabled and the cog button is clicked', async () => {
+    // clone providerInfo and change id and status
+    const customProviderInfo: ProviderInfo = { ...providerInfo };
+    // remove display name
+    setDisplayName(customProviderInfo, undefined);
+    customProviderInfo.status = 'installed';
+    // change name of the provider
+    customProviderInfo.name = 'foo-provider';
+    providerInfos.set([customProviderInfo]);
+
+    const onboarding: OnboardingInfo = {
+      extension: 'id',
+      removable: true,
+      steps: [],
+      title: 'onboarding',
+      enablement: 'true',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+    };
+    onboardingList.set([onboarding]);
+    render(PreferencesResourcesRendering, {});
+    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    // redirect to create new page
+    expect(router.goto).toHaveBeenCalledWith('/preferences/onboarding/id');
+  });
 });
 
 test('Expect to see elements regarding podman provider', async () => {
@@ -150,59 +660,7 @@ test('Expect to see elements regarding podman provider', async () => {
   expect(button).toBeInTheDocument();
 });
 
-describe('provider connections', () => {
-  test('Expect to have two container connection region', () => {
-    providerInfos.set([providerInfo]);
-    const { getAllByLabelText } = render(PreferencesResourcesRendering, {});
-
-    const statuses = getAllByLabelText('Connection Status');
-    expect(statuses.length).toBe(2);
-  });
-
-  test('Expect to be start, delete actions enabled and stop, restart disabled when container stopped', async () => {
-    providerInfo.containerConnections[0].status = 'stopped';
-    providerInfos.set([providerInfo]);
-    const { getByRole } = render(PreferencesResourcesRendering, {});
-
-    // get the region containing the content for the default connection
-    const region = getByRole('region', { name: defaultContainerConnectionName });
-
-    const startButton = within(region).getByRole('button', { name: 'Start' });
-    expect(startButton).toBeInTheDocument();
-    expect(!startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const stopButton = within(region).getByRole('button', { name: 'Stop' });
-    expect(stopButton).toBeInTheDocument();
-    expect(stopButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const restartButton = within(region).getByRole('button', { name: 'Restart' });
-    expect(restartButton).toBeInTheDocument();
-    expect(restartButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const deleteButton = within(region).getByRole('button', { name: 'Delete' });
-    expect(deleteButton).toBeInTheDocument();
-    expect(!deleteButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-  });
-
-  test('Expect to be start, delete actions disabled and stop, restart enabled when container running', async () => {
-    providerInfo.containerConnections[0].status = 'started';
-    providerInfos.set([providerInfo]);
-    const { getByRole } = render(PreferencesResourcesRendering, {});
-
-    // get the region containing the content for the default connection
-    const region = getByRole('region', { name: defaultContainerConnectionName });
-
-    const startButton = within(region).getByRole('button', { name: 'Start' });
-    expect(startButton).toBeInTheDocument();
-    expect(startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const stopButton = within(region).getByRole('button', { name: 'Stop' });
-    expect(stopButton).toBeInTheDocument();
-    expect(!stopButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const restartButton = within(region).getByRole('button', { name: 'Restart' });
-    expect(restartButton).toBeInTheDocument();
-    expect(!restartButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-    const deleteButton = within(region).getByRole('button', { name: 'Delete' });
-    expect(deleteButton).toBeInTheDocument();
-    expect(deleteButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-  });
-
+describe('container provider connections', () => {
   test('Expect custom action to be there', async () => {
     //provide a single connection provider
     const singleProvider: ProviderInfo = structuredClone(providerInfo);
@@ -288,249 +746,4 @@ test('Expect to see the no resource message when there is no providers', async (
   render(PreferencesResourcesRendering, {});
   const panel = screen.getByLabelText('no-resource-panel');
   expect(panel).toBeInTheDocument();
-});
-
-test('Expect to redirect to create New page if provider is installed', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Create new foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // telemetry sent
-  expect(window.telemetryTrack).toBeCalledWith('createNewProviderConnectionPageRequested', {
-    providerId: customProviderInfo.id,
-    name: customProviderInfo.name,
-  });
-  // redirect to create new page
-  expect(router.goto).toHaveBeenCalledWith(`/preferences/provider/${customProviderInfo.internalId}`);
-});
-
-test('Expect to display the dialog if missing requirements for installation', async () => {
-  const installPreflightMock = vi.fn().mockResolvedValue(false);
-  const installProviderMock = vi.fn().mockResolvedValue(undefined);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).runInstallPreflightChecks = installPreflightMock;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).installProvider = installProviderMock;
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  // change name of the provider
-  customProviderInfo.status = 'not-installed';
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Create new foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // provider is not installed, it checks the requirements, something fails and the dialog about missing reqs is shown
-  expect(installPreflightMock).toBeCalled();
-  expect(installProviderMock).not.toHaveBeenCalled();
-  const modal = screen.getByLabelText('install provider');
-  expect(modal).toBeInTheDocument();
-});
-
-test('Expect to directly install the provider if requirements are met', async () => {
-  const installPreflightMock = vi.fn().mockResolvedValue(true);
-  const installProviderMock = vi.fn().mockResolvedValue(undefined);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).runInstallPreflightChecks = installPreflightMock;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).installProvider = installProviderMock;
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  // change name of the provider
-  customProviderInfo.status = 'not-installed';
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Create new foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // all requirements are met so the installProvider function is called
-  expect(installPreflightMock).toBeCalled();
-  expect(installProviderMock).toBeCalled();
-});
-
-test('Expect to redirect to onboarding page if setup button is clicked', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'not-installed';
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-
-  const onboarding: OnboardingInfo = {
-    extension: 'id',
-    removable: true,
-    steps: [],
-    title: 'onboarding',
-    enablement: 'true',
-    name: 'foobar',
-    displayName: 'FooBar',
-    icon: 'data:image/png;base64,foobar',
-  };
-  onboardingList.set([onboarding]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Setup foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // redirect to create new page
-  expect(router.goto).toHaveBeenCalledWith(`/preferences/onboarding/id`);
-});
-
-test('Expect setup button to appear even if provider status is set to unknown and enablement is true', async () => {
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'unknown';
-  customProviderInfo.name = 'foobar';
-  providerInfos.set([customProviderInfo]);
-
-  // Onboarding is enabled
-  const onboarding: OnboardingInfo = {
-    extension: 'id',
-    removable: true,
-    steps: [],
-    title: 'onboarding',
-    enablement: 'true',
-    name: 'foobar',
-    displayName: 'FooBar',
-    icon: 'data:image/png;base64,foobar',
-  };
-  onboardingList.set([onboarding]);
-  render(PreferencesResourcesRendering, {});
-
-  // Expect the setup button to appear
-  const button = screen.getByRole('button', { name: 'Setup foobar' });
-  expect(button).toBeInTheDocument();
-});
-
-test('Expect to redirect to extension preferences page if onboarding is disabled and the cog button is clicked', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'installed';
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-
-  configurationProperties.set([
-    {
-      parentId: 'preferences.id',
-      title: 'record',
-      placeholder: 'Example: text',
-      description: 'record-description',
-      extension: {
-        id: 'extension',
-      },
-      hidden: false,
-      id: 'extension.format.prop',
-      type: 'string',
-      format: 'file',
-      scope: CONFIGURATION_DEFAULT_SCOPE,
-    },
-  ]);
-
-  const onboarding: OnboardingInfo = {
-    extension: 'id',
-    removable: true,
-    steps: [],
-    title: 'onboarding',
-    enablement: 'false',
-    name: 'foobar',
-    displayName: 'FooBar',
-    icon: 'data:image/png;base64,foobar',
-  };
-  onboardingList.set([onboarding]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Setup foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // redirect to create new page
-  expect(router.goto).toHaveBeenCalledWith('/preferences/default/preferences.id');
-});
-
-test('Expect to not have cog icon button if provider has no active onboarding nor configurations', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'installed';
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  configurationProperties.set([]);
-
-  const onboarding: OnboardingInfo = {
-    extension: 'id',
-    removable: true,
-    steps: [],
-    title: 'onboarding',
-    enablement: 'false',
-    name: 'foobar',
-    displayName: 'FooBar',
-    icon: 'data:image/png;base64,foobar',
-  };
-  onboardingList.set([onboarding]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
-  expect(button).not.toBeInTheDocument();
-});
-
-test('Expect to not have cog icon button if provider has no onboarding nor configurations', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'installed';
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-  configurationProperties.set([]);
-
-  onboardingList.set([]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
-  expect(button).not.toBeInTheDocument();
-});
-
-test('Expect to redirect to extension onboarding page if onboarding is enabled and the cog button is clicked', async () => {
-  // clone providerInfo and change id and status
-  const customProviderInfo: ProviderInfo = { ...providerInfo };
-  // remove display name
-  customProviderInfo.containerProviderConnectionCreationDisplayName = undefined;
-  customProviderInfo.status = 'installed';
-  // change name of the provider
-  customProviderInfo.name = 'foo-provider';
-  providerInfos.set([customProviderInfo]);
-
-  const onboarding: OnboardingInfo = {
-    extension: 'id',
-    removable: true,
-    steps: [],
-    title: 'onboarding',
-    enablement: 'true',
-    name: 'foobar',
-    displayName: 'FooBar',
-    icon: 'data:image/png;base64,foobar',
-  };
-  onboardingList.set([onboarding]);
-  render(PreferencesResourcesRendering, {});
-  const button = screen.getByRole('button', { name: 'Setup foo-provider' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-  // redirect to create new page
-  expect(router.goto).toHaveBeenCalledWith('/preferences/onboarding/id');
 });

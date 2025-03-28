@@ -3,11 +3,7 @@ import { faEdit, faPlay, faRotateRight, faStop, faTrash } from '@fortawesome/fre
 import { Buffer } from 'buffer';
 import { router } from 'tinro';
 
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import LoadingIconButton from '../ui/LoadingIconButton.svelte';
 import {
@@ -19,10 +15,10 @@ import { type IConnectionRestart, type IConnectionStatus } from './Util';
 
 export let connectionStatus: IConnectionStatus | undefined;
 export let provider: ProviderInfo;
-export let connection: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
+export let connection: ProviderConnectionInfo;
 export let updateConnectionStatus: (
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
   action?: string,
   error?: string,
   inProgress?: boolean,
@@ -31,7 +27,7 @@ export let addConnectionToRestartingQueue: (connection: IConnectionRestart) => v
 
 async function startConnectionProvider(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
   loggerHandlerKey?: symbol,
 ): Promise<void> {
   try {
@@ -54,7 +50,7 @@ async function startConnectionProvider(
 
 async function restartConnectionProvider(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): Promise<void> {
   if (providerConnectionInfo.status === 'started') {
     updateConnectionStatus(provider, providerConnectionInfo, 'restart');
@@ -75,7 +71,7 @@ async function restartConnectionProvider(
 
 async function stopConnectionProvider(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): Promise<void> {
   try {
     if (providerConnectionInfo.status === 'started') {
@@ -95,7 +91,7 @@ async function stopConnectionProvider(
 
 async function editConnectionProvider(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): Promise<void> {
   router.goto(
     `/preferences/container-connection/edit/${provider.internalId}/${Buffer.from(providerConnectionInfo.name).toString(
@@ -106,7 +102,7 @@ async function editConnectionProvider(
 
 async function deleteConnectionProvider(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): Promise<void> {
   try {
     if (providerConnectionInfo.status === 'stopped' || providerConnectionInfo.status === 'unknown') {
@@ -126,10 +122,7 @@ async function deleteConnectionProvider(
   }
 }
 
-function getLoggerHandler(
-  provider: ProviderInfo,
-  containerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
-): ConnectionCallback {
+function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: ProviderConnectionInfo): ConnectionCallback {
   return {
     log: (): void => {},
     warn: (): void => {},
