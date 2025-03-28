@@ -282,20 +282,20 @@ export class KubernetesClient {
 
     // needs to refresh
     this.kubeConfigWatcher.onDidChange(async () => {
-      this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
       await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
       this.apiSender.send('kubernetes-context-update');
     });
 
     this.kubeConfigWatcher.onDidCreate(async () => {
-      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
       await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
       this.apiSender.send('kubernetes-context-update');
     });
 
     this.kubeConfigWatcher.onDidDelete(() => {
-      this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
       this.kubeConfig = new KubeConfig();
+      this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
       this.apiSender.send('kubernetes-context-update');
     });
   }

@@ -197,9 +197,17 @@ export async function createCluster(
   };
 
   const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
-  // now execute the command to create the cluster
   const startTime = performance.now();
   try {
+    // Add listener for kubeconfig change
+    let kubeconfigUpdated = false;
+    const disposeOnDidUpdate = extensionApi.kubernetes.onDidUpdateKubeconfig(
+      async (_event: extensionApi.KubeconfigUpdateEvent) => {
+        kubeconfigUpdated = true;
+      },
+    );
+
+    // Execute the command to create the cluster
     await extensionApi.process.exec(
       kindCli,
       ['create', 'cluster', '--config', configFile ?? tmpFilePath, '--kubeconfig', kubeConfigPath],
@@ -210,8 +218,16 @@ export async function createCluster(
       },
     );
 
-    // Create ingress controller resources depending on whether a configFile was provided or not
+    // Wait at most 5s for Podman Desktop to recognize the change to kubeconfig
+    let timeout = 0;
+    while (!kubeconfigUpdated && timeout < 50) {
+      await new Promise(f => setTimeout(f, 100));
+      timeout++;
+    }
 
+    disposeOnDidUpdate.dispose();
+
+    // Create ingress controller resources depending on whether a configFile was provided or not
     if (ingressController && configFile) {
       const configClusterName = await getClusterNameFromConfigFile(configFile);
       logger?.log('Creating ingress controller from config file namespace: ', configClusterName);

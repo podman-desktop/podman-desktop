@@ -42,6 +42,7 @@ vi.mock('@podman-desktop/api', async () => {
     kubernetes: {
       createResources: vi.fn(),
       getKubeconfig: vi.fn().mockReturnValue({ path: '/some/path' }),
+      onDidUpdateKubeconfig: vi.fn(),
     },
     provider: {
       getContainerConnections: vi
@@ -64,6 +65,14 @@ vi.mock('./util', async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(fs.promises.mkdtemp).mockResolvedValue('/tmp/file');
+
+  // mock kubeconfig changing immediately after registering for update
+  vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(listener => {
+    listener({} as extensionApi.KubeconfigUpdateEvent);
+    return {
+      dispose: vi.fn(),
+    };
+  });
 });
 
 const telemetryLogUsageMock = vi.fn();
@@ -101,6 +110,37 @@ test('expect cluster to be created', async () => {
   expect(props).to.have.property('env');
   const env = props.env;
   expect(env).toStrictEqual({ PATH: '/kind/path' });
+});
+
+test('expect cluster creation to wait for kubeconfig change', async () => {
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+  // record kubeconfig listener
+  let listener!: (e: extensionApi.KubeconfigUpdateEvent) => extensionApi.Disposable;
+  vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(x => {
+    listener = x;
+    return {
+      dispose: vi.fn(),
+    };
+  });
+
+  createCluster({}, '', telemetryLoggerMock).catch((error: unknown) => {
+    console.error('Error creating cluster', error);
+  });
+
+  // wait for the listener to be registered and wait another 100ms
+  await vi.waitFor(() => {
+    if (!listener) throw new Error('Not listening yet');
+  });
+  await new Promise(f => setTimeout(f, 100));
+
+  expect(telemetryLogUsageMock).not.toHaveBeenCalled();
+
+  // notify listener
+  listener({} as extensionApi.KubeconfigUpdateEvent);
+
+  await vi.waitFor(() => expect(telemetryLogUsageMock).toHaveBeenCalled());
 });
 
 test('expect cluster to be created using config file', async () => {
