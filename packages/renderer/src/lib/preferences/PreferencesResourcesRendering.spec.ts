@@ -169,8 +169,9 @@ test('Expect to receive the highlight if focus prop is provided', async () => {
   render(PreferencesResourcesRendering, { focus: 'test-provider' });
 
   await vi.waitFor(() => {
-    const element = screen.getByTestId('test-provider');
-    expect(element).toHaveClass('highlight'); // Check if the highlight class is applied
+    const element = document.getElementById('test-provider');
+    expect(element).not.toBeNull(); // Ensure the element exists
+    expect(element).toHaveClass('highlight'); // Check for highlight class
   });
 });
 
