@@ -18,6 +18,8 @@ let {
   entry,
   command = (): void => router.goto(`/preferences/resources?focus=${entry.id}`),
   disableTooltip = false,
+  class: className,
+  tooltipTopRight = false,
 }: Props = $props();
 
 let connections = $derived.by(() => {
