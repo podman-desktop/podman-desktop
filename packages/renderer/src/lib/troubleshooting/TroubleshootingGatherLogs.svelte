@@ -36,7 +36,7 @@ async function saveLogsAsZip(): Promise<void> {
   {#if logs.length > 0}
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)] mt-3">
       <ul aria-label="logs">
-        {#each logs as log (log)}
+        {#each logs as log, index (index)}
           <li>
             <div class="flex flex-row align-middle items-center">
               <div class="font-mono text-[10px] font-thin">

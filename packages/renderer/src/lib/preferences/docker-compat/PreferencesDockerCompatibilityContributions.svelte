@@ -169,7 +169,7 @@ async function onChangeProperty(property: PropertyWithDisplayName, value: unknow
 }
 </script>
 
-{#each groupItems.items as groupItem}
+{#each groupItems.items as groupItem, index (index)}
   <div class="container flex flex-row w-full pt-2" role="list" aria-label="{groupItem.name}">
     <!-- column with the group-->
     <div class="h-full bg-[var(--pd-button-primary-bg)] rounded-sm p-1">

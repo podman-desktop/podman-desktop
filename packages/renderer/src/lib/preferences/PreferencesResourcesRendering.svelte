@@ -470,7 +470,7 @@ function handleError(errorMessage: string): void {
           <PreferencesConnectionsEmptyRendering
             message={provider.emptyConnectionMarkdownDescription}
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0} />
-          {#each provider.containerConnections as container}
+          {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
               <div class="float-right">
@@ -581,7 +581,7 @@ function handleError(errorMessage: string): void {
               </div>
             </div>
           {/each}
-          {#each provider.kubernetesConnections as kubeConnection}
+          {#each provider.kubernetesConnections as kubeConnection, index (index)}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={kubeConnection.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">

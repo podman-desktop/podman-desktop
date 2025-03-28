@@ -481,7 +481,7 @@ function updateKubeResult(): void {
           aria-label="Select a Port"
           required>
           <option value="" disabled selected>Select a port</option>
-          {#each containerPortArray as port (port)}
+          {#each containerPortArray as port, index (index)}
             <option value={port}>{port}</option>
           {/each}
         </select>
@@ -531,7 +531,7 @@ function updateKubeResult(): void {
           aria-label="Select a Kubernetes Namespace"
           name="namespaceChoice"
           bind:value={currentNamespace}>
-          {#each allNamespaces.items as namespace}
+          {#each allNamespaces.items as namespace, index (index)}
             <option value={namespace.metadata?.name}>
               {namespace.metadata?.name}
             </option>
@@ -585,7 +585,7 @@ function updateKubeResult(): void {
           {#if createdPod.status?.containerStatuses}
             <p class="pt-2">Container statuses:</p>
             <ul class="list-disc list-inside">
-              {#each createdPod.status.containerStatuses as containerStatus}
+              {#each createdPod.status.containerStatuses as containerStatus, index (index)}
                 <li class="pt-2">
                   {containerStatus.name}
                   {#if containerStatus.ready}
@@ -610,7 +610,7 @@ function updateKubeResult(): void {
           {#if createdRoutes && createdRoutes.length > 0}
             <p class="pt-2">Endpoints:</p>
             <ul class="list-disc list-inside">
-              {#each createdRoutes as createdRoute}
+              {#each createdRoutes as createdRoute, index (index)}
                 <li class="pt-2">
                   Port {createdRoute.spec.port?.targetPort} is reachable with route
                   <Link on:click={async (): Promise<void> => await openRoute(createdRoute)}>{createdRoute.metadata.name}</Link>

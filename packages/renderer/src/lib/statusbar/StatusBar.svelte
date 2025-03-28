@@ -91,7 +91,7 @@ onDestroy(() => {
   role="contentinfo"
   aria-label="Status Bar">
   <div class="flex flex-nowrap gap-x-1.5 h-full text-ellipsis whitespace-nowrap">
-    {#each leftEntries as entry}
+    {#each leftEntries as entry, index (index)}
       <StatusBarItem entry={entry} />
     {/each}
     {#if experimentalProvidersStatusBar}
@@ -104,7 +104,7 @@ onDestroy(() => {
     {/if}
   </div>
   <div class="flex flex-wrap flex-row-reverse gap-x-1.5 h-full place-self-end">
-    {#each rightEntries as entry}
+    {#each rightEntries as entry, index (index)}
       <StatusBarItem entry={entry} />
     {/each}
     {#if experimentalTaskStatusBar}

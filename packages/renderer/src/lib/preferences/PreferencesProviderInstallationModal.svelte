@@ -37,7 +37,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
           </div>
           <div class="flex flex-row mx-auto text-md">Some system requirements are missing.</div>
           <div class="flex flex-col min-h-[150px] mt-5 mx-auto py-4 px-10 rounded-md bg-[var(--pd-content-card-bg)]">
-            {#each preflightChecks as preCheck}
+            {#each preflightChecks as preCheck, index (index)}
               <div class="flex flex-row mb-2 mx-auto">
                 <Fa icon={faCircleXmark} class="text-[var(--pd-state-error)] mt-0.5" />
                 <div class="flex flex-col ml-1 text-sm">
@@ -46,7 +46,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
                     {#if preCheck.docLinks}
                       <div class="flex flex-row mt-0.5">
                         <span class="mr-1">See:</span>
-                        {#each preCheck.docLinks as link}
+                        {#each preCheck.docLinks as link, index (index)}
                           <a href={link.url} target="_blank" class="mr-1" on:click={async (e): Promise<void> => await openLink(e, link.url)}
                             >{link.title}</a>
                         {/each}
