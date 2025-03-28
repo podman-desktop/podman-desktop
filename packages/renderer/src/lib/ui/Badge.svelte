@@ -24,6 +24,6 @@ onMount(async () => {
 });
 </script>
 
-<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {$$props.class}" style={customStyle}>
+<div class="text-[var(--pd-badge-text)] text-xs me-2 px-1 py-0.5 rounded-sm select-none {customClass} {$$props.class}" style={customStyle} aria-label="badge-{label}">
   {label}
 </div>
