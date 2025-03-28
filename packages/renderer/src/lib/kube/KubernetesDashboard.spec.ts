@@ -29,6 +29,7 @@ import * as kubernetesPermissions from '/@/stores/kubernetes-context-permission'
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import * as kubernetesExperimental from '/@/stores/kubernetes-experimental';
+import * as noKubernetesContext from '/@/stores/kubernetes-no-current-context';
 import * as kubernetesReourcesCount from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
@@ -57,6 +58,7 @@ vi.mock('/@/stores/kubernetes-resources-count');
 vi.mock('/@/lib/kube/active-resources-count-listen');
 
 vi.mock('/@/stores/kubernetes-context-permission');
+vi.mock('/@/stores/kubernetes-no-current-context');
 
 const openExternalMock = vi.fn();
 
@@ -69,6 +71,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
 });
 
 test('Verify basic page', async () => {

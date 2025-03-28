@@ -20,14 +20,13 @@ import {
   kubernetesCurrentContextRoutes,
   kubernetesCurrentContextSecrets,
   kubernetesCurrentContextServices,
-  kubernetesCurrentContextState,
 } from '/@/stores/kubernetes-contexts-state';
 import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { IDisposable } from '/@api/disposable';
-import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
+import { noKubernetesCurrentContext } from '../../stores/kubernetes-no-current-context';
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
@@ -41,7 +40,6 @@ interface ExtendedKubernetesObject extends KubernetesObject {
   };
 }
 
-let noContexts = $derived($kubernetesCurrentContextState.error === NO_CURRENT_CONTEXT_ERROR);
 let currentContextName = $derived($kubernetesContexts.find(context => context.currentContext)?.name);
 
 // Stores and states for non-experimental mode
@@ -180,7 +178,7 @@ async function openKubernetesDocumentation(): Promise<void> {
 
 <div class="flex flex-col w-full h-full">
   <div class="flex flex-col w-full h-full pt-4">
-    {#if noContexts}
+    {#if $noKubernetesCurrentContext}
       <KubernetesEmptyPage />
     {:else}
       <!-- Details - collapsible -->
