@@ -41,7 +41,7 @@ if (container.groupInfo.created) {
   <tr>
     <DetailsCell>Image</DetailsCell>
     <DetailsCell>
-      <Link on:click={(): void => router.goto(container.imageHref ?? $router.path)}>{container.image}</Link>
+      <Link onclick={(): void => router.goto(container.imageHref ?? $router.path)}>{container.image}</Link>
     </DetailsCell>
   </tr>
   {#if container.command}

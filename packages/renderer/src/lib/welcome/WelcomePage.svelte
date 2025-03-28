@@ -163,7 +163,7 @@ function startOnboardingQueue(): void {
           <div class="w-2/5 text-[var(--pd-content-card-text)]">
             Help Red Hat improve Podman Desktop by allowing anonymous usage data to be collected.
             <Link
-              on:click={async (): Promise<void> => {
+              onclick={async (): Promise<void> => {
                 await window.openExternal('https://developers.redhat.com/article/tool-data-collection');
               }}>Read our privacy statement</Link>
           </div>
