@@ -158,6 +158,22 @@ test('Expect to scroll to the focused element if focus prop is provided', async 
   });
 });
 
+test('Expect to receive the highlight if focus prop is provided', async () => {
+  const customProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    id: 'test-provider',
+    name: 'Test Provider',
+  };
+
+  providerInfos.set([customProviderInfo]);
+  render(PreferencesResourcesRendering, { focus: 'test-provider' });
+
+  await vi.waitFor(() => {
+    const element = screen.getByTestId('test-provider');
+    expect(element).toHaveClass('highlight'); // Check if the highlight class is applied
+  });
+});
+
 test('Expect to see elements regarding podman provider', async () => {
   providerInfos.set([providerInfo]);
   render(PreferencesResourcesRendering, {});
