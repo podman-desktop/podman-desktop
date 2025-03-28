@@ -21,7 +21,7 @@ export let artifact: V1NodeSpec | undefined;
     <tr>
       <Cell>Pod CIDRs</Cell>
       <Cell>
-        {#each artifact.podCIDRs as cidr}
+        {#each artifact.podCIDRs as cidr, index (index)}
           <div>{cidr}</div>
         {/each}
       </Cell>
@@ -39,7 +39,7 @@ export let artifact: V1NodeSpec | undefined;
       <Cell>
         <table>
           <tbody>
-            {#each artifact.taints as taint}
+            {#each artifact.taints as taint, index (index)}
               <tr>
                 <Cell>{taint.key}</Cell>
                 <Cell>Effect: {taint.effect}, Value: {taint.value ?? 'N/A'}</Cell>

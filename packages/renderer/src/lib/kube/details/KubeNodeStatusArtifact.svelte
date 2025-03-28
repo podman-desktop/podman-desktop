@@ -68,7 +68,7 @@ export let artifact: V1NodeStatus | undefined;
     <tr>
       <Title>Addresses</Title>
     </tr>
-    {#each artifact.addresses as address}
+    {#each artifact.addresses as address, index (index)}
       <tr>
         <Cell>{address.type}</Cell>
         <Cell>{address.address}</Cell>
@@ -79,7 +79,7 @@ export let artifact: V1NodeStatus | undefined;
     <tr>
       <Title>Capacity</Title>
     </tr>
-    {#each Object.entries(artifact.capacity) as [key, value]}
+    {#each Object.entries(artifact.capacity) as [key, value] (key)}
       <tr>
         <Cell>{key}</Cell>
         <Cell>{value}</Cell>
@@ -90,7 +90,7 @@ export let artifact: V1NodeStatus | undefined;
     <tr>
       <Title>Allocatable</Title>
     </tr>
-    {#each Object.entries(artifact.allocatable) as [key, value]}
+    {#each Object.entries(artifact.allocatable) as [key, value] (key)}
       <tr>
         <Cell>{key}</Cell>
         <Cell>{value}</Cell>

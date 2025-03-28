@@ -13,7 +13,7 @@ let { object }: Props = $props();
 const ingressRouteUtils = new IngressRouteUtils();
 </script>
 
-{#each ingressRouteUtils.getHostPaths(object) as hostPath}
+{#each ingressRouteUtils.getHostPaths(object) as hostPath, index (index)}
   <div class="text-[var(--pd-table-body-text)] overflow-hidden text-ellipsis">
     {#if hostPath.url}
       <Link

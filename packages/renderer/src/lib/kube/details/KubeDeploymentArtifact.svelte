@@ -28,7 +28,7 @@ let { artifact, deploymentName, namespace }: Props = $props();
     <tr>
       <Cell>Selector</Cell>
       <Cell>
-        {#each Object.entries(artifact.selector.matchLabels) as [key, value]}
+        {#each Object.entries(artifact.selector.matchLabels) as [key, value] (key)}
           <div>{key}: {value}</div>
         {/each}
       </Cell>
@@ -44,7 +44,7 @@ let { artifact, deploymentName, namespace }: Props = $props();
     <tr>
       <Title>Containers</Title>
     </tr>
-    {#each artifact.template.spec?.containers as container}
+    {#each artifact.template.spec?.containers as container (container.name)}
       <tr>
         <Subtitle>{container.name}</Subtitle>
       </tr>

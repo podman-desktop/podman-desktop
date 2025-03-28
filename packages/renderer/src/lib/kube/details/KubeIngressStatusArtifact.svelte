@@ -16,7 +16,7 @@ export let artifact: V1IngressStatus | undefined;
   <tr>
     <Cell>Load Balancer</Cell>
     <Cell>
-      {#each artifact.loadBalancer?.ingress as ingress}
+      {#each artifact.loadBalancer?.ingress as ingress, index (index)}
         <div>{ingress.ip ?? ingress.hostname}</div>
       {/each}
     </Cell>
