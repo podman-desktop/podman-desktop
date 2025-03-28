@@ -18,9 +18,8 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { handleConfirmationDialog } from '/@/utility/operations';
-import { isMac } from '/@/utility/platform';
-
+import { handleConfirmationDialog } from '../../utility/operations';
+import { isMac } from '../../utility/platform';
 import { KubernetesResourceState } from '../core/states';
 import { DetailsPage } from './details-page';
 
@@ -40,27 +39,14 @@ export class KubernetesResourceDetailsPage extends DetailsPage {
 
   constructor(page: Page, title: string) {
     super(page, title);
-    this.applyChangesButton = this.tabContent.getByRole('button', {
-      name: 'Apply changes to cluster',
-    });
-    this.revertChagesButton = this.tabContent.getByRole('button', {
-      name: 'Revert Changes',
-    });
-    this.deleteButton = this.controlActions.getByRole('button', {
-      name: 'Delete',
-      exact: false,
-    });
-    this.editorWidget = this.page.getByRole('dialog', {
-      name: 'Find / Replace',
-    });
-    this.toggleButton = this.editorWidget.getByRole('button', {
-      name: 'Toggle Replace',
-    });
+    this.applyChangesButton = this.tabContent.getByRole('button', { name: 'Apply changes to cluster' });
+    this.revertChagesButton = this.tabContent.getByRole('button', { name: 'Revert Changes' });
+    this.deleteButton = this.controlActions.getByRole('button', { name: 'Delete', exact: false });
+    this.editorWidget = this.page.getByRole('dialog', { name: 'Find / Replace' });
+    this.toggleButton = this.editorWidget.getByRole('button', { name: 'Toggle Replace' });
     this.findTextArea = this.editorWidget.getByPlaceholder('Find');
     this.replaceTextArea = this.editorWidget.getByPlaceholder('Replace');
-    this.replaceButton = this.editorWidget.getByRole('button', {
-      name: 'Replace All',
-    });
+    this.replaceButton = this.editorWidget.getByRole('button', { name: 'Replace All' });
   }
 
   async getState(): Promise<string> {

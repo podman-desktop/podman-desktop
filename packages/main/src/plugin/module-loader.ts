@@ -79,10 +79,8 @@ export class ModuleLoader {
             cache = {};
             extModuleCache.set(parent.path, cache);
           }
-          if (!cache[request]) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            cache[request] = <any>{ ...override };
-          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cache[request] ??= <any>{ ...override };
           return cache[request];
         }
         // eslint-disable-next-line prefer-rest-params,prefer-spread

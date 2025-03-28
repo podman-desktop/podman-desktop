@@ -74,24 +74,11 @@ export class Uri {
     }
 
     let { scheme, authority, path, query, fragment } = change;
-    if (scheme === undefined) {
-      scheme = this._scheme;
-    }
-
-    if (authority === undefined) {
-      authority = this._authority;
-    }
-
-    if (path === undefined) {
-      path = this._path;
-    }
-    if (query === undefined) {
-      query = this._query;
-    }
-
-    if (fragment === undefined) {
-      fragment = this._fragment;
-    }
+    scheme ??= this._scheme;
+    authority ??= this._authority;
+    path ??= this._path;
+    query ??= this._query;
+    fragment ??= this._fragment;
 
     if (
       scheme === this.scheme &&

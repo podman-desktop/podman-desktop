@@ -112,9 +112,7 @@ export class RegistrySetup {
         this.localRegistries.set(registry.serverUrl, registry);
         // update the file
         const authFile = await this.readAuthFile();
-        if (!authFile.auths) {
-          authFile.auths = {};
-        }
+        authFile.auths ??= {};
         authFile.auths[registry.serverUrl] = {
           auth: Buffer.from(`${registry.username}:${registry.secret}`).toString('base64'),
           podmanDesktopAlias: registry.alias,
@@ -145,9 +143,7 @@ export class RegistrySetup {
         this.localRegistries.set(registry.serverUrl, registry);
         // update the file
         const authFile = await this.readAuthFile();
-        if (!authFile.auths) {
-          authFile.auths = {};
-        }
+        authFile.auths ??= {};
         authFile.auths[registry.serverUrl] = {
           auth: Buffer.from(`${registry.username}:${registry.secret}`).toString('base64'),
           podmanDesktopAlias: registry.alias,

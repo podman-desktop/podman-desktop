@@ -137,9 +137,7 @@ onMount(async () => {
     restoreConfigurationValues();
   }
 
-  if (taskId === undefined) {
-    taskId = operationConnectionInfoMap.size + 1;
-  }
+  taskId ??= operationConnectionInfoMap.size + 1;
 
   const data: { [p: string]: unknown } = {};
   for (let field of configurationKeys) {

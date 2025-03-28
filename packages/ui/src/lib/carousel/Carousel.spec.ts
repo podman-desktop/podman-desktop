@@ -48,7 +48,6 @@ beforeEach(() => {
 test('carousel cards get visible when size permits', async () => {
   render(CarouselTest);
   const card1 = screen.getByText('card 1');
-  console.log(window.innerWidth);
   expect(card1).toBeVisible();
 
   callback([{ contentRect: { width: 680 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
@@ -102,7 +101,6 @@ test('rotate right button displays next card', async () => {
 test('carousel left and right buttons enabled when all items does not fit into screen and disabled otherwise', async () => {
   render(CarouselTest);
   const card1 = screen.getByText('card 1');
-  console.log(window.innerWidth);
   expect(card1).toBeVisible();
 
   let cards = screen.queryAllByText('card 2');
@@ -135,7 +133,6 @@ test('carousel left and right buttons enabled when all items does not fit into s
 test('left and right buttons have hover class', async () => {
   render(CarouselTest);
   const card1 = screen.getByText('card 1');
-  console.log(window.innerWidth);
   expect(card1).toBeVisible();
 
   let cards = screen.queryAllByText('card 2');

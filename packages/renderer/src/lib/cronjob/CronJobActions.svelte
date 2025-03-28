@@ -6,13 +6,11 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { CronJobUI } from './CronJobUI';
 
-let {
-  cronjob,
-  detailed = false,
-}: {
+interface Props {
   cronjob: CronJobUI;
   detailed?: boolean;
-} = $props();
+}
+let { cronjob, detailed = false }: Props = $props();
 
 async function deleteCronJob(): Promise<void> {
   cronjob.status = 'DELETING';

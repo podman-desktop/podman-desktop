@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
 import IngressRouteActions from './IngressRouteActions.svelte';
@@ -28,10 +28,12 @@ import type { RouteUI } from './RouteUI';
 const updateMock = vi.fn();
 const deleteIngressMock = vi.fn();
 const deleteRoutesMock = vi.fn();
+const showMessageBoxMock = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'kubernetesDeleteIngress', { value: deleteIngressMock });
   Object.defineProperty(window, 'kubernetesDeleteRoute', { value: deleteRoutesMock });
+  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
 });
 
 afterEach(() => {
@@ -53,6 +55,8 @@ class StatusHolder {
 }
 
 test('Expect no error and status deleting ingress', async () => {
+  showMessageBoxMock.mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+
   const ingressUI: IngressUI = new StatusHolder('RUNNING') as unknown as IngressUI;
   ingressUI.name = 'my-ingress';
   ingressUI.namespace = 'test-namespace';
@@ -63,6 +67,10 @@ test('Expect no error and status deleting ingress', async () => {
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Ingress' });
   await fireEvent.click(deleteButton);
+  expect(showMessageBoxMock).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
+
+  // Wait for the dialog to disappear
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(ingressUI.status).toEqual('DELETING');
   expect(updateMock).toHaveBeenCalled();
@@ -70,6 +78,8 @@ test('Expect no error and status deleting ingress', async () => {
 });
 
 test('Expect no error and status deleting route', async () => {
+  showMessageBoxMock.mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+
   const routeUI: RouteUI = new StatusHolder('RUNNING') as unknown as RouteUI;
   routeUI.name = 'my-route';
   routeUI.namespace = 'test-namespace';
@@ -88,6 +98,10 @@ test('Expect no error and status deleting route', async () => {
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Route' });
   await fireEvent.click(deleteButton);
+  expect(showMessageBoxMock).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
+
+  // Wait for the dialog to disappear
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(routeUI.status).toEqual('DELETING');
   expect(updateMock).toHaveBeenCalled();

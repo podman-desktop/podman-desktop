@@ -155,9 +155,7 @@ async function gotoManageRegistries(): Promise<void> {
 }
 
 onMount(() => {
-  if (!selectedProviderConnection) {
-    selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-  }
+  selectedProviderConnection ??= providerConnections.length > 0 ? providerConnections[0] : undefined;
 });
 
 let imageNameInvalid: string | undefined = undefined;

@@ -125,9 +125,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       // we will just download the latest version
       let downloaded: boolean = false;
       try {
-        if (composeVersionMetadata === undefined) {
-          composeVersionMetadata = await composeDownload.getLatestVersionAsset();
-        }
+        composeVersionMetadata ??= await composeDownload.getLatestVersionAsset();
         // Download
         await composeDownload.download(composeVersionMetadata);
 

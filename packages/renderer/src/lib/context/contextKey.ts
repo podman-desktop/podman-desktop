@@ -896,9 +896,7 @@ export class ContextKeyDefinedExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyNotExpr.create(this.key, this);
-    }
+    this.negated ??= ContextKeyNotExpr.create(this.key, this);
     return this.negated;
   }
 }
@@ -970,9 +968,7 @@ export class ContextKeyEqualsExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyNotEqualsExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeyNotEqualsExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1040,9 +1036,7 @@ export class ContextKeyInExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyNotInExpr.create(this.key, this.valueKey);
-    }
+    this.negated ??= ContextKeyNotInExpr.create(this.key, this.valueKey);
     return this.negated;
   }
 }
@@ -1172,9 +1166,7 @@ export class ContextKeyNotEqualsExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyEqualsExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeyEqualsExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1234,9 +1226,7 @@ export class ContextKeyNotExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyDefinedExpr.create(this.key, this);
-    }
+    this.negated ??= ContextKeyDefinedExpr.create(this.key, this);
     return this.negated;
   }
 }
@@ -1312,9 +1302,7 @@ export class ContextKeyGreaterExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeySmallerEqualsExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeySmallerEqualsExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1374,9 +1362,7 @@ export class ContextKeyGreaterEqualsExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeySmallerExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeySmallerExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1436,9 +1422,7 @@ export class ContextKeySmallerExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyGreaterEqualsExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeyGreaterEqualsExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1498,9 +1482,7 @@ export class ContextKeySmallerEqualsExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyGreaterExpr.create(this.key, this.value, this);
-    }
+    this.negated ??= ContextKeyGreaterExpr.create(this.key, this.value, this);
     return this.negated;
   }
 }
@@ -1573,9 +1555,7 @@ export class ContextKeyRegexExpr implements IContextKeyExpression {
   }
 
   public negate(): ContextKeyExpression {
-    if (!this.negated) {
-      this.negated = ContextKeyNotRegexExpr.create(this);
-    }
+    this.negated ??= ContextKeyNotRegexExpr.create(this);
     return this.negated;
   }
 }

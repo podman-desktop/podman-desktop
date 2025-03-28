@@ -1,7 +1,10 @@
 <script lang="ts">
 import { providerColors } from './ProviderInfoCircle';
 
-let { type }: { type: 'kubernetes' | 'podman' | 'docker' | undefined } = $props();
+interface Props {
+  type?: 'kubernetes' | 'podman' | 'docker';
+}
+let { type }: Props = $props();
 let color = $derived(providerColors[type ?? 'unknown']);
 </script>
 

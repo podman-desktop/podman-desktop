@@ -37,9 +37,7 @@ export class ImageFilesImpl implements ImageFilesProvider, Disposable {
   ) {}
 
   addFile(layer: ImageFilesystemLayer, opts: AddCommonOptions & { size: number }): ImageFilesProvider {
-    if (!layer.files) {
-      layer.files = [];
-    }
+    layer.files ??= [];
     layer.files.push({
       path: opts.path,
       type: 'file',
@@ -55,9 +53,7 @@ export class ImageFilesImpl implements ImageFilesProvider, Disposable {
   }
 
   addDirectory(layer: ImageFilesystemLayer, opts: AddCommonOptions): ImageFilesProvider {
-    if (!layer.files) {
-      layer.files = [];
-    }
+    layer.files ??= [];
     layer.files.push({
       path: opts.path,
       type: 'directory',
@@ -73,9 +69,7 @@ export class ImageFilesImpl implements ImageFilesProvider, Disposable {
   }
 
   addSymlink(layer: ImageFilesystemLayer, opts: AddCommonOptions & { linkPath: string }): ImageFilesProvider {
-    if (!layer.files) {
-      layer.files = [];
-    }
+    layer.files ??= [];
     layer.files.push({
       path: opts.path,
       type: 'symlink',
@@ -92,17 +86,13 @@ export class ImageFilesImpl implements ImageFilesProvider, Disposable {
   }
 
   addWhiteout(layer: ImageFilesystemLayer, path: string): ImageFilesProvider {
-    if (!layer.whiteouts) {
-      layer.whiteouts = [];
-    }
+    layer.whiteouts ??= [];
     layer.whiteouts.push(path);
     return this;
   }
 
   addOpaqueWhiteout(layer: ImageFilesystemLayer, path: string): ImageFilesProvider {
-    if (!layer.opaqueWhiteouts) {
-      layer.opaqueWhiteouts = [];
-    }
+    layer.opaqueWhiteouts ??= [];
     layer.opaqueWhiteouts.push(path);
     return this;
   }

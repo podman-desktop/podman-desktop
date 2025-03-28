@@ -24,6 +24,12 @@ const people: Person[] = [
   { name: 'Charlie', duration: new Date().getTime() - 3600000 },
 ];
 
+type Group = {
+  name: string;
+};
+
+const group: Group[] = [{ name: 'Teacher' }, { name: 'Student' }];
+
 const nameCol: TableColumn<Person, string> = new TableColumn('Name', {
   renderMapping: obj => obj.name,
   renderer: TableSimpleColumn,
@@ -39,6 +45,19 @@ const selectable = (_person: Person): boolean => true;
 const row = new TableRow<Person>({
   selectable,
   disabledText: 'cannot be selected',
+});
+
+const rowGroup = new TableRow<Group, Person>({
+  children: (group: Group): Array<Person> => {
+    switch (group.name) {
+      case 'Teacher':
+        return [people[0]];
+      case 'Student':
+        return [people[1], people[2]];
+      default:
+        return [];
+    }
+  },
 });
 </script>
 
@@ -56,4 +75,12 @@ setTemplate(template);
     data: people,
     columns,
     row,
+  }} />
+
+<Story
+  name="Children"
+  args={{
+    data: group,
+    columns: [nameCol],
+    row: rowGroup,
   }} />

@@ -27,7 +27,7 @@ function openGroupDetails(containerGroup: ContainerGroupInfoUI): void {
 </script>
 
 <button
-  class="flex flex-col text-[var(--pd-table-body-text-highlight)] max-w-full"
+  class="flex flex-col text-[var(--pd-table-body-text-highlight)] max-w-full text-left"
   title={object.type}
   on:click={(): void => openGroupDetails(object)}>
   <div class="max-w-full overflow-hidden text-ellipsis">

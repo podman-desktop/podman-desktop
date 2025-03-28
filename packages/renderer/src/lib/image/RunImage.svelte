@@ -7,7 +7,7 @@ import { router } from 'tinro';
 
 import { array2String } from '/@/lib/string/string.js';
 import { handleNavigation } from '/@/navigation';
-import type { ContainerCreateOptions, DeviceMapping, HostConfig } from '/@api/container-info';
+import type { ContainerCreateOptions, DeviceMapping, HostConfig, HostConfigPortBinding } from '/@api/container-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { NetworkInspectInfo } from '/@api/network-info';
@@ -250,7 +250,7 @@ async function startContainer(): Promise<void> {
   // create ExposedPorts objects
   const ExposedPorts: { [key: string]: object } = {};
 
-  const PortBindings: { [key: string]: object } = {};
+  const PortBindings: HostConfigPortBinding = {};
   try {
     exposedPorts.forEach((port, index) => {
       if (port.includes('-') || containerPortMapping[index]?.port.includes('-')) {

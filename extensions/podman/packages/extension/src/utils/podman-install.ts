@@ -645,26 +645,6 @@ class WinMemoryCheck extends BaseCheck {
   }
 }
 
-async function isUserAdmin(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isUserAdmin();
-}
-
-async function isPodmanDesktopElevated(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isRunningElevated();
-}
-
-async function isHyperVInstalled(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isHyperVInstalled();
-}
-
-async function isHyperVRunning(): Promise<boolean> {
-  const client = await getPowerShellClient();
-  return client.isHyperVRunning();
-}
-
 export class WSL2Check extends BaseCheck {
   title = 'WSL2 Installed';
   installWSLCommandId = 'podman.onboarding.installWSL';
@@ -686,9 +666,14 @@ export class WSL2Check extends BaseCheck {
     }
   }
 
+  async isUserAdmin(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isUserAdmin();
+  }
+
   async execute(): Promise<extensionApi.CheckResult> {
     try {
-      const isAdmin = await isUserAdmin();
+      const isAdmin = await this.isUserAdmin();
       const isWSL = await this.isWSLPresent();
       const isRebootNeeded = await this.isRebootNeeded();
 
@@ -828,6 +813,26 @@ export class HyperVCheck extends BaseCheck {
     super();
   }
 
+  async isUserAdmin(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isUserAdmin();
+  }
+
+  async isPodmanDesktopElevated(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isRunningElevated();
+  }
+
+  async isHyperVInstalled(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isHyperVInstalled();
+  }
+
+  async isHyperVRunning(): Promise<boolean> {
+    const client = await getPowerShellClient();
+    return client.isHyperVRunning();
+  }
+
   async execute(): Promise<extensionApi.CheckResult> {
     // if the hyperv check is called as an installation preflight we skip the podman version check
     if (!this.installationPreflightMode && !(await this.isPodmanVersionSupported())) {
@@ -835,7 +840,7 @@ export class HyperVCheck extends BaseCheck {
         description: `Hyper-V is only supported with podman version >= ${HyperVCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV}.`,
       });
     }
-    if (!(await isUserAdmin())) {
+    if (!(await this.isUserAdmin())) {
       return this.createFailureResult({
         description: 'You must have administrative rights to run Hyper-V Podman machines',
         docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
@@ -845,12 +850,12 @@ export class HyperVCheck extends BaseCheck {
         },
       });
     }
-    if (!(await isPodmanDesktopElevated())) {
+    if (!(await this.isPodmanDesktopElevated())) {
       return this.createFailureResult({
         description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
       });
     }
-    if (!(await isHyperVInstalled())) {
+    if (!(await this.isHyperVInstalled())) {
       return this.createFailureResult({
         description: 'Hyper-V is not installed on your system.',
         docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
@@ -860,7 +865,7 @@ export class HyperVCheck extends BaseCheck {
         },
       });
     }
-    if (!(await isHyperVRunning())) {
+    if (!(await this.isHyperVRunning())) {
       return this.createFailureResult({
         description: 'Hyper-V is not running on your system.',
         docLinksDescription: 'call sc start vmms in a terminal',

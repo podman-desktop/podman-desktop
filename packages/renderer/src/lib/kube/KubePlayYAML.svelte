@@ -164,9 +164,7 @@ onMount(async () => {
   currentNamespace = await window.kubernetesGetCurrentNamespace();
 
   // check that the variable is set to a value, otherwise set to default namespace
-  if (!currentNamespace) {
-    currentNamespace = 'default';
-  }
+  currentNamespace ??= 'default';
 
   // grab all the namespaces (will be useful to provide a drop-down to select the namespace)
   try {

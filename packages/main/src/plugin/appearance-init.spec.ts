@@ -57,6 +57,7 @@ test('Expect appearance configuration change to update native theme', async () =
   // call the callback
   callback?.({
     key: `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`,
+    value: 'dark',
   } as unknown as IConfigurationChangeEvent);
 
   // check we have called updateNativeTheme

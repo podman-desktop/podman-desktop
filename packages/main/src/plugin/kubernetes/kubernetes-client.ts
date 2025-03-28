@@ -282,20 +282,20 @@ export class KubernetesClient {
 
     // needs to refresh
     this.kubeConfigWatcher.onDidChange(async () => {
-      this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
       await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
       this.apiSender.send('kubernetes-context-update');
     });
 
     this.kubeConfigWatcher.onDidCreate(async () => {
-      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
       await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
       this.apiSender.send('kubernetes-context-update');
     });
 
     this.kubeConfigWatcher.onDidDelete(() => {
-      this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
       this.kubeConfig = new KubeConfig();
+      this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
       this.apiSender.send('kubernetes-context-update');
     });
   }
@@ -465,9 +465,7 @@ export class KubernetesClient {
         console.trace('unable to list namespaces', error);
       }
     }
-    if (!namespace) {
-      namespace = 'default';
-    }
+    namespace ??= 'default';
     return namespace;
   }
 
@@ -990,6 +988,35 @@ export class KubernetesClient {
     }
   }
 
+  // setCurrentNamespace changes the current namespace without updating the kubeconfig file
+  async setCurrentNamespace(namespace: string): Promise<void> {
+    // Set the new namespace and clear cached data
+    this.currentNamespace = namespace;
+
+    this.#execs.forEach(entry => entry.conn.close());
+    this.#execs.clear();
+
+    // Update state with a copy of the kubeConfig with only the current namespace changed
+    const newConfig = new KubeConfig();
+    newConfig.loadFromOptions({
+      contexts: this.kubeConfig.contexts.map(ctx =>
+        ctx.name !== this.kubeConfig.currentContext
+          ? ctx
+          : {
+              name: ctx.name,
+              cluster: ctx.cluster,
+              namespace: namespace,
+              user: ctx.user,
+            },
+      ),
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.kubeConfig.currentContext,
+    });
+    await this.contextsState.update(newConfig);
+    this.apiSender.send('kubernetes-context-update');
+  }
+
   // Check that we can connect to the cluster and return a Promise<boolean> of true or false depending on the result.
   // We will check via the health check on the cluster of the current context, with a short timeout.
   async checkConnection(): Promise<boolean> {
@@ -1189,12 +1216,12 @@ export class KubernetesClient {
     }
 
     try {
-      const ctx = new KubeConfig();
-      ctx.loadFromFile(this.kubeconfigPath);
-      ctx.currentContext = context;
+      const configCopy = new KubeConfig();
+      configCopy.loadFromString(this.kubeConfig.exportConfig());
+      configCopy.currentContext = context;
       const validSpecs = manifests.filter(s => isKubernetesObjectWithKindAndName(s));
 
-      const client = ctx.makeApiClient(KubernetesObjectApi);
+      const client = configCopy.makeApiClient(KubernetesObjectApi);
       const created: KubernetesObject[] = [];
       for (const spec of validSpecs) {
         // this is to convince TypeScript that metadata exists
@@ -1204,9 +1231,7 @@ export class KubernetesClient {
         delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'];
         spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec);
 
-        if (!spec.metadata.namespace) {
-          spec.metadata.namespace = namespace ?? DEFAULT_NAMESPACE;
-        }
+        spec.metadata.namespace ??= namespace ?? DEFAULT_NAMESPACE;
         try {
           // try to get the resource, if it does not exist an error will be thrown and we will
           // end up in the catch block

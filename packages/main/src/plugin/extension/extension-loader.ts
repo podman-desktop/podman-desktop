@@ -704,9 +704,7 @@ export class ExtensionLoader {
 
     extension.subscriptions.push(this.notificationRegistry.registerExtension(extension.id));
 
-    if (!extension.api) {
-      extension.api = this.createApi(extension);
-    }
+    extension.api ??= this.createApi(extension);
     const extensionWithApi = extension as AnalyzedExtensionWithApi;
     this.analyzedExtensions.set(extension.id, extensionWithApi);
     this.extensionState.delete(extension.id);
@@ -1424,9 +1422,7 @@ export class ExtensionLoader {
       },
       navigateToOnboarding: async (extensionId?: string): Promise<void> => {
         let onboardingExtensionId = extensionId;
-        if (!onboardingExtensionId) {
-          onboardingExtensionId = extensionInfo.id;
-        }
+        onboardingExtensionId ??= extensionInfo.id;
         await this.navigationManager.navigateToOnboarding(onboardingExtensionId);
       },
       navigate: async (routeId: string, ...args: unknown[]): Promise<void> => {

@@ -20,7 +20,11 @@ import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 
-let { exitSettingsCallback, meta = $bindable() }: { exitSettingsCallback: () => void; meta: TinroRouteMeta } = $props();
+interface Props {
+  exitSettingsCallback: () => void;
+  meta: TinroRouteMeta;
+}
+let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();

@@ -2,6 +2,7 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher } from 'svelte';
 
+import { withConfirmation } from '../dialogs/messagebox-utils';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
@@ -30,6 +31,10 @@ async function deleteIngressRoute(): Promise<void> {
 
 <ListItemButtonIcon
   title={`Delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'Ingress' : 'Route'}`}
-  onClick={deleteIngressRoute}
+  onClick={(): void =>
+    withConfirmation(
+      deleteIngressRoute,
+      `delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'ingress' : 'route'} ${ingressRoute.name}`,
+    )}
   detailed={detailed}
   icon={faTrash} />

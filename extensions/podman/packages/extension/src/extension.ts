@@ -55,7 +55,7 @@ import {
   LoggerDelegator,
   VMTYPE,
 } from './utils/util';
-import { getSocketPath, isDisguisedPodman } from './utils/warnings';
+import { isDisguisedPodman } from './utils/warnings';
 
 type StatusHandler = (name: string, event: extensionApi.ProviderConnectionStatus) => void;
 
@@ -81,13 +81,7 @@ const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
 
-// Warning to check to see if the socket is a disguised Podman socket,
-// by default we assume it is until proven otherwise when we check
-let isDisguisedPodmanSocket = true;
-let disguisedPodmanSocketWatcher: extensionApi.FileSystemWatcher | undefined;
-
 // Configuration buttons
-const configurationCompatibilityMode = 'setting.dockerCompatibility';
 let telemetryLogger: extensionApi.TelemetryLogger | undefined;
 
 const wslHelper = new WslHelper();
@@ -1383,25 +1377,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   const provider = extensionApi.provider.createProvider(providerOptions);
 
-  // Check on initial setup
-  await checkDisguisedPodmanSocket();
-
-  // Update the status of the provider if the socket is changed, created or deleted
-  disguisedPodmanSocketWatcher = setupDisguisedPodmanSocketWatcher(provider, getSocketPath());
-  if (disguisedPodmanSocketWatcher) {
-    extensionContext.subscriptions.push(disguisedPodmanSocketWatcher);
-  }
-
   // Compatibility mode status bar item
   // only available for macOS
   if (extensionApi.env.isMac) {
-    // Handle any configuration changes (for example, changing the boolean button for compatibility mode)
-    extensionApi.configuration.onDidChangeConfiguration(async e => {
-      if (e.affectsConfiguration(`podman.${configurationCompatibilityMode}`)) {
-        await handleCompatibilityModeSetting();
-      }
-    });
-
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.disableCompatibilityMode', async () => {
@@ -1419,19 +1397,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // update the initial context value
     const compatibilityEnabled = socketCompatibilityMode.isEnabled();
     extensionApi.context.setValue(PODMAN_DOCKER_COMPAT_ENABLE_KEY, compatibilityEnabled);
-
-    // Create a status bar item to show the status of compatibility mode as well as
-    // create a command so when you can disable / enable compatibility mode
-    const statusBarItem = extensionApi.window.createStatusBarItem();
-    statusBarItem.text = 'Docker Compatibility';
-    statusBarItem.command = 'podman.socketCompatibilityMode';
-
-    // Use tooltip text from class
-    statusBarItem.tooltip = socketCompatibilityMode.tooltipText();
-
-    statusBarItem.iconClass = 'fa fa-plug';
-    statusBarItem.show();
-    extensionContext.subscriptions.push(statusBarItem);
 
     // Create a modal dialog to ask the user if they want to enable or disable compatibility mode
     const command = extensionApi.commands.registerCommand('podman.socketCompatibilityMode', async () => {
@@ -1460,8 +1425,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           await switchCompatibilityMode(false);
         }
       }
-      // Use tooltip text from class
-      statusBarItem.tooltip = socketCompatibilityMode.tooltipText();
     });
 
     // Push the results of the command so we can unload it later
@@ -2159,9 +2122,7 @@ export async function createMachine(
       telemetryRecords.imagePath = 'embedded';
     }
   }
-  if (!telemetryRecords.imagePath) {
-    telemetryRecords.imagePath = 'default';
-  }
+  telemetryRecords.imagePath ??= 'default';
 
   const installedPodman = await getPodmanInstallation();
   const version = installedPodman?.version;
@@ -2251,72 +2212,6 @@ export async function createMachine(
 
 export function resetShouldNotifySetup(): void {
   shouldNotifySetup = true;
-}
-
-function setupDisguisedPodmanSocketWatcher(
-  provider: extensionApi.Provider,
-  socketFile: string,
-): extensionApi.FileSystemWatcher | undefined {
-  // Monitor the socket file for any changes, creation or deletion
-  // and trigger a change if that happens
-
-  // Add the check to the listeners as well to make sure we check on podman status change as well
-  listeners.add(() => {
-    checkDisguisedPodmanSocket().catch((error: unknown) => {
-      console.error('Error while checking disguised podman socket', error);
-    });
-  });
-
-  let socketWatcher: extensionApi.FileSystemWatcher | undefined = undefined;
-  if (extensionApi.env.isLinux || extensionApi.env.isMac) {
-    socketWatcher = extensionApi.fs.createFileSystemWatcher(socketFile);
-  }
-
-  // only trigger if the watched file is the socket file
-  const updateSocket = async (uri: extensionApi.Uri): Promise<void> => {
-    if (uri.fsPath === socketFile) {
-      await checkDisguisedPodmanSocket();
-    }
-  };
-
-  socketWatcher?.onDidChange(async uri => {
-    await updateSocket(uri);
-  });
-
-  socketWatcher?.onDidCreate(async uri => {
-    await updateSocket(uri);
-  });
-
-  socketWatcher?.onDidDelete(async uri => {
-    await updateSocket(uri);
-  });
-
-  return socketWatcher;
-}
-
-export async function checkDisguisedPodmanSocket(): Promise<void> {
-  // Check to see if the socket is disguised or not. If it is, we'll push a warning up
-  // to the plugin library to the let the provider know that there is a warning
-  const disguisedCheck = await isDisguisedPodman();
-  if (isDisguisedPodmanSocket !== disguisedCheck) {
-    isDisguisedPodmanSocket = disguisedCheck;
-  }
-
-  // If it's disguised on startup, set the enable-docker-compatibility setting accordingly
-  await extensionApi.configuration.getConfiguration('podman').update(configurationCompatibilityMode, disguisedCheck);
-}
-
-// Shortform for getting the compatibility mode setting
-function getCompatibilityModeSetting(): boolean {
-  return extensionApi.configuration.getConfiguration('podman').get<boolean>(configurationCompatibilityMode) ?? false;
-}
-
-// Handle the setting by checking the compatibility
-// and retrieving the correct socket compatibility class as well
-export async function handleCompatibilityModeSetting(): Promise<void> {
-  const compatibilityMode = getCompatibilityModeSetting();
-
-  await switchCompatibilityMode(compatibilityMode);
 }
 
 async function switchCompatibilityMode(enabled: boolean): Promise<void> {

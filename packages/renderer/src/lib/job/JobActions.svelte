@@ -6,13 +6,11 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { JobUI } from './JobUI';
 
-let {
-  job,
-  detailed = false,
-}: {
+interface Props {
   job: JobUI;
   detailed?: boolean;
-} = $props();
+}
+let { job, detailed = false }: Props = $props();
 
 async function deleteJob(): Promise<void> {
   job.status = 'DELETING';

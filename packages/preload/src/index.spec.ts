@@ -21,7 +21,7 @@
 import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
 import type { IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
@@ -82,209 +82,241 @@ test('build Api Sender', () => {
   expect(received.length).toBe(2);
 });
 
-test('openDialog', async () => {
+describe('collect calls to exposeInMainWorld and ipcRenderer.on and calls initExposure', () => {
   // store the exposeInMainWorld calls
   const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
-
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
 
   // store the ipcRenderer.on calls
   const ipcRendererOnCalls: Map<string, (event: IpcRendererEvent, ...args: unknown[]) => void> = new Map();
 
-  vi.mocked(ipcRenderer.on).mockImplementation(
-    (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
-      ipcRendererOnCalls.set(eventName, listener);
-      return {} as IpcRenderer;
-    },
-  );
-  // call init exposure
-  initExposure();
-
-  // mock ipcRenderer.invoke
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
-
-  // grab openDialog exposure
-  const openDialogExposure = exposeInMainWorldCalls.get('openDialog');
-  expect(openDialogExposure).toBeDefined();
-
-  // get the 'dialog:open-save-dialog-response'
-  const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-  expect(dialogOpenSaveDialogResponse).toBeDefined();
-
-  // call the exposure
-  const openDialogOptions: OpenDialogOptions = {
-    title: 'MyCustomTitle',
+  const getInMainWorld = (s: string): ((...args: unknown[]) => unknown) => {
+    const exposure = exposeInMainWorldCalls.get(s);
+    expect(exposure).toBeDefined();
+    if (!exposure) {
+      throw new Error('should be defined');
+    }
+    return exposure;
   };
 
-  // send the response after the call
-  setTimeout(() => {
-    dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', ['file1', 'file2']);
-  }, 100);
-
-  const result = await openDialogExposure?.(openDialogOptions);
-
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
-
-  // check the result
-  expect(result).toEqual(['file1', 'file2']);
-});
-
-test('saveDialog', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
-
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
-
-  // store the ipcRenderer.on calls
-  const ipcRendererOnCalls: Map<string, (event: IpcRendererEvent, ...args: unknown[]) => void> = new Map();
-
-  vi.mocked(ipcRenderer.on).mockImplementation(
-    (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
-      ipcRendererOnCalls.set(eventName, listener);
-      return {} as IpcRenderer;
-    },
-  );
-  // call init exposure
-  initExposure();
-
-  // mock ipcRenderer.invoke
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
-
-  // grab openDialog exposure
-  const saveDialogExposure = exposeInMainWorldCalls.get('saveDialog');
-  expect(saveDialogExposure).toBeDefined();
-
-  // get the 'dialog:open-save-dialog-response'
-  const dialogOpenSaveDialogResponse = ipcRendererOnCalls.get('dialog:open-save-dialog-response');
-  expect(dialogOpenSaveDialogResponse).toBeDefined();
-
-  // call the exposure
-  const saveDialogOptions: SaveDialogOptions = {
-    title: 'MyCustomTitle',
+  const getRendererOn = (s: string): ((event: IpcRendererEvent, ...args: unknown[]) => void) => {
+    const exposure = ipcRendererOnCalls.get(s);
+    expect(exposure).toBeDefined();
+    if (!exposure) {
+      throw new Error('should be defined');
+    }
+    return exposure;
   };
 
-  // send the response after the call
-  setTimeout(() => {
-    dialogOpenSaveDialogResponse?.({} as IpcRendererEvent, '0', 'file1');
-  }, 100);
+  beforeEach(() => {
+    exposeInMainWorldCalls.clear();
+    ipcRendererOnCalls.clear();
 
-  const result = await saveDialogExposure?.(saveDialogOptions);
+    vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
+      (funcName: string, func: (...args: unknown[]) => unknown) => {
+        exposeInMainWorldCalls.set(funcName, func);
+      },
+    );
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    vi.mocked(ipcRenderer.on).mockImplementation(
+      (eventName: string, listener: (event: IpcRendererEvent, ...args: unknown[]) => void): IpcRenderer => {
+        ipcRendererOnCalls.set(eventName, listener);
+        return {} as IpcRenderer;
+      },
+    );
 
-  // check the result
-  expect(result).toEqual('file1');
-});
+    initExposure();
+  });
 
-test('getKubernetesPortForwards', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+  test('openDialog', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+    // grab openDialog exposure
+    const openDialogExposure = getInMainWorld('openDialog');
 
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: [] });
-  // call init exposure
-  initExposure();
+    // get the 'dialog:open-save-dialog-response'
+    const dialogOpenSaveDialogResponse = getRendererOn('dialog:open-save-dialog-response');
 
-  // grab getKubernetesPortForwards exposure
-  const getKubernetesPortForwardsExposure = exposeInMainWorldCalls.get('getKubernetesPortForwards');
-  expect(getKubernetesPortForwardsExposure).toBeDefined();
+    // call the exposure
+    const openDialogOptions: OpenDialogOptions = {
+      title: 'MyCustomTitle',
+    };
 
-  const result = await getKubernetesPortForwardsExposure?.();
+    // send the response after the call
+    setTimeout(() => {
+      dialogOpenSaveDialogResponse({} as IpcRendererEvent, '0', ['file1', 'file2']);
+    }, 100);
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    const result = await openDialogExposure(openDialogOptions);
 
-  // check the result
-  expect(result).toEqual([]);
-});
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-test('createKubernetesPortForward', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+    // check the result
+    expect(result).toEqual(['file1', 'file2']);
+  });
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+  test('saveDialog', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ error: undefined, result: undefined });
 
-  const userPortForward: ForwardConfig = {
-    id: 'fake-id',
-    namespace: 'kubernetes',
-    name: 'service',
-    kind: WorkloadKind.SERVICE,
-    forward: {
-      localPort: 50_050,
-      remotePort: 88,
-    },
-  };
+    // grab openDialog exposure
+    const saveDialogExposure = getInMainWorld('saveDialog');
 
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
-  // call init exposure
-  initExposure();
+    // get the 'dialog:open-save-dialog-response'
+    const dialogOpenSaveDialogResponse = getRendererOn('dialog:open-save-dialog-response');
 
-  // grab createKubernetesPortForward exposure
-  const createKubernetesPortForwardExposure = exposeInMainWorldCalls.get('createKubernetesPortForward');
-  expect(createKubernetesPortForwardExposure).toBeDefined();
+    // call the exposure
+    const saveDialogOptions: SaveDialogOptions = {
+      title: 'MyCustomTitle',
+    };
 
-  const result = await createKubernetesPortForwardExposure?.(userPortForward);
+    // send the response after the call
+    setTimeout(() => {
+      dialogOpenSaveDialogResponse({} as IpcRendererEvent, '0', 'file1');
+    }, 100);
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+    const result = await saveDialogExposure(saveDialogOptions);
 
-  // check the result
-  expect(result).toEqual(userPortForward);
-});
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-test('deleteKubernetesPortForward', async () => {
-  // store the exposeInMainWorld calls
-  const exposeInMainWorldCalls: Map<string, (...args: unknown[]) => unknown> = new Map();
+    // check the result
+    expect(result).toEqual('file1');
+  });
 
-  vi.mocked(contextBridge.exposeInMainWorld).mockImplementation(
-    (funcName: string, func: (...args: unknown[]) => unknown) => {
-      exposeInMainWorldCalls.set(funcName, func);
-    },
-  );
+  test('getKubernetesPortForwards', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: [] });
 
-  const userPortForward: ForwardConfig = {
-    id: 'fake-id',
-    namespace: 'kubernetes',
-    name: 'service',
-    kind: WorkloadKind.SERVICE,
-    forward: {
-      localPort: 50_050,
-      remotePort: 88,
-    },
-  };
+    // grab getKubernetesPortForwards exposure
+    const getKubernetesPortForwardsExposure = getInMainWorld('getKubernetesPortForwards');
 
-  vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
-  // call init exposure
-  initExposure();
+    const result = await getKubernetesPortForwardsExposure();
 
-  // grab createKubernetesPortForward exposure
-  const deleteKubernetesPortForwardExposure = exposeInMainWorldCalls.get('deleteKubernetesPortForward');
-  expect(deleteKubernetesPortForwardExposure).toBeDefined();
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
 
-  const result = await deleteKubernetesPortForwardExposure?.(userPortForward);
+    // check the result
+    expect(result).toEqual([]);
+  });
 
-  // check we invoke ipcRenderer.invoke
-  expect(ipcRenderer.invoke).toBeCalled();
+  test('createKubernetesPortForward', async () => {
+    const userPortForward: ForwardConfig = {
+      id: 'fake-id',
+      namespace: 'kubernetes',
+      name: 'service',
+      kind: WorkloadKind.SERVICE,
+      forward: {
+        localPort: 50_050,
+        remotePort: 88,
+      },
+    };
 
-  // check the result
-  expect(result).toEqual(undefined);
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: userPortForward });
+
+    // grab createKubernetesPortForward exposure
+    const createKubernetesPortForwardExposure = getInMainWorld('createKubernetesPortForward');
+
+    const result = await createKubernetesPortForwardExposure(userPortForward);
+
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
+
+    // check the result
+    expect(result).toEqual(userPortForward);
+  });
+
+  test('deleteKubernetesPortForward', async () => {
+    const userPortForward: ForwardConfig = {
+      id: 'fake-id',
+      namespace: 'kubernetes',
+      name: 'service',
+      kind: WorkloadKind.SERVICE,
+      forward: {
+        localPort: 50_050,
+        remotePort: 88,
+      },
+    };
+
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+
+    // grab createKubernetesPortForward exposure
+    const deleteKubernetesPortForwardExposure = getInMainWorld('deleteKubernetesPortForward');
+
+    const result = await deleteKubernetesPortForwardExposure(userPortForward);
+
+    // check we invoke ipcRenderer.invoke
+    expect(ipcRenderer.invoke).toBeCalled();
+
+    // check the result
+    expect(result).toEqual(undefined);
+  });
+
+  test('logger passed to createVmProviderConnection is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const createVmProviderConnectionExposure = getInMainWorld('createVmProviderConnection');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await createVmProviderConnectionExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to startProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const startProviderConnectionLifecycleExposure = getInMainWorld('startProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await startProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to stopProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const stopProviderConnectionLifecycleExposure = getInMainWorld('stopProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await stopProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to editProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const editProviderConnectionLifecycleExposure = getInMainWorld('editProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await editProviderConnectionLifecycleExposure('internal', {}, {}, 'key1', logger, 'token1', 'task1');
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][4];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
+
+  test('logger passed to deleteProviderConnectionLifecycle is called during provider-registry:taskConnection-onData', async () => {
+    vi.mocked(ipcRenderer.invoke).mockResolvedValue({ result: undefined });
+    const deleteProviderConnectionLifecycleExposure = getInMainWorld('deleteProviderConnectionLifecycle');
+    const logger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void = vi.fn();
+    await deleteProviderConnectionLifecycleExposure('internal', {}, 'key1', logger);
+    expect(ipcRenderer.invoke).toHaveBeenCalledOnce();
+
+    const id = vi.mocked(ipcRenderer.invoke).mock.calls[0][3];
+    const taskConnectionOnDataExposure = getRendererOn('provider-registry:taskConnection-onData');
+    const data = { data: 'data' };
+    taskConnectionOnDataExposure({} as IpcRendererEvent, id, 'log', data);
+    expect(logger).toHaveBeenCalledWith('key1', 'log', data);
+  });
 });

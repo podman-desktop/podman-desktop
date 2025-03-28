@@ -85,12 +85,10 @@ export class ExtensionsCatalog {
       const endTime = performance.now();
       console.log(`Fetched ${catalogUrl} in ${endTime - startTime}ms`);
       this.apiSender.send('refresh-catalog');
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (requestErr: any) {
+    } catch (requestErr: unknown) {
       // unable to fetch the extensions
       // extract only the error message
-      if (requestErr.message) {
+      if (typeof requestErr === 'object' && requestErr && 'message' in requestErr && requestErr.message) {
         throw new Error(`Unable to fetch the available extensions: ${String(requestErr.message)}`);
       } else {
         throw new Error(`Unable to fetch the available extensions: ${String(requestErr)}`);
@@ -198,9 +196,7 @@ export class ExtensionsCatalog {
       const httpsProxyUrl = proxy?.httpsProxy;
 
       if (httpProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.http = new HttpProxyAgent({
             keepAlive: true,
@@ -215,9 +211,7 @@ export class ExtensionsCatalog {
         }
       }
       if (httpsProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.https = new HttpsProxyAgent({
             keepAlive: true,

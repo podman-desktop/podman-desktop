@@ -292,6 +292,13 @@ jobs:
       - name: Run unit tests
         run: pnpm test:unit
 
+        # publish codecov report if linux
+      - name: publish codecov report
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   smoke-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: smoke e2e tests

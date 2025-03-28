@@ -3,6 +3,7 @@ import { faPen } from '@fortawesome/free-solid-svg-icons';
 import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
 import { ProxyState } from '/@api/proxy';
 
 import SettingsPage from './SettingsPage.svelte';
@@ -22,6 +23,13 @@ onMount(async () => {
   noProxy = proxySettings?.noProxy ?? '';
   proxyState = await window.getProxyState();
 });
+
+function onProxyStateChange(key: unknown): void {
+  const entry = PROXY_LABELS.entries().find(([_, label]) => label === key);
+  if (entry) {
+    proxyState = entry[0];
+  }
+}
 
 async function updateProxySettings(): Promise<void> {
   await window.setProxyState(proxyState);
@@ -73,11 +81,12 @@ function validate(event: any): void {
       <Dropdown
         class="text-sm max-w-28"
         id="toggle-proxy"
-        bind:value={proxyState}
-        options={[
-          {value: ProxyState.PROXY_SYSTEM, label:'System'},
-          {value: ProxyState.PROXY_MANUAL, label:'Manual'},
-          {value: ProxyState.PROXY_DISABLED, label:'Disabled'}]}>
+        onChange={onProxyStateChange}
+        value={PROXY_LABELS.get(proxyState)}
+        options={Array.from(PROXY_LABELS.values()).map((label) => ({
+          value: label,
+          label: label,
+        }))}>
       </Dropdown>
     </label>
 
@@ -132,7 +141,7 @@ function validate(event: any): void {
           required />
       </div>
       <div class="my-2 pt-4">
-        <Button on:click={updateProxySettings} class="w-full" icon={faPen}>Update</Button>
+        <Button on:click={updateProxySettings} class="w-full" title="Update" icon={faPen}>Update</Button>
       </div>
   </div>
 </SettingsPage>

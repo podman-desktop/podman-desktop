@@ -50,6 +50,17 @@ export interface ProviderKubernetesConnectionInfo {
   lifecycleMethods?: LifecycleMethod[];
 }
 
+export interface ProviderVmConnectionInfo {
+  name: string;
+  status: ProviderConnectionStatus;
+  lifecycleMethods?: LifecycleMethod[];
+}
+
+export type ProviderConnectionInfo =
+  | ProviderContainerConnectionInfo
+  | ProviderKubernetesConnectionInfo
+  | ProviderVmConnectionInfo;
+
 export interface ProviderInfo {
   internalId: string;
   id: string;
@@ -57,6 +68,7 @@ export interface ProviderInfo {
   name: string;
   containerConnections: ProviderContainerConnectionInfo[];
   kubernetesConnections: ProviderKubernetesConnectionInfo[];
+  vmConnections: ProviderVmConnectionInfo[];
   status: ProviderStatus;
   lifecycleMethods?: LifecycleMethod[];
   // can create provider connection from ContainerProviderConnectionFactory params
@@ -80,6 +92,17 @@ export interface ProviderInfo {
 
   // optional creation button title (if defined)
   kubernetesProviderConnectionCreationButtonTitle?: string;
+
+  // can create provider connection from VmProviderConnectionFactory params
+  vmProviderConnectionCreation: boolean;
+  // can initialize provider connection from VmProviderConnectionFactory params
+  vmProviderConnectionInitialization: boolean;
+
+  // optional creation name (if defined)
+  vmProviderConnectionCreationDisplayName?: string;
+
+  // optional creation button title (if defined)
+  vmProviderConnectionCreationButtonTitle?: string;
 
   emptyConnectionMarkdownDescription?: string;
 

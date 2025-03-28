@@ -108,16 +108,10 @@ export class PodUtils {
 export function ensureRestrictedSecurityContext(body: any): void {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   body.spec?.containers?.forEach((container: any) => {
-    if (!container.securityContext) {
-      container.securityContext = {};
-    }
+    container.securityContext ??= {};
     container.securityContext.allowPrivilegeEscalation = false;
-    if (!container.securityContext.runAsNonRoot) {
-      container.securityContext.runAsNonRoot = true;
-    }
-    if (!container.securityContext.seccompProfile) {
-      container.securityContext.seccompProfile = {};
-    }
+    container.securityContext.runAsNonRoot ??= true;
+    container.securityContext.seccompProfile ??= {};
     if (
       !container.securityContext.seccompProfile.type ||
       (container.securityContext.seccompProfile.type !== 'RuntimeDefault' &&
@@ -125,12 +119,8 @@ export function ensureRestrictedSecurityContext(body: any): void {
     ) {
       container.securityContext.seccompProfile.type = 'RuntimeDefault';
     }
-    if (!container.securityContext.capabilities) {
-      container.securityContext.capabilities = {};
-    }
-    if (!container.securityContext.capabilities.drop) {
-      container.securityContext.capabilities.drop = [];
-    }
+    container.securityContext.capabilities ??= {};
+    container.securityContext.capabilities.drop ??= [];
     if (container.securityContext.capabilities.drop.indexOf('ALL') === -1) {
       container.securityContext.capabilities.drop.push('ALL');
     }
