@@ -43,7 +43,7 @@ export function coverageConfig(packageRoot, packageName) {
       ],
       provider: 'v8',
       reportsDirectory: path.join(packageRoot, '../../', `test-resources/coverage/${packageName}`),
-      reporter: ['lcov', 'text'],
+      reporter: ['json', 'text'],
     },
   };
   return obj;
