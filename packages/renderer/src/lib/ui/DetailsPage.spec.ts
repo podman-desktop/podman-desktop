@@ -26,6 +26,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { currentPage, lastPage } from '../../stores/breadcrumb';
 import DetailsPage from './DetailsPage.svelte';
+import DetailsPageTest from './DetailsPageTest.svelte';
 
 // mock the router
 vi.mock('tinro', () => {
@@ -119,4 +120,18 @@ test('Expect subtitle is defined and cut', async () => {
 
   // expect class has the clamp
   expect(subtitleElement).toHaveClass('line-clamp-1');
+});
+
+test('props and slots should be displayed', () => {
+  render(DetailsPageTest);
+  screen.logTestingPlaygroundURL();
+  screen.getByText('my-title');
+  screen.getByText('my-details');
+  screen.getByText('my-subtitle');
+  screen.getByText('My tabs slot');
+  screen.getByText('My icon slot');
+  screen.getByText('My subtitle slot');
+  screen.getByText('My actions slot');
+  screen.getByText('My detail slot');
+  screen.getByText('My content slot');
 });
