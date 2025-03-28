@@ -18,16 +18,13 @@
 
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { get, readable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
-import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
-
 import App from './App.svelte';
 import { lastPage, lastSubmenuPages } from './stores/breadcrumb';
+import * as noKubernetesContext from './stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
 const mocks = vi.hoisted(() => ({
@@ -80,6 +77,8 @@ vi.mock('/@/stores/kubernetes-contexts-state', async () => {
   return {};
 });
 
+vi.mock('/@/stores/kubernetes-no-current-context');
+
 const dispatchEventMock = vi.fn();
 const messages = new Map<string, (args: unknown) => void>();
 
@@ -93,11 +92,7 @@ beforeEach(() => {
   };
   Object.defineProperty(window, 'dispatchEvent', { value: dispatchEventMock });
   (window.getConfigurationValue as unknown) = vi.fn();
-  vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable({
-    reachable: false,
-    error: 'initializing',
-    resources: { pods: 0, deployments: 0 },
-  } as ContextGeneralState);
+  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
 });
 
 test('test /image/run/* route', async () => {
@@ -172,11 +167,7 @@ test('do not display kubernetes empty screen if current context', async () => {
 });
 
 test('displays kubernetes empty screen if no current context, without Kubernetes menu', async () => {
-  vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable({
-    reachable: false,
-    error: NO_CURRENT_CONTEXT_ERROR,
-    resources: { pods: 0, deployments: 0 },
-  } as ContextGeneralState);
+  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(true);
 
   render(App);
   router.goto('/kubernetes/deployments');
@@ -187,6 +178,7 @@ test('displays kubernetes empty screen if no current context, without Kubernetes
 });
 
 test('go to last kubernetes page when available', async () => {
+  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
   lastSubmenuPages.set({ Kubernetes: '/kubernetes/deployments' });
   render(App);
   router.goto('/kubernetes');

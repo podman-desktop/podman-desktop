@@ -18,9 +18,8 @@
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 import { createNavigationKubernetesPortForwardEntry } from '/@/stores/navigation/kubernetes/navigation-registry-k8s-port-forward.svelte';
-import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 
-import { kubernetesCurrentContextState } from '../kubernetes-contexts-state';
+import { noKubernetesCurrentContext } from '../kubernetes-no-current-context';
 import { createNavigationKubernetesConfigMapSecretsEntry } from './kubernetes/navigation-registry-k8s-configmap-secrets.svelte';
 import { createNavigationKubernetesCronJobsEntry } from './kubernetes/navigation-registry-k8s-cronjobs.svelte';
 import { createNavigationKubernetesDashboardEntry } from './kubernetes/navigation-registry-k8s-dashboard.svelte';
@@ -55,8 +54,8 @@ export function createNavigationKubernetesGroup(): NavigationRegistryEntry {
   newItems.push(createNavigationKubernetesPortForwardEntry());
   kubernetesNavigationGroupItems = newItems;
 
-  kubernetesCurrentContextState.subscribe(value => {
-    context = value.error !== NO_CURRENT_CONTEXT_ERROR;
+  noKubernetesCurrentContext.subscribe(value => {
+    context = !value;
   });
 
   const mainGroupEntry: NavigationRegistryEntry = {
