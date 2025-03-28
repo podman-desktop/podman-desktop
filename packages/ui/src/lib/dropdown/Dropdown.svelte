@@ -8,6 +8,19 @@ interface Option {
   label: string;
 }
 
+interface Props {
+  id?: string;
+  name?: string;
+  value?: string;
+  disabled?: boolean;
+  onChange?: (val: string) => void;
+  options?: Option[];
+  class?: string;
+  ariaInvalid?: boolean | 'grammar' | 'spelling';
+  ariaLabel?: string;
+  left?: Snippet;
+  children?: Snippet;
+}
 let {
   id,
   name,
@@ -20,19 +33,7 @@ let {
   ariaLabel = '',
   left = undefined,
   children = undefined,
-}: {
-  id?: string;
-  name?: string;
-  value?: string;
-  disabled?: boolean;
-  onChange?: (val: string) => void;
-  options?: Option[];
-  class?: string;
-  ariaInvalid?: boolean | 'grammar' | 'spelling';
-  ariaLabel?: string;
-  left?: Snippet;
-  children?: Snippet;
-} = $props();
+}: Props = $props();
 
 let opened: boolean = $state(false);
 let selectLabel: string = $state('');
