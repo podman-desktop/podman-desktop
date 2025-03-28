@@ -12,7 +12,7 @@ import { type ImageFilesystemLayerUI, toImageFilesystemLayerUIs } from './imageD
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 
 interface Props {
-  imageInfo: ImageInfo | undefined;
+  imageInfo?: ImageInfo;
 }
 let { imageInfo }: Props = $props();
 

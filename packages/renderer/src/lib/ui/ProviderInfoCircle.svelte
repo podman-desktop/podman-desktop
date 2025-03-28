@@ -2,7 +2,7 @@
 import { providerColors } from './ProviderInfoCircle';
 
 interface Props {
-  type: 'kubernetes' | 'podman' | 'docker' | undefined;
+  type?: 'kubernetes' | 'podman' | 'docker';
 }
 let { type }: Props = $props();
 let color = $derived(providerColors[type ?? 'unknown']);
