@@ -18,7 +18,7 @@ export let conditions: {
         <tr>
           <th align="left">Type</th><th align="left">Status</th><th align="left">Updated</th><th align="left">Reason</th><th align="left">Message</th>
         </tr>
-        {#each conditions as condition, index (`${condition.type}-${index}`)}
+        {#each conditions as condition, index (index)}
           <tr>
             <td>{condition.type}</td>
             <td>{condition.status}</td>

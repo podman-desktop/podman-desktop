@@ -68,7 +68,7 @@ export let artifact: V1NodeStatus | undefined;
     <tr>
       <Title>Addresses</Title>
     </tr>
-    {#each artifact.addresses as address}
+    {#each artifact.addresses as address, index (index)}
       <tr>
         <Cell>{address.type}</Cell>
         <Cell>{address.address}</Cell>

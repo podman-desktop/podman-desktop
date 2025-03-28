@@ -122,7 +122,7 @@ if (pod?.status?.startTime) {
               <tr>
                 <td class="py-2 px-4">Environment Variables</td>
                 <td class="py-2 px-4">
-                  {#each container.env ? container.env.map(e => `${e.name}: ${e.value}`) : [] as env, index (`${env}-${index}`)}
+                  {#each container.env ? container.env.map(e => `${e.name}: ${e.value}`) : [] as env, index (index)}
                     <div>{env}</div>
                   {/each}
                 </td>

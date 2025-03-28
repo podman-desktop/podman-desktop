@@ -41,7 +41,7 @@ export let artifact: V1IngressSpec | undefined;
     <tr>
       <Title>TLS</Title>
     </tr>
-    {#each artifact.tls as tls}
+    {#each artifact.tls as tls, index (index)}
       <tr>
         <Cell>Secret Name</Cell>
         <Cell>{tls.secretName}</Cell>
@@ -59,10 +59,10 @@ export let artifact: V1IngressSpec | undefined;
     <tr>
       <Cell>Rules</Cell>
       <Cell>
-        {#each artifact.rules || [] as rule}
+        {#each artifact.rules || [] as rule, index (index)}
           <!-- Here we use || [] to ensure it's always an array -->
           {#if rule.http}
-            {#each rule.http.paths as path}
+            {#each rule.http.paths as path, index (index)}
               Path: {path.path}
               {#if rule.host}
                 • Link:

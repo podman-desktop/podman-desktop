@@ -15,7 +15,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
     <tr>
       <Cell>Access Modes</Cell>
       <Cell>
-        {#each artifact.accessModes as mode (mode)}
+        {#each artifact.accessModes as mode, index (index)}
           <div>{mode}</div>
         {/each}
       </Cell>
@@ -88,7 +88,7 @@ export let artifact: V1PersistentVolumeClaimSpec | undefined;
         <Cell>
           <table>
             <tbody>
-              {#each artifact.selector.matchExpressions as expression}
+              {#each artifact.selector.matchExpressions as expression, index (index)}
                 {#if expression.values}
                   <tr>
                     <Cell>Expression: {expression.key} {expression.operator}</Cell>
