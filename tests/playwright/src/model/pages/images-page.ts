@@ -248,9 +248,7 @@ export class ImagesPage extends MainPage {
   async getAllImageBadges(name: string): Promise<string[]> {
     return test.step(`Get all badges for image: ${name}`, async () => {
       const locators = await this.getAllBadgeLocators(name);
-      const list = await Promise.all(locators.map(async locator => await locator.innerText()));
-
-      return list.length > 0 ? list : [];
+      return await Promise.all(locators.map(async locator => await locator.innerText()));
     });
   }
 
