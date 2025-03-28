@@ -29,7 +29,7 @@ export class DockerCompatibilitySetup {
     this.#dockerContextHandler = dockerContextHandler;
   }
 
-  async init(): Promise<void> {
+  protected async refreshContextList(): Promise<void> {
     // get the current contexts
     const currentContexts = await this.#dockerContextHandler.listContexts();
 
@@ -42,18 +42,23 @@ export class DockerCompatibilitySetup {
       };
     });
     context.setValue('docker.cli.context', contextEnumItems, 'DockerCompatibility');
+  }
+
+  async init(): Promise<void> {
+    await this.refreshContextList();
 
     // track the changes operated by the user
-    configuration.onDidChangeConfiguration(event => {
+    configuration.onDidChangeConfiguration(async event => {
       if (event.affectsConfiguration('docker.cli.context')) {
         // get the value
         const value = configuration.getConfiguration('docker.cli', 'DockerCompatibility');
         const contextName = value.get<string>('context');
-
         if (contextName) {
-          this.#dockerContextHandler.switchContext(contextName).catch((error: unknown) => {
-            console.error('Error switching docker context', error);
-          });
+          try {
+            await this.#dockerContextHandler.switchContext(contextName);
+          } catch (error: unknown) {
+            console.error('error while switching the context', error);
+          }
         }
       }
     });
