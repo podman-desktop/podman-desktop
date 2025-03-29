@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -27,8 +25,6 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import CustomPick from './CustomPick.svelte';
 import type { CustomPickOptions } from './quickpick-input';
 
-const sendCustomPickItemsOnConfirmation = vi.fn();
-const closeCustomPick = vi.fn();
 const receiveFunctionMock = vi.fn();
 
 // mock some methods of the window object
@@ -36,8 +32,6 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  (window as any).sendCustomPickItemsOnConfirmation = sendCustomPickItemsOnConfirmation;
-  (window as any).closeCustomPick = closeCustomPick;
 });
 
 describe('CustomPick', () => {
@@ -140,7 +134,7 @@ describe('CustomPick', () => {
 
     await userEvent.click(button);
 
-    expect(closeCustomPick).toHaveBeenCalled();
+    expect(window.closeCustomPick).toHaveBeenCalled();
   });
 
   test('Expect that by clicking the next button it calls the senditemms and close command', async () => {
@@ -176,7 +170,7 @@ describe('CustomPick', () => {
     expect(button).toBeInTheDocument();
 
     await userEvent.click(button);
-    expect(sendCustomPickItemsOnConfirmation).toHaveBeenCalled();
-    expect(closeCustomPick).toHaveBeenCalled();
+    expect(window.sendCustomPickItemsOnConfirmation).toHaveBeenCalled();
+    expect(window.closeCustomPick).toHaveBeenCalled();
   });
 });
