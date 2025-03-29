@@ -29,6 +29,28 @@ export enum DiskType {
   Applehv = 'applehv',
 }
 
+type ResponseManifest = {
+  digest: string;
+  annotations: {
+    disktype: string;
+  };
+  platform: {
+    os: string;
+    architecture: string;
+  };
+};
+
+type ResponseLayers = {
+  digest: string;
+  size: number;
+};
+
+type ResponseJSON = {
+  layers: ResponseLayers[];
+  errors: unknown;
+  manifests: ResponseManifest[];
+};
+
 // to make this file a module
 export class PodmanDownload {
   #podmanVersion: string;
@@ -288,9 +310,10 @@ export class Podman5DownloadMachineOS {
     this.#version = version;
     this.#shaCheck = shaCheck;
     this.#assetsFolder = assetsFolder;
+    this.#ociRegistryProjectLink = '';
   }
 
-  async getManifest(manifestUrl: string): Promise<any> {
+  async getManifest(manifestUrl: string): Promise<ResponseJSON> {
     const response = await fetch(manifestUrl, {
       method: 'GET',
       headers: {
@@ -298,7 +321,7 @@ export class Podman5DownloadMachineOS {
         Accept: 'application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json',
       },
     });
-    return response.json();
+    return response.json() as unknown as ResponseJSON;
   }
 
   protected async pipe(
