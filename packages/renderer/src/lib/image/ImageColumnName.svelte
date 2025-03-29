@@ -22,7 +22,7 @@ function openDetails(image: ImageInfoUI): void {
       {object.isManifest ? ' (manifest)' : ''}
     </div>
     {#if object.badges.length}
-      {#each object.badges as badge}
+      {#each object.badges as badge, index (index)}
         <Badge color={badge.color} label={badge.label} />
       {/each}
     {/if}
