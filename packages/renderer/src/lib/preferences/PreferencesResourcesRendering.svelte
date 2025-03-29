@@ -370,10 +370,45 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+export let focus: string | undefined;
+let highlightID: string | undefined;
+
+$: if (focus && focus !== highlightID) {
+  requestAnimationFrame(() => {
+    highlightID = focus;
+    const element = document.getElementById(focus);
+    if (element) {
+      element.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
+}
+
+function getClassForProvider(providerId: string): string {
+  return highlightID === providerId ? 'highlight' : '';
+}
+
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
 </script>
+
+<style>
+  @keyframes fadeOutline {
+    0% {
+      outline: 2px solid var(--pd-link);
+      outline-offset: 2px;
+    }
+    100% {
+      outline: 2px solid rgba(255, 0, 0, 0);
+      outline-offset: 2px;
+    }
+  }
+
+  .highlight {
+    animation: fadeOutline 0.5s ease-in-out forwards;
+  }
+</style>
+
 
 <SettingsPage title="Resources">
   <span slot="subtitle" class:hidden={providers.length === 0}>
@@ -391,7 +426,8 @@ function handleError(errorMessage: string): void {
 
     {#each providers as provider}
       <div
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        id={provider.id}
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex {getClassForProvider(provider.id)}"
         role="region"
         aria-label={provider.id}>
         <div role="region" aria-label="Provider Setup">
