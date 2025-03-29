@@ -9,7 +9,7 @@ tags: [enable-docker-compatibility, disable-docker-compatibility]
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Customizing Docker compatibility - Experimental feature
+# Customizing Docker compatibility
 
 With Podman Desktop, you can customize the Docker compatibility feature. If you want to run your Docker applications on a Podman engine, you can enable the feature.
 
@@ -53,12 +53,9 @@ The binding between the Podman machine and the system socket is not known. So, P
 
 #### Procedure
 
-- Perform one of the following steps:
+- Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
 
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-
-  A Docker Compatibility section is added to the list of **Settings**.
+A Docker Compatibility section is added to the list of **Settings**.
 
 #### Verification
 
@@ -84,13 +81,9 @@ Perform any of the following steps:
 1. Click **OK**. A notification prompts you to restart your Podman machine.
 1. Click **Yes**.
    ![restart Podman machine](img/restart-podman-machine.png)
-1. Perform one of the following steps:
-
-   - Go to **Settings > Experimental**, and click the toggle button.
-     ![enable toggle button - Experimental](img/enable-using-experimental.png)
-   - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-     ![enable toggle button - Preferences](img/enable-using-preferences.png)
-     A Docker Compatibility section is added to the list of **Settings**.
+1. Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
+   ![enable toggle button - Preferences](img/enable-using-preferences.png)
+   A Docker Compatibility section is added to the list of **Settings**.
 
 #### Verification
 
@@ -121,12 +114,9 @@ Perform any of the following steps:
 
 #### Procedure
 
-- Perform one of the following steps:
+- Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
 
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-
-  A Docker Compatibility section is added to the list of **Settings**.
+A Docker Compatibility section is added to the list of **Settings**.
 
 #### Verification
 
@@ -154,10 +144,7 @@ Perform any of the following steps:
 
 #### Procedure
 
-- Perform one of the following steps:
-
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
+- Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
 
   The Docker Compatibility section is removed from the list of **Settings**.
 
@@ -180,11 +167,7 @@ Perform any of the following steps:
 1. Enter your machine password when prompted. A successful operation notification opens.
 1. Click **OK**. A notification prompts you to restart your Podman machine.
 1. Click **Yes**.
-1. Perform one of the following steps:
-
-   - Go to **Settings > Experimental**, and click the toggle button.
-   - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
-
+1. Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
    The Docker Compatibility section is removed from the list of **Settings**.
 
 #### Verification
@@ -214,10 +197,7 @@ Perform any of the following steps:
 
 #### Procedure
 
-- Perform one of the following steps:
-
-  - Go to **Settings > Experimental**, and click the toggle button.
-  - Go to **Settings > Preferences > Experimental (Docker Compatibility)**, and click the toggle button.
+- Go to **Settings > Preferences > Docker Compatibility**, and click the toggle button.
 
   The Docker Compatibility section is removed from the list of **Settings**.
 
