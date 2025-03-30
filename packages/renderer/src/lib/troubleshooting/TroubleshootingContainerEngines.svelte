@@ -21,7 +21,7 @@ $: containerEnginesRunning = containerEngines.filter(containerEngine => containe
 
   {#if containerEnginesRunning.length > 0}
     <div class="mt-4">Running:</div>
-    {#each containerEnginesRunning as containerEngineRunning (containerEngineRunning)}
+    {#each containerEnginesRunning as containerEngineRunning}
       <TroubleshootingContainerEngine containerEngineRunning={containerEngineRunning} />
     {/each}
 

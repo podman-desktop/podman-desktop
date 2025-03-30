@@ -58,7 +58,7 @@ async function fetch(): Promise<void> {
             {@const reverseOrderedBufferEvents = [...eventStoreInfo.bufferEvents].reverse()}
 
             <ul class="h-32 overflow-auto list-disc list-inside text-xs" aria-label="buffer-events">
-              {#each reverseOrderedBufferEvents as bufferEvent (bufferEvent)}
+              {#each reverseOrderedBufferEvents as bufferEvent}
                 <li aria-label={bufferEvent.name}>
                   {#if bufferEvent.skipped}
                     Skipped event

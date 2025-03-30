@@ -182,7 +182,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
       {/each}
     </div>
     <div class="h-full w-full pr-4 overflow-y-scroll pb-16">
-      {#each filtered as result (result)}
+      {#each filtered as result, index (index)}
         <div
           role="row"
           class="rounded-r-lg bg-[var(--pd-content-bg)] mb-4 mr-4 p-4 border-l-2"

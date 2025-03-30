@@ -37,7 +37,7 @@ async function copyLogsToClipboard(): Promise<void> {
   {#if logs.length > 0}
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
       <ul aria-label="logs">
-        {#each logs as log (log)}
+        {#each logs as log}
           <li>
             <div class="flex flex-row align-middle items-center">
               <div
