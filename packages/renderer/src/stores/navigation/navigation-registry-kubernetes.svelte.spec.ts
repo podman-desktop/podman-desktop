@@ -21,7 +21,7 @@ import { readable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
-import * as noKubernetesContext from '/@/stores/kubernetes-no-current-context';
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import { type ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
@@ -35,7 +35,7 @@ vi.mock('/@/stores/kubernetes-no-current-context');
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
 test('createNavigationImageEntry with current context', async () => {
@@ -82,7 +82,7 @@ test('createNavigationImageEntry with current context', async () => {
 });
 
 test('createNavigationImageEntry without current context', async () => {
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(true);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
   vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextJobs = readable<KubernetesObject[]>([]);

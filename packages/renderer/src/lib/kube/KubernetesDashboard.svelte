@@ -22,11 +22,11 @@ import {
   kubernetesCurrentContextServices,
 } from '/@/stores/kubernetes-contexts-state';
 import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { IDisposable } from '/@api/disposable';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
-import { noKubernetesCurrentContext } from '../../stores/kubernetes-no-current-context';
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
@@ -178,7 +178,7 @@ async function openKubernetesDocumentation(): Promise<void> {
 
 <div class="flex flex-col w-full h-full">
   <div class="flex flex-col w-full h-full pt-4">
-    {#if $noKubernetesCurrentContext}
+    {#if $kubernetesNoCurrentContext}
       <KubernetesEmptyPage />
     {:else}
       <!-- Details - collapsible -->

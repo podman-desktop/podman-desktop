@@ -20,11 +20,11 @@ import { get } from 'svelte/store';
 import { expect, test } from 'vitest';
 
 import { kubernetesContexts } from './kubernetes-contexts';
-import { noKubernetesCurrentContext } from './kubernetes-no-current-context';
+import { kubernetesNoCurrentContext } from './kubernetes-no-current-context';
 
 test('is true when there is no context', () => {
   kubernetesContexts.set([]);
-  const currentValue = get(noKubernetesCurrentContext);
+  const currentValue = get(kubernetesNoCurrentContext);
   expect(currentValue).toBeTruthy();
 });
 
@@ -42,7 +42,7 @@ test('is false when there is a current context', () => {
       currentContext: true,
     },
   ]);
-  const currentValue = get(noKubernetesCurrentContext);
+  const currentValue = get(kubernetesNoCurrentContext);
   expect(currentValue).toBeFalsy();
 });
 
@@ -59,6 +59,6 @@ test('is true when there is no current context', () => {
       user: 'user2',
     },
   ]);
-  const currentValue = get(noKubernetesCurrentContext);
+  const currentValue = get(kubernetesNoCurrentContext);
   expect(currentValue).toBeTruthy();
 });

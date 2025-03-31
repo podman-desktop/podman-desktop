@@ -20,10 +20,10 @@ import { derived } from 'svelte/store';
 
 import { kubernetesContexts } from './kubernetes-contexts';
 
-// noKubernetesCurrentContext is true when no kubernetes current context is found
+// kubernetesNoCurrentContext is true when no kubernetes current context is found
 // (generally when there id no kubeconfig file, but also if the file is empty or with no contexts, or with no current context)
 // this store is usable for both Kubernetes experimental and non-experimental modes
-export const noKubernetesCurrentContext = derived(
+export const kubernetesNoCurrentContext = derived(
   [kubernetesContexts],
   ([contexts]) => !contexts.find(c => c.currentContext),
 );

@@ -22,9 +22,10 @@ import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
+
 import App from './App.svelte';
 import { lastPage, lastSubmenuPages } from './stores/breadcrumb';
-import * as noKubernetesContext from './stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
 const mocks = vi.hoisted(() => ({
@@ -92,7 +93,7 @@ beforeEach(() => {
   };
   Object.defineProperty(window, 'dispatchEvent', { value: dispatchEventMock });
   (window.getConfigurationValue as unknown) = vi.fn();
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
 test('test /image/run/* route', async () => {
@@ -167,7 +168,7 @@ test('do not display kubernetes empty screen if current context', async () => {
 });
 
 test('displays kubernetes empty screen if no current context, without Kubernetes menu', async () => {
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(true);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
 
   render(App);
   router.goto('/kubernetes/deployments');
@@ -178,7 +179,7 @@ test('displays kubernetes empty screen if no current context, without Kubernetes
 });
 
 test('go to last kubernetes page when available', async () => {
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
   lastSubmenuPages.set({ Kubernetes: '/kubernetes/deployments' });
   render(App);
   router.goto('/kubernetes');

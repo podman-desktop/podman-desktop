@@ -17,9 +17,9 @@
  ***********************************************************************/
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { createNavigationKubernetesPortForwardEntry } from '/@/stores/navigation/kubernetes/navigation-registry-k8s-port-forward.svelte';
 
-import { noKubernetesCurrentContext } from '../kubernetes-no-current-context';
 import { createNavigationKubernetesConfigMapSecretsEntry } from './kubernetes/navigation-registry-k8s-configmap-secrets.svelte';
 import { createNavigationKubernetesCronJobsEntry } from './kubernetes/navigation-registry-k8s-cronjobs.svelte';
 import { createNavigationKubernetesDashboardEntry } from './kubernetes/navigation-registry-k8s-dashboard.svelte';
@@ -54,7 +54,7 @@ export function createNavigationKubernetesGroup(): NavigationRegistryEntry {
   newItems.push(createNavigationKubernetesPortForwardEntry());
   kubernetesNavigationGroupItems = newItems;
 
-  noKubernetesCurrentContext.subscribe(value => {
+  kubernetesNoCurrentContext.subscribe(value => {
     context = !value;
   });
 

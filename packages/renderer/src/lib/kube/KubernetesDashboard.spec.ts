@@ -29,7 +29,7 @@ import * as kubernetesPermissions from '/@/stores/kubernetes-context-permission'
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import * as kubernetesExperimental from '/@/stores/kubernetes-experimental';
-import * as noKubernetesContext from '/@/stores/kubernetes-no-current-context';
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import * as kubernetesReourcesCount from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
@@ -71,7 +71,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(noKubernetesContext).noKubernetesCurrentContext = writable(false);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
 test('Verify basic page', async () => {
