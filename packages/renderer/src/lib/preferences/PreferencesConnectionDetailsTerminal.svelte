@@ -119,7 +119,7 @@ async function refreshTerminal(): Promise<void> {
   );
 
   // get terminal if any
-  const existingTerminal = getExistingTerminal(connectionInfo.name, connectionInfo.endpoint.socketPath);
+  const existingTerminal = getExistingTerminal(provider.internalId, connectionInfo.name);
   shellTerminal = new Terminal({
     fontSize,
     lineHeight,
@@ -169,7 +169,6 @@ onDestroy(async () => {
   // register terminal for reusing it
   registerTerminal({
     providerInternalId: provider.internalId,
-    connectionSocket: connectionInfo.endpoint.socketPath,
     connectionName: connectionInfo.name,
     callbackId: sendCallbackId,
     terminal: terminalContent,
