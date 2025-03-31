@@ -63,6 +63,7 @@ let kindCli: CliTool | undefined;
 let kindPath: string | undefined;
 
 let installer: KindInstaller;
+let provider: extensionApi.Provider;
 
 const imageHandler = new ImageHandler();
 
@@ -287,6 +288,24 @@ export function refreshKindClustersOnProviderConnectionUpdate(provider: extensio
   });
 }
 
+export async function registerUpdatesIfAny(
+  provider: extensionApi.Provider,
+): Promise<extensionApi.Disposable | undefined> {
+  const latestVersion = await installer.getLatestVersionAsset();
+  const binaryVersion = (await getKindBinaryInfo('kind')).version;
+  console.log(binaryVersion);
+  if (latestVersion.tag.slice(1) !== binaryVersion) {
+    return provider.registerUpdate({
+      version: binaryVersion,
+      update: async () => {
+        kindPath = await installLatestKind();
+        provider.updateVersion((await getKindBinaryInfo('kind')).version);
+      },
+    });
+  }
+}
+
+const currentUpdatesDisposables: extensionApi.Disposable[] = [];
 export async function createProvider(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
@@ -308,7 +327,7 @@ export async function createProvider(
   providerOptions.emptyConnectionMarkdownDescription = `
   Kind is a Kubernetes utility for running local clusters using single-container "nodes", providing an easy way to create and manage Kubernetes environments for development and testing.\n\nMore information: [kind.sigs.k8s.io](https://kind.sigs.k8s.io/)`;
 
-  const provider = extensionApi.provider.createProvider(providerOptions);
+  provider = extensionApi.provider.createProvider(providerOptions);
 
   extensionContext.subscriptions.push(provider);
   await registerProvider(extensionContext, provider, telemetryLogger);
@@ -322,6 +341,23 @@ export async function createProvider(
       );
     }),
   );
+
+  const checkForUpdate = async (): Promise<void> => {
+    // remove previous updates
+    for (const disposable of currentUpdatesDisposables) {
+      disposable.dispose();
+    }
+    currentUpdatesDisposables.length = 0;
+    const disposable = await registerUpdatesIfAny(provider);
+    if (disposable) {
+      currentUpdatesDisposables.push(disposable);
+    }
+  };
+  await checkForUpdate();
+
+  provider.onDidUpdateVersion(async () => {
+    await checkForUpdate();
+  });
 
   // when containers are refreshed, update
   extensionApi.containerEngine.onEvent(async event => {
@@ -337,11 +373,22 @@ export async function createProvider(
   // search when a new container is updated or removed
   extensionApi.provider.onDidRegisterContainerConnection(async () => {
     await searchKindClusters(provider);
+    checkForUpdate().catch((error: unknown) => {
+      console.error('Error checking for update', error);
+    });
   });
   extensionApi.provider.onDidUnregisterContainerConnection(async () => {
     await searchKindClusters(provider);
+    checkForUpdate().catch((error: unknown) => {
+      console.error('Error checking for update', error);
+    });
   });
-  extensionApi.provider.onDidUpdateProvider(async () => registerProvider(extensionContext, provider, telemetryLogger));
+  extensionApi.provider.onDidUpdateProvider(async () => {
+    await registerProvider(extensionContext, provider, telemetryLogger);
+    checkForUpdate().catch((error: unknown) => {
+      console.error('Error checking for update', error);
+    });
+  });
   // search for kind clusters on boot
   await searchKindClusters(provider);
 }
@@ -449,6 +496,11 @@ async function registerCliTool(
   const update = {
     version: latestVersion !== kindCli.version ? latestVersion : undefined,
     selectVersion: async (): Promise<string> => {
+      try {
+        binary = await getKindBinaryInfo('kind');
+      } catch (err: unknown) {
+        console.error(err);
+      }
       const selected = await installer.promptUserForVersion(binary?.version);
       releaseToUpdateTo = selected;
       releaseVersionToUpdateTo = removeVersionPrefix(selected.tag);
@@ -481,6 +533,7 @@ async function registerCliTool(
         installationSource: 'extension',
         path: cliPath,
       });
+      provider.updateVersion(releaseVersionToUpdateTo);
       if (releaseVersionToUpdateTo === latestVersion) {
         delete update.version;
       } else {
