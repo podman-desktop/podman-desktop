@@ -134,7 +134,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@tsconfig/strictest": "^2.0.5",
     "@types/adm-zip": "^0.5.7",
-    "@types/dockerode": "^3.3.35",
+    "@types/dockerode": "^3.3.36",
     "@types/express": "^4.17.21",
     "@types/getos": "^3.0.4",
     "@types/js-yaml": "^4.0.9",

@@ -166,8 +166,8 @@ importers:
         specifier: ^0.5.7
         version: 0.5.7
       '@types/dockerode':
-        specifier: ^3.3.35
-        version: 3.3.35
+        specifier: ^3.3.36
+        version: 3.3.36
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -4089,8 +4089,8 @@ packages:
   '@types/docker-modem@3.0.6':
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
 
-  '@types/dockerode@3.3.35':
-    resolution: {integrity: sha512-P+DCMASlsH+QaKkDpekKrP5pLls767PPs+/LrlVbKnEnY5tMpEUa2C6U4gRsdFZengOqxdCIqy16R22Q3pLB6Q==}
+  '@types/dockerode@3.3.36':
+    resolution: {integrity: sha512-K0wTBKjjVI1xS4zeLynssmmbpPl4AnWZ/MJ3JBTi9eGzEmu+xgMLVSKiWzsy/z+3GBPLD5+uE/i/6ZTeZPaX7A==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -15775,7 +15775,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.13.14
+      '@types/node': 22.13.10
 
   '@types/bonjour@3.5.13':
     dependencies:
@@ -15929,10 +15929,10 @@ snapshots:
       '@types/node': 22.13.14
       '@types/ssh2': 1.15.4
 
-  '@types/dockerode@3.3.35':
+  '@types/dockerode@3.3.36':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 22.13.10
+      '@types/node': 22.13.14
       '@types/ssh2': 1.15.4
 
   '@types/eslint-scope@3.7.7':
@@ -15955,7 +15955,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.13.14
+      '@types/node': 22.13.10
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -16131,7 +16131,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.13.14
+      '@types/node': 22.13.10
       '@types/send': 0.17.4
 
   '@types/sockjs@0.3.36':
