@@ -152,7 +152,6 @@ const config = {
     license: 'LICENSE',
     finishArgs: [
       // allow to execute commands remotely
-      '--socket=session-bus',
       '--socket=wayland',
       '--socket=x11',
       '--share=ipc',
@@ -170,6 +169,11 @@ const config = {
       '--share=network',
       // System notifications with libnotify
       '--talk-name=org.freedesktop.Notifications',
+      // Allow safeStorage access to keyring to encrypt/decrypt file used to store sensitive information
+      // In Gnome Desktop Environment
+      '--talk-name=org.freedesktop.secrets',
+      // In KDE Desktop Environment
+      '--talk-name=org.kde.kwalletd6',
     ],
     useWaylandFlags: 'false',
     artifactName: 'podman-desktop-${version}.${ext}',
