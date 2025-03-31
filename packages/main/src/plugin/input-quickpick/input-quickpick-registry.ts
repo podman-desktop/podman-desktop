@@ -20,6 +20,7 @@ import type {
   CancellationToken,
   InputBoxOptions,
   InputBoxValidationMessage,
+  QuickPickItem,
   QuickPickOptions,
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
@@ -38,8 +39,7 @@ export class InputQuickPickRegistry {
   private callbacksQuickPicks = new Map<
     number,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items: readonly any[];
+      items: readonly (string | QuickPickItem)[];
       deferred: PromiseWithResolvers<string[] | string | undefined>;
       options?: QuickPickOptions;
       token?: CancellationToken;
@@ -88,7 +88,7 @@ export class InputQuickPickRegistry {
       deferred.reject('Input has been cancelled');
     });
     // return the promise
-    return deferred.promise;
+    return deferred.promise as Promise<string | undefined>;
   }
 
   // this method is called by the frontend when the user has entered a value
@@ -163,7 +163,9 @@ export class InputQuickPickRegistry {
       // grab item
       const item = callback.items[index];
 
-      return callback.options.onDidSelectItem(item);
+      if (item) {
+        return callback.options.onDidSelectItem(item);
+      }
     }
     return undefined;
   }
@@ -172,11 +174,10 @@ export class InputQuickPickRegistry {
    * Return a promise that resolves to the selected item (or undefined if cancelled)
    */
   async showQuickPick(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: readonly any[] | Promise<readonly any[]>,
+    items: readonly (string | QuickPickItem)[] | Promise<readonly (string | QuickPickItem)[]>,
     options?: QuickPickOptions,
     token?: CancellationToken,
-  ): Promise<string[] | string | undefined> {
+  ): Promise<unknown[] | unknown | undefined> {
     // keep track of this request
     this.callbackId++;
 

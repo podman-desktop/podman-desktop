@@ -97,10 +97,8 @@ import { ExtensionWatcher } from './extension-watcher.js';
 
 export interface ActivatedExtension {
   id: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  deactivateFunction: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  exports: any;
+  deactivateFunction?: () => Promise<void>;
+  exports: unknown;
   extensionContext: containerDesktopAPI.ExtensionContext;
   packageJSON: unknown;
 }
@@ -245,8 +243,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       if (err instanceof Error) {
         return { message: err.message, stack: err.stack };
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return { message: (err as any).toString() };
+        return { message: String(err) };
       }
     }
     return undefined;
@@ -271,21 +268,19 @@ export class ExtensionLoader implements IAsyncDisposable {
     }));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transformActivatedExtensionToExposedExtension<T = any>(
+  transformActivatedExtensionToExposedExtension<T = unknown>(
     activatedExtension: ActivatedExtension,
   ): containerDesktopAPI.Extension<T> {
     return {
       id: activatedExtension.id,
-      exports: activatedExtension.exports,
+      exports: activatedExtension.exports as T,
       extensionUri: activatedExtension.extensionContext.extensionUri,
       extensionPath: activatedExtension.extensionContext.extensionUri.fsPath,
       packageJSON: activatedExtension.packageJSON,
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getExposedExtension<T = any>(extensionId: string): containerDesktopAPI.Extension<T> | undefined {
+  getExposedExtension<T = unknown>(extensionId: string): containerDesktopAPI.Extension<T> | undefined {
     // do we have a matching extension?
     const activatedExtension = this.activatedExtensions.get(extensionId);
     if (activatedExtension) {
@@ -294,8 +289,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getAllExposedExtensions(): containerDesktopAPI.Extension<any>[] {
+  getAllExposedExtensions(): containerDesktopAPI.Extension<unknown>[] {
     return Array.from(this.activatedExtensions.values()).map(activatedExtension =>
       this.transformActivatedExtensionToExposedExtension(activatedExtension),
     );
@@ -854,7 +848,7 @@ export class ExtensionLoader implements IAsyncDisposable {
 
         telemetryOptions['loadingRuntimeDuration'] = afterLoadingRuntime - beforeLoadingRuntime;
 
-        await this.activateExtension(extension, runtime);
+        await this.activateExtension(extension, runtime as unknown as Record<string, unknown>);
       } else {
         console.log(`Extension (${extension.id}) not activated because it is disabled`);
       }
@@ -898,17 +892,14 @@ export class ExtensionLoader implements IAsyncDisposable {
     const commands: typeof containerDesktopAPI.commands = {
       registerCommand(
         command: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        callback: (...args: any[]) => any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        thisArg?: any,
+        callback: (...args: unknown[]) => unknown,
+        thisArg?: unknown,
       ): containerDesktopAPI.Disposable {
         const registration = commandRegistry.registerCommand(command, callback, thisArg);
         disposables.push(registration);
         return registration;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      executeCommand<T = unknown>(commandId: string, ...args: any[]): PromiseLike<T> {
+      executeCommand<T = unknown>(commandId: string, ...args: unknown[]): PromiseLike<T> {
         return commandRegistry.executeCommand(commandId, ...args);
       },
     };
@@ -1070,14 +1061,12 @@ export class ExtensionLoader implements IAsyncDisposable {
         return inputQuickPickRegistry.showInputBox(options, token);
       },
 
-      showQuickPick(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        items: readonly any[] | Promise<readonly any[]>,
+      showQuickPick<T extends string | containerDesktopAPI.QuickPickItem>(
+        items: readonly T[] | Promise<readonly T[]>,
         options?: containerDesktopAPI.QuickPickOptions,
         token?: containerDesktopAPI.CancellationToken,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ): Promise<any> {
-        return inputQuickPickRegistry.showQuickPick(items, options, token);
+      ): Promise<T | T[] | undefined> {
+        return inputQuickPickRegistry.showQuickPick(items, options, token) as Promise<T | T[] | undefined>;
       },
 
       withProgress: <R>(
@@ -1411,8 +1400,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     };
 
     const extensions: typeof containerDesktopAPI.extensions = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      getExtension<T = any>(extensionId: string): containerDesktopAPI.Extension<T> | undefined {
+      getExtension<T = unknown>(extensionId: string): containerDesktopAPI.Extension<T> | undefined {
         return instance.getExposedExtension(extensionId);
       },
       get all() {
@@ -1484,8 +1472,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     };
 
     const contextAPI: typeof containerDesktopAPI.context = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setValue: (key: string, value: any, scope?: 'onboarding' | 'DockerCompatibility'): void => {
+      setValue: (key: string, value: unknown, scope?: 'onboarding' | 'DockerCompatibility'): void => {
         if (scope === 'onboarding' || scope === 'DockerCompatibility') {
           key = `${extensionInfo.id}.${scope}.${key}`;
         }
@@ -1715,8 +1702,10 @@ export class ExtensionLoader implements IAsyncDisposable {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async activateExtension(extension: AnalyzedExtension, extensionMain: any | undefined): Promise<void> {
+  async activateExtension(
+    extension: AnalyzedExtension,
+    extensionMain: Record<string, unknown> | undefined,
+  ): Promise<void> {
     this.extensionState.set(extension.id, 'starting');
     this.extensionStateErrors.delete(extension.id);
     this.apiSender.send('extension-starting', {});
@@ -1741,9 +1730,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       extensionUri,
       secrets,
     };
-    let deactivateFunction = undefined;
+    let deactivateFunction: (() => Promise<void>) | undefined = undefined;
     if (typeof extensionMain?.['deactivate'] === 'function') {
-      deactivateFunction = extensionMain['deactivate'];
+      deactivateFunction = extensionMain['deactivate'] as () => Promise<void>;
     }
 
     const telemetryOptions: Record<string, unknown> = {
@@ -1834,7 +1823,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       return;
     }
 
-    const telemetryOptions = { extensionId: extension.id };
+    const telemetryOptions: { extensionId: string; error?: unknown } = { extensionId: extension.id };
 
     this.extensionState.set(extension.id, 'stopping');
     this.apiSender.send('extension-stopping');
@@ -1842,10 +1831,9 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (extension.deactivateFunction) {
       try {
         await extension.deactivateFunction();
-      } catch (err) {
+      } catch (err: unknown) {
         console.log(`Deactivating extension ${extension.id} failed error:${err}`);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (telemetryOptions as any).error = err;
+        telemetryOptions.error = err;
       }
     }
 
