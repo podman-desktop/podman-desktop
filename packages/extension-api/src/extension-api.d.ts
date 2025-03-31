@@ -2642,7 +2642,7 @@ declare module '@podman-desktop/api' {
     MaximumRetryCount?: number;
   }
 
-  type MountType = 'bind' | 'volume' | 'tmpfs';
+  type MountType = 'bind' | 'volume' | 'tmpfs' | 'image';
 
   type MountConsistency = 'default' | 'consistent' | 'cached' | 'delegated';
 
@@ -2669,6 +2669,9 @@ declare module '@podman-desktop/api' {
     TmpfsOptions?: {
       SizeBytes: number;
       Mode: number;
+    };
+    ImageOptions?: {
+      Subpath?: string;
     };
   }
 
