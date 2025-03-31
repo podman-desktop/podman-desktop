@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy } from 'svelte';
+import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
 
 import { tabWithinParent } from '../utils/dialog-utils';
 
@@ -10,6 +10,7 @@ interface Props {
   top?: boolean;
   ignoreFocusOut?: boolean;
   onclose?: () => void;
+  children?: Snippet;
 }
 
 let modal: HTMLDivElement;
@@ -20,6 +21,7 @@ let {
   onclose = (): void => {
     dispatch('close');
   },
+  children,
 }: Props = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
@@ -69,6 +71,6 @@ function handleMousedown(e: MouseEvent): void {
     aria-label={name}
     aria-modal="true"
     bind:this={modal}>
-    <slot />
+    {@render children?.()}
   </div>
 </div>
