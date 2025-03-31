@@ -6,6 +6,7 @@ import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
+import { fade } from 'svelte/transition';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
@@ -371,44 +372,24 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 }
 
 export let focus: string | undefined;
-let highlightID: string | undefined;
+let TransitionID: string | undefined;
 
-$: if (focus && focus !== highlightID) {
-  requestAnimationFrame(() => {
-    highlightID = focus;
-    const element = document.getElementById(focus);
-    if (element) {
-      element.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
-  });
+function scrollToElement(target: string): void {
+  const element = document.getElementById(target);
+  if (element) {
+    element.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
 }
 
-function getClassForProvider(providerId: string): string {
-  return highlightID === providerId ? 'highlight' : '';
+$: if (focus) {
+  scrollToElement(focus);
+  TransitionID = focus;
 }
 
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
 </script>
-
-<style>
-  @keyframes fadeOutline {
-    0% {
-      outline: 2px solid var(--pd-link);
-      outline-offset: 2px;
-    }
-    100% {
-      outline: 2px solid rgba(255, 0, 0, 0);
-      outline-offset: 2px;
-    }
-  }
-
-  .highlight {
-    animation: fadeOutline 0.5s ease-in-out forwards;
-  }
-</style>
-
 
 <SettingsPage title="Resources">
   <span slot="subtitle" class:hidden={providers.length === 0}>
@@ -427,9 +408,15 @@ function handleError(errorMessage: string): void {
     {#each providers as provider}
       <div
         id={provider.id}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex {getClassForProvider(provider.id)}"
+        class="
+        bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 
+        flex"
         role="region"
         aria-label={provider.id}>
+        <div class="w-6"> {#if TransitionID === provider.id}
+          <div transition:fade={{ duration: 500 }}>⭐</div>
+        {/if}
+        </div>
         <div role="region" aria-label="Provider Setup">
           <!-- left col - provider icon/name + "create new" button -->
           <div class="min-w-[170px] max-w-[200px]">
