@@ -6,11 +6,7 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
@@ -32,7 +28,7 @@ router.subscribe(() => {
   providerLifecycleError = '';
 });
 
-let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | undefined = undefined;
+let connectionInfo: ProviderConnectionInfo | undefined = undefined;
 
 let providers: ProviderInfo[] = [];
 onMount(() => {
@@ -56,7 +52,9 @@ $: providerDisplayName =
     ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
     : providerInfo?.kubernetesProviderConnectionCreation
       ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
-      : undefined) ?? providerInfo?.name;
+      : providerInfo?.vmProviderConnectionCreation
+        ? providerInfo?.vmProviderConnectionCreationDisplayName
+        : undefined) ?? providerInfo?.name;
 
 let title: string;
 $: title = connectionInfo ? `Update ${providerDisplayName} ${connectionInfo.name}` : `Create ${providerDisplayName}`;
@@ -155,6 +153,16 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
             properties={properties}
             propertyScope="KubernetesProviderConnectionFactory"
             callback={window.createKubernetesProviderConnection}
+            taskId={taskId}
+            bind:inProgress={inProgress} />
+        {/if}
+
+        {#if providerInfo?.vmProviderConnectionCreation === true}
+          <PreferencesConnectionCreationRendering
+            providerInfo={providerInfo}
+            properties={properties}
+            propertyScope="VmProviderConnectionFactory"
+            callback={window.createVmProviderConnection}
             taskId={taskId}
             bind:inProgress={inProgress} />
         {/if}
