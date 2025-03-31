@@ -1,19 +1,18 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import { onMount, type Snippet } from 'svelte';
-import type { HTMLAttributes } from 'svelte/elements';
 import Fa from 'svelte-fa';
 
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
-interface Props extends HTMLAttributes<HTMLElement> {
+interface Props {
   icon?: IconDefinition;
   class?: string;
   children: Snippet;
   onclick: () => void;
-  ariaLabel?: string;
+  'aria-label'?: string;
 }
-
+// eslint-disable-next-line svelte/no-unused-props
 let { icon = undefined, class: classes = '', 'aria-label': ariaLabel = '', children, onclick }: Props = $props();
 
 let iconType: string | undefined = $state(undefined);
