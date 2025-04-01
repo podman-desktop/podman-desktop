@@ -32,10 +32,14 @@ export class KubernetesResourcePage extends MainPage {
     });
   }
 
-  async getResourceRowByName(resourceName: string, timeout: number = 70_000): Promise<Locator> {
-    const resourceRow = this.content.getByRole('row', { name: resourceName });
-    await resourceRow.waitFor({ state: 'visible', timeout: timeout });
-    return resourceRow;
+  async fetchKubernetesResource(resourceName: string, timeout: number = 15_000): Promise<Locator> {
+    try {
+      await playExpect.poll(async () => this.getRowByName(resourceName, false), { timeout: timeout }).toBeTruthy();
+    } catch {
+      throw Error(`Resource: ${resourceName} does not exist`);
+    }
+
+    return (await this.getRowByName(resourceName, false)) as Locator;
   }
 
   async geAttributeByRow(row: Locator, attributeName: string, resourceType: KubernetesResources): Promise<Locator> {
@@ -47,12 +51,10 @@ export class KubernetesResourcePage extends MainPage {
   async openResourceDetails(
     resourceName: string,
     resourceType: KubernetesResources,
+    timeout?: number,
   ): Promise<KubernetesResourceDetailsPage> {
     return test.step(`Open ${resourceType}: ${resourceName} details`, async () => {
-      const resourceRow = await this.getResourceRowByName(resourceName);
-      if (resourceRow === undefined) {
-        throw Error(`Resource: ${resourceName} does not exist`);
-      }
+      const resourceRow = await this.fetchKubernetesResource(resourceName, timeout);
 
       let resourceRowName;
       if (resourceType === KubernetesResources.Nodes) {
@@ -70,7 +72,7 @@ export class KubernetesResourcePage extends MainPage {
 
   async deleteKubernetesResource(resourceName: string): Promise<void> {
     return test.step(`Delete ${resourceName}`, async () => {
-      const resourceRow = await this.getResourceRowByName(resourceName);
+      const resourceRow = await this.fetchKubernetesResource(resourceName);
       const deleteButton = resourceRow.getByRole('button', {
         name: 'Delete',
         exact: false,

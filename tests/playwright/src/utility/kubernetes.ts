@@ -44,7 +44,7 @@ export async function deployContainerToCluster(
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
     await playExpect
-      .poll(async () => kubernetesPodsPage.getResourceRowByName(deployedPodName), { timeout: 15_000 })
+      .poll(async () => kubernetesPodsPage.getRowByName(deployedPodName), { timeout: 15_000 })
       .toBeTruthy();
   });
 }
@@ -63,7 +63,7 @@ export async function createKubernetesResource(
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
     await playExpect(kubernetesResourcePage.heading).toBeVisible();
-    await playExpect(await kubernetesResourcePage.getResourceRowByName(resourceName)).toBeVisible();
+    await playExpect.poll(async () => kubernetesResourcePage.getRowByName(resourceName)).toBeTruthy();
   });
 }
 
@@ -76,10 +76,12 @@ export async function deleteKubernetesResource(
     const navigationBar = new NavigationBar(page);
 
     const kubernetesBar = await navigationBar.openKubernetes();
-    const pvcsPage = await kubernetesBar.openTabPage(resourceType);
-    await pvcsPage.deleteKubernetesResource(resourceName);
+    const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
+    await kubernetesResourcePage.deleteKubernetesResource(resourceName);
     await handleConfirmationDialog(page);
-    await playExpect(await pvcsPage.getResourceRowByName(resourceName)).not.toBeVisible({ timeout: 30_000 });
+    await playExpect
+      .poll(async () => await kubernetesResourcePage.getRowByName(resourceName), { timeout: 30_000 })
+      .not.toBeTruthy();
   });
 }
 
@@ -114,7 +116,11 @@ export async function checkKubernetesResourceState(
     const kubernetesBar = await navigationBar.openKubernetes();
 
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
-    const kubernetesResourceDetails = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
+    const kubernetesResourceDetails = await kubernetesResourcePage.openResourceDetails(
+      resourceName,
+      resourceType,
+      timeout,
+    );
     await playExpect(kubernetesResourceDetails.heading).toBeVisible();
     await playExpect
       .poll(async () => kubernetesResourceDetails.getState(), { timeout: timeout })
@@ -156,7 +162,6 @@ export async function editDeploymentYamlFile(
 
     const deploymentsPage = await kubernetesBar.openTabPage(resourceType);
     await playExpect(deploymentsPage.heading).toBeVisible();
-    await playExpect(await deploymentsPage.getResourceRowByName(deploymentName)).toBeVisible();
     const deploymentDetails = await deploymentsPage.openResourceDetails(deploymentName, resourceType);
     await playExpect(deploymentDetails.heading).toBeVisible();
     await deploymentDetails.editKubernetsYamlFile(
@@ -200,9 +205,6 @@ export async function configurePortForwarding(
 
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
-    await playExpect
-      .poll(async () => kubernetesResourcePage.getResourceRowByName(resourceName), { timeout: 15_000 })
-      .toBeTruthy();
     const kubernetesResourceDetailsPage = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
     await kubernetesResourceDetailsPage.activateTab('Summary');
     const forwardButton = page.getByRole('button', { name: `Forward...` });
@@ -227,8 +229,7 @@ export async function verifyPortForwardingConfiguration(
     const kubernetesBar = await navigationBar.openKubernetes();
     const portForwardingPage = await kubernetesBar.openTabPage(KubernetesResources.PortForwarding);
     await playExpect(portForwardingPage.heading).toBeVisible();
-    const configurationRow = await portForwardingPage.getResourceRowByName(configurationName);
-    await playExpect(configurationRow).toBeVisible();
+    const configurationRow = await portForwardingPage.fetchKubernetesResource(configurationName);
 
     const localPortCell = await portForwardingPage.geAttributeByRow(
       configurationRow,
@@ -251,20 +252,5 @@ export async function verifyLocalPortResponse(forwardAddress: string, responseMe
     const blob: Blob = await response.blob();
     const text: string = await blob.text();
     playExpect(text).toContain(responseMessage);
-  });
-}
-
-export async function waitForKubernetesResourceAvailability(
-  page: Page,
-  resourceType: KubernetesResources,
-  name: string,
-  timeout = 70_000,
-): Promise<void> {
-  return test.step(`Wait for k8s resource: ${name} to exist`, async () => {
-    const navigationBar = new NavigationBar(page);
-
-    const kubernetesBar = await navigationBar.openKubernetes();
-    const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
-    await kubernetesResourcePage.getResourceRowByName(name, timeout);
   });
 }
