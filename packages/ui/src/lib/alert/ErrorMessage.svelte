@@ -13,7 +13,6 @@ interface Props {
   'aria-label'?: string;
 }
 
-// eslint-disable-next-line svelte/no-unused-props
 let { error, icon = false, wrapMessage = false, class: className, 'aria-label': ariaLabel }: Props = $props();
 
 let customClassWidth = $state('');
