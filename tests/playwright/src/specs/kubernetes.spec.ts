@@ -179,7 +179,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
     });
   test.describe
     .serial('Cronjobs lifecycle test', () => {
-      test('Create and verify a running Kubernetes service', async ({ page }) => {
+      test('Create and verify a running Kubernetes cronjob', async ({ page }) => {
         await createKubernetesResource(
           page,
           KubernetesResources.Cronjobs,
