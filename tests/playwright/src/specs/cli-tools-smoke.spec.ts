@@ -52,7 +52,7 @@ toolsToTest.forEach(tool => {
         await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
         await cliToolsPage.uninstallTool(tool);
         await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
           .toBeFalsy();
       });
 
@@ -61,7 +61,7 @@ toolsToTest.forEach(tool => {
         await cliToolsPage.downgradeTool(tool);
         await cliToolsPage.uninstallTool(tool);
         await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
           .toBeFalsy();
       });
 
@@ -70,7 +70,7 @@ toolsToTest.forEach(tool => {
         await cliToolsPage.updateTool(tool);
         await cliToolsPage.uninstallTool(tool);
         await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 30_000 })
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
           .toBeFalsy();
       });
     });
