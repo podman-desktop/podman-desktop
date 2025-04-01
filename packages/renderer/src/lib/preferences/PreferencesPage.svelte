@@ -19,6 +19,7 @@ import PreferencesProxiesRendering from './PreferencesProxiesRendering.svelte';
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 import PreferencesRendering from './PreferencesRendering.svelte';
 import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelte';
+import PreferencesVmConnectionRendering from './PreferencesVmConnectionRendering.svelte';
 import { isDefaultScope } from './Util';
 
 let properties: IConfigurationPropertyRecordedSchema[];
@@ -119,5 +120,14 @@ onMount(async () => {
       providerInternalId={meta.params.provider}
       apiUrlBase64={meta.params.apiUrlBase64}
       properties={properties} />
+  </Route>
+  <Route
+    path="/vm-connection/:provider/:name/*"
+    breadcrumb="VM Engine"
+    let:meta
+    navigationHint="details">
+    <PreferencesVmConnectionRendering
+      providerInternalId={meta.params.provider}
+      connectionName={meta.params.name} />
   </Route>
 </div>

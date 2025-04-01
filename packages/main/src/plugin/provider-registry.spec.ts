@@ -2005,7 +2005,7 @@ describe('startProvider', () => {
 });
 
 describe('shellInProviderConnection', () => {
-  test('check if are all listeners disposed before calling close', async () => {
+  test('check if are all listeners disposed before calling close with container connection', async () => {
     const provider = providerRegistry.createProvider('id', 'name', {
       id: 'internal',
       name: 'internal',
@@ -2076,6 +2076,88 @@ describe('shellInProviderConnection', () => {
         return 'started';
       },
       vmType: 'libkrun',
+    });
+
+    // Call shellInProviderConnection
+    const shellInProviderConnection = await providerRegistry.shellInProviderConnection(
+      '0',
+      connection,
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+    );
+
+    // Check that all callbacks are set and session is created
+    expect(openMock).toBeCalled();
+    expect(onDataMock).toBeCalled();
+    expect(onErrorMock).toBeCalled();
+    expect(onEndMock).toBeCalled();
+
+    // Check that close is called and listeners are disposed
+    shellInProviderConnection.close();
+
+    expect(disposeOnDataMock).toBeCalled();
+    expect(disposeOnErrorMock).toBeCalled();
+    expect(disposeOnEndMock).toBeCalled();
+    expect(closeMock).toBeCalled();
+  });
+
+  test('check if are all listeners disposed before calling close with VM connection', async () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    const connection: ProviderVmConnectionInfo = {
+      name: 'connection',
+      status: 'started',
+    };
+
+    const closeMock = vi.fn();
+    const openMock = vi.fn();
+
+    const disposeOnDataMock = vi.fn();
+    const disposeOnErrorMock = vi.fn();
+    const disposeOnEndMock = vi.fn();
+
+    const onDataMock = vi.fn().mockImplementation((_listener, _thisArgs, disposableArray) => {
+      const disposable = { dispose: disposeOnDataMock };
+      disposableArray.push(disposable);
+      return disposable;
+    });
+    const onErrorMock = vi.fn().mockImplementation((_listener, _thisArgs, disposableArray) => {
+      const disposable = { dispose: disposeOnErrorMock };
+      disposableArray.push(disposable);
+      return disposable;
+    });
+    const onEndMock = vi.fn().mockImplementation((_listener, _thisArgs, disposableArray) => {
+      const disposable = { dispose: disposeOnEndMock };
+      disposableArray.push(disposable);
+      return disposable;
+    });
+
+    const shellAccessSession: ProviderConnectionShellAccessSession = {
+      onData: onDataMock,
+      onError: onErrorMock,
+      onEnd: onEndMock,
+      close: closeMock,
+    } as unknown as ProviderConnectionShellAccessSession;
+
+    openMock.mockReturnValue(shellAccessSession);
+    const shellAccess: ProviderConnectionShellAccess = {
+      open: openMock,
+    } as unknown as ProviderConnectionShellAccess;
+
+    (provider as ProviderImpl).registerVmProviderConnection({
+      name: 'connection',
+      lifecycle: {
+        start: vi.fn(),
+        stop: vi.fn(),
+      },
+      shellAccess: shellAccess,
+      status() {
+        return 'started';
+      },
     });
 
     // Call shellInProviderConnection

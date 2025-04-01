@@ -1275,7 +1275,7 @@ export class PluginSystem {
       async (
         _listener,
         internalProviderId: string,
-        connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        connectionInfo: ProviderConnectionInfo,
         onDataId: number,
       ): Promise<number> => {
         // provide the data content to the remote side

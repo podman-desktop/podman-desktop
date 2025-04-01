@@ -655,7 +655,7 @@ function handleError(errorMessage: string): void {
                   type="button"
                   on:click={(): void =>
                     router.goto(
-                      `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/summary`,
+                      `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
                     )}>
                   <Fa icon={faArrowUpRightFromSquare} />
                 </button>

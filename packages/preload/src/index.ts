@@ -636,7 +636,7 @@ export function initExposure(): void {
     'shellInProviderConnection',
     async (
       internalProviderId: string,
-      connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      connectionInfo: ProviderConnectionInfo,
       onData: (data: string) => void,
       onError: (error: string) => void,
       onEnd: () => void,

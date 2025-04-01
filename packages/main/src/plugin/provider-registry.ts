@@ -1449,7 +1449,7 @@ export class ProviderRegistry {
 
   async shellInProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     onData: (data: string) => void,
     onError: (error: string) => void,
     onEnd: () => void,
@@ -1463,7 +1463,7 @@ export class ProviderRegistry {
       let shellAccess: ProviderConnectionShellAccess | undefined;
       let connection: ProviderConnectionShellAccessSession | undefined;
       const disposables: Disposable[] = [];
-      if (this.isContainerConnection(containerConnection) && providerConnectionInfo.status === 'started') {
+      if (!this.isKubernetesConnection(containerConnection) && providerConnectionInfo.status === 'started') {
         shellAccess = containerConnection.shellAccess;
         connection = shellAccess?.open();
         connection?.onData(
