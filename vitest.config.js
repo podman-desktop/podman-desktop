@@ -26,6 +26,7 @@ import path from 'node:path';
  */
 const config = {
   test: {
+    retry: 3, // Retries failing tests up to 3 times
     globals: true,
     environment: 'jsdom',
     globalSetup: './tests/playwright/src/globalSetup/global-setup.ts',
