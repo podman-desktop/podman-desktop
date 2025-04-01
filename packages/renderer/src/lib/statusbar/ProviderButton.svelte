@@ -43,7 +43,7 @@ let providerStatus = $derived.by(() => {
     <div aria-label="Connection Status Icon" class="max-h-3 fa-regular fa-circle-up"></div>    
   {/if}
   {#if provider.images.icon}
-    <div class="relative">
+    <div class="relative flex h-full items-center">
       <IconImage image={provider.images.icon} class="max-h-3 grayscale {providerStatus === 'stopped' ? 'brightness-50' : ''}" alt={provider.name}></IconImage>
       <ProviderButtonStatus status={providerStatus} />
     </div>
