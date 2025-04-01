@@ -47,6 +47,10 @@ test('Check containers button is available and click on it', async () => {
   } as unknown as ProviderContainerConnectionInfo;
   render(TroubleshootingContainerEngine, { containerEngineRunning });
 
+  // expect to be in a region with label
+  const region = screen.getByRole('region', { name: name });
+  expect(region).toBeInTheDocument();
+
   // expect to have the name label
   const nameHeading = screen.getByRole('heading', { name: 'name' });
   expect(nameHeading).toBeInTheDocument();
