@@ -43,7 +43,7 @@ test('Check reconnect button is available and click on it', async () => {
   await fireEvent.click(reconnectButton);
 
   // check that we have the ping result
-  const reconnectResult = screen.getByRole('status', { name: '' });
+  const reconnectResult = screen.getByRole('status', { name: 'Reconnect Providers' });
   expect(reconnectResult).toBeInTheDocument();
   expect(reconnectResult).toHaveTextContent('Done');
 
@@ -66,7 +66,7 @@ test('Check reconnect button is available and get error', async () => {
   await fireEvent.click(reconnectButton);
 
   // check that we have the reconnect result
-  const reconnectResult = screen.getByRole('status', { name: '' });
+  const reconnectResult = screen.getByRole('status', { name: 'Reconnect Providers' });
   expect(reconnectResult).toBeInTheDocument();
   expect(reconnectResult).toHaveTextContent('Done');
 

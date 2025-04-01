@@ -33,4 +33,8 @@ test('Check stores widget is there', async () => {
   // get the title
   const title = screen.getByRole('status', { name: 'stores' });
   expect(title).toBeInTheDocument();
+
+  // expect to have store list
+  const stores = screen.getByRole('list', { name: 'stores' });
+  expect(stores).toBeInTheDocument();
 });
