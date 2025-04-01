@@ -151,7 +151,6 @@ const config = {
   flatpak: {
     license: 'LICENSE',
     finishArgs: [
-      // allow to execute commands remotely
       '--socket=wayland',
       '--socket=x11',
       '--share=ipc',
