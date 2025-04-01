@@ -4,15 +4,16 @@ import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Tooltip from '../tooltip/Tooltip.svelte';
-import type { AriaLabelAttribute } from './ErrorMessage';
 
-interface Props extends AriaLabelAttribute {
+interface Props {
   error: string;
   icon?: boolean;
   wrapMessage?: boolean;
   class?: string;
+  'aria-label'?: string;
 }
 
+// eslint-disable-next-line svelte/no-unused-props
 let { error, icon = false, wrapMessage = false, class: className, 'aria-label': ariaLabel }: Props = $props();
 
 let customClassWidth = $state('');
