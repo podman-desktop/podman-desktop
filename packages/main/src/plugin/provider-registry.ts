@@ -47,6 +47,7 @@ import type {
   UnregisterKubernetesConnectionEvent,
   UpdateContainerConnectionEvent,
   UpdateKubernetesConnectionEvent,
+  VmProviderConnection,
 } from '@podman-desktop/api';
 
 import type {
@@ -66,7 +67,7 @@ import type { ContainerProviderRegistry } from './container-registry.js';
 import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { LifecycleContextImpl, LoggerImpl } from './lifecycle-context.js';
-import { ProviderImpl, type VmProviderConnection } from './provider-impl.js';
+import { ProviderImpl } from './provider-impl.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 

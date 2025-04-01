@@ -525,6 +525,13 @@ declare module '@podman-desktop/api' {
     status(): ProviderConnectionStatus;
   }
 
+  export interface VmProviderConnection {
+    name: string;
+    shellAccess?: ProviderConnectionShellAccess;
+    lifecycle?: ProviderConnectionLifecycle;
+    status(): ProviderConnectionStatus;
+  }
+
   // common set of options for creating a provider
   export interface ProviderConnectionFactory {
     // Allow to initialize a provider
@@ -545,6 +552,12 @@ declare module '@podman-desktop/api' {
 
   // create a kubernetes provider
   export interface KubernetesProviderConnectionFactory extends ProviderConnectionFactory {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
+  }
+
+  // create a Vm provider
+  export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
   }
