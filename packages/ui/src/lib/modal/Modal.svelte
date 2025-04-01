@@ -1,17 +1,28 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy } from 'svelte';
+import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
 
 import { tabWithinParent } from '../utils/dialog-utils';
 
 const dispatch = createEventDispatcher();
 
+interface Props {
+  name?: string;
+  top?: boolean;
+  ignoreFocusOut?: boolean;
+  onclose?: () => void;
+  children?: Snippet;
+}
+
 let modal: HTMLDivElement;
-export let name = 'drop-down-dialog';
-export let top: boolean = false;
-export let ignoreFocusOut: boolean = false;
-export let onclose: () => void = () => {
-  dispatch('close');
-};
+let {
+  name = 'drop-down-dialog',
+  top = false,
+  ignoreFocusOut = false,
+  onclose = (): void => {
+    dispatch('close');
+  },
+  children,
+}: Props = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
   if (e.key === 'Escape') {
@@ -60,6 +71,6 @@ function handleMousedown(e: MouseEvent): void {
     aria-label={name}
     aria-modal="true"
     bind:this={modal}>
-    <slot />
+    {@render children?.()}
   </div>
 </div>

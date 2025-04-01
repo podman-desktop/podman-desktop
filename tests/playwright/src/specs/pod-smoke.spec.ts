@@ -223,7 +223,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect(restartButton).toBeVisible();
   });
 
-  test(`Checking pods under containers`, async ({ navigationBar }) => {
+  test(`Checking pods under containers`, async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
     await playExpect.poll(async () => containers.containerExists(podToRun), { timeout: 10_000 }).toBeTruthy();
     await playExpect
@@ -232,6 +232,17 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect
       .poll(async () => containers.containerExists(`${frontendContainer}-podified`), { timeout: 10_000 })
       .toBeTruthy();
+
+    const containerDetailsPage = await containers.openContainersDetails(`${frontendContainer}-podified`);
+    await playExpect(containerDetailsPage.heading).toContainText(`${frontendContainer}-podified`);
+    await containerDetailsPage.activateTab('Terminal');
+
+    await playExpect(containerDetailsPage.terminalContent).toBeVisible();
+    await playExpect(containerDetailsPage.terminalContent).toContainText('@');
+    await page.waitForTimeout(1_000);
+    await containerDetailsPage.terminalInput.pressSequentially('pwd', { delay: 15 });
+    await containerDetailsPage.terminalInput.press('Enter');
+    await playExpect(containerDetailsPage.terminalContent).toContainText('app');
   });
 
   test('Checking deployed application', async () => {

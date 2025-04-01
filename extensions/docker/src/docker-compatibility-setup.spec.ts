@@ -18,7 +18,7 @@
 
 import type { Configuration } from '@podman-desktop/api';
 import { configuration, context } from '@podman-desktop/api';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { DockerCompatibilitySetup } from './docker-compatibility-setup.js';
 import type { DockerContextHandler } from './docker-context-handler.js';
@@ -45,11 +45,24 @@ const dockerContextHandler = {
   switchContext: vi.fn(),
 } as unknown as DockerContextHandler;
 
-let dockerCompatibilitySetup: DockerCompatibilitySetup;
+class TestDockerCompatibilitySetup extends DockerCompatibilitySetup {
+  async refreshContextList(): Promise<void> {
+    return super.refreshContextList();
+  }
+}
+
+let dockerCompatibilitySetup: TestDockerCompatibilitySetup;
+
+const originalConsoleError = console.error;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  dockerCompatibilitySetup = new DockerCompatibilitySetup(dockerContextHandler);
+  console.error = vi.fn();
+  dockerCompatibilitySetup = new TestDockerCompatibilitySetup(dockerContextHandler);
+});
+
+afterEach(() => {
+  console.error = originalConsoleError;
 });
 
 test('check sending the docker cli contexts as context.setValue', async () => {
@@ -109,6 +122,8 @@ test('check set the context when configuration change', async () => {
   // empty list of context
   vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([]);
 
+  const spyRefreshContextList = vi.spyOn(dockerCompatibilitySetup, 'refreshContextList');
+
   await dockerCompatibilitySetup.init();
 
   // capture the callback sent to onDidChangeConfiguration
@@ -122,9 +137,48 @@ test('check set the context when configuration change', async () => {
   // mock switchContext
   vi.mocked(dockerContextHandler.switchContext).mockResolvedValue();
 
+  // clear the refreshContextList call
+  spyRefreshContextList.mockClear();
+
   // call the callback
   callback({ affectsConfiguration: vi.fn(() => true) });
 
   // check we called switchContext
-  expect(dockerContextHandler.switchContext).toHaveBeenCalledWith('context1');
+  await vi.waitFor(() => expect(dockerContextHandler.switchContext).toHaveBeenCalledWith('context1'));
+
+  // check we called the refreshContextList
+  await vi.waitFor(() => expect(spyRefreshContextList).toHaveBeenCalled());
+});
+
+test('check set the context but switch context throw error', async () => {
+  // empty list of context
+  vi.mocked(dockerContextHandler.listContexts).mockResolvedValue([]);
+
+  const spyRefreshContextList = vi.spyOn(dockerCompatibilitySetup, 'refreshContextList');
+  await dockerCompatibilitySetup.init();
+
+  // capture the callback sent to onDidChangeConfiguration
+  const callback = vi.mocked(configuration.onDidChangeConfiguration).mock.calls[0][0];
+
+  // mock configuration.getConfiguration
+  vi.mocked(configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(() => 'context1'),
+  } as unknown as Configuration);
+
+  // mock switchContext
+  vi.mocked(dockerContextHandler.switchContext).mockRejectedValue(new Error('error switching context'));
+
+  spyRefreshContextList.mockClear();
+
+  // call the callback
+  callback({ affectsConfiguration: vi.fn(() => true) });
+
+  // check we called switchContext
+  await vi.waitFor(() => expect(dockerContextHandler.switchContext).toHaveBeenCalledWith('context1'));
+
+  // check we called the refreshContextList
+  expect(spyRefreshContextList).not.toHaveBeenCalled();
+
+  // check we logged the error
+  expect(console.error).toHaveBeenCalledWith('error while switching the context', expect.any(Error));
 });

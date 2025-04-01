@@ -32,18 +32,17 @@ test('get a terminal', async () => {
   // register a new terminal
   registerTerminal({
     providerInternalId: '1',
-    connectionSocket: 'connectionSocket1',
     connectionName: 'connectionName1',
     callbackId: 1,
     terminal: {} as any,
   });
 
   // try to grab the terminal
-  const terminal1 = getExistingTerminal('connectionName1', 'connectionSocket1');
+  const terminal1 = getExistingTerminal('1', 'connectionName1');
   expect(terminal1).toBeDefined();
 
   // try to grab an unexisting terminal
-  const terminal2 = getExistingTerminal('connectionName2', 'connectionSocket2');
+  const terminal2 = getExistingTerminal('1', 'connectionName2');
   expect(terminal2).toBeUndefined();
 });
 
@@ -51,7 +50,6 @@ test('terminals should be updated in case of a matching provider connection is r
   // set list of terminals
   registerTerminal({
     providerInternalId: '1',
-    connectionSocket: 'connectionSocket1',
     connectionName: 'connectionName1',
     callbackId: 1,
     terminal: {} as any,

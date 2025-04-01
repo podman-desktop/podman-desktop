@@ -57,7 +57,7 @@ export interface SimpleContainerInfo extends Dockerode.ContainerInfo {
   engineType: 'podman' | 'docker';
 }
 
-type MountType = 'bind' | 'volume' | 'tmpfs';
+type MountType = 'bind' | 'volume' | 'tmpfs' | 'image';
 
 type MountConsistency = 'default' | 'consistent' | 'cached' | 'delegated';
 

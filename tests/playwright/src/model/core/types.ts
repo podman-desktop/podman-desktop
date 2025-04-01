@@ -55,6 +55,8 @@ export enum KubernetesResources {
   ConfigMapsSecrets = 'ConfigMaps & Secrets',
   PortForwarding = 'Port Forwarding',
   Pods = 'Pods',
+  Cronjobs = 'CronJobs',
+  Jobs = 'Jobs',
 }
 
 export const KubernetesResourceAttributes: Record<KubernetesResources, string[]> = {
@@ -65,5 +67,17 @@ export const KubernetesResourceAttributes: Record<KubernetesResources, string[]>
   [KubernetesResources.PVCs]: ['Selected', 'Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
   [KubernetesResources.ConfigMapsSecrets]: ['Selected', 'Status', 'Name', 'Type', 'Keys', 'Age', 'Actions'],
   [KubernetesResources.PortForwarding]: ['Status', 'Name', 'Type', 'Local Port', 'Remote Port', 'Actions'],
-  [KubernetesResources.Pods]: ['Selectes', 'Status', 'Name', 'Containers', 'Age', 'Actions'],
+  [KubernetesResources.Pods]: ['Selected', 'Status', 'Name', 'Containers', 'Age', 'Actions'],
+  [KubernetesResources.Cronjobs]: [
+    'Selected',
+    'Status',
+    'Name',
+    'Schedule',
+    'Last scheduled',
+    'Suspended',
+    'Active',
+    'Age',
+    'Actions',
+  ],
+  [KubernetesResources.Jobs]: ['Selected', 'Status', 'Name', 'Conditions', 'Completions', 'Age', 'Actions'],
 };

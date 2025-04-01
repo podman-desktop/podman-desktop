@@ -7,11 +7,7 @@ import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import type { ProviderConnectionInfo, ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
@@ -104,7 +100,7 @@ async function startConnectionProvider(
 
 function updateConnectionStatus(
   provider: ProviderInfo,
-  connectionInfo: ProviderKubernetesConnectionInfo | ProviderContainerConnectionInfo,
+  connectionInfo: ProviderConnectionInfo,
   action?: string,
   error?: string,
 ): void {

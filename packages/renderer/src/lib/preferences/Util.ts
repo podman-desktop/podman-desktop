@@ -21,6 +21,7 @@ import type { Terminal } from '@xterm/xterm';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type {
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -84,7 +85,7 @@ function writeMultilineString(xterm: Terminal, data: string, colorPrefix: string
 
 export function getProviderConnectionName(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): string {
   return `${provider.name}-${providerConnectionInfo.name}`;
 }

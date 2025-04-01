@@ -16,7 +16,7 @@ let { provider, onclick, left, class: className }: Props = $props();
 </script>
 
 <button
-  on:click={onclick}
+  onclick={onclick}
   class="px-1 py-px flex flex-row h-full items-center gap-1 min-w-fit hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative {className}"
   aria-label={provider.name}>
   {@render left?.()}
