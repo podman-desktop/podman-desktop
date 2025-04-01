@@ -254,3 +254,45 @@ export async function verifyLocalPortResponse(forwardAddress: string, responseMe
     playExpect(text).toContain(responseMessage);
   });
 }
+
+export async function monitorPodStatusInClusterContainer(
+  page: Page,
+  containerName: string,
+  command: string,
+  timeout: number = 160_000,
+): Promise<void> {
+  const navigationBar = new NavigationBar(page);
+  const containersPage = await navigationBar.openContainers();
+  await playExpect.poll(async () => containersPage.getContainerRowByName(containerName)).toBeTruthy();
+  const containerDetailsPage = await containersPage.openContainersDetails(containerName);
+
+  await playExpect
+    .poll(
+      async () => {
+        await containerDetailsPage.executeCommandInTerminal(command);
+        const result = await checkContourPodsInTerminal(page, containerName);
+        await containerDetailsPage.executeCommandInTerminal('clear');
+        return result;
+      },
+      { timeout: timeout },
+    )
+    .toBeTruthy();
+}
+
+async function checkContourPodsInTerminal(page: Page, containerName: string): Promise<boolean> {
+  const containerDetailsPage = new ContainerDetailsPage(page, containerName);
+  await containerDetailsPage.activateTab('Terminal');
+  await playExpect(containerDetailsPage.terminalContent).toBeVisible();
+  await page.waitForTimeout(2_000);
+
+  try {
+    await playExpect(containerDetailsPage.terminalContent).toContainText(/contour-\S+\s+1\/1\s+Running\s+\d+\s+\S+/);
+    await playExpect(containerDetailsPage.terminalContent).toContainText(
+      /contour-certgen-\S+\s+0\/1\s+Completed\s+\d+\s+\S+/,
+    );
+    await playExpect(containerDetailsPage.terminalContent).toContainText(/envoy-\S+\s+2\/2\s+Running\s+\d+\s+\S+/);
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ export class KubernetesBar {
         return new KubernetesResourcePage(this.page, 'PVCs');
       case 'ConfigMaps & Secrets':
         return new KubernetesResourcePage(this.page, 'Configmaps and Secrets');
+      case 'Ingresses & Routes':
+        return new KubernetesResourcePage(this.page, 'ingresses and routes');
       default:
         return new KubernetesResourcePage(this.page, kubernetesResource);
     }

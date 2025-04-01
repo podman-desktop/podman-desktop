@@ -102,4 +102,12 @@ export class ContainerDetailsPage extends DetailsPage {
       return new DeployToKubernetesPage(this.page);
     });
   }
+
+  async executeCommandInTerminal(command: string): Promise<void> {
+    await this.activateTab(ContainerDetailsPage.TERMINAL_TAB);
+
+    await playExpect(this.terminalInput).toBeVisible();
+    await this.terminalInput.pressSequentially(command);
+    await this.terminalInput.press('Enter');
+  }
 }
