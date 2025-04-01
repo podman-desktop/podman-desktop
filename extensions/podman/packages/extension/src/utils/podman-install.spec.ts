@@ -863,6 +863,38 @@ describe('performUpdate', () => {
     expect(extensionApi.Uri.parse).toHaveBeenCalledWith(releaseNotes.href);
     expect(extensionApi.env.openExternal).toHaveBeenCalled();
   });
+
+  test('should not start instalation when updating from Podman 5.3.1 to 5.4.X', async () => {
+    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Yes');
+    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext);
+    (extensionApi.env.isWindows as boolean) = true;
+    // all podman machine are stopped
+    vi.spyOn(podmanInstall, 'stopPodmanMachinesIfAnyBeforeUpdating').mockResolvedValue(true);
+    // return true if data have been cleaned or if user skip it
+    vi.spyOn(podmanInstall, 'wipeAllDataBeforeUpdatingToV5').mockResolvedValue(true);
+
+    // mock initialized
+    podmanInstall['podmanInfo'] = {} as unknown as PodmanInfo;
+    // mock checkForUpdate
+    vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+      hasUpdate: true,
+      installedVersion: '5.3.1',
+      bundledVersion: '5.4.1',
+    });
+
+    await podmanInstall.performUpdate(providerMock, undefined);
+
+    expect(extensionApi.window.showInformationMessage).toHaveBeenCalledWith(
+      'Updating the podman from 5.3.1 to 5.4.1 requires manual installation.\nDo you want to show instructions for this?',
+      'Yes',
+      'No',
+    );
+
+    expect(extensionApi.Uri.parse).toHaveBeenCalledWith(
+      'https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md',
+    );
+    expect(extensionApi.env.openExternal).toHaveBeenCalled();
+  });
 });
 
 describe('MacOSInstaller', () => {
