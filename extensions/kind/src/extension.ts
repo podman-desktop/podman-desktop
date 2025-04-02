@@ -293,7 +293,6 @@ export async function registerUpdatesIfAny(
 ): Promise<extensionApi.Disposable | undefined> {
   const latestVersion = await installer.getLatestVersionAsset();
   const binaryVersion = (await getKindBinaryInfo('kind')).version;
-  console.log(binaryVersion);
   if (latestVersion.tag.slice(1) !== binaryVersion) {
     return provider.registerUpdate({
       version: binaryVersion,
@@ -354,7 +353,7 @@ export async function createProvider(
         currentUpdatesDisposables.push(disposable);
       }
     } catch (error: unknown) {
-      console.error('Error while checking for update', error);
+      console.error('Error while checking for provider update', error);
     }
   };
   await checkForUpdate();

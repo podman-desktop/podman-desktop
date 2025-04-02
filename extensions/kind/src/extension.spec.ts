@@ -96,6 +96,13 @@ const CLI_TOOL_MOCK: extensionApi.CliTool = {
   version: '0.0.1',
 } as unknown as extensionApi.CliTool;
 
+const PROVIDER_MOCK: podmanDesktopApi.Provider = {
+  setKubernetesProviderConnectionFactory: vi.fn(),
+  onDidUpdateVersion: vi.fn(),
+  updateVersion: vi.fn(),
+  registerUpdate: vi.fn(),
+} as unknown as podmanDesktopApi.Provider;
+
 beforeEach(() => {
   vi.resetAllMocks();
 
@@ -111,21 +118,7 @@ beforeEach(() => {
   // mock create cli tool
   vi.mocked(podmanDesktopApi.cli.createCliTool).mockReturnValue(CLI_TOOL_MOCK);
 
-  vi.mocked(podmanDesktopApi.provider.createProvider).mockResolvedValue({
-    setKubernetesProviderConnectionFactory: vi.fn(),
-    onDidUpdateVersion: vi.fn(),
-    updateVersion: vi.fn(),
-    registerUpdate: vi.fn(),
-  } as unknown as extensionApi.Provider);
-
-  const createProviderMock = vi.fn();
-  podmanDesktopApi.provider.createProvider = createProviderMock;
-  createProviderMock.mockImplementation(() => ({
-    setKubernetesProviderConnectionFactory: vi.fn(),
-    onDidUpdateVersion: vi.fn(),
-    updateVersion: vi.fn(),
-    registerUpdate: vi.fn(),
-  }));
+  vi.mocked(podmanDesktopApi.provider.createProvider).mockReturnValue(PROVIDER_MOCK);
 
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
@@ -505,13 +498,6 @@ describe('cli#uninstall', () => {
 });
 
 describe('kubernetes create factory', () => {
-  const PROVIDER_MOCK: podmanDesktopApi.Provider = {
-    setKubernetesProviderConnectionFactory: vi.fn(),
-    onDidUpdateVersion: vi.fn(),
-    updateVersion: vi.fn(),
-    registerUpdate: vi.fn(),
-  } as unknown as podmanDesktopApi.Provider;
-
   beforeEach(async () => {
     // default: no binary
     vi.mocked(util.getKindBinaryInfo).mockRejectedValue(new Error('no binary installed'));
@@ -569,5 +555,31 @@ describe('kubernetes create factory', () => {
     expect(KindInstaller.prototype.download).toHaveBeenCalled();
 
     expect(createCluster).toHaveBeenCalled();
+  });
+});
+
+describe('provider#update', () => {
+  beforeEach(() => {
+    // mock existing cli object (otherwise we can't update)
+    vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+      path: 'test-storage-path/kind',
+      version: '0.0.1',
+    });
+  });
+
+  test('available update should register update in provider', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v1.5.6',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    await activate();
+    expect(PROVIDER_MOCK.registerUpdate).toHaveBeenCalled();
+  });
+
+  test('Register update in provider is not called if there is no update available', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v0.0.1',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    await activate();
+    expect(PROVIDER_MOCK.registerUpdate).not.toHaveBeenCalled();
   });
 });
