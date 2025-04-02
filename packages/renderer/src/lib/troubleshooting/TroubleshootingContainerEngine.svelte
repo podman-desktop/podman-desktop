@@ -7,7 +7,6 @@ import TroubleshootingContainerEnginePing from './TroubleshootingContainerEngine
 export let containerEngineRunning: ProviderContainerConnectionInfo;
 </script>
 
-
 <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] m-4 p-4 text-sm" role="region" aria-label={containerEngineRunning.name}>
   <h6 aria-label="name">Name: {containerEngineRunning.name}</h6>
   <div class="mx-4">
