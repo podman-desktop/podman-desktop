@@ -801,13 +801,25 @@ declare module '@podman-desktop/api' {
     status: ProviderConnectionStatus;
   }
 
+  export interface UpdateVmConnectionEvent {
+    providerId: string;
+    connection: VmProviderConnection;
+    status: ProviderConnectionStatus;
+  }
+
   export interface UnregisterContainerConnectionEvent {
     providerId: string;
   }
   export interface UnregisterKubernetesConnectionEvent {
     providerId: string;
   }
+  export interface UnregisterVmConnectionEvent {
+    providerId: string;
+  }
   export interface RegisterKubernetesConnectionEvent {
+    providerId: string;
+  }
+  export interface RegisterVmConnectionEvent {
     providerId: string;
   }
   export interface RegisterContainerConnectionEvent {
