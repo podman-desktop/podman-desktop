@@ -16,11 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type {
-  Configuration,
-  UpdateContainerConnectionEvent,
-  UpdateKubernetesConnectionEvent,
-} from '@podman-desktop/api';
+import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
@@ -46,8 +42,15 @@ const CONFIGURATION_REGISTRY_MOCK: ConfigurationRegistry = {
 
 const PROVIDER_REGISTRY_MOCK: ProviderRegistry = {
   getProviderInfos: vi.fn(),
-  onDidUpdateContainerConnection: vi.fn(),
-  onDidUpdateKubernetesConnection: vi.fn(),
+  // containers
+  onDidRegisterContainerConnection: vi.fn(),
+  onDidUnregisterContainerConnection: vi.fn(),
+  // kubernetes
+  onDidRegisterKubernetesConnection: vi.fn(),
+  onDidUnregisterKubernetesConnection: vi.fn(),
+  // VMs
+  onDidRegisterVmConnection: vi.fn(),
+  onDidUnregisterVmConnection: vi.fn(),
 } as unknown as ProviderRegistry;
 
 const KIND_ONE_CLUSTER_PROVIDER: ProviderInfo = {
@@ -59,6 +62,7 @@ const KIND_ONE_CLUSTER_PROVIDER: ProviderInfo = {
     },
   ],
   containerConnections: [],
+  vmConnections: [],
 } as unknown as ProviderInfo;
 
 const KIND_EMPTY_CLUSTER_PROVIDER: ProviderInfo = {
@@ -70,6 +74,7 @@ const PODMAN_PROVIDER: ProviderInfo = {
   id: 'podman',
   name: 'Podman',
   kubernetesConnections: [],
+  vmConnections: [],
   containerConnections: [
     {
       name: 'podman-machine-default',
@@ -85,6 +90,7 @@ const COMPOSE_PROVIDER: ProviderInfo = {
   name: 'compose',
   kubernetesConnections: [],
   containerConnections: [],
+  vmConnections: [],
 } as unknown as ProviderInfo;
 
 const CONFIGURATION_MOCK: Configuration = {
@@ -252,69 +258,39 @@ describe('pin / unpin', () => {
   });
 });
 
-describe('provider update', () => {
-  function getListeners(): {
-    containerConnectionUpdateListener: (e: UpdateContainerConnectionEvent) => void;
-    kubernetesConnectionUpdateListener: (e: UpdateKubernetesConnectionEvent) => void;
-  } {
-    // init
-    const pinRegistry = getPinRegistry();
-    pinRegistry.init();
+type RegisterEvent = Pick<
+  ProviderRegistry,
+  | 'onDidRegisterContainerConnection'
+  | 'onDidUnregisterContainerConnection'
+  | 'onDidRegisterKubernetesConnection'
+  | 'onDidUnregisterKubernetesConnection'
+  | 'onDidRegisterVmConnection'
+  | 'onDidUnregisterVmConnection'
+>;
 
-    expect(PROVIDER_REGISTRY_MOCK.onDidUpdateContainerConnection).toHaveBeenCalledOnce();
-    expect(PROVIDER_REGISTRY_MOCK.onDidUpdateKubernetesConnection).toHaveBeenCalledOnce();
+test.each([
+  'onDidRegisterContainerConnection',
+  'onDidUnregisterContainerConnection',
+  'onDidRegisterKubernetesConnection',
+  'onDidUnregisterKubernetesConnection',
+  'onDidRegisterVmConnection',
+  'onDidUnregisterVmConnection',
+] as Array<keyof RegisterEvent>)('ProviderRegistry#%s should make the pin registry notify', async event => {
+  // init
+  const pinRegistry = getPinRegistry();
+  pinRegistry.init();
 
-    const containerConnectionUpdateListener = vi.mocked(PROVIDER_REGISTRY_MOCK.onDidUpdateContainerConnection).mock
-      .calls[0]?.[0];
-    if (!containerConnectionUpdateListener)
-      throw new Error('onDidUpdateContainerConnection mock has not been called properly');
+  // ensure call count is zero
+  vi.mocked(API_SENDER_MOCK.send).mockReset();
+  expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
 
-    const kubernetesConnectionUpdateListener = vi.mocked(PROVIDER_REGISTRY_MOCK.onDidUpdateKubernetesConnection).mock
-      .calls[0]?.[0];
-    if (!kubernetesConnectionUpdateListener)
-      throw new Error('onDidUpdateKubernetesConnection mock has not been called properly');
+  expect(PROVIDER_REGISTRY_MOCK[event]).toHaveBeenCalledOnce();
+  const listener = vi.mocked(PROVIDER_REGISTRY_MOCK[event]).mock.calls[0]?.[0] as unknown as () => void;
+  expect(listener).toBeDefined();
 
-    return {
-      containerConnectionUpdateListener,
-      kubernetesConnectionUpdateListener,
-    };
-  }
+  listener();
 
-  test('container connection update should call notify', async () => {
-    const { containerConnectionUpdateListener } = getListeners();
-
-    // ensure call count is zero
-    vi.mocked(API_SENDER_MOCK.send).mockReset();
-    expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
-
-    // simulate event
-    containerConnectionUpdateListener({
-      status: 'started',
-      providerId: 'podman',
-      connection: {},
-    } as unknown as UpdateContainerConnectionEvent);
-
-    await vi.waitFor(() => {
-      expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
-    });
-  });
-
-  test('kubernetes connection update should call notify', async () => {
-    const { kubernetesConnectionUpdateListener } = getListeners();
-
-    // ensure call count is zero
-    vi.mocked(API_SENDER_MOCK.send).mockReset();
-    expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
-
-    // simulate event
-    kubernetesConnectionUpdateListener({
-      status: 'started',
-      providerId: 'kind',
-      connection: {},
-    } as unknown as UpdateKubernetesConnectionEvent);
-
-    await vi.waitFor(() => {
-      expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
-    });
+  await vi.waitFor(() => {
+    expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
   });
 });
