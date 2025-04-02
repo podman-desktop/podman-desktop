@@ -64,6 +64,7 @@ let kindPath: string | undefined;
 
 let installer: KindInstaller;
 let provider: extensionApi.Provider;
+let latestAsset: KindGithubReleaseArtifactMetadata | undefined = undefined;
 
 const imageHandler = new ImageHandler();
 
@@ -291,9 +292,8 @@ export function refreshKindClustersOnProviderConnectionUpdate(provider: extensio
 export async function registerUpdatesIfAny(
   provider: extensionApi.Provider,
 ): Promise<extensionApi.Disposable | undefined> {
-  const latestVersion = await installer.getLatestVersionAsset();
   const binaryVersion = (await getKindBinaryInfo('kind')).version;
-  if (latestVersion.tag.slice(1) !== binaryVersion) {
+  if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion) {
     return provider.registerUpdate({
       version: binaryVersion,
       update: async () => {
@@ -487,7 +487,6 @@ async function registerCliTool(
   let releaseToUpdateTo: KindGithubReleaseArtifactMetadata | undefined;
   let releaseVersionToUpdateTo: string | undefined;
 
-  let latestAsset: KindGithubReleaseArtifactMetadata | undefined;
   try {
     latestAsset = await installer.getLatestVersionAsset();
   } catch (error: unknown) {
