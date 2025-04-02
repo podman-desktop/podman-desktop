@@ -348,9 +348,13 @@ export async function createProvider(
       disposable.dispose();
     }
     currentUpdatesDisposables.length = 0;
-    const disposable = await registerUpdatesIfAny(provider);
-    if (disposable) {
-      currentUpdatesDisposables.push(disposable);
+    try {
+      const disposable = await registerUpdatesIfAny(provider);
+      if (disposable) {
+        currentUpdatesDisposables.push(disposable);
+      }
+    } catch (error: unknown) {
+      console.error('Error while checking for update', error);
     }
   };
   await checkForUpdate();

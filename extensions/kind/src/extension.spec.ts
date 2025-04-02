@@ -62,7 +62,9 @@ vi.mock('@podman-desktop/api', () => ({
     onDidUnregisterContainerConnection: vi.fn(),
     onDidUpdateProvider: vi.fn(),
     onDidUpdateContainerConnection: vi.fn(),
+    onDidUpdateVersion: vi.fn(),
     createProvider: vi.fn(),
+    registerUpdate: vi.fn(),
   },
   containerEngine: {
     listContainers: vi.fn(),
@@ -111,11 +113,19 @@ beforeEach(() => {
 
   vi.mocked(podmanDesktopApi.provider.createProvider).mockResolvedValue({
     setKubernetesProviderConnectionFactory: vi.fn(),
+    onDidUpdateVersion: vi.fn(),
+    updateVersion: vi.fn(),
+    registerUpdate: vi.fn(),
   } as unknown as extensionApi.Provider);
 
   const createProviderMock = vi.fn();
   podmanDesktopApi.provider.createProvider = createProviderMock;
-  createProviderMock.mockImplementation(() => ({ setKubernetesProviderConnectionFactory: vi.fn() }));
+  createProviderMock.mockImplementation(() => ({
+    setKubernetesProviderConnectionFactory: vi.fn(),
+    onDidUpdateVersion: vi.fn(),
+    updateVersion: vi.fn(),
+    registerUpdate: vi.fn(),
+  }));
 
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
@@ -227,7 +237,7 @@ describe('cli tool', () => {
     vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
     await activate();
 
-    expect(util.getKindBinaryInfo).toHaveBeenCalledTimes(2);
+    expect(util.getKindBinaryInfo).toHaveBeenCalledTimes(3);
     expect(podmanDesktopApi.cli.createCliTool).toHaveBeenCalledWith({
       displayName: 'Kind',
       path: 'test-storage-path/kind',
@@ -253,7 +263,11 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   const createProviderMock = vi.fn();
   podmanDesktopApi.provider.createProvider = createProviderMock;
-  createProviderMock.mockImplementation(() => ({ setKubernetesProviderConnectionFactory: vi.fn() }));
+  createProviderMock.mockImplementation(() => ({
+    setKubernetesProviderConnectionFactory: vi.fn(),
+    onDidUpdateVersion: vi.fn(),
+    updateVersion: vi.fn(),
+  }));
 
   const listContainersMock = vi.fn();
   podmanDesktopApi.containerEngine.listContainers = listContainersMock;
@@ -493,6 +507,9 @@ describe('cli#uninstall', () => {
 describe('kubernetes create factory', () => {
   const PROVIDER_MOCK: podmanDesktopApi.Provider = {
     setKubernetesProviderConnectionFactory: vi.fn(),
+    onDidUpdateVersion: vi.fn(),
+    updateVersion: vi.fn(),
+    registerUpdate: vi.fn(),
   } as unknown as podmanDesktopApi.Provider;
 
   beforeEach(async () => {
