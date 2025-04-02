@@ -298,10 +298,11 @@ async function abortBuild(): Promise<void> {
   title="Build image from Containerfile"
   inProgress={buildImageInfo?.buildRunning}
   showEmptyScreen={providerConnections.length === 0}>
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <i class="fas fa-cube fa-2x" aria-hidden="true"></i>
-  </svelte:fragment>
-  <div slot="content" class="space-y-6">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-6">
     <div hidden={buildImageInfo?.buildRunning}>
       <label for="containerFilePath" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Containerfile path</label>
@@ -398,4 +399,5 @@ async function abortBuild(): Promise<void> {
       {/if}
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

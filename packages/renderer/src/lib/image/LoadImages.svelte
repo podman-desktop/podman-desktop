@@ -80,10 +80,11 @@ async function loadImages(): Promise<void> {
 </script>
 
 <EngineFormPage title="Load Images">
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-  </svelte:fragment>
-  <div slot="content" class="space-y-2">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-2">
     {#if providerConnections.length > 1}
     <div class="mb-2">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
@@ -127,4 +128,5 @@ async function loadImages(): Promise<void> {
       </div>
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

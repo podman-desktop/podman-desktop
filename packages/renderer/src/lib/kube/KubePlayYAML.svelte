@@ -194,9 +194,12 @@ function goBackToPodsPage(): void {
 
 {#if providerConnections.length > 0}
   <EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
-    <KubePlayIcon slot="icon" size="30px" />
+    {#snippet icon()}
+    <KubePlayIcon size="30px" />
+    {/snippet}
 
-    <div slot="content" class="space-y-6">
+    {#snippet content()}
+    <div class="space-y-6">
       <div hidden={runStarted}>
         <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
           >Kubernetes YAML file</label>
@@ -377,5 +380,6 @@ function goBackToPodsPage(): void {
         <Button on:click={goBackToPodsPage} class="w-full">Done</Button>
       {/if}
     </div>
+    {/snippet}
   </EngineFormPage>
 {/if}
