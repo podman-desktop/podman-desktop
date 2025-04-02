@@ -479,7 +479,7 @@ $: globalOnboarding = global;
           </div>
         {:else}
           <div class="mt-10 mx-auto text-sm min-h-[120px]" aria-label="Exit Info Message">
-            <Link onclick={(): void => setDisplayCancelSetup(true)}>Exit</Link> the setup. You can try again later.
+            <Link on:click={(): void => setDisplayCancelSetup(true)}>Exit</Link> the setup. You can try again later.
           </div>
         {/if}
         <div

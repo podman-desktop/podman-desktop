@@ -149,7 +149,7 @@ async function openGitHub(): Promise<void> {
         <span aria-label="Like Podman Desktop? Give us a star on GitHub" class="flex items-center">
           <Fa class="px-1 text-[var(--pd-invert-content-info-icon)]" icon={faHeart} />{smileyRating === 3 ? 'Like' : 'Love'} It? Give us a <Fa
             class="px-1 text-[var(--pd-state-warning)]"
-            icon={faStar} />on <Link aria-label="GitHub" onclick={openGitHub}>GitHub</Link>
+            icon={faStar} />on <Link aria-label="GitHub" on:click={openGitHub}>GitHub</Link>
         </span>
       </div>
     {/if}

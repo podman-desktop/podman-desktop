@@ -48,7 +48,7 @@ function openContainer(containerID: string): void {
     {#each compose.containers as container (container.id)}
       <tr>
         <DetailsCell>
-          <Link onclick={(): void => openContainer(container.id)}>{container.name}</Link>
+          <Link on:click={(): void => openContainer(container.id)}>{container.name}</Link>
         </DetailsCell>
         <DetailsCell>{container.id}</DetailsCell>
       </tr>

@@ -64,7 +64,7 @@ function handleKeydown(e: KeyboardEvent): void {
           role="navigation"
           aria-label="Breadcrumb">
           {#if breadcrumbLeftPart}
-            <Link class="text-sm" aria-label="Back" onclick={onbreadcrumbClick}
+            <Link class="text-sm" aria-label="Back" on:click={onbreadcrumbClick}
               >{breadcrumbLeftPart}</Link>
           {/if}
           {#if breadcrumbRightPart}

@@ -24,7 +24,7 @@ setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}
-  <Link {...args} onclick={doClick}>{args.content}</Link>
+  <Link {...args} on:click={doClick}>{args.content}</Link>
 {/snippet}
 
 <Story

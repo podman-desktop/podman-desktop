@@ -105,7 +105,7 @@ $: window
       and to click to go to the registries page -->
       {#if !isAuthenticatedForThisImage}
         <p class="text-[var(--pd-state-warning)] pt-1">
-          No registry with push permissions found. <Link onclick={(): void => router.goto('/preferences/registries')}
+          No registry with push permissions found. <Link on:click={(): void => router.goto('/preferences/registries')}
             >Add a registry now.</Link>
         </p>{/if}
     </div>
