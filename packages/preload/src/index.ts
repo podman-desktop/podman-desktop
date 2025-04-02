@@ -110,6 +110,7 @@ import type {
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
 import type { CatalogExtension } from '../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
+import type { GithubDiscussionsData } from '../../main/src/plugin/github/github-discussions-data';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -673,6 +674,13 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('shellInProviderConnectionClose', async (dataId: number) => {
     return ipcInvoke('provider-registry:shellInProviderConnectionClose', dataId);
   });
+
+  contextBridge.exposeInMainWorld(
+    'getExperimentalFeatureReactions',
+    async (): Promise<Record<string, GithubDiscussionsData>> => {
+      return ipcInvoke('settings:experimental-feature:get-reactions');
+    },
+  );
 
   ipcRenderer.on(
     'provider-registry:shellInProviderConnection-onData',
