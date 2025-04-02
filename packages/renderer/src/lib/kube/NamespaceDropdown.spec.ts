@@ -83,7 +83,8 @@ test('Expect namespaces are in the dropdown', async () => {
   await fireEvent.click(dropdown);
 
   // first namespace is in the original button and in the dropdown
-  const item1 = screen.getAllByRole('button', { name: firstNS });
+  const item1 = screen.getAllByRole('button', { name: new RegExp(`${firstNS}$`) });
+
   expect(item1.length).toEqual(2);
 
   // second namespace is also clickable
