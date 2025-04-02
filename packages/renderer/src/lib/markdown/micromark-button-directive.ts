@@ -40,8 +40,19 @@ export function button(d: Directive): void {
     return false;
   }
 
-  // Make sure {command=example} has been passed in
-  if (d.attributes && 'command' in d.attributes) {
+  // If {command=example args='["arg1"]'} has been passed in
+  // Icon format of a button
+  if (d.attributes && 'command' in d.attributes && 'args' in d.attributes) {
+    this.tag(`
+      <button 
+        class="fa-solid ${this.encode(d.label)} before:px-1 fa-3x" 
+        data-command="${this.encode(d.attributes.command)}" 
+        data-args="${JSON.parse(d.attributes.args)}">
+      </button>
+    `);
+
+    // Make sure {command=example} has been passed in
+  } else if (d.attributes && 'command' in d.attributes) {
     // Make this a button if it's a command
     this.tag(
       '<button class="px-4 py-[6px] rounded-[4px] text-white text-[13px] whitespace-nowrap bg-purple-600 hover:bg-purple-500 no-underline" data-command="' +

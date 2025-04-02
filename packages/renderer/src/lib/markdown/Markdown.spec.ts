@@ -76,6 +76,17 @@ describe('Custom button', () => {
     expect(markdownContent).toContainHTML('data-command="command"');
     expect(markdownContent).toContainHTML('Name of the button</button>');
   });
+
+  test('Expect button to be rendered as a icon with args', async () => {
+    const icon = 'faIconIcon';
+    await waitRender({ markdown: `:button[${icon}]{command=command args='["arg1"]'}` });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML(`<button class="fa-solid ${icon} before:px-1 fa-3x"`);
+    expect(markdownContent).toContainHTML('data-command="command"');
+    expect(markdownContent).toContainHTML(`data-args="arg1"`);
+    expect(markdownContent).toContainHTML('</button>');
+  });
 });
 
 describe('Custom link', () => {
