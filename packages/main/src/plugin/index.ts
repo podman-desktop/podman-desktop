@@ -161,6 +161,7 @@ import { ExtensionDevelopmentFolders } from './extension/extension-development-f
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
+import { FeedbackForm } from './feedback-form.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
 import { IconRegistry } from './icon-registry.js';
@@ -724,6 +725,8 @@ export class PluginSystem {
     await this.extensionLoader.init();
 
     const feedback = new FeedbackHandler(this.extensionLoader);
+    const feedbackForm = new FeedbackForm(commandRegistry, apiSender);
+    feedbackForm.init();
 
     const extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender);
     extensionsCatalog.init();
