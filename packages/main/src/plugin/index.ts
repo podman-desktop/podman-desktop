@@ -50,6 +50,8 @@ import type { IpcMainInvokeEvent } from 'electron/main';
 import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
+import { GithubClient } from '/@/plugin/github/github-client.js';
+import type { GithubDiscussionsData } from '/@/plugin/github/github-discussions-data.js';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -163,6 +165,7 @@ import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
+import { ExperimentalDiscussion } from './github/experimental-discussion.js';
 import { IconRegistry } from './icon-registry.js';
 import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
@@ -468,6 +471,12 @@ export class PluginSystem {
       notifications,
       configurationRegistryEmitter,
     );
+
+    const githubClient = new GithubClient();
+    githubClient.init();
+
+    const experimentalFeedback = new ExperimentalDiscussion(githubClient, configurationRegistry);
+    experimentalFeedback.init();
 
     const colorRegistry = new ColorRegistry(apiSender, configurationRegistry);
     colorRegistry.init();
@@ -1329,6 +1338,13 @@ export class PluginSystem {
       async (_listener, onDataId: number): Promise<void> => {
         const callback = providerRegistryShellInProviderConnectionSendCallback.get(onDataId);
         callback?.close();
+      },
+    );
+
+    this.ipcHandle(
+      'settings:experimental-feature:get-reactions',
+      async (_listener): Promise<Record<string, GithubDiscussionsData>> => {
+        return experimentalFeedback.collectExperimentalConfigurationReactions();
       },
     );
 
