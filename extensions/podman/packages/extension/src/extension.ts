@@ -83,6 +83,9 @@ const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
 
 // Configuration buttons
+const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
+
+// Telemetry
 let telemetryLogger: extensionApi.TelemetryLogger | undefined;
 
 const wslHelper = new WslHelper();
@@ -97,6 +100,7 @@ let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
 
+// Alert for setting up
 let shouldNotifySetup = true;
 const setupPodmanNotification: extensionApi.NotificationOptions = {
   title: 'Podman needs to be set up',
@@ -107,6 +111,21 @@ const setupPodmanNotification: extensionApi.NotificationOptions = {
   silent: true,
 };
 let notificationDisposable: extensionApi.Disposable;
+
+// Alert for running podman-mac-helper
+// Add notification that podman-mac-helper needs setting up
+let doNotShouldMacHelperSetup = false;
+const setupMacHelperNotification: extensionApi.NotificationOptions = {
+  title: 'Podman Mac Helper needs to be set up',
+  body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
+  type: 'info',
+  // Execute the "Docker Compatibility" command when the button is clicked
+  markdownActions:
+    ':button[Enable]{command=podman.socketCompatibilityMode} &nbsp; :button[Do not show again]{command=podman.doNotShowMacHelperNotification}',
+  highlight: true,
+  silent: true,
+};
+let podmanMacHelperNotificationDisposable: extensionApi.Disposable;
 
 export type MachineJSON = {
   Name: string;
@@ -175,6 +194,43 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
 function notifySetupPodman(): void {
   notificationDisposable?.dispose();
   notificationDisposable = extensionApi.window.showNotification(setupPodmanNotification);
+}
+
+async function checkAndNotifySetupPodmanMacHelper(): Promise<void> {
+  // Exit immediately if doNotShouldMacHelperSetup is true
+  if (doNotShouldMacHelperSetup) {
+    return;
+  }
+
+  // We do one last check to see if the socket is truly disguised or not by checking isEnabled for socketCompatibilityMode
+  const socketCompatibilityMode = getSocketCompatibility();
+
+  // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
+  const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+  // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
+  // and we are on macOS, as the helper is only required for macOS.
+  if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
+    notifySetupPodmanMacHelper();
+  } else {
+    // If it's already enabled, just dispose the notification
+    podmanMacHelperNotificationDisposable?.dispose();
+  }
+}
+
+// Shortform for getting the do not show ever again setting for the podman-mac-helper notification
+function getDoNotShowMacHelperSetting(): boolean {
+  return (
+    extensionApi.configuration
+      .getConfiguration('podman')
+      .get<boolean>(configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
+  );
+}
+
+// Show the banner for running podman-mac-helper
+function notifySetupPodmanMacHelper(): void {
+  podmanMacHelperNotificationDisposable?.dispose();
+  podmanMacHelperNotificationDisposable = extensionApi.window.showNotification(setupMacHelperNotification);
 }
 
 export async function updateMachines(
@@ -408,6 +464,12 @@ async function doUpdateMachines(
       // this should only run if we at least one machine
       await checkDefaultMachine(machines);
     }
+  }
+
+  // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
+  // and if we should notify that we need to run podman-mac-helper, we do so.
+  if (extensionApi.env.isMac) {
+    await checkAndNotifySetupPodmanMacHelper();
   }
 }
 
@@ -1381,6 +1443,26 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // Compatibility mode status bar item
   // only available for macOS
   if (extensionApi.env.isMac) {
+    // Get if we should never show the podman-mac-helper notification ever again
+    doNotShouldMacHelperSetup = getDoNotShowMacHelperSetting();
+
+    // Register the command for disabling the do not show mac helper setting permanently
+    extensionContext.subscriptions.push(
+      extensionApi.commands.registerCommand('podman.doNotShowMacHelperNotification', async () => {
+        // Set the configuration setting to true, so on reload of Podman Desktop it
+        // is consistent / will not show the notification again
+        await extensionApi.configuration
+          .getConfiguration('podman')
+          .update(configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
+
+        //  Set the global variable to true
+        doNotShouldMacHelperSetup = true;
+
+        // Dismiss the notification
+        podmanMacHelperNotificationDisposable?.dispose();
+      }),
+    );
+
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
       extensionApi.commands.registerCommand('podman.disableCompatibilityMode', async () => {
@@ -1430,6 +1512,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
+
+    // After pushing, let's check to see if we need to run podman-mac-helper notification at all
+    // macOS only
+    if (extensionApi.env.isMac) {
+      await checkAndNotifySetupPodmanMacHelper();
+    }
   }
 
   const doAutoStart = async (
