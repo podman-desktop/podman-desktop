@@ -672,7 +672,17 @@ function handleError(errorMessage: string): void {
               connection={vmConnection}
               connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
               updateConnectionStatus={updateContainerStatus}
-              addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+              addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
+              <span slot="advanced-actions" class:hidden={providers.length === 0}>
+                <Tooltip bottom tip="More Options">
+                  <ActionsMenu dropdownMenu={true}>
+                    <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => router.goto(
+                      `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
+                    )}/>
+                  </ActionsMenu>
+                </Tooltip>
+              </span>
+            </PreferencesConnectionActions>
           </div>
         {/each}
         </div>
