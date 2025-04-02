@@ -674,9 +674,14 @@ declare module '@podman-desktop/api' {
       containerProviderConnectionFactory: KubernetesProviderConnectionFactory,
       connectionAuditor?: Auditor,
     ): Disposable;
+    setVmProviderConnectionFactory(
+      vmProviderConnectionFactory: VmProviderConnectionFactory,
+      connectionAuditor?: Auditor,
+    ): Disposable;
 
     registerContainerProviderConnection(connection: ContainerProviderConnection): Disposable;
     registerKubernetesProviderConnection(connection: KubernetesProviderConnection): Disposable;
+    registerVmProviderConnection(connection: VmProviderConnection): Disposable;
     registerLifecycle(lifecycle: ProviderLifecycle): Disposable;
 
     // register installation flow
@@ -1178,7 +1183,11 @@ declare module '@podman-desktop/api' {
   /**
    * The configuration scope
    */
-  export type ConfigurationScope = string | ContainerProviderConnection | KubernetesProviderConnection;
+  export type ConfigurationScope =
+    | string
+    | ContainerProviderConnection
+    | KubernetesProviderConnection
+    | VmProviderConnection;
 
   export interface Configuration {
     /**
