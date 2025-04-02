@@ -40,8 +40,10 @@ const extensionContext = {
 const provider: extensionApi.Provider = {
   setContainerProviderConnectionFactory: vi.fn(),
   setKubernetesProviderConnectionFactory: vi.fn(),
+  setVmProviderConnectionFactory: vi.fn(),
   registerContainerProviderConnection: vi.fn(),
   registerKubernetesProviderConnection: vi.fn(),
+  registerVmProviderConnection: vi.fn(),
   registerLifecycle: vi.fn(),
   registerInstallation: vi.fn(),
   registerUpdate: vi.fn(),
