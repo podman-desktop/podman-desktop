@@ -1,11 +1,19 @@
 <script lang="ts">
 import { FormPage } from '@podman-desktop/ui-svelte';
+import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { currentPage, lastPage } from '../../stores/breadcrumb';
 
-export let title: string;
-export let inProgress = false;
+interface Props {
+  title: string;
+  inProgress?: boolean;
+  icon?: Snippet;
+  actions?: Snippet;
+  content?: Snippet;
+}
+
+const { title, inProgress = false, icon: localIcon, actions: localActions, content: localContent }: Props = $props();
 
 export function goToPreviousPage(): void {
   router.goto($lastPage.path);
@@ -20,7 +28,7 @@ export function goToPreviousPage(): void {
   breadcrumbTitle="Go back to {$lastPage.name}"
   onclose={goToPreviousPage}
   onbreadcrumbClick={goToPreviousPage}>
-  <slot slot="icon" name="icon" />
-  <slot slot="actions" name="actions" />
-  <slot slot="content" name="content" />
+  {#snippet icon()}{@render localIcon?.()}{/snippet}
+  {#snippet actions()}{@render localActions?.()}{/snippet}
+  {#snippet content()}{@render localContent?.()}{/snippet}
 </FormPage>
