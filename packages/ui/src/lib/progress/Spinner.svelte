@@ -4,15 +4,15 @@ interface Props {
   class?: string;
   style?: string;
 }
-let { size = '2em', class: classProp, style: styleProp }: Props = $props();
+let { size = '2em', class: className, style }: Props = $props();
 </script>
 
 <i
   role="progressbar"
   aria-label="Loading"
   aria-busy="true"
-  class="flex justify-center items-center {classProp}"
-  style={styleProp}>
+  class="flex justify-center items-center {className}"
+  style={style}>
   <svg width={size} height={size} viewBox="0 0 100 100" role="img">
     <defs>
       <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
