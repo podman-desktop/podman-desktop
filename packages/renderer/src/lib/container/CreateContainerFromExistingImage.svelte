@@ -352,13 +352,14 @@ function onContainerConnectionChange(): void {
 </script>
 
 <EngineFormPage title="Select an image">
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <ImageIcon />
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet actions()}
     <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
-  </svelte:fragment>
-  <div slot="content" class="space-y-2 flex flex-col">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-2 flex flex-col">
     <div class="flex flex-col">
       {#key selectedProviderConnection}
         <Typeahead
@@ -442,5 +443,6 @@ function onContainerConnectionChange(): void {
       <TerminalWindow bind:terminal={logsPull} />
     {/if}
   </div>
+  {/snippet}
 </EngineFormPage>
 

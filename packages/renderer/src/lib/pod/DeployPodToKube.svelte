@@ -396,9 +396,12 @@ function updateKubeResult(): void {
 </script>
 
 <EngineFormPage title="Deploy generated pod to Kubernetes" inProgress={deployStarted && !deployFinished}>
-  <i class="fas fa-rocket fa-2x" slot="icon" aria-hidden="true"></i>
+  {#snippet icon()}
+  <i class="fas fa-rocket fa-2x" aria-hidden="true"></i>
+  {/snippet}
 
-  <div slot="content" class="space-y-2">
+  {#snippet content()}
+  <div class="space-y-2">
     {#if kubeDetails}
       <p>Generated Kubernetes YAML:</p>
       <div class="h-48 pt-2">
@@ -637,4 +640,5 @@ function updateKubeResult(): void {
       </div>
     {/if}
   </div>
+  {/snippet}
 </EngineFormPage>

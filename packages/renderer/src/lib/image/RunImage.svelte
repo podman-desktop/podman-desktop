@@ -652,10 +652,11 @@ const envDialogOptions: OpenDialogOptions = {
 <Route path="/*">
   {#if dataReady}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
-      <svelte:fragment slot="icon">
+      {#snippet icon()}
         <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-      </svelte:fragment>
-      <div slot="content" class="space-y-2">
+      {/snippet}
+      {#snippet content()}
+      <div class="space-y-2">
         <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
           <Tab title="Basic" selected={isTabSelected($router.path, 'basic')} url={getTabUrl($router.path, 'basic')} />
           <Tab
@@ -1146,6 +1147,7 @@ const envDialogOptions: OpenDialogOptions = {
           {/if}
         </div>
       </div>
+      {/snippet}
     </EngineFormPage>
   {/if}
 </Route>
