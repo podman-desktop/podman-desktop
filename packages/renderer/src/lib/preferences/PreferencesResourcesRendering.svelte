@@ -6,7 +6,6 @@ import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
-import { fade } from 'svelte/transition';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
@@ -397,16 +396,19 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
 export let focus: string | undefined;
 let TransitionID: string | undefined;
 
-function scrollToElement(target: string): void {
+function scrollToProvider(target: string): void {
   const element = document.getElementById(target);
   if (element) {
     element.scrollIntoView({ behavior: 'auto', block: 'start' });
   }
+  TransitionID = target;
+  setTimeout(() => {
+    TransitionID = '';
+  }, 2000);
 }
 
 $: if (focus) {
-  scrollToElement(focus);
-  TransitionID = focus;
+  scrollToProvider(focus);
 }
 
 function handleError(errorMessage: string): void {
@@ -436,20 +438,18 @@ function handleError(errorMessage: string): void {
         flex"
         role="region"
         aria-label={provider.id}>
-        <div class="w-6"> {#if TransitionID === provider.id}
-          <div transition:fade={{ duration: 500 }}>⭐</div>
-        {/if}
-        </div>
         <div role="region" aria-label="Provider Setup">
           <!-- left col - provider icon/name + "create new" button -->
           <div class="min-w-[170px] max-w-[200px]">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
-                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" />
+                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" 
+                  class:animate-pulse={TransitionID === provider.id} />
                   <!-- TODO check theme used for image, now use dark by default -->
                 {:else}
-                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" />
+                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" 
+                  class:animate-pulse={TransitionID === provider.id} />
                 {/if}
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
