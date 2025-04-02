@@ -114,14 +114,16 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
 
 {#if connectionInfo}
   <DetailsPage title={connectionInfo.name}>
-    <svelte:fragment slot="subtitle">
-      <div class="flex flex-row">
-        <ConnectionStatus status={connectionInfo.status} />
-        <ConnectionErrorInfoButton status={connectionStatus} />
-      </div>
-    </svelte:fragment>
-    <svelte:fragment slot="actions">
-      {#if providerInfo}
+    {#snippet subtitleSnippet()}
+      {#if connectionInfo}
+        <div class="flex flex-row">
+          <ConnectionStatus status={connectionInfo.status} />
+          <ConnectionErrorInfoButton status={connectionStatus} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if providerInfo && connectionInfo}
         <div class="flex justify-end">
           <PreferencesConnectionActions
             provider={providerInfo}
@@ -131,19 +133,19 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
             addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
         </div>
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="icon">
+    {/snippet}
+    {#snippet iconSnippet()}
       <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
-    </svelte:fragment>
-    <svelte:fragment slot="tabs">
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab
         title="Terminal"
         selected={isTabSelected($router.path, 'terminal')}
         url={getTabUrl($router.path, 'terminal')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <div class="h-full">
-        {#if providerInfo}
+        {#if providerInfo && connectionInfo}
           <Route path="/terminal" breadcrumb="Terminal" navigationHint="tab">
             <PreferencesConnectionDetailsTerminal
               provider={providerInfo}
@@ -152,6 +154,6 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
           </Route>
         {/if}
       </div>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}
