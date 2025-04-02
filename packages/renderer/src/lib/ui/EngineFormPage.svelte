@@ -8,10 +8,14 @@ export let showEmptyScreen: boolean = false;
 </script>
 
 <FormPage title={title} inProgress={inProgress}>
-  <slot slot="icon" name="icon" />
-  <slot slot="actions" name="actions" />
-  <slot slot="tabs" name="tabs" />
-  <slot slot="content">
+  {#snippet icon()}
+  <slot name="icon" />
+  {/snippet}
+  {#snippet actions()}
+  <slot name="actions" />
+  {/snippet}
+  {#snippet content()}
+  <slot>
     <div class="p-5 min-w-full h-full">
       {#if showEmptyScreen}
         <NoContainerEngineEmptyScreen />
@@ -22,4 +26,5 @@ export let showEmptyScreen: boolean = false;
       {/if}
     </div>
   </slot>
+  {/snippet}
 </FormPage>

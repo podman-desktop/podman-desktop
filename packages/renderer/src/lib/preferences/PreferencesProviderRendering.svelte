@@ -85,7 +85,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
 
 <Route path="/*" breadcrumb={providerInfo?.name} navigationHint="details">
   <FormPage title={title} inProgress={inProgress}>
-    <svelte:fragment slot="icon">
+    {#snippet icon()}
       {#if providerInfo?.images?.icon}
         {#if typeof providerInfo.images.icon === 'string'}
           <img src={providerInfo.images.icon} alt={providerInfo.name} class="max-h-10" />
@@ -94,9 +94,9 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           <img src={providerInfo.images.icon.dark} alt={providerInfo.name} class="max-h-10" />
         {/if}
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet actions()}
       <!-- Manage lifecycle-->
       {#if providerInfo?.lifecycleMethods}
         <div class="pl-1 py-2 px-6">
@@ -131,9 +131,10 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           {/if}
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <div slot="content" class="px-5 pb-5 min-w-full h-fit">
+    {#snippet content()}
+    <div class="px-5 pb-5 min-w-full h-fit">
       <div class="bg-[var(--pd-content-card-bg)] px-6 py-4">
         <!-- Create connection panel-->
         {#if providerInfo?.containerProviderConnectionCreation === true}
@@ -168,6 +169,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
         {/if}
       </div>
     </div>
+    {/snippet}
   </FormPage>
 </Route>
 {#if showModalProviderInfo}
