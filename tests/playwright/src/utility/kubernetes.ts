@@ -263,6 +263,7 @@ export async function monitorPodStatusInClusterContainer(
 ): Promise<void> {
   const navigationBar = new NavigationBar(page);
   const containersPage = await navigationBar.openContainers();
+  await playExpect(containersPage.heading).toBeVisible();
   await playExpect.poll(async () => containersPage.getContainerRowByName(containerName)).toBeTruthy();
   const containerDetailsPage = await containersPage.openContainersDetails(containerName);
 
