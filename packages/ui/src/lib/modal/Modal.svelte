@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy, type Snippet } from 'svelte';
+import { createEventDispatcher, onDestroy } from 'svelte';
 
 import { tabWithinParent } from '../utils/dialog-utils';
 
@@ -9,8 +9,8 @@ interface Props {
   name?: string;
   top?: boolean;
   ignoreFocusOut?: boolean;
+  overflowVisible?: boolean;
   onclose?: () => void;
-  children?: Snippet;
 }
 
 let modal: HTMLDivElement;
@@ -18,10 +18,10 @@ let {
   name = 'drop-down-dialog',
   top = false,
   ignoreFocusOut = false,
+  overflowVisible = false,
   onclose = (): void => {
     dispatch('close');
   },
-  children,
 }: Props = $props();
 
 const handle_keydown = (e: KeyboardEvent): void => {
@@ -66,11 +66,11 @@ function handleMousedown(e: MouseEvent): void {
   <div
     class:translate-y-[-5%]={!top}
     class:my-[32px]={top}
-    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl overflow-auto w-[calc(200vw-4em)] h-fit max-w-[42em] max-h-[calc(100vh-4em)] border-[1px] border-[var(--pd-modal-border)]"
+    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl {overflowVisible ? 'overflow-visible' : 'overflow-auto'} w-[calc(200vw-4em)] h-fit max-w-[42em] max-h-[calc(100vh-4em)] border-[1px] border-[var(--pd-modal-border)]"
     role="dialog"
     aria-label={name}
     aria-modal="true"
     bind:this={modal}>
-    {@render children?.()}
+    <slot />
   </div>
 </div>
