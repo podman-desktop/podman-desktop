@@ -24,11 +24,11 @@ export default defineConfig({
       'extensions/**/vitest.config.ts',
     ],
     // use GitHub action reporters when running in CI
-    reporters: process.env.GITHUB_ACTIONS?['github-actions', 'default']:['default'],
+    reporters: process.env.CI ? [['default'], ['junit', { includeConsoleOutput: false }]] : ['default'],
     coverage: {
       excludeAfterRemap: true,
       provider: 'v8',
-      reporter: ['html'],
+      reporter: [process.env.CI?'json':'text'],
     },
   },
 });

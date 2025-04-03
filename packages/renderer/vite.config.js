@@ -23,7 +23,6 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 import tailwindcss from '@tailwindcss/vite';
 
 let filename = fileURLToPath(import.meta.url);
