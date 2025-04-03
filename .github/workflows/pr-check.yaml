@@ -289,7 +289,7 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Execute pnpm
+      - name: Execute build
         run: pnpm build
 
       - name: Run unit tests
