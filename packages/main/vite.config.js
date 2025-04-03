@@ -65,10 +65,6 @@ const config = {
     emptyOutDir: true,
     reportCompressedSize: false,
   },
-  test: {
-    retry: 3, // Retries failing tests up to 3 times
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
-  },
 };
 
 export default config;

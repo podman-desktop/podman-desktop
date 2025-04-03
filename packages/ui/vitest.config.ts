@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,45 +16,28 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
+import { join } from 'node:path';
+import { defineProject } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
-import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
-import tailwindcss from '@tailwindcss/vite';
 
-let filename = fileURLToPath(import.meta.url);
-const PACKAGE_ROOT = path.dirname(filename);
+const PACKAGE_ROOT = __dirname;
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  mode: process.env.MODE,
+export default defineProject({
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
-      '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ hot: !process.env.VITEST }), svelteTesting()],
-  optimizeDeps: {
-    exclude: ['tinro'],
-  },
-  base: '',
-  server: {
-    fs: {
-      strict: true,
+  plugins: [svelte({ hot: !process.env.VITEST }), svelteTesting()],
+  test: {
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    globals: true,
+    environment: 'jsdom',
+    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
+    deps: {
+      inline: ['moment'],
     },
-  },
-  build: {
-    sourcemap: true,
-    outDir: 'dist',
-    assetsDir: '.',
-
-    emptyOutDir: true,
-    reportCompressedSize: false,
   },
 });

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/**
- * Config for extensions tests
- * placed in project root tests folder
- * @type {import('vite').UserConfig}
- * @see https://vitest.dev/config/
- */
-const config = {
+import { join, resolve } from 'node:path';
+import { defineProject } from 'vitest/config';
+
+const PACKAGE_ROOT = __dirname;
+const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..');
+
+export default defineProject({
+  root: PACKAGE_ROOT,
   test: {
     globals: true,
-    environment: 'jsdom',
-    include: ['*.{test,spec}.ts'],
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    alias: {
+      '@podman-desktop/api': resolve(WORKSPACE_ROOT, '__mocks__/@podman-desktop/api.js'),
+    },
   },
-};
-
-export default config;
+});

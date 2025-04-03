@@ -15,45 +15,20 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-import { join } from 'path';
-import { builtinModules } from 'module';
-import { node } from '../../.electron-vendors.cache.json';
+import { defineProject } from 'vitest/config';
 
 const PACKAGE_ROOT = __dirname;
 
 /**
+ * Config for extensions tests
+ * placed in project root tests folder
  * @type {import('vite').UserConfig}
- * @see https://vitejs.dev/config/
+ * @see https://vitest.dev/config/
  */
-const config = {
-  mode: process.env.MODE,
+export default defineProject({
   root: PACKAGE_ROOT,
-  envDir: process.cwd(),
-  resolve: {
-    alias: {
-      '/@/': join(PACKAGE_ROOT, 'src', '/'),
-    },
+  test: {
+    globals: true,
+    include: ['*.{test,spec}.ts'],
   },
-  build: {
-    sourcemap: 'inline',
-    target: `node${node}`,
-    outDir: 'dist',
-    assetsDir: '.',
-    minify: process.env.MODE === 'production' ? 'esbuild' : false,
-    lib: {
-      entry: 'src/extension.ts',
-      formats: ['cjs'],
-    },
-    rollupOptions: {
-      external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
-      output: {
-        entryFileNames: '[name].js',
-      },
-    },
-    emptyOutDir: true,
-    reportCompressedSize: false,
-  },
-};
-
-export default config;
+});

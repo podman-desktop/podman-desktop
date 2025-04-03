@@ -65,9 +65,6 @@ const config = {
     emptyOutDir: true,
     reportCompressedSize: false,
   },
-  test: {
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
-  },
 };
 
 export default config;

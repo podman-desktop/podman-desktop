@@ -40,16 +40,6 @@ export default defineConfig({
     },
   },
   plugins: [tailwindcss(), svelte({ hot: !process.env.VITEST }), svelteTesting()],
-  test: {
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    globals: true,
-    environment: 'jsdom',
-    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
-    deps: {
-      inline: ['moment'],
-    },
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
-  },
   base: '',
   server: {
     fs: {
