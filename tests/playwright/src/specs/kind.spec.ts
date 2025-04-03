@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
@@ -36,10 +39,23 @@ import { waitForPodmanMachineStartup } from '../utility/wait';
 const RESOURCE_NAME: string = 'kind';
 const EXTENSION_LABEL: string = 'podman-desktop.kind';
 const CLUSTER_NAME: string = 'kind-cluster';
-const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
+const CUSTOM_CONFIG_CLUSTER_NAME: string = 'test-cluster';
+const KIND_CONTAINER: string = `${CLUSTER_NAME}-control-plane`;
+const CUSTOM_CONFIG_KIND_CONTAINER: string = `${CUSTOM_CONFIG_CLUSTER_NAME}-control-plane`;
 const CLUSTER_CREATION_TIMEOUT: number = 300_000;
-let resourcesPage: ResourcesPage;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const CUSTOM_CONFIG_FILE_PATH: string = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  'resources',
+  'kubernetes',
+  'test-kind-config-file.yaml',
+);
+
+let resourcesPage: ResourcesPage;
 let kindResourceCard: ResourceConnectionCardPage;
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
@@ -57,7 +73,7 @@ test.beforeAll(async ({ runner, page, welcomePage }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
-    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    await deleteCluster(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
   } finally {
     await runner.close();
   }
@@ -104,7 +120,7 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
 
     test('Check resources added with the Kind cluster', async ({ page }) => {
-      await checkClusterResources(page, KIND_NODE);
+      await checkClusterResources(page, KIND_CONTAINER);
     });
 
     test('Kind cluster operations - STOP', async ({ page }) => {
@@ -130,7 +146,7 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
 
     test('Kind cluster operations - DELETE', async ({ page }) => {
-      await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+      await deleteCluster(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
     });
   });
   test.describe('Kind cluster operations - Details', () => {
@@ -177,7 +193,27 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
 
     test('Kind cluster operations details - DELETE', async ({ page }) => {
-      await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+      await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
+    });
+  });
+  test.describe('Kind cluster creation with custom config file', () => {
+    test('Create a Kind cluster using the custom config file', async ({ page }) => {
+      test.setTimeout(CLUSTER_CREATION_TIMEOUT);
+      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+        await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+          configFilePath: CUSTOM_CONFIG_FILE_PATH,
+          providerType: providerTypeGHA,
+          useIngressController: false,
+        });
+      } else {
+        await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+          configFilePath: CUSTOM_CONFIG_FILE_PATH,
+        });
+      }
+      await checkClusterResources(page, CUSTOM_CONFIG_KIND_CONTAINER);
+    });
+    test('Delete the Kind cluster', async ({ page }) => {
+      await deleteClusterFromDetails(page, RESOURCE_NAME, CUSTOM_CONFIG_KIND_CONTAINER, CUSTOM_CONFIG_CLUSTER_NAME);
     });
   });
 });
