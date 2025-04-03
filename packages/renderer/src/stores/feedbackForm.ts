@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { type Writable, writable } from 'svelte/store';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../main/src/plugin/configuration-registry';
 import type { RemindOption } from '../../../main/src/plugin/message-box';
 import { configurationProperties } from './configurationProperties';
-import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 
 interface FeedbackNotification {
   id: string;
@@ -34,7 +34,7 @@ interface FeedbackNotification {
   featureDisabled: boolean;
 
   // Help variable for each feature to remember if the dialog was already opened
-  wasOpenned: boolean;
+  wasOpened: boolean;
 }
 
 export type ExperimentalFeatures =
@@ -56,36 +56,37 @@ function setupFeedback(): void {
 
     feedbackFormNotifications.update(store => {
       experimentalProperties.forEach(async (property): Promise<void> => {
-        if (!property.id) return;
-        const enabled = (await window.getConfigurationValue<boolean>(property.id)) ?? false;
+        const propertyID = property.id;
+        if (!propertyID) return;
+        const enabled = (await window.getConfigurationValue<boolean>(propertyID)) ?? false;
 
         // Get record from store
-        const record = store.get(property.id);
+        const record = store.get(propertyID);
 
         // If record does not exist, then create one
         // Otherwise update disabled
         if (!record) {
-          store.set(property.id, {
-            id: property.id,
+          store.set(propertyID, {
+            id: propertyID,
             notifyAtDate: undefined,
             featureDisabled: !enabled,
-            wasOpenned: false,
+            wasOpened: false,
           });
         } else {
-          store.set(property.id, { ...record, featureDisabled: !enabled });
+          store.set(propertyID, { ...record, featureDisabled: !enabled });
         }
       });
       return store;
     });
   });
-}
+};
 
 setupFeedback();
 
 function updateNotifyAtDate(id: string, notifyAtDate: Date | undefined): void {
   return feedbackFormNotifications.subscribe(map => {
     const feedbackNotification = map.get(id);
-    if (feedbackNotification) map.set(id, { ...feedbackNotification, notifyAtDate: notifyAtDate, wasOpenned: true });
+    if (feedbackNotification) map.set(id, { ...feedbackNotification, notifyAtDate: notifyAtDate, wasOpened: true });
   })();
 }
 
@@ -111,7 +112,7 @@ function formatName(id: string): string {
     });
 }
 
-function canBeOpenned(featureID: ExperimentalFeatures): boolean {
+function canBeOpened(featureID: ExperimentalFeatures): boolean {
   let canOpen = true;
   const unsubscriber = feedbackFormNotifications.subscribe(store => {
     const record = store.get(featureID);
@@ -122,7 +123,7 @@ function canBeOpenned(featureID: ExperimentalFeatures): boolean {
     }
 
     // The experimental page of the feature was openned (e.g. Tasks Manager)
-    if (!record.wasOpenned) {
+    if (!record.wasOpened) {
       canOpen = true;
       return;
     }
@@ -142,12 +143,8 @@ function canBeOpenned(featureID: ExperimentalFeatures): boolean {
   return canOpen;
 }
 
-window.events?.receive('openWebsite', async (args: unknown): Promise<void> => {
-  await window.openExternal(args as string);
-});
-
 export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promise<void> {
-  if (!canBeOpenned(featureID)) return;
+  if (!canBeOpened(featureID)) return;
 
   const featureGitHubLink = experimentalProperties.find(property => property.id === featureID)?.experimental
     ?.githubDiscussionLink;
@@ -155,6 +152,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
   if (!featureGitHubLink) return;
 
   const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openWebsite args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openWebsite args='["${featureGitHubLink}"]'}`;
+  const buttonOptions = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
 
   const response = await window.showMessageBox({
     title: `Share Your Feedback`,
@@ -163,7 +161,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
     buttons: [
       {
         heading: 'Remind me later',
-        buttons: ['Remind me tomorrow', 'Remind me in 2 days', `Don't show me again`],
+        buttons: buttonOptions,
       },
       {
         label: 'Share Feedback on GitHub',
@@ -176,9 +174,9 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
 
   // Share Feedback on GitHub was selected
   if (response.response === 1) {
-    window.openExternal(featureGitHubLink);
-    remindLater(featureID, "Don't show again");
+    await window.openExternal(featureGitHubLink);
+    remindLater(featureID, 'Don\'t show again');
   }
   // Option from Dropdown was selected
-  else if (response.response === 0 && response.option) remindLater(featureID, response.option);
+  else if (response.response === 0 && response.option) remindLater(featureID, buttonOptions[response.option]);
 }
