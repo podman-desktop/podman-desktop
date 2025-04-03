@@ -29,18 +29,19 @@ export default defineConfig({
     ],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['default'], ['junit', { includeConsoleOutput: false }]] : ['default'],
+    outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
+      all: true,
+      clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
-      reporter: [process.env.CI?'json':'text'],
+      reporter: process.env.CI ? ['json', 'text'] : ['lcov', 'text'],
     },
     exclude: [
       ...configDefaults.exclude,
       '**/builtin/**',
       '**/cypress/**',
       '**/dist/**',
-      // do not get coverage for spec files
-      '**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       '**/.{cache,git,idea,output,temp,cdix}/**',
       '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
     ]

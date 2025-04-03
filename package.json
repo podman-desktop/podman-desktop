@@ -73,7 +73,7 @@
     "test:scripts:stylesheet": "vitest run ./scripts/generate-stylesheet.spec.ts --passWithNoTests",
     "test:watch": "vitest watch",
     "test:website": "vitest run -r website --passWithNoTests --coverage",
-    "test:unit:coverage": "vitest --run --config=vitest.config.unit.ts",
+    "test:unit:coverage": "vitest --run --config=vitest.config.unit.ts --coverage",
     "watch": "node scripts/watch.mjs",
     "format:check": "biome format && prettier --cache --check \"website/**/*.md\"",
     "format:clean": "rimraf node_modules/.cache/prettier",
