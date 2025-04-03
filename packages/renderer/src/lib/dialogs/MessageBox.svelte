@@ -54,11 +54,6 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
     cancelId = buttons.findIndex(b => {
       // only for "clasic" buttons and not Dropdown component
       if (typeof b === 'string') return b.toLowerCase() === 'cancel';
-<<<<<<< HEAD
-=======
-      // If we have object we need to enable overflow-visible in Modal component
-      else if (typeof b === 'object') overflowVisible = true;
->>>>>>> 949d45db10 (chore: added experimental feedback logic)
     });
   }
 
@@ -121,7 +116,7 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} on:close={onClose} {overflowVisible}>
+  <Dialog title={title} on:close={onClose}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
@@ -153,7 +148,7 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="buttons">
-      {#each buttonOrder as i}
+      {#each buttonOrder as i, index (index)}
         {#if i === cancelId}
           <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
         {:else if typeof buttons[i] === 'object'}
