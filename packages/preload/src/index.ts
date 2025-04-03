@@ -117,7 +117,7 @@ import type {
 } from '../../main/src/plugin/kubernetes/kube-generator-registry';
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { Menu } from '../../main/src/plugin/menu-registry';
-import type { MessageBoxOptions, MessageBoxReturnValue, RemindOption } from '../../main/src/plugin/message-box';
+import type { MessageBoxOptions, MessageBoxReturnValue } from '../../main/src/plugin/message-box';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 import type { StatusBarEntryDescriptor } from '../../main/src/plugin/statusbar/statusbar-registry';
 import type { IDisposable } from '../../main/src/plugin/types/disposable';
@@ -1774,7 +1774,7 @@ export function initExposure(): void {
     async (
       messageBoxId: number,
       selectedIndex: number | undefined,
-      selectedOption: RemindOption | undefined,
+      selectedOption: number | undefined,
     ): Promise<void> => {
       return ipcInvoke('showMessageBox:onSelect', messageBoxId, selectedIndex, selectedOption);
     },
