@@ -52,7 +52,7 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.0",
     "typedoc": "^0.28.1",
-    "typedoc-plugin-markdown": "^4.6.0",
+    "typedoc-plugin-markdown": "^4.6.1",
     "typescript": "^5.8.2",
     "vitest": "^3.1.1"
   },
