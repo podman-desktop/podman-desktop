@@ -15,13 +15,17 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
     workspace: [
+      // packages
       'packages/*/vitest.config.ts',
-      'extensions/**/vitest.config.ts',
+      // simple extensions
+      'extensions/*/vitest.config.ts',
+      // multi packages extensions
+      'extensions/packages/*/vitest.config.ts',
     ],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['default'], ['junit', { includeConsoleOutput: false }]] : ['default'],
@@ -30,5 +34,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: [process.env.CI?'json':'text'],
     },
+    exclude: [
+      ...configDefaults.exclude,
+      '**/builtin/**',
+      '**/cypress/**',
+      '**/dist/**',
+      // do not get coverage for spec files
+      '**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '**/.{cache,git,idea,output,temp,cdix}/**',
+      '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
+    ]
   },
 });
