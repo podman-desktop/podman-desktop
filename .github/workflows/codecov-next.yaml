@@ -49,7 +49,7 @@ jobs:
       - name: Run unit tests
         run: pnpm test:unit:coverage
         env:
-          - NODE_OPTIONS: "--max-old-space-size=8192"
+          NODE_OPTIONS: "--max-old-space-size=8192"
 
       - name: publish codecov report
         uses: codecov/codecov-action@v5
