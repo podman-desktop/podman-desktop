@@ -54,6 +54,7 @@ describe('containers', () => {
     const response = 1;
     vi.mocked(window.showMessageBox).mockResolvedValue({
       response,
+      option: undefined,
     });
 
     // search for the button
@@ -98,6 +99,7 @@ describe('images', () => {
     const response = IMAGE_BUTTONS.indexOf(ALL_UNTAGGED_IMAGES);
     vi.mocked(window.showMessageBox).mockResolvedValue({
       response,
+      option: undefined,
     });
 
     // search for the button
@@ -122,6 +124,7 @@ describe('images', () => {
     const response = IMAGE_BUTTONS.indexOf(ALL_UNUSED_IMAGES);
     vi.mocked(window.showMessageBox).mockResolvedValue({
       response,
+      option: undefined,
     });
 
     // search for the button
@@ -146,6 +149,7 @@ describe('images', () => {
     const response = IMAGE_BUTTONS.indexOf(CANCEL_BUTTON);
     vi.mocked(window.showMessageBox).mockResolvedValue({
       response,
+      option: undefined,
     });
 
     // search for the button

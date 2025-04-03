@@ -864,14 +864,14 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1, option: undefined });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete selected containers and pods' });
   await fireEvent.click(deleteButton);
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
 
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0, option: undefined });
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.deleteContainer).toHaveBeenCalled());

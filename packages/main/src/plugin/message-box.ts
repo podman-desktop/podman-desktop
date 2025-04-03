@@ -76,7 +76,7 @@ export interface MessageBoxOptions {
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
-  option?: RemindOption;
+  option: number | undefined;
 }
 
 export class MessageBox {
@@ -134,7 +134,7 @@ export class MessageBox {
   async onDidSelectButton(
     id: number,
     selectedIndex: number | undefined,
-    selectedOption: RemindOption | undefined,
+    selectedOption: number | undefined,
   ): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);

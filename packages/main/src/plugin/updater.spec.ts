@@ -341,6 +341,7 @@ test('expect command update not to be called when configuration value on never',
 test('clicking on "Update Never" should set the configuration value to never', async () => {
   vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
     response: 3, // Update never
+    option: undefined,
   });
 
   let mListener: (() => Promise<void>) | undefined;
@@ -371,6 +372,7 @@ describe('expect update command to depends on context', async () => {
   const getUpdateListener = async (): Promise<UpdateCommandListener> => {
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
       response: 2, // Update never
+      option: undefined,
     });
 
     vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue({
@@ -495,6 +497,7 @@ describe('download task and progress', async () => {
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
       response: 0,
+      option: undefined,
     });
 
     await updateCommandCallback?.('status-bar-entry');
@@ -516,6 +519,7 @@ describe('download task and progress', async () => {
     // user click on restart
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
       response: 0,
+      option: undefined,
     });
 
     onUpdateDownloadedCallback?.(updatedDownloadedEvent);
@@ -561,6 +565,7 @@ describe('download task and progress', async () => {
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
       response: 0,
+      option: undefined,
     });
 
     // simulate download failure

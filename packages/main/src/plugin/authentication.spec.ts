@@ -310,7 +310,7 @@ test('authentication shows confirmation request when signing out from a session'
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
   authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
 
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1, option: undefined });
 
   const session1 = await authentication.getSession(
     { id: 'ext1', label: 'Ext 1' },
@@ -320,7 +320,7 @@ test('authentication shows confirmation request when signing out from a session'
   );
 
   vi.mocked(mb.showMessageBox).mockReset();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0, option: undefined });
 
   await authentication.signOut('company.auth-provider', session1!.id);
 
@@ -331,7 +331,7 @@ test('authentication shows confirmation request when signing out from a session'
   );
 
   vi.mocked(mb.showMessageBox).mockReset();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1, option: undefined });
 
   await authentication.getSession({ id: 'ext2', label: 'Ext 2' }, 'company.auth-provider', ['scope1', 'scope2'], {
     createIfNone: true,

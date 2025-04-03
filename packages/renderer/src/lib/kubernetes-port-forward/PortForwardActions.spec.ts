@@ -50,6 +50,7 @@ beforeEach(() => {
   // mock resolved `Yes`
   vi.mocked(window.showMessageBox).mockResolvedValue({
     response: 0,
+    option: undefined,
   });
 });
 

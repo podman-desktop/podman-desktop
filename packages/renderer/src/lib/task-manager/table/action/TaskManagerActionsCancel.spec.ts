@@ -61,7 +61,7 @@ const inProgressCancellableTask: TaskInfoUI = {
 
 test('Expect cancellable action being displayed if cancellable', async () => {
   // return Yes for the confirmation
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0, option: undefined });
 
   render(TaskManagerActionsCancel, { task: inProgressCancellableTask });
   const cancelButton = screen.getByRole('button', { name: 'Cancel task' });

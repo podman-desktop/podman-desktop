@@ -96,7 +96,7 @@ describe.each<{
   });
 
   test('Expect redirect to previous page if route is deleted', async () => {
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0, option: undefined });
     const routerGotoSpy = vi.spyOn(router, 'goto');
 
     // mock object store
