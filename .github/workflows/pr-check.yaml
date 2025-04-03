@@ -289,6 +289,9 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Execute pnpm
+        run: pnpm build
+
       - name: Run unit tests
         run: pnpm test:unit:coverage
 
