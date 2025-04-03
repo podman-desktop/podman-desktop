@@ -48,7 +48,7 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
     <NavPage title="Tasks" bind:searchTerm={searchTerm}>
       <svelte:fragment slot="additional-actions">
         <TaskManagerClearAllButton />
-        <CloseButton title="Hide (Escape)" on:click={hide} />
+        <CloseButton onclick={hide} />
       </svelte:fragment>
 
       <svelte:fragment slot="tabs">
