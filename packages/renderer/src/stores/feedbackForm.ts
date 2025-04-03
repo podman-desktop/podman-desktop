@@ -155,6 +155,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
   if (!featureGitHubLink) return;
 
   const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openWebsite args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openWebsite args='["${featureGitHubLink}"]'}`;
+  const buttonOptions = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
 
   const response = await window.showMessageBox({
     title: `Share Your Feedback`,
@@ -163,7 +164,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
     buttons: [
       {
         heading: 'Remind me later',
-        buttons: ['Remind me tomorrow', 'Remind me in 2 days', `Don't show me again`],
+        buttons: buttonOptions,
       },
       {
         label: 'Share Feedback on GitHub',
@@ -180,5 +181,5 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
     remindLater(featureID, "Don't show again");
   }
   // Option from Dropdown was selected
-  else if (response.response === 0 && response.option) remindLater(featureID, response.option);
+  else if (response.response === 0 && response.option) remindLater(featureID, buttonOptions[response.option]);
 }

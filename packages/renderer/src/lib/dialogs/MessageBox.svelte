@@ -160,7 +160,13 @@ function getButtonType(b: boolean): ButtonType {
             <Dropdown
               name={dropdownButtons.heading}
               value={dropdownButtons.heading}
-              onChange={async (option): Promise<void> => await clickButton(i, option as RemindOption)}
+              onChange={async (option): Promise<void> => {
+                let optionIndex: number | undefined = dropdownButtons.buttons.indexOf(option);
+                if (optionIndex === -1) {
+                  optionIndex = undefined;
+                }
+                await clickButton(i, optionIndex)
+              }}
               options={dropdownButtons.buttons.map(button => ({label: button, value: button}))}/>
           {:else}
             <Button type="primary" icon={buttons[i].icon} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i].label}</Button>
