@@ -148,4 +148,53 @@ describe('MessageBox', () => {
     await userEvent.keyboard('{Tab}');
     expect(ok).toEqual(document.activeElement);
   });
+
+  test('Expect to see two messagebox in a row', async () => {
+    const idRequest1 = 686;
+    const idRequest2 = 687;
+
+    const messageBoxOptions1: MessageBoxOptions = {
+      id: idRequest1,
+      title: 'My custom title',
+      message: 'My message',
+    };
+
+    const messageBoxOptions2: MessageBoxOptions = {
+      id: idRequest2,
+      title: 'My custom second title',
+      message: 'My second message',
+    };
+
+    let eventCallback: ((options: MessageBoxOptions) => void) | undefined;
+    receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
+      if (message === 'showMessageBox:open') {
+        eventCallback = callback;
+      }
+    });
+
+    render(MessageBox, {});
+
+    // wait that the event callback is set
+    await vi.waitFor(() => eventCallback !== undefined);
+
+    // ok ask to display a first quickpick
+    expect(eventCallback).toBeDefined();
+    eventCallback?.(messageBoxOptions1);
+
+    const ok1 = await screen.findByText('OK');
+    expect(ok1).toBeInTheDocument();
+
+    const title1 = await screen.findByText(messageBoxOptions1.title);
+    expect(title1).toBeInTheDocument();
+    await fireEvent.click(ok1);
+    await vi.waitFor(() => expect(sendShowMessageBoxOnSelect).toBeCalledWith(idRequest1, 0));
+    eventCallback?.(messageBoxOptions2);
+
+    const ok2 = await screen.findByText('OK');
+    expect(ok2).toBeInTheDocument();
+
+    const title2 = await screen.findByText(messageBoxOptions2.title);
+    expect(title2).toBeInTheDocument();
+    await fireEvent.click(ok2);
+  });
 });
