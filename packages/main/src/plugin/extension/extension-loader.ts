@@ -1102,7 +1102,31 @@ export class ExtensionLoader {
         eventCollect: (eventName: 'stream' | 'error' | 'finish', data: string) => void,
         options?: containerDesktopAPI.BuildImageOptions,
       ) {
-        return containerProviderRegistry.buildImage(context, eventCollect, options);
+        // to avoid breaking the extension-api the pull option may be `string | boolean`.
+        let pull: boolean | undefined;
+        if (options?.pull) {
+          switch (typeof options.pull) {
+            case 'boolean':
+              pull = options.pull;
+              break;
+            case 'string':
+              pull = options.pull.toLowerCase() === 'true';
+              break;
+            default:
+              throw new Error(`option pull should be of type string or boolean got ${typeof options.pull}`);
+          }
+        }
+
+        return containerProviderRegistry.buildImage(
+          context,
+          eventCollect,
+          options
+            ? {
+                ...options,
+                pull: pull,
+              }
+            : undefined,
+        );
       },
       listImages(options?: containerDesktopAPI.ListImagesOptions): Promise<containerDesktopAPI.ImageInfo[]> {
         return containerProviderRegistry.podmanListImages(options);
