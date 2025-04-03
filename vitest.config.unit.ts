@@ -28,14 +28,14 @@ export default defineConfig({
       'extensions/packages/*/vitest.config.ts',
     ],
     // use GitHub action reporters when running in CI
-    reporters: process.env.CI ? [['default'], ['junit', { includeConsoleOutput: false }]] : ['default'],
+    reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
       all: true,
       clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
-      reporter: process.env.CI ? ['json', 'text'] : ['lcov', 'text'],
+      reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
     },
     exclude: [
       ...configDefaults.exclude,
