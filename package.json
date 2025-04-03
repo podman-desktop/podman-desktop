@@ -64,7 +64,7 @@
     "test:extensions:docker": "vitest --run --project=docker --passWithNoTests --coverage ",
     "test:extensions:kube": "vitest --run --project=kube-context --passWithNoTests --coverage ",
     "test:extensions:lima": "vitest --run --project=lima --passWithNoTests --coverage ",
-    "test:extensions:podman": "vitest --run --project=podmann --passWithNoTests --coverage ",
+    "test:extensions:podman": "vitest --run --project=podman --passWithNoTests --coverage ",
     "test:extensions:registries": "vitest --run --project=registries --passWithNoTests --coverage ",
     "test:extensions:kubectl-cli": "vitest --run --project=kubectl-cli --passWithNoTests --coverage ",
     "test:renderer": "pnpm run build:preload:types && pnpm run build:ui && vitest --run --project=renderer --passWithNoTests --coverage",
