@@ -37,12 +37,16 @@ export function createListener(
 
     // Retrieve the command and expandable within the dataset
     let command: string | undefined;
+    let args: string | undefined;
     let expandable: string | undefined;
 
     if ('dataset' in eventTarget && eventTarget.dataset && typeof eventTarget.dataset === 'object') {
       const targetDataset = eventTarget.dataset;
       if ('command' in targetDataset && typeof targetDataset.command === 'string') {
         command = targetDataset.command;
+      }
+      if ('args' in targetDataset && typeof targetDataset.args === 'string') {
+        args = targetDataset.args;
       }
       if ('expandable' in targetDataset && typeof targetDataset.expandable === 'string') {
         expandable = targetDataset.expandable;
@@ -97,7 +101,7 @@ export function createListener(
           targetButton.firstChild.style.display = 'inline-block';
         }
         window
-          .executeCommand(command)
+          .executeCommand(command, args)
           .then(value => inProgressMarkdownCommandExecutionCallback(command, 'successful', value))
           .catch((reason: unknown) => inProgressMarkdownCommandExecutionCallback(command, 'failed', reason))
           .finally(() => {
@@ -109,7 +113,7 @@ export function createListener(
       } else if (eventTarget instanceof HTMLAnchorElement) {
         // Execute the command since it's a simple "link" to it
         // usually associated with a dialog / quickpick action.
-        window.executeCommand(command).catch((reason: unknown) => console.error(String(reason)));
+        window.executeCommand(command, args).catch((reason: unknown) => console.error(String(reason)));
       }
     }
   };
