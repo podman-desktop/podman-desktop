@@ -17,38 +17,14 @@
  ***********************************************************************/
 import { configDefaults, defineConfig } from 'vitest/config';
 
-const PODMAN_DESKTOP_EXCLUDED = [
-  '**/builtin/**',
-  '**/cypress/**',
-  '**/dist/**',
-  '**/node_modules/**',
-  '**/.{cache,git,idea,output,temp,cdix}/**',
-  '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
-];
+const PODMAN_DESKTOP_EXCLUDED = ['**/builtin/**', '**/dist/**', '**/.{cache,git,idea,output,temp,cdix}/**'];
 
 /**
  * vitest workspace configuration for unit tests
  */
 export default defineConfig({
   test: {
-    workspace: [
-      // packages
-      'packages/*/vitest.config.{js,ts}',
-      // global extension tests
-      'extensions/vitest.config.{js,ts}',
-      // simple extensions
-      'extensions/*/vitest.config.{js,ts}',
-      // multi packages extensions
-      'extensions/*/packages/*/vitest.config.{js,ts}',
-      // website
-      'website/vitest.config.{js,ts}',
-      // tools
-      'tools/vitest.config.{js,ts}',
-      // scripts
-      'scripts/vitest.config.{js,ts}',
-      // storybook
-      'storybook/vitest.config.{js,ts}',
-    ],
+    workspace: ['{extensions,packages,tool,storybook,website,scripts}/**/vitest.config.{js,ts}', '!**/builtin/**'],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
@@ -58,6 +34,12 @@ export default defineConfig({
       excludeAfterRemap: true,
       provider: 'v8',
       reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
+      include: [
+        // projects with sources in src folder
+        '{extensions,packages,tool,storybook}/**/{src,scripts}/**',
+        // projects with sources at root
+        '{website,scripts}/*',
+      ],
       exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
     },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
