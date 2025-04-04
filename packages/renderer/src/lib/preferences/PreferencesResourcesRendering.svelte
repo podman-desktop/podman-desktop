@@ -646,7 +646,7 @@ function handleError(errorMessage: string): void {
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
             </div>
           {/each}
-          {#each provider.vmConnections as vmConnection}
+          {#each provider.vmConnections as vmConnection, index (index)}
           <div class="px-5 py-2 w-[240px]" role="region" aria-label={vmConnection.name}>
             <div class="float-right">
               <Tooltip bottom tip="{provider.name} details">
