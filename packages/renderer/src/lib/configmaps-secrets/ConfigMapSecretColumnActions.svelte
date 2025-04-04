@@ -8,4 +8,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<ConfigmapSecretActions configMapSecret={object} on:update />
+<ConfigmapSecretActions configMapSecret={object} />
