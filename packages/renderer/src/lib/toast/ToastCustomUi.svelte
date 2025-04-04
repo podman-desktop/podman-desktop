@@ -14,12 +14,17 @@ interface Props {
 
 let { toastId, taskInfo, onpop = (): void => {} }: Props = $props();
 
-const closeAction = (): void => {
+function hideToast(): void {
   toast.pop(toastId);
+}
+
+const closeAction = (): void => {
+  hideToast();
   onpop();
 };
 
 const executeAction = async (): Promise<void> => {
+  hideToast();
   await window.executeTask(taskInfo.id);
 };
 </script>

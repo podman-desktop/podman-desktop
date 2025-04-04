@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, waitFor } from '@testing-library/svelte';
 import { toast } from '@zerodevx/svelte-toast';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { tasksInfo } from '/@/stores/tasks';
 import type { TaskInfo } from '/@api/taskInfo';
@@ -72,7 +72,6 @@ test('Check a toast is being created when there is a task created', async () => 
   expect(toast.push).toHaveBeenCalledWith(
     IN_PROGRESS_TASK.name,
     expect.objectContaining({
-      initial: 0,
       dismissable: false,
       component: {
         props: expect.objectContaining({
@@ -129,7 +128,6 @@ test('Check a toast is being updated after a task is updated', async () => {
   expect(toast.set).toHaveBeenCalledWith(
     dummyToastId,
     expect.objectContaining({
-      initial: 0,
       dismissable: false,
       component: {
         props: expect.objectContaining({
@@ -140,4 +138,113 @@ test('Check a toast is being updated after a task is updated', async () => {
       },
     }),
   );
+});
+
+describe('Toast disappearing and notifying again', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('Check that toast is being pushed again if the task took longer than 60s', async () => {
+    // make it enabled
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+    // return a toast id when we create one
+    const dummyToastId = 1256;
+    vi.mocked(toast.push).mockReturnValue(dummyToastId);
+
+    tasksInfo.set([IN_PROGRESS_TASK]);
+
+    render(ToastTaskNotifications, {});
+
+    // check we have called toast library to create a toast
+    await waitFor(() => expect(toast.push).toHaveBeenCalled());
+
+    // Simulate that the task is now doing its stuff for 1 min
+    vi.advanceTimersByTime(60000);
+
+    // ok, now update the task to go from in-progress to success
+    const updatedTask: TaskInfo = {
+      ...IN_PROGRESS_TASK,
+      status: 'success',
+      state: 'completed',
+    };
+    // reset call to toast.set
+    vi.mocked(toast.set).mockClear();
+    tasksInfo.set([updatedTask]);
+
+    // check we have called toast library to update a toast
+    await waitFor(() => expect(toast.set).toHaveBeenCalled());
+
+    // check we have called toast library to update the toast
+    expect(toast.set).toHaveBeenCalledWith(
+      dummyToastId,
+      expect.objectContaining({
+        dismissable: false,
+        component: {
+          props: expect.objectContaining({
+            taskInfo: updatedTask,
+          }),
+          sendIdTo: 'toastId',
+          src: expect.anything(),
+        },
+      }),
+    );
+
+    // Check that the toast is being pushed again
+    await waitFor(() => expect(toast.push).toHaveBeenCalledTimes(2));
+  });
+
+  test('Check that toast is not being pushed again if the task took less than 60s', async () => {
+    // make it enabled
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+    // return a toast id when we create one
+    const dummyToastId = 1256;
+    vi.mocked(toast.push).mockReturnValue(dummyToastId);
+
+    tasksInfo.set([IN_PROGRESS_TASK]);
+
+    render(ToastTaskNotifications, {});
+
+    // check we have called toast library to create a toast
+    await waitFor(() => expect(toast.push).toHaveBeenCalled());
+
+    // Simulate that the task is now doing its stuff for 30sec
+    vi.advanceTimersByTime(30000);
+
+    // ok, now update the task to go from in-progress to success
+    const updatedTask: TaskInfo = {
+      ...IN_PROGRESS_TASK,
+      status: 'success',
+      state: 'completed',
+    };
+    // reset call to toast.set
+    vi.mocked(toast.set).mockClear();
+    tasksInfo.set([updatedTask]);
+
+    // check we have called toast library to update a toast
+    await waitFor(() => expect(toast.set).toHaveBeenCalled());
+
+    // check we have called toast library to update the toast
+    expect(toast.set).toHaveBeenCalledWith(
+      dummyToastId,
+      expect.objectContaining({
+        dismissable: false,
+        component: {
+          props: expect.objectContaining({
+            taskInfo: updatedTask,
+          }),
+          sendIdTo: 'toastId',
+          src: expect.anything(),
+        },
+      }),
+    );
+
+    // Check that the toast is being pushed again
+    await waitFor(() => expect(toast.push).toHaveBeenCalledTimes(1));
+  });
 });
