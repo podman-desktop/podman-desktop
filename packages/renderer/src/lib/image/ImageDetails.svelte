@@ -62,7 +62,7 @@ function closeModals(): void {
 
 let imageInfo: ImageInfo | undefined;
 let image: ImageInfoUI | undefined;
-let detailsPage: DetailsPage | undefined;
+let detailsPage: DetailsPage<ImageInfoUI> | undefined;
 
 let showCheckTab: boolean = false;
 let showFilesTab: boolean = false;
@@ -131,30 +131,28 @@ onDestroy(() => {
 </script>
 
 {#if image}
-  <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag} bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      {#if image}<StatusIcon icon={image.icon} size={24} status={image.status} />{/if}
+  <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag} bind:this={detailsPage} snippetsData={image}>
+    {#snippet iconSnippet(sImage)}
+      <StatusIcon icon={sImage.icon} size={24} status={sImage.status} />
     {/snippet}
-    {#snippet subtitleSnippet()}
-      {#if image?.badges.length}
+    {#snippet subtitleSnippet(sImage)}
+      {#if sImage.badges.length}
         <div class="flex flex-row">
-          {#each image.badges as badge, index (index)}
+          {#each sImage.badges as badge, index (index)}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>
       {/if}
     {/snippet}
-    {#snippet actionsSnippet()}
-      {#if image}
-        <ImageActions
-          image={image}
-          onPushImage={handlePushImageModal}
-          onRenameImage={handleRenameImageModal}
-          detailed={true}
-          dropdownMenu={false}
-          groupContributions={true}
-          on:update={(): ImageInfoUI | undefined => (image = image)} />
-      {/if}
+    {#snippet actionsSnippet(sImage)}
+      <ImageActions
+        image={sImage}
+        onPushImage={handlePushImageModal}
+        onRenameImage={handleRenameImageModal}
+        detailed={true}
+        dropdownMenu={false}
+        groupContributions={true}
+        on:update={(): ImageInfoUI | undefined => (image = image)} />
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
@@ -167,24 +165,22 @@ onDestroy(() => {
         <Tab title="Files" selected={isTabSelected($router.path, 'files')} url={getTabUrl($router.path, 'files')} />
       {/if}
     {/snippet}
-    {#snippet contentSnippet()}
-      {#if image}
-        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-          <ImageDetailsSummary image={image} />
-        </Route>
-        <Route path="/history" breadcrumb="History" navigationHint="tab">
-          <ImageDetailsHistory image={image} />
-        </Route>
-        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-          <ImageDetailsInspect image={image} />
-        </Route>
-        <Route path="/check" breadcrumb="Check" navigationHint="tab">
-          <ImageDetailsCheck imageInfo={imageInfo} />
-        </Route>
-        <Route path="/files" breadcrumb="Files" navigationHint="tab">
-          <ImageDetailsFiles imageInfo={imageInfo} />
-        </Route>
-      {/if}
+    {#snippet contentSnippet(sImage)}
+      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+        <ImageDetailsSummary image={sImage} />
+      </Route>
+      <Route path="/history" breadcrumb="History" navigationHint="tab">
+        <ImageDetailsHistory image={sImage} />
+      </Route>
+      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+        <ImageDetailsInspect image={sImage} />
+      </Route>
+      <Route path="/check" breadcrumb="Check" navigationHint="tab">
+        <ImageDetailsCheck imageInfo={imageInfo} />
+      </Route>
+      <Route path="/files" breadcrumb="Files" navigationHint="tab">
+        <ImageDetailsFiles imageInfo={imageInfo} />
+      </Route>
     {/snippet}
   </DetailsPage>
 
