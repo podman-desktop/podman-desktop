@@ -32,9 +32,13 @@ onMount(async () => {
 window.events?.receive('dev-tools:open-extension', (extensionId: unknown) => {
   const extensionElement = document.getElementById(`dd-webview-${extensionId}`);
 
-  if (extensionElement) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (extensionElement as any).openDevTools();
+  // Check that the element contains "openDevTools" method, which is only available on Electron WebviewTag
+  // we cannot use `instanceof` as Electron does not "contain" the WebviewTag class at run time.
+  if (extensionElement && 'openDevTools' in extensionElement) {
+    (extensionElement as Electron.WebviewTag).openDevTools();
+  } else {
+    // Warn if unable
+    console.warn(`Element with ID dd-webview-${extensionId} is not an Electron WebviewTag.`);
   }
 });
 </script>
