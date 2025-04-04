@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 import { DetailsPage } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
@@ -10,18 +10,20 @@ interface Props {
   titleDetail?: string;
   subtitle?: string;
 
-  contentSnippet?: Snippet;
-  tabsSnippet?: Snippet;
-  iconSnippet?: Snippet;
-  subtitleSnippet?: Snippet;
-  actionsSnippet?: Snippet;
-  detailSnippet?: Snippet;
+  snippetsData: T;
+  contentSnippet?: Snippet<[T]>;
+  tabsSnippet?: Snippet<[T]>;
+  iconSnippet?: Snippet<[T]>;
+  subtitleSnippet?: Snippet<[T]>;
+  actionsSnippet?: Snippet<[T]>;
+  detailSnippet?: Snippet<[T]>;
 }
 
 const {
   title,
   titleDetail = undefined,
   subtitle = undefined,
+  snippetsData,
   contentSnippet: localContentSnippet,
   tabsSnippet: localTabsSnippet,
   iconSnippet: localIconSnippet,
@@ -45,10 +47,10 @@ export function close(): void {
   onclose={close}
   onbreadcrumbClick={close}>
 
-  {#snippet iconSnippet()}{@render localIconSnippet?.()}{/snippet}
-  {#snippet subtitleSnippet()}{@render localSubtitleSnippet?.()}{/snippet}
-  {#snippet actionsSnippet()}{@render localActionsSnippet?.()}{/snippet}
-  {#snippet detailSnippet()}{@render localDetailSnippet?.()}{/snippet}
-  {#snippet tabsSnippet()}{@render localTabsSnippet?.()}{/snippet}
-  {#snippet contentSnippet()}{@render localContentSnippet?.()}{/snippet}
+  {#snippet iconSnippet()}{@render localIconSnippet?.(snippetsData)}{/snippet}
+  {#snippet subtitleSnippet()}{@render localSubtitleSnippet?.(snippetsData)}{/snippet}
+  {#snippet actionsSnippet()}{@render localActionsSnippet?.(snippetsData)}{/snippet}
+  {#snippet detailSnippet()}{@render localDetailSnippet?.(snippetsData)}{/snippet}
+  {#snippet tabsSnippet()}{@render localTabsSnippet?.(snippetsData)}{/snippet}
+  {#snippet contentSnippet()}{@render localContentSnippet?.(snippetsData)}{/snippet}
 </DetailsPage>
