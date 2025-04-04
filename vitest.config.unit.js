@@ -24,7 +24,7 @@ const PODMAN_DESKTOP_EXCLUDED = ['**/builtin/**', '**/dist/**', '**/.{cache,git,
  */
 export default defineConfig({
   test: {
-    workspace: ['{extensions,packages,tool,storybook,website,scripts}/**/vitest.config.{js,ts}', '!**/builtin/**'],
+    workspace: ['{extensions,packages,tools,storybook,website,scripts}/**/vitest.config.{js,ts}', '!**/builtin/**'],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
@@ -36,7 +36,7 @@ export default defineConfig({
       reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
       include: [
         // projects with sources in src folder
-        '{extensions,packages,tool,storybook}/**/{src,scripts}/**',
+        '{extensions,packages,tools,storybook}/**/{src,scripts}/**',
         // projects with sources at root
         '{website,scripts}/*',
       ],
