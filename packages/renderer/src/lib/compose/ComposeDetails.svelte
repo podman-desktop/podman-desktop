@@ -88,7 +88,7 @@ onDestroy(() => {
 </script>
 
 {#if compose}
-  <DetailsPage title={composeName} subtitle="">
+  <DetailsPage title={composeName} subtitle="" snippetsData={{}}>
     {#snippet iconSnippet()}
       <StatusIcon icon={ComposeIcon} size={24} status={compose.status} />
     {/snippet}
