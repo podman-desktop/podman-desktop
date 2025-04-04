@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { coverageConfig, testConfig } from '../vitest-shared-extensions.config';
+import { defineProject } from 'vitest/config';
 
 const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = 'website';
 
-const config = {
+export default defineProject({
+  root: PACKAGE_ROOT,
   test: {
-    ...testConfig(),
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
+    globals: true,
+    environment: 'node',
+    include: ['*.{test,spec}.?(c|m)[jt]s?(x)'],
+    alias: {},
   },
-};
-
-export default config;
+});

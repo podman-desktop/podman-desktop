@@ -43,8 +43,11 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Execute build
+        run: pnpm build
+
       - name: Run unit tests
-        run: pnpm test:unit
+        run: pnpm test:unit:coverage
 
       - name: publish codecov report
         uses: codecov/codecov-action@v5

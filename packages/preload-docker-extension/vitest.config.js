@@ -16,21 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { defineProject } from 'vitest/config';
 
 const PACKAGE_ROOT = __dirname;
-const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..');
 
 export default defineProject({
   root: PACKAGE_ROOT,
   test: {
+    // Retries failing tests up to 3 times
+    retry: 3,
     globals: true,
     environment: 'node',
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     alias: {
-      '@podman-desktop/api': resolve(WORKSPACE_ROOT, '__mocks__/@podman-desktop/api.js'),
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
     },
   },
 });

@@ -19,7 +19,6 @@
 import { node } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 
 const PACKAGE_ROOT = __dirname;
 const PACKAGE_NAME = 'main';
@@ -64,10 +63,6 @@ const config = {
     },
     emptyOutDir: true,
     reportCompressedSize: false,
-  },
-  test: {
-    retry: 3, // Retries failing tests up to 3 times
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
   },
 };
 

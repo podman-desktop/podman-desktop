@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
-import { coverageConfig, testConfig } from '../../vitest-shared-extensions.config';
+import { join, resolve } from 'node:path';
+import { defineProject } from 'vitest/config';
 
 const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = 'extensions/lima';
+const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..');
 
-const config = {
+export default defineProject({
+  root: PACKAGE_ROOT,
   test: {
-    ...testConfig(),
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
-  },
-  resolve: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     alias: {
-      '@podman-desktop/api': path.resolve('../../', '__mocks__/@podman-desktop/api.js'),
+      '@podman-desktop/api': resolve(WORKSPACE_ROOT, '__mocks__/@podman-desktop/api.js'),
     },
   },
-};
-
-export default config;
+});
