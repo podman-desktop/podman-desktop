@@ -8,4 +8,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<DeploymentActions deployment={object} on:update />
+<DeploymentActions deployment={object} />
