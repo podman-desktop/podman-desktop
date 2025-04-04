@@ -25,7 +25,6 @@ import IngressRouteActions from './IngressRouteActions.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
 
-const updateMock = vi.fn();
 const deleteIngressMock = vi.fn();
 const deleteRoutesMock = vi.fn();
 const showMessageBoxMock = vi.fn();
@@ -62,7 +61,7 @@ test('Expect no error and status deleting ingress', async () => {
   ingressUI.namespace = 'test-namespace';
   ingressUI.selected = false;
 
-  render(IngressRouteActions, { ingressRoute: ingressUI, onUpdate: updateMock });
+  render(IngressRouteActions, { ingressRoute: ingressUI });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Ingress' });
@@ -73,7 +72,6 @@ test('Expect no error and status deleting ingress', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(ingressUI.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteIngressMock).toHaveBeenCalled();
 });
 
@@ -93,7 +91,7 @@ test('Expect no error and status deleting route', async () => {
   routeUI.selected = false;
   routeUI.tlsEnabled = false;
 
-  render(IngressRouteActions, { ingressRoute: routeUI, onUpdate: updateMock });
+  render(IngressRouteActions, { ingressRoute: routeUI });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Route' });
@@ -104,6 +102,5 @@ test('Expect no error and status deleting route', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(routeUI.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteRoutesMock).toHaveBeenCalled();
 });

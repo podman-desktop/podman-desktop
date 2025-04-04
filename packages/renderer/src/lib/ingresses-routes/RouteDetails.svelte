@@ -80,7 +80,7 @@ onDestroy(() => {
       {#if routeUI}<StatusIcon icon={IngressRouteIcon} size={24} status={routeUI.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if routeUI}<IngressRouteActions ingressRoute={routeUI} detailed={true} on:update={(): RouteUI | undefined => (routeUI = routeUI)} />{/if}
+      {#if routeUI}<IngressRouteActions ingressRoute={routeUI} detailed={true} />{/if}
     {/snippet}
     {#snippet detailSnippet()}
       {#if routeUI}

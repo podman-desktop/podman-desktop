@@ -80,7 +80,7 @@ async function loadIngressDetails(): Promise<void> {
       {#if ingressUI}<StatusIcon icon={IngressRouteIcon} size={24} status={ingressUI.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if ingressUI}<IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={(): IngressUI | undefined => (ingressUI = ingressUI)} />{/if}
+      {#if ingressUI}<IngressRouteActions ingressRoute={ingressUI} detailed={true} />{/if}
     {/snippet}
     {#snippet detailSnippet()}
       {#if ingressUI}
