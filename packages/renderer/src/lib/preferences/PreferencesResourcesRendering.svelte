@@ -393,6 +393,24 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+export let focus: string | undefined;
+let TransitionID: string | undefined;
+
+function scrollToProvider(target: string): void {
+  const element = document.getElementById(target);
+  if (element) {
+    element.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
+  TransitionID = target;
+  setTimeout(() => {
+    TransitionID = '';
+  }, 2000);
+}
+
+$: if (focus) {
+  scrollToProvider(focus);
+}
+
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
@@ -414,7 +432,10 @@ function handleError(errorMessage: string): void {
 
     {#each providers as provider (provider.id)}
       <div
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        id={provider.id}
+        class="
+        bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 
+        flex"
         role="region"
         aria-label={provider.id}>
         <div role="region" aria-label="Provider Setup">
@@ -423,10 +444,12 @@ function handleError(errorMessage: string): void {
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
-                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" />
+                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" 
+                  class:animate-pulse={TransitionID === provider.id} />
                   <!-- TODO check theme used for image, now use dark by default -->
                 {:else}
-                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" />
+                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" 
+                  class:animate-pulse={TransitionID === provider.id} />
                 {/if}
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
