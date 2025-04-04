@@ -17,6 +17,15 @@
  ***********************************************************************/
 import { configDefaults, defineConfig } from 'vitest/config';
 
+const PODMAN_DESKTOP_EXCLUDED = [
+  '**/builtin/**',
+  '**/cypress/**',
+  '**/dist/**',
+  '**/node_modules/**',
+  '**/.{cache,git,idea,output,temp,cdix}/**',
+  '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
+];
+
 export default defineConfig({
   test: {
     workspace: [
@@ -36,14 +45,14 @@ export default defineConfig({
       excludeAfterRemap: true,
       provider: 'v8',
       reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
+      exclude: [
+        ...configDefaults.coverage.exclude,
+        ...PODMAN_DESKTOP_EXCLUDED,
+      ],
     },
     exclude: [
       ...configDefaults.exclude,
-      '**/builtin/**',
-      '**/cypress/**',
-      '**/dist/**',
-      '**/.{cache,git,idea,output,temp,cdix}/**',
-      '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
+      ...PODMAN_DESKTOP_EXCLUDED,
     ]
   },
 });
