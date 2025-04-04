@@ -25,7 +25,6 @@ import tailwindcss from '@tailwindcss/vite';
 
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
-import { coverageConfig } from '../vitest-shared-extensions.config';
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
@@ -41,16 +40,6 @@ export default defineConfig({
     },
   },
   plugins: [tailwindcss(), svelte(), svelteTesting()],
-  test: {
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    globals: true,
-    environment: 'jsdom',
-    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
-    deps: {
-      inline: ['moment'],
-    },
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
-  },
   base: '',
   server: {
     fs: {

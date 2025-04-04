@@ -26,6 +26,9 @@ const PODMAN_DESKTOP_EXCLUDED = [
   '**/*{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tailwind,postcss}.config.*',
 ];
 
+/**
+ * vitest workspace configuration for unit tests
+ */
 export default defineConfig({
   test: {
     workspace: [
@@ -34,13 +37,21 @@ export default defineConfig({
       // simple extensions
       'extensions/*/vitest.config.ts',
       // multi packages extensions
-      'extensions/packages/*/vitest.config.ts',
+      'extensions/*/packages/*/vitest.config.ts',
+      // website
+      'website/vitest.config.ts',
+      // tools
+      'tools/vitest.config.ts',
+      // scripts
+      'scripts/vitest.config.ts',
+      // storybook
+      'storybook/vitest.config.ts',
     ],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
-      all: true,
+      all: false,
       clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
