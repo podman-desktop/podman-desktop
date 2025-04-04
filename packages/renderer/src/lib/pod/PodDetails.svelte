@@ -67,7 +67,10 @@ onMount(() => {
           <div>&nbsp;</div>
         {/if}
       </div>
-      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => (pod = pod)} />
+      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => {
+        pod = pod; // Keep this assignment for svelte 4 - can be safely removed when migrating to svelte 5
+        return pod;
+      }} />
     {/snippet}
     {#snippet detailSnippet()}
       <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
