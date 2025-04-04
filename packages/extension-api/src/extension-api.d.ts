@@ -546,12 +546,14 @@ declare module '@podman-desktop/api' {
 
   // create programmatically a ContainerProviderConnection
   export interface ContainerProviderConnectionFactory extends ProviderConnectionFactory {
-    create(params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken): Promise<void>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    create(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
   }
 
   // create a kubernetes provider
   export interface KubernetesProviderConnectionFactory extends ProviderConnectionFactory {
-    create?(params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken): Promise<void>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
   }
 
   // create a Vm provider

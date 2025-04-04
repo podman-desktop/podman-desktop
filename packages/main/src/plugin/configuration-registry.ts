@@ -79,10 +79,8 @@ export type ConfigurationScope =
   | 'DEFAULT'
   | 'ContainerConnection'
   | 'KubernetesConnection'
-  | 'VmConnection'
   | 'ContainerProviderConnectionFactory'
   | 'KubernetesProviderConnectionFactory'
-  | 'VmProviderConnectionFactory'
   | 'DockerCompatibility'
   | 'Onboarding';
 
