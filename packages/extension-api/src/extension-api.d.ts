@@ -532,6 +532,8 @@ declare module '@podman-desktop/api' {
     status(): ProviderConnectionStatus;
   }
 
+  export type ProviderConnection = ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection;
+
   // common set of options for creating a provider
   export interface ProviderConnectionFactory {
     // Allow to initialize a provider
@@ -1194,11 +1196,7 @@ declare module '@podman-desktop/api' {
   /**
    * The configuration scope
    */
-  export type ConfigurationScope =
-    | string
-    | ContainerProviderConnection
-    | KubernetesProviderConnection
-    | VmProviderConnection;
+  export type ConfigurationScope = string | ProviderConnection;
 
   export interface Configuration {
     /**
