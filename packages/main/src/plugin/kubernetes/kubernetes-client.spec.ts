@@ -298,13 +298,6 @@ beforeAll(() => {
       makeInformer: vi.fn(),
       createConfiguration: vi.fn(),
       KubernetesObjectApi: vi.fn(),
-      FetchError: class FetchError extends Error {
-        statusCode: number;
-        constructor(statusCode: number, message: string) {
-          super(message);
-          this.statusCode = statusCode;
-        }
-      },
       HttpError: class HttpError extends Error {
         statusCode: number;
         constructor(statusCode: number, message: string) {
@@ -1005,21 +998,22 @@ test('If Kubernetes returns a http error, output the http body message error.', 
   makeApiClientMock.mockReturnValue({
     read: vi.fn().mockReturnValue({}),
     create: vi.fn().mockRejectedValue(
-      new clientNode.FetchError('A K8sError within message body', 'foo', {
-        code: '500',
-        name: 'foo',
-        message: 'foo',
-      }),
+      new clientNode.ApiException(
+        400,
+        'msg',
+        JSON.stringify({
+          message: 'A K8sError within message body',
+        }),
+        {},
+      ),
     ),
   });
 
   try {
     await client.createResources('dummy', [{ apiVersion: 'v1' }]);
   } catch (err: unknown) {
-    console.log(err);
-    // Check that the error is clientNode.HttpError
     expect(err).to.be.a('Error');
-    expect((err as Error).message).contain('A K8sError within message body');
+    expect((err as Error).message).equals('A K8sError within message body');
   }
 });
 

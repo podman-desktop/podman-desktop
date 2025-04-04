@@ -56,7 +56,6 @@ import {
   createConfiguration,
   CustomObjectsApi,
   Exec,
-  FetchError,
   Health,
   KubeConfig,
   KubernetesObjectApi,
@@ -1271,22 +1270,23 @@ export class KubernetesClient {
       return created;
     } catch (error: unknown) {
       telemetryOptions['error'] = error;
-      if (error instanceof FetchError) {
-        const httpError = error as FetchError;
-
-        // If there is a "message" in the body of the http error, throw that
-        // as that's where Kubernetes tends to put the error message
-        if (httpError.message) {
-          throw new Error(httpError.message);
+      if (error instanceof ApiException) {
+        const statusError = error as ApiException<string>;
+        let status: unknown;
+        try {
+          status = JSON.parse(statusError.body);
+        } catch {
+          throw error;
         }
-
-        // Otherwise, throw the "generic" HTTP error message
-        if (httpError.message) {
-          throw new Error(httpError.message);
+        if (
+          status &&
+          typeof status === 'object' &&
+          'message' in status &&
+          status.message &&
+          typeof status.message === 'string'
+        ) {
+          throw new Error(status.message);
         }
-
-        // If all else fails, throw the body of the error
-        throw new Error(httpError.message);
       }
       throw error;
     } finally {
