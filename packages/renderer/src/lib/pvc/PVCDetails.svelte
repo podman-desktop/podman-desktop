@@ -79,7 +79,7 @@ async function loadDetails(): Promise<void> {
       {#if pvc}<StatusIcon icon={PVCIcon} size={24} status={pvc.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if pvc}<PVCActions pvc={pvc} detailed={true} on:update={(): PVCUI | undefined => (pvc = pvc)} />{/if}
+      {#if pvc}<PVCActions pvc={pvc} detailed={true} />{/if}
     {/snippet}
     {#snippet detailSnippet()}
       {#if pvc}
