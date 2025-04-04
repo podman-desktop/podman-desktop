@@ -340,8 +340,10 @@ export class PodmanInstall {
         return;
       }
 
-      // https://github.com/podman-desktop/podman-desktop/issues/11720
+      // Podman github link with information that 5.3.1 cant update to 5.4.X
       // https://github.com/containers/podman/pull/25135
+      // Podman Desktop link with proposed solution
+      // https://github.com/podman-desktop/podman-desktop/issues/11720
       if (!updateInfo.bundledVersion) return;
       if (
         extensionApi.env.isWindows &&
