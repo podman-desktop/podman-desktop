@@ -28,7 +28,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import type { NavigationBar } from '../model/workbench/navigation';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { isCI, isLinux } from '../utility/platform';
+import { isCI, isLinux, isMac } from '../utility/platform';
 
 const RESOURCE_NAME: string = 'Compose';
 
@@ -37,6 +37,8 @@ let composeVersion: string;
 const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
 
 test.skip(!!isCI && isLinux, 'Tests suite should not run on Linux platform');
+//issue: https://github.com/podman-desktop/e2e/issues/348
+test.skip(isMac, 'Currently there is an issue with running this test on macOS platform');
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('compose-onboarding-e2e');
