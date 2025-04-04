@@ -28,7 +28,7 @@ interface Props {
 let { name, namespace }: Props = $props();
 
 let configMap: ConfigMapSecretUI | undefined = $state(undefined);
-let detailsPage: DetailsPage | undefined = $state(undefined);
+let detailsPage: DetailsPage<ConfigMapSecretUI> | undefined = $state(undefined);
 let kubeConfigMap: V1ConfigMap | undefined = $state(undefined);
 let kubeError: string | undefined = $state(undefined);
 
@@ -74,19 +74,17 @@ async function loadDetails(): Promise<void> {
 </script>
 
 {#if configMap}
-  <DetailsPage title={configMap.name} subtitle={configMap.namespace} bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      {#if configMap}<StatusIcon icon={ConfigMapIcon} size={24} status={configMap.status} />{/if}
+  <DetailsPage title={configMap.name} subtitle={configMap.namespace} bind:this={detailsPage} snippetsData={configMap}>
+    {#snippet iconSnippet(cm)}
+      <StatusIcon icon={ConfigMapIcon} size={24} status={cm.status} />
     {/snippet}
-    {#snippet actionsSnippet()}
-      {#if configMap}<ConfigMapSecretActions configMapSecret={configMap} detailed={true} />{/if}
+    {#snippet actionsSnippet(cm)}
+      <ConfigMapSecretActions configMapSecret={cm} detailed={true} />
     {/snippet}
-    {#snippet detailSnippet()}
-      {#if configMap}
-        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-          <StateChange state={configMap.status} />
-        </div>
-      {/if}
+    {#snippet detailSnippet(cm)}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        <StateChange state={cm.status} />
+      </div>
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />

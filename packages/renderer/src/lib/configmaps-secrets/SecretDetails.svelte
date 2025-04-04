@@ -28,7 +28,7 @@ interface Props {
 let { name, namespace }: Props = $props();
 
 let secret: ConfigMapSecretUI | undefined = $state(undefined);
-let detailsPage: DetailsPage | undefined = $state(undefined);
+let detailsPage: DetailsPage<ConfigMapSecretUI> | undefined = $state(undefined);
 let kubeSecret: V1Secret | undefined = $state(undefined);
 let kubeError: string | undefined = $state(undefined);
 
@@ -74,19 +74,17 @@ async function loadDetails(): Promise<void> {
 </script>
 
 {#if secret}
-  <DetailsPage title={secret.name} subtitle={secret.namespace} bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      {#if secret}<StatusIcon icon={SecretIcon} size={24} status={secret.status} />{/if}
+  <DetailsPage title={secret.name} subtitle={secret.namespace} bind:this={detailsPage} snippetsData={secret}>
+    {#snippet iconSnippet(sSecret)}
+      <StatusIcon icon={SecretIcon} size={24} status={sSecret.status} />
     {/snippet}
-    {#snippet actionsSnippet()}
-      {#if secret}<ConfigMapSecretActions configMapSecret={secret} detailed={true} />{/if}
+    {#snippet actionsSnippet(sSecret)}
+      <ConfigMapSecretActions configMapSecret={sSecret} detailed={true} />
     {/snippet}
-    {#snippet detailSnippet()}
-      {#if secret}
-        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-          <StateChange state={secret.status} />
-        </div>
-      {/if}
+    {#snippet detailSnippet(sSecret)}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        <StateChange state={sSecret.status} />
+      </div>
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />

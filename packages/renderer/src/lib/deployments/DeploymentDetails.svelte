@@ -31,7 +31,7 @@ interface Props {
 let { name, namespace }: Props = $props();
 
 let deployment: DeploymentUI | undefined = $state(undefined);
-let detailsPage: DetailsPage | undefined = $state(undefined);
+let detailsPage: DetailsPage<DeploymentUI> | undefined = $state(undefined);
 let kubeDeployment: V1Deployment | undefined = $state(undefined);
 let kubeError: string | undefined = $state(undefined);
 
@@ -82,12 +82,12 @@ async function loadDetails(): Promise<void> {
 </script>
 
 {#if deployment}
-  <DetailsPage title={deployment.name} subtitle={deployment.namespace} bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      {#if deployment}<StatusIcon icon={DeploymentIcon} size={24} status={deployment.status} />{/if}
+  <DetailsPage title={deployment.name} subtitle={deployment.namespace} bind:this={detailsPage} snippetsData={deployment}>
+    {#snippet iconSnippet(sDeployment)}
+      <StatusIcon icon={DeploymentIcon} size={24} status={sDeployment.status} />
     {/snippet}
-    {#snippet actionsSnippet()}
-      {#if deployment}<DeploymentActions deployment={deployment} detailed={true} />{/if}
+    {#snippet actionsSnippet(sDeployment)}
+      <DeploymentActions deployment={sDeployment} detailed={true} />
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
