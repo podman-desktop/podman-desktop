@@ -28,7 +28,7 @@ interface Props {
 let { name, namespace }: Props = $props();
 
 let cronjob = $state<CronJobUI | undefined>();
-let detailsPage = $state<DetailsPage | undefined>();
+let detailsPage = $state<DetailsPage<CronJobUI> | undefined>();
 let kubeCronJob = $state<V1CronJob | undefined>();
 let kubeError = $state<string | undefined>();
 
@@ -74,19 +74,17 @@ async function loadDetails(): Promise<void> {
 </script>
 
 {#if cronjob}
-  <DetailsPage title={cronjob.name} subtitle={cronjob.namespace} bind:this={detailsPage}>
-    {#snippet iconSnippet()}
-      {#if cronjob}<StatusIcon icon={CronJobIcon} size={24} status={cronjob.status} />{/if}
+  <DetailsPage title={cronjob.name} subtitle={cronjob.namespace} bind:this={detailsPage} snippetsData={cronjob}>
+    {#snippet iconSnippet(sCronjob)}
+      <StatusIcon icon={CronJobIcon} size={24} status={sCronjob.status} />
     {/snippet}
-    {#snippet actionsSnippet()}
-      {#if cronjob}<CronJobActions cronjob={cronjob} detailed={true} />{/if}
+    {#snippet actionsSnippet(sCronjob)}
+      <CronJobActions cronjob={sCronjob} detailed={true} />
     {/snippet}
-    {#snippet detailSnippet()}
-      {#if cronjob}
-        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-          <StateChange state={cronjob.status} />
-        </div>
-      {/if}
+    {#snippet detailSnippet(sCronjob)}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        <StateChange state={sCronjob.status} />
+      </div>
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
