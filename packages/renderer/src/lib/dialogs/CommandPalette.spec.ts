@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
@@ -33,8 +31,6 @@ const receiveFunctionMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 
-const executeCommandMock = vi.fn();
-// mock some methods of the window object
 beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
@@ -42,8 +38,6 @@ beforeAll(() => {
 
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
-
-  (window as any).executeCommand = executeCommandMock;
 });
 
 beforeEach(() => {
@@ -123,7 +117,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(executeCommandMock).toBeCalledWith('my-command-2');
+    expect(window.executeCommand).toBeCalledWith('my-command-2');
   });
 
   test('Check tab key', async () => {
@@ -169,7 +163,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(executeCommandMock).toBeCalledWith('my-command-2');
+    expect(window.executeCommand).toBeCalledWith('my-command-2');
   });
 
   test('Check keyup ⬆️', async () => {
@@ -228,7 +222,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(executeCommandMock).toBeCalledWith('my-command-2');
+    expect(window.executeCommand).toBeCalledWith('my-command-2');
   });
 
   test('Check Enter key', async () => {
@@ -260,7 +254,7 @@ describe('Command Palette', () => {
     // now, press the Enter key
     await userEvent.keyboard('{Enter}');
 
-    expect(executeCommandMock).toBeCalledWith('my-command-1');
+    expect(window.executeCommand).toBeCalledWith('my-command-1');
   });
 
   test('Check filtering', async () => {
@@ -320,7 +314,7 @@ describe('Command Palette', () => {
     // now, press the Enter key
     await userEvent.keyboard('{Enter}');
 
-    expect(executeCommandMock).toBeCalledWith('my-command-1');
+    expect(window.executeCommand).toBeCalledWith('my-command-1');
   });
 
   test('Check enablement', async () => {
@@ -379,6 +373,6 @@ describe('Command Palette', () => {
     // now, press the Enter key
     await userEvent.keyboard('{Enter}');
 
-    expect(executeCommandMock).toBeCalledWith('my-command-enabled-1');
+    expect(window.executeCommand).toBeCalledWith('my-command-enabled-1');
   });
 });
