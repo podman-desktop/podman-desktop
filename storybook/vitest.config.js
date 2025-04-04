@@ -35,9 +35,7 @@ export default defineProject({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,
     environment: 'jsdom',
-    alias: [
-      { find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' },
-    ],
+    alias: [{ find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' }],
     deps: {
       inline: ['moment'],
     },

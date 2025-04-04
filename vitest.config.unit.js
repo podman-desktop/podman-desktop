@@ -33,19 +33,21 @@ export default defineConfig({
   test: {
     workspace: [
       // packages
-      'packages/*/vitest.config.ts',
+      'packages/*/vitest.config.{js,ts}',
+      // global extension tests
+      'extensions/vitest.config.{js,ts}',
       // simple extensions
-      'extensions/*/vitest.config.ts',
+      'extensions/*/vitest.config.{js,ts}',
       // multi packages extensions
-      'extensions/*/packages/*/vitest.config.ts',
+      'extensions/*/packages/*/vitest.config.{js,ts}',
       // website
-      'website/vitest.config.ts',
+      'website/vitest.config.{js,ts}',
       // tools
-      'tools/vitest.config.ts',
+      'tools/vitest.config.{js,ts}',
       // scripts
-      'scripts/vitest.config.ts',
+      'scripts/vitest.config.{js,ts}',
       // storybook
-      'storybook/vitest.config.ts',
+      'storybook/vitest.config.{js,ts}',
     ],
     // use GitHub action reporters when running in CI
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
@@ -56,14 +58,8 @@ export default defineConfig({
       excludeAfterRemap: true,
       provider: 'v8',
       reporter: process.env.CI ? ['json'] : ['lcov', 'text'],
-      exclude: [
-        ...configDefaults.coverage.exclude,
-        ...PODMAN_DESKTOP_EXCLUDED,
-      ],
+      exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
     },
-    exclude: [
-      ...configDefaults.exclude,
-      ...PODMAN_DESKTOP_EXCLUDED,
-    ]
+    exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },
 });

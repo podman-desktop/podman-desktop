@@ -16,36 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { defineProject } from 'vitest/config';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { svelteTesting } from '@testing-library/svelte/vite';
 
 const PACKAGE_ROOT = __dirname;
+const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..', '..', '..');
 
 export default defineProject({
   root: PACKAGE_ROOT,
-  resolve: {
-    alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
-      '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
-    },
-  },
-  plugins: [svelte({ hot: !process.env.VITEST }), svelteTesting()],
   test: {
-    retry: 3, // Retries failing tests up to 3 times
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     globals: true,
-    environment: 'jsdom',
-    alias: [
-      { find: '@testing-library/svelte', replacement: '@testing-library/svelte/svelte5' },
-      {
-        find: /^monaco-editor$/,
-        replacement: `${PACKAGE_ROOT}/../../node_modules/monaco-editor/esm/vs/editor/editor.api`,
-      },
-    ],    deps: {
-      inline: ['moment'],
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    alias: {
+      '@podman-desktop/api': resolve(WORKSPACE_ROOT, '__mocks__/@podman-desktop/api.js'),
     },
-    setupFiles: ['./vite.tests.setup.js'],
   },
 });
