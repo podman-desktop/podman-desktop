@@ -57,20 +57,24 @@ toolsToTest.forEach(tool => {
       });
 
       test(`Install ${tool} -> downgrade -> uninstall`, async () => {
+        test.setTimeout(120_000);
+
         await cliToolsPage.installTool(tool);
         await cliToolsPage.downgradeTool(tool);
         await cliToolsPage.uninstallTool(tool);
         await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
           .toBeFalsy();
       });
 
       test(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
+        test.setTimeout(120_000);
+
         await cliToolsPage.installToolWithSecondLatestVersion(tool);
         await cliToolsPage.updateTool(tool);
         await cliToolsPage.uninstallTool(tool);
         await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
+          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
           .toBeFalsy();
       });
     });

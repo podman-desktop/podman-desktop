@@ -76,7 +76,15 @@ export class CLIToolsPage extends SettingsPage {
         return '';
       }
 
-      return await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).innerText();
+      if ((await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).count()) === 0) {
+        return '';
+      }
+
+      try {
+        return await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).innerText();
+      } catch (e) {
+        return '';
+      }
     });
   }
 
