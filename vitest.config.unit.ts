@@ -51,7 +51,7 @@ export default defineConfig({
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }]] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
-      all: false,
+      all: true,
       clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
