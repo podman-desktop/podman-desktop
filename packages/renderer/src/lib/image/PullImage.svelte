@@ -275,15 +275,16 @@ async function searchFunction(value: string): Promise<void> {
   title="Pull image from a registry"
   inProgress={pullInProgress}
   showEmptyScreen={providerConnections.length === 0}>
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <i class="fas fa-arrow-circle-down fa-2x" aria-hidden="true"></i>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="actions">
+  {#snippet actions()}
     <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
-  </svelte:fragment>
+  {/snippet}
 
-  <div slot="content" class="space-y-6">
+  {#snippet content()}
+  <div class="space-y-6">
     <div class="w-full">
       <label for="imageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Image to Pull</label>
@@ -360,4 +361,5 @@ async function searchFunction(value: string): Promise<void> {
     </footer>
     <TerminalWindow bind:terminal={logsPull} />
   </div>
+  {/snippet}
 </EngineFormPage>
