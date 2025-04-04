@@ -26,7 +26,7 @@ export let containerID: string;
 
 let container: ContainerInfoUI;
 
-let detailsPage: DetailsPage;
+let detailsPage: DetailsPage<undefined>;
 
 let displayTty = false;
 // update current route scheme
@@ -68,7 +68,7 @@ onMount(() => {
 </script>
 
 {#if container}
-  <DetailsPage title={container.name} bind:this={detailsPage}>
+  <DetailsPage title={container.name} bind:this={detailsPage} snippetsData={undefined}>
     {#snippet iconSnippet()}
       <StatusIcon icon={ContainerIcon} size={24} status={container.state} />
     {/snippet}
