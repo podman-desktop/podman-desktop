@@ -27,6 +27,8 @@ import type { EventStoreInfo } from '/@/stores/event-store';
 
 import TroubleshootingPageStore from './TroubleshootingPageStore.svelte';
 
+const storeName = 'my-test-store';
+
 beforeAll(() => {});
 
 test('Check store info is displayed and clicking on buttons works', async () => {
@@ -34,7 +36,7 @@ test('Check store info is displayed and clicking on buttons works', async () => 
   const fetchMock = vi.fn();
 
   const eventStoreInfo: EventStoreInfo = {
-    name: 'my-test-store',
+    name: storeName,
     size: 3,
     bufferEvents: [],
     clearEvents: clearEventsMock,
@@ -42,6 +44,10 @@ test('Check store info is displayed and clicking on buttons works', async () => 
   };
 
   render(TroubleshootingPageStore, { eventStoreInfo });
+
+  // expect to have a list item with label of the store name
+  const store = screen.getByRole('listitem', { name: storeName });
+  expect(store).toBeInTheDocument();
 
   // expect to have the Refresh button
   const refreshButton = screen.getByRole('button', { name: 'Refresh' });

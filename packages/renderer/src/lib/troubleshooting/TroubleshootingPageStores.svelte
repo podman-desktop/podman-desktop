@@ -32,7 +32,7 @@ onDestroy(() => {
     <div role="status" aria-label="stores" class="text-xl">Stores</div>
   </div>
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4" role="list" aria-label="stores">
     {#each allEventstores as eventStore (eventStore.name)}
       <TroubleshootingPageStore eventStoreInfo={eventStore} />
     {/each}

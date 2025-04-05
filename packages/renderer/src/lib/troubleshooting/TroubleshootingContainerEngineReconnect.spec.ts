@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ test('Check reconnect button is available and click on it', async () => {
   await fireEvent.click(reconnectButton);
 
   // check that we have the ping result
-  const reconnectResult = screen.getByRole('status', { name: '' });
+  const reconnectResult = screen.getByRole('status', { name: 'Reconnect Providers' });
   expect(reconnectResult).toBeInTheDocument();
   expect(reconnectResult).toHaveTextContent('Done');
 
@@ -66,7 +66,7 @@ test('Check reconnect button is available and get error', async () => {
   await fireEvent.click(reconnectButton);
 
   // check that we have the reconnect result
-  const reconnectResult = screen.getByRole('status', { name: '' });
+  const reconnectResult = screen.getByRole('status', { name: 'Reconnect Providers' });
   expect(reconnectResult).toBeInTheDocument();
   expect(reconnectResult).toHaveTextContent('Done');
 
