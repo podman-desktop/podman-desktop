@@ -25,7 +25,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
       <div
         class="flex items-center justify-between px-5 py-4 mb-4 text-[var(--pd-modal-header-text)] bg-[var(--pd-modal-header-bg)]">
         <h1 class="text-md font-semibold">Create a new {providerToBeInstalled.displayName}</h1>
-        <CloseButton class="px-2 py-1" on:click={closeCallback} />
+        <CloseButton class="px-2 py-1" onclick={closeCallback} />
       </div>
       <div class="overflow-y-auto px-4 pb-4 text-[var(--pd-modal-text)]">
         <div class="flex flex-col rounded-lg">

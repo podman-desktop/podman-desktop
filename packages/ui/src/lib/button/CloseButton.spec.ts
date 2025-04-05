@@ -44,12 +44,10 @@ test('Check button styling', async () => {
   expect(img).toHaveClass('svelte-fa');
 });
 
-test('Check on:click action', async () => {
+test('Check onclick action', async () => {
   const clickMock = vi.fn();
-  const comp = render(CloseButton);
-  comp.container.onclick = clickMock;
+  render(CloseButton, { onclick: clickMock });
 
-  // check on:click
   const button = screen.getByRole('button');
   expect(button).toBeInTheDocument();
   expect(clickMock).not.toHaveBeenCalled();

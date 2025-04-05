@@ -3,18 +3,25 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher } from 'svelte';
 import Fa from 'svelte-fa';
 
+interface Props {
+  onclick: () => void;
+  class?: string;
+}
+
+let { onclick, class: className }: Props = $props();
+
 const dispatch = createEventDispatcher<{ click: undefined }>();
 
 function click(): void {
+  onclick();
   dispatch('click');
 }
 </script>
 
 <button
   type="button"
-  class="hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px] p-1 no-underline cursor-pointer outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] {$$props.class ??
-    ''}"
-  on:click={click}
+  class="hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px] p-1 no-underline cursor-pointer outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] {className}"
+  onclick={click}
   title="Close"
   aria-label="Close">
   <Fa icon={faTimes} />
