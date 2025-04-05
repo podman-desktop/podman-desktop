@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   readonly httpPort: Locator;
   readonly httpsPort: Locator;
   readonly containerImage: Locator;
+  readonly configFileInput: Locator;
+  readonly warning: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -44,6 +46,11 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
     this.httpPort = this.clusterPropertiesInformation.getByLabel('HTTP Port');
     this.httpsPort = this.clusterPropertiesInformation.getByLabel('HTTPS Port');
     this.containerImage = this.clusterPropertiesInformation.getByPlaceholder('Leave empty for using latest.');
+    this.configFileInput = this.clusterPropertiesInformation.getByRole('textbox', {
+      name: 'Custom path to Kind config file (Default is blank)',
+      exact: true,
+    });
+    this.warning = this.page.getByRole('alert', { name: 'warning' });
   }
 
   public async createClusterDefault(clusterName: string = 'kind-cluster', timeout?: number): Promise<void> {
@@ -60,11 +67,29 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
 
   public async createClusterParametrized(
     clusterName: string = 'kind-cluster',
-    { providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {},
+    {
+      configFilePath,
+      providerType,
+      httpPort,
+      httpsPort,
+      useIngressController,
+      containerImage,
+    }: KindClusterOptions = {},
     timeout?: number,
   ): Promise<void> {
     return test.step('Create parametrized cluster', async () => {
-      await fillTextbox(this.clusterNameField, clusterName);
+      // Use the default cluster name if a custom config file is used; the default cluster name should be ignored in this case.
+      if (configFilePath) {
+        await playExpect(this.configFileInput).toBeVisible();
+        await this.configFileInput.evaluate(node => node.removeAttribute('readonly'));
+        await this.configFileInput.fill(configFilePath);
+        await playExpect(this.warning).toBeVisible();
+        await playExpect(this.warning).toContainText(
+          'By specifying a config file, all other options will be ignored except for ingress controller deployment.',
+        );
+      } else {
+        await fillTextbox(this.clusterNameField, clusterName);
+      }
 
       if (providerType) {
         try {
