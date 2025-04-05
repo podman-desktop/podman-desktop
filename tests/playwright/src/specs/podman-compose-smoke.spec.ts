@@ -37,6 +37,11 @@ const composeContainer = 'resources';
 const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
 const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
 
+const IS_OPENSHIFT_PIPELINE_RUNNER: boolean = process.env.CI_PLATFORM === 'OpenShift';
+
+test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
+test.skip(isMac && !IS_OPENSHIFT_PIPELINE_RUNNER, 'Run test on macOS only inside OpenShift pipelines');
+
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('podman-compose-e2e');
   await welcomePage.handleWelcomePage(true);
@@ -57,9 +62,6 @@ test.afterAll(async ({ page, runner }) => {
 
 test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
   test('Verify Compose was installed', async ({ page, navigationBar }) => {
-    test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
-    test.skip(!!isMac, 'Currently there is an issue with running this test on macOS platform');
-
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
