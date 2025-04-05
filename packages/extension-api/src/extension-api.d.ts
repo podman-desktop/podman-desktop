@@ -3543,7 +3543,7 @@ declare module '@podman-desktop/api' {
     /**
      * Attempt to pull the image even if an older image exists locally.
      */
-    pull?: string;
+    pull?: boolean | string;
 
     /**
      * Default: true
