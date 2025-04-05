@@ -46,7 +46,7 @@ test('Check button styling', async () => {
 
 test('Check onclick action', async () => {
   const clickMock = vi.fn();
-  const comp = render(CloseButton, { onclick: clickMock });
+  render(CloseButton, { onclick: clickMock });
 
   const button = screen.getByRole('button');
   expect(button).toBeInTheDocument();
