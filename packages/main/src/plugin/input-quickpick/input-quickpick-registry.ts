@@ -20,6 +20,7 @@ import type {
   CancellationToken,
   InputBoxOptions,
   InputBoxValidationMessage,
+  QuickPickItem,
   QuickPickOptions,
 } from '@podman-desktop/api';
 
@@ -31,15 +32,14 @@ export class InputQuickPickRegistry {
 
   private callbacksInputBox = new Map<
     number,
-    { deferred: Deferred<string | undefined>; options?: InputBoxOptions; token?: CancellationToken }
+    { deferred: Deferred<unknown | undefined>; options?: InputBoxOptions; token?: CancellationToken }
   >();
 
   private callbacksQuickPicks = new Map<
     number,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items: readonly any[];
-      deferred: Deferred<string[] | string | undefined>;
+      items: readonly (string | QuickPickItem)[];
+      deferred: Deferred<unknown | undefined>;
       options?: QuickPickOptions;
       token?: CancellationToken;
     }
@@ -52,7 +52,7 @@ export class InputQuickPickRegistry {
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = new Deferred<string | undefined>();
+    const deferred = new Deferred<unknown | undefined>();
 
     // store the callback that will resolve the promise
     this.callbacksInputBox.set(this.callbackId, { deferred, options, token });
@@ -86,7 +86,7 @@ export class InputQuickPickRegistry {
       deferred.reject('Input has been cancelled');
     });
     // return the promise
-    return deferred.promise;
+    return deferred.promise as Promise<string | undefined>;
   }
 
   // this method is called by the frontend when the user has entered a value
@@ -161,7 +161,9 @@ export class InputQuickPickRegistry {
       // grab item
       const item = callback.items[index];
 
-      return callback.options.onDidSelectItem(item);
+      if (item) {
+        return callback.options.onDidSelectItem(item);
+      }
     }
     return undefined;
   }
@@ -170,16 +172,15 @@ export class InputQuickPickRegistry {
    * Return a promise that resolves to the selected item (or undefined if cancelled)
    */
   async showQuickPick(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: readonly any[] | Promise<readonly any[]>,
+    items: readonly (string | QuickPickItem)[] | Promise<readonly (string | QuickPickItem)[]>,
     options?: QuickPickOptions,
     token?: CancellationToken,
-  ): Promise<string[] | string | undefined> {
+  ): Promise<unknown[] | unknown | undefined> {
     // keep track of this request
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = new Deferred<string | string[] | undefined>();
+    const deferred = new Deferred<unknown | undefined>();
 
     // check if the items are a promise
     if (items instanceof Promise) {
