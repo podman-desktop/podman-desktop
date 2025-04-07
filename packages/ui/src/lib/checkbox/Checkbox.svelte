@@ -1,33 +1,49 @@
 <script lang="ts">
 import { faSquare as faOutlineSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCheckSquare, faMinusSquare, faSquare } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
-export let checked = false;
-export let disabled = false;
-export let indeterminate = false;
-export let disabledTooltip = '';
-export let title = '';
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let required = false;
-
 const dispatch = createEventDispatcher<{ click: boolean }>();
-const faSize = '1.33x';
 
-function onClick(
-  event: MouseEvent & {
-    currentTarget: EventTarget & HTMLInputElement;
-  },
-): void {
-  const checked = event.currentTarget.checked;
-  dispatch('click', checked);
+interface Props {
+  onclick?: () => void;
+  children?: Snippet;
+  class?: string;
+  'aria-label'?: string;
+  checked?: boolean;
+  disabled?: boolean;
+  indeterminate?: boolean;
+  disabledTooltip?: string;
+  title?: string;
+  id?: string;
+  name?: string;
+  required?: boolean;
 }
+
+let {
+  onclick = (): void => {
+    checked = !checked;
+    dispatch('click', checked);
+  },
+  children,
+  class: className = '',
+  'aria-label': ariaLabel,
+  checked = $bindable(),
+  disabled = false,
+  indeterminate = false,
+  disabledTooltip = '',
+  title = '',
+  id = undefined,
+  name = undefined,
+  required = false,
+}: Props = $props();
+
+const faSize = '1.33x';
 </script>
 
-<label class="flex flex-row items-center {$$props.class ?? ''}">
-  <div class="relative p-2 self-start" class:mt-0.5={$$slots.default} class:mr-1={$$slots.default}>
+<label class="flex flex-row items-center {className}">
+  <div class="relative p-2 self-start" class:mt-0.5={!!children} class:mr-1={!!children}>
     <div
       class="grid absolute left-0 top-0"
       title={disabled ? disabledTooltip : title}
@@ -53,7 +69,7 @@ function onClick(
       {/if}
     </div>
     <input
-      aria-label={title}
+      aria-label={ariaLabel ?? title}
       type="checkbox"
       id={id}
       name={name}
@@ -63,7 +79,7 @@ function onClick(
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}
       class="opacity-0 absolute top-0 left-0 w-px h-px text-xl"
-      on:click={onClick} />
+      {onclick} />
   </div>
-  <slot />
+  {@render children?.()}
 </label>
