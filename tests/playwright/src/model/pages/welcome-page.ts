@@ -44,6 +44,8 @@ export class WelcomePage extends BasePage {
   async turnOffTelemetry(): Promise<void> {
     return test.step('Turn off Telemetry', async () => {
       if (await this.telemetryConsent.isChecked()) {
+        await playExpect(this.telemetryConsent).toBeChecked();
+        await this.page.waitForTimeout(1_000);
         await this.telemetryConsent.uncheck();
       }
 
