@@ -1,13 +1,18 @@
 <script lang="ts">
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount, type Snippet } from 'svelte';
 
 let dropDownHeight: number;
 let dropDownWidth: number;
 let dropDownElement: HTMLElement;
 let sideAlign: string;
 
-export let clientY: number;
-export let clientX: number;
+interface Props {
+  clientY: number;
+  clientX: number;
+  children?: Snippet;
+}
+
+let { clientY, clientX, children }: Props = $props();
 
 const STATUS_BAR_HEIGHT = 24;
 
@@ -42,5 +47,5 @@ onDestroy(() => {
   bind:clientWidth={dropDownWidth}
   bind:this={dropDownElement}
   class="{sideAlign} absolute z-10 m-2 rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-hidden">
-  <slot />
+  {@render children?.()}
 </div>

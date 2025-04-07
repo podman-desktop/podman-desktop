@@ -1,15 +1,27 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
+import type { Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 import DropDownMenuItems from './DropDownMenuItems.svelte';
 
-export let onBeforeToggle = (): void => {};
-export let icon: IconDefinition = faEllipsisVertical;
-export let shownAsMenuActionItem = false;
-export let hidden = false;
-export let title = '';
+interface Props {
+  onBeforeToggle?: () => void;
+  icon?: IconDefinition;
+  shownAsMenuActionItem?: boolean;
+  hidden?: boolean;
+  title?: string;
+  children?: Snippet;
+}
+let {
+  onBeforeToggle = (): void => {},
+  icon = faEllipsisVertical,
+  shownAsMenuActionItem = false,
+  hidden = false,
+  title = '',
+  children,
+}: Props = $props();
 
 // Show and hide the menu using clickOutside
 let showMenu = false;
@@ -55,7 +67,7 @@ function onButtonClick(e: MouseEvent): void {
     <!-- Button for the dropdown menu -->
     <button
       aria-label={title.length > 0 ? title : 'kebab menu'}
-      on:click={onButtonClick}
+      onclick={onButtonClick}
       title={title}
       bind:this={outsideWindow}
       class="text-[var(--pd-action-button-text)] {shownAsMenuActionItem
@@ -66,7 +78,9 @@ function onButtonClick(e: MouseEvent): void {
 
     <!-- Dropdown menu for all other actions -->
     {#if showMenu}
-      <DropDownMenuItems clientY={clientY} clientX={clientX}><slot /></DropDownMenuItems>
+      <DropDownMenuItems clientY={clientY} clientX={clientX}>
+        {@render children?.()}
+      </DropDownMenuItems>
     {/if}
   </div>
 {/if}
