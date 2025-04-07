@@ -1946,8 +1946,8 @@ describe('containerEngine', async () => {
     });
 
     test('non-(string | boolean) pull option should throw an error', async () => {
-      await expect(() => {
-        return api.containerEngine.buildImage('context', vi.fn(), {
+      await expect(async () => {
+        await api.containerEngine.buildImage('context', vi.fn(), {
           pull: { foo: 'bar' }, // non-sense
         } as unknown as containerDesktopAPI.BuildImageOptions);
       }).rejects.toThrowError('option pull should be of type string or boolean got object');
