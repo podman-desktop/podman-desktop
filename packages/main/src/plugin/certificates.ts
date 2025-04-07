@@ -93,6 +93,14 @@ export class Certificates {
         ondata: (ca: string) => {
           CAs.push(ca);
         },
+      });
+      wincaAPI({
+        format: wincaAPI.der2.pem,
+        inject: false,
+        store: 'ca',
+        ondata: (ca: string) => {
+          CAs.push(ca);
+        },
         onend: () => {
           resolve(CAs);
         },
