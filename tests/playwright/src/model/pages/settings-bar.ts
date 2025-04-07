@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { type Locator, type Page, test } from '@playwright/test';
+import { expect as playExpect } from '@playwright/test';
 
 import type { SettingsPage } from './settings-page';
 
@@ -47,7 +48,8 @@ export class SettingsBar {
     return test.step(`Open ${type.name} tab from Settings`, async () => {
       const desiredPage = new type(this.page);
       const tab = await desiredPage.getTab();
-      await tab.click();
+      await playExpect(tab).toBeVisible();
+      await tab.click({ force: true });
       return desiredPage;
     });
   }
