@@ -8,13 +8,14 @@ interface Props {
   entry?: ProviderInfo;
   status?: ProviderStatus | ProviderConnectionStatus | 'Update available';
   class?: string;
+  updateAvailable?: boolean;
 }
 
-let { entry, status, class: className = '' }: Props = $props();
+let { entry, status, class: className = '', updateAvailable = false }: Props = $props();
 
 let providerStatus = $derived.by(() => {
   if (entry) {
-    if (entry.updateInfo?.version) {
+    if (updateAvailable) {
       return 'Update available';
     } else if (entry.containerConnections.length > 0) {
       return entry.containerConnections[0].status;

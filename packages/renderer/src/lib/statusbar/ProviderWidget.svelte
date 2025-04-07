@@ -3,6 +3,7 @@ import { Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
+import { cliToolInfos } from '/@/stores/cli-tools';
 import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
@@ -33,12 +34,18 @@ let connections = $derived.by(() => {
     return [entry];
   }
 });
+
+let providerCliTool = $derived($cliToolInfos.filter(cliTool => cliTool.extensionInfo.id === entry.extensionId));
+
+let updateAvailable = $derived(
+  providerCliTool.length > 0 && providerCliTool[0].canUpdate && providerCliTool[0].newVersion,
+);
 </script>
 
 <Tooltip top={!tooltipTopRight} topRight={tooltipTopRight} class="mb-[20px]">
   <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
     <div class="flex flex-col">
-      {#if entry.updateInfo?.version}
+      {#if updateAvailable}
         <div class="flex flex-row h-fit pb-1">
           Update available
         </div>
@@ -56,5 +63,6 @@ let connections = $derived.by(() => {
     class={className}
     provider={entry}
     onclick={command}
+    updateAvailable={updateAvailable}
   />
 </Tooltip>

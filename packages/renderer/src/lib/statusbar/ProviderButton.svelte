@@ -10,9 +10,10 @@ interface Props {
   onclick: () => void;
   class?: string;
   left?: Snippet<[]>;
+  updateAvailable?: boolean;
 }
 
-let { provider, onclick, left, class: className }: Props = $props();
+let { provider, onclick, left, class: className, updateAvailable = false }: Props = $props();
 </script>
 
 <button
@@ -21,7 +22,7 @@ let { provider, onclick, left, class: className }: Props = $props();
   aria-label={provider.name}>
   {@render left?.()}
   {#if provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.status }
-    <ProviderWidgetStatus entry={provider} />
+    <ProviderWidgetStatus entry={provider} updateAvailable={updateAvailable} />
   {/if}
   {#if provider.images.icon}
     <IconImage image={provider.images.icon} class="max-h-3 grayscale" alt={provider.name}></IconImage>
