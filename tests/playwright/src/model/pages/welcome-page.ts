@@ -31,7 +31,7 @@ export class WelcomePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.welcomeMessage = page.getByText('Welcome to Podman Desktop');
-    this.telemetryConsent = page.getByText('Telemetry');
+    this.telemetryConsent = page.getByLabel('Enable telemetry');
     this.skipOnBoarding = page.getByRole('button', {
       name: 'Skip',
       exact: true,
@@ -45,7 +45,6 @@ export class WelcomePage extends BasePage {
     return test.step('Turn off Telemetry', async () => {
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
-        await this.page.waitForTimeout(1_000);
         await this.telemetryConsent.uncheck();
       }
 
