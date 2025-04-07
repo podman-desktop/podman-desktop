@@ -48,11 +48,13 @@ const KUBERNETES_CONNECTION_MOCK: ProviderKubernetesConnectionInfo = {
 
 const CONTAINER_PROVIDER_MOCK: ProviderInfo = {
   ...EMPTY_PROVIDER_MOCK,
+  id: 'provider1',
   containerConnections: [CONTAINER_CONNECTION_MOCK],
 };
 
 const KUBERNETES_PROVIDER_MOCK: ProviderInfo = {
   ...EMPTY_PROVIDER_MOCK,
+  id: 'provider2',
   kubernetesConnections: [KUBERNETES_CONNECTION_MOCK],
 };
 

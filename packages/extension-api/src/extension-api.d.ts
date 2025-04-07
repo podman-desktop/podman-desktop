@@ -525,6 +525,13 @@ declare module '@podman-desktop/api' {
     status(): ProviderConnectionStatus;
   }
 
+  export interface VmProviderConnection {
+    name: string;
+    shellAccess?: ProviderConnectionShellAccess;
+    lifecycle?: ProviderConnectionLifecycle;
+    status(): ProviderConnectionStatus;
+  }
+
   // common set of options for creating a provider
   export interface ProviderConnectionFactory {
     // Allow to initialize a provider
@@ -547,6 +554,11 @@ declare module '@podman-desktop/api' {
   export interface KubernetesProviderConnectionFactory extends ProviderConnectionFactory {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
+  }
+
+  // create a Vm provider
+  export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
+    create?(params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken): Promise<void>;
   }
 
   export interface AuditRecord {
@@ -661,9 +673,14 @@ declare module '@podman-desktop/api' {
       containerProviderConnectionFactory: KubernetesProviderConnectionFactory,
       connectionAuditor?: Auditor,
     ): Disposable;
+    setVmProviderConnectionFactory(
+      vmProviderConnectionFactory: VmProviderConnectionFactory,
+      connectionAuditor?: Auditor,
+    ): Disposable;
 
     registerContainerProviderConnection(connection: ContainerProviderConnection): Disposable;
     registerKubernetesProviderConnection(connection: KubernetesProviderConnection): Disposable;
+    registerVmProviderConnection(connection: VmProviderConnection): Disposable;
     registerLifecycle(lifecycle: ProviderLifecycle): Disposable;
 
     // register installation flow
@@ -783,13 +800,25 @@ declare module '@podman-desktop/api' {
     status: ProviderConnectionStatus;
   }
 
+  export interface UpdateVmConnectionEvent {
+    providerId: string;
+    connection: VmProviderConnection;
+    status: ProviderConnectionStatus;
+  }
+
   export interface UnregisterContainerConnectionEvent {
     providerId: string;
   }
   export interface UnregisterKubernetesConnectionEvent {
     providerId: string;
   }
+  export interface UnregisterVmConnectionEvent {
+    providerId: string;
+  }
   export interface RegisterKubernetesConnectionEvent {
+    providerId: string;
+  }
+  export interface RegisterVmConnectionEvent {
     providerId: string;
   }
   export interface RegisterContainerConnectionEvent {
@@ -1165,7 +1194,11 @@ declare module '@podman-desktop/api' {
   /**
    * The configuration scope
    */
-  export type ConfigurationScope = string | ContainerProviderConnection | KubernetesProviderConnection;
+  export type ConfigurationScope =
+    | string
+    | ContainerProviderConnection
+    | KubernetesProviderConnection
+    | VmProviderConnection;
 
   export interface Configuration {
     /**

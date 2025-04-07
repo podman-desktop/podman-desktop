@@ -45,7 +45,7 @@ function isSearchMatchingStatus(status?: string): boolean {
 <Button type="tab" on:click={(): void => toggleSearchTerm()} selected={isSearchMatchingStatus()}>All</Button>
 
 <!-- Add other specific statuses -->
-{#each TASK_STATUSES as status}
+{#each TASK_STATUSES as status, index (index)}
   <Button
     type="tab"
     on:click={(): void => toggleSearchTerm(status)}

@@ -340,16 +340,39 @@ export class PodmanInstall {
         return;
       }
 
-      const answer = await extensionApi.window.showInformationMessage(
-        `You have Podman ${updateInfo.installedVersion}.\nDo you want to update to ${updateInfo.bundledVersion}?`,
-        'Yes',
-        'No',
-        'Ignore',
-        'Open release notes',
-      );
-      if (answer === 'Yes') {
-        await this.getInstaller()?.update();
-        if (updateInfo.bundledVersion) {
+      // Podman github link with information that 5.3.1 cant update to 5.4.X
+      // https://github.com/containers/podman/pull/25135
+      // Podman Desktop link with proposed solution
+      // https://github.com/podman-desktop/podman-desktop/issues/11720
+      if (!updateInfo.bundledVersion) return;
+      if (
+        extensionApi.env.isWindows &&
+        updateInfo.installedVersion === '5.3.1' &&
+        compare(updateInfo.bundledVersion, '5.4.0', '>=')
+      ) {
+        // The updating from 5.3.1 -> 5.4.X have failed on Windows
+        const result = await extensionApi.window.showInformationMessage(
+          `Updating the podman from ${updateInfo.installedVersion} to ${updateInfo.bundledVersion} requires manual installation.\nDo you want to show instructions for this?`,
+          'Yes',
+          'No',
+        );
+
+        if (result === 'Yes') {
+          const url = extensionApi.Uri.parse(
+            'https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md',
+          );
+          await extensionApi.env.openExternal(url);
+        }
+      } else {
+        const answer = await extensionApi.window.showInformationMessage(
+          `You have Podman ${updateInfo.installedVersion}.\nDo you want to update to ${updateInfo.bundledVersion}?`,
+          'Yes',
+          'No',
+          'Ignore',
+          'Open release notes',
+        );
+        if (answer === 'Yes') {
+          await this.getInstaller()?.update();
           this.podmanInfo.podmanVersion = updateInfo.bundledVersion;
           provider.updateDetectionChecks(getDetectionChecks(installedPodman));
           provider.updateVersion(updateInfo.bundledVersion);
@@ -370,11 +393,11 @@ export class PodmanInstall {
             PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
             isLibkrunSupported(updateInfo.bundledVersion),
           );
+        } else if (answer === 'Ignore') {
+          this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
+        } else if (answer === 'Open release notes') {
+          await extensionApi.env.openExternal(extensionApi.Uri.parse(podman5JSON.releaseNotes.href));
         }
-      } else if (answer === 'Ignore') {
-        this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
-      } else if (answer === 'Open release notes') {
-        await extensionApi.env.openExternal(extensionApi.Uri.parse(podman5JSON.releaseNotes.href));
       }
     }
   }

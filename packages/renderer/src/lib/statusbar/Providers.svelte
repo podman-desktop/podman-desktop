@@ -11,6 +11,6 @@ let providers: ProviderInfo[] = $derived(
 );
 </script>
 
-{#each providers as entry, i}
+{#each providers as entry, i (entry.id)}
   <ProviderWidget entry={entry} tooltipTopRight={i === 0}/>
 {/each}

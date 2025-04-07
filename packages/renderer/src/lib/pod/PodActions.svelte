@@ -197,7 +197,7 @@ if (dropdownMenu) {
       icon={faExternalLinkSquareAlt} />
   {:else if openingUrls.length > 1}
     <DropdownMenu icon={faExternalLinkSquareAlt} hidden={dropdownMenu} shownAsMenuActionItem={true}>
-      {#each openingUrls as url}
+      {#each openingUrls as url, index (index)}
         <ListItemButtonIcon
           title="Open {extractPort(url)}"
           onClick={(): Promise<void> => window.openExternal(url)}

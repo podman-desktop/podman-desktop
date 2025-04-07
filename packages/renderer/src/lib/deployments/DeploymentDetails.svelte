@@ -87,7 +87,7 @@ async function loadDetails(): Promise<void> {
       {#if deployment}<StatusIcon icon={DeploymentIcon} size={24} status={deployment.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if deployment}<DeploymentActions deployment={deployment} detailed={true} on:update={(): DeploymentUI | undefined => (deployment = deployment)} />{/if}
+      {#if deployment}<DeploymentActions deployment={deployment} detailed={true} />{/if}
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />

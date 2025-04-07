@@ -74,7 +74,7 @@ export let volumeName = '';
             aria-label="Provider Choice"
             disabled={createVolumeFinished}
             bind:value={selectedProvider}>
-            {#each providerConnections as providerConnection}
+            {#each providerConnections as providerConnection, index (index)}
               <option value={providerConnection}>{providerConnection.name}</option>
             {/each}
           </select>

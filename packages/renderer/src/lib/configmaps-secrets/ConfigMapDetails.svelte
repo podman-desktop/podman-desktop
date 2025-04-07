@@ -79,7 +79,7 @@ async function loadDetails(): Promise<void> {
       {#if configMap}<StatusIcon icon={ConfigMapIcon} size={24} status={configMap.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if configMap}<ConfigMapSecretActions configMapSecret={configMap} detailed={true} on:update={(): ConfigMapSecretUI | undefined => (configMap = configMap)} />{/if}
+      {#if configMap}<ConfigMapSecretActions configMapSecret={configMap} detailed={true} />{/if}
     {/snippet}
     {#snippet detailSnippet()}
       {#if configMap}

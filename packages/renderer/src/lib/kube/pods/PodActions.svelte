@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowsRotate, faExternalLinkSquareAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher, onMount } from 'svelte';
+import { onMount } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
@@ -12,11 +12,6 @@ import type { PodUI } from './PodUI';
 export let pod: PodUI;
 export let dropdownMenu = false;
 export let detailed = false;
-
-const dispatch = createEventDispatcher<{ update: PodUI }>();
-export let onUpdate: (update: PodUI) => void = update => {
-  dispatch('update', update);
-};
 
 let openingKubernetesUrls = new Map();
 
@@ -40,14 +35,12 @@ onMount(async () => {
 
 async function restartPod(): Promise<void> {
   pod.status = 'RESTARTING';
-  onUpdate(pod);
 
   await window.restartKubernetesPod(pod.name);
 }
 
 async function deletePod(): Promise<void> {
   pod.status = 'DELETING';
-  onUpdate(pod);
 
   await window.kubernetesDeletePod(pod.name);
 }

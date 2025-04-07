@@ -24,7 +24,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import ServiceActions from './ServiceActions.svelte';
 import type { ServiceUI } from './ServiceUI';
 
-const updateMock = vi.fn();
 const deleteMock = vi.fn();
 const showMessageBoxMock = vi.fn();
 
@@ -67,7 +66,7 @@ afterEach(() => {
 test('Expect no error and status deleting service', async () => {
   // Mock the showMessageBox to return 0 (yes)
   showMessageBoxMock.mockResolvedValue({ response: 0 });
-  render(ServiceActions, { service, onUpdate: updateMock });
+  render(ServiceActions, { service });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Service' });
@@ -75,6 +74,5 @@ test('Expect no error and status deleting service', async () => {
 
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(service.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteMock).toHaveBeenCalled();
 });

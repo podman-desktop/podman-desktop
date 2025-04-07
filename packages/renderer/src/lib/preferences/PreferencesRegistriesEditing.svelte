@@ -246,7 +246,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         <div class="text-left py-4 uppercase w-1/5" role="columnheader"></div>
       </div>
 
-      {#each $registriesInfos as registry}
+      {#each $registriesInfos as registry, index (index)}
         <!-- containerDesktopAPI.Registry row start -->
         <div
           class="flex flex-col w-full border-t border-[var(--pd-content-text)] text-[var(--pd-invert-content-card-text)]"
@@ -373,7 +373,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         <!-- containerDesktopAPI.Registry row end -->
       {/each}
 
-      {#each $registriesSuggestedInfos as registry, i (registry)}
+      {#each $registriesSuggestedInfos as registry, i (i)}
         <!-- Add new registry form start -->
         <div
           class="flex flex-col w-full border-t border-[var(--pd-content-text)] text-[var(--pd-invert-content-card-text)]"

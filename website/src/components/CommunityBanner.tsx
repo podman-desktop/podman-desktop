@@ -8,13 +8,12 @@ function Banner(): JSX.Element {
         <img className="inline h-3 align-bottom mr-6" alt="Small box" src="img/banner/small_box.png" />
         Join us for the{' '}
         <a
-          href="https://github.com/podman-desktop/community/issues/3"
+          href="https://github.com/podman-desktop/community/blob/main/meetings/README.md#upcoming-community-meeting"
           target="_blank"
           rel="noreferrer"
           className="underline text-white ml-1">
-          first Podman Desktop Community Meeting
-        </a>{' '}
-        on March 27th
+          Next Podman Desktop Community Meeting
+        </a>
         <img className="inline h-10 align-middle ml-6" alt="Large box" src="img/banner/large_box.png" />
       </div>
     </div>

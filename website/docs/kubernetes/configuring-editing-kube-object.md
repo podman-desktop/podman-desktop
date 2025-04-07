@@ -71,7 +71,7 @@ spec:
 1. View the created object:
 
    - View the `Pod` object on the **Kubernetes > Pods** object page.
-   - View the other Kubernetes objects on the related object page. For example, if you have created a `Node` object, you can view it on the **Kubernetes > Nodes** page.
+   - View other Kubernetes objects on the related object page. For example, if you have created a `Node` object, you can view it on the **Kubernetes > Nodes** page.
 
 2. Optional: Click the name of the object to view its detailed summary.
    ![summary tab](img/summary-tab.png)

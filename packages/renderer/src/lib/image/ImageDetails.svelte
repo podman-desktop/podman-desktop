@@ -138,7 +138,7 @@ onDestroy(() => {
     {#snippet subtitleSnippet()}
       {#if image?.badges.length}
         <div class="flex flex-row">
-          {#each image.badges as badge}
+          {#each image.badges as badge, index (index)}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>

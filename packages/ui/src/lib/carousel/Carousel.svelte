@@ -60,7 +60,7 @@ function rotateRight(): void {
   </button>
 
   <div id="carousel-cards-{containerId}" class="flex grow gap-3 overflow-hidden">
-    {#each visibleCards as cardValue}
+    {#each visibleCards as cardValue, index (index)}
     {@render card(cardValue)}
     {/each}
   </div>

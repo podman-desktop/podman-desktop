@@ -108,7 +108,7 @@ onMount(() => {
   <div class="flex flex-row grow w-full mt-2 items-end">
     <div class="flex">
       {#if badges.length > 0}
-        {#each badges as badge}
+        {#each badges as badge, index (index)}
           <div
             class="text-[var(--pd-content-card-text)] border-[var(--pd-content-card-border-selected)] border text-sm font-medium me-2 px-2.5 py-0.5 rounded-xl">
             {badge}

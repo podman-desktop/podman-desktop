@@ -73,7 +73,7 @@ onMount(() => {
     {#snippet subtitleSnippet()}
       {#if imageMetadataInfo?.badges.length}
         <div class="flex flex-row">
-          {#each imageMetadataInfo.badges as badge}
+          {#each imageMetadataInfo.badges as badge, index (index)}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>

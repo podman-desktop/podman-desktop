@@ -43,10 +43,14 @@ import type {
   ProviderUpdate,
   RegisterContainerConnectionEvent,
   RegisterKubernetesConnectionEvent,
+  RegisterVmConnectionEvent,
   UnregisterContainerConnectionEvent,
   UnregisterKubernetesConnectionEvent,
+  UnregisterVmConnectionEvent,
   UpdateContainerConnectionEvent,
   UpdateKubernetesConnectionEvent,
+  UpdateVmConnectionEvent,
+  VmProviderConnection,
 } from '@podman-desktop/api';
 
 import type {
@@ -66,7 +70,7 @@ import type { ContainerProviderRegistry } from './container-registry.js';
 import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { LifecycleContextImpl, LoggerImpl } from './lifecycle-context.js';
-import { ProviderImpl, type VmProviderConnection } from './provider-impl.js';
+import { ProviderImpl } from './provider-impl.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -81,21 +85,6 @@ export type ContainerConnectionProviderLifecycleListener = (
   providerInfo: ProviderInfo,
   providerContainerConnectionInfo: ProviderContainerConnectionInfo,
 ) => void;
-
-/*
- * to be exposed in extension-api.d.ts
- */
-export interface RegisterVmConnectionEvent {
-  providerId: string;
-}
-export interface UnregisterVmConnectionEvent {
-  providerId: string;
-}
-export interface UpdateVmConnectionEvent {
-  providerId: string;
-  connection: VmProviderConnection;
-  status: ProviderConnectionStatus;
-}
 
 /**
  * Manage creation of providers and their lifecycle.

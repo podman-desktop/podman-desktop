@@ -288,9 +288,9 @@ function onWindowClick(e: Event): void {
     role="row"
     bind:this={list}
     class="max-h-80 overflow-auto bg-[var(--pd-content-card-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px]">
-    {#each items as item, i}
+    {#each items as item, i (i)}
       {#if itemHeadings[i]}
-        {#each itemHeadings[i] as heading}
+        {#each itemHeadings[i] as heading, index (index)}
           <button class='p-[2px] text-[var(--pd-button-disabled-text)] w-full text-start' disabled>{heading}</button>
         {/each}
       {/if}

@@ -70,7 +70,7 @@ function openContainer(containerID: string): void {
     <tr>
       <DetailsTitle>Container Usage</DetailsTitle>
     </tr>
-    {#each volume.containersUsage as container}
+    {#each volume.containersUsage as container (container.id)}
       <tr>
         <DetailsCell>
           <Link on:click={(): void => openContainer(container.id)}

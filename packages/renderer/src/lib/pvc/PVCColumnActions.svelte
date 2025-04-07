@@ -8,4 +8,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<PVCActions pvc={object} on:update />
+<PVCActions pvc={object} />

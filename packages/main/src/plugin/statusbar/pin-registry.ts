@@ -68,7 +68,12 @@ export class PinRegistry implements IDisposable {
   public getOptions(): Array<PinOption> {
     return this.providers
       .getProviderInfos()
-      .filter(provider => provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0)
+      .filter(
+        provider =>
+          provider.containerConnections.length > 0 ||
+          provider.kubernetesConnections.length > 0 ||
+          provider.vmConnections.length > 0,
+      )
       .map(provider => ({
         value: provider.id,
         label: provider.name,
@@ -121,8 +126,15 @@ export class PinRegistry implements IDisposable {
       this.notify();
     }
 
-    // notify if container connection / kubernetes connection changed
-    this.#disposables.push(this.providers.onDidUpdateContainerConnection(this.notify.bind(this)));
-    this.#disposables.push(this.providers.onDidUpdateKubernetesConnection(this.notify.bind(this)));
+    // ==== notify if container connection / kubernetes / vm connection changed
+    // containers
+    this.#disposables.push(this.providers.onDidRegisterContainerConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterContainerConnection(this.notify.bind(this)));
+    // kubernetes
+    this.#disposables.push(this.providers.onDidRegisterKubernetesConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterKubernetesConnection(this.notify.bind(this)));
+    // vm connections
+    this.#disposables.push(this.providers.onDidRegisterVmConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterVmConnection(this.notify.bind(this)));
   }
 }

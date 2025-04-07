@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
@@ -11,16 +10,10 @@ import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 export let configMapSecret: ConfigMapSecretUI;
 export let detailed = false;
 
-const dispatch = createEventDispatcher<{ update: ConfigMapSecretUI }>();
-export let onUpdate: (update: ConfigMapSecretUI) => void = update => {
-  dispatch('update', update);
-};
-
 const configmapSecretUtils = new ConfigMapSecretUtils();
 
 async function deleteConfigMapSecret(): Promise<void> {
   configMapSecret.status = 'DELETING';
-  onUpdate(configMapSecret);
 
   if (configmapSecretUtils.isSecret(configMapSecret)) {
     await window.kubernetesDeleteSecret(configMapSecret.name);
