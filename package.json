@@ -13,7 +13,7 @@
   },
   "main": "packages/main/dist/index.cjs",
   "scripts": {
-    "build": "pnpm run build:main && pnpm run build:preload && pnpm run build:preload-docker-extension && pnpm run build:preload-webview && pnpm run build:ui && pnpm run build:renderer && pnpm run build:extensions",
+    "build": "pnpm run build:main && pnpm run build:preload && pnpm run build:preload-docker-extension && pnpm run build:preload-webview && npm run build:preload:types && pnpm run build:ui && pnpm run build:renderer && pnpm run build:extensions",
     "build:main": "cd ./packages/main && vite build",
     "build:extensions": "pnpm run build:extensions:compose && pnpm run build:extensions:docker && pnpm run build:extensions:lima && pnpm run build:extensions:podman && pnpm run build:extensions:kubecontext && pnpm run build:extensions:kind && pnpm run build:extensions:registries && pnpm run build:extensions:kubectl-cli",
     "build:extensions:compose": "cd ./extensions/compose && pnpm run build",
