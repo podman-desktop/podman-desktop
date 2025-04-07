@@ -55,7 +55,7 @@ export class WelcomePage extends BasePage {
   async closeWelcomePage(): Promise<DashboardPage> {
     return test.step('Close Welcome Page', async () => {
       await playExpect(this.skipOnBoarding).toBeEnabled();
-      await this.skipOnBoarding.click();
+      await this.skipOnBoarding.click({ force: true });
       return new DashboardPage(this.page);
     });
   }
