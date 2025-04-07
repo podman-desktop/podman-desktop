@@ -25,7 +25,7 @@ const FETCH_MOCK: typeof fetch = vi.fn();
 // let's mock a timestamp in ONE hour
 const RESET_TIMESTAMP = new Date().getTime() / 1000 + 60 * 60;
 
-const BODY_RATE_LIMIT_BELLOW: unknown = {
+const BODY_RATE_LIMIT_BELOW: unknown = {
   resources: {
     // omitted
   },
@@ -47,7 +47,7 @@ const BODY_RATE_LIMIT_ABOVE: unknown = {
   },
 };
 
-const RESPONSE_RATE_LIMIT_BELLOW: Response = {
+const RESPONSE_RATE_LIMIT_BELOW: Response = {
   url: 'https://api.github.com/rate_limit',
   status: 200,
   headers: new Headers({
@@ -55,7 +55,7 @@ const RESPONSE_RATE_LIMIT_BELLOW: Response = {
     'x-ratelimit-remaining': '57',
     'x-ratelimit-reset': `${RESET_TIMESTAMP}`,
   }),
-  text: () => Promise.resolve(JSON.stringify(BODY_RATE_LIMIT_BELLOW)),
+  text: () => Promise.resolve(JSON.stringify(BODY_RATE_LIMIT_BELOW)),
 } as unknown as Response;
 
 const RESPONSE_RATE_LIMIT_ABOVE: Response = {
@@ -71,7 +71,7 @@ const RESPONSE_RATE_LIMIT_ABOVE: Response = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(FETCH_MOCK).mockResolvedValue(RESPONSE_RATE_LIMIT_BELLOW);
+  vi.mocked(FETCH_MOCK).mockResolvedValue(RESPONSE_RATE_LIMIT_BELOW);
 });
 
 function getClient(): GithubClient {
@@ -154,7 +154,7 @@ test('rate limit reached should make client not ready', async () => {
 });
 
 test('should should register octokit hook', async () => {
-  vi.mocked(FETCH_MOCK).mockResolvedValue(RESPONSE_RATE_LIMIT_BELLOW);
+  vi.mocked(FETCH_MOCK).mockResolvedValue(RESPONSE_RATE_LIMIT_BELOW);
 
   const client = getClient();
   client.init();
