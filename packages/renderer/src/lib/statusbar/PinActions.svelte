@@ -56,7 +56,7 @@ function pin(providerId: string): void {
 <div bind:this={outsideWindow}>
   {#if showMenu}
     <PinMenu>
-      {#each providers.entries() as [provider, pinned] }
+      {#each providers.entries() as [provider, pinned] (provider.id)}
         <ProviderButton
           class="w-full text-[var(--pd-dropdown-item-text)] hover:rounded-md hover:!bg-[var(--pd-dropdown-item-hover-bg)] hover:text-[var(--pd-dropdown-item-hover-text)]"
           provider={provider}
