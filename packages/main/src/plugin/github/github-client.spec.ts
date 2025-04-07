@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GithubClient } from '/@/plugin/github/github-client.js';
 
@@ -71,7 +71,12 @@ const RESPONSE_RATE_LIMIT_ABOVE: Response = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.useFakeTimers();
   vi.mocked(FETCH_MOCK).mockResolvedValue(RESPONSE_RATE_LIMIT_BELOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 function getClient(): GithubClient {
@@ -107,6 +112,24 @@ test('init should check rate limits', async () => {
 
   await vi.waitFor(() => {
     expect(FETCH_MOCK).toHaveBeenCalledWith('https://api.github.com/rate_limit', expect.anything());
+  });
+});
+
+test('fetch error during init should disable for one hour the client', async () => {
+  vi.mocked(FETCH_MOCK).mockRejectedValue(new Error('something went wrong'));
+
+  const client = getClient();
+  client.init();
+
+  await vi.waitFor(() => {
+    expect(FETCH_MOCK).toHaveBeenCalledOnce();
+  });
+
+  expect(client.ready).toBeFalsy();
+  await vi.advanceTimersByTimeAsync(61 * 60 * 1000);
+
+  await vi.waitFor(() => {
+    expect(client.ready).toBeTruthy();
   });
 });
 
