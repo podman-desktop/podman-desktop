@@ -3,20 +3,23 @@ import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-i
 import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import GitHubReactions from '/@/lib/preferences/GitHubReactions.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import Label from '/@/lib/ui/Label.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { GithubDiscussionsData } from '../../../../main/src/plugin/github/github-discussions-data';
 import Markdown from '../markdown/Markdown.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 interface Props {
   record: IConfigurationPropertyRecordedSchema;
+  reactions?: GithubDiscussionsData;
   title?: 'full' | 'short';
 }
 
-const { record, title = 'short' }: Props = $props();
+const { record, reactions, title = 'short' }: Props = $props();
 let showResetButton = $state(false);
 let resetToDefault = $state(false);
 
@@ -132,13 +135,19 @@ async function openGitHubDiscussion(): Promise<void> {
         initialValue={getInitialValue(recordUI.original)} />
     {/if}
   </div>
-  {#if record.experimental?.githubDiscussionLink}
-    <Button
-      padding="px-3 py-1"
-      class="w-min"
-      title="Share feedback on GitHub discussion"
-      icon={faArrowUpRightFromSquare}
-      on:click={openGitHubDiscussion}
-    >Share feedback</Button>
-  {/if}
+  <div class="flex flex-row gap-x-4 items-center">
+    {#if record.experimental?.githubDiscussionLink}
+      <Button
+        padding="px-3 py-1"
+        class="w-min"
+        title="Share feedback on GitHub discussion"
+        icon={faArrowUpRightFromSquare}
+        on:click={openGitHubDiscussion}
+      >Share feedback</Button>
+    {/if}
+    {#if reactions}
+      <GitHubReactions reactions={reactions}/>
+    {/if}
+  </div>
+
 </div>

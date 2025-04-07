@@ -1,4 +1,6 @@
 <script lang="ts">
+import { onMount } from 'svelte';
+
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
@@ -6,6 +8,7 @@ import { getInitialValue } from '/@/lib/preferences/Util';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { GithubDiscussionsData } from '../../../../main/src/plugin/github/github-discussions-data';
 
 interface Props {
   properties: IConfigurationPropertyRecordedSchema[];
@@ -55,6 +58,17 @@ async function onCheckedAll(event: { detail: boolean }): Promise<void> {
 $effect(() => {
   refresh();
 });
+
+let reactions: Record<string, GithubDiscussionsData> = $state({});
+
+onMount(() => {
+  window
+    .getExperimentalFeatureReactions()
+    .then(mReactions => {
+      reactions = mReactions;
+    })
+    .catch(console.error);
+});
 </script>
 
 <SettingsPage title="Experimental Features">
@@ -86,7 +100,7 @@ $effect(() => {
     {#each experimental as configItem (configItem.id)}
       <div>
         <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2">
-          <PreferencesRenderingItem title="full" record={configItem} />
+          <PreferencesRenderingItem reactions={configItem.id ? reactions[configItem.id]:undefined} title="full" record={configItem} />
         </div>
       </div>
     {/each}
