@@ -39,9 +39,6 @@ let providerStatus = $derived.by(() => {
   class="px-1 py-px flex flex-row h-full items-center gap-1 min-w-fit hover:bg-[var(--pd-statusbar-hover-bg)] hover:cursor-pointer relative {className}"
   aria-label={provider.name}>
   {@render left?.()}
-  {#if providerStatus === 'Update available'}
-    <div aria-label="Connection Status Icon" class="max-h-3 fa-regular fa-circle-up"></div>    
-  {/if}
   {#if provider.images.icon}
     <div class="relative flex h-full items-center">
       <IconImage image={provider.images.icon} class="max-h-3 grayscale {providerStatus === 'stopped' ? 'brightness-50' : ''}" alt={provider.name}></IconImage>
