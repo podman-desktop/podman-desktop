@@ -60,7 +60,7 @@ function pin(providerId: string): void {
         <ProviderButton
           class="w-full text-[var(--pd-dropdown-item-text)] hover:rounded-md hover:!bg-[var(--pd-dropdown-item-hover-bg)] hover:text-[var(--pd-dropdown-item-hover-text)]"
           provider={provider}
-          onclick={pinned?unpin.bind(undefined, provider.id):pin.bind(undefined, provider.id)}
+          onclick={pinned ? unpin.bind(undefined, provider.id) : pin.bind(undefined, provider.id)}
         >
           {#snippet left()}
             <div class="w-4">
