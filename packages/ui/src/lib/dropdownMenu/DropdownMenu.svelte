@@ -24,10 +24,10 @@ let {
 }: Props = $props();
 
 // Show and hide the menu using clickOutside
-let showMenu = false;
+let showMenu = $state(false);
 
 // If we touch outside the window, hide the menu
-let outsideWindow: HTMLButtonElement;
+let outsideWindow = $state<HTMLButtonElement>();
 
 // If we hit ESC while the menu is open, close it
 function handleEscape({ key }: KeyboardEvent): void {
@@ -36,8 +36,8 @@ function handleEscape({ key }: KeyboardEvent): void {
   }
 }
 
-let clientY: number;
-let clientX: number;
+let clientY = $state(0);
+let clientX = $state(0);
 
 function toggleMenu(): void {
   onBeforeToggle();
@@ -47,7 +47,9 @@ function toggleMenu(): void {
 // If we click outside the menu, close the menu
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onWindowClick(e: any): void {
-  if (!hidden) showMenu = outsideWindow.contains(e.target);
+  if (!hidden) {
+    showMenu = outsideWindow?.contains(e.target) ?? false;
+  }
 }
 
 function onButtonClick(e: MouseEvent): void {

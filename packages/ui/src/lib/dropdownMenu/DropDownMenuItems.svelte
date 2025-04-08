@@ -1,10 +1,12 @@
 <script lang="ts">
 import { onDestroy, onMount, type Snippet } from 'svelte';
 
-let dropDownHeight: number;
-let dropDownWidth: number;
+// Provide default values for dropdown height and width
+// for onMount validations.
+let dropDownHeight = $state(0);
+let dropDownWidth = $state(0);
 let dropDownElement: HTMLElement;
-let sideAlign: string;
+let sideAlign = $state<string>();
 
 interface Props {
   clientY: number;
