@@ -72,8 +72,8 @@ let autoMachineStarted = false;
 let autoMachineName: string | undefined;
 
 // System default notifier
-let defaultMachineNotify = !extensionApi.env.isLinux;
-let defaultConnectionNotify = !extensionApi.env.isLinux;
+let defaultMachineNotify = !extensionApi.env.isUnixLike;
+let defaultConnectionNotify = !extensionApi.env.isUnixLike;
 let defaultMachineMonitor = true;
 
 // current status of machines
@@ -281,7 +281,7 @@ async function doUpdateMachines(
 
     // Only on macOS and Windows should we show the setup notification
     // if for some reason doing getJSONMachineList fails..
-    if (shouldNotifySetup && !extensionApi.env.isLinux) {
+    if (shouldNotifySetup && !extensionApi.env.isUnixLike) {
       // push setup notification
       notifySetupPodman();
       shouldNotifySetup = false;
@@ -303,7 +303,7 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine && shouldNotifySetup && !extensionApi.env.isLinux) {
+  if (shouldCleanMachine && shouldNotifySetup && !extensionApi.env.isUnixLike) {
     // push setup notification
     notifySetupPodman();
     shouldNotifySetup = false;
@@ -312,17 +312,17 @@ async function doUpdateMachines(
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
   // Only show the notification on macOS and Windows
-  // as Podman is already installed on Linux and machine is OPTIONAL.
-  if (shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
+  // Expect Podman to be already installed on unix-like OSes and machine is OPTIONAL.
+  if (shouldNotifySetup && machines.length === 0 && !extensionApi.env.isUnixLike) {
     // push setup notification
     notifySetupPodman();
     shouldNotifySetup = false;
   }
 
-  // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
-  // podman is correctly setup so if there is an old notification asking the user to take action
+  // if there is at least one machine which does not need to be cleaned and the OS is not unix-like
+  // podman is correctly set up, so if there is an old notification asking the user to take action
   // we dispose it as not needed anymore
-  if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
+  if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isUnixLike) {
     notificationDisposable?.dispose();
     shouldNotifySetup = true;
   }
@@ -429,8 +429,8 @@ async function doUpdateMachines(
       if (!socketPath) {
         if (extensionApi.env.isMac) {
           socketPath = calcMacosSocketPath(machineName);
-        } else if (extensionApi.env.isLinux) {
-          socketPath = calcLinuxSocketPath(machineName);
+        } else if (extensionApi.env.isUnixLike) {
+          socketPath = calcUnixSocketPath(machineName);
         } else if (extensionApi.env.isWindows) {
           socketPath = calcWinPipeName(machineName);
         }
@@ -453,9 +453,9 @@ async function doUpdateMachines(
 
   // If the machine length is zero and we are on macOS or Windows,
   // we will update the provider as being 'installed', or ready / starting / configured if there is a machine
-  // if we are on Linux, ignore this as podman machine is OPTIONAL and the provider status in Linux is based upon
+  // if we are on Unix-like OS, ignore this as podman machine is OPTIONAL and the provider status is based upon
   // the native podman installation / not machine.
-  if (!extensionApi.env.isLinux) {
+  if (!extensionApi.env.isUnixLike) {
     if (machines.length === 0) {
       if (provider.status !== 'configuring') {
         provider.updateStatus('installed');
@@ -649,7 +649,7 @@ function calcMacosSocketPath(machineName: string): string {
   return socketPath;
 }
 
-function calcLinuxSocketPath(machineName: string): string {
+function calcUnixSocketPath(machineName: string): string {
   let socketPath = path.resolve(podmanMachineSocketsDirectory, machineName, 'podman.sock');
   if (isMovedPodmanSocket) {
     socketPath = path.resolve(podmanMachineSocketsDirectory, 'qemu', 'podman.sock');
@@ -821,7 +821,7 @@ async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
 
         extensionApi.context.setValue('podmanIsNotInstalled', false, 'onboarding');
         // if podman has been installed, we reset the notification flag so if podman is uninstalled in future we can show the notification again
-        if (extensionApi.env.isLinux) {
+        if (extensionApi.env.isUnixLike) {
           shouldNotifySetup = true;
           // notification is no more required
           notificationDisposable?.dispose();
@@ -2013,7 +2013,7 @@ const PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION = '4.5.0';
 
 export function isPodmanSocketLocationMoved(podmanVersion: string): boolean {
   return (
-    extensionApi.env.isLinux && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION) >= 0
+    extensionApi.env.isUnixLike && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION) >= 0
   );
 }
 
@@ -2128,7 +2128,7 @@ export function sendTelemetryRecords(
         console.trace('unable to check wsl version', error);
         telemetryRecords.errorWslVersion = error;
       }
-    } else if (extensionApi.env.isLinux && telemetryRecords.provider === 'qemu') {
+    } else if (extensionApi.env.isUnixLike && telemetryRecords.provider === 'qemu') {
       try {
         telemetryRecords.qemuVersion = await qemuHelper.getQemuVersion();
       } catch (err: unknown) {
