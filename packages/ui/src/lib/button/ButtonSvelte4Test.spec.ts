@@ -22,10 +22,10 @@ import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import ContainerIcon from '../icons/ContainerIcon.svelte';
-import ButtonSvelteLegacyTest from './ButtonSvelteLegacyTest.svelte';
+import ButtonSvelte4Test from './ButtonSvelte4Test.svelte';
 
 test('should render content', () => {
-  const { getByText } = render(ButtonSvelteLegacyTest, {
+  const { getByText } = render(ButtonSvelte4Test, {
     onclick: vi.fn(),
     content: 'Dummy Button',
   });
@@ -35,7 +35,7 @@ test('should render content', () => {
 });
 
 test('svelte component icon should be properly rendered', () => {
-  const { container } = render(ButtonSvelteLegacyTest, {
+  const { container } = render(ButtonSvelte4Test, {
     onclick: vi.fn(),
     content: 'Dummy Button',
     icon: ContainerIcon,
@@ -47,7 +47,7 @@ test('svelte component icon should be properly rendered', () => {
 
 test('click event should be propagated', async () => {
   const onclickMock = vi.fn();
-  const { getByRole } = render(ButtonSvelteLegacyTest, {
+  const { getByRole } = render(ButtonSvelte4Test, {
     onclick: onclickMock,
   });
 
