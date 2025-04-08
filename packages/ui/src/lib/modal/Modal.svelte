@@ -9,6 +9,7 @@ interface Props {
   name?: string;
   top?: boolean;
   ignoreFocusOut?: boolean;
+  overflowVisible?: boolean;
   onclose?: () => void;
   children?: Snippet;
 }
@@ -18,6 +19,7 @@ let {
   name = 'drop-down-dialog',
   top = false,
   ignoreFocusOut = false,
+  overflowVisible = false,
   onclose = (): void => {
     dispatch('close');
   },
