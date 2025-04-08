@@ -103,7 +103,8 @@ let classes = $derived.by(() => {
       {:else if isFontAwesomeIcon(icon)}
         <Fa icon={icon} />
       {:else if iconType === 'unknown'}
-        {@render icon()}
+        {@const Icon = icon}
+        <Icon/>
       {/if}
       {#if children}
         <span>{@render children()}</span>
