@@ -9,6 +9,7 @@ import type { ProviderInfo } from '/@api/provider-info';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 import PinMenu from './PinMenu.svelte';
+  import { showFeedbackDialog } from '/@/stores/feedbackForm';
 
 let showMenu: boolean = $state(false);
 let outsideWindow: HTMLDivElement;
@@ -44,10 +45,12 @@ function onWindowClick(e: Event): void {
 
 function unpin(providerId: string): void {
   window.unpinStatusBar(providerId).catch(console.error);
+  setTimeout(() => showFeedbackDialog('statusbarProviders.showProviders'), 60000);
 }
 
 function pin(providerId: string): void {
   window.pinStatusBar(providerId).catch(console.error);
+  setTimeout(() => showFeedbackDialog('statusbarProviders.showProviders'), 60000);
 }
 </script>
 
