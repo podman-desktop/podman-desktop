@@ -15,7 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { type BuildImageInfo, buildImagesInfo } from '/@/stores/build-images';
+
+import { buildImagesInfo } from '/@/stores/build-images';
 
 export interface BuildImageCallback {
   // callback on stream
@@ -37,48 +38,29 @@ export interface BuildReplay {
   end: boolean;
 }
 
-export interface BuildHold {
-  // stream hold
-  stream: string;
-
-  // error hold
-  error: string;
-
-  // end hold
-  end: boolean;
-}
-
 // map by build id
 const buildCallbacks = new Map<symbol, BuildImageCallback>();
-const buildOnHolds = new Map<symbol, BuildHold>();
 const buildReplays = new Map<symbol, BuildReplay>();
 
-// new build is occuring, needs to compute a new key and prepare replay data
-export function startBuild(buildImageCallback: BuildImageCallback): BuildImageInfo {
+// new build is occurring, needs to compute a new key and prepare replay data
+export function startBuild(buildImageCallback: BuildImageCallback): symbol {
   const key = getKey();
   buildCallbacks.set(key, buildImageCallback);
 
   // create a new replay value
   buildReplays.set(key, { stream: '', error: '', end: false });
-  return { buildImageKey: key, buildRunning: true };
+  return key;
 }
 
 // clear all data related to the given build
-export function clearBuildTask(info: BuildImageInfo): void {
-  buildCallbacks.delete(info.buildImageKey);
-  buildOnHolds.delete(info.buildImageKey);
-  buildReplays.delete(info.buildImageKey);
-  // remove current build
-  buildImagesInfo.set({ buildImageKey: getKey(), buildRunning: false });
+// even if build did not started once
+export function clearBuildTask(key: symbol = Symbol()): void {
+  buildCallbacks.delete(key);
 }
 
 // client is leaving the page, disconnect the UI
 // need to store the events
 export function disconnectUI(key: symbol): void {
-  // provide on hold events
-  const holdingEvents: BuildHold = { stream: '', error: '', end: false };
-  buildOnHolds.set(key, holdingEvents);
-
   // remove the current callback
   buildCallbacks.delete(key);
 }
@@ -87,39 +69,16 @@ export function disconnectUI(key: symbol): void {
 export function reconnectUI(key: symbol, buildImageCallback: BuildImageCallback): void {
   // add the new callback
   buildCallbacks.set(key, buildImageCallback);
-
   // replay previous lines
   const replay = buildReplays.get(key);
-  if (replay) {
-    if (replay.stream.length > 0) {
-      buildImageCallback.onStream(replay.stream);
-    }
-    if (replay.error.length > 0) {
-      buildImageCallback.onError(replay.error);
-    }
+  if (!replay) {
+    throw new Error('Cannot find replay for the image build. Have you called startBuild function?');
   }
-
-  // on hold events should be replayed
-  // replay the holding results
-  let ended = false;
-  const hold = buildOnHolds.get(key);
-  if (hold) {
-    if (hold.stream.length > 0) {
-      buildImageCallback.onStream(hold.stream);
-    }
-    if (hold.error.length > 0) {
-      buildImageCallback.onError(hold.error);
-    }
-    if (hold.end) {
-      ended = true;
-      buildImageCallback.onEnd();
-    }
+  buildImageCallback.onStream(replay.stream);
+  if (replay.error) {
+    buildImageCallback.onError(replay.error);
   }
-  // ok remove the intermediate events
-  buildOnHolds.delete(key);
-
-  // check if it was ended in the replay
-  if (!ended && replay?.end) {
+  if (replay.end) {
     buildImageCallback.onEnd();
   }
 }
@@ -133,35 +92,34 @@ function getKey(): symbol {
 export function eventCollect(key: symbol, eventName: 'finish' | 'stream' | 'error', data: string): void {
   // keep values for replay
   const replay = buildReplays.get(key);
-  if (replay) {
-    if (eventName === 'stream') {
-      replay.stream += `${data}\r`;
-    } else if (eventName === 'error') {
-      replay.error += `${data}\r`;
-    } else if (eventName === 'finish') {
-      replay.end = true;
-    }
+  if (!replay) {
+    throw new Error('Call startBuild function before collecting events ');
   }
   const callback = buildCallbacks.get(key);
-  if (!callback) {
-    // need to store the result for later as no UI is connected
-    const hold = buildOnHolds.get(key);
-    if (hold) {
-      if (eventName === 'stream') {
-        hold.stream += `${data}\r`;
-      } else if (eventName === 'error') {
-        hold.error += `${data}\r`;
-      } else if (eventName === 'finish') {
-        hold.end = true;
-      }
-      return;
-    }
-  }
+
   if (eventName === 'stream') {
+    replay.stream += `${data}\r`;
     callback?.onStream(data);
   } else if (eventName === 'error') {
+    replay.error += `${data}\r`;
     callback?.onError(data);
   } else if (eventName === 'finish') {
+    replay.end = true;
     callback?.onEnd();
   }
 }
+
+export function deleteBuildImageTask(taskId: number): void {
+  const id = taskId as number;
+  // remove task from buildImagesInfo
+  buildImagesInfo.update(map => {
+    const buildImageInfo = map.get(id);
+    if (buildImageInfo) {
+      clearBuildTask(buildImageInfo.buildImageKey);
+    }
+    map.delete(id);
+    return map;
+  });
+}
+
+window.events?.receive('build-image-task-delete', deleteBuildImageTask as (...args: unknown[]) => void);

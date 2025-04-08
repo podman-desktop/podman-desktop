@@ -32,7 +32,7 @@ export interface NavigationParameters {
   [NavigationPage.EXISTING_IMAGE_CREATE_CONTAINER]: never;
   [NavigationPage.DEPLOY_TO_KUBE]: { id: string; engineId: string };
   [NavigationPage.IMAGES]: never;
-  [NavigationPage.IMAGE_BUILD]: never;
+  [NavigationPage.IMAGE_BUILD]: { taskId: number | undefined };
   [NavigationPage.IMAGE]: { id: string; engineId: string; tag: string };
   [NavigationPage.MANIFEST]: { id: string; engineId: string; tag: string };
   [NavigationPage.ONBOARDING]: { extensionId: string };

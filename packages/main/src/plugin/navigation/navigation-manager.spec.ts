@@ -146,6 +146,9 @@ test('check navigateToImageBuild', async () => {
 
   expect(apiSender.send).toHaveBeenCalledWith('navigate', {
     page: NavigationPage.IMAGE_BUILD,
+    parameters: {
+      taskId: undefined,
+    },
   });
 });
 

@@ -96,11 +96,27 @@ onMount(async () => {
   });
   sortedCards = DEFAULT_CARDS;
 
-  // first item should be the default
-  sortedCards[0].isDefault = true;
-  sortedCards[0].checked = true;
-
   advancedCards = ADVANCED_CARDS;
+  sortedCards[0].isDefault = true;
+  // first item should be the default if not reconnected to ongoing build
+  if (!platforms) {
+    sortedCards[0].checked = true;
+  } else {
+    let tempPlatformsArray = platforms.split(',');
+    sortedCards.forEach(card => {
+      card.checked = tempPlatformsArray.includes(card.value);
+    });
+    advancedCards.forEach(card => {
+      card.checked = tempPlatformsArray.includes(card.value);
+    });
+    // support for custom advanced platforms
+    tempPlatformsArray.forEach(platform => {
+      if (!sortedCards.some(card => card.value === platform) && !advancedCards.some(card => card.value === platform)) {
+        addCard({ value: platform });
+      }
+    });
+    showMoreOptions = advancedCards.some(card => card.checked);
+  }
 });
 
 function handleCard(card: { detail: { mode: 'add' | 'remove'; value: string } }): void {

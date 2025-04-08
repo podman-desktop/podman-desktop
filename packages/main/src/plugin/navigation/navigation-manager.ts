@@ -187,9 +187,12 @@ export class NavigationManager {
     });
   }
 
-  async navigateToImageBuild(): Promise<void> {
+  async navigateToImageBuild(taskId?: number): Promise<void> {
     this.navigateTo({
       page: NavigationPage.IMAGE_BUILD,
+      parameters: {
+        taskId,
+      },
     });
   }
 

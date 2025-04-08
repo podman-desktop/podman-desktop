@@ -21,6 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { tick } from 'svelte';
+import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import BuildImageFromContainerfile from '/@/lib/image/BuildImageFromContainerfile.svelte';
@@ -32,19 +34,19 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 // xterm is used in the UI, but not tested, added in order to avoid the multiple warnings being shown during the test.
 vi.mock('@xterm/xterm', () => {
   return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn(), dispose: vi.fn() }),
+    Terminal: vi.fn().mockReturnValue({
+      loadAddon: vi.fn(),
+      open: vi.fn(),
+      write: vi.fn(),
+      clear: vi.fn(),
+      dispose: vi.fn(),
+      reset: vi.fn(),
+    }),
   };
 });
 
 // fake the window.events object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
 });
@@ -90,10 +92,7 @@ function setup(): void {
     installationSupport: undefined,
   } as unknown as ProviderInfo;
   providerInfos.set([providerInfo]);
-  buildImagesInfo.set({
-    buildImageKey: Symbol(),
-    buildRunning: false,
-  });
+  buildImagesInfo.set(new Map());
 }
 
 test('Expect Build button is disabled', async () => {
@@ -147,12 +146,15 @@ test('Expect Done button is enabled once build is done', async () => {
 test('Select multiple platforms and expect pressing Build will do two buildImage builds', async () => {
   // Auto select amd64
   vi.mocked(window.getOsArch).mockResolvedValue('amd64');
+  vi.mocked(window.pathRelative).mockResolvedValue('containerfile');
   setup();
   await waitRender();
 
   const containerFilePath = screen.getByRole('textbox', { name: 'Containerfile path' });
   expect(containerFilePath).toBeInTheDocument();
   await userEvent.type(containerFilePath, '/somepath/containerfile');
+
+  await tick();
 
   // Type in the image name a test value 'foobar'
   const containerImageName = screen.getByRole('textbox', { name: 'Image name' });
@@ -208,6 +210,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     expect.anything(),
     expect.anything(),
     expect.anything(),
+    expect.anything(),
   );
 
   expect(window.buildImage).toHaveBeenCalledWith(
@@ -215,6 +218,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     'containerfile',
     undefined,
     'linux/arm64',
+    expect.anything(),
     expect.anything(),
     expect.anything(),
     expect.anything(),
@@ -314,6 +318,7 @@ test('Selecting one platform only calls buildImage once with the selected platfo
     expect.anything(),
     expect.anything(),
     expect.anything(),
+    expect.anything(),
   );
 });
 
@@ -326,16 +331,34 @@ test('Expect Abort button to hidden when image build is not in progress', async 
 });
 
 test('Expect Abort button to being visible when image build is in progress', async () => {
+  // Auto select amd64
+  vi.mocked(window.getOsArch).mockResolvedValue('amd64');
+  let resolveCallback: (value?: unknown) => void = () => {};
+  vi.mocked(window.buildImage).mockResolvedValue(new Promise(resolve => (resolveCallback = resolve)));
   setup();
-  buildImagesInfo.set({
-    buildImageKey: Symbol(),
-    buildRunning: true,
-  });
-  render(BuildImageFromContainerfile);
+  await waitRender();
 
-  const abortButton = screen.getByRole('button', { name: 'Cancel' });
-  expect(abortButton).toBeInTheDocument();
-  expect(abortButton).toBeEnabled();
+  vi.mocked(window.pathRelative).mockResolvedValue('containerfile');
+  const containerFilePath = screen.getByRole('textbox', { name: 'Containerfile path' });
+  expect(containerFilePath).toBeInTheDocument();
+  await userEvent.type(containerFilePath, '/somepath/containerfile');
+
+  const imageName = screen.getByRole('textbox', { name: 'Image name' });
+  expect(imageName).toBeInTheDocument();
+  await userEvent.type(imageName, 'foobar');
+
+  const buildButton = screen.getByRole('button', { name: 'Build' });
+  expect(buildButton).toBeInTheDocument();
+  expect(buildButton).toBeEnabled();
+
+  await userEvent.click(buildButton);
+
+  await waitFor(() => {
+    const abortButton = screen.getByRole('button', { name: 'Cancel' });
+    expect(abortButton).toBeInTheDocument();
+    expect(abortButton).toBeEnabled();
+  });
+  resolveCallback();
 });
 
 test('Expect no value for containerImageName input field (no my-custom-image value), just show the placeholder.', async () => {
@@ -429,3 +452,138 @@ test('Expect build to include build arguments', async () => {
   expect(buildButton).toBeEnabled();
   await userEvent.click(buildButton);
 });
+
+test('Expect build page to load a state for a build requested by taskId', async () => {
+  let onDataCallbacksBuildImageId = 0;
+  const onDataCallbacksBuildImage = new Map<
+    number,
+    (key: symbol, eventName: 'finish' | 'stream' | 'error', data: string) => void
+  >();
+  const onDataCallbacksBuildImageKeys = new Map<number, symbol>();
+  const buildImagePromiseCallbacks = new Map<
+    number,
+    { resolve: (value: unknown) => void; reject: (value: unknown) => void }
+  >();
+  setup();
+
+  // mock window.buildImage to simulate multiple builds are running
+  vi.mocked(window.buildImage).mockImplementation(
+    async (
+      _containerBuildContextDirectory: string,
+      _relativeContainerfilePath: string,
+      _imageName: string | undefined,
+      _platform: string,
+      _selectedProvider: ProviderContainerConnectionInfo,
+      key: symbol,
+      eventCollect: (key: symbol, eventName: 'finish' | 'stream' | 'error', data: string) => void,
+      _cancellableTokenId?: number,
+      _buildargs?: { [key: string]: string },
+      _taskId?: number,
+    ) => {
+      onDataCallbacksBuildImageId++;
+      onDataCallbacksBuildImage.set(onDataCallbacksBuildImageId, eventCollect);
+      onDataCallbacksBuildImageKeys.set(onDataCallbacksBuildImageId, key);
+      return new Promise((resolve, reject) => {
+        buildImagePromiseCallbacks.set(onDataCallbacksBuildImageId, { resolve, reject });
+      });
+    },
+  );
+
+  let rendering = render(BuildImageFromContainerfile);
+  let containerFilePath = screen.getByRole('textbox', { name: 'Containerfile path' });
+  await userEvent.type(containerFilePath, '/somepath/containerfile');
+
+  let buildFolder = screen.getByRole('textbox', { name: 'Build context directory' });
+
+  let containerImageName = screen.getByRole('textbox', { name: 'Image name' });
+  await userEvent.type(containerImageName, 'foobar');
+
+  // Expect to be able to build fine with the build arguments / no errors.
+  let buildButton = screen.getByRole('button', { name: 'Build' });
+  await userEvent.click(buildButton);
+  await tick();
+  await waitFor(() => {
+    expect(containerFilePath).not.toBeVisible();
+  });
+
+  // unmount the page
+  rendering.unmount();
+
+  // render the page again like it was requested from Images page
+  rendering = render(BuildImageFromContainerfile);
+
+  containerFilePath = rendering.getByRole('textbox', { name: 'Containerfile path' });
+  expect(containerFilePath).toBeVisible();
+  await userEvent.type(containerFilePath, '/somepath1/containerfile1');
+
+  buildFolder = rendering.getByRole('textbox', { name: 'Build context directory' });
+  expect(buildFolder).toBeVisible();
+
+  containerImageName = rendering.getByRole('textbox', { name: 'Image name' });
+  expect(containerImageName).toBeVisible();
+  await userEvent.type(containerImageName, 'foobar1');
+
+  // Expect to be able to build fine with the build arguments / no errors.
+  buildButton = rendering.getByRole('button', { name: 'Build' });
+  expect(buildButton).toBeVisible();
+  expect(buildButton).toBeEnabled();
+
+  await userEvent.click(buildButton);
+
+  expect(onDataCallbacksBuildImageId).equals(2);
+  expect(onDataCallbacksBuildImage).toHaveLength(2);
+  expect(onDataCallbacksBuildImageKeys).toHaveLength(2);
+
+  await waitFor(() => expect(get(buildImagesInfo).size).equals(2));
+
+  let cancelButton = rendering.getByRole('button', { name: 'Cancel' });
+
+  expect(containerFilePath).not.toBeVisible();
+  expect(buildFolder).not.toBeVisible();
+  expect(containerImageName).not.toBeVisible();
+  expect(buildButton).not.toBeVisible();
+  expect(cancelButton).toBeVisible();
+
+  await userEvent.click(cancelButton);
+
+  buildButton = rendering.getByRole('button', { name: 'Build' });
+
+  expect(containerFilePath).toBeVisible();
+  expect(buildFolder).toBeVisible();
+  expect(containerImageName).toBeVisible();
+  expect(buildButton).toBeVisible();
+  expect(cancelButton).not.toBeVisible();
+
+  await rendering.rerender({ taskId: 9 });
+
+  await waitFor(() => {
+    expect(containerFilePath).not.toBeVisible();
+    expect(buildFolder).not.toBeVisible();
+    expect(containerImageName).not.toBeVisible();
+    expect(buildButton).not.toBeVisible();
+  });
+
+  cancelButton = rendering.getByRole('button', { name: 'Cancel' });
+
+  expect(cancelButton).toBeVisible();
+
+  buildImagePromiseCallbacks.get(1)?.resolve(undefined);
+
+  await waitFor(() => {
+    buildButton = rendering.getByRole('button', { name: 'Build' });
+    expect(buildButton).toBeVisible();
+  });
+
+  expect(containerFilePath).toBeVisible();
+  expect(buildFolder).toBeVisible();
+  expect(containerImageName).toBeVisible();
+
+  buildButton = rendering.getByRole('button', { name: 'Build' });
+
+  expect(buildButton).toBeVisible();
+  expect(cancelButton).not.toBeVisible();
+
+  expect(containerFilePath).toHaveValue('/somepath/containerfile');
+  expect(buildFolder).toHaveValue('/somepath');
+  expect(containerImageName).toHaveValue('foobar');
+}, 100000);

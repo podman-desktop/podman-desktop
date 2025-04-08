@@ -1346,6 +1346,7 @@ export class PluginSystem {
         onDataCallbacksBuildImageId: number,
         cancellableTokenId?: number,
         buildargs?: { [key: string]: string },
+        taskId?: number,
       ): Promise<unknown> => {
         // create task
         const task = taskManager.createTask({
@@ -1353,17 +1354,20 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToImageBuild().catch((err: unknown) => {
+              navigationManager.navigateToImageBuild(taskId).catch((err: unknown) => {
                 console.error(`Something went wrong while trying to navigate to image build: ${String(err)}`);
               });
             },
           },
         });
 
+        task.onUpdate(e => apiSender.send(`build-image-task-${e.action}`, taskId));
+
         const abortController = this.createAbortControllerOnCancellationToken(
           cancellationTokenRegistry,
           cancellableTokenId,
         );
+
         return containerProviderRegistry
           .buildImage(
             containerBuildContextDirectory,
