@@ -10,6 +10,7 @@ overrides:
   serve-handler>path-to-regexp: ^3.3.0
   express>cookie: ^0.7.0
   '@docusaurus/theme-mermaid>mermaid': ^11.4.1
+  '@docusaurus/mdx-loader>image-size': ^1.2.1
   webpack-dev-server>http-proxy-middleware: ^2.0.7
   '@kubernetes/client-node>jsonpath-plus': ^10.3.0
   cssstyle>@asamuzakjp/css-color: ^2.8.3-b.2
@@ -7448,8 +7449,8 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
-  image-size@1.1.1:
-    resolution: {integrity: sha512-541xKlUw6jr/6gGuk92F+mYM5zaFAc5ahphvkqvNe2bQ6gVBkd6bfrmVJ2t4KDAfikAYZyIqTnktX3i6/aQDrQ==}
+  image-size@1.2.1:
+    resolution: {integrity: sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==}
     engines: {node: '>=16.x'}
     hasBin: true
 
@@ -13435,7 +13436,7 @@ snapshots:
       estree-util-value-to-estree: 3.2.1
       file-loader: 6.2.0(webpack@5.96.1)
       fs-extra: 11.2.0
-      image-size: 1.1.1
+      image-size: 1.2.1
       mdast-util-mdx: 3.0.0
       mdast-util-to-string: 4.0.0
       react: 18.2.0
@@ -20128,7 +20129,7 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  image-size@1.1.1:
+  image-size@1.2.1:
     dependencies:
       queue: 6.0.2
 
@@ -23149,7 +23150,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:

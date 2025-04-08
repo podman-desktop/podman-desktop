@@ -220,6 +220,7 @@
       "serve-handler>path-to-regexp": "^3.3.0",
       "express>cookie": "^0.7.0",
       "@docusaurus/theme-mermaid>mermaid": "^11.4.1",
+      "@docusaurus/mdx-loader>image-size": "^1.2.1",
       "webpack-dev-server>http-proxy-middleware": "^2.0.7",
       "@kubernetes/client-node>jsonpath-plus": "^10.3.0",
       "cssstyle>@asamuzakjp/css-color": "^2.8.3-b.2",
