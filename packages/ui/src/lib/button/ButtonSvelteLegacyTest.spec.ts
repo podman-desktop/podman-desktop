@@ -21,6 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
+import ContainerIcon from '../icons/ContainerIcon.svelte';
 import ButtonSvelteLegacyTest from './ButtonSvelteLegacyTest.svelte';
 
 test('should render content', () => {
@@ -31,6 +32,17 @@ test('should render content', () => {
 
   const btn = getByText('Dummy Button');
   expect(btn).toBeInTheDocument();
+});
+
+test('svelte component icon should be properly rendered', () => {
+  const { container } = render(ButtonSvelteLegacyTest, {
+    onclick: vi.fn(),
+    content: 'Dummy Button',
+    icon: ContainerIcon,
+  });
+
+  const svg = container.querySelector('svg');
+  expect(svg).toBeDefined();
 });
 
 test('click event should be propagated', async () => {
