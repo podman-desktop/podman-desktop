@@ -686,7 +686,7 @@ export class PluginSystem {
     );
     extensionDevelopmentFolders.init();
 
-    const pinRegistry = new PinRegistry(commandRegistry, apiSender, configurationRegistry, providerRegistry);
+    const pinRegistry = new PinRegistry(commandRegistry, apiSender, configurationRegistry, providerRegistry, telemetry);
     pinRegistry.init();
 
     this.extensionLoader = new ExtensionLoader(
