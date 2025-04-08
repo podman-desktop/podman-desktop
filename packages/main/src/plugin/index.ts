@@ -605,6 +605,12 @@ export class PluginSystem {
       return navigationManager.navigateToTroubleshooting();
     });
 
+    commandRegistry.registerCommand('openWebsite', async arg => {
+      if (arg) {
+        await shell.openExternal(arg);
+      }
+    });
+
     // register appearance (light, dark, auto being system)
     const appearanceConfiguration = new AppearanceInit(configurationRegistry);
     appearanceConfiguration.init();
@@ -1896,8 +1902,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'showMessageBox:onSelect',
-      async (_listener, id: number, index: number | undefined): Promise<void> => {
-        return messageBox.onDidSelectButton(id, index);
+      async (_listener, id: number, index: number | undefined, option: number | undefined): Promise<void> => {
+        return messageBox.onDidSelectButton(id, index, option);
       },
     );
 
