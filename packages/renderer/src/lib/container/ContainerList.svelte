@@ -334,7 +334,7 @@ let imageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Image
   },
 });
 
-let ageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date | undefined>('Age', {
+let ageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date | undefined>('Uptime', {
   renderer: TableDurationColumn,
   renderMapping(object): Date | undefined {
     if (containerUtils.isContainerInfoUI(object)) {
