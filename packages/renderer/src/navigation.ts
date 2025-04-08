@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer } from 'buffer';
 import { router } from 'tinro';
 
 import { NavigationPage } from '/@api/navigation-page';
@@ -78,7 +80,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       break;
     case NavigationPage.IMAGE:
       router.goto(
-        `/images/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}`,
+        `/images/${request.parameters.id}/${request.parameters.engineId}/${Buffer.from(request.parameters.tag).toString('base64')}/summary`,
       );
       break;
     case NavigationPage.ONBOARDING:
