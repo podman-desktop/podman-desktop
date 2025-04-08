@@ -117,15 +117,20 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
 async function handleAbort(): Promise<void> {
   if (cancellableTokenId !== 0 && remainingProviders > 0) {
     await window.cancelToken(cancellableTokenId);
+    // reset token
+    cancellableTokenId = 0;
+    aborted = true;
+
+    // update providers
     providers = providers.map(p => {
       if (p.state === 'running') {
         p.state = 'canceled';
       }
       return p;
     });
-    aborted = true;
+
+    // telemetry
     await window.telemetryTrack('imageCheck.aborted');
-    cancellableTokenId = 0;
   }
 }
 </script>
