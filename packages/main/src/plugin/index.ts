@@ -1350,6 +1350,7 @@ export class PluginSystem {
           cancellationTokenRegistry,
           cancellableTokenId,
         );
+        const buildImageEvents: { eventName: string; data: string }[] = [];
         return containerProviderRegistry
           .buildImage(
             containerBuildContextDirectory,
@@ -1371,6 +1372,7 @@ export class PluginSystem {
             },
           )
           .then(result => {
+            buildImageEvents.forEach(console.log);
             task.status = 'success';
             return result;
           })

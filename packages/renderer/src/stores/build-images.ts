@@ -17,11 +17,48 @@
  ***********************************************************************/
 
 import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
+
+export interface BuildArg {
+  key: string;
+  value: string;
+}
 
 export interface BuildImageInfo {
-  buildImageKey: symbol;
+  buildImageKey?: symbol;
   buildRunning: boolean;
+  buildFinished: boolean;
+  containerImageName?: string;
+  containerFilePath: string;
+  containerBuildContextDirectory: string;
+  containerBuildPlatform: string;
+  buildParentImageName?: string;
+  buildError?: string;
+  buildArgs: BuildArg[];
+  cancellableTokenId?: number;
+  selectedProvider: ProviderContainerConnectionInfo;
+}
+
+export function cleanupBuildImageInfo() {
+  buildImagesInfo.set(createDefaultBuildImageInfo());
+}
+
+function createDefaultBuildImageInfo() {
+  return {
+    buildRunning: false,
+    buildFinished: false,
+    containerFilePath: '',
+    containerBuildContextDirectory: '',
+    containerBuildPlatform: '',
+    buildArgs: [{ key: '', value: '' }],
+  };
+}
+
+export function getBuildImageInfo(): BuildImageInfo {
+  const current = get(buildImagesInfo);
+
+  return current ? current : createDefaultBuildImageInfo();
 }
 
 // current build key

@@ -204,6 +204,9 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
         <Route path="/images/build" breadcrumb="Build an Image">
           <BuildImageFromContainerfile />
         </Route>
+        <Route path="/images/build/:taskId" breadcrumb="Build an Image" let:meta>
+          <BuildImageFromContainerfile taskId={meta.params.taskId}/>
+        </Route>
         <Route path="/images/pull" breadcrumb="Pull an Image">
           <PullImage />
         </Route>
