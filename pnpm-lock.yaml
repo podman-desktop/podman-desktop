@@ -11,6 +11,7 @@ overrides:
   express>cookie: ^0.7.0
   '@docusaurus/theme-mermaid>mermaid': ^11.4.1
   '@docusaurus/mdx-loader>image-size': ^1.2.1
+  '@docusaurus/mdx-loader>estree-util-value-to-estree': ^3.3.3
   webpack-dev-server>http-proxy-middleware: ^2.0.7
   '@kubernetes/client-node>jsonpath-plus': ^10.3.0
   cssstyle>@asamuzakjp/css-color: ^2.8.3-b.2
@@ -6681,8 +6682,8 @@ packages:
   estree-util-to-js@2.0.0:
     resolution: {integrity: sha512-WDF+xj5rRWmD5tj6bIqRi6CkLIXbbNQUcxQHzGysQzvHmdYG2G7p/Tf0J0gpxGgkeMZNTIjT/AoSvC9Xehcgdg==}
 
-  estree-util-value-to-estree@3.2.1:
-    resolution: {integrity: sha512-Vt2UOjyPbNQQgT5eJh+K5aATti0OjCIAGc9SgMdOFYbohuifsWclR74l0iZTJwePMgWYdX1hlVS+dedH9XV8kw==}
+  estree-util-value-to-estree@3.3.3:
+    resolution: {integrity: sha512-Db+m1WSD4+mUO7UgMeKkAwdbfNWwIxLt48XF2oFU9emPfXkIu+k5/nlOj313v7wqtAPo0f9REhUvznFrPkG8CQ==}
 
   estree-util-visit@2.0.0:
     resolution: {integrity: sha512-m5KgiH85xAhhW8Wta0vShLcUvOsh3LLPI2YVwcbio1l7E09NTLL1EyMZFM1OyWowoH0skScNbhOPl4kcBgzTww==}
@@ -13433,7 +13434,7 @@ snapshots:
       '@mdx-js/mdx': 3.1.0(acorn@8.14.1)
       '@slorber/remark-comment': 1.0.0
       escape-html: 1.0.3
-      estree-util-value-to-estree: 3.2.1
+      estree-util-value-to-estree: 3.3.3
       file-loader: 6.2.0(webpack@5.96.1)
       fs-extra: 11.2.0
       image-size: 1.2.1
@@ -19151,7 +19152,7 @@ snapshots:
       astring: 1.9.0
       source-map: 0.7.4
 
-  estree-util-value-to-estree@3.2.1:
+  estree-util-value-to-estree@3.3.3:
     dependencies:
       '@types/estree': 1.0.7
 
