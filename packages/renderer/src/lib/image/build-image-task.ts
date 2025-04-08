@@ -15,7 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { type BuildImageInfo, buildImagesInfo } from '/@/stores/build-images';
+import { get } from 'svelte/store';
+import { type BuildImageInfo, buildImagesInfo, cleanupBuildImageInfo } from '/@/stores/build-images';
 
 export interface BuildImageCallback {
   // callback on stream
@@ -54,22 +55,23 @@ const buildOnHolds = new Map<symbol, BuildHold>();
 const buildReplays = new Map<symbol, BuildReplay>();
 
 // new build is occuring, needs to compute a new key and prepare replay data
-export function startBuild(buildImageCallback: BuildImageCallback): BuildImageInfo {
+export function startBuild(buildImageCallback: BuildImageCallback): symbol {
   const key = getKey();
   buildCallbacks.set(key, buildImageCallback);
 
   // create a new replay value
   buildReplays.set(key, { stream: '', error: '', end: false });
-  return { buildImageKey: key, buildRunning: true };
+  return key;
 }
 
 // clear all data related to the given build
-export function clearBuildTask(info: BuildImageInfo): void {
-  buildCallbacks.delete(info.buildImageKey);
-  buildOnHolds.delete(info.buildImageKey);
-  buildReplays.delete(info.buildImageKey);
+// even if build did not started once
+export function clearBuildTask(key: symbol = Symbol()): void {
+  buildCallbacks.delete(key);
+  buildOnHolds.delete(key);
+  buildReplays.delete(key);
   // remove current build
-  buildImagesInfo.set({ buildImageKey: getKey(), buildRunning: false });
+  cleanupBuildImageInfo();
 }
 
 // client is leaving the page, disconnect the UI
