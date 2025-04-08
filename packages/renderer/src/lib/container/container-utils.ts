@@ -76,6 +76,15 @@ export class ContainerUtils {
     return humanizeDuration(uptimeInMs, { round: true, largest: 1 });
   }
 
+  getCreated(containerInfoUI: ContainerInfoUI): Date | undefined {
+    if (!containerInfoUI.created) {
+      return undefined;
+    }
+
+    // containerInfoUI.created is in seconds
+    return moment(containerInfoUI.created * 1000).toDate();
+  }
+
   getUpDate(containerInfoUI: ContainerInfoUI): Date | undefined {
     if (containerInfoUI.state !== 'RUNNING' || !containerInfoUI.startedAt) {
       return undefined;
