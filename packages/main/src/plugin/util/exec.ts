@@ -22,7 +22,7 @@ import { spawn } from 'node:child_process';
 import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
 import * as sudo from 'sudo-prompt';
 
-import { isLinux, isMac, isWindows } from '../../util.js';
+import { isMac, isUnixLike, isWindows } from '../../util.js';
 import type { Proxy } from '../proxy.js';
 
 export const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
@@ -130,7 +130,7 @@ export class Exec {
           )}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
         ];
         command = 'osascript';
-      } else if (isLinux()) {
+      } else if (isUnixLike()) {
         args = [command, ...(args ?? [])];
         command = 'pkexec';
       }
