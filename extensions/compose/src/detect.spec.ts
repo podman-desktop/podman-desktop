@@ -33,6 +33,7 @@ const osMock: OS = {
   isWindows: vi.fn(),
   isLinux: vi.fn(),
   isMac: vi.fn(),
+  isUnixLike: vi.fn(),
 };
 
 let detect: Detect;
@@ -49,7 +50,7 @@ vi.mock('@podman-desktop/api', async () => {
       exec: vi.fn(),
     },
     env: {
-      isLinux: false,
+      isUnixLike: false,
       isWindows: false,
       isMac: false,
     },
@@ -131,8 +132,8 @@ describe('Check getDockerComposePath uses proper tooling by platform', () => {
     );
   });
 
-  test('linux should use which', async () => {
-    (extensionApi.env.isLinux as boolean) = true;
+  test('unix-like OSes should use which', async () => {
+    (extensionApi.env.isUnixLike as boolean) = true;
     (extensionApi.env.isWindows as boolean) = false;
     (extensionApi.env.isMac as boolean) = false;
 
@@ -143,7 +144,7 @@ describe('Check getDockerComposePath uses proper tooling by platform', () => {
   test('mac should use which', async () => {
     (extensionApi.env.isMac as boolean) = true;
     (extensionApi.env.isWindows as boolean) = false;
-    (extensionApi.env.isLinux as boolean) = false;
+    (extensionApi.env.isUnixLike as boolean) = false;
 
     await detect.getDockerComposePath('docker-compose');
     expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['docker-compose']);
@@ -152,7 +153,7 @@ describe('Check getDockerComposePath uses proper tooling by platform', () => {
   test('windows should use which', async () => {
     (extensionApi.env.isWindows as boolean) = true;
     (extensionApi.env.isMac as boolean) = false;
-    (extensionApi.env.isLinux as boolean) = false;
+    (extensionApi.env.isUnixLike as boolean) = false;
 
     await detect.getDockerComposePath('docker-compose');
     expect(extensionApi.process.exec).toHaveBeenCalledWith('where.exe', ['docker-compose']);
@@ -189,7 +190,7 @@ describe('parseVersion', () => {
 
 describe('Check default socket path', async () => {
   test('linux', async () => {
-    (osMock.isLinux as Mock).mockReturnValue(true);
+    (osMock.isUnixLike as Mock).mockReturnValue(true);
     (osMock.isMac as Mock).mockReturnValue(false);
     (osMock.isWindows as Mock).mockReturnValue(false);
     const result = detect.getSocketPath();
@@ -197,7 +198,7 @@ describe('Check default socket path', async () => {
   });
 
   test('macOS', async () => {
-    (osMock.isLinux as Mock).mockReturnValue(false);
+    (osMock.isUnixLike as Mock).mockReturnValue(false);
     (osMock.isMac as Mock).mockReturnValue(true);
     (osMock.isWindows as Mock).mockReturnValue(false);
     const result = detect.getSocketPath();
@@ -205,7 +206,7 @@ describe('Check default socket path', async () => {
   });
 
   test('windows', async () => {
-    (osMock.isLinux as Mock).mockReturnValue(false);
+    (osMock.isUnixLike as Mock).mockReturnValue(false);
     (osMock.isMac as Mock).mockReturnValue(false);
     (osMock.isWindows as Mock).mockReturnValue(true);
     const result = detect.getSocketPath();

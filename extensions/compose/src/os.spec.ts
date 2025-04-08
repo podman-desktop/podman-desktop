@@ -35,9 +35,23 @@ test('linux', async () => {
   const isWindows = os.isWindows();
   const isLinux = os.isLinux();
   const isMac = os.isMac();
+  const isUnixLike = os.isUnixLike();
   expect(isWindows).toBeFalsy();
   expect(isLinux).toBeTruthy();
   expect(isMac).toBeFalsy();
+  expect(isUnixLike).toBeTruthy();
+});
+
+test('freebsd', async () => {
+  vitest.spyOn(process, 'platform', 'get').mockReturnValue('freebsd');
+  const isWindows = os.isWindows();
+  const isLinux = os.isLinux();
+  const isMac = os.isMac();
+  const isUnixLike = os.isUnixLike();
+  expect(isWindows).toBeFalsy();
+  expect(isLinux).toBeFalsy();
+  expect(isMac).toBeFalsy();
+  expect(isUnixLike).toBeTruthy();
 });
 
 test('mac', async () => {
@@ -45,9 +59,11 @@ test('mac', async () => {
   const isWindows = os.isWindows();
   const isLinux = os.isLinux();
   const isMac = os.isMac();
+  const isUnixLike = os.isUnixLike();
   expect(isWindows).toBeFalsy();
   expect(isLinux).toBeFalsy();
   expect(isMac).toBeTruthy();
+  expect(isUnixLike).toBeFalsy();
 });
 
 test('windows', async () => {
@@ -55,7 +71,9 @@ test('windows', async () => {
   const isWindows = os.isWindows();
   const isLinux = os.isLinux();
   const isMac = os.isMac();
+  const isUnixLike = os.isUnixLike();
   expect(isWindows).toBeTruthy();
   expect(isLinux).toBeFalsy();
   expect(isMac).toBeFalsy();
+  expect(isUnixLike).toBeFalsy();
 });

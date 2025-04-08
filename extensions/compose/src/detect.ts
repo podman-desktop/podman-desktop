@@ -92,8 +92,8 @@ export class Detect {
   }
 
   async getDockerComposePath(executable: string): Promise<string> {
-    // grab full path for Linux and mac
-    if (extensionApi.env.isLinux || extensionApi.env.isMac) {
+    // grab full path for Unix-like OSes and Mac
+    if (extensionApi.env.isUnixLike || extensionApi.env.isMac) {
       try {
         const { stdout: fullPath } = await extensionApi.process.exec('which', [executable]);
         return fullPath;
