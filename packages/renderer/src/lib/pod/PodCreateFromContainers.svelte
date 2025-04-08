@@ -302,9 +302,9 @@ function navigateToContainers(): void {
           <Button type="link" on:click={navigateToContainers}>Close</Button>
           <Button
             icon={SolidPodIcon}
-            bind:disabled={createInProgress}
+            disabled={createInProgress}
             on:click={createPodFromContainers}
-            bind:inProgress={createInProgress}
+            inProgress={createInProgress}
             aria-label="Create pod">
             Create Pod
           </Button>

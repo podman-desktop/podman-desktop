@@ -27,7 +27,7 @@ async function reconnectContainerProviders(): Promise<void> {
 <div class="flex flex-row items-center">
   <Button
     class="my-1"
-    bind:inProgress={reconnectInProgress}
+    inProgress={reconnectInProgress}
     title="Re-establish connection to the container engine sockets"
     on:click={reconnectContainerProviders}
     icon={faPlug}>

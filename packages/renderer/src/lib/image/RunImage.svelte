@@ -1138,7 +1138,7 @@ const envDialogOptions: OpenDialogOptions = {
           class="w-full"
           icon={faPlay}
           aria-label="Start Container"
-          bind:disabled={invalidFields}>
+          disabled={invalidFields}>
           Start Container
         </Button>
         <div aria-label="createError">

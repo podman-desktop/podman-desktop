@@ -90,7 +90,7 @@ async function exportContainer(): Promise<void> {
     {#snippet icon()}
       <i class="fas fa-download fa-2x" aria-hidden="true"></i>
     {/snippet}
-      
+
     {#snippet content()}
       {#if container}
         <div class="space-y-2">
@@ -115,7 +115,7 @@ async function exportContainer(): Promise<void> {
               class="w-full mt-5"
               icon={faDownload}
               inProgress={inProgress}
-              bind:disabled={invalidFields}
+              disabled={invalidFields}
               aria-label="Export container">
               Export Container
             </Button>

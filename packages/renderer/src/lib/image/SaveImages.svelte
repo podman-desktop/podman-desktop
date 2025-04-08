@@ -170,7 +170,7 @@ async function saveImages(): Promise<void> {
           class="w-full"
           icon={faPlay}
           aria-label="Save images"
-          bind:disabled={saveDisabled}>
+          disabled={saveDisabled}>
           Save Images
         </Button>
         <div aria-label="saveError">
