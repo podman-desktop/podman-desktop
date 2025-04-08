@@ -18,7 +18,7 @@ interface Props {
   padding?: string;
   class?: string;
   hidden?: boolean;
-  'aria-label': string;
+  'aria-label'?: string;
   onclick?: () => void;
   children?: Snippet;
 }
