@@ -27,6 +27,7 @@ let cancellableTokenId: number = $state(0);
 
 let remainingProviders: number = $state(0);
 let aborted = $state(false);
+let aborting = $state(false);
 
 let providersUnsubscribe: Unsubscriber;
 
@@ -115,8 +116,14 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
 }
 
 async function handleAbort(): Promise<void> {
+  // avoid race condition
+  if (aborting) return;
+
   if (cancellableTokenId !== 0 && remainingProviders > 0) {
-    await window.cancelToken(cancellableTokenId);
+    aborting = true;
+    await window.cancelToken(cancellableTokenId).finally(() => {
+      aborting = false;
+    });
     // reset token
     cancellableTokenId = 0;
     aborted = true;
