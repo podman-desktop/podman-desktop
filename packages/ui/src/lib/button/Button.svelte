@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
+import { createEventDispatcher } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Spinner from '../progress/Spinner.svelte';
@@ -18,9 +19,12 @@ interface Props {
   class?: string;
   hidden?: boolean;
   'aria-label': string;
-  onclick: () => void;
+  onclick?: () => void;
   children?: Snippet;
 }
+
+// support legacy usage (on:click)
+const dispatch = createEventDispatcher<{ click: undefined }>();
 
 let {
   title,
@@ -34,7 +38,7 @@ let {
   class: classNames,
   hidden,
   'aria-label': ariaLabel,
-  onclick,
+  onclick = dispatch.bind(undefined, 'click'),
   children,
 }: Props = $props();
 
@@ -76,10 +80,6 @@ let classes = $derived.by(() => {
 
   return result;
 });
-
-function onClickHandler(): void {
-  onclick?.();
-}
 </script>
 
 <button
@@ -92,7 +92,7 @@ function onClickHandler(): void {
   hidden={hidden}
   title={title}
   aria-label={ariaLabel}
-  onclick={onClickHandler}
+  onclick={onclick}
   disabled={disabled || inProgress}>
   {#if icon ?? inProgress}
     <div
