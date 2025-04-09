@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ const PACKAGE_NAME = 'website';
 
 const config = {
   test: {
-    ...testConfig(),
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
+    environment: 'node',
+    include: ['*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 
