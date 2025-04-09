@@ -15,8 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { App as ElectronApp, BrowserWindow } from 'electron';
+import type { App as ElectronApp, BrowserWindow, Net as ElectronNet, Protocol as ElectronProtocol } from 'electron';
 
+import { ProtocolMedia } from '/@/protocol-media.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isMac, isWindows } from '/@/util.js';
 
@@ -38,10 +39,16 @@ export class Main {
   // TODO: should be renamed to #protocolLauncher
   public protocolLauncher: ProtocolLauncher;
 
-  constructor(app: ElectronApp) {
+  #net: ElectronNet;
+  #protocol: ElectronProtocol;
+
+  constructor(app: ElectronApp, net: ElectronNet, protocol: ElectronProtocol) {
     this.app = app;
     this.mainWindowDeferred = new Deferred<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
+
+    this.#net = net;
+    this.#protocol = protocol;
   }
 
   main(args: string[]): void {
@@ -74,6 +81,12 @@ export class Main {
      */
     const security = new SecurityRestrictions(this.app);
     security.init();
+
+    /**
+     * Media protocol
+     */
+    const media = new ProtocolMedia(this.app, this.#net, this.#protocol);
+    media.init();
 
     /**
      * Disable Hardware Acceleration for more power-save
