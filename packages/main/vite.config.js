@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@
 import { node } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 
 const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = 'main';
 /**
  * @type {import('vite').UserConfig}
  * @see https://vitejs.dev/config/
@@ -67,7 +65,8 @@ const config = {
   },
   test: {
     retry: 3, // Retries failing tests up to 3 times
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 
