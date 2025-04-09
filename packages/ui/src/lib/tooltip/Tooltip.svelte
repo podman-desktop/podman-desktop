@@ -55,7 +55,7 @@ import type { Snippet } from 'svelte';
 import { tooltipHidden } from './tooltip-store';
 
 interface Props {
-  tip?: string;
+  tip?: string | Snippet;
   top?: boolean;
   topLeft?: boolean;
   topRight?: boolean;
@@ -66,7 +66,6 @@ interface Props {
   left?: boolean;
   class?: string;
   'aria-label'?: string;
-  tipSnippet?: Snippet;
   children?: Snippet;
 }
 let {
@@ -81,9 +80,12 @@ let {
   left = false,
   class: className = '',
   'aria-label': ariaLabel,
-  tipSnippet = undefined,
   children = undefined,
 }: Props = $props();
+
+function isSnippet(obj: string | Snippet): obj is Snippet {
+  return obj.length === 1;
+}
 </script>
 
 <div class="relative inline-block">
@@ -101,18 +103,19 @@ let {
     class:bottom-left={bottomLeft}
     class:bottom-right={bottomRight}>
     {#if tip && !$tooltipHidden}
-      <div
-        class="inline-block py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-        aria-label="{ariaLabel ?? 'tooltip'}">
-        {tip}
-      </div>
-    {/if}
-    {#if tipSnippet && !tip && !$tooltipHidden}
-      <div
-        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-        aria-label="{ariaLabel ?? 'tooltip'}">
-        {@render tipSnippet?.()}
-      </div>
+      {#if !isSnippet(tip)}
+        <div
+          class="inline-block py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          aria-label="{ariaLabel ?? 'tooltip'}">
+          {tip}
+        </div>
+      {:else}
+        <div
+          class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          aria-label="{ariaLabel ?? 'tooltip'}">
+          {@render tip()}
+        </div>
+      {/if}
     {/if}
   </div>
 </div>

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,43 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { createRawSnippet, tick } from 'svelte';
 import { expect, test } from 'vitest';
 
 import Tooltip from './Tooltip.svelte';
 import { tooltipHidden } from './tooltip-store';
 
-test('tooltip is not empty string when tooltipHidden value false', async () => {
+const tip = 'test';
+
+test('Expect basic prop styling', async () => {
+  render(Tooltip, { tip: tip });
+
+  const element = screen.getByLabelText('tooltip');
+  expect(element).toBeInTheDocument();
+  expect(element).toHaveClass('bg-[var(--pd-tooltip-bg)]');
+  expect(element).toHaveClass('text-[var(--pd-tooltip-text)]');
+  expect(element).toHaveClass('border-[var(--pd-tooltip-border)]');
+  expect(element).toHaveClass('border-[1px]');
+});
+
+test('Expect basic slot styling', async () => {
+  render(Tooltip, {
+    tip: createRawSnippet(() => {
+      return {
+        render: (): string => 'test',
+      };
+    }),
+  });
+
+  const element = screen.getByLabelText('tooltip');
+  expect(element).toBeInTheDocument();
+  expect(element).toHaveClass('bg-[var(--pd-tooltip-bg)]');
+  expect(element).toHaveClass('text-[var(--pd-tooltip-text)]');
+  expect(element).toHaveClass('border-[var(--pd-tooltip-border)]');
+  expect(element).toHaveClass('border-[1px]');
+});
+
+test('Expect tooltip is not empty string when tooltipHidden value false', async () => {
   tooltipHidden.set(false);
 
   render(Tooltip, { tip: 'test 1' });
@@ -40,10 +70,49 @@ test('tooltip is not empty string when tooltipHidden value false', async () => {
   expect(screen.queryByText('test 1')).toBeInTheDocument();
 });
 
-test('tooltip z order', async () => {
+test('Expect tooltip z order', async () => {
   render(Tooltip, { tip: 'my tooltip' });
 
   // get the tooltip
   const tooltip = screen.getByText('my tooltip');
   expect(tooltip.parentElement).toHaveClass('z-60');
 });
+
+test('Expect class styling to apply to tip', async () => {
+  render(Tooltip, { class: 'my-[5px] mx-[10px]', tip });
+
+  const slotElement = screen.getByLabelText('tooltip');
+  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
+});
+
+test('Expect class styling to apply to tip snippet', async () => {
+  render(Tooltip, {
+    class: 'my-[5px] mx-[10px]',
+    tip: createRawSnippet(() => {
+      return {
+        render: (): string => 'test',
+      };
+    }),
+  });
+
+  const slotElement = screen.getByLabelText('tooltip');
+  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
+});
+
+function createTest(props: Record<string, boolean>, locationName: string, expectedStyle = locationName): void {
+  test(`Expect property ${locationName} to add ${expectedStyle} class to parent element`, () => {
+    render(Tooltip, { tip, ...props });
+    const element = screen.getByLabelText('tooltip');
+    expect(element).toBeInTheDocument();
+    expect(element.parentElement).toHaveClass(expectedStyle);
+  });
+}
+
+createTest({ left: true }, 'left');
+createTest({ right: true }, 'right');
+createTest({ bottom: true }, 'bottom');
+createTest({ top: true }, 'top');
+createTest({ topLeft: true }, 'topLeft', 'top-left');
+createTest({ topRight: true }, 'topRight', 'top-right');
+createTest({ bottomLeft: true }, 'bottomLeft', 'bottom-left');
+createTest({ bottomRight: true }, 'bottomRight', 'bottom-right');

@@ -47,7 +47,6 @@ test('Expect tooltip', async () => {
   });
   const label = screen.getByText(tip);
   expect(label).toBeInTheDocument();
-  expect(label.parentElement?.firstChild).toBeInTheDocument();
 });
 
 test('Expect role to be defined', async () => {
