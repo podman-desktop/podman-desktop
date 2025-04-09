@@ -55,9 +55,8 @@ class ReleaseNotesPreparator {
     private organization: string,
     private repo: string,
     private milestone: string,
-    private api_key: string,
-    private api_url: string,
     private username: string,
+    private model: string | undefined,
   ) {
     this.octokit = new Octokit({ auth: token });
   }
@@ -163,7 +162,6 @@ class ReleaseNotesPreparator {
   public async generate(): Promise<void> {
     let prs: Issue[] = await this.getPRsByMilestone(this.organization, this.repo, this.milestone);
     const firstTimeContributorPRs = await this.getFirstTimeContributors(prs);
-
     const categorizedPRsMap: Record<string, PRCategory> = {};
 
     for (const pr of prs) {
@@ -207,64 +205,71 @@ class ReleaseNotesPreparator {
 
     const changelog: PRCategory[] = Object.values(categorizedPRsMap);
 
-    // If the key is not existing skip generating highlited features
-    if (!this.api_key) await this.generateMD(changelog, firstTimeContributorPRs, []);
+    if (!this.model) {
+      // skip generating higlited PRs
+      return await this.generateMD(changelog, firstTimeContributorPRs, []);
+    }
 
     // Generating highlited features
     prs = prs.map(pr => ({ ...pr, body: pr.body ? pr.body.replace(/### Screenshot \/ video of UI[\s\S]*/, '') : '' }));
-    const features = prs.filter(issue => issue.pull_request && issue.title.startsWith('feat'));
+    const features = prs.filter(
+      issue => issue.pull_request && issue.title.startsWith('feat') && issue.title.startsWith('chore'),
+    );
     const content = features.map((pr, index) => `PR${index + 1}: ${pr.title} - ${pr.body}\n}`).join('');
 
-    const requestOptions: RequestInit = {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${this.api_key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'granite-8b-code-instruct-128k',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'Instruction: Identify the 3 most interesting PRs from the list provided. For each of them, generate the following: A title (do not copy the original PR title). A short description of exactly 2 sentences. A long description of exactly 3 to 5 sentences. Output format: Return the result in the following JSON structure: [{"title": "Your generated title here","shortDesc": "Your short 2-sentence description here.","longDesc": "Your longer 3–5 sentence description here."},...]',
+    const body = {
+      model: this.model,
+      stream: false,
+      prompt: `Instruction: Identify the 4 most interesting PRs from the list provided. For each of them, generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use word PR in the longDesc and shortDesc. DATA: ${content}`,
+      format: {
+        type: 'object',
+        properties: {
+          prs: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                shortDesc: { type: 'string' },
+                longDesc: { type: 'string' },
+              },
+              required: ['title', 'shortDesc', 'longDesc'],
+            },
           },
-          { role: 'user', content: content },
-        ],
-      }),
+        },
+        required: ['prs'],
+      },
     };
 
-    await fetch(`${this.api_url}/v1/chat/completions`, requestOptions)
+    await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
       .then(async response => {
-        // We get a valid response
-        if (response.ok) {
-          try {
-            // Here it is pure luck if we get data from right format
-            const content = (await response.json()).choices[0].message.content;
-            // try to extract the JSON from message
-            const match = content.match(/\{[\s\S]*\}/);
-            if (match) {
-              // We can use the first one, since the AI shoud return just one JSON onject in the text
-              console.log('AI model returned JSON in the response, trying to parse it');
-              return JSON.parse(match[0]);
-            }
-            return [];
-          } catch (e: unknown) {
-            //   // We didn't get data from correct JSON format
-            console.error(
-              `Got error ${e}.\nGenerated data from AI was not valid JSON format, generating release notes without highlights.`,
-            );
-            return [];
-          }
+        if (!response.ok) {
+          console.error(`HTTP error! Status: ${response.status}`);
+          return [];
         }
-        return [];
+
+        try {
+          const prs = JSON.parse((await response.json()).response).prs;
+          return prs;
+        } catch (e: unknown) {
+          // We didn't get data from correct JSON format
+          console.error(
+            `Got error ${e}.\nGenerated data from AI was not valid JSON format, generating release notes without highlights.`,
+          );
+          return [];
+        }
       })
       .then(async result => {
         // Generate the output with highlited features
         await this.generateMD(changelog, firstTimeContributorPRs, result as HighlitedPR[]);
       })
-      .catch(async error => {
+      .catch(async (error: unknown) => {
         // Generate the output without highlited features
         console.error(`Fetch error: ${error}\nGenerating release notes without highlights.`);
         await this.generateMD(changelog, firstTimeContributorPRs, []);
@@ -274,14 +279,12 @@ class ReleaseNotesPreparator {
 
 async function run(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    token = process.env.GH_TOKEN;
-  }
+  token ??= process.env.GH_TOKEN;
   const args = process.argv.slice(2);
   let organization = 'podman-desktop';
   let repo = 'podman-desktop';
+  let model: string | undefined = undefined;
   let api_key = process.env.API_KEY ?? '';
-  let api_url = 'https://granite-8b-code-instruct-maas-apicast-production.apps.prod.rhoai.rh-aiservices-bu.com:443';
   let milestone: string = '';
   let username = process.env.GITHUB_USERNAME;
   for (let i = 0; i < args.length; i++) {
@@ -289,20 +292,23 @@ async function run(): Promise<void> {
       token = args[++i];
     } else if (args[i] === '--org') {
       organization = args[++i];
-    } else if (args[i] === '--api_key') {
+    } else if (args[i] === '--skip_highlited') {
       api_key = args[++i];
-    } else if (args[i] === '--api_url') {
-      api_url = args[++i];
     } else if (args[i] === '--repo') {
       repo = args[++i];
     } else if (args[i] === '--username') {
       username = args[++i];
     } else if (args[i] === '--milestone') {
       milestone = args[++i];
+    } else if (args[i] === '--model') {
+      model = args[++i];
     }
   }
   if (token && username) {
-    await new ReleaseNotesPreparator(token, organization, repo, milestone, api_key, api_url, username).generate();
+    if (!model) {
+      console.log('Generating release notes without highlited PRs');
+    }
+    await new ReleaseNotesPreparator(token, organization, repo, milestone, username, model).generate();
   } else {
     console.log('No token or username found. Use either GITHUB_TOKEN, GITHUB_USERNAME or pass it as an argument');
   }
