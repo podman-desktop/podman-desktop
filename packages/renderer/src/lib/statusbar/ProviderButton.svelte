@@ -41,7 +41,7 @@ let providerStatus = $derived.by(() => {
   {@render left?.()}
   {#if provider.images.icon}
     <div class="relative flex h-full items-center">
-      <IconImage image={provider.images.icon} class="max-h-3 grayscale {providerStatus === 'stopped' ? 'brightness-50' : ''}" alt={provider.name}></IconImage>
+      <IconImage image={provider.images.icon} class="max-h-[15px] grayscale {providerStatus === 'stopped' ? 'brightness-50' : ''}" alt={provider.name}></IconImage>
       <ProviderButtonStatus status={providerStatus} />
     </div>
   {/if}
