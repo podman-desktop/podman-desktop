@@ -36,7 +36,7 @@ let connections = $derived.by(() => {
 </script>
 
 <Tooltip top={!tooltipTopRight} topRight={tooltipTopRight} class="mb-[20px]">
-  {#snippet tipSnippet()}
+  {#snippet tip()}
     <div class="py-2 px-4" hidden={disableTooltip}>
       <div class="flex flex-col">
         {#if entry.updateInfo?.version}
