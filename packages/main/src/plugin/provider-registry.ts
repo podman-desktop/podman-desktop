@@ -693,6 +693,7 @@ export class ProviderRegistry {
               name: connection.vmTypeDisplayName ?? connection.vmType,
             }
           : undefined,
+        version: connection.version?.(),
       };
     } else if (this.isKubernetesConnection(connection)) {
       providerConnection = {
