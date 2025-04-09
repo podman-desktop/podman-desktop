@@ -64,8 +64,8 @@ onMount(async () => {
       properties={properties}
       taskId={+meta.params.taskId} />
   </Route>
-  <Route path="/resources" breadcrumb="Resources" navigationHint="root">
-    <PreferencesResourcesRendering />
+  <Route path="/resources" breadcrumb="Resources" navigationHint="root" let:meta>
+    <PreferencesResourcesRendering focus={meta.query.focus}/>
   </Route>
   <Route path="/docker-compatibility" breadcrumb="Docker Compatibility">
     <PreferencesDockerCompatibilityRendering />
