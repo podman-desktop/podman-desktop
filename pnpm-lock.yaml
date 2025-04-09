@@ -29,8 +29,8 @@ importers:
         specifier: 0.3.4
         version: 0.3.4
       '@kubernetes/client-node':
-        specifier: ^1.1.0
-        version: 1.1.0(encoding@0.1.13)
+        specifier: ^1.1.2
+        version: 1.1.2(encoding@0.1.13)
       '@segment/analytics-node':
         specifier: ^2.2.1
         version: 2.2.1(encoding@0.1.13)
@@ -3050,8 +3050,8 @@ packages:
     peerDependencies:
       jsep: ^0.4.0||^1.0.0
 
-  '@kubernetes/client-node@1.1.0':
-    resolution: {integrity: sha512-6Sp7ekNfMmDH2HvEQLb8vuPu+mX0xNkPElQLX5N/mjxeMimFWfecZeiFfIaG+Q9S1v+snZfTNJjvpOwNUVO7RA==}
+  '@kubernetes/client-node@1.1.2':
+    resolution: {integrity: sha512-kkE0D8zB5rIQoR6SUwlHUyQtpLvrW0gXOd2MabQsql7I2oPnMA8pb50A1MWB4yH0eX29t45gxs7lOVlS0UPsiw==}
 
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
@@ -4335,6 +4335,9 @@ packages:
 
   '@types/ws@8.18.0':
     resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -8978,8 +8981,8 @@ packages:
   nwsapi@2.2.16:
     resolution: {integrity: sha512-F1I/bimDpj3ncaNDhfyMWuFqmQDBwDB0Fogc2qpL3BWvkQteFD/8BzWuIRl83rq0DXfm8SGt/HFhLXZyljTXcQ==}
 
-  oauth4webapi@3.3.1:
-    resolution: {integrity: sha512-ZwX7UqYrP3Lr+Glhca3a1/nF2jqf7VVyJfhGuW5JtrfDUxt0u+IoBPzFjZ2dd7PJGkdM6CFPVVYzuDYKHv101A==}
+  oauth4webapi@3.4.0:
+    resolution: {integrity: sha512-5lcbectYuzQHvh0Ni7Epvc13sMVq7BxWUlHEYHaNko64OA1hcats0Huq30vZjqCZULcVE/PZxAGGPansfRAWKQ==}
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -9057,8 +9060,8 @@ packages:
     resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
     hasBin: true
 
-  openid-client@6.3.4:
-    resolution: {integrity: sha512-CGZGk9Y6Bv9R4bXlrzVoxzD1n4h8iP914UhjVyRSftqzqO4CWaRqKpOmW253Jmpv4EWkz7/Gut/90iiWW8t0ow==}
+  openid-client@6.4.1:
+    resolution: {integrity: sha512-Bwta7kyGn0vyRGOatIAAvEOYCIiTwxBptrBpJgV9KdV0OGJ8OPe8wWY7bQbDqCJrDCclq6xbJMfK2Ilp5TugbA==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -14704,21 +14707,21 @@ snapshots:
     dependencies:
       jsep: 1.4.0
 
-  '@kubernetes/client-node@1.1.0(encoding@0.1.13)':
+  '@kubernetes/client-node@1.1.2(encoding@0.1.13)':
     dependencies:
       '@types/js-yaml': 4.0.9
-      '@types/node': 22.13.10
+      '@types/node': 22.14.0
       '@types/node-fetch': 2.6.12
       '@types/stream-buffers': 3.0.7
       '@types/tar': 6.1.13
-      '@types/ws': 8.18.0
+      '@types/ws': 8.18.1
       form-data: 4.0.2
       hpagent: 1.2.0
       isomorphic-ws: 5.0.0(ws@8.18.1)
       js-yaml: 4.1.0
       jsonpath-plus: 10.3.0
       node-fetch: 2.7.0(encoding@0.1.13)
-      openid-client: 6.3.4
+      openid-client: 6.4.1
       rfc4648: 1.5.4
       socks-proxy-agent: 8.0.5
       stream-buffers: 3.0.3
@@ -15797,7 +15800,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.14.0
+      '@types/node': 22.13.10
 
   '@types/bonjour@3.5.13':
     dependencies:
@@ -15948,7 +15951,7 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 22.14.0
+      '@types/node': 22.13.10
       '@types/ssh2': 1.15.5
 
   '@types/dockerode@3.3.37':
@@ -15975,7 +15978,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.14.0
+      '@types/node': 22.13.10
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -16151,7 +16154,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.14.0
+      '@types/node': 22.13.10
       '@types/send': 0.17.4
 
   '@types/sockjs@0.3.36':
@@ -16189,7 +16192,7 @@ snapshots:
 
   '@types/tar-stream@3.1.3':
     dependencies:
-      '@types/node': 22.14.0
+      '@types/node': 22.13.10
 
   '@types/tar@6.1.13':
     dependencies:
@@ -16215,6 +16218,10 @@ snapshots:
   '@types/winreg@1.2.36': {}
 
   '@types/ws@8.18.0':
+    dependencies:
+      '@types/node': 22.14.0
+
+  '@types/ws@8.18.1':
     dependencies:
       '@types/node': 22.14.0
 
@@ -19912,7 +19919,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -21945,7 +21952,7 @@ snapshots:
 
   nwsapi@2.2.16: {}
 
-  oauth4webapi@3.3.1: {}
+  oauth4webapi@3.4.0: {}
 
   object-assign@4.1.1: {}
 
@@ -22040,10 +22047,10 @@ snapshots:
 
   opener@1.5.2: {}
 
-  openid-client@6.3.4:
+  openid-client@6.4.1:
     dependencies:
       jose: 6.0.10
-      oauth4webapi: 3.3.1
+      oauth4webapi: 3.4.0
 
   optionator@0.9.4:
     dependencies:
@@ -23149,7 +23156,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:
