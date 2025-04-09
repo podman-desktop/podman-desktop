@@ -25,7 +25,7 @@ import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-vi.mock(import('/@/lib/statusbar/ProviderWidgetStatus.svelte'));
+vi.mock(import('./ProviderTooltipStatus.svelte'));
 vi.mock(import('/@/lib/appearance/IconImage.svelte'));
 
 const PROVIDER_MOCK = {
