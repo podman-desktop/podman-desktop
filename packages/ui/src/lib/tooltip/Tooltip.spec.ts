@@ -81,8 +81,8 @@ test('Expect tooltip z order', async () => {
 test('Expect class styling to apply to tip', async () => {
   render(Tooltip, { class: 'my-[5px] mx-[10px]', tip });
 
-  const slotElement = screen.getByLabelText('tooltip');
-  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
+  const tooltip = screen.getByLabelText('tooltip');
+  expect(tooltip).toHaveClass('my-[5px] mx-[10px]');
 });
 
 test('Expect class styling to apply to tip snippet', async () => {
@@ -95,24 +95,22 @@ test('Expect class styling to apply to tip snippet', async () => {
     }),
   });
 
-  const slotElement = screen.getByLabelText('tooltip');
-  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
+  const tooltip = screen.getByLabelText('tooltip');
+  expect(tooltip).toHaveClass('my-[5px] mx-[10px]');
 });
 
-function createTest(props: Record<string, boolean>, locationName: string, expectedStyle = locationName): void {
-  test(`Expect property ${locationName} to add ${expectedStyle} class to parent element`, () => {
-    render(Tooltip, { tip, ...props });
-    const element = screen.getByLabelText('tooltip');
-    expect(element).toBeInTheDocument();
-    expect(element.parentElement).toHaveClass(expectedStyle);
-  });
-}
-
-createTest({ left: true }, 'left');
-createTest({ right: true }, 'right');
-createTest({ bottom: true }, 'bottom');
-createTest({ top: true }, 'top');
-createTest({ topLeft: true }, 'topLeft', 'top-left');
-createTest({ topRight: true }, 'topRight', 'top-right');
-createTest({ bottomLeft: true }, 'bottomLeft', 'bottom-left');
-createTest({ bottomRight: true }, 'bottomRight', 'bottom-right');
+test.each([
+  [{ left: true }, 'left'],
+  [{ right: true }, 'right'],
+  [{ bottom: true }, 'bottom'],
+  [{ top: true }, 'top'],
+  [{ topLeft: true }, 'top-left'],
+  [{ topRight: true }, 'top-right'],
+  [{ bottomLeft: true }, 'bottom-left'],
+  [{ bottomRight: true }, 'bottom-right'],
+])('Expect property %props to add %expectedStyle', (props, expectedStyle) => {
+  render(Tooltip, { tip, ...props });
+  const element = screen.getByLabelText('tooltip');
+  expect(element).toBeInTheDocument();
+  expect(element.parentElement).toHaveClass(expectedStyle);
+});
