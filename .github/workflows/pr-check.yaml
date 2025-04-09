@@ -289,6 +289,9 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Build
+        run: pnpm build
+
       - name: Run unit tests
         run: pnpm test:unit
 
@@ -337,7 +340,7 @@ jobs:
 
       # Enables multi-architecture support for building multi-arch manifests
       - name: Install QEMU for Multi-Arch
-        run: | 
+        run: |
           sudo apt install -y qemu-user-static
 
       - name: Set cgroup_manager to 'cgroupfs' instead of systemd
