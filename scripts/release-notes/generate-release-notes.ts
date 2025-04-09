@@ -208,7 +208,9 @@ class ReleaseNotesPreparator {
     const changelog: PRCategory[] = Object.values(categorizedPRsMap);
 
     // If the key is not existing skip generating highlited features
-    if (!this.api_key) await this.generateMD(changelog, firstTimeContributorPRs, []);
+    if (!this.api_key) {
+      return await this.generateMD(changelog, firstTimeContributorPRs, []);
+    }
 
     // Generating highlited features
     prs = prs.map(pr => ({ ...pr, body: pr.body ? pr.body.replace(/### Screenshot \/ video of UI[\s\S]*/, '') : '' }));
@@ -274,9 +276,7 @@ class ReleaseNotesPreparator {
 
 async function run(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    token = process.env.GH_TOKEN;
-  }
+  token ??= process.env.GH_TOKEN;
   const args = process.argv.slice(2);
   let organization = 'podman-desktop';
   let repo = 'podman-desktop';
