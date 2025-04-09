@@ -161,7 +161,6 @@ import { ExtensionDevelopmentFolders } from './extension/extension-development-f
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
-import { FeedbackForm } from './feedback-form.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
 import { IconRegistry } from './icon-registry.js';
@@ -606,6 +605,12 @@ export class PluginSystem {
       return navigationManager.navigateToTroubleshooting();
     });
 
+    commandRegistry.registerCommand('openWebsite', async arg => {
+      if (arg) {
+        await shell.openExternal(arg);
+      }
+    });
+
     // register appearance (light, dark, auto being system)
     const appearanceConfiguration = new AppearanceInit(configurationRegistry);
     appearanceConfiguration.init();
@@ -733,8 +738,6 @@ export class PluginSystem {
     await this.extensionLoader.init();
 
     const feedback = new FeedbackHandler(this.extensionLoader);
-    const feedbackForm = new FeedbackForm(commandRegistry, apiSender);
-    feedbackForm.init();
 
     const extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender);
     extensionsCatalog.init();
