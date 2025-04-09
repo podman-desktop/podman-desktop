@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Uri } from '@podman-desktop/api';
+import { shell } from 'electron';
+
 import type { IDisposable } from '/@api/disposable.js';
 import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
@@ -105,6 +108,14 @@ export class CommandsInit implements IDisposable {
             });
         },
       ),
+    );
+
+    this.#disposables.push(
+      commandRegistry.registerCommand('openWebsite', async (arg: Uri) => {
+        if (arg) {
+          await shell.openExternal(arg.toString());
+        }
+      }),
     );
   }
 

@@ -106,4 +106,8 @@ describe('CommandsInit', () => {
   test('should register the pullImage command', () => {
     expect(commandRegistryMock.registerCommand).toBeCalledWith('pullImage', expect.anything());
   });
+
+  test('should register the openWebsite command', () => {
+    expect(commandRegistryMock.registerCommand).toBeCalledWith('openWebsite', expect.anything());
+  });
 });
