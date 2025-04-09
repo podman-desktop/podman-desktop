@@ -18,6 +18,7 @@ import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
+import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TelemetryLink } from '../components/TelemetryLink';
@@ -132,6 +133,7 @@ function Hero(): JSX.Element {
             src="img/features/homepage.webp"
           />
         </div>
+        <CNCFCommunityBanner />
       </div>
     </section>
   );
