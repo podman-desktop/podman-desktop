@@ -94,7 +94,7 @@ test('expect ProviderButtonStatus to be called with the current status when a pr
   expect(ProviderButtonStatus).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
-      sttaus: PROVIDER_MOCK.status,
+      status: PROVIDER_MOCK.status,
     }),
   );
 });
