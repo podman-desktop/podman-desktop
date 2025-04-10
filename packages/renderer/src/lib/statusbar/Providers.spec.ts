@@ -17,22 +17,25 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import Providers from '/@/lib/statusbar/Providers.svelte';
 import ProviderWidget from '/@/lib/statusbar/ProviderWidget.svelte';
 import { providerInfos } from '/@/stores/providers';
+import { statusBarPinned } from '/@/stores/statusbar-pinned';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
+import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 // mock provider widget
 vi.mock(import('./ProviderWidget.svelte'));
 
 const EMPTY_PROVIDER_MOCK: ProviderInfo = {
+  id: 'empty-provider',
   name: 'empty-provider',
   containerConnections: [],
   kubernetesConnections: [],
@@ -60,8 +63,17 @@ const KUBERNETES_PROVIDER_MOCK: ProviderInfo = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.executeCommand).mockResolvedValue(undefined);
+
   // reset the store
   providerInfos.set([]);
+  statusBarPinned.set(
+    [KUBERNETES_PROVIDER_MOCK, CONTAINER_PROVIDER_MOCK].map(provider => ({
+      label: provider.name,
+      value: provider.id,
+      pinned: true,
+    })),
+  );
 });
 
 test('no provider should not render any provider widget', () => {
@@ -90,6 +102,31 @@ test('provider with container connection should be displayed', () => {
     entry: CONTAINER_PROVIDER_MOCK,
     tooltipTopRight: true,
   });
+});
+
+test('provider with container but not pinned should not be displayed', () => {
+  // mock no pinned item
+  statusBarPinned.set([]);
+  providerInfos.set([CONTAINER_PROVIDER_MOCK]);
+
+  render(Providers);
+
+  // should only render one
+  expect(ProviderWidget).not.toHaveBeenCalled();
+});
+
+test('pin button should call window#executeCommand', async () => {
+  const { getByRole } = render(Providers);
+
+  const button = getByRole('button', { name: 'Pin' });
+  expect(button).toBeInTheDocument();
+
+  expect(window.executeCommand).not.toHaveBeenCalled();
+
+  await fireEvent.click(button);
+
+  expect(window.executeCommand).toHaveBeenCalledOnce();
+  expect(window.executeCommand).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.TOGGLE_MENU_COMMAND);
 });
 
 test('provider with kubernetes connection should be displayed', () => {

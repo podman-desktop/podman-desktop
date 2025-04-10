@@ -532,6 +532,8 @@ declare module '@podman-desktop/api' {
     status(): ProviderConnectionStatus;
   }
 
+  export type ProviderConnection = ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection;
+
   // common set of options for creating a provider
   export interface ProviderConnectionFactory {
     // Allow to initialize a provider
@@ -1194,11 +1196,7 @@ declare module '@podman-desktop/api' {
   /**
    * The configuration scope
    */
-  export type ConfigurationScope =
-    | string
-    | ContainerProviderConnection
-    | KubernetesProviderConnection
-    | VmProviderConnection;
+  export type ConfigurationScope = string | ProviderConnection;
 
   export interface Configuration {
     /**
@@ -3543,7 +3541,7 @@ declare module '@podman-desktop/api' {
     /**
      * Attempt to pull the image even if an older image exists locally.
      */
-    pull?: string;
+    pull?: boolean | string;
 
     /**
      * Default: true

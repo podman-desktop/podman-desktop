@@ -20,7 +20,7 @@ Error: unable to start host networking: "could not find \"gvproxy\" in one of [/
 
 1. Download `gvproxy` from the [gvisor-tap-vsock release page](https://github.com/containers/gvisor-tap-vsock/releases).
 2. Build the `podman-mac-helper` from the source code on the [Podman GitHub page](https://github.com/containers/podman/tree/main/cmd/podman-mac-helper).
-3. Add the `helpers_binaries_dir` entry to `~/.config/containers/conf`:
+3. Add the `helpers_binaries_dir` entry to `~/.config/containers/containers.conf`:
 
 ```sh
 [containers]

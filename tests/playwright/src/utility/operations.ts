@@ -24,9 +24,11 @@ import test, { expect as playExpect } from '@playwright/test';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
+import { PreferencesPage } from '../model/pages/preferences-page';
 import { RegistriesPage } from '../model/pages/registries-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
+import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { waitUntil, waitWhile } from './wait';
@@ -382,4 +384,49 @@ export async function untagImagesFromPodman(name: string, tag: string = ''): Pro
       throw new Error(`Error untagging images from Podman: ${error}`);
     }
   });
+}
+
+export async function setDockerCompatibilityFeature(page: Page, enable: boolean): Promise<void> {
+  //Open the preferences bar and verify DC preferences page
+  const settingsBar = new SettingsBar(page);
+
+  if (await settingsBar.preferencesTab.isHidden()) {
+    //Open settings if not opened already
+    const navigationBar = new NavigationBar(page);
+    await navigationBar.openSettings();
+  }
+
+  await settingsBar.expandPreferencesTab();
+
+  const DCPreferencesLink = settingsBar.getLinkLocatorByHref('/preferences/default/preferences.dockerCompatibility');
+  await playExpect(DCPreferencesLink).toBeVisible();
+  await DCPreferencesLink.click();
+  const DCPreferencesPage = new PreferencesPage(page);
+
+  await playExpect(DCPreferencesPage.heading).toBeVisible();
+  const experimentalTitle = DCPreferencesPage.content.getByText('Docker Compatibility', { exact: true });
+  await playExpect(experimentalTitle).toBeVisible();
+
+  //Set the feature
+  const dockerCompatibilityCheckbox = DCPreferencesPage.content.getByRole('checkbox', {
+    name: 'Enable the section for Docker compatibility.',
+  });
+  await playExpect(dockerCompatibilityCheckbox).toBeVisible();
+  const isEnabled = await dockerCompatibilityCheckbox.isChecked();
+  if (isEnabled !== enable) {
+    await dockerCompatibilityCheckbox.locator('..').setChecked(enable);
+    const isEnabled = await dockerCompatibilityCheckbox.isChecked();
+    playExpect(isEnabled).toEqual(enable);
+  }
+
+  //Verify the main docker compatibility page (dis)appeared
+  const DCSettingsLink = settingsBar.getLinkLocatorByHref('/preferences/docker-compatibility');
+  if (enable) {
+    await playExpect(DCSettingsLink).toBeVisible();
+  } else {
+    await playExpect(DCSettingsLink).not.toBeVisible();
+  }
+
+  //Close the preferences bar
+  await settingsBar.expandPreferencesTab();
 }

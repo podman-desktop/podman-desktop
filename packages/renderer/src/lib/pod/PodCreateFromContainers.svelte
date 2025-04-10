@@ -219,9 +219,12 @@ function navigateToContainers(): void {
 </script>
 
 <EngineFormPage title="Copy containers to a pod" inProgress={createInProgress}>
-  <SolidPodIcon slot="icon" size="40" />
+  {#snippet icon()}
+  <SolidPodIcon size="40" />
+  {/snippet}
 
-  <div slot="content">
+  {#snippet content()}
+  <div >
     <div>
       {#if podCreation}
         {#if containersPorts.length > 0}
@@ -299,9 +302,9 @@ function navigateToContainers(): void {
           <Button type="link" on:click={navigateToContainers}>Close</Button>
           <Button
             icon={SolidPodIcon}
-            bind:disabled={createInProgress}
+            disabled={createInProgress}
             on:click={createPodFromContainers}
-            bind:inProgress={createInProgress}
+            inProgress={createInProgress}
             aria-label="Create pod">
             Create Pod
           </Button>
@@ -313,4 +316,5 @@ function navigateToContainers(): void {
       {/if}
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

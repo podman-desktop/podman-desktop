@@ -87,42 +87,46 @@ async function exportContainer(): Promise<void> {
 
 {#if container}
   <EngineFormPage title="Export container {container.name}">
-    <svelte:fragment slot="icon">
+    {#snippet icon()}
       <i class="fas fa-download fa-2x" aria-hidden="true"></i>
-    </svelte:fragment>
+    {/snippet}
 
-    <div slot="content" class="space-y-2">
-      <div>
-        <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-          >Export to:</label>
-        <div class="flex w-full">
-          <Input
-            class="grow mr-2"
-            name={container.id}
-            readonly
-            value={outputTarget}
-            id="input-export-container-name"
-            aria-invalid={invalidFolder} />
-          <Button
-            on:click={selectFolderPath}
-            title="Open dialog to select the output file"
-            aria-label="Select output file">Browse ...</Button>
+    {#snippet content()}
+      {#if container}
+        <div class="space-y-2">
+          <div>
+            <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+              >Export to:</label>
+            <div class="flex w-full">
+              <Input
+                class="grow mr-2"
+                name={container.id}
+                readonly
+                value={outputTarget}
+                id="input-export-container-name"
+                aria-invalid={invalidFolder} />
+              <Button
+                on:click={selectFolderPath}
+                title="Open dialog to select the output file"
+                aria-label="Select output file">Browse ...</Button>
+            </div>
+            <Button
+              on:click={exportContainer}
+              class="w-full mt-5"
+              icon={faDownload}
+              inProgress={inProgress}
+              disabled={invalidFields}
+              aria-label="Export container">
+              Export Container
+            </Button>
+            <div aria-label="createError">
+              {#if exportedError}
+                <ErrorMessage class="py-2 text-sm" error={exportedError} />
+              {/if}
+            </div>
+          </div>
         </div>
-        <Button
-          on:click={exportContainer}
-          class="w-full mt-5"
-          icon={faDownload}
-          inProgress={inProgress}
-          bind:disabled={invalidFields}
-          aria-label="Export container">
-          Export Container
-        </Button>
-        <div aria-label="createError">
-          {#if exportedError}
-            <ErrorMessage class="py-2 text-sm" error={exportedError} />
-          {/if}
-        </div>
-      </div>
-    </div>
+      {/if}
+    {/snippet}
   </EngineFormPage>
 {/if}

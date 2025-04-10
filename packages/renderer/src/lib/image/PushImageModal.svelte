@@ -127,7 +127,7 @@ $: window
         on:click={async (): Promise<void> => {
           await pushImage(selectedImageTag);
         }}
-        bind:inProgress={pushInProgress}>
+        inProgress={pushInProgress}>
         Push image
       </Button>
     {:else}

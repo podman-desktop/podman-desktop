@@ -21,9 +21,16 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
+
+export enum PIN_REGISTRY_TELEMETRY_EVENTS {
+  PIN = 'pin-registry:pin',
+  UNPIN = 'pin-registry:unpin',
+  OPTIONS = 'pin-registry:options',
+}
 
 /**
  * The {@link PinRegistry} hold the pinned options on the providers part of the status bar.
@@ -39,6 +46,7 @@ export class PinRegistry implements IDisposable {
     private apiSender: ApiSenderType,
     private configurationRegistry: ConfigurationRegistry,
     private providers: ProviderRegistry,
+    private telemetry: Telemetry,
   ) {}
 
   dispose(): void {
@@ -56,6 +64,11 @@ export class PinRegistry implements IDisposable {
     this.notify();
     // save async
     this.save().catch(console.error);
+
+    // track event
+    this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.PIN, {
+      optionId: optionId,
+    });
   }
 
   public unpin(optionId: string): void {
@@ -63,6 +76,11 @@ export class PinRegistry implements IDisposable {
     this.notify();
     // save async
     this.save().catch(console.error);
+
+    // track event
+    this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.UNPIN, {
+      optionId: optionId,
+    });
   }
 
   public getOptions(): Array<PinOption> {
@@ -124,6 +142,11 @@ export class PinRegistry implements IDisposable {
     if (options) {
       this.#pinned = new Set<string>(options);
       this.notify();
+
+      // track user defined options
+      this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.OPTIONS, {
+        options: options,
+      });
     }
 
     // ==== notify if container connection / kubernetes / vm connection changed

@@ -14,12 +14,17 @@ interface Props {
 
 let { toastId, taskInfo, onpop = (): void => {} }: Props = $props();
 
-const closeAction = (): void => {
+function hideToast(): void {
   toast.pop(toastId);
+}
+
+const closeAction = (): void => {
+  hideToast();
   onpop();
 };
 
 const executeAction = async (): Promise<void> => {
+  hideToast();
   await window.executeTask(taskInfo.id);
 };
 </script>
@@ -52,7 +57,7 @@ const executeAction = async (): Promise<void> => {
     {/if}
 
     <div class="flex grow flex-col items-end">
-      <CloseButton class="text-[var(--pd-modal-text)]" on:click={closeAction} />
+      <CloseButton class="text-[var(--pd-modal-text)]" onclick={closeAction} />
     </div>
   </div>
   <div class="flex flex-row items-center italic line-clamp-4">

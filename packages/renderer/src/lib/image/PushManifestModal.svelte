@@ -73,7 +73,7 @@ async function pushManifestFinished(): Promise<void> {
         class="w-auto"
         icon={faCircleArrowUp}
         on:click={pushManifest}
-        bind:inProgress={pushInProgress}>
+        inProgress={pushInProgress}>
         Push manifest
       </Button>
     {:else}

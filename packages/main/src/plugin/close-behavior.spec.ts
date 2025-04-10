@@ -26,7 +26,7 @@ import type { Directories } from './directories.js';
 
 vi.mock('./util', () => {
   return {
-    isLinux: vi.fn(),
+    isUnixLike: vi.fn(),
   };
 });
 
@@ -46,14 +46,14 @@ test('should register a configuration', async () => {
   expect(after).toBeDefined();
 });
 
-test('should set default value of configuraton registry on Linux to true', async () => {
-  vi.spyOn(util, 'isLinux').mockImplementation(() => true);
+test('should set default value of configuraton registry on Linux and FreeBSD to true', async () => {
+  vi.spyOn(util, 'isUnixLike').mockImplementation(() => true);
   await closeBehavior.init();
   expect(configurationRegistry.getConfigurationProperties()['preferences.ExitOnClose']?.default).toBeTruthy();
 });
 
-test('should set default value of configuraton registry if not Linux', async () => {
-  vi.spyOn(util, 'isLinux').mockImplementation(() => false);
+test('should set default value of configuraton registry if not Linux or FreeBSD', async () => {
+  vi.spyOn(util, 'isUnixLike').mockImplementation(() => false);
   await closeBehavior.init();
   expect(configurationRegistry.getConfigurationProperties()['preferences.ExitOnClose']?.default).toBeFalsy();
 });

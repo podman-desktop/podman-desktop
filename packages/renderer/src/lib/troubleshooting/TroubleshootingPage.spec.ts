@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ test('Check Troubleshooting Page', async () => {
   await fireEvent.click(repairConnectionsLink);
 
   // check we have the container connections role
-  const containerConnections = screen.getByRole('status', { name: 'container connections' });
+  const containerConnections = screen.getByRole('status', { name: 'Container Connections' });
   expect(containerConnections).toBeInTheDocument();
 
   // click on the stores tab

@@ -352,13 +352,14 @@ function onContainerConnectionChange(): void {
 </script>
 
 <EngineFormPage title="Select an image">
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <ImageIcon />
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet actions()}
     <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
-  </svelte:fragment>
-  <div slot="content" class="space-y-2 flex flex-col">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-2 flex flex-col">
     <div class="flex flex-col">
       {#key selectedProviderConnection}
         <Typeahead
@@ -423,13 +424,13 @@ function onContainerConnectionChange(): void {
             <Button
               icon={faArrowCircleDown}
               class="w-full"
-              bind:disabled={imageNameIsInvalid}
+              disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
-              bind:inProgress={pullInProgress}>
+              inProgress={pullInProgress}>
               Pull Image and Run
             </Button>
           {:else}
-            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} class="w-full" disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}
@@ -442,5 +443,6 @@ function onContainerConnectionChange(): void {
       <TerminalWindow bind:terminal={logsPull} />
     {/if}
   </div>
+  {/snippet}
 </EngineFormPage>
 

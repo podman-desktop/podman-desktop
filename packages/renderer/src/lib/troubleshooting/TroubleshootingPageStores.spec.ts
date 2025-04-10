@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,4 +33,8 @@ test('Check stores widget is there', async () => {
   // get the title
   const title = screen.getByRole('status', { name: 'stores' });
   expect(title).toBeInTheDocument();
+
+  // expect to have store list
+  const stores = screen.getByRole('list', { name: 'stores' });
+  expect(stores).toBeInTheDocument();
 });

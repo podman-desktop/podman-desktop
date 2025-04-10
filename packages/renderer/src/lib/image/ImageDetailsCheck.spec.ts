@@ -35,7 +35,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'getCancellableTokenSource', { value: getCancellableTokenSourceMock });
   getCancellableTokenSourceMock.mockImplementation(() => tokenID);
   Object.defineProperty(window, 'imageCheck', { value: imageCheckMock });
-  Object.defineProperty(window, 'cancelToken', { value: cancelTokenSpy });
+  Object.defineProperty(window, 'cancelToken', { value: cancelTokenSpy.mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
 });
 

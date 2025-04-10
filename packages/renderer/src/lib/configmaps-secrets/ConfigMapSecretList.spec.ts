@@ -48,6 +48,41 @@ test('Expect configmap empty screen', async () => {
   });
 });
 
+test('Displays correct title', async () => {
+  const configMap: V1ConfigMap = {
+    metadata: {
+      name: 'my-configmap',
+      namespace: 'my-namespace',
+    },
+    data: {
+      key1: 'value1',
+      key2: 'value2',
+    },
+  };
+
+  const secret: V1Secret = {
+    metadata: {
+      name: 'my-secret',
+      namespace: 'my-namespace',
+    },
+    data: {
+      secretkey1: 'value1',
+      secretkey2: 'value2',
+    },
+    type: 'Opaque',
+  };
+
+  vi.mocked(states).kubernetesCurrentContextConfigMapsFiltered = writable<KubernetesObject[]>([configMap]);
+  vi.mocked(states).kubernetesCurrentContextSecretsFiltered = writable<KubernetesObject[]>([secret]);
+
+  render(ConfigMapSecretList);
+
+  await vi.waitFor(() => {
+    const title = screen.getByRole('heading', { name: 'ConfigMaps and Secrets' });
+    expect(title).toBeInTheDocument();
+  });
+});
+
 test('Expect configmap and secrets list', async () => {
   const configMap: V1ConfigMap = {
     metadata: {

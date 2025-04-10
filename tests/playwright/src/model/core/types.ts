@@ -24,6 +24,7 @@ export interface ContainerInteractiveParams {
 }
 
 export interface KindClusterOptions {
+  configFilePath?: string;
   providerType?: string;
   httpPort?: string;
   httpsPort?: string;

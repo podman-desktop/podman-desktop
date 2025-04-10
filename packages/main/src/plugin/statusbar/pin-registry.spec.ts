@@ -23,7 +23,8 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import { PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
+import { PIN_REGISTRY_TELEMETRY_EVENTS, PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ProviderInfo } from '/@api/provider-info.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 
@@ -52,6 +53,10 @@ const PROVIDER_REGISTRY_MOCK: ProviderRegistry = {
   onDidRegisterVmConnection: vi.fn(),
   onDidUnregisterVmConnection: vi.fn(),
 } as unknown as ProviderRegistry;
+
+const TELEMETRY_MOCK: Telemetry = {
+  track: vi.fn(),
+} as unknown as Telemetry;
 
 const KIND_ONE_CLUSTER_PROVIDER: ProviderInfo = {
   id: 'kind',
@@ -99,7 +104,13 @@ const CONFIGURATION_MOCK: Configuration = {
 } as unknown as Configuration;
 
 function getPinRegistry(): PinRegistry {
-  return new PinRegistry(COMMAND_REGISTRY_MOCK, API_SENDER_MOCK, CONFIGURATION_REGISTRY_MOCK, PROVIDER_REGISTRY_MOCK);
+  return new PinRegistry(
+    COMMAND_REGISTRY_MOCK,
+    API_SENDER_MOCK,
+    CONFIGURATION_REGISTRY_MOCK,
+    PROVIDER_REGISTRY_MOCK,
+    TELEMETRY_MOCK,
+  );
 }
 
 beforeEach(() => {
@@ -180,6 +191,25 @@ describe('init', () => {
     });
   });
 
+  test('init should not emit telemetry event on default (empty) value', () => {
+    const pinRegistry = getPinRegistry();
+    pinRegistry.init();
+
+    expect(TELEMETRY_MOCK.track).not.toHaveBeenCalled();
+  });
+
+  test('init should emit telemetry event when user have defined value', () => {
+    // mock user defined values (not default)
+    vi.mocked(CONFIGURATION_MOCK.get).mockReturnValue([KIND_ONE_CLUSTER_PROVIDER.id]);
+
+    const pinRegistry = getPinRegistry();
+    pinRegistry.init();
+
+    expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.OPTIONS, {
+      options: [KIND_ONE_CLUSTER_PROVIDER.id],
+    });
+  });
+
   test('configuration value should be used if exists', () => {
     // mock kind as pinned from configuration
     vi.mocked(CONFIGURATION_MOCK.get).mockReturnValue([KIND_ONE_CLUSTER_PROVIDER.id]);
@@ -254,6 +284,26 @@ describe('pin / unpin', () => {
           },
         ]),
       );
+    });
+  });
+
+  test('pin should emit a telemetry event', async () => {
+    pinRegistry.pin(PODMAN_PROVIDER.id);
+
+    await vi.waitFor(() => {
+      expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.PIN, {
+        optionId: PODMAN_PROVIDER.id,
+      });
+    });
+  });
+
+  test('unpin should emit a telemetry event', async () => {
+    pinRegistry.unpin(PODMAN_PROVIDER.id);
+
+    await vi.waitFor(() => {
+      expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.UNPIN, {
+        optionId: PODMAN_PROVIDER.id,
+      });
     });
   });
 });

@@ -36,7 +36,7 @@ export class ExtensionsPage {
     this.page = page;
     this.header = page.getByRole('region', { name: 'header' });
     this.content = page.getByRole('region', { name: 'content' });
-    this.heading = this.header.getByLabel('Title').getByText('extensions');
+    this.heading = this.header.getByRole('heading', { name: 'extensions' });
     this.additionalActions = this.header.getByRole('group', {
       name: 'additionalActions',
     });

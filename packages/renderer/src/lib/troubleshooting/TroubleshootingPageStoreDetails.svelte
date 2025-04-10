@@ -34,7 +34,7 @@ async function fetch(): Promise<void> {
         <div class="mx-2 flex flex-row items-center">
           Size: <div role="status" aria-label="size">{eventStoreInfo.size}</div>
           <div class="mx-2">
-            <Button class="my-1" bind:inProgress={fetchInProgress} on:click={fetch} icon={faRefresh}
+            <Button class="my-1" inProgress={fetchInProgress} on:click={fetch} icon={faRefresh}
               >Refresh</Button>
           </div>
         </div>
@@ -48,7 +48,7 @@ async function fetch(): Promise<void> {
             {#if eventStoreInfo.bufferEvents.length > 0}
               <Button
                 class="my-1"
-                bind:inProgress={fetchInProgress}
+                inProgress={fetchInProgress}
                 title="Clear events"
                 on:click={eventStoreInfo.clearEvents}
                 icon={faTrash}>Clear</Button>
