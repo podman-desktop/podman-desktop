@@ -288,3 +288,46 @@ describe('getContexts', () => {
     expect(contexts.find(c => c.name === 'bar')).toBeDefined();
   });
 });
+
+describe('createContext', () => {
+  test('creating default context should throw exception', async () => {
+    let error: unknown;
+    try {
+      await dockerContextHandler.createContext({ name: 'default' } as unknown as DockerContextParsingInfo);
+    } catch (err: unknown) {
+      error = err;
+    }
+    expect(error).toBeDefined();
+    expect(error).toBeInstanceOf(Error);
+  });
+
+  test('creating non default context should write file', async () => {
+    const mkdirSpy = vi.spyOn(fs.promises, 'mkdir');
+    const writeFileSpy = vi.spyOn(fs.promises, 'writeFile');
+    await dockerContextHandler.createContext({
+      name: 'non-default',
+      metadata: { description: '' },
+      endpoints: { docker: { host: '' } },
+    } as unknown as DockerContextParsingInfo);
+    expect(mkdirSpy).toBeCalled();
+    expect(writeFileSpy).toBeCalled();
+  });
+});
+
+describe('removeContext', () => {
+  test('removing default context should be noop', async () => {
+    const rmSpy = vi.spyOn(fs.promises, 'rm');
+    await dockerContextHandler.removeContext('default');
+
+    // no rm folder
+    expect(rmSpy).not.toBeCalled();
+  });
+
+  test('removing non default context should delete folder', async () => {
+    const rmSpy = vi.spyOn(fs.promises, 'rm');
+    await dockerContextHandler.removeContext('non-default');
+
+    // no rm folder
+    expect(rmSpy).toBeCalled();
+  });
+});
