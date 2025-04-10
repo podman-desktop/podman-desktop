@@ -11,4 +11,4 @@ const commandLine = 'podman volume create myFirstVolume';
   title="No volumes"
   message="Create a volume using the following command line:"
   commandline={commandLine}
-  on:click={(): Promise<void> => window.clipboardWriteText(commandLine)} />
+  onClick={(): Promise<void> => window.clipboardWriteText(commandLine)} />

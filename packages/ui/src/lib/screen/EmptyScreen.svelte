@@ -1,26 +1,48 @@
 <script lang="ts">
 import { faPaste } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher, onMount } from 'svelte';
+import { createEventDispatcher, onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Button from '../button/Button.svelte';
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let icon: any;
-export let title = 'No title';
-export let message = 'Message';
-export let detail = '';
-export let commandline = '';
-export let hidden = false;
+interface Props {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+  title?: string;
+  message?: string;
+  detail?: string;
+  commandline?: string;
+  hidden?: boolean;
+  class?: string;
+  style?: string;
+  'aria-label'?: string;
+  upperContent?: Snippet;
+  children?: Snippet;
+  onClick?: (text: string) => void;
+}
 
-let fontAwesomeIcon = false;
-let processed = false;
+let {
+  icon = undefined,
+  title = 'No title',
+  message = '',
+  detail = '',
+  commandline = '',
+  hidden = false,
+  class: className,
+  style,
+  'aria-label': ariaLabel,
+  upperContent,
+  children,
+  onClick = (text): void => {
+    dispatch('click', text);
+  },
+}: Props = $props();
+
+let fontAwesomeIcon = $state(false);
+let processed = $state(false);
 
 const dispatch = createEventDispatcher<{ click: string }>();
-export let onClick: (text: string) => void = text => {
-  dispatch('click', text);
-};
 
 onMount(() => {
   if (isFontAwesomeIcon(icon)) {
@@ -36,26 +58,27 @@ function handleClick(): void {
   }
 }
 
-let copyTextDivElement: HTMLDivElement;
+let copyTextDivElement = $state<HTMLDivElement>();
 </script>
 
 <div
-  class="flex flex-row w-full h-full justify-center {$$props.class ?? ''}"
+  class="flex flex-row w-full h-full justify-center {className}"
   class:hidden={hidden}
-  style={$$props.style}
-  aria-label={$$props['aria-label']}>
+  style={style}
+  aria-label={ariaLabel}>
   <div class="flex flex-col h-full justify-center text-center space-y-3">
     <div class="flex justify-center text-[var(--pd-details-empty-icon)] py-2">
       {#if processed}
         {#if fontAwesomeIcon}
           <Fa icon={icon} size="4x" />
         {:else}
-          <svelte:component this={icon} size="55" />
+          {@const IconComponent = icon}
+          <IconComponent size=55 />
         {/if}
       {/if}
     </div>
     <h1 class="text-xl text-[var(--pd-details-empty-header)]">{title}</h1>
-    <slot name="upperContent" slot="upperContent" />
+    {@render upperContent?.()}
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2">{message}</span>
     {#if detail}
       <span class="text-[var(--pd-details-empty-sub-header)]">{detail}</span>
@@ -73,9 +96,9 @@ let copyTextDivElement: HTMLDivElement;
           ><Fa class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste} /></Button>
       </div>
     {/if}
-    {#if $$slots}
+    {#if children}
       <div class="py-2">
-        <slot />
+        {@render children()}
       </div>
     {/if}
   </div>

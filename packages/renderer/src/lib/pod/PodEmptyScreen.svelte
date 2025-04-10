@@ -54,12 +54,12 @@ async function startPod(): Promise<void> {
   title="No pods"
   message="Run a first pod using the following command line:"
   commandline={commandLine}
-  on:click={(): Promise<void> => window.clipboardWriteText(commandLine)}>
-  <div slot="upperContent">
+  onClick={(): Promise<void> => window.clipboardWriteText(commandLine)}>
+  {#snippet upperContent()}
     <div class="flex gap-2 justify-center p-3">
       <Button title="Start your first pod" type="primary" inProgress={inProgress} on:click={startPod}
         >Start your first pod</Button>
     </div>
     <h1 class="text-xl text-[var(--pd-details-empty-header)]">OR</h1>
-  </div>
+  {/snippet}
 </EmptyScreen>
