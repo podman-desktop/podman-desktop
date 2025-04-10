@@ -90,8 +90,8 @@ const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): bo
       legacyObjectStore: kubernetesCurrentContextSecretsFiltered,
     },
   ]}
-  singular="configmap and secret"
-  plural="configmaps and secrets"
+  singular="ConfigMap and Secret"
+  plural="ConfigMaps and Secrets"
   icon={ConfigMapSecretIcon}
   searchTerm={searchTerm}
   columns={columns}

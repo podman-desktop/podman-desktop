@@ -118,7 +118,7 @@ async function loadImages(): Promise<void> {
         class="w-full"
         icon={faPlay}
         aria-label="Load images"
-        bind:disabled={loadDisabled}>
+        disabled={loadDisabled}>
         Load Images
       </Button>
       <div aria-label="loadError">

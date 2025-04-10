@@ -338,7 +338,7 @@ function goBackToPodsPage(): void {
           on:click={playKubeFile}
           disabled={hasInvalidFields || runStarted}
           class="w-full"
-          bind:inProgress={runStarted}
+          inProgress={runStarted}
           icon={KubePlayIcon}>
           Play
         </Button>

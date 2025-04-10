@@ -23,12 +23,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 import tailwindcss from '@tailwindcss/vite';
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
-const PACKAGE_NAME = 'renderer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -59,7 +57,6 @@ export default defineConfig({
     deps: {
       inline: ['moment'],
     },
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
     setupFiles: ['./vite.tests.setup.js'],
   },
   base: '',

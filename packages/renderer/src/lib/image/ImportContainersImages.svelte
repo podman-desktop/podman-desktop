@@ -148,7 +148,7 @@ async function importContainers(): Promise<void> {
         class="w-full"
         icon={faPlay}
         aria-label="Import containers"
-        bind:disabled={importDisabled}>
+        disabled={importDisabled}>
         Import Containers
       </Button>
       <div aria-label="importError">

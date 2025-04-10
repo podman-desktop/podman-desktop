@@ -345,9 +345,9 @@ async function searchFunction(value: string): Promise<void> {
         {#if !pullFinished}
           <Button
             icon={faArrowCircleDown}
-            bind:disabled={imageNameIsInvalid}
+            disabled={imageNameIsInvalid}
             on:click={pullImage}
-            bind:inProgress={pullInProgress}>
+            inProgress={pullInProgress}>
             Pull image
           </Button>
         {:else}

@@ -424,13 +424,13 @@ function onContainerConnectionChange(): void {
             <Button
               icon={faArrowCircleDown}
               class="w-full"
-              bind:disabled={imageNameIsInvalid}
+              disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
-              bind:inProgress={pullInProgress}>
+              inProgress={pullInProgress}>
               Pull Image and Run
             </Button>
           {:else}
-            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} class="w-full" disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}

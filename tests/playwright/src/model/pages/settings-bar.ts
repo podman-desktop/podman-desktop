@@ -59,7 +59,11 @@ export class SettingsBar {
   }
 
   public getPreferencesLinkLocator(label: string): Locator {
-    return this.settingsNavBar.getByRole('link', { name: label });
+    return this.settingsNavBar.getByRole('link', { name: label, exact: true });
+  }
+
+  public getLinkLocatorByHref(href: string): Locator {
+    return this.settingsNavBar.locator(`[href*="${href}"]`);
   }
 
   public async expandPreferencesTab(): Promise<void> {

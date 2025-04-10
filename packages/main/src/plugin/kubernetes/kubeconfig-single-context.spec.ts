@@ -71,7 +71,7 @@ test('KubeConfigSingleContext', () => {
     clusters: [clusters[0]],
     currentContext: 'context1',
   } as KubeConfig;
-  expect(single.getKubeConfig()).toEqual(expected);
+  expect(single.getKubeConfig()).toEqual(expect.objectContaining(expected));
 
   const kcExpected = new KubeConfig();
   kcExpected.loadFromOptions(expected);

@@ -36,7 +36,7 @@ let openDetails = false;
   <div class="text-sm">({eventStoreInfo.size} items)</div>
   <div class="">
     <Button
-      bind:inProgress={fetchInProgress}
+      inProgress={fetchInProgress}
       class="my-1"
       aria-label="Refresh"
       on:click={fetch}

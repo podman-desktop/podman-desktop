@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,14 @@ const config = {
     },
     emptyOutDir: true,
     reportCompressedSize: false,
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    alias: {
+      '@podman-desktop/api': join(PACKAGE_ROOT, '..', '..', '__mocks__/@podman-desktop/api.js'),
+    },
   },
 };
 

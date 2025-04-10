@@ -94,6 +94,7 @@ for (const { extensionName, extensionType } of extentionTypes) {
       test.setTimeout(200000);
 
       const extensionsPage = new ExtensionsPage(page);
+      await playExpect(extensionsPage.heading).toBeVisible();
 
       await extensionsPage.openCatalogTab();
       const extensionCatalog = new ExtensionCatalogCardPage(page, extensionType);

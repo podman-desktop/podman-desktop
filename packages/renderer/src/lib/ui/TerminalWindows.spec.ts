@@ -42,9 +42,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function createTerminalMock(): Terminal {
+  return {
+    ...writable(),
+    dispose: vi.fn(),
+  } as unknown as Terminal;
+}
+
 test('expect terminal constructor to have been called on mount', async () => {
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
   });
 
   await vi.waitFor(() => {
@@ -54,7 +61,7 @@ test('expect terminal constructor to have been called on mount', async () => {
 
 test('expect terminal constructor to reflect props', async () => {
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
     disableStdIn: true,
     convertEol: true,
     screenReaderMode: true,
@@ -73,7 +80,7 @@ test('expect terminal constructor to reflect props', async () => {
 
 test('showCursor false or undefined should write specific instruction to terminal', async () => {
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
     showCursor: false,
   });
 
@@ -87,7 +94,7 @@ test('terminal constructor should contains fontSize and lineHeight from configur
   vi.mocked(window.getConfigurationValue).mockResolvedValue(10);
 
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
   });
 
   await vi.waitFor(() => {
@@ -115,7 +122,7 @@ test('addon fit should be loaded on mount', async () => {
   vi.mocked(FitAddon).mockReturnValue(fitAddonMock);
 
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
   });
 
   await vi.waitFor(() => {
@@ -131,7 +138,7 @@ test('matchMedia resize listener should trigger fit addon', async () => {
   vi.spyOn(window, 'addEventListener');
 
   render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
   });
 
   const listener: () => void = await vi.waitFor(() => {
@@ -154,7 +161,7 @@ test('matchMedia resize listener should trigger fit addon', async () => {
 
 test('search props should add terminal search controls', async () => {
   const { getByRole } = render(TerminalWindow, {
-    terminal: writable() as unknown as Terminal,
+    terminal: createTerminalMock(),
     search: true,
   });
 

@@ -18,6 +18,7 @@ Below is a list of organizations that are using Podman Desktop.
 | -------------------------------- | ----------------------------------------------------------------------- | ---------------- |
 | [SAMPLE Acme](https://acme.com/) | ![production](https://img.shields.io/badge/-production-blue?style=flat) |
 | [Amadeus](https://amadeus.com/) | ![production](https://img.shields.io/badge/-production-blue?style=flat) | Migration of 2k+ developers' container engines to Podman Desktop in Jan 2024. Regular collaboration with the Podman Desktop engineering team.
+| [École et observatoire des Sciences de la Terre](https://eost.unistra.fr/) | ![production](https://img.shields.io/badge/-production-blue?style=flat) | Used to improve security on our developer workstations |
 
 ## Solutions built with Podman Desktop
 
