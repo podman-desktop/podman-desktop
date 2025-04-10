@@ -60,6 +60,9 @@ const providerInfo: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
   extensionId: '',
   cleanupSupport: false,
+  vmConnections: [],
+  vmProviderConnectionCreation: false,
+  vmProviderConnectionInitialization: false,
 };
 
 const podCreation: PodCreation = {
@@ -153,7 +156,7 @@ const containerInspectInfo: ContainerInspectInfo = {
     PortBindings: {
       9090: [
         {
-          HostPort: 8383,
+          HostPort: '8383',
           HostIp: '',
         },
       ],

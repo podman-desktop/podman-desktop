@@ -115,7 +115,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     await containersDetails.closeButton.click();
     await playExpect(containers.heading).toBeVisible();
   });
-  test('Open a container details', async ({ navigationBar }) => {
+  test('Open a container details', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
@@ -131,7 +131,14 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     await containersDetails.activateTab('Inspect');
     await containersDetails.activateTab('Kube');
     await containersDetails.activateTab('Terminal');
-    // TODO: After updating of accessibility of various element in containers pages, we can extend test
+
+    await playExpect(containersDetails.terminalContent).toBeVisible();
+    await playExpect(containersDetails.terminalContent).toContainText('#');
+    await page.waitForTimeout(1_000);
+    await containersDetails.terminalInput.pressSequentially('ps', { delay: 15 });
+    await containersDetails.terminalInput.press('Enter');
+    await playExpect(containersDetails.terminalContent).toContainText('root');
+    await playExpect(containersDetails.terminalContent).toContainText('/bin/sh');
   });
   test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {
     const containers = await navigationBar.openContainers();

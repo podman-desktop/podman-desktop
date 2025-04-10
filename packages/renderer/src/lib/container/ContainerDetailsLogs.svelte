@@ -59,9 +59,7 @@ async function fetchContainerLogs(): Promise<void> {
 function afterTerminalInit(): void {
   // mount the svelte5 component to the terminal xterm element
   let xtermElement = terminalParentDiv.querySelector('.xterm');
-  if (!xtermElement) {
-    xtermElement = terminalParentDiv;
-  }
+  xtermElement ??= terminalParentDiv;
   // add svelte component using this xterm element
   mount(ContainerDetailsLogsClear, {
     target: xtermElement,

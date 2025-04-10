@@ -57,7 +57,7 @@ export interface SimpleContainerInfo extends Dockerode.ContainerInfo {
   engineType: 'podman' | 'docker';
 }
 
-type MountType = 'bind' | 'volume' | 'tmpfs';
+type MountType = 'bind' | 'volume' | 'tmpfs' | 'image';
 
 type MountConsistency = 'default' | 'consistent' | 'cached' | 'delegated';
 
@@ -95,9 +95,15 @@ export interface DeviceMapping {
   PathOnHost: string;
 }
 
+export interface HostConfigPortBinding {
+  [port: string]: {
+    HostPort?: string;
+    HostIp?: string;
+  }[];
+}
+
 export interface HostConfig {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PortBindings?: any;
+  PortBindings?: HostConfigPortBinding;
   Binds?: string[];
   AutoRemove?: boolean;
   SecurityOpt?: string[];

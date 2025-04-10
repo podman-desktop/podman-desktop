@@ -102,8 +102,11 @@ export default function Home(): JSX.Element {
             <div>
               <h3 className="text-xl mb-2">3. Attend Community Events</h3>
               <p className="dark:text-gray-700">
-                Join us for upcoming <a href="https://github.com/podman-desktop/community/issues/3">meetups</a>,
-                webinars, and conferences.
+                Join us for upcoming{' '}
+                <a href="https://github.com/podman-desktop/community/blob/main/meetings/README.md#upcoming-community-meeting">
+                  meeting
+                </a>
+                , webinars, and conferences.
               </p>
             </div>
           </div>

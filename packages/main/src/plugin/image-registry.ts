@@ -338,9 +338,7 @@ export class ImageRegistry {
       const httpsProxyUrl = proxy?.httpsProxy;
 
       if (httpProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.http = new HttpProxyAgent({
             keepAlive: true,
@@ -355,9 +353,7 @@ export class ImageRegistry {
         }
       }
       if (httpsProxyUrl) {
-        if (!options.agent) {
-          options.agent = {};
-        }
+        options.agent ??= {};
         try {
           options.agent.https = new HttpsProxyAgent({
             keepAlive: true,
@@ -727,18 +723,14 @@ export class ImageRegistry {
       const arch = manifest.platform.architecture;
       const os = manifest.platform.os;
       let manifestsForOs = manifestsMap.get(os);
-      if (!manifestsForOs) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        manifestsForOs = new Map<string, any>();
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      manifestsForOs ??= new Map<string, any>();
       manifestsForOs.set(arch, manifest);
       manifestsMap.set(os, manifestsForOs);
     });
 
     let wantedOses = manifestsMap.get(wantedOs);
-    if (!wantedOses) {
-      wantedOses = manifestsMap.get('linux');
-    }
+    wantedOses ??= manifestsMap.get('linux');
 
     const keys = Array.from(wantedOses?.keys() ?? []);
     if (!wantedOses || !keys[0]) {
@@ -927,9 +919,7 @@ export class ImageRegistry {
 
   async searchImages(options: ImageSearchOptions): Promise<ImageSearchResult[]> {
     try {
-      if (!options.registry) {
-        options.registry = 'https://index.docker.io';
-      }
+      options.registry ??= 'https://index.docker.io';
       if (options.registry === 'docker.io') {
         options.registry = 'index.docker.io';
       }

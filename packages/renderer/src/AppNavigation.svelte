@@ -20,7 +20,11 @@ import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 
-let { exitSettingsCallback, meta = $bindable() }: { exitSettingsCallback: () => void; meta: TinroRouteMeta } = $props();
+interface Props {
+  exitSettingsCallback: () => void;
+  meta: TinroRouteMeta;
+}
+let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
@@ -80,10 +84,10 @@ function onDidChangeConfigurationCallback(e: Event): void {
       </div>
     </div>
   </NavItem>
-  {#each $navigationRegistry as navigationRegistryItem}
+  {#each $navigationRegistry as navigationRegistryItem, index (index)}
     {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
       <!-- This is a group, list all items from the entry -->
-      {#each navigationRegistryItem.items as item}
+      {#each navigationRegistryItem.items as item, index (index)}
         <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
       {/each}
     {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}

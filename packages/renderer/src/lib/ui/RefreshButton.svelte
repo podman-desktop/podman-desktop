@@ -1,5 +1,9 @@
 <script lang="ts">
-let { label, onclick }: { label: string; onclick: () => void } = $props();
+interface Props {
+  label: string;
+  onclick: () => void;
+}
+let { label, onclick }: Props = $props();
 </script>
 
 <button

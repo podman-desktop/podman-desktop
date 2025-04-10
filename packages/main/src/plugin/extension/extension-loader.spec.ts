@@ -32,6 +32,7 @@ import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
+import type { BuildImageOptions as InternalBuildImageOptions } from '/@api/image-info.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -167,6 +168,7 @@ const fileSystemMonitoring: FilesystemMonitoring = {} as unknown as FilesystemMo
 const proxy: Proxy = {} as unknown as Proxy;
 
 const containerProviderRegistry: ContainerProviderRegistry = {
+  buildImage: vi.fn(),
   containerExist: vi.fn(),
   imageExist: vi.fn(),
   volumeExist: vi.fn(),
@@ -1928,6 +1930,79 @@ describe('window', async () => {
 });
 
 describe('containerEngine', async () => {
+  describe('buildImage', () => {
+    let api: typeof containerDesktopAPI;
+    beforeEach(() => {
+      api = createApi();
+      expect(api).toBeDefined();
+    });
+
+    test('buildImage without options should call ContainerProviderRegistry#buildImage without options', async () => {
+      const callbackMock = vi.fn();
+      await api.containerEngine.buildImage('context', callbackMock);
+
+      expect(containerProviderRegistry.buildImage).toHaveBeenCalledOnce();
+      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', callbackMock, undefined);
+    });
+
+    test('non-(string | boolean) pull option should throw an error', async () => {
+      await expect(async () => {
+        await api.containerEngine.buildImage('context', vi.fn(), {
+          pull: { foo: 'bar' }, // non-sense
+        } as unknown as containerDesktopAPI.BuildImageOptions);
+      }).rejects.toThrowError('option pull should be of type string or boolean got object');
+    });
+
+    type TestCase = {
+      name: string;
+      options?: containerDesktopAPI.BuildImageOptions;
+      expected?: InternalBuildImageOptions;
+    };
+
+    test.each([
+      {
+        name: 'pull options as true string',
+        options: {
+          pull: 'true',
+        },
+        expected: {
+          pull: true,
+        },
+      },
+      {
+        name: 'pull options as True string (uppercase)',
+        options: {
+          pull: 'True',
+        },
+        expected: {
+          pull: true,
+        },
+      },
+      {
+        name: 'pull options as non-true string',
+        options: {
+          pull: 'false',
+        },
+        expected: {
+          pull: false,
+        },
+      },
+      {
+        name: 'pull options as non-true string',
+        options: {
+          pull: 'false',
+        },
+        expected: {
+          pull: false,
+        },
+      },
+    ] as Array<TestCase>)('$name', async ({ options, expected }) => {
+      await api.containerEngine.buildImage('context', vi.fn(), options);
+
+      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', expect.any(Function), expected);
+    });
+  });
+
   test('statsContainer ', async () => {
     vi.mocked(containerProviderRegistry.getContainerStats).mockResolvedValue(99);
     vi.mocked(containerProviderRegistry.stopContainerStats).mockResolvedValue(undefined);

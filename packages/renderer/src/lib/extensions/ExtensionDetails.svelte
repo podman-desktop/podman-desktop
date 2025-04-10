@@ -40,20 +40,22 @@ $: extension = derived(
 
 {#if $extension}
   <DetailsPage title="{$extension.displayName} extension" subtitle={$extension.description} bind:this={detailsPage}>
-    <div class="flex flex-col mt-1 items-baseline w-8" slot="icon">
-      <div class="w-8 min-h-8">
-        <!-- Display icon being installed using base64 -->
-        {#if $extension.icon}
-          <ExtensionIcon extension={$extension} />
-        {:else if $extension.iconRef}
-          <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
-        {/if}
+    {#snippet iconSnippet()}
+      <div class="flex flex-col mt-1 items-baseline w-8">
+        <div class="w-8 min-h-8">
+          <!-- Display icon being installed using base64 -->
+          {#if $extension.icon}
+            <ExtensionIcon extension={$extension} />
+          {:else if $extension.iconRef}
+            <img src={$extension.iconRef} alt="{$extension.displayName} icon" class="max-w-8 max-h-8" />
+          {/if}
+        </div>
+        <div class="flex flex-row mt-3">
+          <ExtensionStatus status={$extension.type === 'dd' ? 'started' : $extension.state} />
+        </div>
       </div>
-      <div class="flex flex-row mt-3">
-        <ExtensionStatus status={$extension.type === 'dd' ? 'started' : $extension.state} />
-      </div>
-    </div>
-    <svelte:fragment slot="actions">
+    {/snippet}
+    {#snippet actionsSnippet()}
       <div class="flex items-center space-x-10 w-full">
         {#if $extension.installedExtension}
           <InstalledExtensionActions class="w-48" extension={$extension.installedExtension} />
@@ -66,13 +68,15 @@ $: extension = derived(
           </div>
         {/if}
       </div>
-    </svelte:fragment>
+    {/snippet}
 
-    <div slot="detail" class="flex">
-      <ExtensionBadge class="mt-2" extension={$extension} />
-    </div>
+    {#snippet detailSnippet()}
+      <div class="flex">
+        <ExtensionBadge class="mt-2" extension={$extension} />
+      </div>
+    {/snippet}
     <!-- Display tabs only if extension is in error state -->
-    <svelte:fragment slot="tabs">
+    {#snippet tabsSnippet()}
       {#if $extension.state === 'failed'}
         <Button
           type="tab"
@@ -87,9 +91,9 @@ $: extension = derived(
           }}
           selected={screen === 'ERROR'}>Error</Button>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="content">
+    {#snippet contentSnippet()}
       <div class="flex w-full h-full overflow-y-auto p-5 flex-col lg:flex-row">
         {#if screen === 'README'}
           <ExtensionDetailsSummaryCard extensionDetails={$extension} />
@@ -98,17 +102,17 @@ $: extension = derived(
           <ExtensionDetailsError extension={$extension} />
         {/if}
       </div>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {:else}
   <DetailsPage title="{extensionId} extension" bind:this={detailsPage}>
-    <svelte:fragment slot="content">
+    {#snippet contentSnippet()}
       <div class="flex w-full h-full">
         <EmptyScreen
           title="Extension not found"
           message="Extension with id '{extensionId}' is not available in the catalog"
           icon={extensionIcon} />
       </div>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

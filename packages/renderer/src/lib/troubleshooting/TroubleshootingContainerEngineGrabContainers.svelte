@@ -31,7 +31,7 @@ async function grabContainers(): Promise<void> {
 
 <div class="flex flex-row items-center">
   <div class="w-36">
-    <Button bind:inProgress={listInProgress} class="my-1 w-full" on:click={grabContainers} icon={faSignal}>
+    <Button inProgress={listInProgress} class="my-1 w-full" on:click={grabContainers} icon={faSignal}>
       Check containers
     </Button>
   </div>

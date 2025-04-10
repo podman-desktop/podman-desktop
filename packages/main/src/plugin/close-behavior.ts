@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { isLinux } from '../util.js';
+import { isUnixLike } from '../util.js';
 import type { ConfigurationRegistry, IConfigurationNode } from './configuration-registry.js';
 
 export class CloseBehavior {
@@ -32,7 +32,7 @@ export class CloseBehavior {
         ['preferences.ExitOnClose']: {
           description: 'Quit the app when the close button is clicked instead of minimizing to the tray.',
           type: 'boolean',
-          default: isLinux(),
+          default: isUnixLike(),
         },
       },
     };

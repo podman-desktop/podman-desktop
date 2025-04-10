@@ -26,11 +26,10 @@ import { createKindCluster, deleteCluster } from '../utility/cluster-operations'
 import { test } from '../utility/fixtures';
 import {
   checkKubernetesResourceState,
-  configurePortForwarding,
   createKubernetesResource,
   deleteKubernetesResource,
+  monitorPodStatusInClusterContainer,
   verifyLocalPortResponse,
-  verifyPortForwardingConfiguration,
 } from '../utility/kubernetes';
 import { ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -39,25 +38,27 @@ const CLUSTER_NAME: string = 'kind-cluster';
 const CLUSTER_CREATION_TIMEOUT: number = 300_000;
 const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
 const RESOURCE_NAME: string = 'kind';
-const KUBERNETES_CONTEXT = `kind-${CLUSTER_NAME}`;
-const KUBERNETES_NAMESPACE = 'default';
-const DEPLOYMENT_NAME = 'test-deployment-resource';
-const SERVICE_NAME = 'test-service-resource';
+const KUBERNETES_CONTEXT: string = `kind-${CLUSTER_NAME}`;
+const KUBERNETES_NAMESPACE: string = 'default';
+
+const DEPLOYMENT_NAME: string = 'test-deployment-resource';
+const SERVICE_NAME: string = 'test-service-resource';
+const INGERSS_NAME: string = 'test-ingress-resource';
 const KUBERNETES_RUNTIME = {
   runtime: PlayYamlRuntime.Kubernetes,
   kubernetesContext: KUBERNETES_CONTEXT,
   kubernetesNamespace: KUBERNETES_NAMESPACE,
 };
-
-const REMOTE_PORT: number = 8080;
-const LOCAL_PORT: number = 50000;
-const FORWARD_ADRESS: string = `http://localhost:${LOCAL_PORT}/`;
-const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
+const COMMAND_TO_EXECUTE: string = 'kubectl get pods -n projectcontour';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${DEPLOYMENT_NAME}.yaml`);
 const SERVICE_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SERVICE_NAME}.yaml`);
+const INGRESS_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${INGERSS_NAME}.yaml`);
+
+const FORWARD_ADRESS: string = `http://localhost:9090/`;
+const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
@@ -94,7 +95,12 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }, () => {
+test.describe.serial('Kubernetes newtworking E2E tests', { tag: '@k8s_e2e' }, () => {
+  test('Check Ingress controller pods status', async ({ page }) => {
+    test.setTimeout(160_000);
+    await monitorPodStatusInClusterContainer(page, KIND_NODE, COMMAND_TO_EXECUTE);
+  });
+
   test('Create and verify a running Kubernetes deployment', async ({ page }) => {
     test.setTimeout(80_000);
     await createKubernetesResource(
@@ -113,7 +119,6 @@ test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }
     );
   });
   test('Create and verify a running Kubernetes service', async ({ page }) => {
-    test.setTimeout(80_000);
     await createKubernetesResource(
       page,
       KubernetesResources.Services,
@@ -126,17 +131,30 @@ test.describe.serial('Kubernetes service resource E2E Test', { tag: '@k8s_e2e' }
       KubernetesResources.Services,
       SERVICE_NAME,
       KubernetesResourceState.Running,
-      80_000,
+      10_000,
     );
   });
-
-  test('Verify service functionality via port forwarding', async ({ page }) => {
-    await configurePortForwarding(page, KubernetesResources.Services, SERVICE_NAME);
-    await verifyPortForwardingConfiguration(page, SERVICE_NAME, LOCAL_PORT, REMOTE_PORT);
+  test('Create and verify a running Kubernetes ingress', async ({ page }) => {
+    await createKubernetesResource(
+      page,
+      KubernetesResources.IngeressesRoutes,
+      INGERSS_NAME,
+      INGRESS_YAML_PATH,
+      KUBERNETES_RUNTIME,
+    );
+    await checkKubernetesResourceState(
+      page,
+      KubernetesResources.IngeressesRoutes,
+      INGERSS_NAME,
+      KubernetesResourceState.Running,
+      10_000,
+    );
+  });
+  test(`Verify the availability of the ${SERVICE_NAME} service.`, async () => {
     await verifyLocalPortResponse(FORWARD_ADRESS, RESPONSE_MESSAGE);
   });
   test('Delete Kubernetes resources', async ({ page }) => {
-    await deleteKubernetesResource(page, KubernetesResources.PortForwarding, SERVICE_NAME);
+    await deleteKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGERSS_NAME);
     await deleteKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME);
     await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
   });

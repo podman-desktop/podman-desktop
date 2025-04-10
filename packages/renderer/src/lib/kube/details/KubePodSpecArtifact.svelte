@@ -42,7 +42,7 @@ let { artifact, podName, namespace }: Props = $props();
     <tr>
       <Title>Containers</Title>
     </tr>
-    {#each artifact.containers as container}
+    {#each artifact.containers as container (container.name)}
       <tr>
         <Subtitle>{container.name}</Subtitle>
       </tr>
@@ -54,7 +54,7 @@ let { artifact, podName, namespace }: Props = $props();
     <tr>
       <Title>Volumes</Title>
     </tr>
-    {#each artifact.volumes as volume}
+    {#each artifact.volumes as volume (volume.name)}
       <Volume artifact={volume} />
     {/each}
   {/if}

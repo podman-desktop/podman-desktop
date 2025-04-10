@@ -42,19 +42,23 @@ onMount(() => {
 
 {#if volume}
   <DetailsPage title={volume.shortName} subtitle={volume.humanSize} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={VolumeIcon} size={24} status={volume.status} />
-    <VolumeActions slot="actions" volume={volume} detailed={true} on:update={(): VolumeInfoUI => (volume = volume)} />
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      <StatusIcon icon={VolumeIcon} size={24} status={volume.status} />
+    {/snippet}
+    {#snippet actionsSnippet()}
+      <VolumeActions volume={volume} detailed={true} on:update={(): VolumeInfoUI => (volume = volume)} />
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <VolumeDetailsSummary volume={volume} />
       </Route>
       <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
         <VolumeDetailsInspect volume={volume} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

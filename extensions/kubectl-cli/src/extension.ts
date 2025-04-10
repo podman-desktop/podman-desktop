@@ -128,9 +128,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     async () => {
       // If the version is undefined (checks weren't run, or the user didn't select a version)
       // we will just download the latest version
-      if (kubectlVersionMetadata === undefined) {
-        kubectlVersionMetadata = await kubectlDownload.getLatestVersionAsset();
-      }
+      kubectlVersionMetadata ??= await kubectlDownload.getLatestVersionAsset();
 
       let downloaded: boolean = false;
       try {
@@ -275,9 +273,7 @@ export async function findKubeCtl(extensionContext: extensionApi.ExtensionContex
       }
     }
 
-    if (!binaryPath) {
-      binaryPath = 'kubectl';
-    }
+    binaryPath ??= 'kubectl';
   } catch (e) {
     console.warn(`Error getting kubectl from user PATH: ${e}, trying from extension storage path`);
     try {

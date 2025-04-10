@@ -319,7 +319,7 @@ describe('findComposeBinary', () => {
     return {
       isWindows: vi.fn(),
       isMac: vi.fn(),
-      isLinux: vi.fn(),
+      isUnixLike: vi.fn(),
       exec: vi.fn(),
     };
   });
@@ -376,7 +376,7 @@ describe('findComposeBinary', () => {
   test('Check findComposeBinary on Linux', async () => {
     vi.mock('node:fs');
 
-    vi.spyOn(util, 'isLinux').mockImplementation(() => true);
+    vi.spyOn(util, 'isUnixLike').mockImplementation(() => true);
     vi.spyOn(util, 'isMac').mockImplementation(() => false);
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
 

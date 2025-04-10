@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
@@ -98,13 +96,19 @@ let spyBuildApi: MockInstance<() => WebviewApi>;
 beforeEach(() => {
   vi.resetAllMocks();
   webviewPreload = new TestWebwiewPreload('123');
+
   // mock the window object
-  (window as any).addEventListener = vi.fn();
-  (window as any).matchMedia = vi.fn().mockReturnValue({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+  Object.defineProperty(global, 'window', {
+    value: {
+      addEventListener: vi.fn(),
+      matchMedia: vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    },
   });
+
   // override the getWebviews method
   const spyGetWebviews = vi.spyOn(webviewPreload, 'getWebviews');
   spyGetWebviews.mockResolvedValue([webviewInfo]);
@@ -202,10 +206,10 @@ describe('changeContent', () => {
     // call init to set the webviewInfo
     await webviewPreload.init();
 
-    const callback: any = spyAddEventListener.mock.calls[0][1];
+    const callback: EventListener = spyAddEventListener.mock.calls[0][1] as EventListener;
 
     // call the callback that should call changeContent as we'll have two mandatory fields
-    callback();
+    callback?.({} as Event);
 
     // wait timeout execute
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -254,10 +258,10 @@ describe('changeContent', () => {
     // call init to set the webviewInfo
     await webviewPreload.init();
 
-    const callback: any = spyAddEventListener.mock.calls[0][1];
+    const callback: EventListener = spyAddEventListener.mock.calls[0][1] as EventListener;
 
     // call the callback that should call changeContent as we'll have two mandatory fields
-    callback();
+    callback({} as Event);
 
     // wait timeout execute
     await new Promise(resolve => setTimeout(resolve, 100));

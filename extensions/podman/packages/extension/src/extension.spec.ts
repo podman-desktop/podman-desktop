@@ -27,22 +27,21 @@ import { Disposable } from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as compatibilityModeLib from './compatibility-mode';
 import {
-  checkDisguisedPodmanSocket,
   initCheckAndRegisterUpdate,
   registerOnboardingMachineExistsCommand,
   registerOnboardingUnsupportedPodmanMachineCommand,
   setWSLEnabled,
 } from './extension';
 import * as extension from './extension';
-import type { InstalledPodman } from './podman-cli';
-import * as podmanCli from './podman-cli';
-import { PodmanConfiguration } from './podman-configuration';
-import type { UpdateCheck } from './podman-install';
-import { PodmanInstall } from './podman-install';
-import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './util';
-import * as util from './util';
+import * as compatibilityModeLib from './utils/compatibility-mode';
+import type { InstalledPodman } from './utils/podman-cli';
+import * as podmanCli from './utils/podman-cli';
+import { PodmanConfiguration } from './utils/podman-configuration';
+import type { UpdateCheck } from './utils/podman-install';
+import { PodmanInstall } from './utils/podman-install';
+import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
+import * as util from './utils/util';
 
 const config: Configuration = {
   get: () => {
@@ -57,8 +56,10 @@ const updateWarningsMock = vi.fn();
 const provider: extensionApi.Provider = {
   setContainerProviderConnectionFactory: vi.fn(),
   setKubernetesProviderConnectionFactory: vi.fn(),
+  setVmProviderConnectionFactory: vi.fn(),
   registerContainerProviderConnection: vi.fn(),
   registerKubernetesProviderConnection: vi.fn(),
+  registerVmProviderConnection: vi.fn(),
   registerLifecycle: vi.fn(),
   registerInstallation: vi.fn(),
   registerUpdate: registerUpdateMock,
@@ -321,11 +322,10 @@ vi.mock('./helpers/podman-info-helper', async () => {
   };
 });
 
-vi.mock('./util', async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const actual = await vi.importActual<typeof import('./util')>('./util');
+vi.mock(import('./utils/util'), async importOriginal => {
+  const original = await importOriginal();
   return {
-    ...actual,
+    ...original,
     isMac: vi.fn(),
     isWindows: vi.fn(),
     getAssetsFolder: vi.fn(),
@@ -1212,79 +1212,6 @@ test('test checkDefaultMachine, if the default connection is not in sync with th
   );
 });
 
-test('handlecompatibilitymodesetting: enable called when configuration setting has been set to true', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  // Fake machine output
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({ stdout: JSON.stringify(fakeMachineInfoJSON) } as extensionApi.RunResult),
-  );
-
-  // Spy on get configuration to just return true regardless of handleCompatibilityModeSetting
-  const spyGetConfiguration = vi.spyOn(config, 'get');
-  spyGetConfiguration.mockReturnValue(true);
-
-  const enableMock = vi.fn();
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
-    isEnabled: () => false,
-    enable: enableMock,
-    disable: vi.fn(),
-    details: '',
-    tooltipText: (): string => {
-      return '';
-    },
-  });
-  // Mock async method findRunningMachine to return default
-  const spyFindRunningMachine = vi.spyOn(extension, 'findRunningMachine');
-  spyFindRunningMachine.mockImplementation(() => {
-    return Promise.resolve('default');
-  });
-
-  // Run handleCompatibilityModeSetting
-  await extension.handleCompatibilityModeSetting();
-
-  // check to see if enable has been called
-  expect(enableMock).toHaveBeenCalled();
-});
-
-test('handlecompatibilitymodesetting: disable compatibility called when configuration setting has been set to false', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  // Fake machine output
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({ stdout: JSON.stringify(fakeMachineInfoJSON) } as extensionApi.RunResult),
-  );
-
-  // Spy on get configuration to just return false regardless of handleCompatibilityModeSetting
-  const spyGetConfiguration = vi.spyOn(config, 'get');
-  spyGetConfiguration.mockReturnValue(false);
-
-  const disableMock = vi.fn();
-  const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
-  mock.mockReturnValue({
-    isEnabled: () => true,
-    enable: vi.fn(),
-    disable: disableMock,
-    details: '',
-    tooltipText: (): string => {
-      return '';
-    },
-  });
-
-  // Run handleCompatibilityModeSetting
-  await extension.handleCompatibilityModeSetting();
-
-  // Make sure that it returns that the compatibility mode has been disabled
-  expect(disableMock).toHaveBeenCalled();
-});
-
 test('ensure started machine reports default configuration', async () => {
   vi.mocked(extensionApi.env).isLinux = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
@@ -1610,18 +1537,6 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
-});
-
-test('checkDisguisedPodmanSocket: does not run updateWarnings when called with Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).not.toBeCalled();
-});
-
-test('checkDisguisedPodmanSocket: runs updateWarnings when called not on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = false;
-  await checkDisguisedPodmanSocket(provider);
-  expect(updateWarningsMock).toBeCalled();
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {

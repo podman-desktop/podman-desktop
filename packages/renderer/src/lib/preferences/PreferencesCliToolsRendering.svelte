@@ -16,7 +16,7 @@ import SettingsPage from './SettingsPage.svelte';
       message="Start an extension that registers a CLI"
       hidden={$cliToolInfos.length > 0} />
 
-    {#each $cliToolInfos as cliTool}
+    {#each $cliToolInfos as cliTool (cliTool.id)}
       <PreferencesCliTool cliTool={cliTool} />
     {/each}
   </div>

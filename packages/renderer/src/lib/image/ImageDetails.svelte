@@ -132,26 +132,31 @@ onDestroy(() => {
 
 {#if image}
   <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={image.icon} size={24} status={image.status} />
-    <svelte:fragment slot="subtitle">
-      {#if image.badges.length}
+    {#snippet iconSnippet()}
+      {#if image}<StatusIcon icon={image.icon} size={24} status={image.status} />{/if}
+    {/snippet}
+    {#snippet subtitleSnippet()}
+      {#if image?.badges.length}
         <div class="flex flex-row">
-          {#each image.badges as badge}
+          {#each image.badges as badge, index (index)}
             <Badge color={badge.color} label={badge.label} />
           {/each}
         </div>
       {/if}
-    </svelte:fragment>
-    <ImageActions
-      slot="actions"
-      image={image}
-      onPushImage={handlePushImageModal}
-      onRenameImage={handleRenameImageModal}
-      detailed={true}
-      dropdownMenu={false}
-      groupContributions={true}
-      on:update={(): ImageInfoUI | undefined => (image = image)} />
-    <svelte:fragment slot="tabs">
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if image}
+        <ImageActions
+          image={image}
+          onPushImage={handlePushImageModal}
+          onRenameImage={handleRenameImageModal}
+          detailed={true}
+          dropdownMenu={false}
+          groupContributions={true}
+          on:update={(): ImageInfoUI | undefined => (image = image)} />
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="History" selected={isTabSelected($router.path, 'history')} url={getTabUrl($router.path, 'history')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
@@ -161,24 +166,26 @@ onDestroy(() => {
       {#if showFilesTab}
         <Tab title="Files" selected={isTabSelected($router.path, 'files')} url={getTabUrl($router.path, 'files')} />
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="content">
-      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-        <ImageDetailsSummary image={image} />
-      </Route>
-      <Route path="/history" breadcrumb="History" navigationHint="tab">
-        <ImageDetailsHistory image={image} />
-      </Route>
-      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-        <ImageDetailsInspect image={image} />
-      </Route>
-      <Route path="/check" breadcrumb="Check" navigationHint="tab">
-        <ImageDetailsCheck imageInfo={imageInfo} />
-      </Route>
-      <Route path="/files" breadcrumb="Files" navigationHint="tab">
-        <ImageDetailsFiles imageInfo={imageInfo} />
-      </Route>
-    </svelte:fragment>
+    {/snippet}
+    {#snippet contentSnippet()}
+      {#if image}
+        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+          <ImageDetailsSummary image={image} />
+        </Route>
+        <Route path="/history" breadcrumb="History" navigationHint="tab">
+          <ImageDetailsHistory image={image} />
+        </Route>
+        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+          <ImageDetailsInspect image={image} />
+        </Route>
+        <Route path="/check" breadcrumb="Check" navigationHint="tab">
+          <ImageDetailsCheck imageInfo={imageInfo} />
+        </Route>
+        <Route path="/files" breadcrumb="Files" navigationHint="tab">
+          <ImageDetailsFiles imageInfo={imageInfo} />
+        </Route>
+      {/if}
+    {/snippet}
   </DetailsPage>
 
   {#if pushImageModal}

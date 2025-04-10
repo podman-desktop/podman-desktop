@@ -79,6 +79,7 @@ export class TrayMenu {
             status: 'unknown',
             containerConnections: [],
             kubernetesConnections: [],
+            vmConnections: [],
             lifecycleMethods: [],
             detectionChecks: [],
             version: '',
@@ -88,8 +89,10 @@ export class TrayMenu {
             installationSupport: false,
             containerProviderConnectionCreation: false,
             kubernetesProviderConnectionCreation: false,
+            vmProviderConnectionCreation: false,
             containerProviderConnectionInitialization: false,
             kubernetesProviderConnectionInitialization: false,
+            vmProviderConnectionInitialization: false,
             cleanupSupport: false,
             extensionId: '',
           });
@@ -419,7 +422,7 @@ export class TrayMenu {
     }
     window?.show();
     if (isMac()) {
-      app.dock.show().catch((error: unknown) => {
+      app.dock?.show()?.catch((error: unknown) => {
         console.error('Error while showing dock', error);
       });
     }

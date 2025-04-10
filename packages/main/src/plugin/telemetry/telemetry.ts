@@ -205,9 +205,7 @@ export class Telemetry {
     options?: TelemetryLoggerOptions,
   ): TelemetryLogger {
     // if no sender, use the built-in
-    if (!sender) {
-      sender = this.createBuiltinTelemetrySender(extensionInfo);
-    }
+    sender ??= this.createBuiltinTelemetrySender(extensionInfo);
 
     return new TelemetryLoggerImpl(extensionInfo, sender, options);
   }
@@ -369,9 +367,7 @@ export class Telemetry {
   }
 
   protected async getLocale(): Promise<string> {
-    if (!this.locale) {
-      this.locale = (await osLocale.osLocale()).replace('_', '-');
-    }
+    this.locale ??= (await osLocale.osLocale()).replace('_', '-');
     return this.locale;
   }
 

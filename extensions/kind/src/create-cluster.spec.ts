@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,11 @@ import { getKindPath, getMemTotalInfo } from './util';
 vi.mock('node:fs', () => ({
   promises: {
     writeFile: vi.fn(),
+    readFile: vi.fn(),
     mkdtemp: vi.fn(),
     rm: vi.fn(),
   },
+  readFileSync: vi.fn(),
 }));
 
 vi.mock('@podman-desktop/api', async () => {
@@ -40,6 +42,7 @@ vi.mock('@podman-desktop/api', async () => {
     kubernetes: {
       createResources: vi.fn(),
       getKubeconfig: vi.fn().mockReturnValue({ path: '/some/path' }),
+      onDidUpdateKubeconfig: vi.fn(),
     },
     provider: {
       getContainerConnections: vi
@@ -62,6 +65,14 @@ vi.mock('./util', async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(fs.promises.mkdtemp).mockResolvedValue('/tmp/file');
+
+  // mock kubeconfig changing immediately after registering for update
+  vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(listener => {
+    listener({} as extensionApi.KubeconfigUpdateEvent);
+    return {
+      dispose: vi.fn(),
+    };
+  });
 });
 
 const telemetryLogUsageMock = vi.fn();
@@ -86,7 +97,7 @@ test('expect error is cli returns non zero exit code', async () => {
 
 test('expect cluster to be created', async () => {
   vi.mocked(getKindPath).mockReturnValue('/kind/path');
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   await createCluster({}, '', telemetryLoggerMock);
   expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
     1,
@@ -101,8 +112,39 @@ test('expect cluster to be created', async () => {
   expect(env).toStrictEqual({ PATH: '/kind/path' });
 });
 
+test('expect cluster creation to wait for kubeconfig change', async () => {
+  vi.mocked(getKindPath).mockReturnValue('/kind/path');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+  // record kubeconfig listener
+  let listener!: (e: extensionApi.KubeconfigUpdateEvent) => extensionApi.Disposable;
+  vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(x => {
+    listener = x;
+    return {
+      dispose: vi.fn(),
+    };
+  });
+
+  createCluster({}, '', telemetryLoggerMock).catch((error: unknown) => {
+    console.error('Error creating cluster', error);
+  });
+
+  // wait for the listener to be registered and wait another 100ms
+  await vi.waitFor(() => {
+    if (!listener) throw new Error('Not listening yet');
+  });
+  await new Promise(f => setTimeout(f, 100));
+
+  expect(telemetryLogUsageMock).not.toHaveBeenCalled();
+
+  // notify listener
+  listener({} as extensionApi.KubeconfigUpdateEvent);
+
+  await vi.waitFor(() => expect(telemetryLogUsageMock).toHaveBeenCalled());
+});
+
 test('expect cluster to be created using config file', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -118,8 +160,107 @@ test('expect cluster to be created using config file', async () => {
   expect(extensionApi.kubernetes.createResources).not.toBeCalled();
 });
 
+test('expect cluster to not call setupIngressController function when supplying config file and ingress is set to no', async () => {
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Supply the configuration file
+  await createCluster({ 'kind.cluster.creation.configFile': '/path' }, '', telemetryLoggerMock, logger);
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to NOT be called
+  expect(extensionApi.kubernetes.createResources).not.toBeCalled();
+});
+
+test('expect cluster to call ingress controller setup when ingress is set to yes AND a config is supplied', async () => {
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Supply the configuration file
+  await createCluster(
+    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to be called
+  expect(extensionApi.kubernetes.createResources).toBeCalled();
+
+  // Expect createResources to be called with `kind-kind` as the namespace since we are using a "fake"
+  // config file and there was no name supplied, so it should be using the default
+  expect(extensionApi.kubernetes.createResources).toBeCalledWith('kind-kind', expect.anything());
+});
+
+test('expect cluster to use "name: foobar" within the yaml file when supplying a config file', async () => {
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  // Mock the fs readFileSync function to return a fake yaml file
+  vi.mocked(fs.promises.readFile).mockResolvedValue(
+    `
+    apiVersion: kind.x-k8s.io/v1alpha4
+    kind: Cluster
+    name: foobar
+    nodes:
+    - role: control-plane
+    - role: worker
+    - role: worker`,
+  );
+
+  // Supply the configuration file
+  await createCluster(
+    { 'kind.cluster.creation.configFile': '/path', 'kind.cluster.creation.ingress': 'on' },
+    '',
+    telemetryLoggerMock,
+    logger,
+  );
+
+  // Expect us to call the exec function as normal
+  expect(telemetryLogUsageMock).toHaveBeenNthCalledWith(
+    1,
+    'createCluster',
+    expect.objectContaining({ provider: 'docker' }),
+  );
+
+  expect(telemetryLogErrorMock).not.toBeCalled();
+
+  // Expect create resources to be called
+  expect(extensionApi.kubernetes.createResources).toBeCalled();
+
+  // Expect `kind-foobar` to appear as the kind name in the createResources call
+  expect(extensionApi.kubernetes.createResources).toBeCalledWith('kind-foobar', expect.anything());
+});
+
 test('expect cluster to be created with ingress', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -135,7 +276,7 @@ test('expect cluster to be created with ingress', async () => {
 });
 
 test('expect cluster to be created with ports as strings', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -172,7 +313,7 @@ test('expect cluster to be created with ports as strings', async () => {
 });
 
 test('expect cluster to be created with ports as numbers', async () => {
-  (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
   const logger = {
     log: vi.fn(),
     error: vi.fn(),
@@ -211,7 +352,7 @@ test('expect cluster to be created with ports as numbers', async () => {
 test('expect error if Kubernetes reports error', async () => {
   const error = new Error('Kubernetes error');
   try {
-    (extensionApi.process.exec as Mock).mockReturnValue({} as extensionApi.RunResult);
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
     const logger = {
       log: vi.fn(),
       error: vi.fn(),

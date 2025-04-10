@@ -57,3 +57,13 @@ setTemplate(template);
     value: 'Disabled dropdown',
     disabled: true,
   }} />
+
+<Story name="Left snippet">
+  <Dropdown>
+    <option value="a">One</option>
+    <option value="b">Two</option>
+    {#snippet left()}
+      Selected value:&nbsp;
+    {/snippet}
+  </Dropdown>
+</Story>

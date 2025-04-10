@@ -56,10 +56,11 @@ export let volumeName = '';
   title="Create a volume"
   inProgress={createVolumeInProgress}
   showEmptyScreen={providerConnections.length === 0}>
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <VolumeIcon />
-  </svelte:fragment>
-  <div slot="content" class="space-y-6">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-6">
     <div>
       <label for="containerBuildContextDirectory" class="block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
         >Volume name:</label>
@@ -74,7 +75,7 @@ export let volumeName = '';
             aria-label="Provider Choice"
             disabled={createVolumeFinished}
             bind:value={selectedProvider}>
-            {#each providerConnections as providerConnection}
+            {#each providerConnections as providerConnection, index (index)}
               <option value={providerConnection}>{providerConnection.name}</option>
             {/each}
           </select>
@@ -103,4 +104,5 @@ export let volumeName = '';
       {/if}
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

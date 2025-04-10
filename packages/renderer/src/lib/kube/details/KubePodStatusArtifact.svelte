@@ -39,7 +39,7 @@ if (artifact?.startTime) {
     <tr>
       <Title>Container Status</Title>
     </tr>
-    {#each artifact.containerStatuses as containerStatus}
+    {#each artifact.containerStatuses as containerStatus, index (index)}
       {#if containerStatus.state}
         <tr>
           <Subtitle>{containerStatus.name}</Subtitle>

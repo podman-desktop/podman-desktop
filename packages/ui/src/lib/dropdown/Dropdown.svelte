@@ -4,10 +4,23 @@ import { onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 interface Option {
-  value: unknown;
+  value: string;
   label: string;
 }
 
+interface Props {
+  id?: string;
+  name?: string;
+  value?: string;
+  disabled?: boolean;
+  onChange?: (val: string) => void;
+  options?: Option[];
+  class?: string;
+  ariaInvalid?: boolean | 'grammar' | 'spelling';
+  ariaLabel?: string;
+  left?: Snippet;
+  children?: Snippet;
+}
 let {
   id,
   name,
@@ -18,19 +31,9 @@ let {
   class: className = '',
   ariaInvalid = false,
   ariaLabel = '',
+  left = undefined,
   children = undefined,
-}: {
-  id?: string;
-  name?: string;
-  value?: unknown;
-  disabled?: boolean;
-  onChange?: (val: unknown) => void;
-  options?: Option[];
-  class?: string;
-  ariaInvalid?: boolean | 'grammar' | 'spelling';
-  ariaLabel?: string;
-  children?: Snippet;
-} = $props();
+}: Props = $props();
 
 let opened: boolean = $state(false);
 let selectLabel: string = $state('');
@@ -46,7 +49,7 @@ onMount(() => {
 });
 
 $effect(() => {
-  selectLabel = options.find(o => o.value === value)?.label ?? (typeof value === 'string' ? (value as string) : '');
+  selectLabel = options.find(o => o.value === value)?.label ?? value ?? '';
 });
 
 function onKeyDown(e: KeyboardEvent): void {
@@ -129,7 +132,7 @@ function onEnter(i: number): void {
   highlightIndex = i;
 }
 
-function onSelect(e: Event, newValue: unknown): void {
+function onSelect(e: Event, newValue: string): void {
   onChange(newValue);
   value = newValue;
   close();
@@ -199,6 +202,7 @@ function onWindowClick(e: Event): void {
     name={name}
     onclick={toggleOpen}
     onkeydown={onKeyDown}>
+    {@render left?.()}
     <span class="grow">{selectLabel}</span>
     <div
       class:text-[var(--pd-input-field-stroke)]={!disabled}
@@ -211,7 +215,7 @@ function onWindowClick(e: Event): void {
   {#if opened}
     <div
       class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap">
-      {#each options as option, i}
+      {#each options as option, i (i)}
         <button
           onkeydown={onKeyDown}
           onmouseenter={(): void => onEnter(i)}

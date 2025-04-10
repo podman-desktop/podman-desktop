@@ -32,7 +32,7 @@ async function pingConnection(): Promise<void> {
 
 <div class="flex flex-row items-center">
   <div class="w-36">
-    <Button bind:inProgress={pingInProgress} class="my-1 w-full" on:click={pingConnection} icon={faSignal}>
+    <Button inProgress={pingInProgress} class="my-1 w-full" on:click={pingConnection} icon={faSignal}>
       Ping
     </Button>
   </div>

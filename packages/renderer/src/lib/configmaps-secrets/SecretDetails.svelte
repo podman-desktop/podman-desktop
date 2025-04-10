@@ -75,19 +75,25 @@ async function loadDetails(): Promise<void> {
 
 {#if secret}
   <DetailsPage title={secret.name} subtitle={secret.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={SecretIcon} size={24} status={secret.status} />
-    <svelte:fragment slot="actions">
-      <ConfigMapSecretActions configMapSecret={secret} detailed={true} on:update={(): ConfigMapSecretUI | undefined => (secret = secret)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={secret.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if secret}<StatusIcon icon={SecretIcon} size={24} status={secret.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if secret}<ConfigMapSecretActions configMapSecret={secret} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if secret}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={secret.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <SecretDetailsSummary secret={kubeSecret} kubeError={kubeError} />
       </Route>
@@ -97,6 +103,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeSecret)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

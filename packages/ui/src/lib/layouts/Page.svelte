@@ -64,7 +64,7 @@ function handleKeydown(e: KeyboardEvent): void {
           role="navigation"
           aria-label="Breadcrumb">
           {#if breadcrumbLeftPart}
-            <Link class="text-sm" aria-label="Back" on:click={onbreadcrumbClick} title={breadcrumbTitle}
+            <Link class="text-sm" aria-label="Back" on:click={onbreadcrumbClick}
               >{breadcrumbLeftPart}</Link>
           {/if}
           {#if breadcrumbRightPart}
@@ -72,7 +72,7 @@ function handleKeydown(e: KeyboardEvent): void {
             <div class="grow font-extralight" aria-label="Page Name">{breadcrumbRightPart}</div>
           {/if}
           {#if hasClose}
-            <CloseButton class="justify-self-end text-lg" on:click={onclose} />
+            <CloseButton class="justify-self-end text-lg" onclick={onclose} />
           {/if}
         </div>
       {/if}
@@ -107,7 +107,7 @@ function handleKeydown(e: KeyboardEvent): void {
             </div>
           </div>
           {#if !showBreadcrumb}
-            <CloseButton class="justify-self-end" on:click={onclose} />
+            <CloseButton class="justify-self-end" onclick={onclose} />
           {/if}
         </div>
       </div>

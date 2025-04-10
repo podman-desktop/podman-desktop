@@ -18,7 +18,6 @@
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { get } from 'node:http';
 import * as nodeurl from 'node:url';
@@ -47,11 +46,11 @@ vi.mock('https', () => {
 
 vi.mock('hpagent', () => {
   return {
-    HttpProxyAgent: function (): any {
+    HttpProxyAgent: function (): void {
       // @ts-ignore: this implicit any type
       this.https = false;
     },
-    HttpsProxyAgent: function (): any {
+    HttpsProxyAgent: function (): void {
       // @ts-ignore: this implicit any type
       this.https = true;
     },
@@ -102,20 +101,23 @@ test('getOptions return options w/ agent for https proxy', () => {
   const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl);
   const options = ProxyResolver.getOptions(proxy, true, certificates);
   expect(options.agent).not.toBeUndefined();
-  expect((options.agent as any).https).toBeTruthy();
+  expect(options.agent && 'https' in options.agent ? options.agent.https : false).toBeTruthy();
 });
 
 test('getOptions return options w/ https.Agent for https proxy', () => {
   const proxy = createProxy(true, undefined, HttpProxyUrl);
   const options = ProxyResolver.getOptions(proxy, false, certificates);
   expect(options.agent).not.toBeUndefined();
-  expect((options.agent as any).https).toBeFalsy();
+  expect(options.agent && 'https' in options.agent ? options.agent.https : true).toBeFalsy();
 });
 
 test('patched http get calls original with the original parameters when proxy is not enabled', () => {
   const proxy = createProxy(false, HttpsProxyUrl, HttpProxyUrl);
   const patched = ProxyResolver.createHttpPatchedModules(proxy, certificates);
-  patched.http.get(`${Http}://site.url`);
+  const http = patched['http'];
+  if (http && 'get' in http && typeof http.get === 'function') {
+    http.get(`${Http}://site.url`);
+  }
   expect(get).toBeCalledWith(`${Http}://site.url`);
 });
 
@@ -123,7 +125,11 @@ test('patched http get calls original method with the original parameters when p
   const proxy = createProxy(true, HttpsProxyUrl, HttpProxyUrl);
   const patched = ProxyResolver.createHttpPatchedModules(proxy, certificates);
   const socketOptions = { socketPath: '/var/socket/path' };
-  patched.http.get(socketOptions);
+  const http = patched['http'];
+  if (http && 'get' in http && typeof http.get === 'function') {
+    http.get(socketOptions);
+  }
+
   expect(get).toBeCalledWith(socketOptions, undefined);
 });
 
@@ -133,8 +139,11 @@ test('patched http get when called with url and callback calls original with opt
   const colon = ':';
   const url = `https://[fe80${colon}${colon}1802${colon}20ff${colon}fe8d${colon}d4ce]`;
   const callback = vi.fn();
-  patched.http.get(url, callback);
-  patched.http.get(new nodeurl.URL(url), callback);
+  const http = patched['http'];
+  if (http && 'get' in http && typeof http.get === 'function') {
+    http.get(url, callback);
+    http.get(new nodeurl.URL(url), callback);
+  }
   expect(get).toHaveBeenCalledTimes(2);
   expect(get).toBeCalledWith(
     {
@@ -153,8 +162,11 @@ test('patched http get translates username@password in url to auth option', () =
   const patched = ProxyResolver.createHttpPatchedModules(proxy, certificates);
   const url = 'https://usr:pass@rest.url';
   const callback = vi.fn();
-  patched.http.get(url, callback);
-  patched.http.get(new nodeurl.URL(url), callback);
+  const http = patched['http'];
+  if (http && 'get' in http && typeof http.get === 'function') {
+    http.get(url, callback);
+    http.get(new nodeurl.URL(url), callback);
+  }
   expect(get).toHaveBeenCalledTimes(2);
   expect(get).toBeCalledWith(
     {
@@ -179,7 +191,10 @@ test('patched http get works when url passed as protocol and hostname in options
     port: '',
     protocol: 'https:',
   };
-  patched.http.get(options, callback);
+  const http = patched['http'];
+  if (http && 'get' in http && typeof http.get === 'function') {
+    http.get(options, callback);
+  }
   expect(get).toBeCalledWith(
     {
       agent: new HttpsProxyAgent({} as HttpsProxyAgentOptions),

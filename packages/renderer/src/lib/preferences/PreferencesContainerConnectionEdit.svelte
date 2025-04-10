@@ -65,20 +65,24 @@ async function editConnection(
 
 {#if providerInfo && connectionInfo}
   <DetailsPage title={connectionInfo.name}>
-    <div slot="content" class="text-[var(--pd-content-text)]">
-      <PreferencesConnectionCreationRendering
-        providerInfo={providerInfo}
-        connectionInfo={connectionInfo}
-        properties={properties}
-        propertyScope={scope}
-        callback={editConnection} />
-    </div>
-    <IconImage slot="icon" image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
-    <svelte:fragment slot="subtitle">
+    {#snippet contentSnippet()}
+      <div class="text-[var(--pd-content-text)]">
+        <PreferencesConnectionCreationRendering
+          providerInfo={providerInfo}
+          connectionInfo={connectionInfo}
+          properties={properties}
+          propertyScope={scope}
+          callback={editConnection} />
+      </div>
+    {/snippet}
+    {#snippet iconSnippet()}
+      <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
+    {/snippet}
+    {#snippet subtitleSnippet()}
       {#if connectionInfo.status === 'started'}
         <WarningMessage
           error="This may restart the container or Kubernetes engine. Existing containers or pods may be stopped." />
       {/if}
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

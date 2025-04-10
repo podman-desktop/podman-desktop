@@ -1,11 +1,12 @@
 <script lang="ts">
 import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import RecommendedRegistry from '/@/lib/image/RecommendedRegistry.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
@@ -17,6 +18,7 @@ import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 import { runImageInfo } from '/@/stores/run-image-store';
+import type { ImageInfo } from '/@api/image-info';
 import type { ImageSearchOptions } from '/@api/image-registry';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
@@ -163,9 +165,8 @@ async function gotoManageRegistries(): Promise<void> {
 }
 
 onMount(() => {
-  if (!selectedProviderConnection) {
-    selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-  }
+  // Select default connection
+  selectedProviderConnection ??= providerConnections.length > 0 ? providerConnections[0] : undefined;
 });
 
 let imageNameInvalid: string | undefined = $state();
@@ -222,7 +223,9 @@ async function searchImages(value: string): Promise<string[]> {
 }
 
 async function searchLocalImages(value: string): Promise<string[]> {
-  const listImages = await window.listImages();
+  const listImages: ImageInfo[] = await window.listImages({
+    provider: $state.snapshot(selectedProviderConnection),
+  });
   const localImagesNames = listImages.map(image => {
     if (image.RepoTags) {
       return image.RepoTags;
@@ -277,7 +280,11 @@ async function buildContainerFromImage(): Promise<void> {
     let [registry, imageName] = imageToPull.split('/');
     dockerLibraryImage = `${registry}/library/${imageName}`;
   }
-  const localImages = (await window.listImages()).filter(
+  const localImages = (
+    await window.listImages({
+      provider: $state.snapshot(selectedProviderConnection),
+    })
+  ).filter(
     image =>
       (
         image.RepoTags?.filter(repoTag =>
@@ -295,6 +302,9 @@ async function buildContainerFromImage(): Promise<void> {
 }
 
 async function searchFunction(value: string): Promise<void> {
+  // do not search for images if no connection is selected
+  if (!selectedProviderConnection) return;
+
   value = value.trim();
   const localImagesValues = await searchLocalImages(value);
   const remoteImagesValues = await searchImages(value);
@@ -332,34 +342,44 @@ async function onEnterOperation(): Promise<void> {
     await pullImageAndRun();
   }
 }
+
+function onContainerConnectionChange(): void {
+  // reset values
+  values = [];
+  matchingLocalImages = [];
+  imageToPull = '';
+}
 </script>
 
 <EngineFormPage title="Select an image">
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <ImageIcon />
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet actions()}
     <Button on:click={gotoManageRegistries} icon={faCog}>Manage registries</Button>
-  </svelte:fragment>
-  <div slot="content" class="space-y-2 flex flex-col">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-2 flex flex-col">
     <div class="flex flex-col">
-      <Typeahead
-        id="imageName"
-        name="imageName"
-        placeholder="Select or enter an image to run"
-        onInputChange={searchFunction}
-        resultItems={values}
-        compare={sortResults}
-        onChange={async (s: string): Promise<void> => {
-          validateImageName(s);
-          await resolveShortname();
-          await searchLatestTag();
+      {#key selectedProviderConnection}
+        <Typeahead
+          id="imageName"
+          name="imageName"
+          placeholder="Select or enter an image to run"
+          onInputChange={searchFunction}
+          resultItems={values}
+          compare={sortResults}
+          onChange={async (s: string): Promise<void> => {
+            validateImageName(s);
+            await resolveShortname();
+            await searchLatestTag();
         }}
-        onEnter={onEnterOperation}
-        disabled={pullFinished || pullInProgress}
-        error={!isValidName}
-        required
-        initialFocus />
+          onEnter={onEnterOperation}
+          disabled={pullFinished || pullInProgress}
+          error={!isValidName}
+          required
+          initialFocus />
+      {/key}
       {#if selectedProviderConnection?.type === 'podman' && podmanFQN && !matchingLocalImages.includes(podmanFQN)}
         <div class="absolute mt-2 ml-[-18px] self-start">
           <Tooltip tip="Shortname images will be pulled from Docker Hub" topRight>
@@ -383,21 +403,19 @@ async function onEnterOperation(): Promise<void> {
       <div class="pt-4">
         <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Container Engine</label>
-        <Dropdown
+        <ContainerConnectionDropdown
           id="providerChoice"
           name="providerChoice"
+          onchange={onContainerConnectionChange}
           bind:value={selectedProviderConnection}
-          options={providerConnections.map(providerConnection => ({
-            label: providerConnection.name,
-            value: providerConnection,
-          }))}>
-        </Dropdown>
+          connections={providerConnections}
+          disabled={pullFinished || pullInProgress}/>
       </div>
     {/if}
     {#if providerConnections.length === 1}
       <input type="hidden" name="providerChoice" readonly bind:value={selectedProviderConnection} />
     {/if}
-  
+
     <footer>
       <div class="w-full flex flex-col justify-end gap-3 my-3">
         <div class="flex flex-row">
@@ -406,13 +424,13 @@ async function onEnterOperation(): Promise<void> {
             <Button
               icon={faArrowCircleDown}
               class="w-full"
-              bind:disabled={imageNameIsInvalid}
+              disabled={imageNameIsInvalid}
               on:click={pullImageAndRun}
-              bind:inProgress={pullInProgress}>
+              inProgress={pullInProgress}>
               Pull Image and Run
             </Button>
           {:else}
-            <Button icon={faCircleCheck} class="w-full" bind:disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
+            <Button icon={faCircleCheck} class="w-full" disabled={imageNameIsInvalid} on:click={buildContainerFromImage}>Run Image</Button>
           {/if}
         </div>
         {#if pullError}
@@ -425,5 +443,6 @@ async function onEnterOperation(): Promise<void> {
       <TerminalWindow bind:terminal={logsPull} />
     {/if}
   </div>
+  {/snippet}
 </EngineFormPage>
 

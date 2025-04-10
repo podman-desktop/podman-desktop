@@ -162,12 +162,19 @@ const config = {
       '--filesystem=home',
       // Read podman socket
       '--filesystem=xdg-run/podman:create',
+      // Read/write containers directory access (ability to save the application preferences)
+      '--filesystem=xdg-run/containers:create',
       // Read docker socket
       '--filesystem=/run/docker.sock',
       // Allow communication with network
       '--share=network',
       // System notifications with libnotify
       '--talk-name=org.freedesktop.Notifications',
+      // Allow safeStorage access to keyring to encrypt/decrypt file used to store sensitive information
+      // In Gnome Desktop Environment
+      '--talk-name=org.freedesktop.secrets',
+      // In KDE Desktop Environment
+      '--talk-name=org.kde.kwalletd6',
     ],
     useWaylandFlags: 'false',
     artifactName: 'podman-desktop-${version}.${ext}',

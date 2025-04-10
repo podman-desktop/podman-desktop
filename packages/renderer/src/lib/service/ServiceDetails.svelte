@@ -81,19 +81,23 @@ async function loadDetails(): Promise<void> {
 
 {#if service}
   <DetailsPage title={service.name} subtitle={service.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={ServiceIcon} size={24} status={service.status} />
-    <svelte:fragment slot="actions">
-      <ServiceActions service={service} detailed={true} on:update={(): ServiceUI | undefined => (service = service)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={service.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if service}<StatusIcon icon={ServiceIcon} size={24} status={service.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if service}<ServiceActions service={service} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        {#if service}<StateChange state={service.status} />{/if}
+      </div>
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <ServiceDetailsSummary service={kubeService} kubeError={kubeError} events={events} />
       </Route>
@@ -103,6 +107,6 @@ async function loadDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeService)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

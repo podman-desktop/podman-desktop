@@ -100,3 +100,13 @@ You must install a specific Windows Subsystem for Linux (WSL) distribution to ma
    - Replace `distro` with any official WSL distribution, such as `ubuntu-24.04`.
 1. Restart your machine.
 1. (Optional): Run the `wsl --unregister <distro>` to uninstall the WSL distribution.
+
+## Unable to install Compose extension 2.33.x on Windows due to certificate signature failure
+
+Installing the Compose extension version 2.33.x fails, and you receive an error message: `Unable to fetch the available extensions: certificate signature failure`.
+
+#### Workaround
+
+The reason for the failure could be that the Windows Certificate Store has been improperly loaded with the corporate certificate chain. Usually, all the certificates are placed in one location, namely TrustedRootCA, which results in the failure to import the certificates into the Podman Desktop application.
+
+To get root CA self-signed certificates to work, you can identify where these certificates have been placed in the Windows Certificate Store. Then, you can [clean the Store](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/trusted-root-certification-authorities-certificate-store) to ensure those certificates are in their proper locations.

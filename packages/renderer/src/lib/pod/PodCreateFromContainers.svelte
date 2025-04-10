@@ -219,9 +219,12 @@ function navigateToContainers(): void {
 </script>
 
 <EngineFormPage title="Copy containers to a pod" inProgress={createInProgress}>
-  <SolidPodIcon slot="icon" size="40" />
+  {#snippet icon()}
+  <SolidPodIcon size="40" />
+  {/snippet}
 
-  <div slot="content">
+  {#snippet content()}
+  <div >
     <div>
       {#if podCreation}
         {#if containersPorts.length > 0}
@@ -247,7 +250,7 @@ function navigateToContainers(): void {
             aria-label="Containers">Containers to replicate to the pod:</span>
         </div>
         <div class="w-full bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
-          {#each podCreation.containers as container, index}
+          {#each podCreation.containers as container, index (container.id)}
             <div class="p-2 flex flex-row items-center text-[var(--pd-content-card-text)]">
               <div class="w-10"><StatusIcon icon={ContainerIcon} status="STOPPED" /></div>
               <div class="w-16 pl-3">{index + 1}.</div>
@@ -264,7 +267,7 @@ function navigateToContainers(): void {
               aria-label="Exposed ports">All selected ports will be exposed:</span>
           </div>
           <div class="bg-[var(--pd-content-card-inset-bg)] mb-4 max-h-40 overflow-y-auto">
-            {#each [...mapPortExposed] as [port, value]}
+            {#each [...mapPortExposed] as [port, value] (port)}
               <div class="p-2 flex flex-row align-items text-sm text-[var(--pd-content-card-text)]">
                 <Checkbox
                   class="pt-0.5 mr-5"
@@ -299,9 +302,9 @@ function navigateToContainers(): void {
           <Button type="link" on:click={navigateToContainers}>Close</Button>
           <Button
             icon={SolidPodIcon}
-            bind:disabled={createInProgress}
+            disabled={createInProgress}
             on:click={createPodFromContainers}
-            bind:inProgress={createInProgress}
+            inProgress={createInProgress}
             aria-label="Create pod">
             Create Pod
           </Button>
@@ -313,4 +316,5 @@ function navigateToContainers(): void {
       {/if}
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

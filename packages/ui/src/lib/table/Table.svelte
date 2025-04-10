@@ -202,7 +202,7 @@ function toggleChildren(name: string | undefined): void {
             on:click={toggleAll} />
         </div>
       {/if}
-      {#each columns as column}
+      {#each columns as column, index (index)}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
@@ -233,21 +233,20 @@ function toggleChildren(name: string | undefined): void {
   <!-- Table body -->
   <div role="rowgroup">
     {#each data as object (object)}
+      {@const children = row.info.children?.(object) ?? []}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2">
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
           class:rounded-t-lg={object.name &&
             !collapsed.includes(object.name) &&
-            row.info.children &&
-            row.info.children(object).length > 0}
+            children.length > 0}
           class:rounded-lg={!object.name ||
             collapsed.includes(object.name) ||
-            !row.info.children ||
-            row.info.children(object).length === 0}
+            children.length === 0}
           role="row"
           aria-label={object.name}>
           <div class="whitespace-nowrap place-self-center" role="cell">
-            {#if row.info.children && row.info.children(object).length > 0}
+            {#if children.length > 0}
               <button on:click={toggleChildren.bind(undefined, object.name)}>
                 <Fa
                   size="0.8x"
@@ -266,7 +265,7 @@ function toggleChildren(name: string | undefined): void {
                 on:click={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
-          {#each columns as column}
+          {#each columns as column, index (index)}
             <div
               class="whitespace-nowrap {column.info.align === 'right'
                 ? 'justify-self-end'
@@ -286,11 +285,11 @@ function toggleChildren(name: string | undefined): void {
         </div>
 
         <!-- Child objects -->
-        {#if object.name && !collapsed.includes(object.name) && row.info.children}
-          {#each row.info.children(object) as child, i (child)}
+        {#if object.name && !collapsed.includes(object.name) && children.length > 0}
+          {#each children as child, i (child)}
             <div
               class="grid grid-table gap-x-0.5 hover:bg-[var(--pd-content-card-hover-bg)]"
-              class:rounded-b-lg={i === row.info.children(object).length - 1}
+              class:rounded-b-lg={i === children.length - 1}
               role="row"
               aria-label={child.name}>
               <div class="whitespace-nowrap justify-self-start" role="cell"></div>
@@ -303,7 +302,7 @@ function toggleChildren(name: string | undefined): void {
                     disabledTooltip={row.info.disabledText} />
                 </div>
               {/if}
-              {#each columns as column}
+              {#each columns as column, index (index)}
                 <div
                   class="whitespace-nowrap {column.info.align === 'right'
                     ? 'justify-self-end'

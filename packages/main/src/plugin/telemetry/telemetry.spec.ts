@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { TelemetrySender } from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -232,8 +230,8 @@ describe('TelemetryLoggerImpl', () => {
   test('dispose', async () => {
     const telemetryLogger = new TelemetryLoggerImpl(dummyExtensionInfo, senderMock);
 
-    expect((telemetryLogger as any).commonProperties).toMatchObject({ 'common.extensionVersion': '1.0.0' });
+    expect(telemetryLogger['commonProperties']).toMatchObject({ 'common.extensionVersion': '1.0.0' });
     telemetryLogger.dispose();
-    expect((telemetryLogger as any).commonProperties).toStrictEqual({});
+    expect(telemetryLogger['commonProperties']).toStrictEqual({});
   });
 });

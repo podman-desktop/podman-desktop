@@ -14,11 +14,13 @@ With Podman Desktop, you can easily transition from containers to Kubernetes and
 - Configure the following Kubernetes objects:
   - `Node`: Use this object to set up a node on which the necessary pods can run within a kubernetes cluster.
   - `Deployment`: Use this object to create necessary pods for execution and scale the number of pods.
+  - `Pod`: Use this object to create a set of one or more containers with shared storage and network resources.
   - `Service`: Use this object to expose your application to users and define policies for application access.
   - `Ingress`: Use this object to define routing rules and manage user access to the services running in a Kubernetes cluster.
   - `PersistentVolumeClaim`: Use this object to request `PersistentVolume` resources for storage and define volume access modes within your Kubernetes cluster.
-  - `ConfigMap`: Use this object to to define non-sensitive configuration data for initializing or executing your application.
+  - `ConfigMap`: Use this object to define non-sensitive configuration data for initializing or executing your application.
   - `Secret`: Use this object to store and manage sensitive data, such as passwords, OAuth tokens, and SSH keys for your application.
+  - `CronJob`: Use this object to run a job, such as backup and report generation periodically on a given schedule.
 - View and analyze real-time information about the connection status of the resources configured within the cluster.
 - View the dashboard for analyzing object metrics and reading Kubernetes articles and blog posts.
 - Get resource details using the _Summary_ and _Inspect_ tabs.
@@ -68,8 +70,8 @@ spec:
 
 1. View the created object:
 
-   - View the `Pod` object on the **Pods** component page.
-   - View the other Kubernetes objects on the related object page. For example, if you have created a `Node` object, you can view it on the **Kubernetes > Nodes** page.
+   - View the `Pod` object on the **Kubernetes > Pods** object page.
+   - View other Kubernetes objects on the related object page. For example, if you have created a `Node` object, you can view it on the **Kubernetes > Nodes** page.
 
 2. Optional: Click the name of the object to view its detailed summary.
    ![summary tab](img/summary-tab.png)

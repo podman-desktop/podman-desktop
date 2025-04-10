@@ -3,11 +3,17 @@ import FormPage from './FormPage.svelte';
 </script>
 
 <FormPage title="Test component">
-  <i slot="icon" class="fas fa-lightbulb fa-2x" aria-label="icon"></i>
+  {#snippet icon()}
+  <i class="fas fa-lightbulb fa-2x" aria-label="icon"></i>
+  {/snippet}
 
-  <i slot="actions" class="fas fa-lightbulb fa-2x" aria-label="actions"></i>
+  {#snippet actions()}
+  <i class="fas fa-lightbulb fa-2x" aria-label="actions"></i>
+  {/snippet}
 
-  <div slot="content" class="flex flex-col">
+  {#snippet content()}
+  <div class="flex flex-col">
     <i class="fas fa-lightbulb fa-2x" aria-label="content"></i>
   </div>
+  {/snippet}
 </FormPage>

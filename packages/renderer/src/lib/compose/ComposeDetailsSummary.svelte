@@ -45,7 +45,7 @@ function openContainer(containerID: string): void {
     <tr>
       <DetailsTitle>Containers in compose group</DetailsTitle>
     </tr>
-    {#each compose.containers as container}
+    {#each compose.containers as container (container.id)}
       <tr>
         <DetailsCell>
           <Link on:click={(): void => openContainer(container.id)}>{container.name}</Link>

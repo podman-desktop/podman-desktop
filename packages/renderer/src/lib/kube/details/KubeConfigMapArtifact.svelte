@@ -21,7 +21,7 @@ export let artifact: V1ConfigMap | undefined;
     <tr>
       <Cell>Binary Data</Cell>
       <Cell>
-        {#each Object.entries(artifact.binaryData) as [key, value]}
+        {#each Object.entries(artifact.binaryData) as [key, value] (key)}
           <div>{key}: {value.length} bytes</div>
         {/each}
       </Cell>
@@ -31,7 +31,7 @@ export let artifact: V1ConfigMap | undefined;
     <tr>
       <Subtitle>Data</Subtitle>
     </tr>
-    {#each Object.entries(artifact.data) as [key, value]}
+    {#each Object.entries(artifact.data) as [key, value] (key)}
       <tr>
         <Cell>{key}</Cell>
         <Cell>{value}</Cell>

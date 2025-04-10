@@ -164,9 +164,7 @@ onMount(async () => {
   currentNamespace = await window.kubernetesGetCurrentNamespace();
 
   // check that the variable is set to a value, otherwise set to default namespace
-  if (!currentNamespace) {
-    currentNamespace = 'default';
-  }
+  currentNamespace ??= 'default';
 
   // grab all the namespaces (will be useful to provide a drop-down to select the namespace)
   try {
@@ -196,9 +194,12 @@ function goBackToPodsPage(): void {
 
 {#if providerConnections.length > 0}
   <EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
-    <KubePlayIcon slot="icon" size="30px" />
+    {#snippet icon()}
+    <KubePlayIcon size="30px" />
+    {/snippet}
 
-    <div slot="content" class="space-y-6">
+    {#snippet content()}
+    <div class="space-y-6">
       <div hidden={runStarted}>
         <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
           >Kubernetes YAML file</label>
@@ -337,7 +338,7 @@ function goBackToPodsPage(): void {
           on:click={playKubeFile}
           disabled={hasInvalidFields || runStarted}
           class="w-full"
-          bind:inProgress={runStarted}
+          inProgress={runStarted}
           icon={KubePlayIcon}>
           Play
         </Button>
@@ -379,5 +380,6 @@ function goBackToPodsPage(): void {
         <Button on:click={goBackToPodsPage} class="w-full">Done</Button>
       {/if}
     </div>
+    {/snippet}
   </EngineFormPage>
 {/if}

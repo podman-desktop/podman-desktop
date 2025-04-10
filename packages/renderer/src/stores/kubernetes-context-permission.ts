@@ -30,9 +30,7 @@ let readyToUpdate = false;
 
 export async function checkForUpdate(eventName: string): Promise<boolean> {
   // check for update only in experimental states mode
-  if (experimentalStates === undefined) {
-    experimentalStates = (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
-  }
+  experimentalStates ??= (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
   if (experimentalStates === false) {
     return false;
   }

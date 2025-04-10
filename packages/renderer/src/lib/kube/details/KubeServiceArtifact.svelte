@@ -46,7 +46,7 @@ let { artifact, serviceName, namespace }: Props = $props();
     <tr>
       <Cell>Selectors</Cell>
       <Cell>
-        {#each Object.entries(artifact.selector) as [key, value]}
+        {#each Object.entries(artifact.selector) as [key, value] (key)}
           <div>{key}: {value}</div>
         {/each}
       </Cell>

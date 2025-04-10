@@ -1,7 +1,10 @@
 <script lang="ts">
-export let selected: boolean;
-export let url: string;
-export let title: string;
+interface Props {
+  selected: boolean;
+  url: string;
+  title: string;
+}
+let { selected, url, title }: Props = $props();
 </script>
 
 <div

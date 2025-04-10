@@ -21,9 +21,16 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
+
+export enum PIN_REGISTRY_TELEMETRY_EVENTS {
+  PIN = 'pin-registry:pin',
+  UNPIN = 'pin-registry:unpin',
+  OPTIONS = 'pin-registry:options',
+}
 
 /**
  * The {@link PinRegistry} hold the pinned options on the providers part of the status bar.
@@ -39,6 +46,7 @@ export class PinRegistry implements IDisposable {
     private apiSender: ApiSenderType,
     private configurationRegistry: ConfigurationRegistry,
     private providers: ProviderRegistry,
+    private telemetry: Telemetry,
   ) {}
 
   dispose(): void {
@@ -56,6 +64,11 @@ export class PinRegistry implements IDisposable {
     this.notify();
     // save async
     this.save().catch(console.error);
+
+    // track event
+    this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.PIN, {
+      optionId: optionId,
+    });
   }
 
   public unpin(optionId: string): void {
@@ -63,12 +76,22 @@ export class PinRegistry implements IDisposable {
     this.notify();
     // save async
     this.save().catch(console.error);
+
+    // track event
+    this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.UNPIN, {
+      optionId: optionId,
+    });
   }
 
   public getOptions(): Array<PinOption> {
     return this.providers
       .getProviderInfos()
-      .filter(provider => provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0)
+      .filter(
+        provider =>
+          provider.containerConnections.length > 0 ||
+          provider.kubernetesConnections.length > 0 ||
+          provider.vmConnections.length > 0,
+      )
       .map(provider => ({
         value: provider.id,
         label: provider.name,
@@ -119,10 +142,22 @@ export class PinRegistry implements IDisposable {
     if (options) {
       this.#pinned = new Set<string>(options);
       this.notify();
+
+      // track user defined options
+      this.telemetry.track(PIN_REGISTRY_TELEMETRY_EVENTS.OPTIONS, {
+        options: options,
+      });
     }
 
-    // notify if container connection / kubernetes connection changed
-    this.#disposables.push(this.providers.onDidUpdateContainerConnection(this.notify.bind(this)));
-    this.#disposables.push(this.providers.onDidUpdateKubernetesConnection(this.notify.bind(this)));
+    // ==== notify if container connection / kubernetes / vm connection changed
+    // containers
+    this.#disposables.push(this.providers.onDidRegisterContainerConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterContainerConnection(this.notify.bind(this)));
+    // kubernetes
+    this.#disposables.push(this.providers.onDidRegisterKubernetesConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterKubernetesConnection(this.notify.bind(this)));
+    // vm connections
+    this.#disposables.push(this.providers.onDidRegisterVmConnection(this.notify.bind(this)));
+    this.#disposables.push(this.providers.onDidUnregisterVmConnection(this.notify.bind(this)));
   }
 }

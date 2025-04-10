@@ -27,7 +27,7 @@ setTemplate(template);
 </script>
 
 {#snippet template({ _children }: Args<typeof Story>, _context: StoryContext<typeof Story>)}
-  <CloseButton on:click={doClick} />
+  <CloseButton onclick={doClick} />
 {/snippet}
 
 <Story name="Basic" />

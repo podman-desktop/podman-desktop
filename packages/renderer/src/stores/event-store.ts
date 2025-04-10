@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
  ***********************************************************************/
 
 import humanizeDuration from 'humanize-duration';
-// eslint-disable-next-line import/no-duplicates
-import type { ComponentType } from 'svelte';
-// eslint-disable-next-line import/no-duplicates
+import type { Component } from 'svelte';
 import type { Writable } from 'svelte/store';
 
 import DesktopIcon from '../lib/images/DesktopIcon.svelte';
@@ -48,7 +46,7 @@ interface EventStoreInfoEvent {
 export interface EventStoreInfo {
   name: string;
 
-  iconComponent?: ComponentType;
+  iconComponent?: Component;
 
   // list last 100 events
   bufferEvents: EventStoreInfoEvent[];
@@ -99,7 +97,7 @@ export class EventStore<T> {
     private updater: (...args: unknown[]) => Promise<T>,
 
     // Optional icon component to display in the UI
-    private iconComponent?: ComponentType,
+    private iconComponent?: Component,
   ) {
     if (!iconComponent) {
       this.iconComponent = DesktopIcon;

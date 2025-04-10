@@ -7,7 +7,11 @@ import type { MessageBoxReturnValue } from '../../../../main/src/plugin/message-
 import { type ExtensionBanner } from '../../../../main/src/plugin/recommendations/recommendations-api';
 
 // Pass in the theme appearance colour of PD to the banner, we do it here so we don't have to do multiple isDark checks when rendering multiple banners.
-let { banner, isDark }: { banner: ExtensionBanner; isDark: boolean } = $props();
+interface Props {
+  banner: ExtensionBanner;
+  isDark: boolean;
+}
+let { banner, isDark }: Props = $props();
 
 let style = $state<string | undefined>(undefined);
 let hasBackground = $state(
@@ -69,7 +73,7 @@ async function onClose(): Promise<void> {
   <!-- feature extension actions -->
   <div class="flex flex-col">
     <div class="flex flex-row justify-end">
-      <CloseButton on:click={onClose} />
+      <CloseButton onclick={onClose} />
     </div>
     <FeaturedExtension displayTitle={true} variant="secondary" featuredExtension={banner.featured} />
     <span class="text-base w-full text-end">{banner.featured.description}</span>

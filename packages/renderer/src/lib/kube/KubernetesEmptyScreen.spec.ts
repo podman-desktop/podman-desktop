@@ -19,11 +19,18 @@
 import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 import * as uiSvelte from '@podman-desktop/ui-svelte';
 import { render } from '@testing-library/svelte';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
 
 import KubernetesEmptyScreen from './KubernetesEmptyScreen.svelte';
+import { listenResourcePermitted } from './resource-permission';
+
+vi.mock('./resource-permission');
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 test('KubernetesCheckConnection is called', async () => {
   const kubernetesCheckConnectionSpy = vi.spyOn(kubernetesCheckConnection, 'default');
@@ -32,18 +39,103 @@ test('KubernetesCheckConnection is called', async () => {
 });
 
 test('EmptyScreen is called with properties', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
   render(KubernetesEmptyScreen, {
     icon: faRefresh,
-    title: 'A TITLE',
     message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
   });
   expect(emptyScreenSpy).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
       icon: faRefresh,
-      title: 'A TITLE',
       message: 'A MESSAGE',
+      title: 'No deployments or no pods',
+    }),
+  );
+});
+
+test('EmptyScreen is called with two resources, one of them is not permitted', async () => {
+  vi.mocked(listenResourcePermitted)
+    .mockImplementationOnce(vi.fn((_, callback) => callback(true)))
+    .mockImplementationOnce(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'No deployments or no pods',
+    }),
+  );
+});
+
+test('EmptyScreen is called with two not permitted resources', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments', 'pods'],
+    titleEmpty: 'No deployments or no pods',
+    titleNotPermitted: 'Deployments or pods not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'Deployments or pods not accessible',
+    }),
+  );
+});
+
+test('EmptyScreen is called with one permitted resource', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments'],
+    titleEmpty: 'No deployments',
+    titleNotPermitted: 'Deployments are not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'No deployments',
+    }),
+  );
+});
+
+test('EmptyScreen is called with one not permitted resource', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  const emptyScreenSpy = vi.spyOn(uiSvelte, 'EmptyScreen');
+  render(KubernetesEmptyScreen, {
+    icon: faRefresh,
+    message: 'A MESSAGE',
+    resources: ['deployments'],
+    titleEmpty: 'No deployments',
+    titleNotPermitted: 'Deployments are not accessible',
+  });
+  expect(emptyScreenSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      icon: faRefresh,
+      message: 'A MESSAGE',
+      title: 'Deployments are not accessible',
     }),
   );
 });

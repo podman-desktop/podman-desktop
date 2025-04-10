@@ -244,4 +244,27 @@ export class ImagesPage extends MainPage {
     await deleteManifestButton.click();
     await handleConfirmationDialog(this.page);
   }
+
+  async getAllImageBadges(name: string): Promise<string[]> {
+    return test.step(`Get all badges for image: ${name}`, async () => {
+      const locators = await this.getAllBadgeLocators(name);
+      return await Promise.all(locators.map(async locator => await locator.innerText()));
+    });
+  }
+
+  async checkImageBadge(name: string, badge: string): Promise<boolean> {
+    return test.step(`Check if badge: ${badge} exists for image: ${name}`, async () => {
+      return (await this.getAllImageBadges(name)).includes(badge);
+    });
+  }
+
+  async getAllBadgeLocators(name: string): Promise<Locator[]> {
+    return test.step(`Get all badge locators for image: ${name}`, async () => {
+      const imageRow = await this.getImageRowByName(name);
+      if (imageRow === undefined) {
+        throw Error(`Image: '${name}' does not exist`);
+      }
+      return imageRow.getByLabel('badge-').all();
+    });
+  }
 }

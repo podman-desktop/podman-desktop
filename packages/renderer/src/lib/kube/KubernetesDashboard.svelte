@@ -20,18 +20,18 @@ import {
   kubernetesCurrentContextRoutes,
   kubernetesCurrentContextSecrets,
   kubernetesCurrentContextServices,
-  kubernetesCurrentContextState,
 } from '/@/stores/kubernetes-contexts-state';
 import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { IDisposable } from '/@api/disposable';
-import { NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
 import KubernetesEmptyPage from './KubernetesEmptyPage.svelte';
+import NamespaceDropdown from './NamespaceDropdown.svelte';
 import shareYourLocalProdmanImagesWithTheKubernetesImage from './ShareYourLocalPodmanImagesWithTheKubernetes.png';
 import workingWithKubernetesImage from './WorkingWithKubernetes.png';
 
@@ -41,7 +41,6 @@ interface ExtendedKubernetesObject extends KubernetesObject {
   };
 }
 
-let noContexts = $derived($kubernetesCurrentContextState.error === NO_CURRENT_CONTEXT_ERROR);
 let currentContextName = $derived($kubernetesContexts.find(context => context.currentContext)?.name);
 
 // Stores and states for non-experimental mode
@@ -180,7 +179,7 @@ async function openKubernetesDocumentation(): Promise<void> {
 
 <div class="flex flex-col w-full h-full">
   <div class="flex flex-col w-full h-full pt-4">
-    {#if noContexts}
+    {#if $kubernetesNoCurrentContext}
       <KubernetesEmptyPage />
     {:else}
       <!-- Details - collapsible -->
@@ -208,7 +207,10 @@ async function openKubernetesDocumentation(): Promise<void> {
             <div class="flex flex-col gap-4 bg-[var(--pd-content-card-bg)] grow p-5">
               {#if currentContextName}
                 <!-- Metrics - non-collapsible -->
-                <div class="text-xl pt-2">Metrics</div>
+                <div class="flex flex-row">
+                  <div class="text-xl pt-2 grow">Metrics</div>
+                  <div class="justify-end"><NamespaceDropdown/></div>
+                </div>
                 <div class="grid grid-cols-4 gap-4">
                     <KubernetesDashboardResourceCard type='Nodes' activeCount={activeCounts.nodes} count={counts.nodes} permitted={isPermitted(notPermittedResources, 'nodes')} kind='Node'/>
                     <KubernetesDashboardResourceCard type='Deployments' activeCount={activeCounts.deployments} count={counts.deployments} permitted={isPermitted(notPermittedResources, 'deployments')} kind='Deployment'/>

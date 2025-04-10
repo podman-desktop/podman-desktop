@@ -85,6 +85,7 @@ import type { V1Route } from '/@api/openshift-types';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -92,6 +93,7 @@ import type {
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
+import type { PinOption } from '/@api/status-bar/pin-option';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
@@ -634,7 +636,7 @@ export function initExposure(): void {
     'shellInProviderConnection',
     async (
       internalProviderId: string,
-      connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      connectionInfo: ProviderConnectionInfo,
       onData: (data: string) => void,
       onError: (error: string) => void,
       onEnd: () => void,
@@ -1008,6 +1010,30 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'createVmProviderConnection',
+    async (
+      internalProviderId: string,
+      params: { [key: string]: unknown },
+      key: symbol,
+      keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
+      tokenId: number | undefined,
+      taskId: number | undefined,
+    ): Promise<void> => {
+      onDataCallbacksTaskConnectionId++;
+      onDataCallbacksTaskConnectionKeys.set(onDataCallbacksTaskConnectionId, key);
+      onDataCallbacksTaskConnectionLogs.set(onDataCallbacksTaskConnectionId, keyLogger);
+      return ipcInvoke(
+        'provider-registry:createVmProviderConnection',
+        internalProviderId,
+        params,
+        onDataCallbacksTaskConnectionId,
+        tokenId,
+        taskId,
+      );
+    },
+  );
+
   ipcRenderer.on(
     'provider-registry:taskConnection-onData',
     (_, onDataCallbacksTaskConnectionId: number, channel: string, data: string[]) => {
@@ -1115,7 +1141,7 @@ export function initExposure(): void {
     'startProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {
@@ -1135,7 +1161,7 @@ export function initExposure(): void {
     'stopProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {
@@ -1155,7 +1181,7 @@ export function initExposure(): void {
     'editProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       params: { [key: string]: unknown },
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
@@ -1181,7 +1207,7 @@ export function initExposure(): void {
     'deleteProviderConnectionLifecycle',
     async (
       providerId: string,
-      providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+      providerConnectionInfo: ProviderConnectionInfo,
       key: symbol,
       keyLogger: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
     ): Promise<void> => {
@@ -1905,6 +1931,10 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes-client:getCurrentNamespace');
   });
 
+  contextBridge.exposeInMainWorld('kubernetesSetCurrentNamespace', async (namespace: string): Promise<void> => {
+    return ipcInvoke('kubernetes-client:setCurrentNamespace', namespace);
+  });
+
   contextBridge.exposeInMainWorld(
     'kubernetesListNamespacedPod',
     async (namespace: string, fieldSelector?: string, labelSelector?: string): Promise<V1PodList> => {
@@ -2435,6 +2465,18 @@ export function initExposure(): void {
       return ipcInvoke('kubernetes:getTroubleshootingInformation');
     },
   );
+
+  contextBridge.exposeInMainWorld('getStatusBarPinOptions', async (): Promise<Array<PinOption>> => {
+    return ipcInvoke('statusbar:pin:get-options');
+  });
+
+  contextBridge.exposeInMainWorld('pinStatusBar', async (optionId: string): Promise<void> => {
+    return ipcInvoke('statusbar:pin', optionId);
+  });
+
+  contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
+    return ipcInvoke('statusbar:unpin', optionId);
+  });
 }
 
 // expose methods
