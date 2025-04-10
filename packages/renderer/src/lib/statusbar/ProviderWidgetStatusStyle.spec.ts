@@ -20,10 +20,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ProviderTooltipStatusStyle from './ProviderTooltipStatusStyle.svelte';
+import ProviderWidgetStatusStyle from './ProviderWidgetStatusStyle.svelte';
 
 test('Expect to have different status icon based on provider status', async () => {
-  const renderObject = render(ProviderTooltipStatusStyle, { status: 'ready' });
+  const renderObject = render(ProviderWidgetStatusStyle, { status: 'ready' });
 
   const statusIcon = screen.getByLabelText('Connection Status Name');
   expect(statusIcon).toBeInTheDocument();
