@@ -439,6 +439,10 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            type: 'custom-downloadButton',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/podman-desktop/podman-desktop',
             className: 'header-github-link',
             position: 'right',
