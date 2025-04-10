@@ -73,7 +73,7 @@ async function onClose(): Promise<void> {
   <!-- feature extension actions -->
   <div class="flex flex-col">
     <div class="flex flex-row justify-end">
-      <CloseButton on:click={onClose} />
+      <CloseButton onclick={onClose} />
     </div>
     <FeaturedExtension displayTitle={true} variant="secondary" featuredExtension={banner.featured} />
     <span class="text-base w-full text-end">{banner.featured.description}</span>

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
-import { coverageConfig } from '../vitest-shared-extensions.config';
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
-const PACKAGE_NAME = 'storybook';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -49,7 +47,6 @@ export default defineConfig({
     deps: {
       inline: ['moment'],
     },
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
   },
   base: '',
   server: {

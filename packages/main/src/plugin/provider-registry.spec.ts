@@ -34,6 +34,8 @@ import type {
   ProviderInstallation,
   ProviderLifecycle,
   ProviderUpdate,
+  UpdateVmConnectionEvent,
+  VmProviderConnection,
 } from '@podman-desktop/api';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -49,8 +51,8 @@ import type { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { LifecycleContextImpl } from './lifecycle-context.js';
-import type { ProviderImpl, VmProviderConnection } from './provider-impl.js';
-import { ProviderRegistry, type UpdateVmConnectionEvent } from './provider-registry.js';
+import type { ProviderImpl } from './provider-impl.js';
+import { ProviderRegistry } from './provider-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 

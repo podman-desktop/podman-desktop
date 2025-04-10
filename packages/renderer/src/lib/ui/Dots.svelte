@@ -12,14 +12,14 @@ $: organizedContainers = organizeContainers(containers);
 
 <!-- If containers is more than 10, we will group them and show the number of containers -->
 {#if containers.length > 10}
-  {#each Object.entries(organizedContainers) as [status, c]}
+  {#each Object.entries(organizedContainers) as [status, c] (status)}
     {#if c.length > 0}
       <StatusDot status={status} tooltip="{capitalize(status)}: {c.length}" number={c.length} />
     {/if}
   {/each}
 {:else}
-  {#each Object.entries(organizedContainers) as [status, c]}
-    {#each c as container}
+  {#each Object.entries(organizedContainers) as [status, c] (status)}
+    {#each c as container (container.Id)}
       <StatusDot status={status} name={container.Names} />
     {/each}
   {/each}

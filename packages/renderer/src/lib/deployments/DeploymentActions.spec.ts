@@ -24,7 +24,6 @@ import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 import DeploymentActions from './DeploymentActions.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 
-const updateMock = vi.fn();
 const deleteMock = vi.fn();
 
 class DeploymentfUIImpl {
@@ -73,7 +72,7 @@ afterEach(() => {
 test('Expect no error and status deleting deployment', async () => {
   showMessageBoxMock.mockResolvedValue({ response: 0 });
 
-  render(DeploymentActions, { deployment, onUpdate: updateMock });
+  render(DeploymentActions, { deployment });
 
   // click on delete buttons
   const deleteButton = screen.getByRole('button', { name: 'Delete Deployment' });
@@ -84,6 +83,5 @@ test('Expect no error and status deleting deployment', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(deployment.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteMock).toHaveBeenCalled();
 });

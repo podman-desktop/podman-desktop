@@ -29,6 +29,7 @@ export class ImageEditPage extends BasePage {
   readonly imageName: Locator;
   readonly imageTag: Locator;
   readonly editDialog: Locator;
+  readonly alertDialog: Locator;
 
   constructor(page: Page, name: string) {
     super(page);
@@ -44,6 +45,7 @@ export class ImageEditPage extends BasePage {
     });
     this.name = name;
     this.imageTag = this.editDialog.getByLabel('imageTag');
+    this.alertDialog = page.getByLabel('Error Message Content');
   }
 
   async renameImage(name: string, tag: string = ''): Promise<ImagesPage> {
@@ -60,6 +62,8 @@ export class ImageEditPage extends BasePage {
         await this.imageTag.clear();
         await this.imageTag.fill(tag);
       }
+
+      await playExpect.poll(async () => this.alertDialog.count()).toBe(0);
 
       await playExpect(this.saveButton).toBeEnabled();
       await this.saveButton.click();

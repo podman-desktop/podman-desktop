@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 import { chrome } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 
 const PACKAGE_ROOT = __dirname;
 const PACKAGE_NAME = 'preload-docker-extension';
@@ -66,7 +65,8 @@ const config = {
     reportCompressedSize: false,
   },
   test: {
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 

@@ -93,7 +93,7 @@ test.describe.serial('Verification of kube context management', { tag: '@smoke' 
 
     await kubePage.setDefaultContext('context-2');
     // check that switch worked - current context banner should be visible
-    playExpect(await kubePage.isContextDefault('context-1')).toBeFalsy();
+    await playExpect.poll(async () => await kubePage.isContextDefault('context-1'), { timeout: 10_000 }).toBeFalsy();
     await playExpect
       .poll(async () => await kubePage.isContextDefault('context-2'), {
         timeout: 10_000,

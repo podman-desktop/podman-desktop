@@ -46,6 +46,7 @@ This YAML manifest creates three pods that run the NGINX web server.
 
 1. Go to the **Kubernetes** component page.
 1. Click **Deployments** in the left navigation pane.
+1. Select a namespace in which you want to create the object.
 1. Click **Apply YAML** and select the YAML manifest file. A confirmation notification opens.
    ![applying a yaml manifest](img/applying-a-yaml-manifest.png)
 1. Click **OK**.

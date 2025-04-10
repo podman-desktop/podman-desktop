@@ -16,18 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type {
-  Configuration,
-  UpdateContainerConnectionEvent,
-  UpdateKubernetesConnectionEvent,
-} from '@podman-desktop/api';
+import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import { PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
+import { PIN_REGISTRY_TELEMETRY_EVENTS, PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ProviderInfo } from '/@api/provider-info.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 
@@ -46,9 +43,20 @@ const CONFIGURATION_REGISTRY_MOCK: ConfigurationRegistry = {
 
 const PROVIDER_REGISTRY_MOCK: ProviderRegistry = {
   getProviderInfos: vi.fn(),
-  onDidUpdateContainerConnection: vi.fn(),
-  onDidUpdateKubernetesConnection: vi.fn(),
+  // containers
+  onDidRegisterContainerConnection: vi.fn(),
+  onDidUnregisterContainerConnection: vi.fn(),
+  // kubernetes
+  onDidRegisterKubernetesConnection: vi.fn(),
+  onDidUnregisterKubernetesConnection: vi.fn(),
+  // VMs
+  onDidRegisterVmConnection: vi.fn(),
+  onDidUnregisterVmConnection: vi.fn(),
 } as unknown as ProviderRegistry;
+
+const TELEMETRY_MOCK: Telemetry = {
+  track: vi.fn(),
+} as unknown as Telemetry;
 
 const KIND_ONE_CLUSTER_PROVIDER: ProviderInfo = {
   id: 'kind',
@@ -59,6 +67,7 @@ const KIND_ONE_CLUSTER_PROVIDER: ProviderInfo = {
     },
   ],
   containerConnections: [],
+  vmConnections: [],
 } as unknown as ProviderInfo;
 
 const KIND_EMPTY_CLUSTER_PROVIDER: ProviderInfo = {
@@ -70,6 +79,7 @@ const PODMAN_PROVIDER: ProviderInfo = {
   id: 'podman',
   name: 'Podman',
   kubernetesConnections: [],
+  vmConnections: [],
   containerConnections: [
     {
       name: 'podman-machine-default',
@@ -85,6 +95,7 @@ const COMPOSE_PROVIDER: ProviderInfo = {
   name: 'compose',
   kubernetesConnections: [],
   containerConnections: [],
+  vmConnections: [],
 } as unknown as ProviderInfo;
 
 const CONFIGURATION_MOCK: Configuration = {
@@ -93,7 +104,13 @@ const CONFIGURATION_MOCK: Configuration = {
 } as unknown as Configuration;
 
 function getPinRegistry(): PinRegistry {
-  return new PinRegistry(COMMAND_REGISTRY_MOCK, API_SENDER_MOCK, CONFIGURATION_REGISTRY_MOCK, PROVIDER_REGISTRY_MOCK);
+  return new PinRegistry(
+    COMMAND_REGISTRY_MOCK,
+    API_SENDER_MOCK,
+    CONFIGURATION_REGISTRY_MOCK,
+    PROVIDER_REGISTRY_MOCK,
+    TELEMETRY_MOCK,
+  );
 }
 
 beforeEach(() => {
@@ -174,6 +191,25 @@ describe('init', () => {
     });
   });
 
+  test('init should not emit telemetry event on default (empty) value', () => {
+    const pinRegistry = getPinRegistry();
+    pinRegistry.init();
+
+    expect(TELEMETRY_MOCK.track).not.toHaveBeenCalled();
+  });
+
+  test('init should emit telemetry event when user have defined value', () => {
+    // mock user defined values (not default)
+    vi.mocked(CONFIGURATION_MOCK.get).mockReturnValue([KIND_ONE_CLUSTER_PROVIDER.id]);
+
+    const pinRegistry = getPinRegistry();
+    pinRegistry.init();
+
+    expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.OPTIONS, {
+      options: [KIND_ONE_CLUSTER_PROVIDER.id],
+    });
+  });
+
   test('configuration value should be used if exists', () => {
     // mock kind as pinned from configuration
     vi.mocked(CONFIGURATION_MOCK.get).mockReturnValue([KIND_ONE_CLUSTER_PROVIDER.id]);
@@ -250,71 +286,61 @@ describe('pin / unpin', () => {
       );
     });
   });
-});
 
-describe('provider update', () => {
-  function getListeners(): {
-    containerConnectionUpdateListener: (e: UpdateContainerConnectionEvent) => void;
-    kubernetesConnectionUpdateListener: (e: UpdateKubernetesConnectionEvent) => void;
-  } {
-    // init
-    const pinRegistry = getPinRegistry();
-    pinRegistry.init();
-
-    expect(PROVIDER_REGISTRY_MOCK.onDidUpdateContainerConnection).toHaveBeenCalledOnce();
-    expect(PROVIDER_REGISTRY_MOCK.onDidUpdateKubernetesConnection).toHaveBeenCalledOnce();
-
-    const containerConnectionUpdateListener = vi.mocked(PROVIDER_REGISTRY_MOCK.onDidUpdateContainerConnection).mock
-      .calls[0]?.[0];
-    if (!containerConnectionUpdateListener)
-      throw new Error('onDidUpdateContainerConnection mock has not been called properly');
-
-    const kubernetesConnectionUpdateListener = vi.mocked(PROVIDER_REGISTRY_MOCK.onDidUpdateKubernetesConnection).mock
-      .calls[0]?.[0];
-    if (!kubernetesConnectionUpdateListener)
-      throw new Error('onDidUpdateKubernetesConnection mock has not been called properly');
-
-    return {
-      containerConnectionUpdateListener,
-      kubernetesConnectionUpdateListener,
-    };
-  }
-
-  test('container connection update should call notify', async () => {
-    const { containerConnectionUpdateListener } = getListeners();
-
-    // ensure call count is zero
-    vi.mocked(API_SENDER_MOCK.send).mockReset();
-    expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
-
-    // simulate event
-    containerConnectionUpdateListener({
-      status: 'started',
-      providerId: 'podman',
-      connection: {},
-    } as unknown as UpdateContainerConnectionEvent);
+  test('pin should emit a telemetry event', async () => {
+    pinRegistry.pin(PODMAN_PROVIDER.id);
 
     await vi.waitFor(() => {
-      expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
+      expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.PIN, {
+        optionId: PODMAN_PROVIDER.id,
+      });
     });
   });
 
-  test('kubernetes connection update should call notify', async () => {
-    const { kubernetesConnectionUpdateListener } = getListeners();
-
-    // ensure call count is zero
-    vi.mocked(API_SENDER_MOCK.send).mockReset();
-    expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
-
-    // simulate event
-    kubernetesConnectionUpdateListener({
-      status: 'started',
-      providerId: 'kind',
-      connection: {},
-    } as unknown as UpdateKubernetesConnectionEvent);
+  test('unpin should emit a telemetry event', async () => {
+    pinRegistry.unpin(PODMAN_PROVIDER.id);
 
     await vi.waitFor(() => {
-      expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
+      expect(TELEMETRY_MOCK.track).toHaveBeenCalledWith(PIN_REGISTRY_TELEMETRY_EVENTS.UNPIN, {
+        optionId: PODMAN_PROVIDER.id,
+      });
     });
+  });
+});
+
+type RegisterEvent = Pick<
+  ProviderRegistry,
+  | 'onDidRegisterContainerConnection'
+  | 'onDidUnregisterContainerConnection'
+  | 'onDidRegisterKubernetesConnection'
+  | 'onDidUnregisterKubernetesConnection'
+  | 'onDidRegisterVmConnection'
+  | 'onDidUnregisterVmConnection'
+>;
+
+test.each([
+  'onDidRegisterContainerConnection',
+  'onDidUnregisterContainerConnection',
+  'onDidRegisterKubernetesConnection',
+  'onDidUnregisterKubernetesConnection',
+  'onDidRegisterVmConnection',
+  'onDidUnregisterVmConnection',
+] as Array<keyof RegisterEvent>)('ProviderRegistry#%s should make the pin registry notify', async event => {
+  // init
+  const pinRegistry = getPinRegistry();
+  pinRegistry.init();
+
+  // ensure call count is zero
+  vi.mocked(API_SENDER_MOCK.send).mockReset();
+  expect(API_SENDER_MOCK.send).not.toHaveBeenCalled();
+
+  expect(PROVIDER_REGISTRY_MOCK[event]).toHaveBeenCalledOnce();
+  const listener = vi.mocked(PROVIDER_REGISTRY_MOCK[event]).mock.calls[0]?.[0] as unknown as () => void;
+  expect(listener).toBeDefined();
+
+  listener();
+
+  await vi.waitFor(() => {
+    expect(API_SENDER_MOCK.send).toHaveBeenCalledWith(STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE, expect.any(Array));
   });
 });

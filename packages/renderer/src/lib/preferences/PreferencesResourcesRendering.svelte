@@ -412,7 +412,7 @@ function handleError(errorMessage: string): void {
       message="Start an extension that manages containers or Kubernetes engines"
       hidden={providers.length > 0} />
 
-    {#each providers as provider}
+    {#each providers as provider (provider.id)}
       <div
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
@@ -497,7 +497,7 @@ function handleError(errorMessage: string): void {
           <PreferencesConnectionsEmptyRendering
             message={provider.emptyConnectionMarkdownDescription}
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
-          {#each provider.containerConnections as container}
+          {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
               <div class="float-right">
@@ -537,7 +537,7 @@ function handleError(errorMessage: string): void {
                   class="flex mt-3 {container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}"
                   role="group"
                   aria-label="Provider Configuration">
-                  {#each providerConfiguration.filter(conf => conf.connection === container.name) as connectionSetting}
+                  {#each providerConfiguration.filter(conf => conf.connection === container.name) as connectionSetting (connectionSetting.id)}
                     {#if connectionSetting.format === 'cpu' || connectionSetting.format === 'cpuUsage'}
                       {#if !peerProperties.isPeerProperty(connectionSetting.id)}
                         {@const peerValue = peerProperties.getPeerProperty(
@@ -608,7 +608,7 @@ function handleError(errorMessage: string): void {
               </div>
             </div>
           {/each}
-          {#each provider.kubernetesConnections as kubeConnection}
+          {#each provider.kubernetesConnections as kubeConnection, index (index)}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={kubeConnection.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
@@ -646,7 +646,7 @@ function handleError(errorMessage: string): void {
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
             </div>
           {/each}
-          {#each provider.vmConnections as vmConnection}
+          {#each provider.vmConnections as vmConnection, index (index)}
           <div class="px-5 py-2 w-[240px]" role="region" aria-label={vmConnection.name}>
             <div class="float-right">
               <Tooltip bottom tip="{provider.name} details">

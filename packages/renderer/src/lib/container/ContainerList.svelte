@@ -399,7 +399,7 @@ $: containersAndGroups = containerGroups.map(group =>
             )}
           aria-label="Delete selected containers and pods"
           title="Delete {selectedItemsNumber} selected items"
-          bind:inProgress={bulkDeleteInProgress}
+          inProgress={bulkDeleteInProgress}
           icon={faTrash}>
         </Button>
 

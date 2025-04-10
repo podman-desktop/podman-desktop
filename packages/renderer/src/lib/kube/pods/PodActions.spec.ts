@@ -27,7 +27,6 @@ import type { PodInfoContainerUI } from '../../pod/PodInfoUI';
 import PodActions from './PodActions.svelte';
 import type { PodUI } from './PodUI';
 
-const updateMock = vi.fn();
 const restartMock = vi.fn();
 const deleteMock = vi.fn();
 const showMessageBoxMock = vi.fn();
@@ -78,7 +77,7 @@ beforeEach(() => {
 test('Check deleting pod', async () => {
   showMessageBoxMock.mockResolvedValue({ response: 0 });
 
-  render(PodActions, { pod, onUpdate: updateMock });
+  render(PodActions, { pod });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
@@ -89,21 +88,19 @@ test('Check deleting pod', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(pod.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteMock).toHaveBeenCalled();
 });
 
 test('Check restarting pod', async () => {
   showMessageBoxMock.mockResolvedValue({ response: 0 });
 
-  render(PodActions, { pod, onUpdate: updateMock });
+  render(PodActions, { pod });
 
   // click on restart button
   const restartButton = screen.getByRole('button', { name: 'Restart Pod' });
   await fireEvent.click(restartButton);
 
   expect(pod.status).toEqual('RESTARTING');
-  expect(updateMock).toHaveBeenCalled();
   expect(restartMock).toHaveBeenCalled();
 });
 

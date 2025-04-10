@@ -355,7 +355,7 @@ const row = new TableRow<ImageInfoUI>({
             `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
           )}
         title="Delete {selectedItemsNumber} selected items"
-        bind:inProgress={bulkDeleteInProgress}
+        inProgress={bulkDeleteInProgress}
         icon={faTrash} />
       <Button
         on:click={saveSelectedImages}

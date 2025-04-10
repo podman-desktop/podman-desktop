@@ -80,7 +80,7 @@ onDestroy(async () => {
           <p class="text-[var(--pd-content-card-header-text)] font-bold text-xl ml-2">
             {notesInfo?.title ?? ''}
           </p>
-          <CloseButton on:click={onClose} />
+          <CloseButton onclick={onClose} />
         </div>
         {#if notesInfo?.summary}
           <div
@@ -103,7 +103,7 @@ onDestroy(async () => {
             or try this <Link on:click={openReleaseNotes}>link</Link>
           {/if}
         </p>
-        <CloseButton on:click={onClose} />
+        <CloseButton onclick={onClose} />
       </div>
     </div>
   {/if}

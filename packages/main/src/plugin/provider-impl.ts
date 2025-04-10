@@ -18,19 +18,14 @@
 
 import type {
   Auditor,
-  CancellationToken,
   ContainerProviderConnection,
   ContainerProviderConnectionFactory,
   Event,
   KubernetesProviderConnection,
   KubernetesProviderConnectionFactory,
-  Logger,
   Provider,
   ProviderAutostart,
   ProviderCleanup,
-  ProviderConnectionFactory,
-  ProviderConnectionLifecycle,
-  ProviderConnectionShellAccess,
   ProviderConnectionStatus,
   ProviderDetectionCheck,
   ProviderImages,
@@ -41,6 +36,8 @@ import type {
   ProviderOptions,
   ProviderStatus,
   ProviderUpdate,
+  VmProviderConnection,
+  VmProviderConnectionFactory,
 } from '@podman-desktop/api';
 
 import type { ContainerProviderRegistry } from './container-registry.js';
@@ -48,23 +45,6 @@ import { Emitter } from './events/emitter.js';
 import type { ProviderRegistry } from './provider-registry.js';
 import type { IDisposable } from './types/disposable.js';
 import { Disposable } from './types/disposable.js';
-
-/*
- * to be exposed in extension-api.d.ts
- */
-export interface VmProviderConnection {
-  name: string;
-  shellAccess?: ProviderConnectionShellAccess;
-  lifecycle?: ProviderConnectionLifecycle;
-  status(): ProviderConnectionStatus;
-}
-
-// create a Vm provider
-// to be exposed in extension-api.d.ts
-export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
-}
 
 export class ProviderImpl implements Provider, IDisposable {
   private containerProviderConnections: Set<ContainerProviderConnection>;

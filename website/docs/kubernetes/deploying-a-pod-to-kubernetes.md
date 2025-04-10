@@ -45,7 +45,7 @@ With Podman Desktop, you can deploy a pod to your Kubernetes cluster with an act
 1. On the **Deploy generated pod to Kubernetes** screen, the created pod status is _Phase: Running_
    ![Deploying a pod](img/deploying-a-pod.png)
 
-1. Go to **Pods**: your Kubernetes pod is in the list.
+1. Go to **Kubernetes > Pods**: your Kubernetes pod is in the list.
    ![kube pod in the list](img/kube-pod-in-the-list.png)
 
 1. Optional: Check the running service on the **Kubernetes > Services** page.

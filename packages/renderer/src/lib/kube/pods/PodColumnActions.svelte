@@ -8,4 +8,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<PodActions pod={object} dropdownMenu={true} on:update />
+<PodActions pod={object} dropdownMenu={true} />

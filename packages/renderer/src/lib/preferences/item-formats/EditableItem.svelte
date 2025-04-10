@@ -34,7 +34,7 @@ function onChangeInput(_: string, _value: number): void {
   }
 }
 
-function onSwitchToInProgress(e: MouseEvent): void {
+function onSwitchToInProgress(e: Event): void {
   e.preventDefault();
   // we set the originalValue to keep a record of the initial value
   // if the updating is cancelled, we can reset to it
@@ -42,7 +42,7 @@ function onSwitchToInProgress(e: MouseEvent): void {
   editingInProgress = true;
 }
 
-function onSaveClick(e: MouseEvent): void {
+function onSaveClick(e: Event): void {
   e.preventDefault();
   editingInProgress = false;
   if (record.id) {
@@ -50,7 +50,7 @@ function onSaveClick(e: MouseEvent): void {
   }
 }
 
-function onCancelClick(e: MouseEvent): void {
+function onCancelClick(e: Event): void {
   e.preventDefault();
   // we set the value to the initial one - the value that was set when the edit mode was enabled
   editedValue = originalValue;

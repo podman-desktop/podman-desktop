@@ -123,10 +123,11 @@ async function saveImages(): Promise<void> {
 
 {#if imagesToSave}
   <EngineFormPage title={singleItemMode ? `Save Image ${imagesToSave[0].name}` : 'Save Images'}>
-    <svelte:fragment slot="icon">
+    {#snippet icon()}
       <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-    </svelte:fragment>
-    <div slot="content" class="space-y-2">
+    {/snippet}
+    {#snippet content()}
+    <div class="space-y-2">
       <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
         >Export to:</label>
       <div class="flex w-full">
@@ -148,7 +149,7 @@ async function saveImages(): Promise<void> {
           class="flex flex-row justify-center w-full pt-5 text-sm font-medium text-[var(--pd-content-card-header-text)]">
           <div class="flex flex-col grow">Images to save</div>
         </div>
-        {#each imagesToSave as imageToSave, index}
+        {#each imagesToSave as imageToSave, index (imageToSave.id)}
           {@const imageAndTag = `${imageToSave.name}:${imageToSave.tag}`}
           {@const imageDisplayName = `${imageToSave.name === '<none>' ? imageToSave.shortId : imageAndTag}`}
           <div class="flex flex-row justify-center w-full py-1">
@@ -169,7 +170,7 @@ async function saveImages(): Promise<void> {
           class="w-full"
           icon={faPlay}
           aria-label="Save images"
-          bind:disabled={saveDisabled}>
+          disabled={saveDisabled}>
           Save Images
         </Button>
         <div aria-label="saveError">
@@ -179,5 +180,6 @@ async function saveImages(): Promise<void> {
         </div>
       </div>
     </div>
+    {/snippet}
   </EngineFormPage>
 {/if}

@@ -34,3 +34,11 @@ test('Check widget is there', async () => {
   const repairDiv = screen.getByText('Repair', { exact: true });
   expect(repairDiv).toBeInTheDocument();
 });
+
+test('Check widget has proper role and label', async () => {
+  render(TroubleshootingRepair, {});
+
+  // check the repair title is there
+  const repairDiv = screen.getByRole('region', { name: 'Repair' });
+  expect(repairDiv).toBeInTheDocument();
+});

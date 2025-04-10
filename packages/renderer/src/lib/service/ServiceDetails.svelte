@@ -85,7 +85,7 @@ async function loadDetails(): Promise<void> {
       {#if service}<StatusIcon icon={ServiceIcon} size={24} status={service.status} />{/if}
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if service}<ServiceActions service={service} detailed={true} on:update={(): ServiceUI | undefined => (service = service)} />{/if}
+      {#if service}<ServiceActions service={service} detailed={true} />{/if}
     {/snippet}
     {#snippet detailSnippet()}
       <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">

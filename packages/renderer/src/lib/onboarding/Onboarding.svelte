@@ -372,7 +372,7 @@ $: globalOnboarding = global;
         <!-- New section for listing onboardings -->
         {#if globalOnboarding}
           <div class="flex justify-right mr-3">
-            {#each onboardingItems as onboarding}
+            {#each onboardingItems as onboarding, index (index)}
               <div class="flex flex-col items-center ml-8">
                 <!-- Dot indicating active/inactive state -->
                 <span>
@@ -452,9 +452,9 @@ $: globalOnboarding = global;
 
         <div class="max-w-[80%] flex flex-col mx-auto">
           {#if activeStepContent}
-            {#each activeStepContent as row}
+            {#each activeStepContent as row, index (index)}
               <div class="flex flex-row mx-auto">
-                {#each row as item}
+                {#each row as item, index (index)}
                   <OnboardingItem
                     extension={activeStep.onboarding.extension}
                     item={item}

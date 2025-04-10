@@ -16,7 +16,7 @@ export let onclose: () => void = () => {
     <slot name="icon" />
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>
 
-    <CloseButton on:click={onclose} />
+    <CloseButton onclick={onclose} />
   </div>
 
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4">

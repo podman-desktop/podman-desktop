@@ -24,7 +24,7 @@ import * as jsYaml from 'js-yaml';
 
 import type { ContributionInfo } from '/@api/contribution-info.js';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isMac, isUnixLike, isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import type { Directories } from './directories.js';
@@ -181,7 +181,7 @@ export class ContributionManager {
     } else if (isMac()) {
       binaries.push('/usr/local/bin/docker-compose');
       binaries.push('/opt/homebrew/bin/docker-compose');
-    } else if (isLinux()) {
+    } else if (isUnixLike()) {
       binaries.push('/usr/bin/docker-compose');
       binaries.push('/usr/local/bin/docker-compose');
     }

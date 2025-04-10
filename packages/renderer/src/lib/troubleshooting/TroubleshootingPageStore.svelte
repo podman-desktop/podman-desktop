@@ -21,7 +21,7 @@ async function fetch(): Promise<void> {
 let openDetails = false;
 </script>
 
-<div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] p-2 items-center rounded-sm w-full">
+<div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] p-2 items-center rounded-sm w-full" role="listitem" aria-label={eventStoreInfo.name}>
   <div><svelte:component this={eventStoreInfo.iconComponent} size="20" /></div>
   <div class="text-xl">
     <button
@@ -36,7 +36,7 @@ let openDetails = false;
   <div class="text-sm">({eventStoreInfo.size} items)</div>
   <div class="">
     <Button
-      bind:inProgress={fetchInProgress}
+      inProgress={fetchInProgress}
       class="my-1"
       aria-label="Refresh"
       on:click={fetch}
