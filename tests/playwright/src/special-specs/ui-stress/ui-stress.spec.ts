@@ -23,6 +23,8 @@ console.log(`numberOfObjects => ${numberOfObjects}`);
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('ui-stress-e2e');
+  process.env.KEEP_TRACES_ON_PASS = 'true';
+  process.env.KEEP_VIDEOS_ON_PASS = 'true';
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
 });
