@@ -5,8 +5,8 @@ import { router } from 'tinro';
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import ProviderTooltipStatus from './ProviderTooltipStatus.svelte';
-import ProviderTooltipStatusStyle from './ProviderTooltipStatusStyle.svelte';
+import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
+import ProviderWidgetStatusStyle from './ProviderWidgetStatusStyle.svelte';
 
 interface Props {
   entry: ProviderInfo;
@@ -45,8 +45,8 @@ let connections = $derived.by(() => {
       {/if}
       {#each connections as connection (connection.name)}
         <div class="flex flex-row items-center h-fit">
-          <ProviderTooltipStatus status={connection.status} class="mr-1"/>
-          <ProviderTooltipStatusStyle status={connection.status}/>
+          <ProviderWidgetStatus status={connection.status} class="mr-1"/>
+          <ProviderWidgetStatusStyle status={connection.status}/>
           : {connection.name}
         </div>
       {/each}

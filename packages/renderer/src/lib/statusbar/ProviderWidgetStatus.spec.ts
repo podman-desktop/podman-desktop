@@ -23,7 +23,7 @@ import { expect, test } from 'vitest';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
-import ProviderTooltipStatus from './ProviderTooltipStatus.svelte';
+import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 
 const providerMock = {
   name: 'provider1',
@@ -34,7 +34,7 @@ const providerMock = {
 } as unknown as ProviderInfo;
 
 test('Expect to have different status icon based on provider status', async () => {
-  const renderObject = render(ProviderTooltipStatus, { entry: providerMock });
+  const renderObject = render(ProviderWidgetStatus, { entry: providerMock });
 
   let statusIcon = screen.getByLabelText('Connection Status Icon');
   expect(statusIcon).toBeInTheDocument();
@@ -60,7 +60,7 @@ test('Expect to have different status icon based on provider status', async () =
 });
 
 test('Expect to have Update available icon status when an Update available status is passed', () => {
-  render(ProviderTooltipStatus, { status: 'Update available' });
+  render(ProviderWidgetStatus, { status: 'Update available' });
   const statusIcon = screen.getByLabelText('Connection Status Icon');
   expect(statusIcon).toBeInTheDocument();
   expect(statusIcon).toHaveClass('fa-regular fa-circle-up');
