@@ -47,6 +47,9 @@ test('Expect simple column styling', async () => {
   const text = screen.getByText(pod.name);
   expect(text).toBeInTheDocument();
   expect(text).toHaveClass('text-[var(--pd-table-body-text-highlight)]');
+  expect(text).toHaveClass('overflow-hidden');
+  expect(text).toHaveClass('text-ellipsis');
+  expect(text.parentElement).toHaveClass('text-left');
 
   const id = screen.getByText(pod.shortId);
   expect(id).toBeInTheDocument();

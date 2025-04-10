@@ -28,7 +28,7 @@ import SettingsPage from './SettingsPage.svelte';
         <EmbeddableCatalogExtensionList category="Authentication" showInstalled={false} />
       </div>
     </EmptyScreen>
-    {#each $authenticationProviders as provider}
+    {#each $authenticationProviders as provider (provider.id)}
       {@const sessionRequests = provider.sessionRequests ?? []}
       <!-- Registered Authentication Provider row start -->
       <div class="flex flex-col w-full mb-5" role="listitem" aria-label={provider.displayName}>
@@ -78,7 +78,7 @@ import SettingsPage from './SettingsPage.svelte';
             {#if provider?.accounts?.length > 0}
               <!-- Authentication Provider Session label start -->
               <div class="pt-3 pb-3 text-sm">
-                {#each provider.accounts as account}
+                {#each provider.accounts as account (account.id)}
                   <div class="flex flex-row">
                     <div class="flex items-center w-full">
                       <div class="flex flex-row text-xs p-2 rounded-lg mt-1 bg-[var(--pd-invert-content-bg)]">
@@ -121,7 +121,7 @@ import SettingsPage from './SettingsPage.svelte';
             {:else if sessionRequests.length > 1}
               <!-- Authentication Provider Auth Requests DropDown start -->
               <DropdownMenu>
-                {#each sessionRequests as request}
+                {#each sessionRequests as request (request.id)}
                   <DropdownMenu.Item
                     title="Sign in to use {request.extensionLabel}"
                     onClick={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}

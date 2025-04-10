@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ const containerInspectInfo: ContainerInspectInfo = {
     PortBindings: {
       9090: [
         {
-          HostPort: 8383,
+          HostPort: '8383',
           HostIp: '',
         },
       ],
@@ -244,7 +244,7 @@ test('Compose details inspect is clickable and loadable', async () => {
       ImageID: 'sha256:dummy-image-id',
     },
     {
-      Id: 'sha256:1234567890123',
+      Id: 'sha256:1234567890124',
       Image: 'sha256:123',
       Names: ['foo2'],
       Status: 'Running',

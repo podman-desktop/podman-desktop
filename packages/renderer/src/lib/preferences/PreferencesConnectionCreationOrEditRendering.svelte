@@ -137,9 +137,7 @@ onMount(async () => {
     restoreConfigurationValues();
   }
 
-  if (taskId === undefined) {
-    taskId = operationConnectionInfoMap.size + 1;
-  }
+  taskId ??= operationConnectionInfoMap.size + 1;
 
   const data: { [p: string]: unknown } = {};
   for (let field of configurationKeys) {
@@ -532,7 +530,7 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
         </div>
       {:else}
         {#if operationStarted || errorMessage}
-          <div class="w-4/5">
+          <div class="w-full">
             <div class="mt-2 mb-8">
               <div class="mt-2 float-right">
                 <button
@@ -560,12 +558,12 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
           </div>
         {/if}
         {#if errorMessage}
-          <div class="pt-3 mt-2 w-4/5 h-fit">
+          <div class="pt-3 mt-2 w-full h-fit">
             <ErrorMessage error={errorMessage} />
           </div>
         {/if}
 
-        <div class="p-3 mt-2 w-4/5 h-fit {inProgress ? 'opacity-40 pointer-events-none' : ''}">
+        <div class="p-3 mt-2 w-full h-fit {inProgress ? 'opacity-40 pointer-events-none' : ''}">
           {#if connectionAuditResult && (connectionAuditResult.records?.length ?? 0) > 0}
             <AuditMessageBox auditResult={connectionAuditResult} />
           {/if}
@@ -575,9 +573,9 @@ function preventDefault(handler: (e: SubmitEvent) => Promise<void>): (e: SubmitE
             onsubmit={preventDefault(handleOnSubmit)}
             bind:this={formEl}
             aria-label="Properties Information">
-            {#each configurationKeys as configurationKey}
+            {#each configurationKeys as configurationKey (configurationKey.id)}
               <div class="mb-2.5">
-                <div class="flex flex-row items-center h-[30px]">
+                <div class="flex flex-row items-center h-fit">
                   {#if configurationKey.description}
                     {configurationKey.description}:
                   {:else if configurationKey.markdownDescription && configurationKey.type !== 'markdown'}

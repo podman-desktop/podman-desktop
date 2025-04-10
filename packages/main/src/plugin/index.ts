@@ -88,7 +88,7 @@ import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
 import type { ImageFilesInfo } from '/@api/image-files-info.js';
-import type { ImageInfo } from '/@api/image-info.js';
+import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
@@ -108,6 +108,7 @@ import type { V1Route } from '/@api/openshift-types.js';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -115,6 +116,7 @@ import type {
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import type { PinOption } from '/@api/status-bar/pin-option.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -181,6 +183,7 @@ import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
+import { PinRegistry } from './statusbar/pin-registry.js';
 import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
 import type { StatusBarEntryDescriptor } from './statusbar/statusbar-registry.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
@@ -196,6 +199,7 @@ import type { IDisposable } from './types/disposable.js';
 import type { Deferred } from './util/deferred.js';
 import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
+import { TaskConnectionUtils } from './util/task-connection-utils.js';
 import { ViewRegistry } from './view-registry.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
@@ -682,6 +686,9 @@ export class PluginSystem {
     );
     extensionDevelopmentFolders.init();
 
+    const pinRegistry = new PinRegistry(commandRegistry, apiSender, configurationRegistry, providerRegistry, telemetry);
+    pinRegistry.init();
+
     this.extensionLoader = new ExtensionLoader(
       commandRegistry,
       menuRegistry,
@@ -772,9 +779,12 @@ export class PluginSystem {
     this.ipcHandle('container-provider-registry:listSimpleContainers', async (): Promise<SimpleContainerInfo[]> => {
       return containerProviderRegistry.listSimpleContainers();
     });
-    this.ipcHandle('container-provider-registry:listImages', async (): Promise<ImageInfo[]> => {
-      return containerProviderRegistry.podmanListImages();
-    });
+    this.ipcHandle(
+      'container-provider-registry:listImages',
+      async (_listener, options?: PodmanListImagesOptions): Promise<ImageInfo[]> => {
+        return containerProviderRegistry.podmanListImages(options);
+      },
+    );
     this.ipcHandle('container-provider-registry:listPods', async (): Promise<PodInfo[]> => {
       return containerProviderRegistry.listPods();
     });
@@ -1265,7 +1275,7 @@ export class PluginSystem {
       async (
         _listener,
         internalProviderId: string,
-        connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        connectionInfo: ProviderConnectionInfo,
         onDataId: number,
       ): Promise<number> => {
         // provide the data content to the remote side
@@ -2163,7 +2173,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({
@@ -2199,7 +2209,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({
@@ -2235,7 +2245,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         params: { [key: string]: any },
         loggerId: string,
@@ -2281,7 +2291,7 @@ export class PluginSystem {
       async (
         _listener: Electron.IpcMainInvokeEvent,
         providerId: string,
-        providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+        providerConnectionInfo: ProviderConnectionInfo,
         loggerId: string,
       ): Promise<void> => {
         const task = taskManager.createTask({
@@ -2312,6 +2322,12 @@ export class PluginSystem {
       },
     );
 
+    const taskConnectionUtils = new TaskConnectionUtils({
+      getLogHandler: this.getLogHandler.bind(this),
+      cancellationTokenRegistry,
+      taskManager,
+    });
+
     this.ipcHandle(
       'provider-registry:createContainerProviderConnection',
       async (
@@ -2322,40 +2338,16 @@ export class PluginSystem {
         tokenId: number | undefined,
         taskId: number | undefined,
       ): Promise<void> => {
-        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
-        let token;
-        if (tokenId) {
-          const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
-          token = tokenSource?.token;
-        }
-
         const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
-        const task = taskManager.createTask({
+        return taskConnectionUtils.withTask({
+          loggerId,
+          tokenId,
           title: `Creating ${providerName ?? 'Container'} provider`,
-          action: {
-            name: 'Open task',
-            execute: () => {
-              navigationManager
-                .navigateToProviderTask(internalProviderId, taskId)
-                .catch((err: unknown) => console.error(err));
-            },
-          },
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
+            providerRegistry.createContainerProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });
-
-        return providerRegistry
-          .createContainerProviderConnection(internalProviderId, params, logger, token)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((err: unknown) => {
-            task.error = `Something went wrong while trying to create provider: ${err}`;
-            logger.error(err);
-            throw err;
-          })
-          .finally(() => {
-            logger.onEnd();
-          });
       },
     );
 
@@ -2380,40 +2372,39 @@ export class PluginSystem {
         tokenId: number | undefined,
         taskId: number | undefined,
       ): Promise<void> => {
-        const logger = this.getLogHandler('provider-registry:taskConnection-onData', loggerId);
-        let token;
-        if (tokenId) {
-          const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);
-          token = tokenSource?.token;
-        }
-
         const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
-        const task = taskManager.createTask({
+        return taskConnectionUtils.withTask({
+          loggerId,
+          tokenId,
           title: `Creating ${providerName ?? 'Kubernetes'} provider`,
-          action: {
-            name: 'Open task',
-            execute: () => {
-              navigationManager
-                .navigateToProviderTask(internalProviderId, taskId)
-                .catch((err: unknown) => console.error(err));
-            },
-          },
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
+            providerRegistry.createKubernetesProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
         });
+      },
+    );
 
-        return providerRegistry
-          .createKubernetesProviderConnection(internalProviderId, params, logger, token)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((err: unknown) => {
-            task.error = `Something went wrong while trying to create provider: ${err}`;
-            logger.error(err);
-            throw err;
-          })
-          .finally(() => {
-            logger.onEnd();
-          });
+    this.ipcHandle(
+      'provider-registry:createVmProviderConnection',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        internalProviderId: string,
+        params: { [key: string]: unknown },
+        loggerId: string,
+        tokenId: number | undefined,
+        taskId: number | undefined,
+      ): Promise<void> => {
+        const providerName = providerRegistry.getProviderInfo(internalProviderId)?.name;
+        return taskConnectionUtils.withTask({
+          loggerId,
+          tokenId,
+          title: `Creating ${providerName ?? 'VM'} provider`,
+          navigateToTask: () => navigationManager.navigateToProviderTask(internalProviderId, taskId),
+          execute: (logger: LoggerWithEnd, token?: containerDesktopAPI.CancellationToken) =>
+            providerRegistry.createVmProviderConnection(internalProviderId, params, logger, token),
+          executeErrorMsg: (err: unknown) => `Something went wrong while trying to create provider: ${err}`,
+        });
       },
     );
 
@@ -2638,6 +2629,10 @@ export class PluginSystem {
 
     this.ipcHandle('kubernetes-client:getCurrentNamespace', async (): Promise<string | undefined> => {
       return kubernetesClient.getCurrentNamespace();
+    });
+
+    this.ipcHandle('kubernetes-client:setCurrentNamespace', async (_listener, namespace: string): Promise<void> => {
+      return kubernetesClient.setCurrentNamespace(namespace);
     });
 
     this.ipcHandle(
@@ -3014,6 +3009,18 @@ export class PluginSystem {
         return kubernetesClient.getTroubleshootingInformation();
       },
     );
+
+    this.ipcHandle('statusbar:pin:get-options', async (): Promise<Array<PinOption>> => {
+      return pinRegistry.getOptions();
+    });
+
+    this.ipcHandle('statusbar:pin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.pin(optionId);
+    });
+
+    this.ipcHandle('statusbar:unpin', async (_listener, optionId: string): Promise<void> => {
+      return pinRegistry.unpin(optionId);
+    });
 
     const dockerDesktopInstallation = new DockerDesktopInstallation(
       apiSender,

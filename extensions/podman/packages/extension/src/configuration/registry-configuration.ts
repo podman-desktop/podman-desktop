@@ -27,7 +27,7 @@ import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
 import { getJSONMachineList } from '../extension';
-import { execPodman } from '../util';
+import { execPodman } from '../utils/util';
 import playbookRegistryConfFileTemplate from './playbook-setup-registry-conf-file.mustache?raw';
 
 interface RegistryEntryQuickPickItem extends QuickPickItem {

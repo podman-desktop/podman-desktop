@@ -76,19 +76,25 @@ async function loadIngressDetails(): Promise<void> {
 
 {#if ingressUI}
   <DetailsPage title={ingressUI.name} subtitle={ingressUI.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={IngressRouteIcon} size={24} status={ingressUI.status} />
-    <svelte:fragment slot="actions">
-      <IngressRouteActions ingressRoute={ingressUI} detailed={true} on:update={(): IngressUI | undefined => (ingressUI = ingressUI)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={ingressUI.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if ingressUI}<StatusIcon icon={IngressRouteIcon} size={24} status={ingressUI.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if ingressUI}<IngressRouteActions ingressRoute={ingressUI} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if ingressUI}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={ingressUI.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <ServiceDetailsSummary ingressRoute={kubeIngress} kubeError={kubeError} />
       </Route>
@@ -98,6 +104,6 @@ async function loadIngressDetails(): Promise<void> {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeIngress)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

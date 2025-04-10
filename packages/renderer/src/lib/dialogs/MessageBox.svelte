@@ -87,13 +87,13 @@ function cleanup(): void {
 }
 
 async function clickButton(index?: number): Promise<void> {
-  await window.sendShowMessageBoxOnSelect(currentId, index);
   cleanup();
+  await window.sendShowMessageBoxOnSelect(currentId, index);
 }
 
 async function onClose(): Promise<void> {
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
   cleanup();
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
@@ -132,7 +132,7 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="buttons">
-      {#each buttonOrder as i}
+      {#each buttonOrder as i, index (index)}
         {#if i === cancelId}
           <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
         {:else}

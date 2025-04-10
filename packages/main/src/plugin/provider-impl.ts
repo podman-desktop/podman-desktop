@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import type {
   ProviderOptions,
   ProviderStatus,
   ProviderUpdate,
+  VmProviderConnection,
+  VmProviderConnectionFactory,
 } from '@podman-desktop/api';
 
 import type { ContainerProviderRegistry } from './container-registry.js';
@@ -48,9 +50,11 @@ export class ProviderImpl implements Provider, IDisposable {
   private containerProviderConnections: Set<ContainerProviderConnection>;
   private containerProviderConnectionsStatuses: Map<string, ProviderConnectionStatus>;
   private kubernetesProviderConnections: Set<KubernetesProviderConnection>;
+  private vmProviderConnections: Set<VmProviderConnection>;
   // optional factory
   private _containerProviderConnectionFactory: ContainerProviderConnectionFactory | undefined = undefined;
   private _kubernetesProviderConnectionFactory: KubernetesProviderConnectionFactory | undefined = undefined;
+  private _vmProviderConnectionFactory: VmProviderConnectionFactory | undefined = undefined;
 
   private _connectionAuditor: Auditor | undefined = undefined;
 
@@ -85,6 +89,7 @@ export class ProviderImpl implements Provider, IDisposable {
     this.containerProviderConnectionsStatuses = new Map();
     this.containerProviderConnections = new Set();
     this.kubernetesProviderConnections = new Set();
+    this.vmProviderConnections = new Set();
     this._status = providerOptions.status;
     this._version = providerOptions.version;
 
@@ -109,6 +114,10 @@ export class ProviderImpl implements Provider, IDisposable {
 
   get kubernetesProviderConnectionFactory(): KubernetesProviderConnectionFactory | undefined {
     return this._kubernetesProviderConnectionFactory;
+  }
+
+  get vmProviderConnectionFactory(): VmProviderConnectionFactory | undefined {
+    return this._vmProviderConnectionFactory;
   }
 
   get containerProviderConnectionFactory(): ContainerProviderConnectionFactory | undefined {
@@ -190,6 +199,10 @@ export class ProviderImpl implements Provider, IDisposable {
     return Array.from(this.kubernetesProviderConnections.values());
   }
 
+  get vmConnections(): VmProviderConnection[] {
+    return Array.from(this.vmProviderConnections.values());
+  }
+
   dispose(): void {
     this.providerRegistry.disposeProvider(this);
   }
@@ -226,6 +239,29 @@ export class ProviderImpl implements Provider, IDisposable {
       this.kubernetesProviderConnections.delete(kubernetesProviderConnection);
       disposable.dispose();
       this.providerRegistry.onDidUnregisterKubernetesConnectionCallback(this, kubernetesProviderConnection);
+    });
+  }
+
+  setVmProviderConnectionFactory(
+    vmProviderConnectionFactory: VmProviderConnectionFactory,
+    connectionAuditor?: Auditor,
+  ): Disposable {
+    this._vmProviderConnectionFactory = vmProviderConnectionFactory;
+    this._connectionAuditor = connectionAuditor;
+    return Disposable.create(() => {
+      this._vmProviderConnectionFactory = undefined;
+      this._connectionAuditor = undefined;
+    });
+  }
+
+  registerVmProviderConnection(vmProviderConnection: VmProviderConnection): Disposable {
+    this.vmProviderConnections.add(vmProviderConnection);
+    const disposable = this.providerRegistry.registerVmConnection(this, vmProviderConnection);
+    this.providerRegistry.onDidRegisterVmConnectionCallback(this, vmProviderConnection);
+    return Disposable.create(() => {
+      this.vmProviderConnections.delete(vmProviderConnection);
+      disposable.dispose();
+      this.providerRegistry.onDidUnregisterVmConnectionCallback(this, vmProviderConnection);
     });
   }
 

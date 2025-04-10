@@ -155,46 +155,42 @@ export class Emitter<T = unknown> {
    * to events from this Emitter
    */
   get event(): Event<T> {
-    if (!this._event) {
-      this._event = Object.assign(
-        (listener: (e: T) => unknown, thisArgs?: unknown, disposables?: DisposableGroup) => {
-          if (!this._callbacks) {
-            this._callbacks = new CallbackList();
-          }
-          if (this._options?.onFirstListenerAdd && this._callbacks.isEmpty()) {
-            this._options.onFirstListenerAdd(this);
-          }
-          this._callbacks.add(listener, thisArgs);
-          const removeMaxListenersCheck = this.checkMaxListeners(this.getMaxListeners(this._event));
+    this._event ??= Object.assign(
+      (listener: (e: T) => unknown, thisArgs?: unknown, disposables?: DisposableGroup) => {
+        this._callbacks ??= new CallbackList();
+        if (this._options?.onFirstListenerAdd && this._callbacks.isEmpty()) {
+          this._options.onFirstListenerAdd(this);
+        }
+        this._callbacks.add(listener, thisArgs);
+        const removeMaxListenersCheck = this.checkMaxListeners(this.getMaxListeners(this._event));
 
-          const result: IDisposable = {
-            dispose: () => {
-              if (removeMaxListenersCheck) {
-                removeMaxListenersCheck();
-              }
+        const result: IDisposable = {
+          dispose: () => {
+            if (removeMaxListenersCheck) {
+              removeMaxListenersCheck();
+            }
+            result.dispose = Emitter._noop;
+            if (!this._disposed) {
+              this._callbacks?.remove(listener, thisArgs);
               result.dispose = Emitter._noop;
-              if (!this._disposed) {
-                this._callbacks?.remove(listener, thisArgs);
-                result.dispose = Emitter._noop;
-                if (this._options?.onLastListenerRemove && this._callbacks?.isEmpty()) {
-                  this._options.onLastListenerRemove(this);
-                }
+              if (this._options?.onLastListenerRemove && this._callbacks?.isEmpty()) {
+                this._options.onLastListenerRemove(this);
               }
-            },
-          };
-          if (this.canPushDisposable(disposables)) {
-            disposables.push(result);
-          } else if (this.canAddDisposable(disposables)) {
-            disposables.add(result);
-          }
+            }
+          },
+        };
+        if (this.canPushDisposable(disposables)) {
+          disposables.push(result);
+        } else if (this.canAddDisposable(disposables)) {
+          disposables.add(result);
+        }
 
-          return result;
-        },
-        {
-          maxListeners: Emitter.LEAK_WARNING_THRESHHOLD,
-        },
-      );
-    }
+        return result;
+      },
+      {
+        maxListeners: Emitter.LEAK_WARNING_THRESHHOLD,
+      },
+    );
     return this._event;
   }
 
@@ -235,9 +231,7 @@ export class Emitter<T = unknown> {
   }
 
   protected pushLeakingStack(): () => void {
-    if (!this._leakingStacks) {
-      this._leakingStacks = new Map();
-    }
+    this._leakingStacks ??= new Map();
     const stack = new Error().stack?.split('\n').slice(3).join('\n');
     if (stack) {
       const count = this._leakingStacks.get(stack) ?? 0;

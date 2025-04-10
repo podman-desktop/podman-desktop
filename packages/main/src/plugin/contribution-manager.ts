@@ -24,7 +24,7 @@ import * as jsYaml from 'js-yaml';
 
 import type { ContributionInfo } from '/@api/contribution-info.js';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isMac, isUnixLike, isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import type { Directories } from './directories.js';
@@ -181,7 +181,7 @@ export class ContributionManager {
     } else if (isMac()) {
       binaries.push('/usr/local/bin/docker-compose');
       binaries.push('/opt/homebrew/bin/docker-compose');
-    } else if (isLinux()) {
+    } else if (isUnixLike()) {
       binaries.push('/usr/bin/docker-compose');
       binaries.push('/usr/local/bin/docker-compose');
     }
@@ -333,9 +333,7 @@ export class ContributionManager {
   async waitForRunningState(composeDirectory: string, projectName: string, maxWait?: number): Promise<void> {
     // compute current date
     const startDate = new Date();
-    if (!maxWait) {
-      maxWait = 30 * 1000; // 30s
-    }
+    maxWait ??= 30 * 1000; // 30s
 
     const endDate = new Date(startDate.getTime() + maxWait).getTime();
 
@@ -623,9 +621,7 @@ export class ContributionManager {
         // apply restart policy if not specified
         service.deploy = service.deploy ?? {};
         service.deploy.restart_policy = service.deploy.restart_policy ?? {};
-        if (!service.deploy.restart_policy.condition) {
-          service.deploy.restart_policy.condition = 'always';
-        }
+        service.deploy.restart_policy.condition ??= 'always';
 
         // add the volume from the podman-desktop-socket (only if not inside the service itself)
         if (serviceKey !== PODMAN_DESKTOP_SOCKET_SERVICE) {

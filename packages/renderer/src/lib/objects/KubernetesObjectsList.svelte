@@ -11,6 +11,7 @@ import type { IDisposable } from '/@api/disposable.js';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import KubeActions from '../kube/KubeActions.svelte';
+import NamespaceDropdown from '../kube/NamespaceDropdown.svelte';
 import KubernetesCurrentContextConnectionBadge from '../ui/KubernetesCurrentContextConnectionBadge.svelte';
 import type { KubernetesObjectUI } from './KubernetesObjectUI';
 
@@ -129,6 +130,9 @@ let table: Table;
   </svelte:fragment>
 
   <svelte:fragment slot="bottom-additional-actions">
+    {#if kinds[0].resource !== 'nodes'}
+      <NamespaceDropdown/>
+    {/if}
     {#if selectedItemsNumber > 0}
       <Button
         on:click={(): void =>

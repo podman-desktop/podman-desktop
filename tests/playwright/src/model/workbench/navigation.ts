@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import test, { expect, type Locator, type Page } from '@playwright/test';
+import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import { ContainersPage } from '../pages/containers-page';
 import { DashboardPage } from '../pages/dashboard-page';
@@ -61,32 +61,32 @@ export class NavigationBar {
 
   async openDashboard(): Promise<DashboardPage> {
     return test.step('Open Dashboard page', async () => {
-      await this.dashboardLink.waitFor({ state: 'visible' });
-      await this.dashboardLink.click();
+      await playExpect(this.dashboardLink).toBeVisible({ timeout: 10_000 });
+      await this.dashboardLink.click({ force: true });
       return new DashboardPage(this.page);
     });
   }
 
   async openImages(): Promise<ImagesPage> {
     return test.step('Open Images page', async () => {
-      await this.imagesLink.waitFor({ state: 'visible' });
-      await this.imagesLink.click();
+      await playExpect(this.imagesLink).toBeVisible({ timeout: 10_000 });
+      await this.imagesLink.click({ force: true });
       return new ImagesPage(this.page);
     });
   }
 
   async openContainers(): Promise<ContainersPage> {
     return test.step('Open Containers page', async () => {
-      await this.containersLink.waitFor({ state: 'visible' });
-      await this.containersLink.click();
+      await playExpect(this.containersLink).toBeVisible({ timeout: 10_000 });
+      await this.containersLink.click({ force: true });
       return new ContainersPage(this.page);
     });
   }
 
   async openPods(): Promise<PodsPage> {
     return test.step('Open Pods page', async () => {
-      await this.podsLink.waitFor({ state: 'visible' });
-      await this.podsLink.click();
+      await playExpect(this.podsLink).toBeVisible({ timeout: 10_000 });
+      await this.podsLink.click({ force: true });
       return new PodsPage(this.page);
     });
   }
@@ -95,8 +95,8 @@ export class NavigationBar {
     return test.step('Open Settings Page ', async () => {
       const settingsBar = new SettingsBar(this.page);
       if (!(await settingsBar.settingsNavBar.isVisible())) {
-        await expect(this.settingsLink).toBeVisible();
-        await this.settingsLink.click();
+        await playExpect(this.settingsLink).toBeVisible({ timeout: 10_000 });
+        await this.settingsLink.click({ force: true });
       }
       return settingsBar;
     });
@@ -104,8 +104,8 @@ export class NavigationBar {
 
   async openVolumes(): Promise<VolumesPage> {
     return test.step('Open Volumes page', async () => {
-      await this.volumesLink.waitFor({ state: 'visible' });
-      await this.volumesLink.click();
+      await playExpect(this.volumesLink).toBeVisible({ timeout: 10_000 });
+      await this.volumesLink.click({ force: true });
       return new VolumesPage(this.page);
     });
   }
@@ -114,8 +114,8 @@ export class NavigationBar {
     return test.step('Open Kubernetes Page ', async () => {
       const kubernetesBar = new KubernetesBar(this.page);
       if (!(await kubernetesBar.kubernetesNavBar.isVisible())) {
-        await expect(this.kubernetesLink).toBeVisible();
-        await this.kubernetesLink.click();
+        await playExpect(this.kubernetesLink).toBeVisible({ timeout: 10_000 });
+        await this.kubernetesLink.click({ force: true });
       }
       return kubernetesBar;
     });
@@ -123,8 +123,8 @@ export class NavigationBar {
 
   async openExtensions(): Promise<ExtensionsPage> {
     return test.step('Open Extensions page', async () => {
-      await this.extensionsLink.waitFor({ state: 'visible' });
-      await this.extensionsLink.click();
+      await playExpect(this.extensionsLink).toBeVisible({ timeout: 10_000 });
+      await this.extensionsLink.click({ force: true });
       return new ExtensionsPage(this.page);
     });
   }

@@ -525,6 +525,15 @@ declare module '@podman-desktop/api' {
     status(): ProviderConnectionStatus;
   }
 
+  export interface VmProviderConnection {
+    name: string;
+    shellAccess?: ProviderConnectionShellAccess;
+    lifecycle?: ProviderConnectionLifecycle;
+    status(): ProviderConnectionStatus;
+  }
+
+  export type ProviderConnection = ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection;
+
   // common set of options for creating a provider
   export interface ProviderConnectionFactory {
     // Allow to initialize a provider
@@ -547,6 +556,11 @@ declare module '@podman-desktop/api' {
   export interface KubernetesProviderConnectionFactory extends ProviderConnectionFactory {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
+  }
+
+  // create a Vm provider
+  export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
+    create?(params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken): Promise<void>;
   }
 
   export interface AuditRecord {
@@ -661,9 +675,14 @@ declare module '@podman-desktop/api' {
       containerProviderConnectionFactory: KubernetesProviderConnectionFactory,
       connectionAuditor?: Auditor,
     ): Disposable;
+    setVmProviderConnectionFactory(
+      vmProviderConnectionFactory: VmProviderConnectionFactory,
+      connectionAuditor?: Auditor,
+    ): Disposable;
 
     registerContainerProviderConnection(connection: ContainerProviderConnection): Disposable;
     registerKubernetesProviderConnection(connection: KubernetesProviderConnection): Disposable;
+    registerVmProviderConnection(connection: VmProviderConnection): Disposable;
     registerLifecycle(lifecycle: ProviderLifecycle): Disposable;
 
     // register installation flow
@@ -783,13 +802,25 @@ declare module '@podman-desktop/api' {
     status: ProviderConnectionStatus;
   }
 
+  export interface UpdateVmConnectionEvent {
+    providerId: string;
+    connection: VmProviderConnection;
+    status: ProviderConnectionStatus;
+  }
+
   export interface UnregisterContainerConnectionEvent {
     providerId: string;
   }
   export interface UnregisterKubernetesConnectionEvent {
     providerId: string;
   }
+  export interface UnregisterVmConnectionEvent {
+    providerId: string;
+  }
   export interface RegisterKubernetesConnectionEvent {
+    providerId: string;
+  }
+  export interface RegisterVmConnectionEvent {
     providerId: string;
   }
   export interface RegisterContainerConnectionEvent {
@@ -1165,7 +1196,7 @@ declare module '@podman-desktop/api' {
   /**
    * The configuration scope
    */
-  export type ConfigurationScope = string | ContainerProviderConnection | KubernetesProviderConnection;
+  export type ConfigurationScope = string | ProviderConnection;
 
   export interface Configuration {
     /**
@@ -2642,7 +2673,7 @@ declare module '@podman-desktop/api' {
     MaximumRetryCount?: number;
   }
 
-  type MountType = 'bind' | 'volume' | 'tmpfs';
+  type MountType = 'bind' | 'volume' | 'tmpfs' | 'image';
 
   type MountConsistency = 'default' | 'consistent' | 'cached' | 'delegated';
 
@@ -2670,6 +2701,9 @@ declare module '@podman-desktop/api' {
       SizeBytes: number;
       Mode: number;
     };
+    ImageOptions?: {
+      Subpath?: string;
+    };
   }
 
   type MountConfig = MountSettings[];
@@ -2688,6 +2722,12 @@ declare module '@podman-desktop/api' {
     PathOnHost: string;
   }
 
+  export interface HostConfigPortBinding {
+    [port: string]: {
+      HostPort?: string;
+      HostIp?: string;
+    }[];
+  }
   interface HostConfig {
     AutoRemove?: boolean;
     Binds?: string[];
@@ -2697,7 +2737,7 @@ declare module '@podman-desktop/api' {
       Config: unknown;
     };
     NetworkMode?: string;
-    PortBindings?: unknown;
+    PortBindings?: HostConfigPortBinding;
     RestartPolicy?: HostRestartPolicy;
     VolumeDriver?: string;
     VolumesFrom?: unknown;
@@ -3501,7 +3541,7 @@ declare module '@podman-desktop/api' {
     /**
      * Attempt to pull the image even if an older image exists locally.
      */
-    pull?: string;
+    pull?: boolean | string;
 
     /**
      * Default: true

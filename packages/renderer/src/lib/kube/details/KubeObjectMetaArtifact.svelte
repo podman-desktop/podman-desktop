@@ -67,7 +67,7 @@ if (artifact?.annotations) {
     <tr>
       <Cell>Labels</Cell>
       <Cell>
-        {#each labels as [key, value]}
+        {#each labels as [key, value] (key)}
           {key}: {value}
           <br />
         {/each}
@@ -84,7 +84,7 @@ if (artifact?.annotations) {
       </Cell>
       <Cell>
         {#if internalLabelsDropdownOpen}
-          {#each internalLabels as [key, value]}
+          {#each internalLabels as [key, value] (key)}
             {key}: {value}
             <br />
           {/each}
@@ -99,7 +99,7 @@ if (artifact?.annotations) {
     <tr>
       <Cell>Annotations</Cell>
       <Cell>
-        {#each annotations as [key, value]}
+        {#each annotations as [key, value] (key)}
           {key}: {value}
           <br />
         {/each}
@@ -116,7 +116,7 @@ if (artifact?.annotations) {
       </Cell>
       <Cell>
         {#if internalAnnotationsDropdownOpen}
-          {#each internalAnnotations as [key, value]}
+          {#each internalAnnotations as [key, value] (key)}
             {key}: {value}
             <br />
           {/each}

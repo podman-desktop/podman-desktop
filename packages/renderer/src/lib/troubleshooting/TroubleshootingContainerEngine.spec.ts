@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,10 @@ test('Check containers button is available and click on it', async () => {
     },
   } as unknown as ProviderContainerConnectionInfo;
   render(TroubleshootingContainerEngine, { containerEngineRunning });
+
+  // expect to be in a region with label
+  const region = screen.getByRole('region', { name: name });
+  expect(region).toBeInTheDocument();
 
   // expect to have the name label
   const nameHeading = screen.getByRole('heading', { name: 'name' });

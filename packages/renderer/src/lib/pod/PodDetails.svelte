@@ -56,8 +56,10 @@ onMount(() => {
 
 {#if pod}
   <DetailsPage title={pod.name} subtitle={pod.shortId} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={PodIcon} size={24} status={pod.status} />
-    <svelte:fragment slot="actions">
+    {#snippet iconSnippet()}
+      <StatusIcon icon={PodIcon} size={24} status={pod.status} />
+    {/snippet}
+    {#snippet actionsSnippet()}
       <div class="flex items-center w-5">
         {#if pod.actionError}
           <ErrorMessage error={pod.actionError} icon wrapMessage />
@@ -65,18 +67,23 @@ onMount(() => {
           <div>&nbsp;</div>
         {/if}
       </div>
-      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => (pod = pod)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={pod.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+      <PodActions pod={pod} detailed={true} on:update={(): PodInfoUI => {
+        pod = pod; // Keep this assignment for svelte 4 - can be safely removed when migrating to svelte 5
+        return pod;
+      }} />
+    {/snippet}
+    {#snippet detailSnippet()}
+      <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+        <StateChange state={pod.status} />
+      </div>
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <PodmanPodDetailsSummary pod={pod} />
       </Route>
@@ -89,6 +96,6 @@ onMount(() => {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <PodDetailsKube pod={pod} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

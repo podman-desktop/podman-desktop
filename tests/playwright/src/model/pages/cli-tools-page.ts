@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,15 +35,10 @@ export class CLIToolsPage extends SettingsPage {
     super(page, 'CLI Tools');
     this.main = page.getByRole('region', { name: 'CLI Tools' }); //check name
     this.header = this.main.getByRole('region', { name: 'Header' });
-    this.heading = this.header.getByRole('heading', {
-      name: 'CLI Tools',
-      exact: true,
-    });
+    this.heading = this.header.getByRole('heading', { name: 'CLI Tools', exact: true });
     this.content = this.main.getByRole('region', { name: 'Content' });
     this.toolsTable = this.content.getByRole('table', { name: 'cli-tools' });
-    this.dropDownDialog = page.getByRole('dialog', {
-      name: 'drop-down-dialog',
-    });
+    this.dropDownDialog = page.getByRole('dialog', { name: 'drop-down-dialog' });
     this.versionInputField = this.dropDownDialog.getByRole('textbox');
   }
 
@@ -60,7 +55,15 @@ export class CLIToolsPage extends SettingsPage {
   }
 
   public getUpdateButton(toolName: string): Locator {
-    return this.getToolRow(toolName).getByLabel('Update', { exact: true });
+    return this.getToolRow(toolName)
+      .getByRole('button')
+      .and(this.getToolRow(toolName).getByText('Update available', { exact: true }));
+  }
+
+  public getDowngradeButton(toolName: string): Locator {
+    return this.getToolRow(toolName)
+      .getByRole('button')
+      .and(this.getToolRow(toolName).getByText('Upgrade/Downgrade', { exact: true }));
   }
 
   public getVersionSelectionButton(version: string): Locator {
@@ -73,11 +76,20 @@ export class CLIToolsPage extends SettingsPage {
         return '';
       }
 
-      return await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).innerText();
+      if ((await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).count()) === 0) {
+        return '';
+      }
+
+      try {
+        return await this.getToolRow(toolName).getByLabel('cli-version', { exact: true }).innerText();
+      } catch (e) {
+        console.log(`Could not get version for ${toolName}: ${e}`);
+        return '';
+      }
     });
   }
 
-  public async installTool(toolName: string, version: string = ''): Promise<this> {
+  public async installTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
     return test.step(`Install ${toolName}`, async () => {
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
@@ -97,11 +109,109 @@ export class CLIToolsPage extends SettingsPage {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
 
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .toContain(version);
+      return this;
+    });
+  }
+
+  public async installToolWithSecondLatestVersion(toolName: string, timeout = 60_000): Promise<this> {
+    return test.step(`Install ${toolName} with second latest version`, async () => {
+      await playExpect(this.getInstallButton(toolName)).toBeEnabled();
+      await this.getInstallButton(toolName).click();
+      await playExpect(this.dropDownDialog).toBeVisible();
+
+      const version = await this.getSecondLatestVersionNumber();
+      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
+      await this.getVersionSelectionButton(version).click();
+
+      const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
+      try {
+        await playExpect(confirmationDialog).toBeVisible();
+        await handleConfirmationDialog(this.page, toolName);
+      } catch {
+        console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
+      }
+
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .toContain(version);
+      return this;
+    });
+  }
+
+  public async uninstallTool(toolName: string): Promise<this> {
+    return test.step(`Uninstall ${toolName}`, async () => {
+      if ((await this.getUninstallButton(toolName).count()) === 0) {
+        console.log(`Tool ${toolName} is not installed`);
+        return this;
+      }
+
+      await playExpect(this.getUninstallButton(toolName)).toBeEnabled();
+      await this.getUninstallButton(toolName).click();
+      await handleConfirmationDialog(this.page, 'Uninstall');
+      return this;
+    });
+  }
+
+  public async downgradeTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
+    return test.step(`Downgrade ${toolName}`, async () => {
+      const currentVersion = await this.getCurrentToolVersion(toolName);
+      if (!currentVersion) {
+        throw new Error(`Tool ${toolName} is not installed`);
+      }
+
+      if ((await this.getDowngradeButton(toolName).count()) === 0) {
+        console.log(`Tool ${toolName} is already in a downgraded version`);
+        return this;
+      }
+
+      await playExpect(this.getDowngradeButton(toolName)).toBeEnabled();
+      await this.getDowngradeButton(toolName).click();
+      await playExpect(this.dropDownDialog).toBeVisible();
+
+      if (!version) {
+        version = await this.getSecondLatestVersionNumber();
+      }
+
+      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
+      await this.getVersionSelectionButton(version).click();
+
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .toContain(version);
+      return this;
+    });
+  }
+
+  public async updateTool(toolName: string, timeout = 60_000): Promise<this> {
+    return test.step(`Update ${toolName}`, async () => {
+      const currentVersion = await this.getCurrentToolVersion(toolName);
+      if (!currentVersion) {
+        throw new Error(`Tool ${toolName} is not installed`);
+      }
+
+      if ((await this.getUpdateButton(toolName).count()) === 0) {
+        console.log(`Tool ${toolName} is already on latest`);
+        return this;
+      }
+
+      await playExpect(this.getUpdateButton(toolName)).toBeEnabled();
+      await this.getUpdateButton(toolName).click();
+      await playExpect
+        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
+        .not.toContain(currentVersion);
+
       return this;
     });
   }
 
   private async getLatestVersionNumber(): Promise<string> {
     return await this.dropDownDialog.getByRole('button').first().innerText();
+  }
+
+  private async getSecondLatestVersionNumber(): Promise<string> {
+    return await this.dropDownDialog.getByRole('button').nth(1).innerText();
   }
 }

@@ -7,7 +7,11 @@ type ProviderNameType = 'docker' | 'podman' | 'kubernetes' | undefined;
 
 // provider: name of the provider (e.g. podman, docker, kubernetes)
 // context: only used for Kubernetes-like distros
-let { provider = '', context = '' }: { provider?: string; context?: string } = $props();
+interface Props {
+  provider?: string;
+  context?: string;
+}
+let { provider = '', context = '' }: Props = $props();
 
 // providerName: name of the provider in lowercase (e.g. podman, docker, kubernetes)
 let providerName: ProviderNameType = $state(undefined);

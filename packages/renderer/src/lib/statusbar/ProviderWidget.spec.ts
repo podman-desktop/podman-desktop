@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,18 @@ const providerMock = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+});
+
+test('Check basic styling', async () => {
+  render(ProviderWidget, { entry: providerMock });
+
+  const widget = screen.getByRole('button', { name: 'provider1' });
+  expect(widget).toBeInTheDocument();
+  expect(widget).toHaveClass('items-center');
+  expect(widget).toHaveClass('hover:bg-[var(--pd-statusbar-hover-bg)]');
+  expect(widget).toHaveClass('hover:cursor-pointer');
+  expect(widget).toHaveClass('relative');
+  expect(widget.ariaLabel).toEqual(providerMock.name);
 });
 
 test('Provider widget takes user to /preferences/resources on click by default', async () => {
@@ -107,4 +119,20 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   expect(screen.getByText(': connection 1')).toBeInTheDocument();
   expect(screen.getByText(': connection 2')).toBeInTheDocument();
   expect(screen.getByText(': connection 3')).toBeInTheDocument();
+});
+
+test('class props should be propagated to button', async () => {
+  const { getByRole } = render(ProviderWidget, {
+    entry: providerMock,
+    class: 'potatoes',
+  });
+
+  const widget = getByRole('button', { name: 'provider1' });
+  expect(widget).toHaveClass('potatoes');
+});
+
+test('Expect tooltip to show Update available text if the provider has an update', () => {
+  providerMock.updateInfo = { version: '1.1.0' };
+  render(ProviderWidget, { entry: providerMock });
+  expect(screen.getByText('Update available')).toBeInTheDocument();
 });

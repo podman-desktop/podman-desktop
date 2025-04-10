@@ -17,11 +17,12 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
-import { readable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
-import { type ContextGeneralState, NO_CURRENT_CONTEXT_ERROR } from '/@api/kubernetes-contexts-states';
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
+import { type ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
 import * as kubeContextStore from '../kubernetes-contexts-state';
@@ -30,9 +31,11 @@ import { createNavigationKubernetesGroup } from './navigation-registry-kubernete
 vi.mock('../kubernetes-contexts-state', async () => {
   return {};
 });
+vi.mock('/@/stores/kubernetes-no-current-context');
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
 test('createNavigationImageEntry with current context', async () => {
@@ -79,9 +82,7 @@ test('createNavigationImageEntry with current context', async () => {
 });
 
 test('createNavigationImageEntry without current context', async () => {
-  vi.mocked(kubeContextStore).kubernetesCurrentContextState = readable<ContextGeneralState>({
-    error: NO_CURRENT_CONTEXT_ERROR,
-  } as ContextGeneralState);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
   vi.mocked(kubeContextStore).kubernetesCurrentContextNodes = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextCronJobs = readable<KubernetesObject[]>([]);
   vi.mocked(kubeContextStore).kubernetesCurrentContextJobs = readable<KubernetesObject[]>([]);

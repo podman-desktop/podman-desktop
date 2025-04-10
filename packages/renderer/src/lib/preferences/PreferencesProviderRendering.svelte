@@ -6,15 +6,11 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import { providerInfos } from '/@/stores/providers';
+import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
-import { providerInfos } from '../../stores/providers';
 import FormPage from '../ui/FormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
@@ -32,7 +28,7 @@ router.subscribe(() => {
   providerLifecycleError = '';
 });
 
-let connectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | undefined = undefined;
+let connectionInfo: ProviderConnectionInfo | undefined = undefined;
 
 let providers: ProviderInfo[] = [];
 onMount(() => {
@@ -56,7 +52,9 @@ $: providerDisplayName =
     ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
     : providerInfo?.kubernetesProviderConnectionCreation
       ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
-      : undefined) ?? providerInfo?.name;
+      : providerInfo?.vmProviderConnectionCreation
+        ? providerInfo?.vmProviderConnectionCreationDisplayName
+        : undefined) ?? providerInfo?.name;
 
 let title: string;
 $: title = connectionInfo ? `Update ${providerDisplayName} ${connectionInfo.name}` : `Create ${providerDisplayName}`;
@@ -87,7 +85,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
 
 <Route path="/*" breadcrumb={providerInfo?.name} navigationHint="details">
   <FormPage title={title} inProgress={inProgress}>
-    <svelte:fragment slot="icon">
+    {#snippet icon()}
       {#if providerInfo?.images?.icon}
         {#if typeof providerInfo.images.icon === 'string'}
           <img src={providerInfo.images.icon} alt={providerInfo.name} class="max-h-10" />
@@ -96,9 +94,9 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           <img src={providerInfo.images.icon.dark} alt={providerInfo.name} class="max-h-10" />
         {/if}
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet actions()}
       <!-- Manage lifecycle-->
       {#if providerInfo?.lifecycleMethods}
         <div class="pl-1 py-2 px-6">
@@ -133,9 +131,10 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           {/if}
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <div slot="content" class="px-5 pb-5 min-w-full h-fit">
+    {#snippet content()}
+    <div class="px-5 pb-5 min-w-full h-fit">
       <div class="bg-[var(--pd-content-card-bg)] px-6 py-4">
         <!-- Create connection panel-->
         {#if providerInfo?.containerProviderConnectionCreation === true}
@@ -158,8 +157,19 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
             taskId={taskId}
             bind:inProgress={inProgress} />
         {/if}
+
+        {#if providerInfo?.vmProviderConnectionCreation === true}
+          <PreferencesConnectionCreationRendering
+            providerInfo={providerInfo}
+            properties={properties}
+            propertyScope="VmProviderConnectionFactory"
+            callback={window.createVmProviderConnection}
+            taskId={taskId}
+            bind:inProgress={inProgress} />
+        {/if}
       </div>
     </div>
+    {/snippet}
   </FormPage>
 </Route>
 {#if showModalProviderInfo}

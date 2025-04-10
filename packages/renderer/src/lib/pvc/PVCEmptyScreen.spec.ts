@@ -21,6 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { listenResourcePermitted } from '../kube/resource-permission';
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 
 const mocks = vi.hoisted(() => ({
@@ -31,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   eventsMocks: vi.fn(),
 }));
 
+vi.mock('../kube/resource-permission');
 vi.mock('../../stores/kubernetes-contexts-state', () => ({
   kubernetesCurrentContextState: {
     subscribe: mocks.subscribeMock,
@@ -49,7 +51,15 @@ beforeEach(() => {
 });
 
 test('Expect PVC empty screen', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));
   render(PVCEmptyScreen);
   const noPVCS = screen.getByRole('heading', { name: 'No PVCs' });
+  expect(noPVCS).toBeInTheDocument();
+});
+
+test('Expect PVC empty screen not accessible', async () => {
+  vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(false)));
+  render(PVCEmptyScreen);
+  const noPVCS = screen.getByRole('heading', { name: 'PVCs not accessible' });
   expect(noPVCS).toBeInTheDocument();
 });

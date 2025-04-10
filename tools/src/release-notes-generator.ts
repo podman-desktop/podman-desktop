@@ -19,9 +19,7 @@ import { Generator } from './generator';
 
 async function run(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    token = process.env.GH_TOKEN;
-  }
+  token ??= process.env.GH_TOKEN;
   const args = process.argv.slice(2);
   let organization = 'containers';
   let repo = 'podman-desktop';

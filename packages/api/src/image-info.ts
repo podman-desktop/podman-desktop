@@ -85,7 +85,7 @@ export interface BuildImageOptions {
   /**
    * Attempt to pull the image even if an older image exists locally.
    */
-  pull?: string;
+  pull?: boolean;
 
   /**
    * Default: true
@@ -190,7 +190,7 @@ export interface ListImagesOptions {
    *
    * @defaultValue undefined
    */
-  provider?: ContainerProviderConnection;
+  provider?: ContainerProviderConnection | ProviderContainerConnectionInfo;
 }
 
 export interface PodmanListImagesOptions {
@@ -217,5 +217,5 @@ export interface PodmanListImagesOptions {
    *
    * @defaultValue undefined
    */
-  provider?: ContainerProviderConnection;
+  provider?: ContainerProviderConnection | ProviderContainerConnectionInfo;
 }

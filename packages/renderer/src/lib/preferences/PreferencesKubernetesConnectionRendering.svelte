@@ -7,11 +7,7 @@ import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+import type { ProviderConnectionInfo, ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
@@ -104,7 +100,7 @@ async function startConnectionProvider(
 
 function updateConnectionStatus(
   provider: ProviderInfo,
-  connectionInfo: ProviderKubernetesConnectionInfo | ProviderContainerConnectionInfo,
+  connectionInfo: ProviderConnectionInfo,
   action?: string,
   error?: string,
 ): void {
@@ -137,14 +133,16 @@ function setNoLogs(): void {
 
 {#if connectionInfo}
   <DetailsPage title={connectionInfo.name}>
-    <svelte:fragment slot="subtitle">
-      <div class="flex flex-row">
-        <ConnectionStatus status={connectionInfo.status} />
-        <ConnectionErrorInfoButton status={connectionStatus} />
-      </div>
-    </svelte:fragment>
-    <svelte:fragment slot="actions">
-      {#if providerInfo}
+    {#snippet subtitleSnippet()}
+      {#if connectionInfo}
+        <div class="flex flex-row">
+          <ConnectionStatus status={connectionInfo.status} />
+          <ConnectionErrorInfoButton status={connectionStatus} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if connectionInfo && providerInfo}
         <div class="flex justify-end">
           <PreferencesConnectionActions
             provider={providerInfo}
@@ -154,17 +152,19 @@ function setNoLogs(): void {
             addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
         </div>
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="icon">
+    {/snippet}
+    {#snippet iconSnippet()}
       <IconImage image={providerInfo?.images?.icon} alt={providerInfo?.name} class="max-h-10" />
-    </svelte:fragment>
-    <svelte:fragment slot="tabs">
-      <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
-      {#if connectionInfo.lifecycleMethods && connectionInfo.lifecycleMethods.length > 0}
-        <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+    {/snippet}
+    {#snippet tabsSnippet()}
+      {#if connectionInfo}
+        <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
+        {#if connectionInfo.lifecycleMethods && connectionInfo.lifecycleMethods.length > 0}
+          <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+        {/if}
       {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <div class="h-full">
         <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
           <PreferencesKubernetesConnectionDetailsSummary
@@ -180,6 +180,6 @@ function setNoLogs(): void {
             noLog={noLog} />
         </Route>
       </div>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

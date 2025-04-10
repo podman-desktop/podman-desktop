@@ -10,7 +10,7 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
 import { getTerminalTheme } from '../../../../main/src/plugin/terminal-theme';
@@ -18,7 +18,7 @@ import NoLogIcon from '../ui/NoLogIcon.svelte';
 
 interface ProviderDetailsTerminalProps {
   provider: ProviderInfo;
-  connectionInfo: ProviderContainerConnectionInfo;
+  connectionInfo: ProviderContainerConnectionInfo | ProviderVmConnectionInfo;
   screenReaderMode?: boolean;
 }
 
@@ -119,7 +119,7 @@ async function refreshTerminal(): Promise<void> {
   );
 
   // get terminal if any
-  const existingTerminal = getExistingTerminal(connectionInfo.name, connectionInfo.endpoint.socketPath);
+  const existingTerminal = getExistingTerminal(provider.internalId, connectionInfo.name);
   shellTerminal = new Terminal({
     fontSize,
     lineHeight,
@@ -169,7 +169,6 @@ onDestroy(async () => {
   // register terminal for reusing it
   registerTerminal({
     providerInternalId: provider.internalId,
-    connectionSocket: connectionInfo.endpoint.socketPath,
     connectionName: connectionInfo.name,
     callbackId: sendCallbackId,
     terminal: terminalContent,

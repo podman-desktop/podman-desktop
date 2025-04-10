@@ -35,7 +35,7 @@ Make sure you have:
 Create a `package.json` file to initialize your extension.
 
 1. Create a subdirectory, such as `foobar` in the `extensions` directory of the Podman Desktop repository.
-1. Initialize a `package.json` file and add it the subdirectory.
+1. Initialize a `package.json` file and add it to the subdirectory.
 
    ```json
    {}

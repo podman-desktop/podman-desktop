@@ -159,7 +159,7 @@ function dragMe(node: HTMLElement): void {
       {#each items as _, i (i)}
         {#if i % colsPerRow === 0}
           <div class="flex flex-row flex-wrap mx-auto">
-            {#each Array(colsPerRow) as _, j}
+            {#each Array(colsPerRow) as _, j (j)}
               {#if items[(i / colsPerRow) * colsPerRow + j]}
                 {@const innerItem = items[(i / colsPerRow) * colsPerRow + j]}
                 <div
@@ -249,7 +249,7 @@ function dragMe(node: HTMLElement): void {
                           </div>
                         {/if}
 
-                        {#each innerItem.sections as section, i}
+                        {#each innerItem.sections as section, i (i)}
                           <div
                             class="flex justify-center py-2 text-xs font-bold group-[.is-selected]:bg-[var(--pd-tab-highlight)] group-hover:bg-[var(--pd-tab-highlight)] border-x-2 border-transparent group-hover:border-[var(--pd-tab-highlight)]
                     bg-[var(--pd-label-bg)]">

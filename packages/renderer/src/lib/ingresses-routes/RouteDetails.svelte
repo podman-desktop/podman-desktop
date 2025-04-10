@@ -76,19 +76,25 @@ onDestroy(() => {
 
 {#if routeUI}
   <DetailsPage title={routeUI.name} subtitle={routeUI.namespace} bind:this={detailsPage}>
-    <StatusIcon slot="icon" icon={IngressRouteIcon} size={24} status={routeUI.status} />
-    <svelte:fragment slot="actions">
-      <IngressRouteActions ingressRoute={routeUI} detailed={true} on:update={(): RouteUI | undefined => (routeUI = routeUI)} />
-    </svelte:fragment>
-    <div slot="detail" class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
-      <StateChange state={routeUI.status} />
-    </div>
-    <svelte:fragment slot="tabs">
+    {#snippet iconSnippet()}
+      {#if routeUI}<StatusIcon icon={IngressRouteIcon} size={24} status={routeUI.status} />{/if}
+    {/snippet}
+    {#snippet actionsSnippet()}
+      {#if routeUI}<IngressRouteActions ingressRoute={routeUI} detailed={true} />{/if}
+    {/snippet}
+    {#snippet detailSnippet()}
+      {#if routeUI}
+        <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">
+          <StateChange state={routeUI.status} />
+        </div>
+      {/if}
+    {/snippet}
+    {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
       <Tab title="Kube" selected={isTabSelected($router.path, 'kube')} url={getTabUrl($router.path, 'kube')} />
-    </svelte:fragment>
-    <svelte:fragment slot="content">
+    {/snippet}
+    {#snippet contentSnippet()}
       <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
         <ServiceDetailsSummary ingressRoute={kubeRoute} kubeError={kubeError} />
       </Route>
@@ -98,6 +104,6 @@ onDestroy(() => {
       <Route path="/kube" breadcrumb="Kube" navigationHint="tab">
         <KubeEditYAML content={stringify(kubeRoute)} />
       </Route>
-    </svelte:fragment>
+    {/snippet}
   </DetailsPage>
 {/if}

@@ -1,13 +1,33 @@
 <script lang="ts">
+import type { Snippet } from 'svelte';
+
 import Page from './Page.svelte';
 
-export let title: string;
-export let inProgress = false;
-export let breadcrumbLeftPart: string | undefined = undefined;
-export let breadcrumbRightPart: string | undefined = undefined;
-export let breadcrumbTitle: string | undefined = '';
-export let onclose: () => void = () => {};
-export let onbreadcrumbClick: () => void = () => {};
+interface Props {
+  title: string;
+  inProgress?: boolean;
+  breadcrumbLeftPart?: string;
+  breadcrumbRightPart?: string;
+  breadcrumbTitle?: string;
+  onclose?: () => void;
+  onbreadcrumbClick?: () => void;
+  icon?: Snippet;
+  actions?: Snippet;
+  content?: Snippet;
+}
+
+const {
+  title,
+  inProgress = false,
+  breadcrumbLeftPart = undefined,
+  breadcrumbRightPart = undefined,
+  breadcrumbTitle = '',
+  onclose = (): void => {},
+  onbreadcrumbClick = (): void => {},
+  icon,
+  actions,
+  content,
+}: Props = $props();
 </script>
 
 <Page
@@ -19,12 +39,12 @@ export let onbreadcrumbClick: () => void = () => {};
   onclose={onclose}
   onbreadcrumbClick={onbreadcrumbClick}>
   <svelte:fragment slot="icon">
-    <slot name="icon" />
+    {@render icon?.()}
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    <slot name="actions" />
+    {@render actions?.()}
   </svelte:fragment>
   <div slot="content" class="flex w-full h-full overflow-auto">
-    <slot name="content" />
+    {@render content?.()}
   </div>
 </Page>

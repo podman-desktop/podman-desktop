@@ -26,9 +26,6 @@ export interface TerminalOfProvider {
   // engine id of the provider
   providerInternalId: string;
 
-  // connection socket
-  connectionSocket: string;
-
   // connection name
   connectionName: string;
 
@@ -71,7 +68,8 @@ export function registerTerminal(terminal: TerminalOfProvider): void {
   providerTerminals.update(terminals => {
     // remove old instance(s) of terminal if exists
     terminals = terminals.filter(
-      term => !(terminal.connectionName === term.connectionName && term.connectionSocket === terminal.connectionSocket),
+      term =>
+        !(terminal.providerInternalId === term.providerInternalId && terminal.connectionName === term.connectionName),
     );
     terminals.push(terminal);
     return terminals;
@@ -79,11 +77,11 @@ export function registerTerminal(terminal: TerminalOfProvider): void {
 }
 
 export function getExistingTerminal(
+  providerInternalId: string,
   connectionName: string,
-  connectionSocketPath: string,
 ): TerminalOfProvider | undefined {
   const terminals = get(providerTerminals);
   return terminals.find(
-    terminal => terminal.connectionName === connectionName && terminal.connectionSocket === connectionSocketPath,
+    terminal => terminal.providerInternalId === providerInternalId && terminal.connectionName === connectionName,
   );
 }

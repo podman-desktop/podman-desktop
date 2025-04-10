@@ -1,18 +1,31 @@
 <script lang="ts">
-import { createEventDispatcher, onMount } from 'svelte';
+import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
+import { createEventDispatcher, onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let icon: any = undefined;
-
-let iconType: string | undefined = undefined;
-
 const dispatch = createEventDispatcher<{ click: undefined }>();
-export let onclick: () => void = () => {
-  dispatch('click');
-};
+
+interface Props {
+  icon?: IconDefinition;
+  class?: string;
+  children: Snippet;
+  onclick?: () => void;
+  'aria-label'?: string;
+}
+
+let {
+  icon = undefined,
+  class: classes = '',
+  'aria-label': ariaLabel,
+  children,
+  onclick = (): void => {
+    dispatch('click');
+  },
+}: Props = $props();
+
+let iconType: string | undefined = $state(undefined);
 
 onMount(() => {
   if (isFontAwesomeIcon(icon)) {
@@ -23,23 +36,22 @@ onMount(() => {
 });
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-missing-attribute -->
-<!-- svelte-ignore a11y-interactive-supports-focus -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_missing_attribute -->
+<!-- svelte-ignore a11y_interactive_supports_focus -->
 <a
-  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {$$props.class ??
-    ''}"
-  on:click={onclick}
+  class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {classes}"
+  {onclick}
   role="link"
-  aria-label={$$props['aria-label']}>
+  aria-label={ariaLabel ?? ''}>
   {#if icon}
     <span class="flex flex-row space-x-2">
       {#if iconType === 'fa'}
         <Fa icon={icon} />
       {/if}
-      <span><slot /></span>
+      <span>{@render children?.()}</span>
     </span>
   {:else}
-    <slot />
+    {@render children?.()}
   {/if}
 </a>

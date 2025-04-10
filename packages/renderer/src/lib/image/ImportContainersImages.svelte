@@ -101,10 +101,11 @@ async function importContainers(): Promise<void> {
 </script>
 
 <EngineFormPage title="Import Containers">
-  <svelte:fragment slot="icon">
+  {#snippet icon()}
     <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-  </svelte:fragment>
-  <div slot="content" class="space-y-2">
+  {/snippet}
+  {#snippet content()}
+  <div class="space-y-2">
     {#if providerConnections.length > 1}
     <div class="mb-4">
       <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
@@ -127,7 +128,7 @@ async function importContainers(): Promise<void> {
         <div class="flex flex-col w-2/4 mr-2.5">Image Name when importing (e.g quay.io/podman/hello)</div>
       </div>
     {/if}
-    {#each containersToImport as containerToImport, index}
+    {#each containersToImport as containerToImport, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
         <Input bind:value={containerToImport.imagePath} aria-label="container image path" readonly={true} />
         <Input
@@ -147,7 +148,7 @@ async function importContainers(): Promise<void> {
         class="w-full"
         icon={faPlay}
         aria-label="Import containers"
-        bind:disabled={importDisabled}>
+        disabled={importDisabled}>
         Import Containers
       </Button>
       <div aria-label="importError">
@@ -157,4 +158,5 @@ async function importContainers(): Promise<void> {
       </div>
     </div>
   </div>
+  {/snippet}
 </EngineFormPage>

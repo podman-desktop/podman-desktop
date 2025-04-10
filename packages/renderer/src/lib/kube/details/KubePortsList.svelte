@@ -29,7 +29,7 @@ let forwardConfigs: Map<number, ForwardConfig> = $derived(
     <Cell class="flex">Ports</Cell>
     <Cell>
       <div class="flex gap-y-1 flex-col">
-        {#each ports as port}
+        {#each ports as port, index (index)}
           <KubePort namespace={namespace} kind={kind} resourceName={resourceName} port={port} forwardConfig={forwardConfigs.get(port.value)}/>
         {/each}
       </div>

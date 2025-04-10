@@ -11,7 +11,10 @@ import FilesystemLayerView from './FilesystemLayerView.svelte';
 import { type ImageFilesystemLayerUI, toImageFilesystemLayerUIs } from './imageDetailsFiles';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 
-let { imageInfo }: { imageInfo: ImageInfo | undefined } = $props();
+interface Props {
+  imageInfo?: ImageInfo;
+}
+let { imageInfo }: Props = $props();
 
 let imageLayers = $state<ImageFilesystemLayers>();
 let selectedLayer = $state<ImageFilesystemLayerUI>();

@@ -19,10 +19,8 @@
 import { chrome } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
-import { coverageConfig } from '../../vitest-shared-extensions.config';
 
 const PACKAGE_ROOT = __dirname;
-const PACKAGE_NAME = 'preload-webview';
 
 /**
  * @type {import('vite').UserConfig}
@@ -59,7 +57,7 @@ const config = {
   },
   test: {
     environment: 'jsdom',
-    ...coverageConfig(PACKAGE_ROOT, PACKAGE_NAME),
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 

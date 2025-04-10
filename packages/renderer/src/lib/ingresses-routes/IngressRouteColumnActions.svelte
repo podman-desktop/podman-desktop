@@ -9,4 +9,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<IngressRouteActions ingressRoute={object} on:update />
+<IngressRouteActions ingressRoute={object} />

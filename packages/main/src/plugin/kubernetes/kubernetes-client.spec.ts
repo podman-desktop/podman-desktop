@@ -117,7 +117,7 @@ class TestKubernetesClient extends KubernetesClient {
     return super.createWatchObject();
   }
 
-  public setCurrentNamespace(namespace: string): void {
+  public setInitialNamespace(namespace: string): void {
     this.currentNamespace = namespace;
   }
 
@@ -258,7 +258,7 @@ class TestKubernetesClient extends KubernetesClient {
 function createTestClient(namespace?: string): TestKubernetesClient {
   const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
   if (namespace) {
-    client.setCurrentNamespace(namespace);
+    client.setInitialNamespace(namespace);
   }
   return client;
 }
@@ -298,13 +298,6 @@ beforeAll(() => {
       makeInformer: vi.fn(),
       createConfiguration: vi.fn(),
       KubernetesObjectApi: vi.fn(),
-      FetchError: class FetchError extends Error {
-        statusCode: number;
-        constructor(statusCode: number, message: string) {
-          super(message);
-          this.statusCode = statusCode;
-        }
-      },
       HttpError: class HttpError extends Error {
         statusCode: number;
         constructor(statusCode: number, message: string) {
@@ -322,7 +315,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  KubeConfig.prototype.loadFromFile = vi.fn();
+  KubeConfig.prototype.loadFromString = vi.fn();
+  KubeConfig.prototype.exportConfig = vi.fn();
   KubeConfig.prototype.makeApiClient = makeApiClientMock;
   KubeConfig.prototype.getContextObject = getContextObjectMock;
   KubeConfig.prototype.currentContext = 'context';
@@ -520,6 +514,31 @@ test('test that blank kubeconfig path will be set to default one', async () => {
   const kubeconfigPath = Uri.file(resolve(homedir(), '.kube', 'config'));
   // Should be default kubeconfigpath
   expect(setKubeconfigSpy).toBeCalledWith(kubeconfigPath);
+});
+
+test('test that setting current namespace updates namespace but not kubeconfig', async () => {
+  const initialNS = 'fooNS';
+  const client = createTestClient(initialNS);
+
+  KubeConfig.prototype.contexts = [
+    {
+      name: 'foo',
+      cluster: 'cluster',
+      namespace: initialNS,
+      user: 'user',
+    },
+  ];
+  KubeConfig.prototype.loadFromOptions = vi.fn();
+
+  const newNS = 'new-ns';
+  await client.setCurrentNamespace(newNS);
+
+  // current namespace is changed and event is triggered
+  expect(client.getCurrentNamespace()).toEqual(newNS);
+  expect(apiSenderSendMock).toHaveBeenCalledWith('kubernetes-context-update');
+
+  // but context namespace is unchanged
+  expect(client.getContexts()[0]?.namespace).toEqual(initialNS);
 });
 
 test('should throw error if cannot call the cluster (readNamespacedDeployment reject)', async () => {
@@ -979,21 +998,22 @@ test('If Kubernetes returns a http error, output the http body message error.', 
   makeApiClientMock.mockReturnValue({
     read: vi.fn().mockReturnValue({}),
     create: vi.fn().mockRejectedValue(
-      new clientNode.FetchError('A K8sError within message body', 'foo', {
-        code: '500',
-        name: 'foo',
-        message: 'foo',
-      }),
+      new clientNode.ApiException(
+        400,
+        'msg',
+        JSON.stringify({
+          message: 'A K8sError within message body',
+        }),
+        {},
+      ),
     ),
   });
 
   try {
     await client.createResources('dummy', [{ apiVersion: 'v1' }]);
   } catch (err: unknown) {
-    console.log(err);
-    // Check that the error is clientNode.HttpError
     expect(err).to.be.a('Error');
-    expect((err as Error).message).contain('A K8sError within message body');
+    expect((err as Error).message).equals('A K8sError within message body');
   }
 });
 

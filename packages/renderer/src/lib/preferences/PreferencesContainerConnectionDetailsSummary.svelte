@@ -50,7 +50,7 @@ $: providerContainerConfiguration = tmpProviderContainerConfiguration.filter(
         <span class="font-semibold min-w-[150px]">Name</span>
         <span aria-label={containerConnectionInfo.name}>{containerConnectionInfo.name}</span>
       </div>
-      {#each providerContainerConfiguration as connectionSetting}
+      {#each providerContainerConfiguration as connectionSetting (connectionSetting.id)}
         <div class="flex flex-row mt-5">
           <span class="font-semibold min-w-[150px]">{connectionSetting.description}</span>
           {#if connectionSetting.format === 'cpu' || connectionSetting.format === 'cpuUsage'}

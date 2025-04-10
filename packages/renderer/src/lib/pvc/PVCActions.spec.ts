@@ -24,7 +24,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import PVCActions from './PVCActions.svelte';
 import type { PVCUI } from './PVCUI';
 
-const updateMock = vi.fn();
 const deleteMock = vi.fn();
 const showMessageBoxMock = vi.fn();
 
@@ -67,7 +66,7 @@ afterEach(() => {
 
 test('Expect no error and status deleting PVC', async () => {
   showMessageBoxMock.mockResolvedValue({ response: 0 });
-  render(PVCActions, { pvc: fakePVC, onUpdate: updateMock });
+  render(PVCActions, { pvc: fakePVC });
 
   // click on delete buttons
   const deleteButton = screen.getByRole('button', { name: 'Delete PersistentVolumeClaim' });
@@ -75,6 +74,5 @@ test('Expect no error and status deleting PVC', async () => {
 
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(fakePVC.status).toEqual('DELETING');
-  expect(updateMock).toHaveBeenCalled();
   expect(deleteMock).toHaveBeenCalled();
 });

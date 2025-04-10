@@ -22,9 +22,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { Generator, RELEASE_NOTES_SECTION_TAG } from './generator';
 
 vi.mock('@octokit/graphql', async () => {
-  const graphql = vi.fn();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (graphql as any).defaults = vi.fn().mockReturnValue(graphql);
   return {
     graphql: vi.fn(),
   };

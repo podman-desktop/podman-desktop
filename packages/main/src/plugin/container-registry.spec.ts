@@ -40,7 +40,7 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { ContainerCreateOptions } from '/@api/container-info.js';
+import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ImageInfo } from '/@api/image-info.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
@@ -2924,6 +2924,16 @@ describe('createContainer', () => {
 
   test('test create and start Container with WorkingDir', async () => {
     await verifyCreateContainer({ WorkingDir: 'workdir' });
+  });
+
+  test('test create and start Container with custom HostIp', async () => {
+    const hostConfig: HostConfig = { PortBindings: { '123/tcp': [{ HostIp: '123.123.123.123' }] } };
+    await verifyCreateContainer({ HostConfig: hostConfig });
+  });
+
+  test('test create and start Container with custom HostPort', async () => {
+    const hostConfig: HostConfig = { PortBindings: { '123/tcp': [{ HostPort: '8000' }] } };
+    await verifyCreateContainer({ HostConfig: hostConfig });
   });
 
   test('test container is created but not started', async () => {

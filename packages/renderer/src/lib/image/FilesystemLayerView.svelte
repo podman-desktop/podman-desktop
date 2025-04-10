@@ -59,7 +59,7 @@ function getLink(file: ImageFile | undefined): string {
 {#if layerMode || !tree.hidden}
   {#if root}
     {#if children}
-      {#each children as [_, child]}
+      {#each children as [key, child] (key)}
         <svelte:self root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
       {/each}
     {/if}
@@ -73,7 +73,7 @@ function getLink(file: ImageFile | undefined): string {
         {label}<span class="text-[var(--pd-content-text)] opacity-70">{getLink(tree?.data)}</span>
       </button>
       {#if expanded && children}
-        {#each children as [_, child]}
+        {#each children as [key, child] (key)}
           <svelte:self root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
         {/each}
       {/if}

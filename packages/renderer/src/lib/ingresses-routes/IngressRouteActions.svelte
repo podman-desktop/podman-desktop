@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
 
+import { withConfirmation } from '../dialogs/messagebox-utils';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
@@ -10,15 +10,10 @@ import type { RouteUI } from './RouteUI';
 export let ingressRoute: IngressUI | RouteUI;
 export let detailed = false;
 
-const dispatch = createEventDispatcher<{ update: IngressUI | RouteUI }>();
-export let onUpdate: (update: IngressUI | RouteUI) => void = update => {
-  dispatch('update', update);
-};
 const ingressRouteUtils = new IngressRouteUtils();
 
 async function deleteIngressRoute(): Promise<void> {
   ingressRoute.status = 'DELETING';
-  onUpdate(ingressRoute);
 
   if (ingressRouteUtils.isIngress(ingressRoute)) {
     await window.kubernetesDeleteIngress(ingressRoute.name);
@@ -30,6 +25,10 @@ async function deleteIngressRoute(): Promise<void> {
 
 <ListItemButtonIcon
   title={`Delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'Ingress' : 'Route'}`}
-  onClick={deleteIngressRoute}
+  onClick={(): void =>
+    withConfirmation(
+      deleteIngressRoute,
+      `delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'ingress' : 'route'} ${ingressRoute.name}`,
+    )}
   detailed={detailed}
   icon={faTrash} />

@@ -141,9 +141,7 @@ export class TaskImpl implements Task {
   }
 
   get onUpdate(): Event<TaskUpdateEvent> {
-    if (!this.emitter) {
-      this.emitter = new Emitter<TaskUpdateEvent>();
-    }
+    this.emitter ??= new Emitter<TaskUpdateEvent>();
     return this.emitter.event;
   }
 }

@@ -31,6 +31,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  await page.screenshot();
 });
 
 test.afterAll(async ({ runner }) => {
@@ -40,6 +41,7 @@ test.afterAll(async ({ runner }) => {
 test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
   test('Enable all experimental features', async ({ page, navigationBar }) => {
     await navigationBar.openSettings();
+    await page.screenshot();
     const settingsBar = new SettingsBar(page);
     const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
     await experimentalPage.enableAllExperimentalFeatures();

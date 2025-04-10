@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,16 +26,14 @@ import type { ApiSenderType } from './api.js';
  * Local view of the configuration values for a given scope
  */
 export class ConfigurationImpl implements containerDesktopAPI.Configuration {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 
   private scope: containerDesktopAPI.ConfigurationScope;
 
   constructor(
     private apiSender: ApiSenderType,
     protected updateCallback: (sectionName: string, scope: containerDesktopAPI.ConfigurationScope) => void,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private configurationValues: Map<string, any>,
+    private configurationValues: Map<string, { [key: string]: unknown }>,
     private globalSection?: string,
     paramScope?: containerDesktopAPI.ConfigurationScope,
   ) {
@@ -49,16 +47,15 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get<T>(section: any, defaultValue?: any): T | undefined {
+  get<T>(section: string, defaultValue?: unknown): T | undefined {
     const localKey = this.getLocalKey(section);
 
     // now look if we have this value
     const localView = this.getLocalView();
     if (localView[localKey] !== undefined) {
-      return localView[localKey];
+      return localView[localKey] as T;
     }
-    return defaultValue;
+    return defaultValue as T;
   }
 
   has(section: string): boolean {
@@ -69,8 +66,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     return localView[localKey] !== undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async update(section: string, value: any): Promise<void> {
+  async update(section: string, value: unknown): Promise<void> {
     const localKey = this.getLocalKey(section);
 
     // now look if we have this value
@@ -92,19 +88,42 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     this.updateCallback(section, this.scope);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  isContainerProviderConnection(obj: any): obj is containerDesktopAPI.ContainerProviderConnection {
+  isContainerProviderConnection(obj: unknown): obj is containerDesktopAPI.ContainerProviderConnection {
     if (!obj) {
+      return false;
+    }
+    if (typeof obj !== 'object') {
+      return false;
+    }
+    if (!('endpoint' in obj)) {
+      return false;
+    }
+    if (!obj.endpoint || typeof obj.endpoint !== 'object') {
+      return false;
+    }
+    if (!('socketPath' in obj.endpoint)) {
       return false;
     }
     return typeof obj.endpoint?.socketPath === 'string';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  isKubernetesProviderConnection(obj: any): obj is containerDesktopAPI.KubernetesProviderConnection {
+  isKubernetesProviderConnection(obj: unknown): obj is containerDesktopAPI.KubernetesProviderConnection {
     if (!obj) {
       return false;
     }
+    if (typeof obj !== 'object') {
+      return false;
+    }
+    if (!('endpoint' in obj)) {
+      return false;
+    }
+    if (!obj.endpoint || typeof obj.endpoint !== 'object') {
+      return false;
+    }
+    if (!('apiURL' in obj.endpoint)) {
+      return false;
+    }
+
     return typeof obj.endpoint?.apiURL === 'string';
   }
 
@@ -134,14 +153,15 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getLocalView(): { [key: string]: any } {
+  getLocalView(): { [key: string]: unknown } {
     // first, grab values for the given scope
     // and initialize if not present
     const configurationKey = this.getConfigurationKey();
-    if (!this.configurationValues.has(configurationKey)) {
-      this.configurationValues.set(configurationKey, {});
+    let configurationValue = this.configurationValues.get(configurationKey);
+    if (!configurationValue) {
+      configurationValue = {};
+      this.configurationValues.set(configurationKey, configurationValue);
     }
-    return this.configurationValues.get(configurationKey);
+    return configurationValue;
   }
 }

@@ -5,7 +5,7 @@ import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import { ExperimentalSettings } from '/@api/docker-compatibility-info';
+import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
 
 import { configurationProperties } from './stores/configurationProperties';
 
@@ -28,7 +28,7 @@ let experimentalSection: boolean = $state(false);
 
 function updateDockerCompatibility(): void {
   window
-    .getConfigurationValue<boolean>(`${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`)
+    .getConfigurationValue<boolean>(`${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`)
     .then(result => {
       if (result !== undefined) {
         dockerCompatibilityEnabled = result;
@@ -36,7 +36,7 @@ function updateDockerCompatibility(): void {
     })
     .catch((err: unknown) =>
       console.error(
-        `Error getting configuration value ${ExperimentalSettings.SectionName}.${ExperimentalSettings.Enabled}`,
+        `Error getting configuration value ${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`,
         err,
       ),
     );
@@ -87,7 +87,7 @@ onMount(() => {
     </div>
   </div>
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
-    {#each [{ title: 'Resources', href: '/preferences/resources', visible: true }, { title: 'Proxy', href: '/preferences/proxies', visible: true }, { title: 'Docker Compatibility', href: '/preferences/docker-compatibility', visible: dockerCompatibilityEnabled }, { title: 'Registries', href: '/preferences/registries', visible: true }, { title: 'Authentication', href: '/preferences/authentication-providers', visible: true }, { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true }, { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true }] as navItem}
+    {#each [{ title: 'Resources', href: '/preferences/resources', visible: true }, { title: 'Proxy', href: '/preferences/proxies', visible: true }, { title: 'Docker Compatibility', href: '/preferences/docker-compatibility', visible: dockerCompatibilityEnabled }, { title: 'Registries', href: '/preferences/registries', visible: true }, { title: 'Authentication', href: '/preferences/authentication-providers', visible: true }, { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true }, { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true }] as navItem, index (index)}
       {#if navItem.visible}
         <SettingsNavItem title={navItem.title} href={navItem.href} selected={meta.url === navItem.href} />
       {/if}
@@ -112,7 +112,7 @@ onMount(() => {
         selected={meta.url === `/preferences/default/${configSection}`}
         bind:expanded={sectionExpanded[configSection]} />
       {#if sectionExpanded[configSection]}
-        {#each sortItems(configItems) as configItem}
+        {#each sortItems(configItems) as configItem (configItem.id)}
           <SettingsNavItem
             title={configItem.title}
             href="/preferences/default/{configItem.id}"

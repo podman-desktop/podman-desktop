@@ -1,13 +1,18 @@
 <script lang="ts">
-export let size = '2em';
+interface Props {
+  size?: string;
+  class?: string;
+  style?: string;
+}
+let { size = '2em', class: className, style }: Props = $props();
 </script>
 
 <i
   role="progressbar"
   aria-label="Loading"
   aria-busy="true"
-  class="flex justify-center items-center {$$props.class}"
-  style={$$props.style}>
+  class="flex justify-center items-center {className}"
+  style={style}>
   <svg width={size} height={size} viewBox="0 0 100 100" role="img">
     <defs>
       <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">

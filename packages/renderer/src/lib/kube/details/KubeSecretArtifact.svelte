@@ -25,7 +25,7 @@ export let artifact: V1Secret | undefined;
     <tr>
       <Subtitle>Data</Subtitle>
     </tr>
-    {#each Object.entries(artifact.data) as [key, value]}
+    {#each Object.entries(artifact.data) as [key, value] (key)}
       <tr>
         <Cell>{key}</Cell>
         <Cell>{value}</Cell>

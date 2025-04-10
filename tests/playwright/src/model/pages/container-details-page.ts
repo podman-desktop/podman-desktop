@@ -31,6 +31,8 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly imageLink: Locator;
   readonly deployButton: Locator;
   readonly startButton: Locator;
+  readonly terminalInput: Locator;
+  readonly terminalContent: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -50,6 +52,9 @@ export class ContainerDetailsPage extends DetailsPage {
       name: 'Start Container',
       exact: true,
     });
+
+    this.terminalInput = this.tabContent.getByLabel('Terminal input');
+    this.terminalContent = this.tabContent.locator('.xterm-rows');
   }
 
   async getState(): Promise<string> {
@@ -96,5 +101,13 @@ export class ContainerDetailsPage extends DetailsPage {
       await this.deployButton.click();
       return new DeployToKubernetesPage(this.page);
     });
+  }
+
+  async executeCommandInTerminal(command: string): Promise<void> {
+    await this.activateTab(ContainerDetailsPage.TERMINAL_TAB);
+
+    await playExpect(this.terminalInput).toBeVisible();
+    await this.terminalInput.pressSequentially(command);
+    await this.terminalInput.press('Enter');
   }
 }

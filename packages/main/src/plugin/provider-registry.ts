@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import type {
   ProviderCleanup,
   ProviderCleanupAction,
   ProviderCleanupExecuteOptions,
+  ProviderConnection,
   ProviderConnectionShellAccess,
   ProviderConnectionShellAccessSession,
   ProviderConnectionShellDimensions,
@@ -43,19 +44,25 @@ import type {
   ProviderUpdate,
   RegisterContainerConnectionEvent,
   RegisterKubernetesConnectionEvent,
+  RegisterVmConnectionEvent,
   UnregisterContainerConnectionEvent,
   UnregisterKubernetesConnectionEvent,
+  UnregisterVmConnectionEvent,
   UpdateContainerConnectionEvent,
   UpdateKubernetesConnectionEvent,
+  UpdateVmConnectionEvent,
+  VmProviderConnection,
 } from '@podman-desktop/api';
 
 import type {
   LifecycleMethod,
   PreflightChecksCallback,
   ProviderCleanupActionInfo,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
 import type { ApiSenderType } from './api.js';
@@ -98,15 +105,13 @@ export class ProviderRegistry {
   private providerCleanup: Map<string, ProviderCleanup> = new Map();
   private autostartEngine: AutostartEngine | undefined = undefined;
 
-  private connectionLifecycleContexts: Map<
-    ContainerProviderConnection | KubernetesProviderConnection,
-    LifecycleContextImpl
-  > = new Map();
+  private connectionLifecycleContexts: Map<ProviderConnection, LifecycleContextImpl> = new Map();
   private listeners: ProviderEventListener[];
   private lifecycleListeners: ProviderLifecycleListener[];
   private containerConnectionLifecycleListeners: ContainerConnectionProviderLifecycleListener[];
 
-  private kubernetesProviders: Map<string, KubernetesProviderConnection> = new Map();
+  protected kubernetesProviders: Map<string, KubernetesProviderConnection> = new Map();
+  protected vmProviders: Map<string, VmProviderConnection> = new Map();
 
   private readonly _onDidUpdateProvider = new Emitter<ProviderEvent>();
   readonly onDidUpdateProvider: Event<ProviderEvent> = this._onDidUpdateProvider.event;
@@ -125,6 +130,9 @@ export class ProviderRegistry {
   readonly onDidUpdateKubernetesConnection: Event<UpdateKubernetesConnectionEvent> =
     this._onDidUpdateKubernetesConnection.event;
 
+  private readonly _onDidUpdateVmConnection = new Emitter<UpdateVmConnectionEvent>();
+  readonly onDidUpdateVmConnection: Event<UpdateVmConnectionEvent> = this._onDidUpdateVmConnection.event;
+
   private readonly _onDidUnregisterContainerConnection = new Emitter<UnregisterContainerConnectionEvent>();
   readonly onDidUnregisterContainerConnection: Event<UnregisterContainerConnectionEvent> =
     this._onDidUnregisterContainerConnection.event;
@@ -133,9 +141,15 @@ export class ProviderRegistry {
   readonly onDidUnregisterKubernetesConnection: Event<UnregisterKubernetesConnectionEvent> =
     this._onDidUnregisterKubernetesConnection.event;
 
+  private readonly _onDidUnregisterVmConnection = new Emitter<UnregisterVmConnectionEvent>();
+  readonly onDidUnregisterVmConnection: Event<UnregisterVmConnectionEvent> = this._onDidUnregisterVmConnection.event;
+
   private readonly _onDidRegisterKubernetesConnection = new Emitter<RegisterKubernetesConnectionEvent>();
   readonly onDidRegisterKubernetesConnection: Event<RegisterKubernetesConnectionEvent> =
     this._onDidRegisterKubernetesConnection.event;
+
+  private readonly _onDidRegisterVmConnection = new Emitter<RegisterVmConnectionEvent>();
+  readonly onDidRegisterVmConnection: Event<RegisterVmConnectionEvent> = this._onDidRegisterVmConnection.event;
 
   private readonly _onDidRegisterContainerConnection = new Emitter<RegisterContainerConnectionEvent>();
   readonly onDidRegisterContainerConnection: Event<RegisterContainerConnectionEvent> =
@@ -577,12 +591,14 @@ export class ProviderRegistry {
     }
 
     const provider = this.getMatchingProvider(providerInternalId);
-    let connection: ContainerProviderConnection | KubernetesProviderConnection | undefined;
+    let connection: ProviderConnection | undefined;
 
     if (provider.containerConnections && provider.containerConnections.length > 0) {
       connection = provider.containerConnections[0];
     } else if (provider.kubernetesConnections && provider.kubernetesConnections.length > 0) {
       connection = provider.kubernetesConnections[0];
+    } else if (provider.vmConnections && provider.vmConnections.length > 0) {
+      connection = provider.vmConnections[0];
     }
 
     if (!connection) {
@@ -631,6 +647,14 @@ export class ProviderRegistry {
 
         return await provider.kubernetesProviderConnectionFactory.initialize();
       }
+
+      if (provider?.vmProviderConnectionFactory?.initialize) {
+        this.telemetryService.track('initializeProvider', {
+          name: provider.name,
+        });
+
+        return await provider.vmProviderConnectionFactory.initialize();
+      }
     } catch (error: unknown) {
       provider.updateStatus('installed');
       throw error;
@@ -648,10 +672,12 @@ export class ProviderRegistry {
     return this.getProviderConnectionInfo(connection) as ProviderKubernetesConnectionInfo;
   }
 
-  private getProviderConnectionInfo(
-    connection: ContainerProviderConnection | KubernetesProviderConnection,
-  ): ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo {
-    let providerConnection: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo;
+  public getProviderVmConnectionInfo(connection: VmProviderConnection): ProviderVmConnectionInfo {
+    return this.getProviderConnectionInfo(connection) as ProviderVmConnectionInfo;
+  }
+
+  private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
+    let providerConnection: ProviderConnectionInfo;
     if (this.isContainerConnection(connection)) {
       providerConnection = {
         name: connection.name,
@@ -668,13 +694,18 @@ export class ProviderRegistry {
             }
           : undefined,
       };
-    } else {
+    } else if (this.isKubernetesConnection(connection)) {
       providerConnection = {
         name: connection.name,
         status: connection.status(),
         endpoint: {
           apiURL: connection.endpoint.apiURL,
         },
+      };
+    } else {
+      providerConnection = {
+        name: connection.name,
+        status: connection.status(),
       };
     }
     if (connection.lifecycle) {
@@ -703,6 +734,9 @@ export class ProviderRegistry {
     const kubernetesConnections: ProviderKubernetesConnectionInfo[] = provider.kubernetesConnections.map(connection => {
       return this.getProviderKubernetesConnectionInfo(connection);
     });
+    const vmConnections: ProviderVmConnectionInfo[] = provider.vmConnections.map(connection => {
+      return this.getProviderVmConnectionInfo(connection);
+    });
 
     // container connection factory ?
     let containerProviderConnectionInitialization = false;
@@ -714,6 +748,12 @@ export class ProviderRegistry {
     let kubernetesProviderConnectionCreation = false;
     if (provider?.kubernetesProviderConnectionFactory?.create) {
       kubernetesProviderConnectionCreation = true;
+    }
+
+    // VM connection factory ?
+    let vmProviderConnectionCreation = false;
+    if (provider?.vmProviderConnectionFactory?.create) {
+      vmProviderConnectionCreation = true;
     }
 
     // container connection factory ?
@@ -732,10 +772,19 @@ export class ProviderRegistry {
       provider.kubernetesProviderConnectionFactory?.creationDisplayName;
     const kubernetesProviderConnectionCreationButtonTitle =
       provider.kubernetesProviderConnectionFactory?.creationButtonTitle;
-    const emptyConnectionMarkdownDescription = provider.emptyConnectionMarkdownDescription;
     if (provider?.kubernetesProviderConnectionFactory?.initialize) {
       kubernetesProviderConnectionInitialization = true;
     }
+
+    // VM connection factory ?
+    let vmProviderConnectionInitialization = false;
+    const vmProviderConnectionCreationDisplayName = provider.vmProviderConnectionFactory?.creationDisplayName;
+    const vmProviderConnectionCreationButtonTitle = provider.vmProviderConnectionFactory?.creationButtonTitle;
+    if (provider?.vmProviderConnectionFactory?.initialize) {
+      vmProviderConnectionInitialization = true;
+    }
+
+    const emptyConnectionMarkdownDescription = provider.emptyConnectionMarkdownDescription;
 
     // handle installation
     let installationSupport = false;
@@ -756,15 +805,20 @@ export class ProviderRegistry {
       name: provider.name,
       containerConnections,
       kubernetesConnections,
+      vmConnections,
       status: provider.status,
       containerProviderConnectionCreation,
       kubernetesProviderConnectionCreation,
+      vmProviderConnectionCreation,
       containerProviderConnectionInitialization,
       containerProviderConnectionCreationDisplayName,
       containerProviderConnectionCreationButtonTitle,
       kubernetesProviderConnectionInitialization,
       kubernetesProviderConnectionCreationDisplayName,
       kubernetesProviderConnectionCreationButtonTitle,
+      vmProviderConnectionInitialization,
+      vmProviderConnectionCreationDisplayName,
+      vmProviderConnectionCreationButtonTitle,
       emptyConnectionMarkdownDescription,
       links: provider.links,
       detectionChecks: provider.detectionChecks,
@@ -828,10 +882,7 @@ export class ProviderRegistry {
 
   getMatchingConnectionLifecycleContext(
     internalId: string,
-    providerContainerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ContainerProviderConnection,
+    providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): LifecycleContextImpl {
     const connection = this.getMatchingConnectionFromProvider(internalId, providerContainerConnectionInfo);
 
@@ -865,8 +916,7 @@ export class ProviderRegistry {
 
   async createContainerProviderConnection(
     internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
     logHandler: Logger,
     token?: CancellationToken,
   ): Promise<void> {
@@ -894,11 +944,7 @@ export class ProviderRegistry {
     }
   }
 
-  async auditConnectionParameters(
-    internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: AuditRequestItems,
-  ): Promise<AuditResult> {
+  async auditConnectionParameters(internalProviderId: string, params: AuditRequestItems): Promise<AuditResult> {
     // grab the correct provider
     const provider = this.getMatchingProvider(internalProviderId);
     const emptyAuditResult: AuditResult = { records: [] };
@@ -912,8 +958,7 @@ export class ProviderRegistry {
 
   async createKubernetesProviderConnection(
     internalProviderId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
     logHandler: Logger,
     token?: CancellationToken,
   ): Promise<void> {
@@ -924,6 +969,21 @@ export class ProviderRegistry {
       throw new Error('The provider does not support kubernetes connection creation');
     }
     return provider.kubernetesProviderConnectionFactory.create(params, logHandler, token);
+  }
+
+  async createVmProviderConnection(
+    internalProviderId: string,
+    params: { [key: string]: unknown },
+    logHandler: Logger,
+    token?: CancellationToken,
+  ): Promise<void> {
+    // grab the correct provider
+    const provider = this.getMatchingProvider(internalProviderId);
+
+    if (!provider.vmProviderConnectionFactory?.create) {
+      throw new Error('The provider does not support VM connection creation');
+    }
+    return provider.vmProviderConnectionFactory.create(params, logHandler, token);
   }
 
   // helper method
@@ -965,35 +1025,64 @@ export class ProviderRegistry {
     return kubernetesConnection;
   }
 
+  protected getMatchingVmConnectionFromProvider(
+    internalProviderId: string,
+    providerContainerConnectionInfo: ProviderVmConnectionInfo,
+  ): VmProviderConnection {
+    // grab the correct provider
+    const provider = this.getMatchingProvider(internalProviderId);
+
+    // grab the correct kubernetes connection
+    const vmConnection = provider.vmConnections.find(
+      connection => connection.name === providerContainerConnectionInfo.name,
+    );
+    if (!vmConnection) {
+      throw new Error(`no VM connection matching provider id ${internalProviderId}`);
+    }
+    return vmConnection;
+  }
+
   getMatchingConnectionFromProvider(
     internalProviderId: string,
-    providerContainerConnectionInfo:
-      | ProviderContainerConnectionInfo
-      | ProviderKubernetesConnectionInfo
-      | ContainerProviderConnection,
-  ): ContainerProviderConnection | KubernetesProviderConnection {
+    providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
+  ): ProviderConnection {
     if (this.isProviderContainerConnection(providerContainerConnectionInfo)) {
       return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else {
+    } else if (this.isProviderKubernetesConnectionInfo(providerContainerConnectionInfo)) {
       return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
+    } else {
+      return this.getMatchingVmConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
     }
   }
 
   isProviderContainerConnection(
-    connection: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo | ContainerProviderConnection,
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
-    return (connection as ProviderContainerConnectionInfo).endpoint.socketPath !== undefined;
+    return (connection as ProviderContainerConnectionInfo).endpoint?.socketPath !== undefined;
   }
 
-  isContainerConnection(
-    connection: ContainerProviderConnection | KubernetesProviderConnection,
-  ): connection is ContainerProviderConnection {
-    return (connection as ContainerProviderConnection).endpoint.socketPath !== undefined;
+  isProviderKubernetesConnectionInfo(
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
+  ): connection is ProviderKubernetesConnectionInfo {
+    return (
+      !this.isProviderContainerConnection(connection) &&
+      (connection as ProviderKubernetesConnectionInfo).endpoint !== undefined
+    );
+  }
+
+  isContainerConnection(connection: ProviderConnection): connection is ContainerProviderConnection {
+    return (connection as ContainerProviderConnection).endpoint?.socketPath !== undefined;
+  }
+
+  isKubernetesConnection(connection: ProviderConnection): connection is KubernetesProviderConnection {
+    return (
+      !this.isContainerConnection(connection) && (connection as ContainerProviderConnection).endpoint !== undefined
+    );
   }
 
   async startProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider
@@ -1019,12 +1108,23 @@ export class ProviderRegistry {
     } finally {
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
         this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
-      } else {
+      } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
         this._onDidUpdateKubernetesConnection.fire({
           providerId: provider.id,
           connection: {
             name: providerConnectionInfo.name,
             endpoint: providerConnectionInfo.endpoint,
+            status: (): ProviderConnectionStatus => {
+              return 'started';
+            },
+          },
+          status: 'started',
+        });
+      } else {
+        this._onDidUpdateVmConnection.fire({
+          providerId: provider.id,
+          connection: {
+            name: providerConnectionInfo.name,
             status: (): ProviderConnectionStatus => {
               return 'started';
             },
@@ -1051,9 +1151,8 @@ export class ProviderRegistry {
 
   async editProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: { [key: string]: any },
+    providerConnectionInfo: ProviderConnectionInfo,
+    params: { [key: string]: unknown },
     logHandler?: Logger,
     token?: CancellationToken,
   ): Promise<void> {
@@ -1085,7 +1184,7 @@ export class ProviderRegistry {
 
   async stopProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider
@@ -1124,12 +1223,23 @@ export class ProviderRegistry {
         this._onBeforeDidUpdateContainerConnection.fire(event);
         this._onDidUpdateContainerConnection.fire(event);
         this._onAfterDidUpdateContainerConnection.fire(event);
-      } else {
+      } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
         this._onDidUpdateKubernetesConnection.fire({
           providerId: provider.id,
           connection: {
             name: providerConnectionInfo.name,
             endpoint: providerConnectionInfo.endpoint,
+            status: (): ProviderConnectionStatus => {
+              return 'stopped';
+            },
+          },
+          status: 'stopped',
+        });
+      } else {
+        this._onDidUpdateVmConnection.fire({
+          providerId: provider.id,
+          connection: {
+            name: providerConnectionInfo.name,
             status: (): ProviderConnectionStatus => {
               return 'stopped';
             },
@@ -1145,7 +1255,7 @@ export class ProviderRegistry {
 
   async deleteProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     logHandler?: Logger,
   ): Promise<void> {
     // grab the correct provider
@@ -1184,6 +1294,12 @@ export class ProviderRegistry {
     this._onDidRegisterKubernetesConnection.fire({ providerId: provider.id });
   }
 
+  onDidRegisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {
+    this.connectionLifecycleContexts.set(vmProviderConnection, new LifecycleContextImpl());
+    this.apiSender.send('provider-register-vm-connection', { name: vmProviderConnection.name });
+    this._onDidRegisterVmConnection.fire({ providerId: provider.id });
+  }
+
   onDidChangeContainerProviderConnectionStatus(
     provider: ProviderImpl,
     containerConnection: ContainerProviderConnection,
@@ -1219,6 +1335,11 @@ export class ProviderRegistry {
   ): void {
     this.apiSender.send('provider-unregister-kubernetes-connection', { name: kubernetesProviderConnection.name });
     this._onDidUnregisterKubernetesConnection.fire({ providerId: provider.id });
+  }
+
+  onDidUnregisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {
+    this.apiSender.send('provider-unregister-vm-connection', { name: vmProviderConnection.name });
+    this._onDidUnregisterVmConnection.fire({ providerId: provider.id });
   }
 
   onDidUpdateProviderStatus(providerId: string, callback: (providerInfo: ProviderInfo) => void): void {
@@ -1275,13 +1396,41 @@ export class ProviderRegistry {
     // listen to events
     return Disposable.create(() => {
       clearInterval(timer);
+      this.kubernetesProviders.delete(id);
+      this.apiSender.send('provider-change', {});
+    });
+  }
+
+  registerVmConnection(provider: Provider, vmProviderConnection: VmProviderConnection): Disposable {
+    const providerName = vmProviderConnection.name;
+    const id = `${provider.id}.${providerName}`;
+    this.vmProviders.set(id, vmProviderConnection);
+    this.telemetryService.track('registerVmProviderConnection', {
+      name: vmProviderConnection.name,
+      total: this.vmProviders.size,
+    });
+
+    let previousStatus = vmProviderConnection.status();
+
+    // track the status of the provider
+    const timer = setInterval(() => {
+      const newStatus = vmProviderConnection.status();
+      if (newStatus !== previousStatus) {
+        this.apiSender.send('provider-change', {});
+        previousStatus = newStatus;
+      }
+    }, 2000);
+
+    return Disposable.create(() => {
+      clearInterval(timer);
+      this.vmProviders.delete(id);
       this.apiSender.send('provider-change', {});
     });
   }
 
   async shellInProviderConnection(
     internalProviderId: string,
-    providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
     onData: (data: string) => void,
     onError: (error: string) => void,
     onEnd: () => void,
@@ -1295,7 +1444,7 @@ export class ProviderRegistry {
       let shellAccess: ProviderConnectionShellAccess | undefined;
       let connection: ProviderConnectionShellAccessSession | undefined;
       const disposables: Disposable[] = [];
-      if (this.isContainerConnection(containerConnection) && providerConnectionInfo.status === 'started') {
+      if (!this.isKubernetesConnection(containerConnection) && providerConnectionInfo.status === 'started') {
         shellAccess = containerConnection.shellAccess;
         connection = shellAccess?.open();
         connection?.onData(

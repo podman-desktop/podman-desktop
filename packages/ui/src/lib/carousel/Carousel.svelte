@@ -1,18 +1,22 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
+
+interface Props<T> {
+  cards: T[];
+  cardWidth?: number;
+  card: Snippet<[T]>;
+}
+let { cards, card, cardWidth = 340 }: Props<T> = $props();
 
 let resizeObserver: ResizeObserver;
 
-export let cards: unknown[];
-export let cardWidth = 340;
-
-let cardsFit = 1;
+let cardsFit = $state(1);
 // eslint-disable-next-line sonarjs/pseudo-random
-let containerId = Math.random().toString(36).slice(-6);
+const containerId = Math.random().toString(36).slice(-6);
 
-$: visibleCards = cards.slice(0, cardsFit);
+const visibleCards = $derived(cards.slice(0, cardsFit));
 
 function calcCardsToFit(width: number): number {
   const cf = Math.floor(width / cardWidth);
@@ -48,7 +52,7 @@ function rotateRight(): void {
 <div class="flex flex-row items-center">
   <button
     id="left"
-    on:click={rotateLeft}
+    onclick={rotateLeft}
     aria-label="Rotate left"
     class="h-8 w-8 mr-3 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full disabled:bg-[var(--pd-content-card-carousel-disabled-nav)]"
     disabled={visibleCards.length === cards.length}>
@@ -56,14 +60,14 @@ function rotateRight(): void {
   </button>
 
   <div id="carousel-cards-{containerId}" class="flex grow gap-3 overflow-hidden">
-    {#each visibleCards as card}
-      <slot card={card} />
+    {#each visibleCards as cardValue, index (index)}
+    {@render card(cardValue)}
     {/each}
   </div>
 
   <button
     id="right"
-    on:click={rotateRight}
+    onclick={rotateRight}
     aria-label="Rotate right"
     class="h-8 w-8 ml-3 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full disabled:bg-[var(--pd-content-card-carousel-disabled-nav)]"
     disabled={visibleCards.length === cards.length}>

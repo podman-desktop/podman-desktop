@@ -125,15 +125,9 @@ async function getMacOSProxySettings(exec: Exec): Promise<ProxySettings | undefi
     let noProxy = undefined;
     for (let index = 1; index < lines.length; ++index) {
       if (!lines[index]?.startsWith('*')) {
-        if (!httpProxy) {
-          httpProxy = await getMacOSConnectionProxyInfo(exec, lines[index] ?? '', false);
-        }
-        if (!httpsProxy) {
-          httpsProxy = await getMacOSConnectionProxyInfo(exec, lines[index] ?? '', true);
-        }
-        if (!noProxy) {
-          noProxy = await getMacOSConnectionProxyByPass(exec, lines[index] ?? '');
-        }
+        httpProxy ??= await getMacOSConnectionProxyInfo(exec, lines[index] ?? '', false);
+        httpsProxy ??= await getMacOSConnectionProxyInfo(exec, lines[index] ?? '', true);
+        noProxy ??= await getMacOSConnectionProxyByPass(exec, lines[index] ?? '');
       }
     }
     return (httpProxy ?? httpsProxy ?? noProxy) ? { httpProxy, httpsProxy, noProxy } : undefined;

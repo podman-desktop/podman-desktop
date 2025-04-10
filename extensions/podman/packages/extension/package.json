@@ -196,12 +196,6 @@
           "description": "Start the machine now",
           "when": "podman.isStartNowAtMachineInitSupported"
         },
-        "podman.setting.dockerCompatibility": {
-          "type": "boolean",
-          "default": false,
-          "description": "Docker compatibility mode is a feature that allows you to use Podman as a drop-in replacement for Docker-compatible CLI tools. Podman will automatically emulate a Docker API socket connection (typically) to /var/run/docker.sock. NOTE: This requires administrative privileges.",
-          "when": "isMac"
-        },
         "podman.setting.rosetta": {
           "type": "boolean",
           "default": true,
@@ -415,7 +409,7 @@
   },
   "devDependencies": {
     "@types/mustache": "^4.2.5",
-    "@types/ssh2": "^1.15.4",
+    "@types/ssh2": "^1.15.5",
     "@types/sshpk": "^1.17.4",
     "adm-zip": "^0.5.16",
     "hasha": "^6.0.0",
@@ -424,7 +418,7 @@
     "octokit": "^4.1.2",
     "sshpk": "^1.18.0",
     "tsx": "^4.19.3",
-    "vite": "^6.2.2",
-    "vitest": "^3.0.8"
+    "vite": "^6.2.5",
+    "vitest": "^3.1.1"
   }
 }

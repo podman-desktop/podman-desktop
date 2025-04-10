@@ -58,3 +58,10 @@ test('Expect to have different status icon based on provider status', async () =
     'animate-spin border border-solid border-[var(--pd-action-button-spinner)] border-t-transparent',
   );
 });
+
+test('Expect to have Update available icon status when an Update available status is passed', () => {
+  render(ProviderWidgetStatus, { status: 'Update available' });
+  const statusIcon = screen.getByLabelText('Connection Status Icon');
+  expect(statusIcon).toBeInTheDocument();
+  expect(statusIcon).toHaveClass('fa-regular fa-circle-up');
+});

@@ -182,7 +182,7 @@ async function onInputChange(): Promise<void> {
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" />
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
-          {#each filteredCommandInfoItems as item, i}
+          {#each filteredCommandInfoItems as item, i (item.id)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
                 on:click={(): Promise<void> => clickOnItem(i)}

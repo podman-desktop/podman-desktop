@@ -23,7 +23,7 @@ import type {
   ListPromise,
   ObjectCache,
 } from '@kubernetes/client-node';
-import { ADD, DELETE, ERROR, ListWatch, UPDATE, Watch } from '@kubernetes/client-node';
+import { ADD, ApiException, DELETE, ERROR, ListWatch, UPDATE, Watch } from '@kubernetes/client-node';
 import type { Disposable } from '@podman-desktop/api';
 
 import type { Event } from '../events/emitter.js';
@@ -121,6 +121,11 @@ export class ResourceInformer<T extends KubernetesObject> implements Disposable 
     });
     // This is issued when there is an error
     this.#informer.on(ERROR, (error: unknown) => {
+      if (error instanceof ApiException && error.code === 404) {
+        // starting from kubernetes-client v1.1, informer is correctly started even if resource does not exist in API
+        // and the 404 error is received here
+        return;
+      }
       this.#offline = true;
       this.#onOffline.fire({
         kubeconfig: this.#kubeConfig,

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import type { Terminal } from '@xterm/xterm';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type {
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
@@ -84,7 +85,7 @@ function writeMultilineString(xterm: Terminal, data: string, colorPrefix: string
 
 export function getProviderConnectionName(
   provider: ProviderInfo,
-  providerConnectionInfo: ProviderContainerConnectionInfo | ProviderKubernetesConnectionInfo,
+  providerConnectionInfo: ProviderConnectionInfo,
 ): string {
   return `${provider.name}-${providerConnectionInfo.name}`;
 }
@@ -94,7 +95,7 @@ export function getNormalizedDefaultNumberValue(configurationKey: IConfiguration
   if (!configurationKey.maximum || typeof configurationKey.maximum !== 'number') {
     return configurationKey.default;
   }
-  if (configurationKey.maximum > configurationKey.default) {
+  if (typeof configurationKey.default === 'number' && configurationKey.maximum > configurationKey.default) {
     return configurationKey.default;
   }
   return configurationKey.maximum;

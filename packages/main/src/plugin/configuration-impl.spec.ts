@@ -32,7 +32,7 @@ class TestConfigurationImpl extends ConfigurationImpl {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  const map = new Map<string, string>();
+  const map = new Map<string, { [key: string]: unknown }>();
   configurationImpl = new TestConfigurationImpl(
     {
       send: vi.fn(),
