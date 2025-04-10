@@ -23,10 +23,11 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
+import ProviderButtonStatus from '/@/lib/statusbar/ProviderButtonStatus.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-vi.mock(import('/@/lib/statusbar/ProviderWidgetStatus.svelte'));
 vi.mock(import('/@/lib/appearance/IconImage.svelte'));
+vi.mock(import('/@/lib/statusbar/ProviderButtonStatus.svelte'));
 
 const PROVIDER_MOCK = {
   name: 'provider1',
@@ -81,4 +82,19 @@ test('left slot should be rendered if defined', async () => {
   await vi.waitFor(() => {
     expect(left).toHaveBeenCalled();
   });
+});
+
+test('expect ProviderButtonStatus to be called with the current status when a provider icon is provided', () => {
+  render(ProviderButton, {
+    provider: PROVIDER_MOCK,
+    onclick: vi.fn(),
+    class: 'potatoes',
+  });
+
+  expect(ProviderButtonStatus).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      sttaus: PROVIDER_MOCK.status,
+    }),
+  );
 });
