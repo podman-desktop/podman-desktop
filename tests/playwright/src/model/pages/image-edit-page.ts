@@ -63,11 +63,7 @@ export class ImageEditPage extends BasePage {
         await this.imageTag.fill(tag);
       }
 
-      await playExpect
-        .poll(async () => this.alertDialog.count(), {
-          message: `Error dialog found with message: ${await this.alertDialog.first().innerText()}`,
-        })
-        .toBe(0);
+      await playExpect.poll(async () => this.alertDialog.count()).toBe(0);
 
       await playExpect(this.saveButton).toBeEnabled();
       await this.saveButton.click();
