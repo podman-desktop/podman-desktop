@@ -338,7 +338,10 @@ let ageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI, Date | u
   renderer: TableDurationColumn,
   renderMapping(object): Date | undefined {
     if (containerUtils.isContainerInfoUI(object)) {
-      return containerUtils.getUpDate(object);
+      const upDate = containerUtils.getUpDate(object);
+      // When is container not running, show when was the container created instead
+      if (!upDate) return containerUtils.getCreated(object);
+      return upDate;
     }
     return undefined;
   },
