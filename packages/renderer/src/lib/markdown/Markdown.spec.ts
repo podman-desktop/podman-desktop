@@ -78,14 +78,22 @@ describe('Custom button', () => {
   });
 
   test('Expect button to be rendered as a icon with args', async () => {
+    vi.mocked(window.executeCommand).mockResolvedValue({});
+
     const icon = 'faIconIcon';
     await waitRender({ markdown: `:button[${icon}]{command=command args='["arg1"]'}` });
     const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
     expect(markdownContent).toBeInTheDocument();
-    expect(markdownContent).toContainHTML(`<button class="fa-solid ${icon} before:px-1 fa-3x"`);
+    expect(markdownContent).toContainHTML(
+      `<button class="fa-solid ${icon} before:px-1 fa-3x hover:text-[var(--pd-action-button-primary-hover-text)]"`,
+    );
     expect(markdownContent).toContainHTML('data-command="command"');
     expect(markdownContent).toContainHTML(`data-args="arg1"`);
     expect(markdownContent).toContainHTML('</button>');
+
+    const iconButton = screen.getByRole('button', { name: icon });
+    expect(iconButton).toBeDefined();
+    await fireEvent.click(iconButton);
   });
 });
 
