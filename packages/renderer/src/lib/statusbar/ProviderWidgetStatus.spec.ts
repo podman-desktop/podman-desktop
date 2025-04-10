@@ -17,41 +17,27 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
-import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { ProviderInfo } from '/@api/provider-info';
-
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 
-const providerMock = {
-  name: 'provider1',
-  containerConnections: [],
-  kubernetesConnections: [],
-  status: 'ready' as ProviderStatus,
-  images: {},
-} as unknown as ProviderInfo;
-
 test('Expect to have different status icon based on provider status', async () => {
-  const renderObject = render(ProviderWidgetStatus, { entry: providerMock });
+  const renderObject = render(ProviderWidgetStatus, { status: 'ready' });
 
   let statusIcon = screen.getByLabelText('Connection Status Icon');
   expect(statusIcon).toBeInTheDocument();
   expect(statusIcon).toHaveClass('fa-regular fa-circle-check');
 
-  providerMock.status = 'error';
-  await renderObject.rerender({ entry: providerMock });
+  await renderObject.rerender({ status: 'error' });
   expect(statusIcon).toBeInTheDocument();
   expect(statusIcon).toHaveClass('fa-regular fa-circle-xmark');
 
-  providerMock.status = 'unknown';
-  await renderObject.rerender({ entry: providerMock });
+  await renderObject.rerender({ status: 'unknown' });
   expect(statusIcon).toBeInTheDocument();
   expect(statusIcon).toHaveClass('fa-regular fa-circle-question');
 
-  providerMock.status = 'stopping';
-  await renderObject.rerender({ entry: providerMock });
+  await renderObject.rerender({ status: 'stopping' });
   statusIcon = screen.getByLabelText('Connection Status Icon');
   expect(statusIcon).toBeInTheDocument();
   expect(statusIcon).toHaveClass(
