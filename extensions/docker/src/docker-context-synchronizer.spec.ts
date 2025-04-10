@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderContainerConnection } from '@podman-desktop/api';
+import type { ContainerProviderConnection, ProviderContainerConnection } from '@podman-desktop/api';
 import { env, provider } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -31,8 +31,7 @@ vi.mock('@podman-desktop/api', async () => {
       isMac: false,
     },
     provider: {
-      onDidRegisterContainerConnection: vi.fn(),
-      onDidUnregisterContainerConnection: vi.fn(),
+      onDidUpdateContainerConnection: vi.fn(),
       getContainerConnections: vi.fn(() => []),
     },
   };
@@ -46,6 +45,7 @@ const DOCKER_CONNECTION = {
     endpoint: {
       socketPath: '/var/run/docker.sock',
     },
+    status: vi.fn(),
   },
 } as unknown as ProviderContainerConnection;
 
@@ -57,6 +57,7 @@ const PODMAN_CONNECTION1 = {
     endpoint: {
       socketPath: '/var/run/podman1.sock',
     },
+    status: vi.fn(),
   },
 } as unknown as ProviderContainerConnection;
 
@@ -68,6 +69,7 @@ const PODMAN_CONNECTION2 = {
     endpoint: {
       socketPath: '/var/run/podman2.sock',
     },
+    status: vi.fn(),
   },
 } as unknown as ProviderContainerConnection;
 
@@ -78,23 +80,32 @@ const dockerContextHandler = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  DOCKER_CONNECTION.connection.status = vi.fn().mockReturnValue('started');
+  PODMAN_CONNECTION1.connection.status = vi.fn().mockReturnValue('started');
+  PODMAN_CONNECTION2.connection.status = vi.fn().mockReturnValue('started');
 });
 
 class TestDockerContextSynchronizer extends DockerContextSynchronizer {
-  override async processRemovedConnection(providerId: string): Promise<void> {
-    return super.processRemovedConnection(providerId);
+  override async processUpdatedConnection(connection: ContainerProviderConnection): Promise<void> {
+    return super.processUpdatedConnection(connection);
   }
 }
 
 describe('toDockerContextName', () => {
-  test('should return the name prefixed with podman-', () => {
+  test.each(['Windows', 'Linux', 'MacOS'])('should return the name prefixed with podman- (%s)', platform => {
+    vi.mocked(env).isWindows = platform === 'Windows';
+    vi.mocked(env).isLinux = platform === 'Linux';
+    vi.mocked(env).isMac = platform === 'MacOS';
     const name = toDockerContextName('foo');
-    expect(name).toBe('podman-foo');
+    expect(name).toBe(env.isWindows ? 'podman-foo' : 'podman');
   });
 
-  test('should return the name', () => {
+  test.each(['Windows', 'Linux', 'MacOS'])('should return the name (%s)', platform => {
+    vi.mocked(env).isWindows = platform === 'Windows';
+    vi.mocked(env).isLinux = platform === 'Linux';
+    vi.mocked(env).isMac = platform === 'MacOS';
     const name = toDockerContextName('podman-foo');
-    expect(name).toBe('podman-foo');
+    expect(name).toBe(env.isWindows ? 'podman-foo' : 'podman');
   });
 });
 
@@ -155,8 +166,8 @@ describe('delete context', () => {
     const dockerContextSynchronizer = new TestDockerContextSynchronizer(dockerContextHandler);
     await dockerContextSynchronizer.init();
     expect(dockerContextHandler.createContext).toHaveBeenCalledTimes(2);
-    vi.mocked(provider.getContainerConnections).mockReturnValue([PODMAN_CONNECTION1]);
-    await dockerContextSynchronizer.processRemovedConnection('podman');
+    vi.mocked(PODMAN_CONNECTION2.connection.status).mockReturnValue('stopped');
+    await dockerContextSynchronizer.processUpdatedConnection(PODMAN_CONNECTION2.connection);
     expect(dockerContextHandler.removeContext).toHaveBeenCalledTimes(1);
   });
 });
