@@ -65,7 +65,7 @@ let kindPath: string | undefined;
 let installer: KindInstaller;
 let provider: extensionApi.Provider;
 let latestAsset: KindGithubReleaseArtifactMetadata | undefined = undefined;
-
+let providerUpdate: extensionApi.ProviderUpdate | undefined = undefined;
 const imageHandler = new ImageHandler();
 
 async function installLatestKind(): Promise<string> {
@@ -289,22 +289,8 @@ export function refreshKindClustersOnProviderConnectionUpdate(provider: extensio
   });
 }
 
-export async function registerUpdatesIfAny(
-  provider: extensionApi.Provider,
-): Promise<extensionApi.Disposable | undefined> {
-  const binaryVersion = (await getKindBinaryInfo('kind')).version;
-  if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion) {
-    return provider.registerUpdate({
-      version: binaryVersion,
-      update: async () => {
-        kindPath = await installLatestKind();
-        provider.updateVersion((await getKindBinaryInfo('kind')).version);
-      },
-    });
-  }
-}
+let currentUpdateDisposable: extensionApi.Disposable | undefined = undefined;
 
-const currentUpdatesDisposables: extensionApi.Disposable[] = [];
 export async function createProvider(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
@@ -342,18 +328,13 @@ export async function createProvider(
   );
 
   const checkForUpdate = async (): Promise<void> => {
-    // remove previous updates
-    for (const disposable of currentUpdatesDisposables) {
-      disposable.dispose();
-    }
-    currentUpdatesDisposables.length = 0;
-    try {
-      const disposable = await registerUpdatesIfAny(provider);
-      if (disposable) {
-        currentUpdatesDisposables.push(disposable);
+    const binaryVersion = kindCli?.version;
+    if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion && providerUpdate) {
+      try {
+        currentUpdateDisposable = provider.registerUpdate(providerUpdate);
+      } catch (error: unknown) {
+        console.error('Error while checking for provider update', error);
       }
-    } catch (error: unknown) {
-      console.error('Error while checking for provider update', error);
     }
   };
   await checkForUpdate();
@@ -376,21 +357,12 @@ export async function createProvider(
   // search when a new container is updated or removed
   extensionApi.provider.onDidRegisterContainerConnection(async () => {
     await searchKindClusters(provider);
-    checkForUpdate().catch((error: unknown) => {
-      console.error('Error checking for update', error);
-    });
   });
   extensionApi.provider.onDidUnregisterContainerConnection(async () => {
     await searchKindClusters(provider);
-    checkForUpdate().catch((error: unknown) => {
-      console.error('Error checking for update', error);
-    });
   });
   extensionApi.provider.onDidUpdateProvider(async () => {
     await registerProvider(extensionContext, provider, telemetryLogger);
-    checkForUpdate().catch((error: unknown) => {
-      console.error('Error checking for update', error);
-    });
   });
   // search for kind clusters on boot
   await searchKindClusters(provider);
@@ -538,14 +510,30 @@ async function registerCliTool(
       provider.updateVersion(releaseVersionToUpdateTo);
       if (releaseVersionToUpdateTo === latestVersion) {
         delete update.version;
+        currentUpdateDisposable?.dispose();
       } else {
         update.version = latestVersion;
+        if (providerUpdate) {
+          provider.registerUpdate(providerUpdate);
+        }
       }
       releaseVersionToUpdateTo = undefined;
       releaseToUpdateTo = undefined;
     },
   };
   kindCli.registerUpdate(update);
+
+  // create update object for the provider to use
+  if (latestVersion) {
+    providerUpdate = {
+      version: latestVersion,
+      update: async (): Promise<void> => {
+        releaseToUpdateTo = undefined;
+        await update.doUpdate();
+      },
+    };
+  }
+
   kindCli.registerInstaller({
     selectVersion: async () => {
       const selected = await installer.promptUserForVersion();
