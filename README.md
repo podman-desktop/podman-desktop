@@ -2,11 +2,15 @@
 
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/podman-desktop/podman-desktop)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/podman-desktop/podman-desktop)
+![GitHub contributors](https://img.shields.io/github/contributors/podman-desktop/podman-desktop)
+[![codecov](https://codecov.io/gh/podman-desktop/podman-desktop/graph/badge.svg?token=clbFmLZ85j)](https://codecov.io/gh/podman-desktop/podman-desktop)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9966/badge)](https://www.bestpractices.dev/projects/9966)
 [![CLOMonitor](https://img.shields.io/endpoint?url=https://clomonitor.io/api/projects/cncf/podman-desktop/badge)](https://clomonitor.io/projects/cncf/podman-desktop)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/podman-desktop/podman-desktop/badge)](https://securityscorecards.dev/viewer/?uri=github.com/podman-desktop/podman-desktop)
 [![FOSSA License Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=license)
 [![FOSSA Security Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=security)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-podmandesktop-blue.svg?logo=linkedin)](https://www.linkedin.com/company/podman-desktop/)
 
 <p align="center">
   <img alt="Podman Desktop" src="/website/static/img/features/manage-containers.webp">
