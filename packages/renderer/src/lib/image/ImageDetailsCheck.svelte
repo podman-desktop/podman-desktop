@@ -145,7 +145,7 @@ async function handleAbort(): Promise<void> {
 <ProviderResultPage providers={providers} results={results}>
   <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
   {#snippet headerInfo()}
-  <div class="flex flex-row">
+  <div class="flex flex-row" role="status" aria-label="Analysis Status">
     <div class="w-full flex mb-4 space-x-4">
       <Fa size="1.5x" icon={faStethoscope} />
       {#if aborted}
