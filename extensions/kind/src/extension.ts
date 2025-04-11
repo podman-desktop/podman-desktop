@@ -63,6 +63,7 @@ let kindCli: CliTool | undefined;
 let kindPath: string | undefined;
 
 let installer: KindInstaller;
+
 let provider: extensionApi.Provider;
 let latestAsset: KindGithubReleaseArtifactMetadata | undefined = undefined;
 let providerUpdate: extensionApi.ProviderUpdate | undefined = undefined;
@@ -327,21 +328,14 @@ export async function createProvider(
     }),
   );
 
-  const checkForUpdate = async (): Promise<void> => {
-    const binaryVersion = kindCli?.version;
-    if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion && providerUpdate) {
-      try {
-        currentUpdateDisposable = provider.registerUpdate(providerUpdate);
-      } catch (error: unknown) {
-        console.error('Error while checking for provider update', error);
-      }
+  const binaryVersion = kindCli?.version;
+  if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion && providerUpdate) {
+    try {
+      currentUpdateDisposable = provider.registerUpdate(providerUpdate);
+    } catch (error: unknown) {
+      console.error('Error while checking for provider update', error);
     }
-  };
-  await checkForUpdate();
-
-  provider.onDidUpdateVersion(async () => {
-    await checkForUpdate();
-  });
+  }
 
   // when containers are refreshed, update
   extensionApi.containerEngine.onEvent(async event => {
@@ -361,9 +355,7 @@ export async function createProvider(
   extensionApi.provider.onDidUnregisterContainerConnection(async () => {
     await searchKindClusters(provider);
   });
-  extensionApi.provider.onDidUpdateProvider(async () => {
-    await registerProvider(extensionContext, provider, telemetryLogger);
-  });
+  extensionApi.provider.onDidUpdateProvider(async () => registerProvider(extensionContext, provider, telemetryLogger));
   // search for kind clusters on boot
   await searchKindClusters(provider);
 }
