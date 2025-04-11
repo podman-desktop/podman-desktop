@@ -30,6 +30,9 @@ on:
   repository_dispatch:
     types: [ publish-to-chocolatey ]
 
+permissions:
+  contents: read
+
 jobs:
 
   version:
@@ -56,6 +59,8 @@ jobs:
           echo "desktopVersion=$version" >> ${GITHUB_OUTPUT}
 
   winget-bump:
+    permissions:
+      contents: write  # for Git to git push
     name: Update Chocolatey
     needs: version
     runs-on: windows-2022

@@ -21,10 +21,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
+        permissions:
+          contents: write  # for Git to git push
         description: 'release version like 1.1.0'
         required: true
   repository_dispatch:
     types: [ publish-to-podman_io ]
+
+permissions:
+  contents: read
 
 jobs:
 

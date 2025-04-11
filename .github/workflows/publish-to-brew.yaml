@@ -26,6 +26,9 @@ on:
   repository_dispatch:
     types: [ publish-to-brew ]
 
+permissions:
+  contents: read
+
 jobs:
 
   publish-to-brew:

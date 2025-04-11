@@ -32,8 +32,13 @@ on:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
+    permissions:
+      contents: write  # for peaceiris/actions-gh-pages to push pages branch
     name: Build and deploy website
     runs-on: ubuntu-24.04
     timeout-minutes: 60

@@ -39,6 +39,9 @@ on:
       - 'website/**'
       - 'website-argos/**'
 
+permissions:
+  contents: read
+
 jobs:
   take-screenshots:
     name: take screenshots
