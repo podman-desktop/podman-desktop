@@ -439,6 +439,10 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            type: 'custom-githubStarsButton',
+            position: 'right',
+          },
+          {
             type: 'custom-downloadButton',
             position: 'right',
           },
