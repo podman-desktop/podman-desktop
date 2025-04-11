@@ -330,11 +330,7 @@ export async function createProvider(
 
   const binaryVersion = kindCli?.version;
   if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion && providerUpdate) {
-    try {
-      currentUpdateDisposable = provider.registerUpdate(providerUpdate);
-    } catch (error: unknown) {
-      console.error('Error while checking for provider update', error);
-    }
+    currentUpdateDisposable = provider.registerUpdate(providerUpdate);
   }
 
   // when containers are refreshed, update
