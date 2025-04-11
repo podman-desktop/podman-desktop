@@ -1771,8 +1771,12 @@ export function initExposure(): void {
   );
   contextBridge.exposeInMainWorld(
     'sendShowMessageBoxOnSelect',
-    async (messageBoxId: number, selectedIndex: number | undefined): Promise<void> => {
-      return ipcInvoke('showMessageBox:onSelect', messageBoxId, selectedIndex);
+    async (
+      messageBoxId: number,
+      selectedIndex: number | undefined,
+      selectedOption: number | undefined,
+    ): Promise<void> => {
+      return ipcInvoke('showMessageBox:onSelect', messageBoxId, selectedIndex, selectedOption);
     },
   );
 
