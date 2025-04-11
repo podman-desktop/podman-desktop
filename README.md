@@ -1,7 +1,12 @@
 # Podman Desktop - A graphical tool for developing on containers and Kubernetes
+
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/podman-desktop/podman-desktop)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9966/badge)](https://www.bestpractices.dev/projects/9966)
+[![CLOMonitor](https://img.shields.io/endpoint?url=https://clomonitor.io/api/projects/cncf/podman-desktop/badge)](https://clomonitor.io/projects/cncf/podman-desktop)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/podman-desktop/podman-desktop/badge)](https://securityscorecards.dev/viewer/?uri=github.com/podman-desktop/podman-desktop)
+[![FOSSA License Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=license)
+[![FOSSA Security Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=security)
 
 <p align="center">
   <img alt="Podman Desktop" src="/website/static/img/features/manage-containers.webp">
