@@ -97,7 +97,7 @@ Interested in fixing issues or contributing to Podman Desktop?
 - :checkered_flag: [Read our contributing guide](./CONTRIBUTING.md)
 - :ok_hand: [Review or contribute a pull request](https://github.com/containers/podman-desktop/pulls)
 
-Joining a [community meeting](https://podman-desktop.io/community) is a great way to get involved and help shape the future of Podman Desktop.
+Joining a [community meeting](https://github.com/podman-desktop/community/blob/main/meetings/README.md#upcoming-community-meeting) is a great way to get involved and help shape the future of Podman Desktop.
 
 ## Communication
 
