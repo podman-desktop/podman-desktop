@@ -19,6 +19,9 @@ name: merge-queue
 on:
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   dco:
     name: DCO

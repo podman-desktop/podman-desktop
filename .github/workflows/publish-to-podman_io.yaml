@@ -21,10 +21,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
+        permissions:
+          contents: write  # for Git to git push
         description: 'release version like 1.1.0'
         required: true
   repository_dispatch:
     types: [ publish-to-podman_io ]
+
+permissions:
+  contents: read
 
 jobs:
 
@@ -50,7 +55,7 @@ jobs:
             version="${version:1}"
           fi
           echo "desktopVersion=$version" >> ${GITHUB_OUTPUT}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: containers/podman.io
           ref: refs/heads/main

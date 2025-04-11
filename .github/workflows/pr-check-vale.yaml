@@ -29,8 +29,8 @@ jobs:
     name: runner / vale
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: errata-ai/vale-action@v2.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: errata-ai/vale-action@d89dee975228ae261d22c15adcd03578634d429c # v2.1.1
         env:
           # Required, set by GitHub actions automatically:
           # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret

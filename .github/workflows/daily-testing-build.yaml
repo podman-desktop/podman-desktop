@@ -37,7 +37,7 @@ jobs:
       releaseId: ${{ steps.create_release.outputs.id }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
           fetch-depth: 0
@@ -87,7 +87,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1.16.0
         with:
           tag: ${{ steps.TAG_UTIL.outputs.githubTag }}
           name: ${{ steps.TAG_UTIL.outputs.githubTag }}
@@ -110,17 +110,17 @@ jobs:
         os: [ubuntu-24.04, windows-2022, macos-14]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: podman-desktop/testing-prereleases
           ref: ${{ needs.tag.outputs.githubTag }}
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -152,7 +152,7 @@ jobs:
         run: echo the release id is ${{ needs.tag.outputs.releaseId }}
 
       - name: Publish release
-        uses: StuYarrow/publish-release@v1.1.2
+        uses: StuYarrow/publish-release@01f2a1365bacd77bad861873a7fdf274ab49eefd # v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
         with:
