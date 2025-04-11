@@ -6,6 +6,7 @@ import {
   NavPage,
   Table,
   TableColumn,
+  TableDurationColumn,
   TableRow,
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
@@ -75,18 +76,10 @@ onMount(async () => {
       }
     });
     volumes = computedVolumes;
-
-    // compute refresh interval
-    const interval = computeInterval();
-    refreshTimeouts.push(setTimeout(refreshAge, interval));
   });
 });
 
 onDestroy(() => {
-  // kill timers
-  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
-  refreshTimeouts.length = 0;
-
   // unsubscribe from the store
   if (volumesUnsubscribe) {
     volumesUnsubscribe();
@@ -117,52 +110,6 @@ async function deleteSelectedVolumes(): Promise<void> {
     }),
   );
   bulkDeleteInProgress = false;
-}
-
-let refreshTimeouts: NodeJS.Timeout[] = [];
-const SECOND = 1000;
-function refreshAge(): void {
-  for (const volumeInfo of volumes) {
-    volumeInfo.age = volumeUtils.refreshAge(volumeInfo);
-  }
-  volumes = volumes;
-
-  // compute new interval
-  const newInterval = computeInterval();
-  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
-  refreshTimeouts.length = 0;
-  refreshTimeouts.push(setTimeout(refreshAge, newInterval));
-}
-
-function computeInterval(): number {
-  // no volumes, no refresh
-  if (volumes.length === 0) {
-    return -1;
-  }
-
-  // do we have volumes that have been created in less than 1 minute
-  // if so, need to update every second
-  const volumesCreatedInLessThan1Mn = volumes.filter(volume => moment().diff(volume.created, 'minutes') < 1);
-  if (volumesCreatedInLessThan1Mn.length > 0) {
-    return 2 * SECOND;
-  }
-
-  // every minute for images created less than 1 hour
-  const volumesCreatedInLessThan1Hour = volumes.filter(volume => moment().diff(volume.created, 'hours') < 1);
-  if (volumesCreatedInLessThan1Hour.length > 0) {
-    // every minute
-    return 60 * SECOND;
-  }
-
-  // every hour for images created less than 1 day
-  const volumesCreatedInLessThan1Day = volumes.filter(volume => moment().diff(volume.created, 'days') < 1);
-  if (volumesCreatedInLessThan1Day.length > 0) {
-    // every hour
-    return 60 * 60 * SECOND;
-  }
-
-  // every day
-  return 60 * 60 * 24 * SECOND;
 }
 
 let fetchDataInProgress = false;
@@ -200,9 +147,9 @@ let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
-let ageColumn = new TableColumn<VolumeInfoUI, string>('Age', {
-  renderMapping: (object): string => object.age,
-  renderer: TableSimpleColumn,
+let ageColumn = new TableColumn<VolumeInfoUI, Date>('Age', {
+  renderMapping: (object): Date => new Date(object.created),
+  renderer: TableDurationColumn,
   comparator: (a, b): number => moment().diff(a.created) - moment().diff(b.created),
 });
 
