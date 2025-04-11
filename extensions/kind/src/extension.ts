@@ -501,6 +501,7 @@ async function registerCliTool(
       } else {
         update.version = latestVersion;
         if (providerUpdate) {
+          providerUpdate.version = latestVersion ?? providerUpdate.version;
           currentUpdateDisposable = provider.registerUpdate(providerUpdate);
         }
       }
@@ -515,6 +516,7 @@ async function registerCliTool(
     providerUpdate = {
       version: latestVersion,
       update: async (): Promise<void> => {
+        // ensures that we updates to the latest release
         releaseToUpdateTo = undefined;
         await update.doUpdate();
       },
