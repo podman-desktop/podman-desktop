@@ -16,8 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import wincaAPI from 'win-ca/api';
 
+import { isWindows } from '../util.js';
 import { Certificates } from './certificates.js';
 
 let certificate: Certificates;
@@ -30,6 +32,38 @@ const CR = '\n';
 vi.mock('node:child_process', () => {
   return {
     spawn: vi.fn(),
+  };
+});
+
+vi.mock('../util.js', () => {
+  return {
+    isWindows: vi.fn(),
+    isMac: vi.fn(),
+    isLinux: vi.fn(),
+  };
+});
+
+interface WincaProcedure {
+  exe: () => string;
+  inject: (cert: string) => void;
+  der2: {
+    pem: string;
+  };
+}
+
+interface WincaAPIOptions {
+  store?: string;
+  ondata: (ca: unknown) => void;
+  onend?: () => void;
+}
+
+vi.mock('win-ca/api', () => {
+  const wincaAPI = vi.fn();
+  (wincaAPI as unknown as WincaProcedure).exe = vi.fn();
+  (wincaAPI as unknown as WincaProcedure).inject = vi.fn();
+  (wincaAPI as unknown as WincaProcedure).der2 = { pem: 'pem' };
+  return {
+    default: wincaAPI,
   };
 });
 
@@ -51,4 +85,23 @@ test('expect parse correctly certificates', async () => {
       .replace(new RegExp(CR, 'g'), ''),
   );
   expect(stripped).toStrictEqual(['Foo', 'Bar', 'Baz', 'Qux']);
+});
+
+describe('Windows', () => {
+  beforeEach(() => {
+    vi.mocked(isWindows).mockReturnValue(true);
+  });
+
+  test('expect retrieve certificates', async () => {
+    const rootCertificate = `${BEGIN_CERTIFICATE}${CR}Root${CR}${END_CERTIFICATE}${CR}`;
+    const intermediateCertificate = `${BEGIN_CERTIFICATE}${CR}CA${CR}${END_CERTIFICATE}${CR}`;
+    vi.mocked(wincaAPI).mockImplementation((options: WincaAPIOptions) => {
+      options.ondata(rootCertificate);
+      options.ondata(intermediateCertificate);
+      if (options.onend) options.onend();
+    });
+    const certificates = await certificate.retrieveCertificates();
+    expect(certificates).toContain(rootCertificate);
+    expect(certificates).toContain(intermediateCertificate);
+  });
 });
