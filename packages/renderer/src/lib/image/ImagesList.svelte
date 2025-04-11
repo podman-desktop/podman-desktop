@@ -6,6 +6,7 @@ import {
   NavPage,
   Table,
   TableColumn,
+  TableDurationColumn,
   TableRow,
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
@@ -105,10 +106,6 @@ function updateImages(globalContext: ContextUI): void {
 
   // Set the engines to the global variable for the Prune functionality button
   enginesList = uniqueEngines;
-
-  // compute refresh interval
-  const interval = computeInterval();
-  refreshTimeouts.push(setTimeout(refreshAge, interval));
 }
 
 let imagesUnsubscribe: Unsubscriber;
@@ -152,10 +149,6 @@ onMount(async () => {
 });
 
 onDestroy(() => {
-  // kill timers
-  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
-  refreshTimeouts.length = 0;
-
   // unsubscribe from the store
   if (imagesUnsubscribe) {
     imagesUnsubscribe();
@@ -219,52 +212,6 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
-let refreshTimeouts: NodeJS.Timeout[] = [];
-const SECOND = 1000;
-function refreshAge(): void {
-  for (const imageInfo of images) {
-    imageInfo.age = imageUtils.refreshAge(imageInfo);
-  }
-  images = images;
-
-  // compute new interval
-  const newInterval = computeInterval();
-  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
-  refreshTimeouts.length = 0;
-  refreshTimeouts.push(setTimeout(refreshAge, newInterval));
-}
-
-function computeInterval(): number {
-  // no images, no refresh
-  if (images.length === 0) {
-    return -1;
-  }
-
-  // do we have images that have been created in less than 1 minute
-  // if so, need to update every second
-  const imagesCreatedInLessThan1Mn = images.filter(image => moment().diff(moment.unix(image.createdAt), 'minutes') < 1);
-  if (imagesCreatedInLessThan1Mn.length > 0) {
-    return 2 * SECOND;
-  }
-
-  // every minute for images created less than 1 hour
-  const imagesCreatedInLessThan1Hour = images.filter(image => moment().diff(moment.unix(image.createdAt), 'hours') < 1);
-  if (imagesCreatedInLessThan1Hour.length > 0) {
-    // every minute
-    return 60 * SECOND;
-  }
-
-  // every hour for images created less than 1 day
-  const imagesCreatedInLessThan1Day = images.filter(image => moment().diff(moment.unix(image.createdAt), 'days') < 1);
-  if (imagesCreatedInLessThan1Day.length > 0) {
-    // every hour
-    return 60 * 60 * SECOND;
-  }
-
-  // every day
-  return 60 * 60 * 24 * SECOND;
-}
-
 let selectedItemsNumber: number;
 let table: Table;
 
@@ -286,9 +233,9 @@ let envColumn = new TableColumn<ImageInfoUI>('Environment', {
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
-let ageColumn = new TableColumn<ImageInfoUI, string>('Age', {
-  renderMapping: (image): string => image.age,
-  renderer: TableSimpleColumn,
+let ageColumn = new TableColumn<ImageInfoUI, Date>('Age', {
+  renderMapping: (image): Date => moment.unix(image.createdAt).toDate(),
+  renderer: TableDurationColumn,
   comparator: (a, b): number => moment().diff(moment.unix(a.createdAt)) - moment().diff(moment.unix(b.createdAt)),
 });
 
