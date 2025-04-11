@@ -94,7 +94,7 @@ describe('Windows', () => {
 
   test('expect retrieve certificates', async () => {
     const rootCertificate = `${BEGIN_CERTIFICATE}${CR}Root${CR}${END_CERTIFICATE}${CR}`;
-    const intermediateCertificate = `${BEGIN_CERTIFICATE}${CR}CAt${CR}${END_CERTIFICATE}${CR}`;
+    const intermediateCertificate = `${BEGIN_CERTIFICATE}${CR}CA${CR}${END_CERTIFICATE}${CR}`;
     vi.mocked(wincaAPI).mockImplementation((options: WincaAPIOptions) => {
       if (options.store === 'ca') {
         options.ondata(rootCertificate);
