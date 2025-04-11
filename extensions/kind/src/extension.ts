@@ -501,7 +501,7 @@ async function registerCliTool(
       } else {
         update.version = latestVersion;
         if (providerUpdate) {
-          provider.registerUpdate(providerUpdate);
+          currentUpdateDisposable = provider.registerUpdate(providerUpdate);
         }
       }
       releaseVersionToUpdateTo = undefined;
