@@ -393,6 +393,23 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+export let focus: string | undefined;
+let TransitionID: string | undefined;
+let providerElementMap: Record<string, HTMLElement> = {};
+function handleTransition(): void {
+  if (TransitionID === focus) {
+    return;
+  }
+  TransitionID = focus;
+  setTimeout(() => {
+    TransitionID = '';
+  }, 1000);
+}
+$: if (focus && providerElementMap[focus]) {
+  providerElementMap[focus].scrollIntoView({ behavior: 'auto', block: 'start' });
+  handleTransition();
+}
+
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
@@ -414,6 +431,8 @@ function handleError(errorMessage: string): void {
 
     {#each providers as provider (provider.id)}
       <div
+        id={provider.id}
+        bind:this={providerElementMap[provider.id]}
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
@@ -423,10 +442,12 @@ function handleError(errorMessage: string): void {
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
-                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" />
+                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full"
+                  class:animate-ping={TransitionID === provider.id} />
                   <!-- TODO check theme used for image, now use dark by default -->
                 {:else}
-                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" />
+                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]"
+                  class:animate-ping={TransitionID === provider.id} />
                 {/if}
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
