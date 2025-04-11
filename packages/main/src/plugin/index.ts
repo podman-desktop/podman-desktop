@@ -605,6 +605,12 @@ export class PluginSystem {
       return navigationManager.navigateToTroubleshooting();
     });
 
+    commandRegistry.registerCommand('openWebsite', async arg => {
+      if (arg) {
+        await shell.openExternal(arg);
+      }
+    });
+
     // register appearance (light, dark, auto being system)
     const appearanceConfiguration = new AppearanceInit(configurationRegistry);
     appearanceConfiguration.init();
