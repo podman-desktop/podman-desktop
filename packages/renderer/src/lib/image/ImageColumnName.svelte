@@ -8,17 +8,10 @@ import type { ImageInfoUI } from './ImageInfoUI';
 export let object: ImageInfoUI;
 
 function openDetails(image: ImageInfoUI): void {
-  if (image.isManifest) {
-    handleNavigation({
-      page: NavigationPage.MANIFEST,
-      parameters: { id: image.id, engineId: image.engineId, tag: image.name + ':' + image.tag },
-    });
-  } else {
-    handleNavigation({
-      page: NavigationPage.IMAGE,
-      parameters: { id: image.id, engineId: image.engineId, tag: image.name + ':' + image.tag },
-    });
-  }
+  handleNavigation({
+    page: image.isManifest ? NavigationPage.MANIFEST : NavigationPage.IMAGE,
+    parameters: { id: image.id, engineId: image.engineId, tag: image.name + ':' + image.tag },
+  });
 }
 </script>
 
