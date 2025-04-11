@@ -33,12 +33,12 @@ const image: ImageInfoUI = {
   name: 'my-image-name',
   engineId: 'podman',
   engineName: '',
-  tag: 'latest-tag',
+  tag: 'latest',
   createdAt: 0,
   age: '',
   size: 0,
   humanSize: '',
-  base64RepoTag: 'repoTag',
+  base64RepoTag: 'bXktaW1hZ2UtbmFtZTpsYXRlc3Q=',
   selected: false,
   status: 'UNUSED',
   icon: ImageIcon,
@@ -83,7 +83,7 @@ test('Expect clicking works', async () => {
 
   fireEvent.click(text);
 
-  expect(routerGotoSpy).toBeCalledWith('/images/my-image/podman/repoTag/summary');
+  expect(routerGotoSpy).toBeCalledWith('/images/my-image/podman/bXktaW1hZ2UtbmFtZTpsYXRlc3Q=/summary');
 });
 
 test('Expect badge with simple color', async () => {
@@ -173,7 +173,7 @@ test('Expect badge with light color', async () => {
   await vi.waitFor(async () => expect(badge).toHaveStyle('background-color: #00ff00'));
 });
 
-test('Expect if image is a manifest, the on:click IS there', async () => {
+test('Expect clicking works for manifests', async () => {
   const manifestImage: ImageInfoUI = {
     ...image,
     isManifest: true,
@@ -187,5 +187,5 @@ test('Expect if image is a manifest, the on:click IS there', async () => {
   // test click
   const routerGotoSpy = vi.spyOn(router, 'goto');
   fireEvent.click(text);
-  expect(routerGotoSpy).toBeCalled();
+  expect(routerGotoSpy).toBeCalledWith('/manifests/my-image/podman/bXktaW1hZ2UtbmFtZTpsYXRlc3Q=/summary');
 });
