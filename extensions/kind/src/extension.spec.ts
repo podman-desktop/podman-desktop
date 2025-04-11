@@ -96,6 +96,8 @@ const CLI_TOOL_MOCK: extensionApi.CliTool = {
   version: '0.0.1',
 } as unknown as extensionApi.CliTool;
 
+const disposeMock = vi.fn();
+
 const PROVIDER_MOCK: podmanDesktopApi.Provider = {
   setKubernetesProviderConnectionFactory: vi.fn(),
   onDidUpdateVersion: vi.fn(),
@@ -230,7 +232,7 @@ describe('cli tool', () => {
     vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
     await activate();
 
-    expect(util.getKindBinaryInfo).toHaveBeenCalledTimes(3);
+    expect(util.getKindBinaryInfo).toHaveBeenCalledTimes(2);
     expect(podmanDesktopApi.cli.createCliTool).toHaveBeenCalledWith({
       displayName: 'Kind',
       path: 'test-storage-path/kind',
@@ -316,6 +318,9 @@ describe('cli#update', () => {
       path: 'test-storage-path/kind',
       version: '0.0.1',
     });
+    vi.mocked(PROVIDER_MOCK.registerUpdate).mockReturnValue({
+      dispose: disposeMock,
+    });
   });
 
   test('try to update before selecting cli tool version should throw an error', async () => {
@@ -330,6 +335,9 @@ describe('cli#update', () => {
 
     vi.mocked(KindInstaller.prototype.getKindCliStoragePath).mockReturnValue('storage-path');
     vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
+      tag: 'v1.0.0',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
       tag: 'v1.0.0',
     } as unknown as KindGithubReleaseArtifactMetadata);
     const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
@@ -347,6 +355,8 @@ describe('cli#update', () => {
       path: 'path',
       version: '1.0.0',
     });
+
+    expect(disposeMock).toHaveBeenCalled();
   });
 });
 
@@ -565,6 +575,9 @@ describe('provider#update', () => {
       path: 'test-storage-path/kind',
       version: '0.0.1',
     });
+    vi.mocked(PROVIDER_MOCK.registerUpdate).mockReturnValue({
+      dispose: disposeMock,
+    });
   });
 
   test('available update should register update in provider', async () => {
@@ -581,5 +594,16 @@ describe('provider#update', () => {
     } as unknown as KindGithubReleaseArtifactMetadata);
     await activate();
     expect(PROVIDER_MOCK.registerUpdate).not.toHaveBeenCalled();
+  });
+
+  test('call dispose when provider is updated', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v1.5.6',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    await activate();
+    expect(PROVIDER_MOCK.registerUpdate).toHaveBeenCalledTimes(1);
+
+    await vi.mocked(PROVIDER_MOCK.registerUpdate).mock.calls[0][0].update({} as unknown as podmanDesktopApi.Logger);
+    expect(disposeMock).toHaveBeenCalledTimes(1);
   });
 });

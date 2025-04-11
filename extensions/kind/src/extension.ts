@@ -328,8 +328,7 @@ export async function createProvider(
     }),
   );
 
-  const binaryVersion = kindCli?.version;
-  if (latestAsset && latestAsset.tag.slice(1) !== binaryVersion && providerUpdate) {
+  if (latestAsset && latestAsset.tag.slice(1) !== kindCli?.version && providerUpdate) {
     currentUpdateDisposable = provider.registerUpdate(providerUpdate);
   }
 
