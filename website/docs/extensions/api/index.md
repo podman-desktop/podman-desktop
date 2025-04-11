@@ -19,4 +19,4 @@ Based on your use cases, you can add these common capabilities to your extension
 - Create and show a new webview panel in the UI, use the [`createWebviewPanel()`](https://podman-desktop.io/api/@podman-desktop/namespaces/window/functions/createWebviewPanel) function.
 - Add options for running a command, use the [`RunOptions`](/api/interfaces/RunOptions) interface.
 
-You can also create your own custom extensions and add them to the catalog for others to use.
+You can also create your own custom extensions and add them to the catalog for others to use. For more details, see [Developing an extension](/docs/extensions/developing) and [Packaging and publishing an extension](/docs/extensions/publish).

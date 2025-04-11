@@ -20,7 +20,7 @@ Based on your configurations, Podman Desktop automatically populates the context
 
 :::note
 
-When you select a Kubernetes context, you can access all the namespaces associated with it. You can switch from one namespace to another using the Kubernetes dashboard page or the Kubernetes object pages.
+When you select a Kubernetes context, you can access all the namespaces associated with it. You can switch from one namespace to another using the Kubernetes dashboard page or the Kubernetes object page.
 
 :::
 
