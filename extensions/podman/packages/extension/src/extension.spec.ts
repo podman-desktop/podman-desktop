@@ -3214,3 +3214,72 @@ test('activate and autostart should not duplicate machines ', async () => {
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
 });
+
+describe('podman-mac-helper tests', () => {
+  let contextMock: extensionApi.ExtensionContext;
+
+  beforeEach(() => {
+    // Make sure it's macOS only
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    // Mock the context
+    contextMock = {
+      subscriptions: [],
+      secrets: {
+        delete: vi.fn(),
+        get: vi.fn(),
+        onDidChange: vi.fn(),
+        store: vi.fn(),
+      },
+    } as unknown as extensionApi.ExtensionContext;
+
+    // Mock the get compatibility functionality.
+    // we just assume that it's false / not enabled by default to test the functionality.
+    vi.spyOn(compatibilityModeLib, 'getSocketCompatibility').mockReturnValue({
+      isEnabled: vi.fn(),
+      enable: vi.fn().mockReturnValue(false),
+      disable: vi.fn(),
+      details: '',
+      tooltipText: (): string => {
+        return '';
+      },
+    });
+  });
+
+  test('show setup podman mac helper notification if on mac and podman-mac-helper needs running', async () => {
+    // Activate
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Make sure showNotification contains "body" as: "The Podman Mac Helper is not set up, some features might not function optimally.", ignore everything else.
+    expect(extensionApi.window.showNotification).toBeCalledWith(
+      expect.objectContaining({
+        body: expect.stringContaining(
+          'The Podman Mac Helper is not set up, some features might not function optimally.',
+        ),
+      }),
+    );
+  });
+
+  test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
+    // Set configuration to always be true
+    // mimicking the 'doNotShow' setting being true
+    const spyGetConfiguration = vi.spyOn(config, 'get');
+    spyGetConfiguration.mockReturnValue(true);
+
+    // Activate
+    const api = await extension.activate(contextMock);
+    expect(api).toBeDefined();
+
+    // Make sure showNotification is not shown at all.
+    expect(extensionApi.window.showNotification).not.toBeCalledWith(
+      expect.objectContaining({
+        body: expect.stringContaining(
+          'The Podman Mac Helper is not set up, some features might not function optimally.',
+        ),
+      }),
+    );
+  });
+});
