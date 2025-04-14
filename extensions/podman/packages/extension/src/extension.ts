@@ -114,7 +114,7 @@ let notificationDisposable: extensionApi.Disposable;
 
 // Alert for running podman-mac-helper
 // Add notification that podman-mac-helper needs setting up
-let doNotShouldMacHelperSetup = false;
+let doNotShowMacHelperSetup = false;
 const setupMacHelperNotification: extensionApi.NotificationOptions = {
   title: 'Podman Mac Helper needs to be set up',
   body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
@@ -197,8 +197,8 @@ function notifySetupPodman(): void {
 }
 
 async function checkAndNotifySetupPodmanMacHelper(): Promise<void> {
-  // Exit immediately if doNotShouldMacHelperSetup is true
-  if (doNotShouldMacHelperSetup) {
+  // Exit immediately if doNotShowMacHelperSetup is true
+  if (doNotShowMacHelperSetup) {
     return;
   }
 
@@ -1444,7 +1444,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // only available for macOS
   if (extensionApi.env.isMac) {
     // Get if we should never show the podman-mac-helper notification ever again
-    doNotShouldMacHelperSetup = getDoNotShowMacHelperSetting();
+    doNotShowMacHelperSetup = getDoNotShowMacHelperSetting();
 
     // Register the command for disabling the do not show mac helper setting permanently
     extensionContext.subscriptions.push(
@@ -1456,7 +1456,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           .update(configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
 
         //  Set the global variable to true
-        doNotShouldMacHelperSetup = true;
+        doNotShowMacHelperSetup = true;
 
         // Dismiss the notification
         podmanMacHelperNotificationDisposable?.dispose();
