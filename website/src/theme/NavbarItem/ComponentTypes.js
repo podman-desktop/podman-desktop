@@ -1,6 +1,7 @@
 import ComponentTypes from '@theme-original/NavbarItem/ComponentTypes';
 import { HeaderDownloadButton } from '@site/src/components/DownloadButton';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
+import { GitHubStarsButton } from '@site/src/components/GitHubStarsButton';
 
 // "Custom" navbar items to be added
 export default {
@@ -11,4 +12,5 @@ export default {
     </TelemetryLink>
   ),
   'custom-downloadButton': () => <HeaderDownloadButton className="navbar__item navbar__link" />,
+  'custom-githubStarsButton': () => <GitHubStarsButton className="navbar__item navbar__link" />,
 };
