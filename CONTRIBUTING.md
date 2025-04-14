@@ -232,18 +232,10 @@ When contributing the new code, you should consider not lowering overall code co
 
 We use `@biomejs/biome` (and `prettier` for markdown) as formatter and `eslint` for linting.
 
-Check that your code is properly formatted with the linter and formatter:
-
-Checking:
+Stage your changes in git and check that it is properly linted and formatted:
 
 ```sh
-pnpm lint:check && pnpm format:check
-```
-
-Fix:
-
-```sh
-pnpm lint:fix && pnpm format:fix
+pnpm lint-staged
 ```
 
 ### Step 8. Compile production binaries (optional)
