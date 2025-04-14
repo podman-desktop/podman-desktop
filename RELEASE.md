@@ -34,6 +34,14 @@ Below is what a typical release week may look like:
 1. Above PR MUST be merged before continuing with the steps.
 1. Edit the new release https://github.com/containers/podman-desktop/releases/edit/v0.12.0
 1. Select previous tag (v0.11.0) and click on `Generate release notes` and the click on `Update release`
+1. 🚨 Create the flathub PR once the release is available. This allows users to test the new version. We will hold the merge until it is approved.
+1. The flathub workflow will create an automated PR to the flathub repository https://github.com/flathub/io.podman_desktop.PodmanDesktop
+
+- Go to https://github.com/containers/podman-desktop/actions/workflows/publish-flathub.yaml
+- Click on the top right drop-down `Run workflow`
+- Enter the release version `0.12.0` for example. DO NOT add the `v`
+- Click `Run workflow`
+- You can view the PR at: https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
 
 ## Test release before it is rolling out.
 
@@ -58,6 +66,7 @@ If there are fixes that need to be made to the release as brought up by QE the f
 **Re-spin a release:**
 
 You'll need to create another release from the 1.3.x branch. This can be done by doing the following:
+
 1. Go to `Run workflow` in the [release steps](/RELEASE.md#releasing-on-github) again.
 2. **MAKE SURE** you specify that you want to use the `1.3.x` branch, NOT `main` under `Branch to use for the release`.
 3. Version to release should be `1.3.1` **IMPORTANT NOTE:** Literally `1.3.1` NOT the branch name `1.3.x`.
@@ -66,21 +75,31 @@ You'll need to create another release from the 1.3.x branch. This can be done by
 
 ✅ If QE agrees with the release, we have a green light!
 
+1. Ensure release notes PR is ready
+1. Merge the release notes before flagging the release as the 'latest': It is because Podman Desktop is displaying in the UI the release notes of the new release, so as soon as there is an update, the data needs to be there.
+
 **DO NOT FORGET to change from pre-release to release!**
 
-This is done on your release URL 
+This is done on your release URL
 
- **Do not forget to change the release from 'pre-release' to 'latest release' before proceeding**.
+**Do not forget to change the release from 'pre-release' to 'latest release' before proceeding**.
 
- 1. Go to your release: https://github.com/containers/podman-desktop/releases/tag/vX.X.X
- 2. Press the edit button.
- 3. Uncheck `Set as a pre-release`
+1.  Go to your release: https://github.com/containers/podman-desktop/releases/tag/vX.X.X
+2.  Press the edit button.
+3.  Uncheck `Set as a pre-release`
 
 ## Updating package managers (Brew, Winget, Chocolatey, Flathub)
 
 Pre-requisites:
 
 - Ensure the release is OK (green workflow, artifacts are there https://github.com/containers/podman-desktop/releases).
+
+### Flathub
+
+PR was created during the release, but it was not yet merged.
+The link to the PR is at https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
+
+1. once the PR passes all tests and release is accepted, merge the PR
 
 #### Brew
 
@@ -112,7 +131,7 @@ Publish to chocolatey. The workflow will create an automatic submission to the c
 
 1. Go to https://github.com/containers/podman-desktop/actions/workflows/publish-to-chocolatey.yaml
 1. Click on the top right drop-down `Run workflow`
-1. Select the release (under tags), which would be `v0.12.0`
+1. Run the workflow from the main branch.
 1. Enter the release version `0.12.0`. DO NOT add the `v`
 1. Click `Run workflow`
 
@@ -121,19 +140,6 @@ Afterwards, you'll have to:
 - Approve the PR with title `chore: Update Chocolatey package to 0.12.0` at https://github.com/containers/podman-desktop/pulls?q=is%3Apr+Update+Chocolatey
 
 You can view the progress at: https://community.chocolatey.org/packages/podman-desktop/0.12.0
-
-### Flathub
-
-Publish to Flathub. The workflow will create an automated PR to the flathub repository https://github.com/flathub/io.podman_desktop.PodmanDesktop
-
-1. Go to https://github.com/containers/podman-desktop/actions/workflows/publish-flathub.yaml
-1. Click on the top right drop-down `Run workflow`
-1. Enter the release version `0.12.0` for example. DO NOT add the `v`
-1. Click `Run workflow`
-
-You can view the PR at: https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
-
-1. If the PR passes all tests, merge the PR
 
 ## Documentation
 
