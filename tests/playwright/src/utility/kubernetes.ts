@@ -71,6 +71,7 @@ export async function deleteKubernetesResource(
   page: Page,
   resourceType: KubernetesResources,
   resourceName: string,
+  timeout: number = 30_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceType} kubernetes resource: ${resourceName}`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -80,7 +81,7 @@ export async function deleteKubernetesResource(
     await kubernetesResourcePage.deleteKubernetesResource(resourceName);
     await handleConfirmationDialog(page);
     await playExpect
-      .poll(async () => await kubernetesResourcePage.getRowByName(resourceName), { timeout: 30_000 })
+      .poll(async () => await kubernetesResourcePage.getRowByName(resourceName), { timeout: timeout })
       .not.toBeTruthy();
   });
 }

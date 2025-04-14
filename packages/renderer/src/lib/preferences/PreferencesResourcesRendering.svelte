@@ -393,6 +393,13 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+export let focus: string | undefined;
+let providerElementMap: Record<string, HTMLElement> = {};
+
+$: if (focus && providerElementMap[focus]) {
+  providerElementMap[focus].scrollIntoView({ behavior: 'auto', block: 'start' });
+}
+
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
@@ -414,6 +421,8 @@ function handleError(errorMessage: string): void {
 
     {#each providers as provider (provider.id)}
       <div
+        id={provider.id}
+        bind:this={providerElementMap[provider.id]}
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
