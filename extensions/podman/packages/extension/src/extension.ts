@@ -483,10 +483,13 @@ async function doUpdateMachines(
     }
   }
 
-  // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-  // and if we should notify that we need to run podman-mac-helper, we do so.
   if (extensionApi.env.isMac) {
+    // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
+    // and if we should notify that we need to run podman-mac-helper, we do so.
     await checkAndNotifySetupPodmanMacHelper();
+
+    // Check with regards to the disguised podman socket as well
+    await checkAndNotifyDisguisedPodman();
   }
 }
 
@@ -1530,16 +1533,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
-    // extension activation so that the user isn't constantly prompted with the error message.
-    // only on macOS
+    // Only on macOS
     if (extensionApi.env.isMac) {
+      // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
+      // extension activation so that the user isn't constantly prompted with the error message.
       await checkAndNotifyDisguisedPodman();
-    }
-
-    // After pushing, let's check to see if we need to run podman-mac-helper notification at all
-    // macOS only
-    if (extensionApi.env.isMac) {
+      // After pushing, let's check to see if we need to run podman-mac-helper notification at all
       await checkAndNotifySetupPodmanMacHelper();
     }
   }
@@ -2361,5 +2360,8 @@ async function checkAndNotifyDisguisedPodman(): Promise<void> {
   // If the socket is not disguised, we should alert the user that compatibility was not ran.
   if (!isDisguisedPodmanSocket) {
     notifyDisguisedPodmanSocket();
+  } else {
+    // If it's already disguised, dispose of the notification.
+    disguisedPodmanNotificationDisposable?.dispose();
   }
 }
