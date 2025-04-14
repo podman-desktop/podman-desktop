@@ -33,7 +33,7 @@ Below is what a typical release week may look like:
 1. There should be an automated PR that has been created. Approve this and set to auto-merge. This will be automatically merged in after all tests have been ran (takes 10-30 minutes). The title looks like `chore: 📢 Bump version to 0.13.0`. Rerun workflow manually if some of e2e tests are failing.
 1. Above PR MUST be merged before continuing with the steps.
 1. Edit the new release https://github.com/containers/podman-desktop/releases/edit/v0.12.0
-1. Select previous tag (v0.11.0) and click on `Generate release notes` and the click on `Update release`
+1. Select previous tag (v0.11.0) and click on `Generate release notes` and then click on `Update release`
 1. 🚨 Create the flathub PR once the release is available. This allows users to test the new version. We will hold the merge until it is approved.
 1. The flathub workflow will create an automated PR to the flathub repository https://github.com/flathub/io.podman_desktop.PodmanDesktop
 
