@@ -42,6 +42,8 @@ export class Runner {
   private readonly _testOutput: string;
   private _videoAndTraceName: string | undefined;
   private _runnerOptions: RunnerOptions;
+  private _saveTracesOnPass: boolean;
+  private _saveVideosOnPass: boolean;
 
   private static _instance: Runner | undefined;
 
@@ -65,6 +67,8 @@ export class Runner {
     this._running = false;
     this._runnerOptions = runnerOptions;
     this._profile = this._runnerOptions._profile;
+    this._saveTracesOnPass = this._runnerOptions._saveTracesOnPass;
+    this._saveVideosOnPass = this._runnerOptions._saveVideosOnPass;
     this._testOutput = join(this._runnerOptions._customOutputFolder, this._profile);
     this._customFolder = join(this._testOutput, this._runnerOptions._customFolder);
     this._videoAndTraceName = undefined;
@@ -254,7 +258,7 @@ export class Runner {
       return;
     }
 
-    if (!process.env.KEEP_TRACES_ON_PASS) {
+    if (!process.env.KEEP_TRACES_ON_PASS && !this._saveTracesOnPass) {
       const tracesPath = join(this._testOutput, 'traces', `${this._videoAndTraceName}_trace.zip`);
       if (existsSync(tracesPath)) {
         console.log(`Removing traces folder: ${tracesPath}`);
@@ -262,7 +266,7 @@ export class Runner {
       }
     }
 
-    if (!process.env.KEEP_VIDEOS_ON_PASS) {
+    if (!process.env.KEEP_VIDEOS_ON_PASS && !this._saveVideosOnPass) {
       const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);
       if (existsSync(videoPath)) {
         console.log(`Removing video folder: ${videoPath}`);

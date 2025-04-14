@@ -26,6 +26,8 @@ export class RunnerOptions {
   public readonly _extensionsDisabled: string[];
   public readonly _aiLabModelUploadDisabled: boolean;
   public readonly _binaryPath: string | undefined;
+  public readonly _saveTracesOnPass: boolean;
+  public readonly _saveVideosOnPass: boolean;
   public readonly _customSettings: { [key: string]: unknown } = {};
 
   constructor({
@@ -38,6 +40,8 @@ export class RunnerOptions {
     extensionsDisabled = [],
     aiLabModelUploadDisabled = false,
     binaryPath = undefined,
+    saveTracesOnPass = false,
+    saveVideosOnPass = false,
     customSettings = {},
   }: {
     profile?: string;
@@ -49,6 +53,8 @@ export class RunnerOptions {
     extensionsDisabled?: string[];
     aiLabModelUploadDisabled?: boolean;
     binaryPath?: string;
+    saveTracesOnPass?: boolean;
+    saveVideosOnPass?: boolean;
     customSettings?: { [key: string]: unknown };
   } = {}) {
     this._profile = profile;
@@ -60,6 +66,8 @@ export class RunnerOptions {
     this._extensionsDisabled = extensionsDisabled;
     this._aiLabModelUploadDisabled = aiLabModelUploadDisabled;
     this._binaryPath = binaryPath;
+    this._saveTracesOnPass = saveTracesOnPass;
+    this._saveVideosOnPass = saveVideosOnPass;
     this._customSettings = customSettings;
   }
 
