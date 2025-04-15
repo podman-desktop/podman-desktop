@@ -86,14 +86,14 @@ function cleanup(): void {
   message = '';
 }
 
-async function clickButton(index?: number): Promise<void> {
+async function clickButton(index?: number, option?: number): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, index);
+  await window.sendShowMessageBoxOnSelect(currentId, index, option);
 }
 
 async function onClose(): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined, undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
