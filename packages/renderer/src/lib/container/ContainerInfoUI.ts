@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Port } from '@podman-desktop/api';
+import type { Component } from 'svelte';
 
 // type of groups
 export enum ContainerGroupInfoTypeUI {
@@ -68,7 +69,7 @@ export interface ContainerInfoUI {
   actionInProgress?: boolean;
   actionError?: string;
   labels: { [label: string]: string };
-  icon?: unknown;
+  icon?: string | Component;
   imageBase64RepoTag: string;
   imageHref?: string;
 }

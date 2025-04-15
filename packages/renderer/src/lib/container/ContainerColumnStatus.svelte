@@ -12,6 +12,6 @@ const containerUtils = new ContainerUtils();
 
 {#if containerUtils.isContainerGroupInfoUI(object)}
   <StatusIcon icon={PodIcon} status={object.status} />
-{:else if containerUtils.isContainerInfoUI(object) && typeof object.icon === 'string'}
+{:else if containerUtils.isContainerInfoUI(object) && object.icon}
   <StatusIcon icon={object.icon} status={object.state} />
 {/if}
