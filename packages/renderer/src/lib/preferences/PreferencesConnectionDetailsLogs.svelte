@@ -82,9 +82,9 @@ onMount(async () => {
   if (providerInternalId) {
     await window.startReceiveLogs(
       providerInternalId,
-      (data: unknown[]) => logHandler(data, '\x1b[37m'),
-      (data: unknown[]) => logHandler(data, '\x1b[37m'),
-      (data: unknown[]) => logHandler(data, '\x1b[37m'),
+      (data: unknown[]) => logHandler(data, ''),
+      (data: unknown[]) => logHandler(data, ''),
+      (data: unknown[]) => logHandler(data, ''),
       connectionInfo,
     );
   }
