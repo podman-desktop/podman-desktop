@@ -34,7 +34,7 @@ export default defineConfig({
       '!**/builtin/**',
     ],
     // use GitHub action reporters when running in CI
-    reporters: process.env.GITHUB_ACTIONS ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
+    reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
       all: true,
