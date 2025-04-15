@@ -44,7 +44,7 @@ const navigationManagerMock = {
   navigateToRoute: vi.fn(),
 } as unknown as NavigationManager;
 
-const containerPRoviderRegistryMock = {
+const containerProviderRegistryMock = {
   registerContainerConnection: vi.fn(),
   isApiAttached: vi.fn(),
   onApiAttached: vi.fn(),
@@ -82,7 +82,7 @@ describe('CommandsInit', () => {
       apiSenderMock as ApiSenderType,
       navigationManagerMock as NavigationManager,
       taskManagerMock as TaskManager,
-      containerPRoviderRegistryMock as ContainerProviderRegistry,
+      containerProviderRegistryMock as ContainerProviderRegistry,
     );
     commandsInit.init();
   });
