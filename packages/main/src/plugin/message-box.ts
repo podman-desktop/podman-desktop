@@ -115,7 +115,22 @@ export class MessageBox {
     return deferred.promise;
   }
 
-  async showDialog(type: DialogType, title: string, message: string, items: string[]): Promise<string | undefined> {
+  isDropdownType(response: ButtonsType | undefined): response is DropdownType {
+    return (
+      typeof response === 'object' &&
+      response !== null &&
+      'heading' in response &&
+      'buttons' in response &&
+      Array.isArray((response as DropdownType).buttons)
+    );
+  }
+
+  async showDialog(
+    type: DialogType,
+    title: string,
+    message: string,
+    items: ButtonsType[],
+  ): Promise<string | undefined> {
     const result = await this.showMessageBox({
       title: title,
       message: message,
@@ -124,7 +139,11 @@ export class MessageBox {
     });
 
     if (result.response !== undefined && result.response >= 0) {
-      return items[result.response];
+      const response = items[result.response];
+      if (result.option !== undefined && result.option >= 0) {
+        if (this.isDropdownType(response)) return response.buttons[result.option];
+      }
+      if (typeof response === 'string') return response;
     }
 
     return undefined;

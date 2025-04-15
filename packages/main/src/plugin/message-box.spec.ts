@@ -19,6 +19,7 @@
 import { expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from './api.js';
+import type { DropdownType } from './message-box.js';
 import { MessageBox } from './message-box.js';
 
 test('Should return first item if button clicked is the first', async () => {
@@ -39,4 +40,36 @@ test('Should return second item if button clicked is the second', async () => {
   });
   const result = await messageBox.showDialog('info', 'title', 'message', ['ok', 'cancel']);
   expect(result).toBe('cancel');
+});
+
+test('Should return option one if dropdown clicked is the first', async () => {
+  const messageBox = new MessageBox({} as ApiSenderType);
+  vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
+    response: 0,
+    option: 1,
+  });
+
+  const dropdown: DropdownType = {
+    heading: 'dropdown',
+    buttons: ['Monday', 'Tuesday', 'Wednesday'],
+  };
+
+  const result = await messageBox.showDialog('info', 'title', 'message', [dropdown, 'ok']);
+  expect(result).toBe('Tuesday');
+});
+
+test('Should return option one if dropdown clicked is the second', async () => {
+  const messageBox = new MessageBox({} as ApiSenderType);
+  vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
+    response: 1,
+    option: 0,
+  });
+
+  const dropdown: DropdownType = {
+    heading: 'dropdown',
+    buttons: ['Monday', 'Tuesday', 'Wednesday'],
+  };
+
+  const result = await messageBox.showDialog('info', 'title', 'message', ['ok', dropdown]);
+  expect(result).toBe('Monday');
 });
