@@ -1,7 +1,7 @@
 <script lang="ts">
 interface Props {
-  size: string;
-  solid: boolean;
+  size?: string;
+  solid?: boolean;
 }
 
 let { size = '40', solid }: Props = $props();

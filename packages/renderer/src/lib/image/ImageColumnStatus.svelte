@@ -6,4 +6,7 @@ import type { ImageInfoUI } from './ImageInfoUI';
 export let object: ImageInfoUI;
 </script>
 
-<StatusIcon icon={object.icon} status={object.status} />
+{#if typeof object.icon === 'string'}
+  <StatusIcon icon={object.icon} status={object.status} />
+{/if}
+
