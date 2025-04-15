@@ -439,6 +439,10 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            type: 'custom-downloadButton',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/podman-desktop/podman-desktop',
             className: 'header-github-link',
             position: 'right',
@@ -490,14 +494,20 @@ const config = {
             ],
           },
         ],
-        copyright: `<div class="flex flex-col items-center divide-y-4 divide-none">
-        <div class="w-80"><img class="dark:hidden" alt="Cloud Native Computing Foundation" src="/img/cncf-logo.svg"><img class="hidden dark:inline" alt="Cloud Native Computing Foundation" src="/img/cncf-logo-dark.svg"></div>
-        <div>We are a <a href="https://cncf.io/">Cloud Native Computing Foundation</a> sandbox project.</div>
-        <div class="text-sm">
-        © Copyright ${title} Contributors ${new Date().getFullYear()}. © ${new Date().getFullYear()} The Linux Foundation. All rights reserved.
-        </div>
-        <div class="text-xs">The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our <a href="https://www.linuxfoundation.org/trademark-usage/"> Trademark Usage</a> page.
-        </div>
+        copyright: `
+          <div class="flex flex-col items-start text-left gap-4">
+            <div class="w-96 mt-8 mb-8">
+              <img class="dark:hidden" alt="Cloud Native Computing Foundation" src="/img/cncf-logo.svg">
+              <img class="hidden dark:inline" alt="Cloud Native Computing Foundation" src="/img/cncf-logo-dark.svg">
+            </div>
+            <div class="text-sm">
+              <p class="mb-1">We are a <a href="https://cncf.io/" class="underline">Cloud Native Computing Foundation</a> sandbox project.</p>
+              <p class="mb-1">© Copyright Podman Desktop Contributors ${new Date().getFullYear()}. © ${new Date().getFullYear()} The Linux Foundation. All rights reserved.</p>
+              <p class="mb-1">The Linux Foundation has registered trademarks and uses trademarks.
+              For a list of trademarks of The Linux Foundation, please see our
+              <a href="https://www.linuxfoundation.org/trademark-usage/" class="underline"> Trademark Usage</a> page.</p>
+            </div>
+          </div>
       `,
       },
       prism: {

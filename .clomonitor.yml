@@ -15,21 +15,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: merge-queue
-on:
-  merge_group:
-
-permissions:
-  contents: read
-
-jobs:
-  dco:
-    name: DCO
-    runs-on: ubuntu-24.04
-    steps:
-      - run: echo "This DCO job runs on merge_queue event and does not do anything"
-  semantic:
-    name: Semantic PR
-    runs-on: ubuntu-24.04
-    steps:
-      - run: echo "This DCO job runs on merge_queue event and does not do anything"
+# Checks exemptions
+exemptions:
+  - check: artifacthub_badge # Check identifier (see https://github.com/cncf/clomonitor/blob/main/docs/checks.md#exemptions)
+    reason: "Podman Desktop is a desktop application and does not offer Cloud Native packages."

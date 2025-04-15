@@ -18,7 +18,7 @@ interface Props {
 
 let {
   entry,
-  command = (): void => router.goto('/preferences/resources'),
+  command = (): void => router.goto(`/preferences/resources?focus=${entry.id}`),
   disableTooltip = false,
   class: className,
   tooltipTopRight = false,

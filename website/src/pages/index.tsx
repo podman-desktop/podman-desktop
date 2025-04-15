@@ -1,7 +1,6 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
 import {
   faCertificate,
@@ -19,98 +18,19 @@ import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
 import CommunityBanner from '../components/CommunityBanner';
+import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
-import { TelemetryLink } from '../components/TelemetryLink';
-
-function DownloadClientLinks(): JSX.Element {
-  let operatingSystem = '';
-  let varIcon = undefined;
-  let url = 'macos'; // Just use macos by default as the url before checking the user agent in case of an odd issue (unable to get userAgent / it's blank / etc.)
-  const userAgent = navigator.userAgent;
-
-  if (userAgent.indexOf('Windows') !== -1) {
-    operatingSystem = 'Windows';
-    url = 'windows';
-    varIcon = 'faWindows';
-  } else if (userAgent.indexOf('Mac') !== -1) {
-    operatingSystem = 'macOS';
-    // do not need to set url to macos as it is already set
-    varIcon = 'faApple';
-  } else if (userAgent.indexOf('Linux') !== -1) {
-    operatingSystem = 'Linux';
-    url = 'linux';
-    varIcon = 'faLinux';
-  }
-
-  let mainButton;
-  let otherButton;
-
-  if (operatingSystem !== '') {
-    mainButton = (
-      <div>
-        <TelemetryLink
-          className="no-underline hover:no-underline inline-flex text-white hover:text-white bg-violet-600 border-0 py-4 px-8 mt-6 mb-1 focus:outline-hidden hover:bg-violet-700 rounded-sm text-lg"
-          eventPath="landing"
-          eventTitle="hero-download"
-          to={'/downloads/' + url}>
-          <FontAwesomeIcon size="2x" icon={varIcon as IconProp} className="px-2" /> Download Now
-        </TelemetryLink>
-        <caption className="block mt-0 dark:text-gray-400">
-          For <strong>{operatingSystem}</strong> <em>(browser-detected)</em>
-        </caption>
-      </div>
-    );
-    otherButton = (
-      <div>
-        <Link
-          className="underline font-semibold hover:underline ml-4 inline-flex py-2 px-6 my-4  focus:outline-hidden text-lg"
-          to="/downloads">
-          Other downloads
-        </Link>
-      </div>
-    );
-  } else {
-    mainButton = (
-      <div>
-        <Link
-          className="no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 mt-6 mb-1 focus:outline-hidden hover:bg-purple-600 rounded-sm text-lg"
-          to="/downloads">
-          Download Page
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex justify-center flex-col">
-      {mainButton}
-      {otherButton}
-    </div>
-  );
-}
-
-function DownloadGenericLinks(): JSX.Element {
-  return (
-    <div className="flex justify-center">
-      <Link
-        className="no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 mt-6 mb-1 focus:outline-hidden hover:bg-purple-600 rounded-sm text-lg"
-        to="/downloads">
-        Download Page
-      </Link>
-    </div>
-  );
-}
 
 function Hero(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 body-font">
       <div className="container mx-auto flex px-5 pb-24 pt-4 items-center justify-center flex-col">
-        <div className="text-center lg:w-2/3 w-full bg-hero-pattern bg-no-repeat bg-center">
+        <div className="text-center lg:w-3/4 w-full bg-hero-pattern bg-no-repeat bg-center">
           <div className="bg-white/30 dark:bg-transparent">
-            <h1 className="title-font text-4xl leading-[3rem] lg:text-5xl lg:leading-[4rem] font-bold text-gray-900 dark:text-white mt-[80px]">
+            <h1 className="title-font text-4xl leading-[3rem] lg:text-5xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white mt-[80px] lg:w-3/4 mx-auto">
               Best Free &amp; Open Source Tool for Containers &amp; Kubernetes
             </h1>
-            <p className="text-base font-medium leading-[1.9rem] md:text-lg md:leading-[1.9rem] mt-[88px]">
+            <p className="text-base font-bold leading-[1.9rem] md:text-lg md:leading-[1.9rem] mt-[88px]">
               The best free and open source tool for developers to work with containers and Kubernetes. Simplify
               container management, streamline Kubernetes workflows, and transition from local development to production
               with ease.

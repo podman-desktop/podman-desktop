@@ -114,7 +114,16 @@ test(`Test navigationHandle for ${NavigationPage.IMAGE}`, () => {
     parameters: { id: '123', engineId: 'dummyEngineId', tag: 'dummyTag' },
   });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/123/dummyEngineId/ZHVtbXlUYWc=');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/123/dummyEngineId/ZHVtbXlUYWc=/summary');
+});
+
+test(`Test navigationHandle for ${NavigationPage.MANIFEST}`, () => {
+  handleNavigation({
+    page: NavigationPage.MANIFEST,
+    parameters: { id: '123', engineId: 'dummyEngineId', tag: 'dummyTag' },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/manifests/123/dummyEngineId/ZHVtbXlUYWc=/summary');
 });
 
 test(`Test navigationHandle for ${NavigationPage.ONBOARDING}`, () => {

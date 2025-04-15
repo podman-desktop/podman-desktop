@@ -26,13 +26,18 @@ on:
   repository_dispatch:
     types: [ publish-to-flathub ]
 
+permissions:
+  contents: read
+
 jobs:
 
   update-flathub:
+    permissions:
+      contents: write  # for Git to git push
     name: Publish Podman Desktop to flathub
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: 'flathub/io.podman_desktop.PodmanDesktop'
           ref: 'master'

@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Download website content artifact
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: website-content
@@ -40,7 +40,7 @@ jobs:
           allow_forks: true
 
       - name: Publish preview netlify
-        uses: netlify/actions/cli@master
+        uses: netlify/actions/cli@375963b92b795c7b979927c580dd6f2a65ebcf28 # master
         id: netlify-publish
         with:
           args: deploy --dir=content/website/build --functions=functions
@@ -49,7 +49,7 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
       - name: 'Update status of Pull Request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const { repo: { owner, repo } } = context;

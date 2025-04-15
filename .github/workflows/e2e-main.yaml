@@ -63,13 +63,13 @@ jobs:
     name: Run All E2E tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: github.event_name == 'push'
 
       - name: Set the default env. variables
@@ -120,12 +120,12 @@ jobs:
           EOT
           podman info
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -149,7 +149,7 @@ jobs:
           pnpm ${{ env.NPM_TARGET }}
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857 # v5.5.1
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -159,7 +159,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: e2e-tests
@@ -180,21 +180,21 @@ jobs:
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: github.event_name == 'push'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -226,7 +226,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857 # v5.5.1
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -236,7 +236,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: update-e2e-test-${{ matrix.installation }}
@@ -251,21 +251,21 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: github.event_name == 'push'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -306,7 +306,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857 # v5.5.1
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -316,7 +316,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: mac-update-e2e-test

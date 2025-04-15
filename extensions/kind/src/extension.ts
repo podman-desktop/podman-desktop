@@ -64,6 +64,9 @@ let kindPath: string | undefined;
 
 let installer: KindInstaller;
 
+let provider: extensionApi.Provider;
+let latestAsset: KindGithubReleaseArtifactMetadata | undefined = undefined;
+let providerUpdate: extensionApi.ProviderUpdate | undefined = undefined;
 const imageHandler = new ImageHandler();
 
 async function installLatestKind(): Promise<string> {
@@ -287,6 +290,8 @@ export function refreshKindClustersOnProviderConnectionUpdate(provider: extensio
   });
 }
 
+let currentUpdateDisposable: extensionApi.Disposable | undefined = undefined;
+
 export async function createProvider(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
@@ -308,7 +313,7 @@ export async function createProvider(
   providerOptions.emptyConnectionMarkdownDescription = `
   Kind is a Kubernetes utility for running local clusters using single-container "nodes", providing an easy way to create and manage Kubernetes environments for development and testing.\n\nMore information: [kind.sigs.k8s.io](https://kind.sigs.k8s.io/)`;
 
-  const provider = extensionApi.provider.createProvider(providerOptions);
+  provider = extensionApi.provider.createProvider(providerOptions);
 
   extensionContext.subscriptions.push(provider);
   await registerProvider(extensionContext, provider, telemetryLogger);
@@ -322,6 +327,10 @@ export async function createProvider(
       );
     }),
   );
+
+  if (latestAsset && latestAsset.tag.slice(1) !== kindCli?.version && providerUpdate) {
+    currentUpdateDisposable = provider.registerUpdate(providerUpdate);
+  }
 
   // when containers are refreshed, update
   extensionApi.containerEngine.onEvent(async event => {
@@ -437,7 +446,6 @@ async function registerCliTool(
   let releaseToUpdateTo: KindGithubReleaseArtifactMetadata | undefined;
   let releaseVersionToUpdateTo: string | undefined;
 
-  let latestAsset: KindGithubReleaseArtifactMetadata | undefined;
   try {
     latestAsset = await installer.getLatestVersionAsset();
   } catch (error: unknown) {
@@ -449,6 +457,11 @@ async function registerCliTool(
   const update = {
     version: latestVersion !== kindCli.version ? latestVersion : undefined,
     selectVersion: async (): Promise<string> => {
+      try {
+        binary = await getKindBinaryInfo('kind');
+      } catch (err: unknown) {
+        console.error(err);
+      }
       const selected = await installer.promptUserForVersion(binary?.version);
       releaseToUpdateTo = selected;
       releaseVersionToUpdateTo = removeVersionPrefix(selected.tag);
@@ -481,16 +494,35 @@ async function registerCliTool(
         installationSource: 'extension',
         path: cliPath,
       });
+      provider.updateVersion(releaseVersionToUpdateTo);
       if (releaseVersionToUpdateTo === latestVersion) {
         delete update.version;
+        currentUpdateDisposable?.dispose();
       } else {
         update.version = latestVersion;
+        if (providerUpdate) {
+          providerUpdate.version = latestVersion ?? providerUpdate.version;
+          currentUpdateDisposable = provider.registerUpdate(providerUpdate);
+        }
       }
       releaseVersionToUpdateTo = undefined;
       releaseToUpdateTo = undefined;
     },
   };
   kindCli.registerUpdate(update);
+
+  // create update object for the provider to use
+  if (latestVersion) {
+    providerUpdate = {
+      version: latestVersion,
+      update: async (): Promise<void> => {
+        // ensures that we updates to the latest release
+        releaseToUpdateTo = undefined;
+        await update.doUpdate();
+      },
+    };
+  }
+
   kindCli.registerInstaller({
     selectVersion: async () => {
       const selected = await installer.promptUserForVersion();

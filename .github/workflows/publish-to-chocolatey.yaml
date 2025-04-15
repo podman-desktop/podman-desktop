@@ -30,6 +30,9 @@ on:
   repository_dispatch:
     types: [ publish-to-chocolatey ]
 
+permissions:
+  contents: read
+
 jobs:
 
   version:
@@ -56,6 +59,8 @@ jobs:
           echo "desktopVersion=$version" >> ${GITHUB_OUTPUT}
 
   winget-bump:
+    permissions:
+      contents: write  # for Git to git push
     name: Update Chocolatey
     needs: version
     runs-on: windows-2022
@@ -63,7 +68,7 @@ jobs:
       run:
         shell: powershell
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install the Chocolatey Automatic Package Updater Module
         run: choco install au -y
       - name: Build the Podman Desktop chocolatey Package by making sure we're using the latest release

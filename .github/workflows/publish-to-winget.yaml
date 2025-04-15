@@ -26,6 +26,9 @@ on:
   repository_dispatch:
     types: [ publish-to-winget ]
 
+permissions:
+  contents: read
+
 jobs:
 
   version:
