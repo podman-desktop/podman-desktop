@@ -1,9 +1,9 @@
 <script lang="ts">
-import { faEthernet } from '@fortawesome/free-solid-svg-icons';
 import { StatusIcon } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
 
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
+
+import EthernetIcon from './EthernetIcon.svelte';
 
 interface Props {
   object: ForwardConfig;
@@ -11,10 +11,6 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-{#snippet Ethernet()}
-  <Fa class="w-[20px]" scale={1.5} icon={faEthernet} />
-{/snippet}
-
 {#if object}
-  <StatusIcon status="RUNNING" icon={Ethernet} />
+  <StatusIcon status="RUNNING" icon={EthernetIcon} />
 {/if}
