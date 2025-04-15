@@ -133,7 +133,7 @@ onDestroy(() => {
 {#if image}
   <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag} bind:this={detailsPage}>
     {#snippet iconSnippet()}
-      {#if image && typeof image.icon === 'string'}<StatusIcon icon={image.icon} size={24} status={image.status} />{/if}
+      {#if image?.icon}<StatusIcon icon={image.icon} size={24} status={image.status} />{/if}
     {/snippet}
     {#snippet subtitleSnippet()}
       {#if image?.badges.length}
