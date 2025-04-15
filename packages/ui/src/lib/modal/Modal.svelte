@@ -9,7 +9,6 @@ interface Props {
   name?: string;
   top?: boolean;
   ignoreFocusOut?: boolean;
-  overflow?: 'auto' | 'visible';
   onclose?: () => void;
   children?: Snippet;
 }
@@ -19,7 +18,6 @@ let {
   name = 'drop-down-dialog',
   top = false,
   ignoreFocusOut = false,
-  overflow = 'auto',
   onclose = (): void => {
     dispatch('close');
   },
@@ -68,7 +66,7 @@ function handleMousedown(e: MouseEvent): void {
   <div
     class:translate-y-[-5%]={!top}
     class:my-[32px]={top}
-    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl {overflow === 'auto' ? 'overflow-auto' : 'overflow-visible'} w-[calc(200vw-4em)] h-fit max-w-[42em] max-h-[calc(100vh-4em)] border-[1px] border-[var(--pd-modal-border)]"
+    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl overflow-visible w-[calc(200vw-4em)] h-fit max-w-[42em] max-h-[calc(100vh-4em)] border-[1px] border-[var(--pd-modal-border)]"
     role="dialog"
     aria-label={name}
     aria-modal="true"
