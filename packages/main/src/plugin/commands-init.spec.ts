@@ -107,7 +107,7 @@ describe('CommandsInit', () => {
     expect(commandRegistryMock.registerCommand).toBeCalledWith('pullImage', expect.anything());
   });
 
-  test('should register the openWebsite command', () => {
-    expect(commandRegistryMock.registerCommand).toBeCalledWith('openWebsite', expect.anything());
+  test('should register the openExternal command', () => {
+    expect(commandRegistryMock.registerCommand).toBeCalledWith('openExternal', expect.anything());
   });
 });

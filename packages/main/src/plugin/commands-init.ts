@@ -111,7 +111,7 @@ export class CommandsInit implements IDisposable {
     );
 
     this.#disposables.push(
-      commandRegistry.registerCommand('openWebsite', async (arg: Uri) => {
+      commandRegistry.registerCommand('openExternal', async (arg: Uri) => {
         if (arg) {
           await shell.openExternal(arg.toString());
         }
