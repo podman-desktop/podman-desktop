@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { Component } from 'svelte';
+
 import StarIcon from '../icons/StarIcon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 
@@ -6,8 +8,7 @@ interface Props {
   // status: one of RUNNING, STARTING, USED, CREATED, DELETING, or DEGRADED
   // any other status will result in a standard outlined box
   status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'CREATED' | string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon?: any;
+  icon?: string | Component;
   size?: number;
 }
 let { status = 'UNKNOWN', icon, size = 20 }: Props = $props();
