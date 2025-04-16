@@ -41,6 +41,7 @@ interface PRInfo {
   author: Author;
   number: number;
   link: string;
+  created_at?: string;
 }
 
 interface PRCategory {
@@ -84,39 +85,75 @@ class ReleaseNotesPreparator {
     console.log(`${filename} was created!`);
   }
 
-  private async isFirstTimeContributor(username: string): Promise<boolean> {
-    const { data: commits } = await this.octokit.rest.repos.listCommits({
-      owner: this.organization,
-      repo: this.repo,
-      author: username,
-      per_page: 1,
-    });
+  // Count all PRs in given milestone for each user
+  private async getMilestonePRs(prs: Issue[]): Promise<{ [key: string]: number }> {
+    const result: { [key: string]: number } = {};
+    for (const issue of prs) {
+      if (issue.pull_request) {
+        const author = issue.user?.login;
+        if (author) {
+          if (!result[author]) result[author] = 0;
+          result[author]++;
+        }
+      }
+    }
+    return result;
+  }
 
-    return commits.length === 0;
+  private async isNewContributor(username: string, contributorsMap, milestoneCommits): Promise<boolean> {
+    const totalCommits = contributorsMap[username] || 0;
+    const milestoneCount = milestoneCommits[username] || 0;
+    return totalCommits === milestoneCount && totalCommits > 0;
   }
 
   private async getFirstTimeContributors(prs: Issue[]): Promise<PRInfo[]> {
-    const firstTimeContributors: PRInfo[] = [];
+    const firstTimeContributorsMap: { [username: string]: PRInfo } = {};
+    // Get all contibutors in repo
+    const contributors = await this.octokit.rest.repos.listContributors({
+      owner: this.organization,
+      repo: this.repo,
+      per_page: 100,
+    });
+
+    const contributorsMap = contributors.data.reduce((acc: { [key: string]: number }, contributor) => {
+      if (contributor.login) {
+        acc[contributor.login] = contributor.contributions;
+      }
+      return acc;
+    }, {});
+
+    const usersMilestonePRs = await this.getMilestonePRs(prs);
 
     for (const pr of prs) {
       if (!pr.user) continue;
       const username = pr.user.login;
 
-      const isFirstTime = await this.isFirstTimeContributor(username);
-      if (isFirstTime) {
-        firstTimeContributors.push({
-          title: pr.title,
-          author: {
-            username: username,
-            link: pr.user.html_url,
-          },
-          number: pr.number,
-          link: pr.html_url,
-        });
+      const isNewContributor = await this.isNewContributor(username, contributorsMap, usersMilestonePRs);
+      if (!isNewContributor) continue;
+
+      const newPRInfo: PRInfo = {
+        title: pr.title,
+        author: {
+          username: username,
+          link: pr.user.html_url,
+        },
+        number: pr.number,
+        link: pr.html_url,
+        created_at: pr.created_at,
+      };
+
+      if (firstTimeContributorsMap[username]) {
+        // Get only the oldest one
+        if (new Date(newPRInfo.created_at) > new Date(firstTimeContributorsMap[username].created_at)) {
+          firstTimeContributorsMap[username] = newPRInfo;
+        }
+      } else {
+        firstTimeContributorsMap[username] = newPRInfo;
       }
     }
 
-    return firstTimeContributors ?? undefined;
+    // Vrátíme pole PRInfo z naší mapy
+    return Object.values(firstTimeContributorsMap);
   }
 
   private async getPRsByMilestone(owner: string, repo: string, milestoneTitle: string): Promise<Issue[]> {
@@ -153,7 +190,11 @@ class ReleaseNotesPreparator {
     // Filter our only PRs and PRs created by an user
     prs = prs.filter(
       issue =>
-        issue.pull_request && issue.user && issue.user.type !== 'Bot' && issue.user.login !== 'podman-desktop-bot',
+        issue.pull_request &&
+        issue.user &&
+        issue.user.type !== 'Bot' &&
+        issue.user.login !== 'podman-desktop-bot' &&
+        issue.user.login !== 'step-security-bot',
     );
 
     return prs;
