@@ -24,6 +24,10 @@ export function toDockerContextName(name: string): string {
   return env.isWindows ? (name.startsWith('podman-') ? name : `podman-${name}`) : 'podman';
 }
 
+export function toDescription(name: string): string {
+  return env.isWindows ? `Podman machine ${name}` : 'Podman';
+}
+
 export function toEndpoint(socketPath: string): string {
   return env.isWindows ? `npipe://${socketPath.replace(/\\/g, '/')}` : `unix://${socketPath}`;
 }
@@ -55,7 +59,7 @@ export class DockerContextSynchronizer implements Disposable {
         try {
           await this.dockerContextHandler.createContext({
             name: toDockerContextName(connection.name),
-            metadata: { description: `Podman machine ${connection.name}` },
+            metadata: { description: toDescription(connection.name) },
             endpoints: { docker: { host: toEndpoint(connection.endpoint.socketPath) } },
           });
         } catch (error: unknown) {
