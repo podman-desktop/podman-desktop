@@ -76,7 +76,7 @@ export interface MessageBoxOptions {
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
-  option: number | undefined;
+  option?: number;
 }
 
 export class MessageBox {

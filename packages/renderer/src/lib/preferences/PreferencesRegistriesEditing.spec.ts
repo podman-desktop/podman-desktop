@@ -110,9 +110,7 @@ describe('PreferencesRegistriesEditing', () => {
     vi.mocked(window.checkImageCredentials)
       .mockRejectedValueOnce(new Error('unable to verify the first certificate'))
       .mockRejectedValueOnce(new Error('self signed certificate in certificate chain'));
-    vi.mocked(window.showMessageBox)
-      .mockResolvedValueOnce({ response: 1, option: undefined })
-      .mockResolvedValueOnce({ response: 0, option: undefined });
+    vi.mocked(window.showMessageBox).mockResolvedValueOnce({ response: 1 }).mockResolvedValueOnce({ response: 0 });
     await userEvent.click(button);
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);

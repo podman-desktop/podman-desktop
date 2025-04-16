@@ -31,7 +31,7 @@ $effect(() => {
 });
 
 async function onClose(): Promise<void> {
-  let result: MessageBoxReturnValue = { response: -1, option: undefined };
+  let result: MessageBoxReturnValue = { response: -1 };
   try {
     result = await window.showMessageBox({
       title: 'Hide extension recommendation banners',

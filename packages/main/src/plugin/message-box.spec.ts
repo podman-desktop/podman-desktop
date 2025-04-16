@@ -26,7 +26,6 @@ test('Should return first item if button clicked is the first', async () => {
   const messageBox = new MessageBox({} as ApiSenderType);
   vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
     response: 0,
-    option: undefined,
   });
   const result = await messageBox.showDialog('info', 'title', 'message', ['ok', 'cancel']);
   expect(result).toBe('ok');
@@ -36,7 +35,6 @@ test('Should return second item if button clicked is the second', async () => {
   const messageBox = new MessageBox({} as ApiSenderType);
   vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
     response: 1,
-    option: undefined,
   });
   const result = await messageBox.showDialog('info', 'title', 'message', ['ok', 'cancel']);
   expect(result).toBe('cancel');
