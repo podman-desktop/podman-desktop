@@ -35,6 +35,9 @@ export class DockerContextSynchronizer implements Disposable {
     this.#disposable.push(
       provider.onDidUpdateContainerConnection(event => this.processUpdatedConnection(event.connection)),
     );
+    this.#disposable.push(
+      provider.onDidRegisterContainerConnection(event => this.processUpdatedConnection(event.connection)),
+    );
   }
 
   async init(): Promise<void> {
