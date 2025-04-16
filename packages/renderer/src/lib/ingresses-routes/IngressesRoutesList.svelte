@@ -13,12 +13,12 @@ import type { V1Route } from '/@api/openshift-types';
 
 import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
 import IngressRouteColumnActions from './IngressRouteColumnActions.svelte';
 import IngressRouteColumnBackend from './IngressRouteColumnBackend.svelte';
 import IngressRouteColumnHostPath from './IngressRouteColumnHostPath.svelte';
-import IngressRouteColumnStatus from './IngressRouteColumnStatus.svelte';
 import IngressRouteEmptyScreen from './IngressRouteEmptyScreen.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
@@ -39,7 +39,7 @@ const ingressRouteUtils = new IngressRouteUtils();
 let statusColumn = new TableColumn<IngressUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: IngressRouteColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

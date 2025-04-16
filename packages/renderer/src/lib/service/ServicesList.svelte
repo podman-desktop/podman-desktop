@@ -6,10 +6,10 @@ import { kubernetesCurrentContextServicesFiltered, serviceSearchPattern } from '
 
 import ServiceIcon from '../images/ServiceIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { ServiceUtils } from './service-utils';
 import ServiceColumnActions from './ServiceColumnActions.svelte';
-import ServiceColumnStatus from './ServiceColumnStatus.svelte';
 import ServiceColumnType from './ServiceColumnType.svelte';
 import ServiceEmptyScreen from './ServiceEmptyScreen.svelte';
 import type { ServiceUI } from './ServiceUI';
@@ -29,7 +29,7 @@ const serviceUtils = new ServiceUtils();
 let statusColumn = new TableColumn<ServiceUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: ServiceColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

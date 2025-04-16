@@ -6,10 +6,10 @@ import { kubernetesCurrentContextNodesFiltered, nodeSearchPattern } from '/@/sto
 
 import NodeIcon from '../images/NodeIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { NodeUtils } from './node-utils';
 import NodeColumnRoles from './NodeColumnRoles.svelte';
-import NodeColumnStatus from './NodeColumnStatus.svelte';
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 import type { NodeUI } from './NodeUI';
 
@@ -28,7 +28,7 @@ const nodeUtils = new NodeUtils();
 let statusColumn = new TableColumn<NodeUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: NodeColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

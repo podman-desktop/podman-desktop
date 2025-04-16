@@ -11,10 +11,10 @@ import {
 
 import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
 import ConfigMapSecretColumnActions from './ConfigMapSecretColumnActions.svelte';
-import ConfigMapSecretColumnStatus from './ConfigMapSecretColumnStatus.svelte';
 import ConfigMapSecretColumnType from './ConfigMapSecretColumnType.svelte';
 import ConfigMapSecretEmptyScreen from './ConfigMapSecretEmptyScreen.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
@@ -30,7 +30,7 @@ const configmapSecretUtils = new ConfigMapSecretUtils();
 let statusColumn = new TableColumn<ConfigMapSecretUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: ConfigMapSecretColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

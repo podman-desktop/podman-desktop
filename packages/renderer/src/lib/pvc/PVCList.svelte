@@ -9,11 +9,11 @@ import {
 
 import PVCIcon from '../images/PVCIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { PVCUtils } from './pvc-utils';
 import PVCColumnActions from './PVCColumnActions.svelte';
 import PvcColumnMode from './PVCColumnMode.svelte';
-import PVCColumnStatus from './PVCColumnStatus.svelte';
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 import type { PVCUI } from './PVCUI';
 
@@ -32,7 +32,7 @@ const pvcUtils = new PVCUtils();
 let statusColumn = new TableColumn<PVCUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: PVCColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

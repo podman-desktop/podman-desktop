@@ -6,11 +6,11 @@ import { cronJobSearchPattern, kubernetesCurrentContextCronJobsFiltered } from '
 
 import CronJobIcon from '../images/CronJobIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { capitalize } from '../ui/Util';
 import { CronJobUtils } from './cronjob-utils';
 import CronJobColumnActions from './CronJobColumnActions.svelte';
-import CronJobColumnStatus from './CronJobColumnStatus.svelte';
 import CronJobEmptyScreen from './CronJobEmptyScreen.svelte';
 import type { CronJobUI } from './CronJobUI';
 
@@ -27,7 +27,7 @@ const cronjobUtils = new CronJobUtils();
 let statusColumn = new TableColumn<CronJobUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: CronJobColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
