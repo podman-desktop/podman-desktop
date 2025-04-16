@@ -318,6 +318,20 @@ class ReleaseNotesPreparator {
   }
 }
 
+function showHelp(): void {
+  console.log('Parameters:');
+  console.log('--token - GitHub token or export GITHUB_TOKEN env variable');
+  console.log('--org - GitHub organization (default is "podman-desktop")');
+  console.log('--repo - GitHub repository (default is "podman-desktop")');
+  console.log(
+    '--username - GitHub username which will be used in release notes (GITHUB_USERNAME env variable can be used)',
+  );
+  console.log('--milestone - GitHub milestone for which we want to generate release notes e.g. 1.18.0');
+  console.log(
+    '--model - name of ollama model for generating highlited PRs e.g. gemma3:27b (before running this script run "ollama run gemma3:27b")',
+  );
+}
+
 async function run(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
   token ??= process.env.GH_TOKEN;
@@ -325,16 +339,17 @@ async function run(): Promise<void> {
   let organization = 'podman-desktop';
   let repo = 'podman-desktop';
   let model: string | undefined = undefined;
-  let api_key = process.env.API_KEY ?? '';
   let milestone: string = '';
   let username = process.env.GITHUB_USERNAME;
+  if (args.length === 0) {
+    showHelp();
+    return;
+  }
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--token') {
       token = args[++i];
     } else if (args[i] === '--org') {
       organization = args[++i];
-    } else if (args[i] === '--skip_highlited') {
-      api_key = args[++i];
     } else if (args[i] === '--repo') {
       repo = args[++i];
     } else if (args[i] === '--username') {
@@ -343,6 +358,9 @@ async function run(): Promise<void> {
       milestone = args[++i];
     } else if (args[i] === '--model') {
       model = args[++i];
+    } else if (args[i] === '--help' || args[i] === '-h') {
+      showHelp();
+      return;
     }
   }
   if (token && username) {
