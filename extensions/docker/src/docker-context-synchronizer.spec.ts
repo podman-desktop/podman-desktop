@@ -21,7 +21,12 @@ import { env, provider } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DockerContextHandler } from './docker-context-handler';
-import { DockerContextSynchronizer, toDockerContextName, toEndpoint } from './docker-context-synchronizer.js';
+import {
+  DockerContextSynchronizer,
+  toDescription,
+  toDockerContextName,
+  toEndpoint,
+} from './docker-context-synchronizer.js';
 
 vi.mock('@podman-desktop/api', async () => {
   return {
@@ -106,6 +111,24 @@ describe('toDockerContextName', () => {
     vi.mocked(env).isMac = platform === 'MacOS';
     const name = toDockerContextName('podman-foo');
     expect(name).toBe(env.isWindows ? 'podman-foo' : 'podman');
+  });
+});
+
+describe('toDescription', () => {
+  test.each(['Windows', 'Linux', 'MacOS'])('should return the description (%s)', platform => {
+    vi.mocked(env).isWindows = platform === 'Windows';
+    vi.mocked(env).isLinux = platform === 'Linux';
+    vi.mocked(env).isMac = platform === 'MacOS';
+    const name = toDescription('foo');
+    expect(name).toBe(env.isWindows ? 'Podman machine foo' : 'Podman');
+  });
+
+  test.each(['Windows', 'Linux', 'MacOS'])('should also return the description (%s)', platform => {
+    vi.mocked(env).isWindows = platform === 'Windows';
+    vi.mocked(env).isLinux = platform === 'Linux';
+    vi.mocked(env).isMac = platform === 'MacOS';
+    const name = toDescription('podman-foo');
+    expect(name).toBe(env.isWindows ? 'Podman machine podman-foo' : 'Podman');
   });
 });
 
