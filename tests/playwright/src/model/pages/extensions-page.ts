@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,9 +109,18 @@ export class ExtensionsPage {
     return (await extension.count()) > 0;
   }
 
-  public async getInstalledExtensionVersion(name: string, label: string): Promise<string> {
+  public async getInstalledExtensionVersion(name: string, label: string): Promise<string | undefined> {
     const extensionCard = await this.getInstalledExtension(name, label);
     const version = extensionCard.rightActions.getByLabel('Version');
-    return (await version.textContent()) ?? '';
+    if ((await version.count()) === 0) {
+      return undefined;
+    }
+
+    try {
+      return await version.innerText();
+    } catch (error) {
+      console.log(`Could not get ${label} extension version:`, error);
+      return undefined;
+    }
   }
 }

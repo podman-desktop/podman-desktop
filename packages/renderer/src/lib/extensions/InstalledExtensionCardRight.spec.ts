@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,9 @@ test('Expect to have description and version', async () => {
   expect(region).toHaveTextContent('my description');
 
   // region contains the version
-  expect(region).toHaveTextContent('v1.2.3');
+  const version = screen.getByLabelText('Version');
+  expect(version).toBeInTheDocument();
+  expect(version).toHaveTextContent('v1.2.3');
 
   // not removable
   expect(region).not.toHaveTextContent('Podman Desktop built-in extension');
