@@ -108,4 +108,10 @@ export class ExtensionsPage {
     const extension = this.content.getByRole('region', { name: label });
     return (await extension.count()) > 0;
   }
+
+  public async getInstalledExtensionVersion(name: string, label: string): Promise<string> {
+    const extensionCard = await this.getInstalledExtension(name, label);
+    const version = extensionCard.rightActions.getByLabel('Version');
+    return (await version.textContent()) ?? '';
+  }
 }
