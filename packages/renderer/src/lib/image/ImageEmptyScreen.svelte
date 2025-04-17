@@ -42,7 +42,7 @@ async function pullFirstImage(): Promise<void> {
   title="No images"
   message="Pull a first image using the following command line:"
   commandline={commandLine}
-  onClick={(): Promise<void> => window.clipboardWriteText(commandLine)}>
+  onclick={(): Promise<void> => window.clipboardWriteText(commandLine)}>
   {#snippet upperContent()}
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2"
       >Pull a first image by clicking on this button:</span>

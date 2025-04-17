@@ -19,7 +19,7 @@ interface Props {
   'aria-label'?: string;
   upperContent?: Snippet;
   children?: Snippet;
-  onClick?: (text: string) => void;
+  onclick?: (text: string) => void;
 }
 
 let {
@@ -34,7 +34,7 @@ let {
   'aria-label': ariaLabel,
   upperContent,
   children,
-  onClick = (text): void => {
+  onclick = (text): void => {
     dispatch('click', text);
   },
 }: Props = $props();
@@ -54,7 +54,7 @@ onMount(() => {
 function handleClick(): void {
   const text = copyTextDivElement?.textContent;
   if (text) {
-    onClick(text);
+    onclick(text);
   }
 }
 
