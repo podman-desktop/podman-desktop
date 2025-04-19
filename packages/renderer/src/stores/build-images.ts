@@ -16,8 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Terminal } from '@xterm/xterm';
 import type { Writable } from 'svelte/store';
 import { get, writable } from 'svelte/store';
+
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 export interface BuildArg {
@@ -29,7 +31,7 @@ export interface BuildImageInfo {
   buildImageKey?: symbol;
   buildRunning: boolean;
   buildFinished: boolean;
-  containerImageName?: string;
+  containerImageName: string;
   containerFilePath: string;
   containerBuildContextDirectory: string;
   containerBuildPlatform: string;
@@ -37,15 +39,21 @@ export interface BuildImageInfo {
   buildError?: string;
   buildArgs: BuildArg[];
   cancellableTokenId?: number;
-  selectedProvider: ProviderContainerConnectionInfo;
+  selectedProvider?: ProviderContainerConnectionInfo;
+  logsTerminal?: Terminal;
+  taskId: number;
 }
 
-export function cleanupBuildImageInfo() {
-  buildImagesInfo.set(createDefaultBuildImageInfo());
+export function cleanupBuildImageInfo(taskId: number): void {
+  const map = get(buildImagesInfo);
+  map.delete(taskId);
+  buildImagesInfo.set(map);
 }
 
-function createDefaultBuildImageInfo() {
+export function createDefaultBuildImageInfo(): BuildImageInfo {
   return {
+    taskId: get(buildImagesInfo).size + 1,
+    containerImageName: '',
     buildRunning: false,
     buildFinished: false,
     containerFilePath: '',
@@ -55,11 +63,4 @@ function createDefaultBuildImageInfo() {
   };
 }
 
-export function getBuildImageInfo(): BuildImageInfo {
-  const current = get(buildImagesInfo);
-
-  return current ? current : createDefaultBuildImageInfo();
-}
-
-// current build key
-export const buildImagesInfo: Writable<BuildImageInfo> = writable();
+export const buildImagesInfo: Writable<Map<number, BuildImageInfo>> = writable(new Map());

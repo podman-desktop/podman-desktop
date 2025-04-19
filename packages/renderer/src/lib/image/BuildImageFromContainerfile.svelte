@@ -1,25 +1,17 @@
 <script lang="ts">
-/* eslint-disable import/no-duplicates */
+/* eslint-disable no-useless-escape */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
-import type { Terminal } from '@xterm/xterm';
-import { onDestroy, onMount, tick } from 'svelte';
-import { get } from 'svelte/store';
+import { onDestroy, onMount } from 'svelte';
+import { get, type Unsubscriber } from 'svelte/store';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import { handleNavigation } from '/@/navigation';
-import {
-  type BuildArg,
-  type BuildImageInfo,
-  buildImagesInfo,
-  cleanupBuildImageInfo,
-  getBuildImageInfo,
-} from '/@/stores/build-images';
+import { type BuildImageInfo, buildImagesInfo, createDefaultBuildImageInfo } from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
-/* eslint-enable import/no-duplicates */
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
@@ -36,11 +28,12 @@ import {
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
-let buildImageInfo: BuildImageInfo = getBuildImageInfo();
+export let taskId: number = 0;
+
+let buildImageInfo: BuildImageInfo = createDefaultBuildImageInfo();
 
 let providers: ProviderInfo[] = [];
 let providerConnections: ProviderContainerConnectionInfo[] = [];
-let logsTerminal: Terminal;
 
 const containerFileDialogOptions: OpenDialogOptions = {
   title: 'Select Containerfile to build',
@@ -48,18 +41,35 @@ const containerFileDialogOptions: OpenDialogOptions = {
 const contextDialogOptions: OpenDialogOptions = { title: 'Select Root Context', selectors: ['openDirectory'] };
 
 $: platforms = buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : [];
+$: if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
+  // select the parent directory of the file as default
+  buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
+    .replace(/\\/g, '/')
+    .replace(/\/[^\/]*$/, '');
+}
 $: hasInvalidFields =
   !buildImageInfo.containerFilePath ||
   !buildImageInfo.containerBuildContextDirectory ||
   (platforms.length > 1 && !buildImageInfo.containerImageName) ||
   platforms.length === 0 ||
   !buildImageInfo.selectedProvider;
-$: if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
-  // select the parent directory of the file as default
-  // eslint-disable-next-line no-useless-escape
-  buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
-    .replace(/\\/g, '/')
-    .replace(/\/[^\/]*$/, '');
+
+$: if (taskId && taskId !== buildImageInfo.taskId) {
+  if (buildImageInfo.buildImageKey) {
+    disconnectUI(buildImageInfo.buildImageKey);
+  }
+  buildImageInfo.logsTerminal?.reset();
+  const currentTerminal = buildImageInfo.logsTerminal;
+
+  const buildImagesInfoMap = get(buildImagesInfo);
+  const bgBuildImageInfo = buildImagesInfoMap.get(taskId);
+  if (bgBuildImageInfo) {
+    buildImageInfo = bgBuildImageInfo;
+    bgBuildImageInfo.logsTerminal = currentTerminal;
+    if (buildImageInfo.buildImageKey) {
+      reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
+    }
+  }
 }
 
 interface BuildOutputItem {
@@ -84,8 +94,8 @@ function deleteBuildArg(index: number): void {
 function getTerminalCallback(): BuildImageCallback {
   const imageRegexp = RegExp(/docker:\/\/(?<imageName>.*?):\s/);
   return {
-    onStream: function (data: string): void {
-      logsTerminal.write(`${data}\r`);
+    onStream: function (data: string = ''): void {
+      buildImageInfo.logsTerminal?.write(`${data}\r`);
     },
     onError: function (error: string): void {
       buildImageInfo.buildError = error;
@@ -98,9 +108,10 @@ function getTerminalCallback(): BuildImageCallback {
       if (findingImageName) {
         buildImageInfo.buildParentImageName = findingImageName;
       }
-      logsTerminal.write(`Error:${error}\r`);
+      buildImageInfo.logsTerminal?.write(`Error:${error}\r\n`);
     },
     onEnd: function (): void {
+      // dispatch event to reload images list when image build is done
       window.dispatchEvent(new CustomEvent('image-build', { detail: { name: buildImageInfo.containerImageName } }));
     },
   };
@@ -109,6 +120,7 @@ function getTerminalCallback(): BuildImageCallback {
 async function buildContainerImage(): Promise<void> {
   buildImageInfo.buildParentImageName = undefined;
   buildImageInfo.buildError = undefined;
+  buildImageInfo.logsTerminal?.reset();
 
   // Create the formatted build arguments that will be used when passing to buildImage
   formattedBuildArgs = buildImageInfo.buildArgs.reduce<Record<string, string>>((acc, { key, value }) => {
@@ -124,26 +136,28 @@ async function buildContainerImage(): Promise<void> {
     await buildSinglePlatformImage(); // Single platform build
   } else if (platforms.length > 1) {
     await buildMultiplePlatformImagesAndCreateManifest(); // Multiple platforms build
-  } else {
-    console.error('No platforms specified for the build.');
   }
 }
 
 // Function to handle the building of a container image for a single platform
 async function buildSinglePlatformImage(): Promise<void> {
   buildImageInfo.buildFinished = false;
+  buildImageInfo.buildImageKey = startBuild(getTerminalCallback());
+  buildImageInfo.buildRunning = true;
+
   // Extract the relative path from the containerFilePath and containerBuildContextDirectory
   const relativeContainerfilePath = await window.pathRelative(
     buildImageInfo.containerBuildContextDirectory,
     buildImageInfo.containerFilePath,
   );
+
   buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
-  buildImageInfo.buildImageKey = startBuild(getTerminalCallback());
 
-  // Store the key
-  buildImagesInfo.set(buildImageInfo);
-
+  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
   try {
+    if (!buildImageInfo.selectedProvider) {
+      throw new Error('There is no container engine available.');
+    }
     // Build the singular image
     await window.buildImage(
       buildImageInfo.containerBuildContextDirectory,
@@ -155,41 +169,45 @@ async function buildSinglePlatformImage(): Promise<void> {
       eventCollect,
       buildImageInfo.cancellableTokenId,
       formattedBuildArgs,
+      buildImageInfo.taskId,
     );
   } catch (error) {
-    logsTerminal.write(`Error:${error}\r`);
-  } finally {
-    buildImageInfo.cancellableTokenId = undefined;
-    buildImageInfo.buildRunning = false;
-    buildImageInfo.buildFinished = true;
+    buildImageInfo.logsTerminal?.write(`Error:${error}\r\n`);
   }
+  buildImageInfo.cancellableTokenId = undefined;
+  buildImageInfo.buildRunning = false;
+  buildImageInfo.buildFinished = true;
+  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
 }
 
 // Function to handle the building of container images for multiple platforms and creating a manifest
 // afterwards
 async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
   buildImageInfo.buildFinished = false;
+  buildImageInfo.buildImageKey = startBuild(getTerminalCallback());
+  buildImageInfo.buildRunning = true;
 
   // Collection of build IDs, this is needed for being able to create the manifest
   // as we need to know either the IDs or the names of the images that were built
   let buildIDs = [];
 
   // Extract the relative path from the containerFilePath and containerBuildContextDirectory
-  const relativeContainerfilePath = buildImageInfo.containerFilePath.substring(
-    buildImageInfo.containerBuildContextDirectory.length + 1,
+  const relativeContainerfilePath = await window.pathRelative(
+    buildImageInfo.containerBuildContextDirectory,
+    buildImageInfo.containerFilePath,
   );
 
-  // We'll iterate over each platform and build the image
-  for (const platform of platforms) {
-    // We'll be using the same terminal for all builds (getTerminalCallback)
-    // similar to how Podman CLI does it.
-    buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
-    buildImageInfo.buildImageKey = startBuild(getTerminalCallback());
-
-    // Store the key
-    buildImagesInfo.set(buildImageInfo);
-
-    try {
+  try {
+    // We'll iterate over each platform and build the image
+    for (const platform of platforms) {
+      if (!buildImageInfo.selectedProvider) {
+        throw new Error('There is no container engine available.');
+      }
+      // We'll be using the same terminal for all builds (getTerminalCallback)
+      // similar to how Podman CLI does it.
+      buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
+      buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
+      // Store the key
       // Build the image for the current platform
       // NOTE: We purporsely pass in '' as the container name so that the built image is
       // <none> in the image list similar to the Podman CLI.
@@ -203,6 +221,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         eventCollect,
         buildImageInfo.cancellableTokenId,
         formattedBuildArgs,
+        buildImageInfo.taskId,
       )) as BuildOutput;
 
       // Extract and store the build ID as this is required for creating the manifest, only if it is available.
@@ -214,28 +233,27 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
           buildIDs.push(buildId.replace('sha256:', 'containers-storage:'));
         }
       }
-    } catch (error) {
-      logsTerminal.write(`Error:${error}\r`);
-    } finally {
-      buildImageInfo.cancellableTokenId = undefined;
-      buildImageInfo.buildRunning = false;
     }
-  }
-
-  // Create the manifest after all builds are complete
-  // we will log to the terminal if there is an error
-  try {
-    await window.createManifest({
-      images: buildIDs,
-      name: buildImageInfo.containerImageName!,
-    });
+    // Create the manifest after all builds are complete
+    // we will log to the terminal if there is an error
+    try {
+      await window.createManifest({
+        images: buildIDs,
+        name: buildImageInfo.containerImageName!,
+      });
+    } catch (error) {
+      console.error('Error creating manifest: ', error);
+      buildImageInfo.logsTerminal?.write(`Error:${error}\r`);
+    }
   } catch (error) {
-    console.error('Error creating manifest: ', error);
-    logsTerminal.write(`Error:${error}\r`);
+    buildImageInfo.logsTerminal?.write(`Error:${error}\r\n`);
+  } finally {
+    buildImageInfo.cancellableTokenId = undefined;
+    buildImageInfo.buildRunning = false;
+    // Finally mark the build as finished
+    buildImageInfo.buildFinished = true;
   }
-
-  // Finally mark the build as finished
-  buildImageInfo.buildFinished = true;
+  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
 }
 
 function cleanupBuild(): void {
@@ -244,6 +262,8 @@ function cleanupBuild(): void {
   handleNavigation({ page: NavigationPage.IMAGES });
 }
 
+let buildImagesInfoUnsubscriber: Unsubscriber;
+
 onMount(async () => {
   providers = get(providerInfos);
   providerConnections = providers
@@ -251,29 +271,41 @@ onMount(async () => {
     .flat()
     .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
-  const selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-  buildImageInfo.selectedProvider =
-    !buildImageInfo.selectedProvider && selectedProviderConnection
-      ? selectedProviderConnection
-      : buildImageInfo.selectedProvider;
+  if (
+    !buildImageInfo.selectedProvider ||
+    (buildImageInfo.selectedProvider && !providerConnections.includes(buildImageInfo.selectedProvider))
+  ) {
+    buildImageInfo.selectedProvider = providerConnections.length > 0 ? providerConnections[0] : undefined;
+  }
 
-  // check if we have an existing build info
-  // buildImageInfo = get(buildImagesInfo);
+  if (taskId) {
+    const buildImagesInfoMap = get(buildImagesInfo);
+    const bgBuildImageInfo = buildImagesInfoMap.get(taskId);
+    if (bgBuildImageInfo) {
+      buildImageInfo = bgBuildImageInfo;
+    }
+  }
+  // trigger re-rendering at the end of the build
+  // in case of reconnecting UI
+  buildImagesInfoUnsubscriber = buildImagesInfo.subscribe(map => {
+    const bgBuildImageInfo = map.get(taskId);
+    if (bgBuildImageInfo) {
+      buildImageInfo = bgBuildImageInfo;
+    }
+  });
 });
 
-async function onInit() {
-  if (buildImageInfo?.buildImageKey) {
+function onInit(): void {
+  if (buildImageInfo.buildImageKey) {
     reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
   }
 }
 
 onDestroy(() => {
-  if (buildImageInfo?.buildImageKey && !buildImageInfo.buildFinished) {
+  if (buildImageInfo.buildImageKey && !buildImageInfo.buildFinished) {
     disconnectUI(buildImageInfo.buildImageKey);
-  } else {
-    // reset build image info
-    cleanupBuildImageInfo();
   }
+  buildImagesInfoUnsubscriber?.();
 });
 
 async function abortBuild(): Promise<void> {
@@ -281,22 +313,21 @@ async function abortBuild(): Promise<void> {
     await window.cancelToken(buildImageInfo.cancellableTokenId);
     buildImageInfo.cancellableTokenId = undefined;
   }
-  if (buildImageInfo) {
-    buildImageInfo.buildRunning = false;
-  }
+  buildImageInfo.buildRunning = false;
+  buildImageInfo.buildFinished = true;
 }
 </script>
 
 <EngineFormPage
-  title="Build image from Containerfile"
-  inProgress={buildImageInfo?.buildRunning}
-  showEmptyScreen={providerConnections.length === 0}>
+  title="Build image {buildImageInfo.containerImageName} from Containerfile"
+  inProgress={buildImageInfo.buildRunning}
+  showEmptyScreen={providerConnections.length === 0 && !buildImageInfo.buildRunning}>
   {#snippet icon()}
     <i class="fas fa-cube fa-2x" aria-hidden="true"></i>
   {/snippet}
   {#snippet content()}
   <div class="space-y-6">
-    <div hidden={buildImageInfo?.buildRunning}>
+    <div hidden={buildImageInfo.buildRunning}>
       <label for="containerFilePath" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Containerfile path</label>
       <FileInput
@@ -308,7 +339,7 @@ async function abortBuild(): Promise<void> {
         class="w-full"/>
     </div>
 
-    <div hidden={buildImageInfo?.buildRunning}>
+    <div hidden={buildImageInfo.buildRunning}>
       <label
         for="containerBuildContextDirectory"
         class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Build context directory</label>
@@ -321,7 +352,7 @@ async function abortBuild(): Promise<void> {
         class="w-full"/>
     </div>
 
-    <div hidden={buildImageInfo?.buildRunning}>
+    <div hidden={buildImageInfo.buildRunning}>
       <label for="containerImageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Image name</label>
       <Input
@@ -329,12 +360,11 @@ async function abortBuild(): Promise<void> {
         name="containerImageName"
         id="containerImageName"
         placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
-        class="w-full"
-        required />
+        class="w-full"/>
     </div>
 
     {#if providerConnections.length > 1}
-      <div hidden={buildImageInfo?.buildRunning}>
+      <div hidden={buildImageInfo.buildRunning}>
         <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Container engine</label>
         <ContainerConnectionDropdown
@@ -345,7 +375,7 @@ async function abortBuild(): Promise<void> {
       </div>
     {/if}
 
-    <div hidden={buildImageInfo?.buildRunning}>
+    <div hidden={buildImageInfo.buildRunning}>
       <label for="inputKey" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Build arguments</label>
       {#each buildImageInfo.buildArgs as buildArg, index (index)}
@@ -362,7 +392,7 @@ async function abortBuild(): Promise<void> {
       {/each}
     </div>
 
-    <div hidden={buildImageInfo?.buildRunning}>
+    <div hidden={buildImageInfo.buildRunning}>
       <label for="containerBuildPlatform" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Platform</label>
       {#if platforms.length > 1}
@@ -372,7 +402,7 @@ async function abortBuild(): Promise<void> {
     </div>
 
     <div class="w-full flex flex-row space-x-4">
-      {#if !buildImageInfo?.buildRunning}
+      {#if !buildImageInfo.buildRunning}
         <Button on:click={buildContainerImage} disabled={hasInvalidFields} class="w-full" icon={faCube}>Build</Button>
       {/if}
 
@@ -383,9 +413,9 @@ async function abortBuild(): Promise<void> {
 
     <RecommendedRegistry bind:imageError={buildImageInfo.buildError} imageName={buildImageInfo.buildParentImageName} />
 
-    <TerminalWindow on:init={onInit} bind:terminal={logsTerminal} />
+    <TerminalWindow on:init={onInit} bind:terminal={buildImageInfo.logsTerminal} />
     <div class="w-full">
-      {#if buildImageInfo?.buildRunning}
+      {#if buildImageInfo.buildRunning}
         <Button on:click={abortBuild} class="w-full">Cancel</Button>
       {/if}
     </div>
