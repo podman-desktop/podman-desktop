@@ -78,7 +78,7 @@ onMount(() => {
     badges.push('Default');
   }
 
-  if (isDefault) {
+  if (checked) {
     onCard({ mode: 'add', value: value });
   }
 });

@@ -1332,6 +1332,7 @@ export class PluginSystem {
         onDataCallbacksBuildImageId: number,
         cancellableTokenId?: number,
         buildargs?: { [key: string]: string },
+        taskId?: number,
       ): Promise<unknown> => {
         // create task
         const task = taskManager.createTask({
@@ -1339,7 +1340,7 @@ export class PluginSystem {
           action: {
             name: 'Go to task >',
             execute: () => {
-              navigationManager.navigateToImageBuild().catch((err: unknown) => {
+              navigationManager.navigateToImageBuild(taskId).catch((err: unknown) => {
                 console.error(`Something went wrong while trying to navigate to image build: ${String(err)}`);
               });
             },
@@ -1350,7 +1351,6 @@ export class PluginSystem {
           cancellationTokenRegistry,
           cancellableTokenId,
         );
-        const buildImageEvents: { eventName: string; data: string }[] = [];
         return containerProviderRegistry
           .buildImage(
             containerBuildContextDirectory,
@@ -1372,7 +1372,6 @@ export class PluginSystem {
             },
           )
           .then(result => {
-            buildImageEvents.forEach(console.log);
             task.status = 'success';
             return result;
           })
