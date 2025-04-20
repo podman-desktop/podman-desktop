@@ -205,7 +205,7 @@
         "third-party.docker.tool.compatibility.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Disabling this option will prevent third-party Docker-compatible tools to use Podman. :button[Disable]{command=podman.disableCompatibilityMode}",
+          "markdownDescription": "On startup try to disguise the Docker socket (/var/run/docker.sock) with Podman. This will allow tools that rely on this socket to work with Podman.\n\nDisabling this option will prevent third-party Docker-compatible tools to use Podman. :button[Disable]{command=podman.disableCompatibilityMode}",
           "when": "isMac && podman.podmanDockerCompatibilityEnabled",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
@@ -213,7 +213,7 @@
         "third-party.docker.tool.compatibility.disabled": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enabling this option will direct third-party Docker-compatible tools to use Podman. :button[Enable]{command=podman.enableCompatibilityMode}",
+          "markdownDescription": "On startup try to disguise the Docker socket (/var/run/docker.sock) with Podman. This will allow tools that rely on this socket to work with Podman.\n\nEnabling this option will direct third-party Docker-compatible tools to use Podman. :button[Enable]{command=podman.enableCompatibilityMode}",
           "when": "isMac && !podman.podmanDockerCompatibilityEnabled",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
