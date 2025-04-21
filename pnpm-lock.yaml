@@ -210,8 +210,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 35.1.5
-        version: 35.1.5
+        specifier: 35.2.0
+        version: 35.2.0
       electron-builder:
         specifier: '25.1'
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8(dmg-builder@25.1.8))
@@ -559,8 +559,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 35.1.5
-        version: 35.1.5
+        specifier: 35.2.0
+        version: 35.2.0
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(jsdom@26.0.0)(lightningcss@1.29.2)(msw@2.7.4(@types/node@22.14.1)(typescript@5.8.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.1)
@@ -903,8 +903,8 @@ importers:
         specifier: ^22
         version: 22.13.10
       electron:
-        specifier: 35.1.5
-        version: 35.1.5
+        specifier: 35.2.0
+        version: 35.2.0
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -6367,8 +6367,8 @@ packages:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
     engines: {node: '>=18'}
 
-  electron@35.1.5:
-    resolution: {integrity: sha512-LolvbKKQUSCGvEwbEQNt1cxD1t+YYClDNwBIjn4d28KM8FSqUn9zJuf6AbqNA7tVs9OFl/EQpmg/m4lZV1hH8g==}
+  electron@35.2.0:
+    resolution: {integrity: sha512-GHda7oCkN0pA23qzah735DEbRa06IPwlzP3uvjAmf9af8gxdj5i93JEHeQVGVmSVpd7sSb1pfecs9nz7B1q5ag==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -15916,7 +15916,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
 
   '@types/bonjour@3.5.13':
     dependencies:
@@ -16094,7 +16094,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -16274,7 +16274,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
       '@types/send': 0.17.4
 
   '@types/sockjs@0.3.36':
@@ -18685,10 +18685,10 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@35.1.5:
+  electron@35.2.0:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 22.14.0
+      '@types/node': 22.14.1
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -19301,7 +19301,7 @@ snapshots:
 
   eval@0.1.8:
     dependencies:
-      '@types/node': 22.14.0
+      '@types/node': 22.14.1
       require-like: 0.1.2
 
   eventemitter3@4.0.7: {}
@@ -20040,7 +20040,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23277,7 +23277,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:
