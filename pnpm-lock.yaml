@@ -671,8 +671,8 @@ importers:
         specifier: ^4.1.6
         version: 4.1.6(picomatch@4.0.2)(svelte@5.27.3)(typescript@5.8.3)
       svelte-eslint-parser:
-        specifier: ^1.1.2
-        version: 1.1.2(svelte@5.27.3)
+        specifier: ^1.1.3
+        version: 1.1.3(svelte@5.27.3)
       svelte-fa:
         specifier: ^4.0.3
         version: 4.0.3(svelte@5.27.3)
@@ -765,8 +765,8 @@ importers:
         specifier: ^4.1.6
         version: 4.1.6(picomatch@4.0.2)(svelte@5.27.3)(typescript@5.8.3)
       svelte-eslint-parser:
-        specifier: ^1.1.2
-        version: 1.1.2(svelte@5.27.3)
+        specifier: ^1.1.3
+        version: 1.1.3(svelte@5.27.3)
       tailwindcss:
         specifier: ^4.1.4
         version: 4.1.4
@@ -10875,8 +10875,8 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
-  svelte-eslint-parser@1.1.2:
-    resolution: {integrity: sha512-vqFBRamDKo1l70KMfxxXj1/0Cco5TfMDnqaAjgz6D8PyoMhfMcDOLRkAwPg8WkMyZjMtQL3wW66TZ0x59iqO2w==}
+  svelte-eslint-parser@1.1.3:
+    resolution: {integrity: sha512-DUc/z/vk+AFVoxGv54+BOBFqUrmUgNg2gSO2YqrE3OL6ro19/0azPmQj/4wN3s9RxuF5l7G0162q/Ddk4LJhZA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       svelte: ^3.37.0 || ^4.0.0 || ^5.0.0
@@ -19069,7 +19069,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.3)
       postcss-safe-parser: 7.0.1(postcss@8.5.3)
       semver: 7.7.1
-      svelte-eslint-parser: 1.1.2(svelte@5.27.3)
+      svelte-eslint-parser: 1.1.3(svelte@5.27.3)
     optionalDependencies:
       svelte: 5.27.3
     transitivePeerDependencies:
@@ -20040,7 +20040,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23277,7 +23277,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -24224,7 +24224,7 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
-  svelte-eslint-parser@1.1.2(svelte@5.27.3):
+  svelte-eslint-parser@1.1.3(svelte@5.27.3):
     dependencies:
       eslint-scope: 8.3.0
       eslint-visitor-keys: 4.2.0
