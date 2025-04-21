@@ -965,7 +965,7 @@ importers:
         version: 4.0.0
       docusaurus-plugin-typedoc:
         specifier: ^1.3.0
-        version: 1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.2(typescript@5.8.3)))
+        version: 1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3)))
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -1007,11 +1007,11 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4
       typedoc:
-        specifier: ^0.28.2
-        version: 0.28.2(typescript@5.8.3)
+        specifier: ^0.28.3
+        version: 0.28.3(typescript@5.8.3)
       typedoc-plugin-markdown:
         specifier: ^4.6.2
-        version: 4.6.2(typedoc@0.28.2(typescript@5.8.3))
+        version: 4.6.2(typedoc@0.28.3(typescript@5.8.3))
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -2814,8 +2814,8 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
-  '@gerrit0/mini-shiki@3.2.2':
-    resolution: {integrity: sha512-vaZNGhGLKMY14HbF53xxHNgFO9Wz+t5lTlGNpl2N9xFiKQ0I5oIe0vKjU9dh7Nb3Dw6lZ7wqUE0ri+zcdpnK+Q==}
+  '@gerrit0/mini-shiki@3.2.3':
+    resolution: {integrity: sha512-yemSYr0Oiqk5NAQRfbD5DKUTlThiZw1MxTMx/YpQTg6m4QRJDtV2JTYSuNevgx1ayy/O7x+uwDjh3IgECGFY/Q==}
 
   '@grpc/grpc-js@1.13.2':
     resolution: {integrity: sha512-nnR5nmL6lxF8YBqb6gWvEgLdLh/Fn+kvAdX5hUOnt48sNSb0riz/93ASd2E5gvanPA41X6Yp25bIfGRp1SMb2g==}
@@ -3505,17 +3505,17 @@ packages:
     resolution: {integrity: sha512-J+p5r2BewzowI6YsnSH6U+W9IAvRbEyheqDOSUEwh6QDbxjwcBXwzuPwtz5DtEjbEGMu2QwrwoJvZlZ/n5fugw==}
     engines: {node: '>=18'}
 
-  '@shikijs/engine-oniguruma@3.2.1':
-    resolution: {integrity: sha512-wZZAkayEn6qu2+YjenEoFqj0OyQI64EWsNR6/71d1EkG4sxEOFooowKivsWPpaWNBu3sxAG+zPz5kzBL/SsreQ==}
+  '@shikijs/engine-oniguruma@3.2.2':
+    resolution: {integrity: sha512-vyXRnWVCSvokwbaUD/8uPn6Gqsf5Hv7XwcW4AgiU4Z2qwy19sdr6VGzMdheKKN58tJOOe5MIKiNb901bgcUXYQ==}
 
-  '@shikijs/langs@3.2.1':
-    resolution: {integrity: sha512-If0iDHYRSGbihiA8+7uRsgb1er1Yj11pwpX1c6HLYnizDsKAw5iaT3JXj5ZpaimXSWky/IhxTm7C6nkiYVym+A==}
+  '@shikijs/langs@3.2.2':
+    resolution: {integrity: sha512-NY0Urg2dV9ETt3JIOWoMPuoDNwte3geLZ4M1nrPHbkDS8dWMpKcEwlqiEIGqtwZNmt5gKyWpR26ln2Bg2ecPgw==}
 
-  '@shikijs/themes@3.2.1':
-    resolution: {integrity: sha512-k5DKJUT8IldBvAm8WcrDT5+7GA7se6lLksR+2E3SvyqGTyFMzU2F9Gb7rmD+t+Pga1MKrYFxDIeyWjMZWM6uBQ==}
+  '@shikijs/themes@3.2.2':
+    resolution: {integrity: sha512-Zuq4lgAxVKkb0FFdhHSdDkALuRpsj1so1JdihjKNQfgM78EHxV2JhO10qPsMrm01FkE3mDRTdF68wfmsqjt6HA==}
 
-  '@shikijs/types@3.2.1':
-    resolution: {integrity: sha512-/NTWAk4KE2M8uac0RhOsIhYQf4pdU0OywQuYDGIGAJ6Mjunxl2cGiuLkvu4HLCMn+OTTLRWkjZITp+aYJv60yA==}
+  '@shikijs/types@3.2.2':
+    resolution: {integrity: sha512-a5TiHk7EH5Lso8sHcLHbVNNhWKP0Wi3yVnXnu73g86n3WoDgEra7n3KszyeCGuyoagspQ2fzvy4cpSc8pKhb0A==}
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
@@ -11253,8 +11253,8 @@ packages:
     peerDependencies:
       typedoc: 0.28.x
 
-  typedoc@0.28.2:
-    resolution: {integrity: sha512-9Giuv+eppFKnJ0oi+vxqLM817b/IrIsEMYgy3jj6zdvppAfDqV3d6DXL2vXUg2TnlL62V48th25Zf/tcQKAJdg==}
+  typedoc@0.28.3:
+    resolution: {integrity: sha512-5svOCTfXvVSh6zbZKSQluZhR8yN2tKpTeHZxlmWpE6N5vc3R8k/jhg9nnD6n5tN9/ObuQTojkONrOxFdUFUG9w==}
     engines: {node: '>= 18', pnpm: '>= 10'}
     hasBin: true
     peerDependencies:
@@ -14527,12 +14527,12 @@ snapshots:
 
   '@gar/promisify@1.1.3': {}
 
-  '@gerrit0/mini-shiki@3.2.2':
+  '@gerrit0/mini-shiki@3.2.3':
     dependencies:
-      '@shikijs/engine-oniguruma': 3.2.1
-      '@shikijs/langs': 3.2.1
-      '@shikijs/themes': 3.2.1
-      '@shikijs/types': 3.2.1
+      '@shikijs/engine-oniguruma': 3.2.2
+      '@shikijs/langs': 3.2.2
+      '@shikijs/themes': 3.2.2
+      '@shikijs/types': 3.2.2
       '@shikijs/vscode-textmate': 10.0.2
 
   '@grpc/grpc-js@1.13.2':
@@ -15293,20 +15293,20 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@shikijs/engine-oniguruma@3.2.1':
+  '@shikijs/engine-oniguruma@3.2.2':
     dependencies:
-      '@shikijs/types': 3.2.1
+      '@shikijs/types': 3.2.2
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@shikijs/langs@3.2.1':
+  '@shikijs/langs@3.2.2':
     dependencies:
-      '@shikijs/types': 3.2.1
+      '@shikijs/types': 3.2.2
 
-  '@shikijs/themes@3.2.1':
+  '@shikijs/themes@3.2.2':
     dependencies:
-      '@shikijs/types': 3.2.1
+      '@shikijs/types': 3.2.2
 
-  '@shikijs/types@3.2.1':
+  '@shikijs/types@3.2.2':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
@@ -18487,9 +18487,9 @@ snapshots:
 
   docusaurus-plugin-goatcounter@4.0.0: {}
 
-  docusaurus-plugin-typedoc@1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.2(typescript@5.8.3))):
+  docusaurus-plugin-typedoc@1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3))):
     dependencies:
-      typedoc-plugin-markdown: 4.6.2(typedoc@0.28.2(typescript@5.8.3))
+      typedoc-plugin-markdown: 4.6.2(typedoc@0.28.3(typescript@5.8.3))
 
   dom-accessibility-api@0.5.16: {}
 
@@ -20040,7 +20040,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23277,7 +23277,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.26.10
+      '@babel/runtime': 7.27.0
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -24593,13 +24593,13 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-plugin-markdown@4.6.2(typedoc@0.28.2(typescript@5.8.3)):
+  typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3)):
     dependencies:
-      typedoc: 0.28.2(typescript@5.8.3)
+      typedoc: 0.28.3(typescript@5.8.3)
 
-  typedoc@0.28.2(typescript@5.8.3):
+  typedoc@0.28.3(typescript@5.8.3):
     dependencies:
-      '@gerrit0/mini-shiki': 3.2.2
+      '@gerrit0/mini-shiki': 3.2.3
       lunr: 2.3.9
       markdown-it: 14.1.0
       minimatch: 9.0.5
