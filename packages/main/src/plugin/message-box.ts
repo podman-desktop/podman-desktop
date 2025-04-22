@@ -22,8 +22,6 @@ import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
-export type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
-
 export interface DropdownType {
   heading: string;
   buttons: string[];
@@ -115,7 +113,7 @@ export class MessageBox {
     return deferred.promise;
   }
 
-  isDropdownType(response: ButtonsType | undefined): response is DropdownType {
+  isDropdownType(response?: ButtonsType): response is DropdownType {
     return (
       typeof response === 'object' &&
       response !== null &&
@@ -150,11 +148,7 @@ export class MessageBox {
   }
 
   // this method is called by the frontend when the user selected a button
-  async onDidSelectButton(
-    id: number,
-    selectedIndex: number | undefined,
-    selectedOption: number | undefined,
-  ): Promise<void> {
+  async onDidSelectButton(id: number, selectedIndex?: number, selectedOption?: number): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 

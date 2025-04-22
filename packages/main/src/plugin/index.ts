@@ -1848,7 +1848,7 @@ export class PluginSystem {
 
     this.ipcHandle(
       'showMessageBox:onSelect',
-      async (_listener, id: number, index: number | undefined, option: number | undefined): Promise<void> => {
+      async (_listener, id: number, index: number | undefined, option?: number): Promise<void> => {
         return messageBox.onDidSelectButton(id, index, option);
       },
     );
