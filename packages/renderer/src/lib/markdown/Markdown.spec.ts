@@ -94,6 +94,7 @@ describe('Custom button', () => {
     const iconButton = screen.getByRole('button', { name: icon });
     expect(iconButton).toBeDefined();
     await fireEvent.click(iconButton);
+    expect(window.executeCommand).toBeCalledWith('command', 'arg1');
   });
 });
 
