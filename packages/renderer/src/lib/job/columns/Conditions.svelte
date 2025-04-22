@@ -9,12 +9,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { JobCondition, JobUI } from './JobUI';
+import Label from '../../ui/Label.svelte';
+import type { JobCondition } from '../JobUI';
+import type { Props } from './props';
 
-interface Props {
-  object: JobUI;
-}
 let { object }: Props = $props();
 
 // Determine both the icon and color based on the job condition

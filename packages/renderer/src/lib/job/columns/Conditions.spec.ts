@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import JobColumnConditions from './JobColumnConditions.svelte';
-import type { JobCondition, JobUI } from './JobUI';
+import type { JobCondition, JobUI } from '../JobUI';
+import Conditions from './Conditions.svelte';
 
 function createJobUI(condition: JobCondition): JobUI {
   return {
@@ -39,7 +39,7 @@ function createJobUI(condition: JobCondition): JobUI {
 
 test('Expect column styling completed', async () => {
   const job = createJobUI('completed');
-  render(JobColumnConditions, { object: job });
+  render(Conditions, { object: job });
 
   const text = screen.getByText('Completed');
   expect(text).toBeInTheDocument();
@@ -51,7 +51,7 @@ test('Expect column styling completed', async () => {
 
 test('Expect column styling failed', async () => {
   const job = createJobUI('failed');
-  render(JobColumnConditions, { object: job });
+  render(Conditions, { object: job });
 
   const text = screen.getByText('Failed');
   expect(text).toBeInTheDocument();
@@ -63,7 +63,7 @@ test('Expect column styling failed', async () => {
 
 test('Expect column styling running', async () => {
   const job = createJobUI('running');
-  render(JobColumnConditions, { object: job });
+  render(Conditions, { object: job });
 
   const text = screen.getByText('Running');
   expect(text).toBeInTheDocument();
@@ -75,7 +75,7 @@ test('Expect column styling running', async () => {
 
 test('Expect column styling pending', async () => {
   const job = createJobUI('pending');
-  render(JobColumnConditions, { object: job });
+  render(Conditions, { object: job });
 
   const text = screen.getByText('Pending');
   expect(text).toBeInTheDocument();
@@ -87,7 +87,7 @@ test('Expect column styling pending', async () => {
 
 test('Expect column styling unknown', async () => {
   const job = createJobUI('unknown');
-  render(JobColumnConditions, { object: job });
+  render(Conditions, { object: job });
 
   const text = screen.getByText('Unknown');
   expect(text).toBeInTheDocument();

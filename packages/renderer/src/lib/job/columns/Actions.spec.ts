@@ -21,10 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import JobColumnCompletions from './JobColumnCompletions.svelte';
-import type { JobUI } from './JobUI';
+import type { JobUI } from '../JobUI';
+import Actions from './Actions.svelte';
 
-test('Expect simple column styling', async () => {
+test('Expect job buttons', async () => {
   const job: JobUI = {
     uid: '123',
     name: 'my-job',
@@ -36,9 +36,8 @@ test('Expect simple column styling', async () => {
     condition: 'running',
   };
 
-  render(JobColumnCompletions, { object: job });
+  render(Actions, { object: job });
 
-  const text = screen.getByText(job.succeeded + ' / ' + job.completions);
-  expect(text).toBeInTheDocument();
-  expect(text).toHaveClass('text-[var(--pd-table-body-text)]');
+  const buttons = await screen.findAllByRole('button');
+  expect(buttons).toHaveLength(1);
 });

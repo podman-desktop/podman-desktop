@@ -1,9 +1,6 @@
 <script lang="ts">
-import type { JobUI } from './JobUI';
+import type { Props } from './props';
 
-interface Props {
-  object: JobUI;
-}
 let { object }: Props = $props();
 </script>
 
