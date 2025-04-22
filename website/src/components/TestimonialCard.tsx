@@ -16,7 +16,7 @@ export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
       <div className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 text-2xl font-black bg-gradient-to-br from-sky-500 to-fuschia-500 content-center text-center">
         {props.cardNumber}
       </div>
-      <div className="bg-[#230524] rounded-lg p-6 h-full">
+      <div className="bg-transparent rounded-lg p-6 h-full">
         <div className="flex flex-row items-center">
           <FontAwesomeIcon
             size="3x"
