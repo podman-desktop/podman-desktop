@@ -493,6 +493,53 @@ function MainFeatures(): JSX.Element {
   );
 }
 
+function AdditionalFeatures(): JSX.Element {
+  return (
+    <section className="text-gray-400 bg-gradient-to-b  from-black to-fuschia-400 py-18 body-font md:w-full">
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">And Many More Features ✨</h2>
+        <div className="flex flex-row items-strech justify-center gap-7 leading-[1.5]">
+          <div className="flex flex-col items-start justify-start gap-6 bg-[#3f394cFF] rounded-lg p-6 md:w-full ">
+            <p className="text-lg font-semibold">Learning center</p>
+            <p className="text-xs">
+              Demystify complex topics and expand knowledge of crucial technologies and components, through tutorials,
+              videos and documentation resources.
+            </p>
+          </div>
+          <div className="flex flex-col items-start justify-start gap-6 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+            <p className="text-lg font-semibold">Extensions</p>
+            <p className="text-xs">
+              Podman Desktop extends its capabilities through extensions, allowing developers to tailor the tool to
+              their unique needs and eventually build their own solutions.
+            </p>
+          </div>
+          <div className="flex flex-col items-start justify-start gap-6 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+            <p className="text-lg font-semibold">GPU Acceleration</p>
+            <p className="text-xs">
+              To support any of your local AI development workflows, Podman Desktop enables GPU acceleration and
+              optimizes performance when running models with containers locally.
+            </p>
+          </div>
+          <div className="flex flex-col items-start justify-start gap-6 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+            <p className="text-lg font-semibold">Multi-arch Support</p>
+            <p className="text-xs">
+              Cross-platform multi-architecture support, to build and run containers for multiple hardware platforms,
+              from ARM to x86_64.
+            </p>
+          </div>
+          <div className="flex flex-col items-start justify-start gap-6 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+            <p className="text-lg font-semibold">Enterprise Ready</p>
+            <p className="text-xs">
+              Extensive integrations, including VPN and Proxy support for secure networking configurations, streamlined
+              image registry management, and options for air-gapped installations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Pods(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-tr dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
@@ -609,6 +656,7 @@ export default function Home(): JSX.Element {
       <Hero />
       <RunAnywhere />
       <MainFeatures />
+      <AdditionalFeatures />
       <Pods />
       <Configure />
       <Extensibility />
