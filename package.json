@@ -222,7 +222,7 @@
       "@docusaurus/theme-mermaid>mermaid": "^11.4.1",
       "@docusaurus/mdx-loader>image-size": "^1.2.1",
       "@docusaurus/mdx-loader>estree-util-value-to-estree": "^3.3.3",
-      "webpack-dev-server>http-proxy-middleware": "^2.0.7",
+      "webpack-dev-server>http-proxy-middleware": "^2.0.9",
       "@kubernetes/client-node>jsonpath-plus": "^10.3.0",
       "vitest>vite": "^6.1.0",
       "esbuild-register>esbuild": "^0.25.0",
