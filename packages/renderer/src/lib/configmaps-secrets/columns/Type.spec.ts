@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ConfigMapSecretColumnType from './ConfigMapSecretColumnType.svelte';
-import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
+import type { ConfigMapSecretUI } from '../ConfigMapSecretUI';
+import Type from './Type.svelte';
 
 test('Expect type display for ConfigMap', async () => {
   const configMap: ConfigMapSecretUI = {
@@ -34,7 +34,7 @@ test('Expect type display for ConfigMap', async () => {
     keys: [],
   };
 
-  render(ConfigMapSecretColumnType, { object: configMap });
+  render(Type, { object: configMap });
 
   const text = screen.getByText('ConfigMap');
   expect(text).toBeInTheDocument();
@@ -53,7 +53,7 @@ test('Expect type display for Secret', async () => {
     keys: [],
   };
 
-  render(ConfigMapSecretColumnType, { object: secret });
+  render(Type, { object: secret });
 
   const text = screen.getByText('Secret');
   expect(text).toBeInTheDocument();

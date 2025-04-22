@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ConfigMapSecretColumnActions from './ConfigMapSecretColumnActions.svelte';
-import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
+import type { ConfigMapSecretUI } from '../ConfigMapSecretUI';
+import Actions from './Actions.svelte';
 
 test('Expect action buttons', async () => {
   const configMap: ConfigMapSecretUI = {
@@ -34,7 +34,7 @@ test('Expect action buttons', async () => {
     keys: [],
   };
 
-  render(ConfigMapSecretColumnActions, { object: configMap });
+  render(Actions, { object: configMap });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);

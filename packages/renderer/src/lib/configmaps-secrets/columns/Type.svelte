@@ -2,12 +2,9 @@
 import { faFileAlt, faKey, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
+import Label from '../../ui/Label.svelte';
+import type { Props } from './props';
 
-interface Props {
-  object: ConfigMapSecretUI;
-}
 let { object }: Props = $props();
 
 // Determine the icon and color based on the type
