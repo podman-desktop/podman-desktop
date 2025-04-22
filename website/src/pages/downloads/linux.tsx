@@ -5,11 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
 import Layout from '@theme/Layout';
+import type { Dispatch, SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
 
 async function grabFilenameForLinux(
-  setDownloadData: React.Dispatch<
-    React.SetStateAction<{
+  setDownloadData: Dispatch<
+    SetStateAction<{
       version: string;
       flatpak: string;
       amd64: string;
