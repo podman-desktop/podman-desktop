@@ -2,7 +2,7 @@
 title: Supercharge Your Container Development in VS Code with Podman and Podman Desktop
 description: How to develop apps with VS Code and Podman Desktop
 authors: [firewall]
-tags: [podman-desktop, podman, vscode, docker, extension, development]
+tags: [podman-desktop, podman, vscode, docker, extension, development, container, tools]
 hide_table_of_contents: false
 ---
 
@@ -29,17 +29,17 @@ To integrate VS Code with Podman, we have 2 extensions as options:
 
 Let's install them one by one.
 
-### Option 1: Microsoft’s Docker extension
+### Option 1: Microsoft’s Container Tools extension
 
 To install the extension:
 
 1. Open VS Code.
 2. Click on the Extensions icon in the Activity Bar (or press `Ctrl+Shift+X` or `Cmd+Shift+X`).
-3. Search for "Docker" and install the extension by Microsoft.
+3. Search for "Container Tools" and install the extension by Microsoft.
 
 #### Configuring VS Code for Podman
 
-The Docker extension usually automatically detects Podman if Docker isn't running, by looking at the `DOCKER_HOST` environment variable. In Podman Desktop navigate to Settings \> Docker Compatibility \> Third-Party Tool Compatibility and make sure the option is enabled. It’s possible that if you installed through `brew` that this is not correctly set.
+The Container Tools extension usually automatically detects Podman if Docker isn't running, by looking at the `DOCKER_HOST` environment variable. In Podman Desktop navigate to Settings \> Docker Compatibility \> Third-Party Tool Compatibility and make sure the option is enabled. It’s possible that if you installed through `brew` that this is not correctly set.
 
 ![enabling docker compatibility in the settings](img/vs-code-podman/docker-compatibility.png)
 
@@ -74,11 +74,11 @@ The extensions also allow you to manage containers directly from VS Code. You ca
 
 To view the container logs:
 
-1. Click on the Docker icon in the Activity Bar.
+1. Click on the Container icon in the Activity Bar.
 2. You'll see a list of your containers, images, and networks.
 3. Right-click on a container to perform actions.
 
-![using Docker extension to view the logs of the container](img/vs-code-podman/view-logs.png)
+![using Container Tools extension to view the logs of the container](img/vs-code-podman/view-logs.png)
 
 Similarly using the Pod manager extension we can visually inspect containers, images, and volumes.
 
