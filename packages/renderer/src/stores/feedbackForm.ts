@@ -20,7 +20,6 @@ import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { type Writable, writable } from 'svelte/store';
 
 import type { IConfigurationPropertyRecordedSchema } from '../../../main/src/plugin/configuration-registry';
-import type { RemindOption } from '../../../main/src/plugin/message-box';
 import { configurationProperties } from './configurationProperties';
 
 interface FeedbackNotification {
@@ -36,6 +35,8 @@ interface FeedbackNotification {
   // Help variable for each feature to remember if the dialog was already opened
   wasOpened: boolean;
 }
+
+export type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
 
 export type ExperimentalFeatures =
   | 'tasks.StatusBar'
