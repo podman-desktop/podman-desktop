@@ -215,7 +215,7 @@ function toggleChildren(name: string | undefined): void {
             title="Toggle all"
             bind:checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
-            indeterminate={!selectedItemsNumber && !selectedAllCheckboxes}
+            indeterminate={!!selectedItemsNumber && !selectedAllCheckboxes}
             on:click={toggleAll} />
         </div>
       {/if}
