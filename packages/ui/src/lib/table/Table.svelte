@@ -8,48 +8,63 @@
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { afterUpdate, onMount, tick } from 'svelte';
+import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 
-export let kind: string;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let columns: Column<any>[];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let row: Row<any>;
-export let data: { selected?: boolean; name?: string }[];
-export let defaultSortColumn: string | undefined = undefined;
-export let collapsed: string[] = [];
+interface Props {
+  kind: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: Column<any>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  row: Row<any>;
+  data: Array<{ selected?: boolean; name?: string }>;
+  defaultSortColumn?: string;
+  collapsed?: Array<string>;
+  selectedItemsNumber?: number;
+}
+
+let {
+  kind,
+  columns,
+  row,
+  data = $bindable(),
+  defaultSortColumn,
+  collapsed = $bindable([]),
+  selectedItemsNumber = $bindable(),
+}: Props = $props();
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
 // number of selected items in the list
-export let selectedItemsNumber: number = 0;
-$: selectedItemsNumber = row.info.selectable
-  ? data.filter(object => row.info.selectable?.(object) && object.selected).length +
-    data.reduce(
-      (previous, current) =>
-        previous +
-        (row.info.children?.(current)?.filter(child => row.info.selectable?.(child) && child.selected).length ?? 0),
-      0,
-    )
-  : 0;
+$effect(() => {
+  selectedItemsNumber = row.info.selectable
+    ? data.filter(object => row.info.selectable?.(object) && object.selected).length +
+      data.reduce(
+        (previous, current) =>
+          previous +
+          (row.info.children?.(current)?.filter(child => row.info.selectable?.(child) && child.selected).length ?? 0),
+        0,
+      )
+    : 0;
+});
 
 // do we need to unselect all checkboxes if we don't have all items being selected ?
-let selectedAllCheckboxes = false;
-$: selectedAllCheckboxes = row.info.selectable
-  ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
-    data
-      .filter(object => row.info.children?.(object))
-      .map(object => row.info.children?.(object))
-      .flat()
-      .filter(child => row.info.selectable?.(child))
-      .every(child => child.selected) &&
-    data.filter(object => row.info.selectable?.(object)).length > 0
-  : false;
+let selectedAllCheckboxes = $derived(
+  row.info.selectable
+    ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
+        data
+          .filter(object => row.info.children?.(object))
+          .map(object => row.info.children?.(object))
+          .flat()
+          .filter(child => row.info.selectable?.(child))
+          .every(child => child.selected) &&
+        data.filter(object => row.info.selectable?.(object)).length > 0
+    : false,
+);
 
 function toggleAll(e: CustomEvent<boolean>): void {
   const checked = e.detail;
@@ -68,12 +83,14 @@ function toggleAll(e: CustomEvent<boolean>): void {
   data = [...data];
 }
 
-let sortCol: Column<unknown>;
-let sortAscending: boolean;
+let sortCol: Column<unknown> | undefined = $state();
+let sortAscending: boolean = $state(false);
 
-$: if (data && sortCol) {
-  sortImpl();
-}
+$effect(() => {
+  if (data && sortCol) {
+    sortImpl();
+  }
+});
 
 function sort(column: Column<unknown>): void {
   if (!column) {
@@ -127,7 +144,7 @@ onMount(async () => {
   }
 });
 
-afterUpdate(() => {
+$effect.pre(() => {
   tick()
     .then(() => setGridColumns())
     .catch((err: unknown) => console.error('unable to refresh grid columns', err));
@@ -198,13 +215,13 @@ function toggleChildren(name: string | undefined): void {
             title="Toggle all"
             bind:checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
-            indeterminate={selectedItemsNumber > 0 && !selectedAllCheckboxes}
+            indeterminate={!selectedItemsNumber && !selectedAllCheckboxes}
             on:click={toggleAll} />
         </div>
       {/if}
       {#each columns as column, index (index)}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_interactive_supports_focus -->
         <div
           class="max-w-full overflow-hidden flex flex-row text-sm font-semibold items-center whitespace-nowrap {column
             .info.align === 'right'
@@ -213,7 +230,7 @@ function toggleChildren(name: string | undefined): void {
               ? 'justify-self-center'
               : 'justify-self-start'} self-center select-none"
           class:cursor-pointer={column.info.comparator}
-          on:click={sort.bind(undefined, column)}
+          onclick={sort.bind(undefined, column)}
           role="columnheader">
           <div class="overflow-hidden text-ellipsis">
             {column.title}
@@ -247,7 +264,7 @@ function toggleChildren(name: string | undefined): void {
           aria-label={object.name}>
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if children.length > 0}
-              <button on:click={toggleChildren.bind(undefined, object.name)}>
+              <button onclick={toggleChildren.bind(undefined, object.name)}>
                 <Fa
                   size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
@@ -266,6 +283,7 @@ function toggleChildren(name: string | undefined): void {
             </div>
           {/if}
           {#each columns as column, index (index)}
+            {@const Renderer = column.info.renderer}
             <div
               class="whitespace-nowrap {column.info.align === 'right'
                 ? 'justify-self-end'
@@ -276,8 +294,7 @@ function toggleChildren(name: string | undefined): void {
                 : 'overflow-hidden'} max-w-full py-1.5"
               role="cell">
               {#if column.info.renderer}
-                <svelte:component
-                  this={column.info.renderer}
+                <Renderer
                   object={column.info.renderMapping ? column.info.renderMapping(object) : object} />
               {/if}
             </div>
@@ -303,6 +320,7 @@ function toggleChildren(name: string | undefined): void {
                 </div>
               {/if}
               {#each columns as column, index (index)}
+                {@const Renderer = column.info.renderer}
                 <div
                   class="whitespace-nowrap {column.info.align === 'right'
                     ? 'justify-self-end'
@@ -313,8 +331,7 @@ function toggleChildren(name: string | undefined): void {
                     : 'overflow-hidden'} max-w-full py-1.5"
                   role="cell">
                   {#if column.info.renderer}
-                    <svelte:component
-                      this={column.info.renderer}
+                    <Renderer
                       object={column.info.renderMapping ? column.info.renderMapping(child) : child} />
                   {/if}
                 </div>
