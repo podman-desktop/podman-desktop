@@ -5,39 +5,63 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
 import Layout from '@theme/Layout';
-import type { SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
 
-async function grabfilenameforMac(
-  setDownloadData: React.Dispatch<SetStateAction<{ version: string; binary: string; flatpak: string }>>,
+async function grabFilenameForLinux(
+  setDownloadData: React.Dispatch<
+    React.SetStateAction<{
+      version: string;
+      flatpak: string;
+      amd64: string;
+      arm64: string;
+    }>
+  >,
 ): Promise<void> {
-  const result = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
-  const jsonContent = await result.json();
-  const assets = jsonContent.assets;
-  const linuxAssets = assets.filter((asset: { name: string }) => (asset.name as string).endsWith('.tar.gz'));
-  if (linuxAssets.length !== 1) {
-    throw new Error('Unable to grab .tar.gz');
-  }
-  const linuxAsset = linuxAssets[0];
-
-  const flatpakAssets = assets.filter((asset: { name: string }) => (asset.name as string).endsWith('.flatpak'));
-  if (flatpakAssets.length !== 1) {
-    throw new Error('Unable to grab .flatpak');
-  }
-  const flatpakAsset = flatpakAssets[0];
-  const data = {
-    version: jsonContent.name,
-    binary: linuxAsset.browser_download_url,
-    flatpak: flatpakAsset.browser_download_url,
+  const res = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
+  const json = await res.json();
+  const {
+    tag_name,
+    name: rawName,
+    assets,
+  } = json as {
+    tag_name?: string;
+    name: string;
+    assets: Array<{ name: string; browser_download_url: string }>;
   };
 
-  setDownloadData(data);
+  const version = (tag_name ?? rawName).replace(/^v/, '');
+
+  const flatpakAssets = assets.filter(a => a.name.endsWith('.flatpak'));
+  if (flatpakAssets.length !== 1) {
+    throw new Error('Impossible de trouver l’archive .flatpak');
+  }
+  const flatpakLink = flatpakAssets[0];
+
+  const armAssets = assets.filter(a => a.name.endsWith('-arm64.tar.gz'));
+  if (armAssets.length !== 1) {
+    throw new Error('Impossible de trouver l’archive ARM64 (.tar.gz)');
+  }
+  const armLink = armAssets[0];
+
+  const amdAssets = assets.filter(a => a.name.endsWith('.tar.gz') && !a.name.includes('arm64'));
+  if (amdAssets.length !== 1) {
+    throw new Error('Impossible de trouver l’archive AMD64 (.tar.gz)');
+  }
+  const amdLink = amdAssets[0];
+
+  setDownloadData({
+    version,
+    flatpak: flatpakLink.browser_download_url,
+    arm64: armLink.browser_download_url,
+    amd64: amdLink.browser_download_url,
+  });
 }
 
 export function LinuxDownloads(): JSX.Element {
   const [downloadData, setDownloadData] = useState({
     version: '',
-    binary: '',
+    arm64: '',
+    amd64: '',
     flatpak: '',
   });
 
@@ -46,7 +70,7 @@ export function LinuxDownloads(): JSX.Element {
   };
 
   useEffect(() => {
-    grabfilenameforMac(setDownloadData).catch((err: unknown) => {
+    grabFilenameForLinux(setDownloadData).catch((err: unknown) => {
       console.error(err);
     });
   }, []);
@@ -77,9 +101,17 @@ export function LinuxDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-linux"
-              to={downloadData.binary}>
+              to={downloadData.amd64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               AMD64 binary (tar.gz)
+            </TelemetryLink>
+            <TelemetryLink
+              className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
+              eventPath="download"
+              eventTitle="download-linux"
+              to={downloadData.arm64}>
+              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+              ARM64 binary (tar.gz)
             </TelemetryLink>
           </div>
           <div className="flex flex-col align-middle items-center">
