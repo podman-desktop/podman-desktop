@@ -18,13 +18,13 @@ async function grabFilenameForLinux(
     }>
   >,
 ): Promise<void> {
-  const res = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
-  const json = await res.json();
+  const result = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
+  const jsonContent = await result.json();
   const {
     tag_name,
     name: rawName,
     assets,
-  } = json as {
+  } = jsonContent as {
     tag_name?: string;
     name: string;
     assets: Array<{ name: string; browser_download_url: string }>;
@@ -34,19 +34,19 @@ async function grabFilenameForLinux(
 
   const flatpakAssets = assets.filter(a => a.name.endsWith('.flatpak'));
   if (flatpakAssets.length !== 1) {
-    throw new Error('Impossible de trouver l’archive .flatpak');
+    throw new Error('Unable to grab .flatpak');
   }
   const flatpakLink = flatpakAssets[0];
 
   const armAssets = assets.filter(a => a.name.endsWith('-arm64.tar.gz'));
   if (armAssets.length !== 1) {
-    throw new Error('Impossible de trouver l’archive ARM64 (.tar.gz)');
+    throw new Error('Unable to grab ARM64 (.tar.gz)');
   }
   const armLink = armAssets[0];
 
   const amdAssets = assets.filter(a => a.name.endsWith('.tar.gz') && !a.name.includes('arm64'));
   if (amdAssets.length !== 1) {
-    throw new Error('Impossible de trouver l’archive AMD64 (.tar.gz)');
+    throw new Error('Unable to grab AMD64 (.tar.gz)');
   }
   const amdLink = amdAssets[0];
 
