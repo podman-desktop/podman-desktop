@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import IngressRouteColumnActions from './IngressRouteColumnActions.svelte';
-import type { IngressUI } from './IngressUI';
-import type { RouteUI } from './RouteUI';
+import type { IngressUI } from '../IngressUI';
+import type { RouteUI } from '../RouteUI';
+import Actions from './Actions.svelte';
 
 test('Expect action buttons with ingress object', async () => {
   const ingressUI: IngressUI = {
@@ -33,7 +33,7 @@ test('Expect action buttons with ingress object', async () => {
     selected: false,
   };
 
-  render(IngressRouteColumnActions, { object: ingressUI });
+  render(Actions, { object: ingressUI });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);
@@ -54,7 +54,7 @@ test('Expect action buttons with route object', async () => {
     tlsEnabled: false,
   };
 
-  render(IngressRouteColumnActions, { object: routeUI });
+  render(Actions, { object: routeUI });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);

@@ -21,10 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import { IngressRouteUtils } from './ingress-route-utils';
-import IngressRouteColumnBackend from './IngressRouteColumnBackend.svelte';
-import type { IngressUI } from './IngressUI';
-import type { RouteUI } from './RouteUI';
+import { IngressRouteUtils } from '../ingress-route-utils';
+import type { IngressUI } from '../IngressUI';
+import type { RouteUI } from '../RouteUI';
+import Backend from './Backend.svelte';
 
 const ingressRouteUtils = new IngressRouteUtils();
 
@@ -54,7 +54,7 @@ test('Expect simple column styling with single path ingress', async () => {
     ],
     selected: false,
   };
-  render(IngressRouteColumnBackend, { object: ingressUI });
+  render(Backend, { object: ingressUI });
 
   const backend = ingressRouteUtils.getBackends(ingressUI)[0];
   const text = screen.getByText(backend);
@@ -98,7 +98,7 @@ test('Expect simple column styling with multiple paths ingress', async () => {
     ],
     selected: false,
   };
-  render(IngressRouteColumnBackend, { object: ingressUI });
+  render(Backend, { object: ingressUI });
 
   const backends = ingressRouteUtils.getBackends(ingressUI);
   expect(backends.length).toBe(2);
@@ -124,7 +124,7 @@ test('Expect simple column styling with route', async () => {
     selected: false,
     tlsEnabled: false,
   };
-  render(IngressRouteColumnBackend, { object: routeUI });
+  render(Backend, { object: routeUI });
 
   const backend = ingressRouteUtils.getBackends(routeUI)[0];
   const text = screen.getByText(backend);

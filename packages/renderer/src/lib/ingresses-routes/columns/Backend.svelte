@@ -1,11 +1,7 @@
 <script lang="ts">
-import { IngressRouteUtils } from './ingress-route-utils';
-import type { IngressUI } from './IngressUI';
-import type { RouteUI } from './RouteUI';
+import { IngressRouteUtils } from '../ingress-route-utils';
+import type { Props } from './props';
 
-interface Props {
-  object: IngressUI | RouteUI;
-}
 let { object }: Props = $props();
 
 const ingressRouteUtils = new IngressRouteUtils();

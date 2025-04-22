@@ -21,10 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import { IngressRouteUtils } from './ingress-route-utils';
-import IngressRouteColumnHostPath from './IngressRouteColumnHostPath.svelte';
-import type { IngressUI } from './IngressUI';
-import type { RouteUI } from './RouteUI';
+import { IngressRouteUtils } from '../ingress-route-utils';
+import type { IngressUI } from '../IngressUI';
+import type { RouteUI } from '../RouteUI';
+import HostPath from './HostPath.svelte';
 
 const ingressRouteUtils = new IngressRouteUtils();
 
@@ -54,7 +54,7 @@ test('Expect simple column styling with single host/path ingress', async () => {
     ],
     selected: false,
   };
-  render(IngressRouteColumnHostPath, { object: ingressUI });
+  render(HostPath, { object: ingressUI });
 
   const hostPath = ingressRouteUtils.getHostPaths(ingressUI)[0];
   const link = screen.getByLabelText(hostPath.label);
@@ -102,7 +102,7 @@ test('Expect simple column styling with multiple paths ingress', async () => {
     ],
     selected: false,
   };
-  render(IngressRouteColumnHostPath, { object: ingressUI });
+  render(HostPath, { object: ingressUI });
 
   const hostPaths = ingressRouteUtils.getHostPaths(ingressUI);
   const firstLink = screen.getByRole('link', { name: hostPaths[0].label });
@@ -127,7 +127,7 @@ test('Expect simple column styling with route', async () => {
     selected: false,
     tlsEnabled: false,
   };
-  render(IngressRouteColumnHostPath, { object: routeUI });
+  render(HostPath, { object: routeUI });
 
   const hostPaths = ingressRouteUtils.getHostPaths(routeUI);
   const firstLink = screen.getByRole('link', { name: hostPaths[0].label });
