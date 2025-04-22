@@ -428,11 +428,10 @@ $: containersAndGroups = containerGroups.map(group =>
       kind="container"
       bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
-      data={containersAndGroups}
+      bind:data={containersAndGroups}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if providerConnections.length === 0}

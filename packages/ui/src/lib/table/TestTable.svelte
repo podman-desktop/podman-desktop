@@ -80,8 +80,7 @@ const row = new Row<Person>({
   data={people}
   columns={columns}
   row={row}
-  defaultSortColumn="Id"
-  on:update>
+  defaultSortColumn="Id">
 </Table>
 
 <!-- Dummy component to check if the table component is not updating this object as it contains grid-table css property -->

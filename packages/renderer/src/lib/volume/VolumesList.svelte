@@ -214,11 +214,10 @@ const row = new TableRow<VolumeInfoUI>({
       kind="volume"
       bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
-      data={volumes}
+      bind:data={volumes}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if providerConnections.length === 0}

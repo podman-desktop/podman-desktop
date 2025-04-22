@@ -228,11 +228,10 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
       kind="pod"
       bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
-      data={pods}
+      bind:data={pods}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): PodInfoUI[] => (pods = pods)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $filtered.length === 0 && providerConnections.length === 0}

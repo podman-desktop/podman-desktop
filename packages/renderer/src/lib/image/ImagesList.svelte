@@ -318,11 +318,10 @@ const row = new TableRow<ImageInfoUI>({
       kind="image"
       bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
-      data={images}
+      bind:data={images}
       columns={columns}
       row={row}
-      defaultSortColumn="Age"
-      on:update={(): ImageInfoUI[] => (images = images)}>
+      defaultSortColumn="Age">
     </Table>
 
     {#if providerConnections.length === 0}
