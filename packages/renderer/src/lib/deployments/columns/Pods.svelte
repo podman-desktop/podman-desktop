@@ -1,9 +1,6 @@
 <script lang="ts">
-import type { DeploymentUI } from './DeploymentUI';
+import type { Props } from './props';
 
-interface Props {
-  object: DeploymentUI;
-}
 let { object }: Props = $props();
 </script>
 

@@ -11,10 +11,10 @@ import DeploymentIcon from '../images/DeploymentIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
 import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import ConditionsColumn from './columns/Conditions.svelte';
+import PodsColumn from './columns/Pods.svelte';
 import { DeploymentUtils } from './deployment-utils';
-import DeploymentColumnActions from './DeploymentColumnActions.svelte';
-import DeploymentColumnConditions from './DeploymentColumnConditions.svelte';
-import DeploymentColumnPods from './DeploymentColumnPods.svelte';
 import DeploymentEmptyScreen from './DeploymentEmptyScreen.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 
@@ -41,11 +41,11 @@ let nameColumn = new TableColumn<DeploymentUI>('Name', {
 let conditionsColumn = new TableColumn<DeploymentUI>('Conditions', {
   width: '2fr',
   overflow: true,
-  renderer: DeploymentColumnConditions,
+  renderer: ConditionsColumn,
 });
 
 let podsColumn = new TableColumn<DeploymentUI>('Pods', {
-  renderer: DeploymentColumnPods,
+  renderer: PodsColumn,
 });
 
 let ageColumn = new TableColumn<DeploymentUI, Date | undefined>('Age', {
@@ -60,7 +60,7 @@ const columns = [
   conditionsColumn,
   podsColumn,
   ageColumn,
-  new TableColumn<DeploymentUI>('Actions', { align: 'right', renderer: DeploymentColumnActions }),
+  new TableColumn<DeploymentUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<DeploymentUI>({ selectable: (_deployment): boolean => true });

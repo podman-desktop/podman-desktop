@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import DeploymentColumnPods from './DeploymentColumnPods.svelte';
-import type { DeploymentUI } from './DeploymentUI';
+import type { DeploymentUI } from '../DeploymentUI';
+import Pods from './Pods.svelte';
 
 test('Expect simple column styling', async () => {
   const deployment: DeploymentUI = {
@@ -35,7 +35,7 @@ test('Expect simple column styling', async () => {
     selected: false,
     conditions: [],
   };
-  render(DeploymentColumnPods, { object: deployment });
+  render(Pods, { object: deployment });
 
   const text = screen.getByText(deployment.ready + ' / ' + deployment.replicas);
   expect(text).toBeInTheDocument();

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import DeploymentColumnActions from './DeploymentColumnActions.svelte';
-import type { DeploymentUI } from './DeploymentUI';
+import type { DeploymentUI } from '../DeploymentUI';
+import Actions from './Actions.svelte';
 
 test('Expect action buttons', async () => {
   const deployment: DeploymentUI = {
@@ -36,7 +36,7 @@ test('Expect action buttons', async () => {
     conditions: [],
   };
 
-  render(DeploymentColumnActions, { object: deployment });
+  render(Actions, { object: deployment });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);

@@ -11,12 +11,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { DeploymentCondition, DeploymentUI } from './DeploymentUI';
+import Label from '../../ui/Label.svelte';
+import type { DeploymentCondition } from '../DeploymentUI';
+import type { Props } from './props';
 
-interface Props {
-  object: DeploymentUI;
-}
 let { object }: Props = $props();
 
 // Determine both the icon and color based on the deployment condition
