@@ -4,12 +4,8 @@ import { type Component } from 'svelte';
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 
-import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
 import { icon } from '../kube-icon-utils';
-
-interface Props {
-  object: KubernetesObjectUI;
-}
+import type { Props } from './props';
 
 let { object }: Props = $props();
 

@@ -1,10 +1,6 @@
 <script lang="ts">
-import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
 import { isNamespaced } from '../kube-utils';
-
-interface Props {
-  object: KubernetesObjectUI;
-}
+import type { Props } from './props';
 
 let { object }: Props = $props();
 
