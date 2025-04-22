@@ -8,12 +8,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Fa } from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { ServiceUI } from './ServiceUI';
+import Label from '../../ui/Label.svelte';
+import type { Props } from './props';
 
-interface Props {
-  object: ServiceUI;
-}
 let { object }: Props = $props();
 
 // Determine both the icon and color based on the service type

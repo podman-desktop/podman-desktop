@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ServiceColumnActions from './ServiceColumnActions.svelte';
-import type { ServiceUI } from './ServiceUI';
+import type { ServiceUI } from '../ServiceUI';
+import Actions from './Actions.svelte';
 
 test('Expect action buttons', async () => {
   const service: ServiceUI = {
@@ -36,7 +36,7 @@ test('Expect action buttons', async () => {
     ports: '',
   };
 
-  render(ServiceColumnActions, { object: service });
+  render(Actions, { object: service });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);

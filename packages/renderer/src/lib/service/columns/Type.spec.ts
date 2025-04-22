@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ServiceColumnType from './ServiceColumnType.svelte';
-import type { ServiceUI } from './ServiceUI';
+import type { ServiceUI } from '../ServiceUI';
+import Type from './Type.svelte';
 
 const service: ServiceUI = {
   uid: '123',
@@ -36,7 +36,7 @@ const service: ServiceUI = {
 };
 
 test('Expect basic column styling', async () => {
-  const result = render(ServiceColumnType, { object: JSON.parse(JSON.stringify(service)) });
+  const result = render(Type, { object: JSON.parse(JSON.stringify(service)) });
 
   const text = screen.getByText(service.type);
   expect(text).toBeInTheDocument();
@@ -49,7 +49,7 @@ test('Expect basic column styling', async () => {
 
 test('Expect column styling ClusterIP', async () => {
   service.type = 'ClusterIP';
-  render(ServiceColumnType, { object: JSON.parse(JSON.stringify(service)) });
+  render(Type, { object: JSON.parse(JSON.stringify(service)) });
 
   const text = screen.getByText(service.type);
   expect(text).toBeInTheDocument();
@@ -61,7 +61,7 @@ test('Expect column styling ClusterIP', async () => {
 
 test('Expect column styling LoadBalancer', async () => {
   service.type = 'LoadBalancer';
-  render(ServiceColumnType, { object: JSON.parse(JSON.stringify(service)) });
+  render(Type, { object: JSON.parse(JSON.stringify(service)) });
 
   const text = screen.getByText(service.type);
   expect(text).toBeInTheDocument();
@@ -73,7 +73,7 @@ test('Expect column styling LoadBalancer', async () => {
 
 test('Expect column styling NodePort', async () => {
   service.type = 'NodePort';
-  render(ServiceColumnType, { object: JSON.parse(JSON.stringify(service)) });
+  render(Type, { object: JSON.parse(JSON.stringify(service)) });
 
   const text = screen.getByText(service.type);
   expect(text).toBeInTheDocument();
