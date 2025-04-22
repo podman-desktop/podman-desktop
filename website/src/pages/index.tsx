@@ -261,6 +261,27 @@ function Configure(): JSX.Element {
   );
 }
 
+function Testimonials(): JSX.Element {
+  return (
+    <section className="text-whitebody-font py-24">
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">What People Are Saying ✨</h2>
+        <div className="grid grid-cols-4 gap-10">
+          <div className="relative w-full h-full bg-gradient-to-br from-sky-500 to-fuschia-500 p-[2px] rounded-lg">
+            <div className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 bg-gradient-to-br from-sky-500 to-fuschia-500 content-center text-center">
+              01
+            </div>
+            <div className="bg-[#230524] rounded-lg">
+              Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon
+              headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function EnterpriseReady(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font py-24">
@@ -658,6 +679,7 @@ export default function Home(): JSX.Element {
       <Hero />
       <RunAnywhere />
       <MainFeatures />
+      <Testimonials />
       <Pods />
       <AdditionalFeatures />
       <Configure />
