@@ -264,7 +264,7 @@ function Configure(): JSX.Element {
 
 function Testimonials(): JSX.Element {
   return (
-    <section className="text-whitebody-font py-24">
+    <section className="text-whitebody-font py-24 bg-[#1e041f]">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">What People Are Saying ✨</h2>
         <div className="grid grid-cols-4 gap-10">
