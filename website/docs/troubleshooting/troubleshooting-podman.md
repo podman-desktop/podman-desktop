@@ -70,9 +70,9 @@ Podman Desktop might fail starting a Podman machine.
    $ podman machine start
    ```
 
-1. If the creation fails, read the logs carefully to continue troubleshooting.
+1. If the start fails, read the logs carefully to continue troubleshooting.
 
-## Podman Desktop fails listing images or containers
+## Podman Desktop fails to list images or containers
 
 Podman Desktop might fail listing images or container.
 
@@ -82,13 +82,13 @@ Podman Desktop might fail listing images or container.
 
 #### Procedure
 
-1. On Windows and macOS: in a terminal, verify that at least one Podman machine is running:
+1. On Windows and macOS: In a terminal, verify that at least one Podman machine is running:
 
    ```shell-session
    $ podman machine list
    ```
 
-1. To verify you can connect by using the CLI, in a terminal, run the `hello` container:
+1. To verify that you can connect using the CLI, open a terminal and run the `hello` container:
 
    ```shell-session
    $ podman run quay.io/podman/hello
@@ -98,8 +98,7 @@ Podman Desktop might fail listing images or container.
 
 #### Issue
 
-Podman Desktop might display "No Containers" as shown below, even if there are active containers running in the background.
-![img](../img/containers_error.png)
+Podman Desktop might display "No containers" on the Containers page, even if active containers are running in the background.
 
 #### Solution
 
