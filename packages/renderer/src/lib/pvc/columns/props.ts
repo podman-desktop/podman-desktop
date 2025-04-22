@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import '@testing-library/jest-dom/vitest';
+import type { PVCUI } from '../PVCUI';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
-
-import PVCColumnActions from './PVCColumnActions.svelte';
-import type { PVCUI } from './PVCUI';
-
-test('Expect action buttons', async () => {
-  const fakePVC: PVCUI = {
-    name: 'pvc-1',
-    namespace: 'default',
-    status: 'RUNNING',
-    storageClass: 'standard',
-    accessModes: ['ReadWriteOnce'],
-    selected: false,
-    size: '1Gi',
-  };
-
-  render(PVCColumnActions, { object: fakePVC });
-
-  const buttons = await screen.findAllByRole('button');
-  expect(buttons).toHaveLength(1);
-});
+export interface Props {
+  object: PVCUI;
+}

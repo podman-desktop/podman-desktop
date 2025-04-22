@@ -2,12 +2,9 @@
 import { faCircle, faEye, faLock, faSitemap, faTh, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { PVCUI } from './PVCUI';
+import Label from '../../ui/Label.svelte';
+import type { Props } from './props';
 
-interface Props {
-  object: PVCUI;
-}
 let { object }: Props = $props();
 
 // Determine the icon and color based on the access mode, with comments explaining each icon choice

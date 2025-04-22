@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import PVCColumnMode from './PVCColumnMode.svelte';
+import Mode from './Mode.svelte';
 
 const fakePVC = {
   name: 'my-pvc',
@@ -35,7 +35,7 @@ const fakePVC = {
 };
 
 test('Expect mode display', async () => {
-  render(PVCColumnMode, { object: fakePVC });
+  render(Mode, { object: fakePVC });
 
   const text = screen.getByText('ReadWriteOnce');
   expect(text).toBeInTheDocument();

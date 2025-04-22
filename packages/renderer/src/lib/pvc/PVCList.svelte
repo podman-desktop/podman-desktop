@@ -11,9 +11,9 @@ import PVCIcon from '../images/PVCIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
 import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import ModeColumn from './columns/Mode.svelte';
 import { PVCUtils } from './pvc-utils';
-import PVCColumnActions from './PVCColumnActions.svelte';
-import PvcColumnMode from './PVCColumnMode.svelte';
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 import type { PVCUI } from './PVCUI';
 
@@ -48,7 +48,7 @@ let storageClassColumn = new TableColumn<PVCUI, string>('Storage', {
 });
 
 let accessModesColumn = new TableColumn<PVCUI>('Mode', {
-  renderer: PvcColumnMode,
+  renderer: ModeColumn,
   overflow: true,
   comparator: (a, b): number => a.accessModes.join().localeCompare(b.accessModes.join()),
 });
@@ -72,7 +72,7 @@ const columns = [
   storageClassColumn,
   sizeColumn,
   ageColumn,
-  new TableColumn<PVCUI>('Actions', { align: 'right', renderer: PVCColumnActions }),
+  new TableColumn<PVCUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<PVCUI>({ selectable: (_pvc): boolean => true });
