@@ -13,6 +13,7 @@ import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
+import { TestimonialCard } from '../components/TestimonialCard';
 
 function Hero(): JSX.Element {
   return (
@@ -267,15 +268,40 @@ function Testimonials(): JSX.Element {
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">What People Are Saying ✨</h2>
         <div className="grid grid-cols-4 gap-10">
-          <div className="relative w-full h-full bg-gradient-to-br from-sky-500 to-fuschia-500 p-[2px] rounded-lg">
-            <div className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 bg-gradient-to-br from-sky-500 to-fuschia-500 content-center text-center">
-              01
-            </div>
-            <div className="bg-[#230524] rounded-lg">
-              Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon
-              headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers
-            </div>
-          </div>
+          <TestimonialCard
+            cardNumber="01"
+            username="user1"
+            name="name1"
+            date="April 22 2025"
+            text="Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers"
+          />
+          <TestimonialCard
+            cardNumber="02"
+            username="user2"
+            text="Switched to #PodmanDesktop for local container development, and wow—so much easier to manage than expected. Seamless UI, great integration, and no root daemon. A game-changer!"
+          />
+          <TestimonialCard
+            cardNumber="03"
+            username="user3"
+            text="Tried #PodmanDesktop and was surprised at how easy it was to transition from Docker. The UI is intuitive, and the ability to run rootless containers is a massive win for security!"
+          />
+          <TestimonialCard
+            cardNumber="04"
+            username="user4"
+            name="name4"
+            text="Finally, a container tool that respects system resources! Podman Desktop gives me full control without the bloat. Love how well it integrates with Kubernetes too. 🔥 #K8s #Containers"
+          />
+          <TestimonialCard
+            cardNumber="05"
+            username="user5"
+            text="Tried #PodmanDesktop and was surprised at how easy it was to transition from Docker. The UI is intuitive, and the ability to run rootless containers is a massive win for security!"
+          />
+          <TestimonialCard
+            cardNumber="06"
+            username="user6"
+            date="May 04 2024"
+            text="Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers"
+          />
         </div>
       </div>
     </section>
