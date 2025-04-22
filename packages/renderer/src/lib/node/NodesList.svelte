@@ -8,8 +8,8 @@ import NodeIcon from '../images/NodeIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
 import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import RolesColumn from './columns/Roles.svelte';
 import { NodeUtils } from './node-utils';
-import NodeColumnRoles from './NodeColumnRoles.svelte';
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 import type { NodeUI } from './NodeUI';
 
@@ -38,7 +38,7 @@ let nameColumn = new TableColumn<NodeUI>('Name', {
 });
 
 let rolesColumn = new TableColumn<NodeUI>('Roles', {
-  renderer: NodeColumnRoles,
+  renderer: RolesColumn,
   overflow: true,
   comparator: (a, b): number => a.role.localeCompare(b.role),
 });

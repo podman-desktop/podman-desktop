@@ -3,12 +3,9 @@ import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faMicrochip, faSatelliteDish, faServer } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../ui/Label.svelte';
-import type { NodeUI } from './NodeUI';
+import Label from '../../ui/Label.svelte';
+import type { Props } from './props';
 
-interface Props {
-  object: NodeUI;
-}
 let { object }: Props = $props();
 
 let roleName = $state<string>();

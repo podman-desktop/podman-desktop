@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import NodeColumnRoles from './NodeColumnRoles.svelte';
-import type { NodeUI } from './NodeUI';
+import type { NodeUI } from '../NodeUI';
+import Roles from './Roles.svelte';
 
 const nodeControlPlane: NodeUI = {
   name: 'main-node',
@@ -37,28 +37,28 @@ const nodeWorker: NodeUI = {
 } as NodeUI;
 
 test('Expect role display for control plane', async () => {
-  render(NodeColumnRoles, { object: nodeControlPlane });
+  render(Roles, { object: nodeControlPlane });
 
   const text = screen.getByText('Control Plane');
   expect(text).toBeInTheDocument();
 });
 
 test('Expect role display for node', async () => {
-  render(NodeColumnRoles, { object: nodeWorker });
+  render(Roles, { object: nodeWorker });
 
   const text = screen.getByText('Node');
   expect(text).toBeInTheDocument();
 });
 
 test('Expect GPU display if hasGpu is true', async () => {
-  render(NodeColumnRoles, { object: { ...nodeControlPlane, hasGpu: true } });
+  render(Roles, { object: { ...nodeControlPlane, hasGpu: true } });
 
   const text = screen.getByText('GPU');
   expect(text).toBeInTheDocument();
 });
 
 test('Expect no GPU display if hasGpu is false', async () => {
-  render(NodeColumnRoles, { object: { ...nodeControlPlane, hasGpu: false } });
+  render(Roles, { object: { ...nodeControlPlane, hasGpu: false } });
 
   const text = screen.queryByText('GPU');
   expect(text).not.toBeInTheDocument();
