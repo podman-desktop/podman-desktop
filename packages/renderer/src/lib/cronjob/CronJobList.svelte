@@ -9,8 +9,8 @@ import NameColumn from '../kube/column/Name.svelte';
 import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { capitalize } from '../ui/Util';
+import ActionsColumn from './columns/Actions.svelte';
 import { CronJobUtils } from './cronjob-utils';
-import CronJobColumnActions from './CronJobColumnActions.svelte';
 import CronJobEmptyScreen from './CronJobEmptyScreen.svelte';
 import type { CronJobUI } from './CronJobUI';
 
@@ -76,7 +76,7 @@ const columns = [
   suspendColumn,
   activeColumn,
   ageColumn,
-  new TableColumn<CronJobUI>('Actions', { align: 'right', renderer: CronJobColumnActions }),
+  new TableColumn<CronJobUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<CronJobUI>({ selectable: (_cronjob): boolean => true });

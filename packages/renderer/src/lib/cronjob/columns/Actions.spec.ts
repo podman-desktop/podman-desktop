@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import CronJobColumnActions from './CronJobColumnActions.svelte';
-import type { CronJobUI } from './CronJobUI';
+import type { CronJobUI } from '../CronJobUI';
+import Actions from './Actions.svelte';
 
 test('Expect cronjob buttons', async () => {
   const cronjob: CronJobUI = {
@@ -37,7 +37,7 @@ test('Expect cronjob buttons', async () => {
     active: 1,
   };
 
-  render(CronJobColumnActions, { object: cronjob });
+  render(Actions, { object: cronjob });
 
   const buttons = await screen.findAllByRole('button');
   expect(buttons).toHaveLength(1);
