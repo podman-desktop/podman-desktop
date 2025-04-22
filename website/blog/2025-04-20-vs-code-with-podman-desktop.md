@@ -24,7 +24,7 @@ Before we begin, ensure you have the following installed:
 
 To integrate VS Code with Podman, we have 2 extensions as options:
 
-1. [**Microsoft’s Docker extension**](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)**:** Since Podman is entirely compatible with the Docker API we are to use the "Docker" extension. The "Docker" extension provides excellent support for container-related tasks, including building images, managing containers, and working with Dockerfiles. It intelligently detects Podman if Docker isn't available. It might have [changed its name](https://techcommunity.microsoft.com/blog/AppsonAzureBlog/major-updates-to-vs-code-docker-introducing-container-tools/4400609) by the time you read this.
+1. [**Microsoft’s Container Tools extension**](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-containers)**:** The "Container Tools" extension provides excellent support for container-related tasks, including building images, managing containers, and working with Containerfiles and Dockerfiles.
 2. [**Pod Manager**](https://marketplace.visualstudio.com/items/?itemName=dreamcatcher45.podmanager): This extension was created by one of the members of our community and is completely open source. It is designed to help you manage Podman containers, images, volumes, and networks directly from the VS Code interface.
 
 Let's install them one by one.
@@ -85,13 +85,13 @@ Similarly using the Pod manager extension we can visually inspect containers, im
 1. Click on the Pod manager icon in the Activity Bar.
 2. You'll see a list of your containers, images, and networks.
 
-![using podmanager to view all the runnning containers, images and volumes](img/vs-code-podman/podmanager-details.png)
+![using podmanager to view all the running containers, images and volumes](img/vs-code-podman/podmanager-details.png)
 
 and manage the container lifecycle.
 
 ![using podmanager to manage the lifecycle of the container](img/vs-code-podman/interact-with-container.png)
 
-and ofcourse troubleshoot issues with a visual interface.
+and of course troubleshoot issues with a visual interface.
 
 ![using podmanager to enter the container](img/vs-code-podman/podmanager-details.png)
 
