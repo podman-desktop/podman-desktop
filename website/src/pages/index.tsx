@@ -8,6 +8,7 @@ import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
+import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
 
@@ -93,6 +94,25 @@ function Testimonials(): JSX.Element {
             source="LinkedIn"
             text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
           />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQ(): JSX.Element {
+  return (
+    <section className="text-white py-24 font-body text-4xl font-bold leading-[1.2]">
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
+        <div className="p-8">
+          <ExpandableFAQ
+            title="Is Podman Desktop free?"
+            text="Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License (LGPL). This means that it is freely available for use, modification, and distribution by anyone, without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it accessible to individuals and organizations alike."
+          />
+          <ExpandableFAQ title="Is Podman Desktop suitable for enterprise use?" text="" />
+          <ExpandableFAQ title="How do I get involved on the project?" text="" />
+          <ExpandableFAQ title="Does Podman Desktop support Compose?" text="" />
         </div>
       </div>
     </section>
@@ -374,6 +394,7 @@ export default function Home(): JSX.Element {
       <Pods />
       <AdditionalFeatures />
       <Testimonials />
+      <FAQ />
     </Layout>
   );
 }
