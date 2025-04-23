@@ -20,6 +20,7 @@ import React from 'react';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
+import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 
 function Hero(): JSX.Element {
@@ -69,7 +70,6 @@ function SectionTitle(props: Readonly<{ name: string }>): JSX.Element {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
   return (
     <div className="text-left p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
@@ -398,107 +398,104 @@ function MainFeatures(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="features" />
+        <div className="flex flex-col text-left w-full mb-5">
+          <div className="flex md:flex-row flex-col items-center md:space-x-6">
+            <div className="lg:grow md:w-1/2 flex flex-col md:items-start md:text-left items-center text-center">
+              <SectionLabel name="Esential Features for Containers" />
+              <h1 className="title-font sm:text-4xl text-3xl py-5 font-medium text-gray-900 dark:text-white">
+                Simplify Container Management and Boost Developer Productivity
+              </h1>
+              <p className="leading-relaxed py-5 dark:text-gray-300 text-gray-900">
+                Podman Desktop enhances developer productivity by integrating with popular container runtimes,
+                registries, and developer tools, making it easier to handle containerized applications locally. Whether
+                you're building, debugging, or deploying, Podman Desktop provides robust features and seamless controls,
+                empowering you to work smarter and faster with containers.
+              </p>
+              <ReadTheDocsButton />
+            </div>
+            <ThemedImage
+              className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
+              alt="Pull image and manage registries"
+              sources={{
+                light: useBaseUrl('img/features/containers.png'),
+                dark: useBaseUrl('img/features/containers.png'),
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 space-x-4 pt-16">
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/8"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/graphical.svg'),
+                  dark: useBaseUrl('img/graphical.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+                Intuitive Graphical Interface
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Podman Desktop provides a simple and user-friendly interface for managing containers, making it easier
+                for developers to focus on writing code rather than manually handling container configurations.
+              </p>
+            </div>
 
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Build, run and manage containers
-          </h2>
-        </div>
-        <div className="container px-5 pb-5 mx-auto">
-          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGears} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Build</h2>
-                <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/building-an-image">
-                    <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Build images from Containerfile or Dockerfile
-                  </a>
-                </p>
-              </div>
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/8"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/container.svg'),
+                  dark: useBaseUrl('img/container.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+                Container with Security
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Podman is a secure container runtime through its focus on daemonless, rootless containers, SELinux
+                support, network policy enforcement, immutable containers. This ensures robust security foundations for
+                running Linux containers and Kubernetes workloads.
+              </p>
             </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faRocket} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Run</h2>
 
-                <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/pulling-an-image">
-                    <FontAwesomeIcon icon={faDiagramProject} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Pull images from remote registries
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/starting-a-container">
-                    <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Start / Stop / Restart containers
-                  </a>
-                </p>
-              </div>
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/8"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/platforms.svg'),
+                  dark: useBaseUrl('img/platforms.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+                Cross-Platform Support
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Available on Linux®, macOS, and Windows, Podman Desktop lets developers create, manage, and delete
+                containers without the need for complex scripting or manual intervention.
+              </p>
             </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGaugeHigh} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Inspect</h2>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Get a terminal in your container
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Inspect logs
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faDiagramProject} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Push</h2>
-                <p className="leading-relaxed text-base list-disc">
-                  <a href="/docs/containers/images/pushing-an-image-to-a-registry">
-                    <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                    Push images to OCI registries
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Deploy & Test images on Kubernetes
-                </p>
-              </div>
+
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/8 "
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/certified_container.svg'),
+                  dark: useBaseUrl('img/certified_container.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+                Built with Container Standards
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Podman supports industry-standard container technologies like OCI, and Compose. This compatibility
+                ensures a smooth transition without disrupting existing workflows or requiring extensive retooling.
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <Link
-            title="Discover More"
-            className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-            to="/features">
-            <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-              Discover More
-              <svg
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                className="w-4 h-4 ml-2"
-                viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
-            </div>
-          </Link>
         </div>
       </div>
     </section>
