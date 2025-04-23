@@ -61,7 +61,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
+test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
   test.describe
     .serial('Image Manifest Validation - Simple Containerfile', () => {
       test('Build the image using cross-arch build (simple )', async () => {
@@ -72,13 +72,15 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
+
         imagesPage = await buildImagePage.buildImage(imageNameSimple, dockerfilePath, contextDirectory, architectures);
         await playExpect
           .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 30_000), { timeout: 0 })
           .toBeTruthy();
-        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(4);
+        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
         await imagesPage.toggleImageManifest(manifestLabelSimple);
-        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(2);
+        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
       test('Check Manifest details', async () => {
         const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
@@ -111,6 +113,7 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           'alphine-hello.containerfile',
         );
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         try {
           imagesPage = await buildImagePage.buildImage(
@@ -133,9 +136,9 @@ test.describe('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await playExpect
           .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 30_000), { timeout: 0 })
           .toBeTruthy();
-        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(4);
+        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
         await imagesPage.toggleImageManifest(manifestLabelComplex);
-        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(2);
+        await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
       test('Check Manifest details', async () => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
