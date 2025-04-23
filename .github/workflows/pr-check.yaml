@@ -370,7 +370,7 @@ jobs:
             pnpm compile:current --linux dir
             path=$(realpath ./dist/linux-unpacked/podman-desktop)
             echo "Podman Desktop built binary: $path"
-            export PODMAN_DESKTOP_BINARY_PATH=$path
+            export PODMAN_DESKTOP_BINARY=$path
           fi
           pnpm test:e2e:smoke
 
