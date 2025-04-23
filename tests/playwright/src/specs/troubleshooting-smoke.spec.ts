@@ -44,7 +44,11 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
   test('Can reconnect providers', async () => {
     await troubleshootingPage.openRepairConnections();
     const connectionStatus = await troubleshootingPage.getContainerConnectionsStatus();
-    playExpect(connectionStatus).toContain('running');
+    const regexp = new RegExp(/[1-9] running/);
+    playExpect(
+      regexp.exec(connectionStatus),
+      `Expected at least 1 running provider, got: ${connectionStatus}`,
+    ).not.toBeNull();
     const status = await troubleshootingPage.reconnectProviders();
     playExpect(status).toContain('Done');
   });
