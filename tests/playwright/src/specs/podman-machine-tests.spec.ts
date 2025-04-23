@@ -256,7 +256,7 @@ test.describe
         await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
         await podmanMachineDetails.logsTab.click();
         await playExpect(
-          podmanMachineDetails.tabContent.getByText('Machine "podman-machine-default" started successfully'),
+          podmanMachineDetails.tabContent.getByText('Machine "podman-machine-default" started successfully').first(),
         ).toBeVisible({ timeout: 10_000 });
 
         await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
