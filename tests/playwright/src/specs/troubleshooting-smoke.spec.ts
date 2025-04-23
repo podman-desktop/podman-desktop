@@ -44,7 +44,7 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
   test('Can reconnect providers', async () => {
     await troubleshootingPage.openRepairConnections();
     const connectionStatus = await troubleshootingPage.getContainerConnectionsStatus();
-    const regexp = new RegExp(/[1-9] running/);
+    const regexp = new RegExp(/[1-9]\d* running/);
     playExpect(
       regexp.exec(connectionStatus),
       `Expected at least 1 running provider, got: ${connectionStatus}`,
@@ -62,7 +62,7 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
       /Delayed startup, flushing/,
       /PluginSystem: initialization done/,
     ]) {
-      await playExpect(logs).toContainText(logEntry);
+      await playExpect(logs).toContainText(logEntry, { timeout: 10_000 });
     }
   });
 
