@@ -20,6 +20,7 @@ import React from 'react';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
+import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 
 function Hero(): JSX.Element {
@@ -72,7 +73,7 @@ function SectionTitle(props: Readonly<{ name: string }>): JSX.Element {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
   return (
-    <div className="text-left p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
+    <div className="text-right p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
       <p className="inline-block bg-white dark:bg-charcoal-400 text-gray-900 dark:text-white px-3 py-1 rounded-full transition-colors duration-200 mb-0 text-sm">
         {props.name}
       </p>
@@ -509,84 +510,102 @@ function Pods(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="features" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Work with Pods and Kubernetes
-          </h2>
-        </div>
-        <div className="container px-5 pb-5 mx-auto">
-          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/2 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGears} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Working with pods
-                </h2>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faDiagramProject} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/containers/creating-a-pod">Create Pods from existing containers</a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faGaugeHigh} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Create, start, inspect and manage pods
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/2 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faGaugeHigh} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Working with Kubernetes
-                </h2>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Play Kubernetes YAML directly with Podman Engine
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  Generate Kubernetes YAML from pods
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/kubernetes/deploying-a-pod-to-kubernetes">
-                    Deploy to existing Kubernetes environments
-                  </a>
-                </p>
-                <p className="leading-relaxed text-base list-disc">
-                  <FontAwesomeIcon icon={faRocket} className="text-purple-700 w-3 h-3 mt-1 mr-2" />
-                  <a href="/docs/kind">Running Kubernetes on your workstation with Kind and Podman</a>
-                </p>
-              </div>
+        <div className="flex flex-col text-right w-full mb-5">
+          <div className="flex md:flex-row flex-col-reverse items-center md:space-x-6">
+            <ThemedImage
+              className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
+              alt="Pull image and manage registries"
+              sources={{
+                light: useBaseUrl('img/features/kubernetes.png'),
+                dark: useBaseUrl('img/features/kubernetes.png'),
+              }}
+            />
+            <div className="lg:grow md:w-1/2 flex flex-col md:items-end md:text-right items-center text-center">
+              <SectionLabel name="Crafted for Kubernetes" />
+              <h1 className="title-font sm:text-4xl text-3xl py-5 font-bold text-gray-900 dark:text-white">
+                Streamline Kubernetes workflows
+              </h1>
+              <p className="leading-relaxed py-5 dark:text-gray-300 text-gray-900">
+                Podman Desktop isn't just a container manager; it's built with Kubernetes at its core. This deep
+                integration means seamless workflows for developers. Work with Podman's native Kubernetes support or
+                effortlessly spin up local Kind or Minikube clusters, bridge to remote environments, and manage your
+                Kubernetes deployments directly through Podman Desktop's intuitive graphical interface. Inspect,
+                configure, and orchestrate your pods, services, and deployments with ease, making Kubernetes management
+                both powerful and user-friendly.
+              </p>
+              <ReadTheDocsButton />
             </div>
           </div>
-        </div>
-      </div>
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <Link
-            title="Discover More"
-            className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-            to="/features">
-            <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-              Discover More
-              <svg
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                className="w-4 h-4 ml-2"
-                viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 space-x-4 pt-16">
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/4"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/developtest.svg'),
+                  dark: useBaseUrl('img/developtest.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+                Develop and Test
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Iterate faster with streamlined workflows enabling developers to develop locally and reducing
+                turnarounds cycles.
+              </p>
             </div>
-          </Link>
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/4"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/grow.svg'),
+                  dark: useBaseUrl('img/grow.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+                Grow Your Skills at Your Pace
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Start with containers and seamlessly transition to Kubernetes concepts with Podman capabilities. Podman
+                Desktop makes learning and adoption Kubernetes easy.
+              </p>
+            </div>
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/4"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/troubleshoot1.svg'),
+                  dark: useBaseUrl('img/troubleshoot1.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+                Troubleshoot with Ease
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Whether working natively with Kubernetes objects or managing local or remote clusters, Podman Desktop
+                streamlines your workflows with its intuitive graphical interface.
+              </p>
+            </div>
+            <div className="flex flex-col md:items-start md:text-left items-center text-center">
+              <ThemedImage
+                className="py-4 w-1/4"
+                alt="Pull image and manage registries"
+                sources={{
+                  light: useBaseUrl('img/troubleshoot2.svg'),
+                  dark: useBaseUrl('img/troubleshoot2.svg'),
+                }}
+              />
+              <h2 className="title-font sm:text-2xl text-xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+                Troubleshoot with Ease
+              </h2>
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+                Directly access logs, metrics and debug tools with Podman Desktop intuitive graphical interface to
+                resolve issues efficiently.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
