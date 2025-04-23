@@ -113,7 +113,7 @@ describe('MessageBox', () => {
     render(MessageBox, {});
 
     await userEvent.keyboard('{Escape}');
-    expect(sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, undefined, undefined);
+    expect(sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, undefined);
   });
 
   test('Expect that tabbing works', async () => {
