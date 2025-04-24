@@ -209,8 +209,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 35.2.0
-        version: 35.2.0
+        specifier: 35.2.1
+        version: 35.2.1
       electron-builder:
         specifier: '25.1'
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8(dmg-builder@25.1.8))
@@ -558,8 +558,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 35.2.0
-        version: 35.2.0
+        specifier: 35.2.1
+        version: 35.2.1
       vitest:
         specifier: ^3.1.2
         version: 3.1.2(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(msw@2.7.5(@types/node@22.14.1)(typescript@5.8.3))(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.1)
@@ -902,8 +902,8 @@ importers:
         specifier: ^22
         version: 22.13.10
       electron:
-        specifier: 35.2.0
-        version: 35.2.0
+        specifier: 35.2.1
+        version: 35.2.1
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -6389,8 +6389,8 @@ packages:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
     engines: {node: '>=18'}
 
-  electron@35.2.0:
-    resolution: {integrity: sha512-GHda7oCkN0pA23qzah735DEbRa06IPwlzP3uvjAmf9af8gxdj5i93JEHeQVGVmSVpd7sSb1pfecs9nz7B1q5ag==}
+  electron@35.2.1:
+    resolution: {integrity: sha512-LO4xXLpzkPPUVLvAbdHMlW7N9Z+Qqz+7QsmSWXluTIQMeJk+v7o36nUTZghyA2I1s//tlMvuaCtle6Qo2W0Ktg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -15969,11 +15969,11 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
 
   '@types/conventional-commits-parser@5.0.1':
     dependencies:
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
 
   '@types/cookie@0.6.0': {}
 
@@ -16148,7 +16148,7 @@ snapshots:
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
 
   '@types/geojson@7946.0.16': {}
 
@@ -16298,7 +16298,7 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.13.10
+      '@types/node': 22.14.1
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -18721,7 +18721,7 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@35.2.0:
+  electron@35.2.1:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.14.1
