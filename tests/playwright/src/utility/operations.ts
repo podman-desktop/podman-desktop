@@ -331,7 +331,7 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
       execSync('podman machine start');
       console.log('Default podman machine started');
     } catch (error) {
-      if (error instanceof Error && error.message.includes('VM already running')) {
+      if (error instanceof Error && error.message.includes('already running')) {
         console.log('Default podman machine already started, skipping start.');
       }
     }
