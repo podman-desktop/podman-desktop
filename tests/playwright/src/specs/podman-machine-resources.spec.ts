@@ -84,31 +84,33 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(120_000);
 
-  const settingsBar = await navigationBar.openSettings();
-  await settingsBar.resourcesTab.click();
-
-  const resourcesPage = new ResourcesPage(page);
-  await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-  const defaultMachineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, DEFAULT_PODMAN_MACHINE_NAME);
-
   try {
-    playExpect(await defaultMachineCard.resourceElementConnectionStatus.innerText()).toContain(
-      ResourceElementState.Off,
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.resourcesTab.click();
+
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+    const defaultMachineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, DEFAULT_PODMAN_MACHINE_NAME);
+
+    try {
+      playExpect(await defaultMachineCard.resourceElementConnectionStatus.innerText()).toContain(
+        ResourceElementState.Off,
+      );
+      await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
+      await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+      await handleConfirmationDialog(page, 'Podman', true, 'OK');
+    } catch (error) {
+      console.log('No handling dialog displayed', error);
+    }
+
+    await waitUntil(
+      async () =>
+        (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+      { timeout: 60_000, sendError: true },
     );
-    await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
-    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-    await handleConfirmationDialog(page, 'Podman', true, 'OK');
-  } catch (error) {
-    console.log('No handling dialog displayed', error);
+  } finally {
+    await runner.close();
   }
-
-  await waitUntil(
-    async () =>
-      (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-    { timeout: 60_000, sendError: true },
-  );
-
-  await runner.close();
 });
 
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
