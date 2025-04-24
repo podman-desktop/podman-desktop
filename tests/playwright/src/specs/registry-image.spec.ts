@@ -80,12 +80,12 @@ test.describe.serial('Pulling image from authenticated registry workflow verific
       await navigationBar.openSettings();
       const settingsBar = new SettingsBar(page);
       const registryPage = await settingsBar.openTabPage(RegistriesPage);
-
+      await playExpect(registryPage.heading).toBeVisible({ timeout: 10_000 });
       await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
       const registryBox = registryPage.registriesTable.getByLabel('GitHub');
       const username = registryBox.getByText(registryUsername);
-      await playExpect(username).toBeVisible();
+      await playExpect(username).toBeVisible({ timeout: 15_000 });
     });
 
     test('Image pulling from authenticated registry verification', async ({ navigationBar }) => {
