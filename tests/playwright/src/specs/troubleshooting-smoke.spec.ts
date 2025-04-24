@@ -45,10 +45,12 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
     await troubleshootingPage.openRepairConnections();
     const connectionStatus = await troubleshootingPage.getContainerConnectionsStatus();
     const regexp = new RegExp(/[1-9]\d* running/);
-    playExpect(
-      regexp.exec(connectionStatus),
-      `Expected at least 1 running provider, got: ${connectionStatus}`,
-    ).not.toBeNull();
+    await playExpect
+      .poll(async () => regexp.exec(connectionStatus), {
+        timeout: 15_000,
+        message: `Expected at least 1 running provider, got: ${connectionStatus}`,
+      })
+      .not.toBeNull();
     const status = await troubleshootingPage.reconnectProviders();
     playExpect(status).toContain('Done');
   });
