@@ -23,7 +23,6 @@ import { ResourceElementState } from '../model/core/states';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
-import { RunnerOptions } from '../runner/runner-options';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deletePodmanMachine, deletePodmanMachineFromCLI, handleConfirmationDialog } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
@@ -54,7 +53,6 @@ const machineTypes = [
   },
 ];
 
-test.use({ runnerOptions: new RunnerOptions({ saveTracesOnPass: true, saveVideosOnPass: true }) });
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   runner.setVideoAndTraceName(`podman-machine-resources-e2e`);
 
