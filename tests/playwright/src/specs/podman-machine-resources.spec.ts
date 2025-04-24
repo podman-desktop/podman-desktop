@@ -25,12 +25,7 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import { RunnerOptions } from '../runner/runner-options';
 import { expect as playExpect, test } from '../utility/fixtures';
-import {
-  createPodmanMachineFromCLI,
-  deletePodmanMachine,
-  deletePodmanMachineFromCLI,
-  handleConfirmationDialog,
-} from '../utility/operations';
+import { deletePodmanMachine, deletePodmanMachineFromCLI, handleConfirmationDialog } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
@@ -86,17 +81,32 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   );
 });
 
-test.afterAll(async ({ runner, page }) => {
+test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(120_000);
 
-  await createPodmanMachineFromCLI();
+  const settingsBar = await navigationBar.openSettings();
+  await settingsBar.resourcesTab.click();
+
+  const resourcesPage = new ResourcesPage(page);
+  await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+  const defaultMachineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, DEFAULT_PODMAN_MACHINE_NAME);
 
   try {
+    playExpect(await defaultMachineCard.resourceElementConnectionStatus.innerText()).toContain(
+      ResourceElementState.Off,
+    );
+    await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
     await handleConfirmationDialog(page, 'Podman', true, 'Yes');
     await handleConfirmationDialog(page, 'Podman', true, 'OK');
   } catch (error) {
     console.log('No handling dialog displayed', error);
   }
+
+  await waitUntil(
+    async () =>
+      (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+    { timeout: 60_000, sendError: true },
+  );
 
   await runner.close();
 });
