@@ -43,14 +43,9 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
 
   test('Can reconnect providers', async () => {
     await troubleshootingPage.openRepairConnections();
-    const connectionStatus = await troubleshootingPage.getContainerConnectionsStatus();
-    const regexp = new RegExp(/[1-9]\d* running/);
     await playExpect
-      .poll(async () => regexp.exec(connectionStatus), {
-        timeout: 15_000,
-        message: `Expected at least 1 running provider, got: ${connectionStatus}`,
-      })
-      .not.toBeNull();
+      .poll(async () => troubleshootingPage.getContainerConnectionsStatus(), { timeout: 15_000 })
+      .toContain(/[1-9]\d* running/);
     const status = await troubleshootingPage.reconnectProviders();
     playExpect(status).toContain('Done');
   });
