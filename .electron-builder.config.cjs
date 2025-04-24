@@ -188,7 +188,7 @@ const config = {
   linux: {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
-    target: ['flatpak', 'tar.gz'],
+    target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
     artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,

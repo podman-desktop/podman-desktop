@@ -20,6 +20,7 @@ With Podman Desktop, you can easily transition from containers to Kubernetes and
   - `PersistentVolumeClaim`: Use this object to request `PersistentVolume` resources for storage and define volume access modes within your Kubernetes cluster.
   - `ConfigMap`: Use this object to define non-sensitive configuration data for initializing or executing your application.
   - `Secret`: Use this object to store and manage sensitive data, such as passwords, OAuth tokens, and SSH keys for your application.
+  - `Jobs`: Use this object to create one or more pods and run them in parallel.
   - `CronJob`: Use this object to run a job, such as backup and report generation periodically on a given schedule.
 - View and analyze real-time information about the connection status of the resources configured within the cluster.
 - View the dashboard for analyzing object metrics and reading Kubernetes articles and blog posts.

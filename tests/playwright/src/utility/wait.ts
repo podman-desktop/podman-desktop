@@ -20,6 +20,7 @@ import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { NavigationBar } from '../model/workbench/navigation';
+import { createPodmanMachineFromCLI } from './operations';
 
 export async function wait(
   waitFunction: () => Promise<boolean>,
@@ -116,6 +117,8 @@ export async function delay(ms: number): Promise<void> {
 
 export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_000): Promise<void> {
   return test.step('Wait for Podman machine to be running', async () => {
+    await createPodmanMachineFromCLI();
+
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
     await waitUntil(async () => await dashboardPage.podmanStatusLabel.isVisible(), {

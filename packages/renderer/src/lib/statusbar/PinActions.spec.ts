@@ -18,20 +18,17 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, type RenderResult } from '@testing-library/svelte';
+import { fireEvent, render, type RenderResult, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import type { Component, ComponentProps, Snippet } from 'svelte';
+import type { Component, ComponentProps } from 'svelte';
 import { get } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
-import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
 import type { ProviderInfo } from '/@api/provider-info';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
-
-vi.mock('/@/lib/statusbar/ProviderButton.svelte');
 
 const CONTAINER_CONNECTION_PROVIDER = {
   name: 'podman',
@@ -126,17 +123,10 @@ test('opened menu should render provider based on pin options', async () => {
   expect(get(statusBarPinned)).toHaveLength(1);
 
   // render
-  await getOpenedPinActions();
+  const { getByRole } = await getOpenedPinActions();
 
-  // ensure we only rendered one item
-  expect(ProviderButton).toHaveBeenCalledOnce();
-  expect(ProviderButton).toHaveBeenCalledWith(expect.anything(), {
-    class: expect.any(String),
-    provider: CONTAINER_CONNECTION_PROVIDER,
-    onclick: expect.any(Function),
-    left: expect.any(Function),
-    $$slots: expect.anything(),
-  });
+  const btn = getByRole('button', { name: CONTAINER_CONNECTION_PROVIDER.name });
+  expect(btn).toBeInTheDocument();
 });
 
 test('escape should hide the menu', async () => {
@@ -151,32 +141,6 @@ test('escape should hide the menu', async () => {
 });
 
 describe('pin / unpin', () => {
-  /**
-   * Utility method to get the function provided as props#onclick to the {@link ProviderWidget}
-   * @param providerId
-   */
-  function getProviderButtonProps(providerId: string): {
-    onclick: () => void;
-    left: Snippet;
-  } {
-    const call: [unknown, ComponentProps<typeof ProviderButton>] | undefined = vi
-      .mocked(ProviderButton)
-      .mock.calls.find(([_, { provider }]) => provider.id === providerId);
-
-    // throw if we cannot found the specific call we are looking for
-    if (!call) throw new Error(`cannot find ProviderWidget call for providerId ${providerId}`);
-    // deconstruct the props
-    const [, { onclick, left }] = call;
-
-    // throw if props is undefined
-    if (!onclick || !left)
-      throw new Error(`missing mandatory props on ProviderWidget render for providerId ${providerId}`);
-    return {
-      onclick: onclick,
-      left: left,
-    };
-  }
-
   beforeEach(() => {
     // pin podman
     statusBarPinned.set([
@@ -195,50 +159,42 @@ describe('pin / unpin', () => {
 
   test('expect pinned provider to have pin icon', async () => {
     // render
-    await getOpenedPinActions();
+    const { getByRole } = await getOpenedPinActions();
 
-    // get the command
-    const { left } = getProviderButtonProps(CONTAINER_CONNECTION_PROVIDER.id);
+    const btn = getByRole('button', { name: CONTAINER_CONNECTION_PROVIDER.name });
+    expect(btn).toBeInTheDocument();
 
-    // the pin icon should be visible
-    const { getByRole } = render(left);
-    const svg = getByRole('img', { hidden: true });
+    const svg = within(btn).getByRole('img', { hidden: true });
     expect(svg).toBeInTheDocument();
   });
 
   test('expect unpinned provider to NOT have pin icon', async () => {
     // render
-    await getOpenedPinActions();
+    const { getByRole } = await getOpenedPinActions();
 
-    // get the command
-    const { left } = getProviderButtonProps(KUBERNETES_CONNECTION_PROVIDER.id);
+    const btn = getByRole('button', { name: KUBERNETES_CONNECTION_PROVIDER.name });
+    expect(btn).toBeInTheDocument();
 
-    // the pin icon should be visible
-    const { queryByRole } = render(left);
-    const svg = queryByRole('img', { hidden: true });
+    const svg = within(btn).queryByRole('img', { hidden: true });
     expect(svg).toBeNull();
   });
 
   test('expect pinned provider to have unpin command', async () => {
     // render
-    await getOpenedPinActions();
+    const { getByRole } = await getOpenedPinActions();
 
-    // get the onclick
-    const { onclick } = getProviderButtonProps(CONTAINER_CONNECTION_PROVIDER.id);
-    // call the onclick
-    onclick();
+    const btn = getByRole('button', { name: CONTAINER_CONNECTION_PROVIDER.name });
+    await fireEvent.click(btn);
 
     expect(window.unpinStatusBar).toHaveBeenCalledWith(CONTAINER_CONNECTION_PROVIDER.id);
   });
 
   test('expect unpinned provider to have pin command', async () => {
     // render
-    await getOpenedPinActions();
+    const { getByRole } = await getOpenedPinActions();
 
-    // get the onclick
-    const { onclick } = getProviderButtonProps(KUBERNETES_CONNECTION_PROVIDER.id);
-    // call the onclick
-    onclick();
+    const btn = getByRole('button', { name: KUBERNETES_CONNECTION_PROVIDER.name });
+    await fireEvent.click(btn);
 
     expect(window.pinStatusBar).toHaveBeenCalledWith(KUBERNETES_CONNECTION_PROVIDER.id);
   });

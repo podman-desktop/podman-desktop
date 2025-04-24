@@ -5,9 +5,14 @@ import { onDestroy, onMount } from 'svelte';
 
 import SimpleColumn from './SimpleColumn.svelte';
 
-export let object: Date | undefined;
-let duration: string = '';
-let refreshTimeouts: number[] = [];
+interface Props {
+  object?: Date;
+}
+
+let { object }: Props = $props();
+
+let duration: string = $state('');
+let refreshTimeouts: number[] = $state([]);
 
 export function computeInterval(uptimeInMs: number): number {
   const SECOND = 1000;

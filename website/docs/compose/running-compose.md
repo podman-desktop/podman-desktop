@@ -63,3 +63,7 @@ With Podman Desktop, you can manage multi-container applications defined in a Co
    The Podman Desktop **<Icon icon="fa-solid fa-cube" size="lg" /> Containers** list displays the containers created by Compose grouped in a container group with a `(compose)` suffix, such as `flask-redis (compose)`.
 
 ![img2](img/compose-in-containers-view.png)
+
+#### Additional resources
+
+- [Tutorial: Getting started with Compose](/tutorial/getting-started-with-compose).

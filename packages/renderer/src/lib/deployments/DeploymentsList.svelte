@@ -9,12 +9,12 @@ import {
 
 import DeploymentIcon from '../images/DeploymentIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import { DeploymentUtils } from './deployment-utils';
 import DeploymentColumnActions from './DeploymentColumnActions.svelte';
 import DeploymentColumnConditions from './DeploymentColumnConditions.svelte';
 import DeploymentColumnPods from './DeploymentColumnPods.svelte';
-import DeploymentColumnStatus from './DeploymentColumnStatus.svelte';
 import DeploymentEmptyScreen from './DeploymentEmptyScreen.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 
@@ -29,7 +29,7 @@ const deploymentUtils = new DeploymentUtils();
 let statusColumn = new TableColumn<DeploymentUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: DeploymentColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 

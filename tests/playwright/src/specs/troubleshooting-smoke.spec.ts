@@ -43,8 +43,9 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
 
   test('Can reconnect providers', async () => {
     await troubleshootingPage.openRepairConnections();
-    const connectionStatus = await troubleshootingPage.getContainerConnectionsStatus();
-    playExpect(connectionStatus).toContain('running');
+    await playExpect
+      .poll(async () => troubleshootingPage.getContainerConnectionsStatus(), { timeout: 15_000 })
+      .toMatch(/[1-9]\d* running/);
     const status = await troubleshootingPage.reconnectProviders();
     playExpect(status).toContain('Done');
   });
@@ -58,7 +59,7 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
       /Delayed startup, flushing/,
       /PluginSystem: initialization done/,
     ]) {
-      await playExpect(logs).toContainText(logEntry);
+      await playExpect(logs).toContainText(logEntry, { timeout: 10_000 });
     }
   });
 

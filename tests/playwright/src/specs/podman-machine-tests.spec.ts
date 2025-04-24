@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -256,7 +256,7 @@ test.describe
         await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
         await podmanMachineDetails.logsTab.click();
         await playExpect(
-          podmanMachineDetails.tabContent.getByText('Machine "podman-machine-default" started successfully'),
+          podmanMachineDetails.tabContent.getByText('Machine "podman-machine-default" started successfully').first(),
         ).toBeVisible({ timeout: 10_000 });
 
         await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });

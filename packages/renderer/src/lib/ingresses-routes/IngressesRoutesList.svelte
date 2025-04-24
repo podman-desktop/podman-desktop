@@ -13,12 +13,12 @@ import type { V1Route } from '/@api/openshift-types';
 
 import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import BackendColumn from './columns/Backend.svelte';
+import HostPathColumn from './columns/HostPath.svelte';
 import { IngressRouteUtils } from './ingress-route-utils';
-import IngressRouteColumnActions from './IngressRouteColumnActions.svelte';
-import IngressRouteColumnBackend from './IngressRouteColumnBackend.svelte';
-import IngressRouteColumnHostPath from './IngressRouteColumnHostPath.svelte';
-import IngressRouteColumnStatus from './IngressRouteColumnStatus.svelte';
 import IngressRouteEmptyScreen from './IngressRouteEmptyScreen.svelte';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';
@@ -39,7 +39,7 @@ const ingressRouteUtils = new IngressRouteUtils();
 let statusColumn = new TableColumn<IngressUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: IngressRouteColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
@@ -50,7 +50,7 @@ let nameColumn = new TableColumn<IngressUI | RouteUI>('Name', {
 
 let pathColumn = new TableColumn<IngressUI | RouteUI>('Host/Path', {
   width: '1.5fr',
-  renderer: IngressRouteColumnHostPath,
+  renderer: HostPathColumn,
   comparator: (a, b): number => compareHostPath(a, b),
 });
 
@@ -68,7 +68,7 @@ function compareHostPath(object1: IngressUI | RouteUI, object2: IngressUI | Rout
 
 let backendColumn = new TableColumn<IngressUI | RouteUI>('Backend', {
   width: '1.5fr',
-  renderer: IngressRouteColumnBackend,
+  renderer: BackendColumn,
   comparator: (a, b): number => compareBackend(a, b),
 });
 
@@ -84,7 +84,7 @@ const columns = [
   pathColumn,
   backendColumn,
   ageColumn,
-  new TableColumn<IngressUI | RouteUI>('Actions', { align: 'right', renderer: IngressRouteColumnActions }),
+  new TableColumn<IngressUI | RouteUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<IngressUI | RouteUI>({ selectable: (_ingressRoute): boolean => true });

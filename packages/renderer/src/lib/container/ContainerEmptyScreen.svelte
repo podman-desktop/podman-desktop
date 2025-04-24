@@ -85,8 +85,9 @@ async function runContainer(commandLine: string): Promise<void> {
   title={title}
   message={messageCommandLine}
   commandline={commandLine}
-  on:click={(): Promise<void> => window.clipboardWriteText(commandLine)}>
-  <div slot="upperContent" hidden={stoppedOnly}>
+  onclick={(): Promise<void> => window.clipboardWriteText(commandLine)}>
+  {#snippet upperContent()}
+  <div hidden={stoppedOnly}>
     <span class="text-[var(--pd-details-empty-sub-header)] max-w-[800px] text-pretty mx-2">{messageButton}</span>
     <div class="flex gap-2 justify-center p-3">
       <Button
@@ -97,4 +98,5 @@ async function runContainer(commandLine: string): Promise<void> {
     </div>
     <h1 class="text-xl text-[var(--pd-details-empty-header)]">OR</h1>
   </div>
+  {/snippet}
 </EmptyScreen>

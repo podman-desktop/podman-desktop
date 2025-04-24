@@ -32,7 +32,7 @@ Podman Desktop provides a wide range of extensions that can be used to integrate
 
 **_CLI extensions_**
 
-- Compose: Enables setting up `compose` binary so that you can run `podman compose` commands. See [Compose](/docs/compose) and [Getting started with Compose](/blog/getting-started-with-compose).
+- Compose: Enables setting up `compose` binary so that you can run `podman compose` commands. See [Compose](/docs/compose) and [Getting started with Compose](/tutorial/getting-started-with-compose).
 
 - Kubectl CLI: Enables setting up `kubectl` binary so that you can run `kubectl` commands. See [Managing your CLI tools](/tutorial/managing-your-application-resources#managing-other-resources).
 

@@ -95,7 +95,6 @@ import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
-import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
@@ -136,6 +135,7 @@ import { CliToolRegistry } from './cli-tool-registry.js';
 import { CloseBehavior } from './close-behavior.js';
 import { ColorRegistry } from './color-registry.js';
 import { CommandRegistry } from './command-registry.js';
+import { CommandsInit } from './commands-init.js';
 import type { IConfigurationPropertyRecordedSchema } from './configuration-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
@@ -189,7 +189,6 @@ import type { StatusBarEntryDescriptor } from './statusbar/statusbar-registry.js
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
-import type { TaskAction } from './tasks/tasks.js';
 import { PAGE_EVENT_TYPE, Telemetry } from './telemetry/telemetry.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
@@ -593,18 +592,6 @@ export class PluginSystem {
     );
     podmanDesktopUpdater.init();
 
-    commandRegistry.registerCommand('feedback', () => {
-      apiSender.send('display-feedback', '');
-    });
-
-    commandRegistry.registerCommand('help', () => {
-      apiSender.send('toggle-help-menu', '');
-    });
-
-    commandRegistry.registerCommand('troubleshooting', () => {
-      return navigationManager.navigateToTroubleshooting();
-    });
-
     // register appearance (light, dark, auto being system)
     const appearanceConfiguration = new AppearanceInit(configurationRegistry);
     appearanceConfiguration.init();
@@ -670,9 +657,14 @@ export class PluginSystem {
       onboardingRegistry,
     );
 
-    commandRegistry.registerCommand('kubernetes-navigation', (navRequest: KubernetesNavigationRequest) => {
-      apiSender.send('kubernetes-navigation', navRequest);
-    });
+    const commandsInit = new CommandsInit(
+      commandRegistry,
+      apiSender,
+      navigationManager,
+      taskManager,
+      containerProviderRegistry,
+    );
+    commandsInit.init();
 
     navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
 
@@ -1114,46 +1106,6 @@ export class PluginSystem {
       },
     );
 
-    commandRegistry.registerCommand(
-      'pullImage',
-      async (
-        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
-        imageName: string,
-        callback: (event: PullEvent) => void,
-        platform?: string,
-        taskActionName?: string,
-        taskActionCallback?: () => void,
-      ) => {
-        if (!providerContainerConnectionInfo || !imageName || typeof callback !== 'function') {
-          return;
-        }
-
-        let taskAction: TaskAction | undefined;
-
-        if (taskActionName && typeof taskActionName === 'string' && typeof taskActionCallback === 'function') {
-          taskAction = {
-            name: taskActionName,
-            execute: taskActionCallback,
-          };
-        }
-
-        const task = taskManager.createTask({
-          title: `Pulling ${imageName}`,
-          action: taskAction,
-        });
-
-        return containerProviderRegistry
-          .pullImage(providerContainerConnectionInfo, imageName, callback, platform)
-          .then(result => {
-            task.status = 'success';
-            return result;
-          })
-          .catch((error: unknown) => {
-            task.error = `Something went wrong while trying to pull ${imageName}: ${error};`;
-            throw error;
-          });
-      },
-    );
     this.ipcHandle(
       'container-provider-registry:pullImage',
       async (

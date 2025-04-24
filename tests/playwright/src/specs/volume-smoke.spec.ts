@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
     let containers = await runImage.startContainer(containerToRun, containerStartParams);
-    await playExpect(containers.header).toBeVisible();
+    await playExpect(containers.header).toBeVisible({ timeout: 60_000 });
     await playExpect
       .poll(async () => await containers.containerExists(containerToRun), {
         timeout: 60_000,
