@@ -396,13 +396,13 @@ function RunAnywhere(): JSX.Element {
 
 function MainFeatures(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font py-24">
+    <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-bl dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-left w-full mb-5">
           <div className="flex md:flex-row flex-col items-center md:space-x-6">
             <div className="lg:grow md:w-1/2 flex flex-col md:items-start md:text-left items-center text-center">
-              <SectionLabel name="Esential Features for Containers" />
-              <h1 className="title-font sm:text-4xl text-3xl py-5 font-medium text-gray-900 dark:text-white">
+              <SectionLabel name="Essential Features for Containers" />
+              <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white">
                 Simplify Container Management and Boost Developer Productivity
               </h1>
               <p className="leading-relaxed py-5 dark:text-gray-300 text-gray-900">
@@ -415,7 +415,7 @@ function MainFeatures(): JSX.Element {
             </div>
             <ThemedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
-              alt="Pull image and manage registries"
+              alt="Essential Features for Containers"
               sources={{
                 light: useBaseUrl('img/features/containers.png'),
                 dark: useBaseUrl('img/features/containers.png'),
@@ -426,13 +426,13 @@ function MainFeatures(): JSX.Element {
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/8"
-                alt="Pull image and manage registries"
+                alt="Intuitive Graphical Interface"
                 sources={{
                   light: useBaseUrl('img/graphical.svg'),
                   dark: useBaseUrl('img/graphical.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
                 Intuitive Graphical Interface
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
@@ -444,13 +444,13 @@ function MainFeatures(): JSX.Element {
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/8"
-                alt="Pull image and manage registries"
+                alt="Container with Security"
                 sources={{
-                  light: useBaseUrl('img/container.svg'),
-                  dark: useBaseUrl('img/container.svg'),
+                  light: useBaseUrl('img/secured_container.svg'),
+                  dark: useBaseUrl('img/secured_container.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+              <h2 className="title-font sm:text-3xl text2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
                 Container with Security
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
@@ -463,13 +463,13 @@ function MainFeatures(): JSX.Element {
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/8"
-                alt="Pull image and manage registries"
+                alt="Cross-Platform Support"
                 sources={{
                   light: useBaseUrl('img/platforms.svg'),
                   dark: useBaseUrl('img/platforms.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
                 Cross-Platform Support
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
@@ -481,13 +481,13 @@ function MainFeatures(): JSX.Element {
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/8 "
-                alt="Pull image and manage registries"
+                alt="Built with Container Standards"
                 sources={{
                   light: useBaseUrl('img/certified_container.svg'),
                   dark: useBaseUrl('img/certified_container.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-2xl text-xl py-3 font-medium text-gray-900 dark:text-white">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
                 Built with Container Standards
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
