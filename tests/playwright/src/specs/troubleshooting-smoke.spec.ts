@@ -45,7 +45,7 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
     await troubleshootingPage.openRepairConnections();
     await playExpect
       .poll(async () => troubleshootingPage.getContainerConnectionsStatus(), { timeout: 15_000 })
-      .toContain(/[1-9]\d* running/);
+      .toMatch(/[1-9]\d* running/);
     const status = await troubleshootingPage.reconnectProviders();
     playExpect(status).toContain('Done');
   });
