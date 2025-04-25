@@ -65,6 +65,7 @@ You can also build images directly from VS Code:
 2. Select "Build Image".
 3. VS Code will prompt you for an image name and tag.
 4. The extension will then build the image using Podman.
+5. After that you will be see the build image in the sidebar. If you normally building images on the CLI, your built images will also show here.
 
 ![building a Containerfile in vs code using the microsoft extension](img/vs-code-podman/build-image.png)
 
