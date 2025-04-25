@@ -76,7 +76,7 @@ test.afterAll(async ({ runner }) => {
 
 test.skip(
   isMac,
-  'Skip this part of the suite on MacOS until issue https://github.com/podman-desktop/podman-desktop/issues/12334 is fixed',
+  'Skip this test suite on MacOS until issue https://github.com/podman-desktop/podman-desktop/issues/12334 is fixed',
 );
 
 test.describe
