@@ -44,7 +44,6 @@ export class Runner {
   private _runnerOptions: RunnerOptions;
   private _saveTracesOnPass: boolean;
   private _saveVideosOnPass: boolean;
-  private _testNameMap: Map<string, number> = new Map<string, number>();
 
   private static _instance: Runner | undefined;
 
@@ -352,12 +351,9 @@ export class Runner {
 
   public setVideoAndTraceName(name: string): void {
     this._videoAndTraceName = name;
-    this.incrementTestNameMapValue(name);
 
-    const currentRunCount = this._testNameMap.get(name);
-
-    if (currentRunCount && currentRunCount > 0) {
-      this._videoAndTraceName += `_retry${currentRunCount}`;
+    if (test.info().retry > 0) {
+      this._videoAndTraceName += `_retry-${test.info().retry}`;
     }
   }
 
@@ -367,10 +363,5 @@ export class Runner {
 
   public get options(): object {
     return this._options;
-  }
-
-  private incrementTestNameMapValue(name: string): void {
-    const currentValue = this._testNameMap.get(name) ?? 0;
-    this._testNameMap.set(name, currentValue + 1);
   }
 }
