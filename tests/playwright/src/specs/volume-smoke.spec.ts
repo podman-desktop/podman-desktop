@@ -167,6 +167,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     await playExpect(containers.heading).toBeVisible();
 
     const containerDetails = await containers.openContainersDetails(containerToRun);
+    await playExpect(containerDetails.heading).toBeVisible({ timeout: 10_000 });
     await playExpect
       .poll(async () => containerDetails.getState(), { timeout: 30_000 })
       .toContain(ContainerState.Exited);
