@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { Uri } from '@podman-desktop/api';
@@ -25,7 +23,7 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
 import type { ContainerInfo } from '/@api/container-info';
@@ -39,15 +37,6 @@ const container: ContainerInfo = {
   Image: 'test-image',
   ImageID: 'test-image-id',
 } as unknown as ContainerInfo;
-
-const saveDialogMock = vi.fn();
-const exportContainerMock = vi.fn();
-
-// fake the window.events object
-beforeAll(() => {
-  (window as any).saveDialog = saveDialogMock;
-  (window as any).exportContainer = exportContainerMock;
-});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,7 +60,7 @@ test('Expect export button to be disabled', async () => {
 
 test('Expect export button to be enabled when output target is selected', async () => {
   containersInfos.set([container]);
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
   await waitRender();
   const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
   expect(btnSelectOutputDir).toBeInTheDocument();
@@ -84,8 +73,8 @@ test('Expect export button to be enabled when output target is selected', async 
 
 test('Expect export function called when export button is clicked', async () => {
   containersInfos.set([container]);
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
-  exportContainerMock.mockResolvedValue('');
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.exportContainer).mockResolvedValue(undefined);
   const goToMock = vi.spyOn(router, 'goto');
   await waitRender();
   const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
@@ -96,7 +85,7 @@ test('Expect export function called when export button is clicked', async () => 
   expect(btnExportcontainer).toBeInTheDocument();
   await userEvent.click(btnExportcontainer);
 
-  expect(exportContainerMock).toBeCalledWith(container.engineId, {
+  expect(window.exportContainer).toBeCalledWith(container.engineId, {
     id: container.Id,
     outputTarget: '/tmp/my/path',
   });
@@ -105,8 +94,8 @@ test('Expect export function called when export button is clicked', async () => 
 
 test('Expect error shown if export function fails', async () => {
   containersInfos.set([container]);
-  saveDialogMock.mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
-  exportContainerMock.mockRejectedValue('error while exporting');
+  vi.mocked(window.saveDialog).mockResolvedValue({ scheme: 'file', path: '/tmp/my/path' } as Uri);
+  vi.mocked(window.exportContainer).mockRejectedValue('error while exporting');
   const goToMock = vi.spyOn(router, 'goto');
   await waitRender();
   const btnSelectOutputDir = screen.getByRole('button', { name: 'Select output file' });
@@ -119,7 +108,7 @@ test('Expect error shown if export function fails', async () => {
 
   const errorDiv = screen.getByLabelText('Error Message Content');
 
-  expect(exportContainerMock).toBeCalledWith(container.engineId, {
+  expect(window.exportContainer).toBeCalledWith(container.engineId, {
     id: container.Id,
     outputTarget: '/tmp/my/path',
   });

@@ -49,7 +49,7 @@ export class NavigationBar {
     this.podsLink = this.page.getByRole('link', { name: 'Pods', exact: true }).nth(0);
     this.volumesLink = this.page.getByRole('link', { name: 'Volumes' });
     this.dashboardLink = this.page.getByRole('link', { name: 'Dashboard' });
-    this.settingsLink = this.page.getByRole('link', { name: 'Settings' });
+    this.settingsLink = this.page.getByRole('link', { name: 'Settings', exact: true });
     this.extensionsLink = this.navigationLocator.getByRole('link', {
       name: 'Extensions',
       exact: true,

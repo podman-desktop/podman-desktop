@@ -295,7 +295,7 @@ jobs:
         # publish codecov report if linux
       - name: publish codecov report
         if: ${{ matrix.os=='ubuntu-24.04' }}
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -370,7 +370,7 @@ jobs:
             pnpm compile:current --linux dir
             path=$(realpath ./dist/linux-unpacked/podman-desktop)
             echo "Podman Desktop built binary: $path"
-            export PODMAN_DESKTOP_BINARY_PATH=$path
+            export PODMAN_DESKTOP_BINARY=$path
           fi
           pnpm test:e2e:smoke
 

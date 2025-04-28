@@ -31,6 +31,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
+import { isLinux } from './platform';
 import { waitUntil, waitWhile } from './wait';
 
 /**
@@ -317,6 +318,8 @@ export async function ensureCliInstalled(
 
 export async function createPodmanMachineFromCLI(): Promise<void> {
   return test.step('Create Podman machine from CLI', async () => {
+    if (isLinux) return;
+
     try {
       // eslint-disable-next-line sonarjs/no-os-command-from-path
       execSync('podman machine init --rootful');
@@ -331,7 +334,7 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
       execSync('podman machine start');
       console.log('Default podman machine started');
     } catch (error) {
-      if (error instanceof Error && error.message.includes('VM already running')) {
+      if (error instanceof Error && error.message.includes('already running')) {
         console.log('Default podman machine already started, skipping start.');
       }
     }

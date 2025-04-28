@@ -1,10 +1,10 @@
 <script lang="ts">
 interface Props {
-  size: string;
-  solid: boolean;
+  size?: string;
+  solid?: boolean;
 }
 
-let { size = '40', solid }: Props = $props();
+let { size = '40', solid = false }: Props = $props();
 
 let baseStyle: string = 'stroke:currentColor;stroke-width:0.3;stroke-linecap:round;';
 let style: string = baseStyle + (solid ? 'fill:currentColor' : 'fill:none');

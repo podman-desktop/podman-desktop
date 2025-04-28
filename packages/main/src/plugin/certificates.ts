@@ -90,6 +90,7 @@ export class Certificates {
       wincaAPI({
         format: wincaAPI.der2.pem,
         inject: false,
+        store: ['root', 'ca'],
         ondata: (ca: string) => {
           CAs.push(ca);
         },

@@ -1,5 +1,6 @@
 <script lang="ts">
-import { router } from 'tinro';
+import { handleNavigation } from '/@/navigation';
+import { NavigationPage } from '/@api/navigation-page';
 
 import Badge from '../ui/Badge.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
@@ -7,11 +8,10 @@ import type { ImageInfoUI } from './ImageInfoUI';
 export let object: ImageInfoUI;
 
 function openDetails(image: ImageInfoUI): void {
-  if (image.isManifest) {
-    router.goto(`/manifests/${image.id}/${image.engineId}/${image.base64RepoTag}/summary`);
-  } else {
-    router.goto(`/images/${image.id}/${image.engineId}/${image.base64RepoTag}/summary`);
-  }
+  handleNavigation({
+    page: image.isManifest ? NavigationPage.MANIFEST : NavigationPage.IMAGE,
+    parameters: { id: image.id, engineId: image.engineId, tag: image.name + ':' + image.tag },
+  });
 }
 </script>
 

@@ -6,11 +6,11 @@ import { kubernetesCurrentContextServicesFiltered, serviceSearchPattern } from '
 
 import ServiceIcon from '../images/ServiceIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import TypeColumn from './columns/Type.svelte';
 import { ServiceUtils } from './service-utils';
-import ServiceColumnActions from './ServiceColumnActions.svelte';
-import ServiceColumnStatus from './ServiceColumnStatus.svelte';
-import ServiceColumnType from './ServiceColumnType.svelte';
 import ServiceEmptyScreen from './ServiceEmptyScreen.svelte';
 import type { ServiceUI } from './ServiceUI';
 
@@ -29,7 +29,7 @@ const serviceUtils = new ServiceUtils();
 let statusColumn = new TableColumn<ServiceUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: ServiceColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
@@ -40,7 +40,7 @@ let nameColumn = new TableColumn<ServiceUI>('Name', {
 });
 
 let typeColumn = new TableColumn<ServiceUI>('Type', {
-  renderer: ServiceColumnType,
+  renderer: TypeColumn,
   overflow: true,
   comparator: (a, b): number => a.type.localeCompare(b.type),
 });
@@ -71,7 +71,7 @@ const columns = [
   clusterIPColumn,
   portsColumn,
   ageColumn,
-  new TableColumn<ServiceUI>('Actions', { align: 'right', renderer: ServiceColumnActions }),
+  new TableColumn<ServiceUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<ServiceUI>({ selectable: (_service): boolean => true });

@@ -49,4 +49,5 @@ Before going through each tutorial, familiarize yourself with the key UI compone
 - [Managing your application resources](/tutorial/managing-your-application-resources)
 - [Running an AI application](/tutorial/running-an-ai-application)
 - [Creating an extension](/tutorial/creating-an-extension)
+- [Getting started with Compose](/tutorial/getting-started-with-compose)
 - [Testcontainers with Podman](/tutorial/testcontainers-with-podman)

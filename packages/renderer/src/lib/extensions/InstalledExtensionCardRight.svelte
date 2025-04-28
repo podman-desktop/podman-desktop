@@ -18,7 +18,7 @@ export let extension: CombinedExtensionInfoUI;
     <div>
       {extension.removable ? '' : 'Podman Desktop built-in extension'}
     </div>
-    <div>
+    <div aria-label="Version">
       {#if extension.version}
         v{extension.version}
       {/if}

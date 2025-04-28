@@ -6,12 +6,12 @@ import { jobSearchPattern, kubernetesCurrentContextJobsFiltered } from '/@/store
 
 import JobIcon from '../images/JobIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import CompletionsColumn from './columns/Completions.svelte';
+import ConditionsColumn from './columns/Conditions.svelte';
 import { JobUtils } from './job-utils';
-import JobColumnActions from './JobColumnActions.svelte';
-import JobColumnCompletions from './JobColumnCompletions.svelte';
-import JobColumnConditions from './JobColumnConditions.svelte';
-import JobColumnStatus from './JobColumnStatus.svelte';
 import JobEmptyScreen from './JobEmptyScreen.svelte';
 import type { JobUI } from './JobUI';
 
@@ -28,7 +28,7 @@ const jobUtils = new JobUtils();
 let statusColumn = new TableColumn<JobUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: JobColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
@@ -45,12 +45,12 @@ let ageColumn = new TableColumn<JobUI, Date | undefined>('Age', {
 });
 
 let conditionColumn = new TableColumn<JobUI>('Conditions', {
-  renderer: JobColumnConditions,
+  renderer: ConditionsColumn,
   comparator: (a, b): number => a.condition.localeCompare(b.condition),
 });
 
 let completionColumn = new TableColumn<JobUI>('Completions', {
-  renderer: JobColumnCompletions,
+  renderer: CompletionsColumn,
   comparator: (a, b): number => a.succeeded.toString().localeCompare(b.succeeded.toString()),
 });
 
@@ -60,7 +60,7 @@ const columns = [
   conditionColumn,
   completionColumn,
   ageColumn,
-  new TableColumn<JobUI>('Actions', { align: 'right', renderer: JobColumnActions }),
+  new TableColumn<JobUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<JobUI>({ selectable: (_job): boolean => true });

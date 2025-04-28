@@ -1,33 +1,53 @@
 <script lang="ts">
 import { faSquare as faOutlineSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCheckSquare, faMinusSquare, faSquare } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
-export let checked = false;
-export let disabled = false;
-export let indeterminate = false;
-export let disabledTooltip = '';
-export let title = '';
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let required = false;
-
 const dispatch = createEventDispatcher<{ click: boolean }>();
+
+interface Props {
+  onclick?: (checked: boolean) => void;
+  children?: Snippet;
+  class?: string;
+  checked?: boolean;
+  disabled?: boolean;
+  indeterminate?: boolean;
+  disabledTooltip?: string;
+  title?: string;
+  id?: string;
+  name?: string;
+  required?: boolean;
+}
+
+let {
+  onclick,
+  children,
+  class: className = '',
+  checked = $bindable(),
+  disabled = false,
+  indeterminate = false,
+  disabledTooltip = '',
+  title = '',
+  id,
+  name,
+  required = false,
+}: Props = $props();
+
 const faSize = '1.33x';
 
-function onClick(
-  event: MouseEvent & {
-    currentTarget: EventTarget & HTMLInputElement;
-  },
-): void {
+function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLInputElement }): void {
   const checked = event.currentTarget.checked;
-  dispatch('click', checked);
+  if (onclick) {
+    onclick(checked);
+  } else {
+    dispatch('click', checked);
+  }
 }
 </script>
 
-<label class="flex flex-row items-center {$$props.class ?? ''}">
-  <div class="relative p-2 self-start" class:mt-0.5={$$slots.default} class:mr-1={$$slots.default}>
+<label class="flex flex-row items-center {className}">
+  <div class="relative p-2 self-start" class:mt-0.5={!!children} class:mr-1={!!children}>
     <div
       class="grid absolute left-0 top-0"
       title={disabled ? disabledTooltip : title}
@@ -63,7 +83,7 @@ function onClick(
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}
       class="opacity-0 absolute top-0 left-0 w-px h-px text-xl"
-      on:click={onClick} />
+      onclick={handleClick} />
   </div>
-  <slot />
+  {@render children?.()}
 </label>

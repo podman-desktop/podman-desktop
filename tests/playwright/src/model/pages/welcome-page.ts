@@ -19,6 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { waitWhile } from '/@/utility/wait';
+
 import { BasePage } from './base-page';
 import { DashboardPage } from './dashboard-page';
 
@@ -56,6 +58,12 @@ export class WelcomePage extends BasePage {
     return test.step('Close Welcome Page', async () => {
       await playExpect(this.skipOnBoarding).toBeEnabled();
       await this.skipOnBoarding.click({ force: true });
+      try {
+        await waitWhile(async () => await this.skipOnBoarding.isVisible(), { timeout: 2_000, diff: 100 });
+      } catch (err) {
+        console.log('Skip Onboarding button is still visible, retrying to press the button');
+        await this.skipOnBoarding.click({ force: true });
+      }
       return new DashboardPage(this.page);
     });
   }

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
     let containers = await runImage.startContainer(containerToRun, containerStartParams);
-    await playExpect(containers.header).toBeVisible();
+    await playExpect(containers.header).toBeVisible({ timeout: 60_000 });
     await playExpect
       .poll(async () => await containers.containerExists(containerToRun), {
         timeout: 60_000,
@@ -164,21 +164,29 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
 
     //check the container is stopped and delete it
     containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+
     const containerDetails = await containers.openContainersDetails(containerToRun);
+    await playExpect(containerDetails.heading).toBeVisible({ timeout: 10_000 });
     await playExpect
       .poll(async () => containerDetails.getState(), { timeout: 30_000 })
       .toContain(ContainerState.Exited);
+
     containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+
     const containersPage = await containers.deleteContainer(containerToRun);
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await containersPage.containerExists(containerToRun), {
-        timeout: 30_000,
+        timeout: 60_000,
+        intervals: [1_000],
       })
       .toBeFalsy();
 
     //prune unused volumes
     volumesPage = await navigationBar.openVolumes();
+    await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
     volumesPage = await volumesPage.pruneVolumes();
     await playExpect
       .poll(async () => (await volumesPage.getRowsFromTableByStatus(VolumeState.Unused)).length, { timeout: 10_000 })

@@ -11,11 +11,11 @@ import {
 
 import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
 import NameColumn from '../kube/column/Name.svelte';
+import StatusColumn from '../kube/column/Status.svelte';
 import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
+import ActionsColumn from './columns/Actions.svelte';
+import TypeColumn from './columns/Type.svelte';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';
-import ConfigMapSecretColumnActions from './ConfigMapSecretColumnActions.svelte';
-import ConfigMapSecretColumnStatus from './ConfigMapSecretColumnStatus.svelte';
-import ConfigMapSecretColumnType from './ConfigMapSecretColumnType.svelte';
 import ConfigMapSecretEmptyScreen from './ConfigMapSecretEmptyScreen.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
@@ -30,7 +30,7 @@ const configmapSecretUtils = new ConfigMapSecretUtils();
 let statusColumn = new TableColumn<ConfigMapSecretUI>('Status', {
   align: 'center',
   width: '70px',
-  renderer: ConfigMapSecretColumnStatus,
+  renderer: StatusColumn,
   comparator: (a, b): number => a.status.localeCompare(b.status),
 });
 
@@ -55,7 +55,7 @@ let keysColumn = new TableColumn<ConfigMapSecretUI, string>('Keys', {
 let typeColumn = new TableColumn<ConfigMapSecretUI>('Type', {
   overflow: true,
   width: '2fr',
-  renderer: ConfigMapSecretColumnType,
+  renderer: TypeColumn,
   comparator: (a, b): number => a.type.localeCompare(b.type),
 });
 
@@ -65,7 +65,7 @@ const columns = [
   typeColumn,
   keysColumn,
   ageColumn,
-  new TableColumn<ConfigMapSecretUI>('Actions', { align: 'right', renderer: ConfigMapSecretColumnActions }),
+  new TableColumn<ConfigMapSecretUI>('Actions', { align: 'right', renderer: ActionsColumn }),
 ];
 
 const row = new TableRow<ConfigMapSecretUI>({ selectable: (_configmapSecret): boolean => true });

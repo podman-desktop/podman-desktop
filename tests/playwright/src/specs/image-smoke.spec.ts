@@ -50,9 +50,12 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
 
     const pullImagePage = await imagesPage.openPullImage();
     const updatedImages = await pullImagePage.pullImage(helloContainer);
+    await playExpect(updatedImages.heading).toBeVisible({ timeout: 10_000 });
 
-    const exists = await updatedImages.waitForImageExists(helloContainer);
-    playExpect(exists, `${helloContainer} image not present in the list of images`).toBeTruthy();
+    await playExpect
+      .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
+      .toBeTruthy();
+
     playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
   });
 

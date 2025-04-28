@@ -69,6 +69,17 @@ function SectionTitle(props: Readonly<{ name: string }>): JSX.Element {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
+  return (
+    <div className="text-left p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
+      <p className="inline-block bg-white dark:bg-charcoal-400 text-gray-900 dark:text-white px-3 py-1 rounded-full transition-colors duration-200 mb-0 text-sm">
+        {props.name}
+      </p>
+    </div>
+  );
+}
+
 function KeepUpToDate(): JSX.Element {
   return (
     <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font">
@@ -171,9 +182,9 @@ function Extensibility(): JSX.Element {
                 <svg
                   fill="none"
                   stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   className="w-4 h-4 ml-2"
                   viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -479,9 +490,9 @@ function MainFeatures(): JSX.Element {
               <svg
                 fill="none"
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 className="w-4 h-4 ml-2"
                 viewBox="0 0 24 24">
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -567,9 +578,9 @@ function Pods(): JSX.Element {
               <svg
                 fill="none"
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 className="w-4 h-4 ml-2"
                 viewBox="0 0 24 24">
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
