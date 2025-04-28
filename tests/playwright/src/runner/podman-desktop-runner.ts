@@ -353,7 +353,7 @@ export class Runner {
     this._videoAndTraceName = name;
 
     if (test.info().retry > 0) {
-      this._videoAndTraceName += `_retry${test.info().retry}`;
+      this._videoAndTraceName += `_retry-${test.info().retry}`;
     }
   }
 

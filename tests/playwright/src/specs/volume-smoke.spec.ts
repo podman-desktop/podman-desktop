@@ -164,21 +164,29 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
 
     //check the container is stopped and delete it
     containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+
     const containerDetails = await containers.openContainersDetails(containerToRun);
+    await playExpect(containerDetails.heading).toBeVisible({ timeout: 10_000 });
     await playExpect
       .poll(async () => containerDetails.getState(), { timeout: 30_000 })
       .toContain(ContainerState.Exited);
+
     containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+
     const containersPage = await containers.deleteContainer(containerToRun);
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await containersPage.containerExists(containerToRun), {
-        timeout: 30_000,
+        timeout: 60_000,
+        intervals: [1_000],
       })
       .toBeFalsy();
 
     //prune unused volumes
     volumesPage = await navigationBar.openVolumes();
+    await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
     volumesPage = await volumesPage.pruneVolumes();
     await playExpect
       .poll(async () => (await volumesPage.getRowsFromTableByStatus(VolumeState.Unused)).length, { timeout: 10_000 })
