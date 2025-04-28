@@ -32,6 +32,8 @@ let providerStatus = $derived.by(() => {
     return 'unknown';
   }
 });
+
+let classes = $derived(`max-h-[15px] grayscale ${providerStatus === 'stopped' ? 'brightness-50' : ''}`);
 </script>
 
 <button
@@ -41,8 +43,14 @@ let providerStatus = $derived.by(() => {
   {@render left?.()}
   {#if provider.images.icon}
     <div class="relative flex h-full items-center">
-      <IconImage image={provider.images.icon} class="max-h-[15px] grayscale {providerStatus === 'stopped' ? 'brightness-50' : ''}" alt={provider.name}></IconImage>
-      <ProviderButtonStatus status={providerStatus} />
+    {#if typeof provider.images.icon !== 'string' && provider.images.icon.fontId}
+      <IconImage class={classes} alt={provider.name}>
+        <span role="img" class="podman-desktop-icon-{provider.images.icon.fontId}"></span>
+      </IconImage>
+    {:else if provider.images.icon}
+      <IconImage image={provider.images.icon} class={classes} alt={provider.name}></IconImage>
+    {/if}
+    <ProviderButtonStatus status={providerStatus} />
     </div>
   {/if}
   {#if provider.name}

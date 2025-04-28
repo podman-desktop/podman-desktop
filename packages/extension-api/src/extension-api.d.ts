@@ -661,8 +661,16 @@ declare module '@podman-desktop/api' {
 
   export type ProviderLinks = Link;
 
+  /**
+   * An interface to provide information about provider's images
+   * to use on Dashboard, in Resource Settings and Status Bar.
+   */
   export interface ProviderImages {
-    icon?: string | { light: string; dark: string };
+    /**
+     * fontId is a monochrome icon ID to use in Status Bar. The icon should be defined using
+     * `icons` extension point (see details here https://podman-desktop.io/docs/extensions/developing/adding-icons).
+     */
+    icon?: string | { light: string; dark: string; fontId?: string };
     logo?: string | { light: string; dark: string };
   }
 

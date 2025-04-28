@@ -18,15 +18,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import IconImage from '/@/lib/appearance/IconImage.svelte';
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import ProviderButtonStatus from '/@/lib/statusbar/ProviderButtonStatus.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-vi.mock(import('/@/lib/appearance/IconImage.svelte'));
 vi.mock(import('/@/lib/statusbar/ProviderButtonStatus.svelte'));
 
 const PROVIDER_MOCK = {
@@ -44,7 +43,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('class props should be propagated to button', async () => {
+test('class props should be propagated to button', () => {
   const { getByRole } = render(ProviderButton, {
     provider: PROVIDER_MOCK,
     onclick: vi.fn(),
@@ -55,19 +54,37 @@ test('class props should be propagated to button', async () => {
   expect(widget).toHaveClass('potatoes');
 });
 
-test('provider with an image should render it', async () => {
+test('provider with an imageClass should render it', () => {
+  const provider = {
+    ...PROVIDER_MOCK,
+    images: {
+      icon: {
+        dark: 'image-file.png',
+        light: 'image-file.png',
+        fontId: 'provider-monochrome-icon',
+      },
+    },
+  };
+
   render(ProviderButton, {
-    provider: PROVIDER_MOCK,
+    provider,
     onclick: vi.fn(),
     class: 'potatoes',
   });
 
-  expect(IconImage).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining({
-      image: PROVIDER_MOCK.images.icon,
-    }),
-  );
+  const icon = screen.getByRole('img');
+  expect(icon.className).contains('podman-desktop-icon-provider-monochrome-icon');
+});
+
+test('provider with an image should render it', async () => {
+  render(ProviderButton, {
+    provider: PROVIDER_MOCK,
+    onclick: vi.fn(),
+  });
+  await tick();
+  const icon = screen.getByAltText(PROVIDER_MOCK.name);
+  expect(icon).toBeVisible();
+  expect(icon).toHaveAttribute('src', PROVIDER_MOCK.images.icon);
 });
 
 test('left slot should be rendered if defined', async () => {
