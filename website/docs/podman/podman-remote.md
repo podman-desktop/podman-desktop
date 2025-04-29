@@ -6,6 +6,9 @@ tags: [podman, installing, windows, macOS]
 keywords: [podman desktop, containers, podman, remote]
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Remote access
 
 Podman Desktop can manage remote Podman connections. This is facilitated through a list of connections using the command `podman system connection ls`.
@@ -40,9 +43,24 @@ $ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 
 Your public SSH key needs to be copied to the `~/.ssh/authorized_keys` file on the Linux server:
 
+<Tabs groupId="operating-systems">
+
+<TabItem value="win" label="Windows">
+
+```shell-session
+type ~\.ssh\id_ed25519.pub | ssh user@my-server-ip "cat >> .ssh/authorized_keys"
+```
+
+</TabItem>
+
+<TabItem value="linux-macos" label="Linux & MacOS">
+
 ```sh
 $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@my-server-ip
 ```
+
+</TabItem>
+</Tabs>
 
 3. Enable the Podman socket on the remote connection:
 
@@ -87,6 +105,12 @@ $ podman system connection add my-remote-machine --identity ~/.ssh/id_ed25519 ss
 $ podman system connection add my-remote-machine --identity ~/.ssh/id_ed25519 ssh://root@my-server-ip/run/podman/podman.sock
 ```
 
+:::warning
+
+On Windows, you need to use **an absolute path** for the identities, path with `~` will not resolve
+
+:::
+
 5. Check within Podman Desktop such as the **Containers** section that you can now access your remote instance.
 
 #### Verification
@@ -114,6 +138,12 @@ $ podman system connection default my-remote-machine
 ```sh
 $ podman ps
 ```
+
+:::note
+
+You can also use the `--connection` argument to only target the connection you want. (E.g. `podman --connection=my-remote-machine ps`)
+
+:::
 
 #### Additional resources
 
