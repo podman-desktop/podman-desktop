@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -423,6 +423,13 @@ export class Updater {
   public init(): Disposable {
     // disable auto download
     autoUpdater.autoDownload = false;
+    /**
+     * Differential updates take **a lot** of memory
+     * and have lead to constant JavaScript heap out of memory on windows
+     * let's disable for all platform to have a consistent behaviour
+     * https://github.com/podman-desktop/podman-desktop/issues/12035
+     */
+    autoUpdater.disableDifferentialDownload = true;
 
     this.registerDefaultCommands();
 

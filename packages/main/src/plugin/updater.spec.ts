@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ vi.mock('electron-updater', () => ({
     checkForUpdates: vi.fn(),
     on: vi.fn(),
     autoDownload: true,
+    disableDifferentialDownload: false,
   },
 }));
 
@@ -172,6 +173,24 @@ test('expect init to register configuration', () => {
     apiSenderMock,
   ).init();
   expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
+});
+
+test('expect init to disable differential download', () => {
+  // on import should be false
+  autoUpdater.disableDifferentialDownload = false;
+
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+  updater.init();
+
+  // Updater#init should set it to true
+  expect(autoUpdater.disableDifferentialDownload).toBeTruthy();
 });
 
 test('expect update available entry to be displayed when expected', () => {
