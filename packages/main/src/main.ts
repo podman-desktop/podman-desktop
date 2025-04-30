@@ -18,7 +18,7 @@
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isMac, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 import { Deferred } from './plugin/util/deferred.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -85,6 +85,16 @@ export class Main {
      */
     if (isWindows()) {
       this.app.setAppUserModelId(this.app.name);
+    }
+
+    /**
+     * Since electron v36
+     * references
+     * - https://github.com/electron/electron/issues/46538
+     * - https://chromium-review.googlesource.com/c/chromium/src/+/6310469
+     */
+    if (isLinux()) {
+      this.app.commandLine.appendSwitch('gtk-version', '3');
     }
 
     /**

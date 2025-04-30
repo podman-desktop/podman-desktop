@@ -35,6 +35,9 @@ const ELECTRON_APP_MOCK: ElectronApp = {
   setAppUserModelId: vi.fn(),
   quit: vi.fn(),
   on: vi.fn(),
+  commandLine: {
+    appendSwitch: vi.fn(),
+  },
 } as unknown as ElectronApp;
 
 let PROCESS_EXIT_ORIGINAL: typeof process.exit;
@@ -87,6 +90,26 @@ test('on windows setAppUserModelId should be called', async () => {
   code.main([]);
 
   expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith(ELECTRON_APP_MOCK.name);
+});
+
+describe('gtk-version', () => {
+  test('on linux gtk-version should be set to 3', () => {
+    vi.mocked(isLinux).mockReturnValue(true);
+
+    const code = new Main(ELECTRON_APP_MOCK);
+    code.main([]);
+
+    expect(ELECTRON_APP_MOCK.commandLine.appendSwitch).toHaveBeenCalledWith('gtk-version', '3');
+  });
+
+  test('non-linux platform should not define any gtk-version flag', async () => {
+    vi.mocked(isLinux).mockReturnValue(false);
+
+    const code = new Main(ELECTRON_APP_MOCK);
+    code.main([]);
+
+    expect(ELECTRON_APP_MOCK.commandLine.appendSwitch).not.toHaveBeenCalledWith('gtk-version', expect.anything());
+  });
 });
 
 // Utility type definition for {@link ElectronApp.on} and {@link WebContents.on}
