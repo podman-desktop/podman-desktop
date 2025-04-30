@@ -39,7 +39,7 @@ To install the extension:
 
 #### Configuring VS Code for Podman
 
-The Container Tools extension usually automatically detects Podman if Docker isn't running, by looking at the `DOCKER_HOST` environment variable. In Podman Desktop navigate to Settings \> Docker Compatibility \> Third-Party Tool Compatibility and make sure the option is enabled.
+The Container Tools extension usually automatically detects Podman if Docker isn't running, by looking at the `DOCKER_HOST` environment variable. In Podman Desktop navigate to Settings \> Docker Compatibility \> Third-Party Tool Compatibility and make sure the option is enabled. Learn more about the [Docker Compatibility in our documentation](https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility).
 
 ![enabling docker compatibility in the settings](img/vs-code-podman/docker-compatibility.png)
 
@@ -65,7 +65,9 @@ You can also build images directly from VS Code:
 2. Select "Build Image".
 3. VS Code will prompt you for an image name and tag.
 4. The extension will then build the image using Podman.
-5. After that you will be see the build image in the sidebar. If you normally building images on the CLI, your built images will also show here.
+5. After that you will see the built image in the sidebar.
+
+If you are using the CLI commands to build images, you will also see them here.
 
 ![building a Containerfile in vs code using the microsoft extension](img/vs-code-podman/build-image.png)
 
@@ -86,7 +88,7 @@ Similarly using the Pod manager extension we can visually inspect containers, im
 1. Click on the Pod manager icon in the Activity Bar.
 2. You'll see a list of your containers, images, and networks.
 
-![using podmanager to view all the running containers, images and volumes](img/vs-code-podman/podmanager-details.png)
+![using podmanager to view all the running containers, images and volumes](img/vs-code-podman/podmanager.png)
 
 and manage the container lifecycle.
 
@@ -98,6 +100,6 @@ and of course troubleshoot issues with a visual interface.
 
 ## Conclusion
 
-In comparison, both extensions provide a nearly identical set of features, so it is really up to you which UI you prefer. Personally I will stick with the Pod Manager because the logo is a seal 🦭. Remember if you encounter any issues using these tools or with Podman Desktop let us now by [starting a discussion](https://github.com/podman-desktop/podman-desktop/discussions) or [creating an issue](https://github.com/podman-desktop/podman-desktop/issues).
+In comparison, both extensions provide a nearly identical set of features, so it is really up to you which UI you prefer. Personally I will stick with the Pod Manager because the logo is a seal 🦭. Remember if you encounter any issues using these tools or with Podman Desktop let us know by [starting a discussion](https://github.com/podman-desktop/podman-desktop/discussions) or [creating an issue](https://github.com/podman-desktop/podman-desktop/issues).
 
 By combining the power of VS Code, Podman, and Podman Desktop, you can create a streamlined and efficient container development workflow. The VS Code extensions provide excellent integration with Podman, allowing you to manage containers, build images, and work with Containerfiles directly from your code editor. We are excited to see that Microsoft is embracing Podman and building support into their ecosystem. Podman Desktop complements this with a visual interface for managing your container environment and will help to move from your development environment to a production Kubernetes environment. Embrace these tools and elevate your container development experience!
