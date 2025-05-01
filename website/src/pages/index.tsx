@@ -108,11 +108,42 @@ function FAQ(): JSX.Element {
         <div className="p-8">
           <ExpandableFAQ
             title="Is Podman Desktop free?"
-            text="Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License (LGPL). This means that it is freely available for use, modification, and distribution by anyone, without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it accessible to individuals and organizations alike."
+            text={
+              <p>
+                Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License
+                (LGPL). This means that it is freely available for use, modification, and distribution by anyone,
+                without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it
+                accessible to individuals and organizations alike.
+              </p>
+            }
           />
-          <ExpandableFAQ title="Is Podman Desktop suitable for enterprise use?" text="" />
-          <ExpandableFAQ title="How do I get involved on the project?" text="" />
-          <ExpandableFAQ title="Does Podman Desktop support Compose?" text="" />
+          <ExpandableFAQ title="Is Podman Desktop suitable for enterprise use?" text={<p></p>} />
+          <ExpandableFAQ
+            title="How do I get involved on the project?"
+            text={
+              <p>
+                You can get invloved with the project by visiting our{' '}
+                <Link title="GitHub page" href="https://github.com/podman-desktop/podman-desktop">
+                  GitHub page
+                </Link>{' '}
+                and open a PR, report bugs, suggest new features and enhancements, provide feedback, and more. Every
+                action counts and helps us improve Podman Desktop
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="Does Podman Desktop support Compose?"
+            text={
+              <p>
+                Yes, Podman Desktop supports Compose. You can download the Compose extension to help set up Compose if
+                it is not yet installed. For more information and example, visit our{' '}
+                <Link title="Getting started with Compose" to="/tutorial/getting-started-with-compose">
+                  Getting started with Compose
+                </Link>{' '}
+                page
+              </p>
+            }
+          />
         </div>
       </div>
     </section>
