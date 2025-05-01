@@ -498,7 +498,7 @@ function AdditionalFeatures(): JSX.Element {
     <section className="text-white bg-black bg-gradient-to-b from-transparent to-fuschia-400/40 py-18 body-font md:w-full">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">And Many More Features ✨</h2>
-        <div className="flex flex-row items-strech justify-center gap-7">
+        <div className="flex flex-row items-stretch justify-center gap-7">
           <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">Learning center</p>
             <p className="text-xs leading-[1.5]">
