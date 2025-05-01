@@ -2,7 +2,7 @@ import React from 'react';
 
 export type ExpandableFAQProps = {
   title: string;
-  text: string;
+  text: JSX.Element;
 };
 
 export const ExpandableFAQ = (props: ExpandableFAQProps): JSX.Element => {
