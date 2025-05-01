@@ -963,8 +963,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       docusaurus-plugin-typedoc:
-        specifier: ^1.3.0
-        version: 1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3)))
+        specifier: ^1.4.0
+        version: 1.4.0(typedoc-plugin-markdown@4.6.3(typedoc@0.28.3(typescript@5.8.3)))
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -1009,8 +1009,8 @@ importers:
         specifier: ^0.28.3
         version: 0.28.3(typescript@5.8.3)
       typedoc-plugin-markdown:
-        specifier: ^4.6.2
-        version: 4.6.2(typedoc@0.28.3(typescript@5.8.3))
+        specifier: ^4.6.3
+        version: 4.6.3(typedoc@0.28.3(typescript@5.8.3))
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -6247,8 +6247,8 @@ packages:
     resolution: {integrity: sha512-YJgbriYdruis4N0xutIv1qzoBi7/pe3RwExVvTyRAYLwNyd4oYA119pFSQ92pn6fUUxsffTanDvCT4cT1whSAA==}
     engines: {node: '>=20'}
 
-  docusaurus-plugin-typedoc@1.3.0:
-    resolution: {integrity: sha512-AFVMjtTnbuOazWlLiIbkJuOAoKqVVVJCmEcgpnDBura7rr29cFsfLiaPVwklIOIC89YfTjmtKcQ98CSyqa+wVg==}
+  docusaurus-plugin-typedoc@1.4.0:
+    resolution: {integrity: sha512-lRehUMevMHc40gy/bVuTzu/XwB46Tk342AG0UbpjIKkj3lvsG9rQZK5nnpWffvNalk8QHs3BlAb+xmG4FAUGcg==}
     peerDependencies:
       typedoc-plugin-markdown: '>=4.6.0'
 
@@ -11257,8 +11257,13 @@ packages:
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
 
-  typedoc-plugin-markdown@4.6.2:
-    resolution: {integrity: sha512-JVCIoK7FDN3t3PSLkwDyrBFyjtDznqDCJotP9evxhLyb6bEZTqhAGB0tPy1RmgHuY2WoAONMrsWs8LfLsD+A6A==}
+  typedoc-docusaurus-theme@1.4.0:
+    resolution: {integrity: sha512-L8etzGUfGv1nxcdzw/s/0MUgfiIetTMttdqCY2ZpTnK26pDB8GsBi+9hHwl8cgDrMz+FF+mIyPKNDKhqDeGvTA==}
+    peerDependencies:
+      typedoc-plugin-markdown: '>=4.6.3'
+
+  typedoc-plugin-markdown@4.6.3:
+    resolution: {integrity: sha512-86oODyM2zajXwLs4Wok2mwVEfCwCnp756QyhLGX2IfsdRYr1DXLCgJgnLndaMUjJD7FBhnLk2okbNE9PdLxYRw==}
     engines: {node: '>= 18'}
     peerDependencies:
       typedoc: 0.28.x
@@ -18501,9 +18506,10 @@ snapshots:
 
   docusaurus-plugin-goatcounter@4.0.0: {}
 
-  docusaurus-plugin-typedoc@1.3.0(typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3))):
+  docusaurus-plugin-typedoc@1.4.0(typedoc-plugin-markdown@4.6.3(typedoc@0.28.3(typescript@5.8.3))):
     dependencies:
-      typedoc-plugin-markdown: 4.6.2(typedoc@0.28.3(typescript@5.8.3))
+      typedoc-docusaurus-theme: 1.4.0(typedoc-plugin-markdown@4.6.3(typedoc@0.28.3(typescript@5.8.3)))
+      typedoc-plugin-markdown: 4.6.3(typedoc@0.28.3(typescript@5.8.3))
 
   dom-accessibility-api@0.5.16: {}
 
@@ -24574,7 +24580,11 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-plugin-markdown@4.6.2(typedoc@0.28.3(typescript@5.8.3)):
+  typedoc-docusaurus-theme@1.4.0(typedoc-plugin-markdown@4.6.3(typedoc@0.28.3(typescript@5.8.3))):
+    dependencies:
+      typedoc-plugin-markdown: 4.6.3(typedoc@0.28.3(typescript@5.8.3))
+
+  typedoc-plugin-markdown@4.6.3(typedoc@0.28.3(typescript@5.8.3)):
     dependencies:
       typedoc: 0.28.3(typescript@5.8.3)
 
