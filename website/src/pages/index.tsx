@@ -499,35 +499,35 @@ function AdditionalFeatures(): JSX.Element {
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">And Many More Features ✨</h2>
         <div className="flex flex-row items-strech justify-center gap-7">
-          <div className="flex flex-col items-start justify-start gap-1 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+          <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">Learning center</p>
             <p className="text-xs leading-[1.5]">
               Demystify complex topics and expand knowledge of crucial technologies and components, through tutorials,
               videos and documentation resources.
             </p>
           </div>
-          <div className="flex flex-col items-start justify-start gap-1 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+          <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">Extensions</p>
             <p className="text-xs leading-[1.5]">
               Podman Desktop extends its capabilities through extensions, allowing developers to tailor the tool to
               their unique needs and eventually build their own solutions.
             </p>
           </div>
-          <div className="flex flex-col items-start justify-start gap-1 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+          <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">GPU Acceleration</p>
             <p className="text-xs leading-[1.5]">
               To support any of your local AI development workflows, Podman Desktop enables GPU acceleration and
               optimizes performance when running models with containers locally.
             </p>
           </div>
-          <div className="flex flex-col items-start justify-start gap-1 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+          <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">Multi-arch Support</p>
             <p className="text-xs leading-[1.5]">
               Cross-platform multi-architecture support, to build and run containers for multiple hardware platforms,
               from ARM to x86_64.
             </p>
           </div>
-          <div className="flex flex-col items-start justify-start gap-1 bg-[#3f394cFF] rounded-lg p-6 md:w-full">
+          <div className="flex flex-col items-start justify-start gap-1 bg-purple-800 grayscale-75 rounded-lg p-6 md:w-full">
             <p className="text-lg font-semibold leading-[1.5]">Enterprise Ready</p>
             <p className="text-xs leading-[1.5]">
               Extensive integrations, including VPN and Proxy support for secure networking configurations, streamlined
