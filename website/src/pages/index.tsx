@@ -495,7 +495,7 @@ function MainFeatures(): JSX.Element {
 
 function AdditionalFeatures(): JSX.Element {
   return (
-    <section className="text-white bg-black bg-gradient-to-b from-transparent to-fuschia-400/40 py-18 body-font md:w-full">
+    <section className="text-white bg-black bg-gradient-to-b from-transparent to-fuschia-400/40 py-24 body-font md:w-full">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">And Many More Features ✨</h2>
         <div className="flex flex-row items-stretch justify-center gap-7">
