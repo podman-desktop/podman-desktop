@@ -190,7 +190,7 @@ export class TaskManager {
         name: task.name,
         started: task.started,
         action: task.action?.name,
-        status: 'success',
+        status: task.type === 'error' ? 'failure' : 'success',
         markdownActions: task.markdownActions,
         body: task.body ?? '',
         state: 'completed',

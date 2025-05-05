@@ -60,6 +60,7 @@ export class NotificationRegistry {
       title: notification.title,
       body: notification.body,
       markdownActions: notification.markdownActions,
+      type: notification.type,
     });
     // we show the notification
     const electronNotification = this.showNotification({

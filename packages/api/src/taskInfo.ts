@@ -22,7 +22,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export type NotificationTaskInfo = Omit<TaskInfo, 'progress' | 'error'> & {
   state: 'completed';
-  status: 'success';
+  status: 'success' | 'failure';
   body: string;
   markdownActions?: string;
 };
