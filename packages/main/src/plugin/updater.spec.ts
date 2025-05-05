@@ -31,8 +31,9 @@ import type { MessageBox } from '/@/plugin/message-box.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import { Updater } from '/@/plugin/updater.js';
+import { DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT, Updater } from '/@/plugin/updater.js';
 import * as util from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 import type { ApiSenderType } from './api.js';
 import type { TaskManager } from './tasks/task-manager.js';
@@ -59,6 +60,8 @@ vi.mock('electron-updater', () => ({
 
 vi.mock('/@/util.js', () => ({
   isLinux: vi.fn(),
+  isWindows: vi.fn(),
+  isMac: vi.fn(),
 }));
 
 const getStatusCodeMock = { statusCode: 200 } as IncomingMessage;
@@ -109,6 +112,15 @@ const apiSenderMock = {
   send: vi.fn(),
 } as unknown as ApiSenderType;
 
+function mockConfiguration(options: Record<string, unknown>): void {
+  vi.mocked(configurationMock.get).mockImplementation((section, defaultValue) => {
+    if (section in options) {
+      return options[section];
+    }
+    return defaultValue;
+  });
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.resetAllMocks();
@@ -123,7 +135,9 @@ beforeEach(() => {
   vi.mocked(commandRegistryMock.executeCommand).mockResolvedValue(undefined);
   vi.mocked(util.isLinux).mockReturnValue(false);
 
-  vi.mocked(configurationMock.get).mockReturnValue('never');
+  mockConfiguration({
+    'update.reminder': 'never',
+  });
   vi.mocked(configurationMock.update).mockResolvedValue(undefined);
   vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue(configurationMock);
 
@@ -175,22 +189,78 @@ test('expect init to register configuration', () => {
   expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
 });
 
-test('expect init to disable differential download', () => {
-  // on import should be false
-  autoUpdater.disableDifferentialDownload = false;
+describe('differential download', () => {
+  type TestCase = {
+    platform: 'windows' | 'macos' | 'linux';
+    configuration: Array<DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT>;
+    expectDifferentialDownload: 'enable' | 'disable';
+  };
 
-  const updater = new Updater(
-    messageBoxMock,
-    configurationRegistryMock,
-    statusBarRegistryMock,
-    commandRegistryMock,
-    taskManagerMock,
-    apiSenderMock,
+  test.each<TestCase>([
+    {
+      platform: 'windows',
+      configuration: [],
+      expectDifferentialDownload: 'enable',
+    },
+    {
+      platform: 'windows',
+      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS],
+      expectDifferentialDownload: 'disable',
+    },
+    {
+      platform: 'windows',
+      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+      expectDifferentialDownload: 'enable',
+    },
+    {
+      platform: 'macos',
+      configuration: [],
+      expectDifferentialDownload: 'enable',
+    },
+    {
+      platform: 'macos',
+      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS],
+      expectDifferentialDownload: 'enable',
+    },
+    {
+      platform: 'macos',
+      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+      expectDifferentialDownload: 'disable',
+    },
+    {
+      platform: 'macos',
+      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS, DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+      expectDifferentialDownload: 'disable',
+    },
+  ])(
+    'expect differential download to be $expectDifferentialDownload on $platform with config $configuration',
+    ({ platform, configuration, expectDifferentialDownload }) => {
+      // default should be false
+      autoUpdater.disableDifferentialDownload = false;
+
+      // mock platform
+      vi.mocked(isMac).mockReturnValue(platform === 'macos');
+      vi.mocked(isLinux).mockReturnValue(platform === 'linux');
+      vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+
+      mockConfiguration({
+        'update.disableDifferentialDownload': configuration,
+      });
+
+      const updater = new Updater(
+        messageBoxMock,
+        configurationRegistryMock,
+        statusBarRegistryMock,
+        commandRegistryMock,
+        taskManagerMock,
+        apiSenderMock,
+      );
+      updater.init();
+
+      // Updater#init should set it to true
+      expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
+    },
   );
-  updater.init();
-
-  // Updater#init should set it to true
-  expect(autoUpdater.disableDifferentialDownload).toBeTruthy();
 });
 
 test('expect update available entry to be displayed when expected', () => {
@@ -314,7 +384,9 @@ test('expect command update to be called when configuration value on startup', (
     return {} as unknown as AppUpdater;
   });
 
-  vi.mocked(configurationMock.get).mockReturnValue('startup');
+  mockConfiguration({
+    'update.reminder': 'startup',
+  });
 
   new Updater(
     messageBoxMock,
@@ -339,7 +411,9 @@ test('expect command update not to be called when configuration value on never',
     return {} as unknown as AppUpdater;
   });
 
-  vi.mocked(configurationMock.get).mockReturnValue('never');
+  mockConfiguration({
+    'update.reminder': 'never',
+  });
 
   new Updater(
     messageBoxMock,
