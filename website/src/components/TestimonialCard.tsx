@@ -3,20 +3,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 
 export type TestimonialCardProps = {
-  cardNumber: string;
   username: string;
   text: string;
-  name?: string;
+  source?: string;
   date?: string;
 };
 
 export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
+  let separator = '';
+  if (props.source && props.date) {
+    separator = ', ';
+  }
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-sky-500 to-fuschia-500 p-[2px] rounded-lg">
-      <div className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 text-2xl font-black bg-gradient-to-br from-sky-500 to-fuschia-500 content-center text-center">
-        {props.cardNumber}
-      </div>
-      <div className="bg-transparent rounded-lg p-6 h-full">
+      <img src="/img/quote.svg" alt="Quote symbol" className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 " />
+      <div className="bg-[#230524] rounded-lg p-6 h-full">
         <div className="flex flex-row items-center">
           <FontAwesomeIcon
             size="3x"
@@ -25,9 +26,9 @@ export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
           />
           <div className="ml-6">
             <p className="font-semibold text-lg m-0 leading-1.6">@{props.username}</p>
-            {(props?.name ?? props?.date) && (
+            {(props?.source ?? props?.date) && (
               <p className="text-xs m-0 leading-1.6">
-                {props.name} {props.date}
+                {props.source} {separator} {props.date}
               </p>
             )}
           </div>
