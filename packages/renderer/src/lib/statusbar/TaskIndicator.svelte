@@ -4,7 +4,6 @@ import { Tooltip } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
-import { showFeedbackDialog } from '/@/stores/feedbackForm';
 import { tasksInfo } from '/@/stores/tasks';
 
 let runningTasks = $derived($tasksInfo.filter(task => task.state === 'running'));
@@ -40,15 +39,10 @@ async function cancelTask(): Promise<void> {
     await window.cancelToken(cancellableToken);
   }
 }
-
-function showFeedback(): void {
-  // Show the feedback dialog after 2 minutes
-  setTimeout(() => showFeedbackDialog('tasks.StatusBar'), 120000);
-}
 </script>
 
 {#if runningTasks.length > 0}
-  <button class="flex items-center" onclick={showFeedback}>
+  <button class="flex items-center">
     <Tooltip top tip={title}>
       <button aria-label="Toggle Task Manager" onclick={toggleTaskManager}>
         <div class="flex items-center gap-x-2">

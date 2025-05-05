@@ -1,8 +1,5 @@
 <script lang="ts">
 import { CloseButton, NavPage } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
-
-import { showFeedbackDialog } from '/@/stores/feedbackForm';
 import { filtered, searchPattern } from '/@/stores/tasks';
 
 import TaskManagerBulkDeleteButton from './button/TaskManagerBulkDeleteButton.svelte';
@@ -39,8 +36,6 @@ $effect(() => {
 
 // task or tasks depending on the number of selected items
 const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
-
-onMount(async () => await showFeedbackDialog('tasks.Manager'));
 </script>
 
 <!-- track keys like "ESC" or clicking outside the window, etc. -->

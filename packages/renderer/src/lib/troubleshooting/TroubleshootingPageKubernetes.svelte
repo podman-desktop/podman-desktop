@@ -5,14 +5,11 @@ import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
-import { showFeedbackDialog } from '/@/stores/feedbackForm';
 
 let info = $state<KubernetesTroubleshootingInformation>();
 
 onMount(async () => {
   await refresh();
-  // Show the feedback dialog after 3 minutes
-  setTimeout(() => showFeedbackDialog('kubernetes.statesExperimental'), 180000);
 });
 
 async function refresh(): Promise<void> {

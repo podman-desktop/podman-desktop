@@ -5,6 +5,7 @@ import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import type { ButtonsType, DropdownType } from '../../../../main/src/plugin/message-box';
 import Markdown from '../markdown/Markdown.svelte';
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
@@ -33,8 +34,6 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
     detail = undefined;
   }
 
-  footerMarkdownDescription = options.footerMarkdownDescription;
-
   // use provided buttons, or a single 'OK' button if none are provided
   if (options?.buttons && options.buttons.length > 0) {
     buttons = options.buttons;
@@ -52,8 +51,6 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
     cancelId = buttons.findIndex(b => {
       // only for "clasic" buttons and not Dropdown component
       if (typeof b === 'string') return b.toLowerCase() === 'cancel';
-      // If we have object we need to enable overflow-visible in Modal component
-      else if (typeof b === 'object') overflowVisible = true;
     });
   }
 
@@ -116,7 +113,7 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} on:close={onClose} {overflowVisible}>
+  <Dialog title={title} on:close={onClose}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
@@ -143,7 +140,9 @@ function getButtonType(b: boolean): ButtonType {
         </div>
       {/if}
       {#if detail}
-        <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>
+        <div class="pt-4 leading-5 flex justify-center" aria-label="Dialog Details">
+          <Markdown markdown={detail} />
+        </div>
       {/if}
     </svelte:fragment>
 

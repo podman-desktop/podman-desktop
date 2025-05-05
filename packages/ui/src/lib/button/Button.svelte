@@ -42,7 +42,11 @@ let {
   children,
 }: Props = $props();
 
-let iconType: string = $derived(isFontAwesomeIcon(icon) ? 'fa' : 'unknown');
+let iconType: string = $derived.by(() => {
+  if (isFontAwesomeIcon(icon)) return 'fa';
+  else if (typeof icon === 'string') return 'string';
+  else return 'unknown';
+});
 
 let classes = $derived.by(() => {
   let result: string = '';
@@ -105,6 +109,8 @@ let classes = $derived.by(() => {
       {:else if iconType === 'unknown'}
         {@const Icon = icon}
         <Icon/>
+      {:else if iconType === 'string'}
+        <i role="img" class={icon}></i>
       {/if}
       {#if children}
         <span>{@render children()}</span>
