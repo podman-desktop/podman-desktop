@@ -160,6 +160,7 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
+import { ExperimentalFeatureFeedbackForm } from './experimental-feature-feedback-form.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -531,6 +532,12 @@ export class PluginSystem {
     statusbarProviders.init();
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
+
+    container.bind<ExperimentalFeatureFeedbackForm>(ExperimentalFeatureFeedbackForm).toSelf().inSingletonScope();
+    const experimentalFeatureFeedbackForm = container.get<ExperimentalFeatureFeedbackForm>(
+      ExperimentalFeatureFeedbackForm,
+    );
+    await experimentalFeatureFeedbackForm.init();
 
     // Don't show the tray icon options on Mac
     if (!isMac()) {
