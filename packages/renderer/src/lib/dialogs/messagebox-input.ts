@@ -27,5 +27,4 @@ export interface MessageBoxOptions {
   type?: string;
   defaultId?: number;
   cancelId?: number;
-  footerMarkdownDescription?: string;
 }

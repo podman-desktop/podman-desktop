@@ -20,7 +20,6 @@ let cancelId = -1;
 let defaultId: number;
 let buttonOrder: number[];
 let overflowVisible: boolean = false;
-let footerMarkdownDescription: string | undefined;
 
 let display = false;
 
@@ -34,8 +33,6 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   } else {
     detail = undefined;
   }
-
-  footerMarkdownDescription = options.footerMarkdownDescription;
 
   // use provided buttons, or a single 'OK' button if none are provided
   if (options?.buttons && options.buttons.length > 0) {
@@ -139,15 +136,11 @@ function getButtonType(b: boolean): ButtonType {
       <div class="leading-5" aria-label="Dialog Message">
         <Markdown markdown={message} />
       </div>
-
-      {#if footerMarkdownDescription}
-        <div class="pt-4 flex justify-center" aria-label="Footer Description">
-          <Markdown markdown={footerMarkdownDescription} />
-        </div>
-      {/if}
       
       {#if detail}
-        <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>
+        <div class="pt-4 leading-5 flex justify-center" aria-label="Dialog Details">
+          <Markdown markdown={detail} />
+        </div>
       {/if}
     </svelte:fragment>
 

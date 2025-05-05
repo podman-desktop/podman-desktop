@@ -168,7 +168,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
       },
     ],
     defaultId: 1,
-    footerMarkdownDescription: footerMarkdownDescription,
+    detail: footerMarkdownDescription,
   });
 
   // Share Feedback on GitHub was selected
