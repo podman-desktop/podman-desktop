@@ -371,15 +371,18 @@ describe.each([
     setWSLEnabled(provider === VMTYPE.WSL);
   });
 
-  test('verify create command called with correct values', async () => {
+  test.each([
+    { version: '5.0.0', image: 'image' },
+    { version: '4.5.0', image: 'image-path' },
+  ])(`verify create command called with correct values for %s`, async ({ version, image }) => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
+      stdout: `podman version ${version}`,
     } as extensionApi.RunResult);
 
     await extension.createMachine(
       {
         'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.image': 'path',
         'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
         'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
         'podman.factory.machine.provider': provider,
@@ -388,7 +391,7 @@ describe.each([
     );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
-      ['machine', 'init', '--cpus', '2', '--memory', '1000', '--disk-size', '232', '--image-path', 'path', '--rootful'],
+      ['machine', 'init', '--cpus', '2', '--memory', '1000', '--disk-size', '232', `--${image}`, 'path', '--rootful'],
       {
         logger: undefined,
         token: undefined,
@@ -409,9 +412,12 @@ describe.each([
     );
   });
 
-  test('verify create command called with correct image-path values with image URL', async () => {
+  test.each([
+    { version: '5.0.0', image: 'image' },
+    { version: '4.5.0', image: 'image-path' },
+  ])('verify create command called with correct image values with image URL %s', async ({ version, image }) => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
+      stdout: `podman version ${version}`,
     } as extensionApi.RunResult);
 
     await extension.createMachine(
@@ -435,7 +441,7 @@ describe.each([
         '1000',
         '--disk-size',
         '232',
-        '--image-path',
+        `--${image}`,
         'https://host/file',
         '--rootful',
       ],
@@ -459,9 +465,12 @@ describe.each([
     );
   });
 
-  test('verify create command called with correct image-path values with registry', async () => {
+  test.each([
+    { version: '5.0.0', image: 'image' },
+    { version: '4.5.0', image: 'image-path' },
+  ])('verify create command called with correct image values with registry %s', async ({ version, image }) => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
+      stdout: `podman version ${version}`,
     } as extensionApi.RunResult);
 
     await extension.createMachine(
@@ -485,7 +494,7 @@ describe.each([
         '1000',
         '--disk-size',
         '232',
-        '--image-path',
+        `--${image}`,
         'docker://registry/repo/image:version',
         '--rootful',
       ],
@@ -509,16 +518,19 @@ describe.each([
     );
   });
 
-  test('verify create command called with correct values with user mode networking', async () => {
+  test.each([
+    { version: '5.0.0', image: 'image' },
+    { version: '4.5.0', image: 'image-path' },
+  ])('verify create command called with correct values with user mode networking %s', async ({ version, image }) => {
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
+      stdout: `podman version ${version}`,
     } as extensionApi.RunResult);
 
     await extension.createMachine(
       {
         'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.image': 'path',
         'podman.factory.machine.memory': '1048000000',
         'podman.factory.machine.diskSize': '250000000000',
         'podman.factory.machine.user-mode-networking': true,
@@ -534,7 +546,7 @@ describe.each([
       '1000',
       '--disk-size',
       '232',
-      '--image-path',
+      `--${image}`,
       'path',
       '--rootful',
       '--user-mode-networking',
@@ -559,46 +571,52 @@ describe.each([
     );
   });
 
-  test('verify create command called with now flag if start machine after creation is enabled', async () => {
-    vi.mocked(extensionApi.env).isMac = true;
+  test.each([
+    { version: '5.0.0', image: 'image' },
+    { version: '4.5.0', image: 'image-path' },
+  ])(
+    'verify create command called with now flag if start machine after creation is enabled %s',
+    async ({ version, image }) => {
+      vi.mocked(extensionApi.env).isMac = true;
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
+      vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+        stdout: `podman version ${version}`,
+      } as extensionApi.RunResult);
 
-    await extension.createMachine(
-      {
-        'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image-path': 'path',
-        'podman.factory.machine.memory': '1048000000',
-        'podman.factory.machine.diskSize': '250000000000',
-        'podman.factory.machine.now': true,
-      },
-      podmanConfiguration,
-    );
-    const parameters = [
-      'machine',
-      'init',
-      '--cpus',
-      '2',
-      '--memory',
-      '1000',
-      '--disk-size',
-      '232',
-      '--image-path',
-      'path',
-      '--rootful',
-      '--now',
-    ];
-    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
-      logger: undefined,
-      env: {
-        CONTAINERS_MACHINE_PROVIDER: provider,
-      },
-      token: undefined,
-    });
-    expect(console.error).not.toBeCalled();
-  });
+      await extension.createMachine(
+        {
+          'podman.factory.machine.cpus': '2',
+          'podman.factory.machine.image': 'path',
+          'podman.factory.machine.memory': '1048000000',
+          'podman.factory.machine.diskSize': '250000000000',
+          'podman.factory.machine.now': true,
+        },
+        podmanConfiguration,
+      );
+      const parameters = [
+        'machine',
+        'init',
+        '--cpus',
+        '2',
+        '--memory',
+        '1000',
+        '--disk-size',
+        '232',
+        `--${image}`,
+        'path',
+        '--rootful',
+        '--now',
+      ];
+      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
+        logger: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: provider,
+        },
+        token: undefined,
+      });
+      expect(console.error).not.toBeCalled();
+    },
+  );
 
   test('verify error contains name, message and stderr if creation fails', async () => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
@@ -613,7 +631,7 @@ describe.each([
       extension.createMachine(
         {
           'podman.factory.machine.cpus': '2',
-          'podman.factory.machine.image-path': 'path',
+          'podman.factory.machine.image': 'path',
           'podman.factory.machine.memory': '1048000000',
           'podman.factory.machine.diskSize': '250000000000',
           'podman.factory.machine.now': true,
@@ -627,9 +645,6 @@ describe.each([
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(getAssetsFolder).mockReturnValue('fake');
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
@@ -653,7 +668,7 @@ describe.each([
     });
 
     expect(vi.mocked(extensionApi.process.exec)).toHaveBeenNthCalledWith(
-      3,
+      2,
       podmanCli.getPodmanCli(),
       expect.arrayContaining([expect.stringContaining('.zst')]),
       expect.anything(),
@@ -700,7 +715,7 @@ describe.each([
     await extension.createMachine(
       {
         'podman.factory.machine.cpus': '2',
-        'podman.factory.machine.image-path': 'path',
+        'podman.factory.machine.image': 'path',
         'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
         'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
         'podman.factory.machine.provider': provider,
@@ -719,7 +734,7 @@ describe.each([
         '1000',
         '--disk-size',
         '232',
-        '--image-path',
+        `--image`,
         'path',
         '--playbook',
         fakePlaybookPath,
@@ -2662,7 +2677,7 @@ async function testAudit(path: string, uri: string, condition: typeof expect | t
   expect(auditorInstance).toBeDefined();
   const auditRecords: extensionApi.AuditResult = await auditorInstance!.auditItems({
     'podman.factory.machine.cpus': '2',
-    'podman.factory.machine.image-path': path,
+    'podman.factory.machine.image': path,
     'podman.factory.machine.image-uri': uri,
     'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
     'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB

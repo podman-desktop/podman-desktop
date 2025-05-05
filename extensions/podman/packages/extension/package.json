@@ -147,7 +147,7 @@
           "description": "Disk size",
           "when": "podman.podmanMachineDiskSupported && !podman.isCreateWSLOptionSelected"
         },
-        "podman.factory.machine.image-path": {
+        "podman.factory.machine.image": {
           "type": "string",
           "format": "file",
           "scope": "ContainerProviderConnectionFactory",

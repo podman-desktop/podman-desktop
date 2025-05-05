@@ -1845,10 +1845,10 @@ export async function start(
 export async function connectionAuditor(items: extensionApi.AuditRequestItems): Promise<extensionApi.AuditResult> {
   const records: extensionApi.AuditRecord[] = [];
 
-  if (items['podman.factory.machine.image-uri'] && items['podman.factory.machine.image-path']) {
+  if (items['podman.factory.machine.image-uri'] && items['podman.factory.machine.image']) {
     records.push({
       type: 'error',
-      record: `'Image Path' and 'Image URI' fields are both filled. Please fill only one or leave both fields empty.`,
+      record: `'Image' and 'Image URI' fields are both filled. Please fill only one or leave both fields empty.`,
     });
   }
 
@@ -2203,17 +2203,29 @@ export async function createMachine(
     telemetryRecords.diskSize = params['podman.factory.machine.diskSize'];
   }
 
-  // image-path
-  if (params['podman.factory.machine.image-path'] && typeof params['podman.factory.machine.image-path'] === 'string') {
-    parameters.push('--image-path');
-    parameters.push(params['podman.factory.machine.image-path']);
+  const installedPodman = await getPodmanInstallation();
+  const version = installedPodman?.version;
+  const isPodmanV5OrLater = version?.startsWith('5.') ?? false;
+
+  // image
+  if (params['podman.factory.machine.image'] && typeof params['podman.factory.machine.image'] === 'string') {
+    if (isPodmanV5OrLater) {
+      parameters.push('--image');
+    } else {
+      parameters.push('--image-path');
+    }
+    parameters.push(params['podman.factory.machine.image']);
     telemetryRecords.imagePath = 'custom';
   } else if (
     params['podman.factory.machine.image-uri'] &&
     typeof params['podman.factory.machine.image-uri'] === 'string'
   ) {
     const imageUri = params['podman.factory.machine.image-uri'].trim();
-    parameters.push('--image-path');
+    if (isPodmanV5OrLater) {
+      parameters.push('--image');
+    } else {
+      parameters.push('--image-path');
+    }
     if (imageUri.startsWith('https://') || imageUri.startsWith('http://')) {
       parameters.push(imageUri);
       telemetryRecords.imagePath = 'custom-url';
@@ -2225,19 +2237,15 @@ export async function createMachine(
     // check if we have an embedded asset for the image path for macOS or Windows
     const assetImagePath = path.resolve(getAssetsFolder(), `podman-image-${process.arch}.zst`);
 
-    const podmanInstallation = await getPodmanInstallation();
-
     // Use embedded image only for Podman 5 and onwards
-    if (fs.existsSync(assetImagePath) && podmanInstallation?.version.startsWith('5.')) {
-      parameters.push('--image-path');
+    if (fs.existsSync(assetImagePath) && isPodmanV5OrLater) {
+      parameters.push('--image');
       parameters.push(assetImagePath);
       telemetryRecords.imagePath = 'embedded';
     }
   }
   telemetryRecords.imagePath ??= 'default';
 
-  const installedPodman = await getPodmanInstallation();
-  const version = installedPodman?.version;
   if (params['podman.factory.machine.rootful'] === undefined) {
     // should be rootful mode if version supports this mode and only if rootful is not provided (false or true)
     if (version) {
