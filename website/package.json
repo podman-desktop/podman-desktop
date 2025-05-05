@@ -17,7 +17,6 @@
     "format:fix": "biome format --write && prettier --cache --write --check '**/*.md'",
     "markdownlint:check": "markdownlint-cli2 --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\" \"#api\" ",
     "markdownlint:fix": "markdownlint-cli2 --fix --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\"",
-    "vale": "vale sync && vale --config ../.vale.ini .",
     "lint:check": "cd .. && eslint --cache --cache-location website/.eslintcache website --ext js,ts,tsx",
     "lint:fix": "cd .. && eslint --cache --cache-location website/.eslintcache website --fix --ext js,ts,tsx",
     "lint:clean": "rimraf .eslintcache"

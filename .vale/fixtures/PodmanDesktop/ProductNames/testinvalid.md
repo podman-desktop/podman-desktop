@@ -1,2 +1,0 @@
-Podman desktop
-podman
