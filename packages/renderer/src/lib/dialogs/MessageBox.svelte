@@ -1,10 +1,12 @@
 <script lang="ts">
 import { faCircle, faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faCircleExclamation, faInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, type ButtonType } from '@podman-desktop/ui-svelte';
+import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import { type ButtonsType, type DropdownType, type RemindOption } from '../../../../main/src/plugin/message-box';
+import Markdown from '../markdown/Markdown.svelte';
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
 
@@ -12,11 +14,12 @@ let currentId = 0;
 let title: string;
 let message: string;
 let detail: string | undefined;
-let buttons: string[];
+let buttons: ButtonsType[];
 let type: string | undefined;
 let cancelId = -1;
 let defaultId: number;
 let buttonOrder: number[];
+let overflowVisible: boolean = false;
 
 let display = false;
 
@@ -45,7 +48,12 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   if (options?.cancelId) {
     cancelId = options.cancelId;
   } else {
-    cancelId = buttons.findIndex(b => b.toLowerCase() === 'cancel');
+    cancelId = buttons.findIndex(b => {
+      // only for "clasic" buttons and not Dropdown component
+      if (typeof b === 'string') return b.toLowerCase() === 'cancel';
+      // If we have object we need to enable overflow-visible in Modal component
+      else if (typeof b === 'object') overflowVisible = true;
+    });
   }
 
   // use the provided default (primary) id, otherwise the first non-cancel button is the default
@@ -86,14 +94,15 @@ function cleanup(): void {
   message = '';
 }
 
-async function clickButton(index?: number): Promise<void> {
+async function clickButton(index?: number, option?: number): Promise<void> {
+
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, index);
+  await window.sendShowMessageBoxOnSelect(currentId, index, option);
 }
 
 async function onClose(): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined, undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
@@ -107,7 +116,7 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} on:close={onClose}>
+  <Dialog title={title} on:close={onClose} {overflowVisible}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
@@ -124,10 +133,14 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="content">
-      <div class="leading-5 whitespace-pre-wrap" aria-label="Dialog Message">{message}</div>
-
+      <div class="leading-5" aria-label="Dialog Message">
+        <Markdown markdown={message} />
+      </div>
+      
       {#if detail}
-        <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>
+        <div class="pt-4 leading-5 flex justify-center" aria-label="Dialog Details">
+          <Markdown markdown={detail} />
+        </div>
       {/if}
     </svelte:fragment>
 
@@ -135,6 +148,23 @@ function getButtonType(b: boolean): ButtonType {
       {#each buttonOrder as i, index (index)}
         {#if i === cancelId}
           <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
+        {:else if typeof buttons[i] === 'object'}
+          {#if 'heading' in buttons[i]}
+            {@const dropdownButtons = buttons[i] as DropdownType}
+            <Dropdown
+              name={dropdownButtons.heading}
+              value={dropdownButtons.heading}
+              onChange={async (option): Promise<void> => {
+                let optionIndex: number | undefined = dropdownButtons.buttons.indexOf(option);
+                if (optionIndex === -1) {
+                  optionIndex = undefined;
+                }
+                await clickButton(i, optionIndex);
+                }}
+              options={dropdownButtons.buttons.map(button => ({label: button, value: button}))}/>
+          {:else}
+            <Button type="primary" icon={buttons[i].icon} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i].label}</Button>
+          {/if}
         {:else}
           <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i]}</Button>
         {/if}

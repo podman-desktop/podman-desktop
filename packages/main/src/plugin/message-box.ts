@@ -17,8 +17,23 @@
  ***********************************************************************/
 import type { ApiSenderType } from './api.js';
 import { Deferred } from './util/deferred.js';
+import type { IconDefinition } from '/@api/icon-info.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
+
+export type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
+
+export interface DropdownType {
+  heading: string;
+  buttons: string[];
+}
+
+export interface IconButtonType {
+  label: string;
+  icon: IconDefinition;
+}
+
+export type ButtonsType = string | DropdownType | IconButtonType;
 
 /**
  * Options to configure the behavior of the message box UI.
@@ -39,7 +54,7 @@ export interface MessageBoxOptions {
   /**
    * Text for buttons.
    */
-  buttons?: string[];
+  buttons?: ButtonsType[];
   /**
    * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning'.
    */
@@ -56,6 +71,7 @@ export interface MessageBoxOptions {
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
+  option: number | undefined;
 }
 
 export class MessageBox {
@@ -109,7 +125,11 @@ export class MessageBox {
   }
 
   // this method is called by the frontend when the user selected a button
-  async onDidSelectButton(id: number, selectedIndex: number | undefined): Promise<void> {
+  async onDidSelectButton(
+    id: number,
+    selectedIndex: number | undefined,
+    selectedOption: number | undefined,
+  ): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 
@@ -118,6 +138,7 @@ export class MessageBox {
       // grab item
       const val: MessageBoxReturnValue = {
         response: selectedIndex,
+        option: selectedOption,
       };
       // resolve the promise
       callback.resolve(val);
