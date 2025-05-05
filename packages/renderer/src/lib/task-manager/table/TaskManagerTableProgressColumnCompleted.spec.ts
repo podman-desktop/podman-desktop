@@ -50,6 +50,15 @@ const failureSuccessTask: TaskInfoUI = {
   action: 'dummy',
   cancellable: false,
 } as unknown as TaskInfoUI;
+
+const failureSuccessTaskNoError: TaskInfoUI = {
+  id: '1',
+  name: 'Completed Task 1',
+  state: 'completed',
+  status: 'failure',
+  action: 'dummy',
+  cancellable: false,
+} as unknown as TaskInfoUI;
 test('Expect display success for completed task with success', async () => {
   render(TaskManagerTableProgressColumnCompleted, { task: completedSuccessTask });
 
@@ -72,7 +81,7 @@ test('Expect display success for completed task with canceled', async () => {
   expect(canceledStatus).toBeInTheDocument();
 });
 
-test('Expect display error for completed task with failure', async () => {
+test('Expect display error for completed task with failure if error exists', async () => {
   render(TaskManagerTableProgressColumnCompleted, { task: failureSuccessTask });
 
   const completedStatus = screen.getByRole('status', { name: 'completed status for task Completed Task 1' });
@@ -85,4 +94,18 @@ test('Expect display error for completed task with failure', async () => {
   // expect to see the error message
   const error = screen.getByText('(this is a custom error)');
   expect(error).toBeInTheDocument();
+});
+
+test('Expect no error for completed task with failure an no error', async () => {
+  render(TaskManagerTableProgressColumnCompleted, { task: failureSuccessTaskNoError });
+
+  const completedStatus = screen.getByRole('status', { name: 'completed status for task Completed Task 1' });
+  expect(completedStatus).toBeInTheDocument();
+
+  // expect to see the failure status
+  const failureStatus = screen.getByText('failure');
+  expect(failureStatus).toBeInTheDocument();
+
+  // no error child
+  expect(completedStatus.children.length).toBe(2);
 });
