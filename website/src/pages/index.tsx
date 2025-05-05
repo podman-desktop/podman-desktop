@@ -264,43 +264,32 @@ function Configure(): JSX.Element {
 
 function Testimonials(): JSX.Element {
   return (
-    <section className="text-whitebody-font py-24 bg-[#1e041f]">
+    <section className="text-white body-font py-24 bg-[#1e041f]">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">What People Are Saying ✨</h2>
         <div className="grid grid-cols-4 gap-10">
           <TestimonialCard
-            cardNumber="01"
-            username="user1"
-            name="name1"
-            date="April 22 2025"
-            text="Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers"
+            username="Ayush Pande"
+            source="XDA Developers"
+            date="April 20 2025"
+            text="Unlike its rival, Podman Desktop not only supports multiple container runtimes (including Docker Desktop), but also includes a ton of extensions to boost your workstation's capabilities."
           />
           <TestimonialCard
-            cardNumber="02"
-            username="user2"
-            text="Switched to #PodmanDesktop for local container development, and wow—so much easier to manage than expected. Seamless UI, great integration, and no root daemon. A game-changer!"
+            username="DonSchenck"
+            source="X"
+            date="April 25 2025"
+            text="Dude ... podman. And Podman Desktop. Seriously. Open Source and doesn't run as root."
           />
           <TestimonialCard
-            cardNumber="03"
-            username="user3"
-            text="Tried #PodmanDesktop and was surprised at how easy it was to transition from Docker. The UI is intuitive, and the ability to run rootless containers is a massive win for security!"
+            username="anonymus"
+            source="GitHub discussions"
+            date="April 5 2024"
+            text="I have spent a lot of hours trying out various projects in the past few months for my homelab to test some custom workloads.... OpenStack (Devstack), k3s, rancher, portainer, minikube, docker desktop, etc. and I have found what I needed with your Podman Desktop."
           />
           <TestimonialCard
-            cardNumber="04"
-            username="user4"
-            name="name4"
-            text="Finally, a container tool that respects system resources! Podman Desktop gives me full control without the bloat. Love how well it integrates with Kubernetes too. 🔥 #K8s #Containers"
-          />
-          <TestimonialCard
-            cardNumber="05"
-            username="user5"
-            text="Tried #PodmanDesktop and was surprised at how easy it was to transition from Docker. The UI is intuitive, and the ability to run rootless containers is a massive win for security!"
-          />
-          <TestimonialCard
-            cardNumber="06"
-            username="user6"
-            date="May 04 2024"
-            text="Podman Desktop has completely changed the way I manage containers on my dev machine. No more Docker daemon headaches—just smooth, lightweight container management. Love it! 🚀 #Podman #Containers"
+            username="José Bayoán Santiago Calderón"
+            source="LinkedIn"
+            text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
           />
         </div>
       </div>
