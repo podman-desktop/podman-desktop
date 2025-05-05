@@ -31,7 +31,7 @@ import type { MessageBox } from '/@/plugin/message-box.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import { DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT, Updater } from '/@/plugin/updater.js';
+import { Updater } from '/@/plugin/updater.js';
 import * as util from '/@/util.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 
@@ -191,57 +191,67 @@ test('expect init to register configuration', () => {
 
 describe('differential download', () => {
   type TestCase = {
-    platform: 'windows' | 'macos' | 'linux';
-    configuration: Array<DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT>;
+    platform: 'windows' | 'macos';
+    configuration: boolean;
     expectDifferentialDownload: 'enable' | 'disable';
   };
+
+  beforeEach(() => {
+    // default should be false
+    autoUpdater.disableDifferentialDownload = false;
+
+    // mock platform
+    vi.mocked(isWindows).mockReturnValue(true);
+    vi.mocked(isMac).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(false);
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    // Updater#init should set it to true
+    expect(autoUpdater.disableDifferentialDownload).toBeTruthy();
+  });
+
+  test('default configuration should disable on windows', () => {
+    // mock no user configuration
+    mockConfiguration({});
+  });
 
   test.each<TestCase>([
     {
       platform: 'windows',
-      configuration: [],
+      configuration: false,
       expectDifferentialDownload: 'enable',
     },
     {
       platform: 'windows',
-      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS],
-      expectDifferentialDownload: 'disable',
-    },
-    {
-      platform: 'windows',
-      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
-      expectDifferentialDownload: 'enable',
-    },
-    {
-      platform: 'macos',
-      configuration: [],
-      expectDifferentialDownload: 'enable',
-    },
-    {
-      platform: 'macos',
-      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS],
-      expectDifferentialDownload: 'enable',
-    },
-    {
-      platform: 'macos',
-      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+      configuration: true,
       expectDifferentialDownload: 'disable',
     },
     {
       platform: 'macos',
-      configuration: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS, DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+      configuration: false,
+      expectDifferentialDownload: 'enable',
+    },
+    {
+      platform: 'macos',
+      configuration: true,
       expectDifferentialDownload: 'disable',
     },
   ])(
     'expect differential download to be $expectDifferentialDownload on $platform with config $configuration',
     ({ platform, configuration, expectDifferentialDownload }) => {
-      // default should be false
-      autoUpdater.disableDifferentialDownload = false;
-
       // mock platform
       vi.mocked(isMac).mockReturnValue(platform === 'macos');
-      vi.mocked(isLinux).mockReturnValue(platform === 'linux');
       vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+      vi.mocked(isLinux).mockReturnValue(false);
 
       mockConfiguration({
         'update.disableDifferentialDownload': configuration,

@@ -35,20 +35,12 @@ import type { MessageBox } from '/@/plugin/message-box.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import { isLinux, isMac, isWindows } from '/@/util.js';
+import { isLinux, isWindows } from '/@/util.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
 import rootPackage from '../../../../package.json' with { type: 'json' };
 import type { ApiSenderType } from './api.js';
 import type { TaskManager } from './tasks/task-manager.js';
-
-/**
- * Enum of platform supporting the Electron differential download support
- */
-export enum DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT {
-  WINDOWS = 'windows',
-  MACOS = 'macos',
-}
 
 /**
  * Represents an updater utility for Podman Desktop.
@@ -306,9 +298,8 @@ export class Updater {
           },
           ['preferences.update.disableDifferentialDownload']: {
             description: 'Disable electron disableDifferentialDownload',
-            type: 'array',
-            default: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS],
-            enum: [DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS, DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS],
+            type: 'boolean',
+            default: isWindows(),
             hidden: true,
           },
         },
@@ -317,15 +308,13 @@ export class Updater {
   }
 
   /**
-   * @returns The array of {@link DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT} where the differential download
+   * @returns if the differential download is disabled or not
    * should be disabled
    */
-  private getDisableDifferentialDownloadPlatform(): Array<DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT> {
+  private getDisableDifferentialDownloadConfigurationValue(): boolean {
     return this.configurationRegistry
       .getConfiguration('preferences')
-      .get<Array<DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT>>('update.disableDifferentialDownload', [
-        DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS,
-      ]);
+      .get<boolean>('update.disableDifferentialDownload', isWindows());
   }
 
   /**
@@ -447,25 +436,6 @@ export class Updater {
     return !!this.#nextVersion;
   }
 
-  /**
-   * Given the current platform and the user configuration, determine if the differential download
-   * should be disabled.
-   * @private
-   */
-  private isDifferentialDownloadDisabled(): boolean {
-    // 1. Get the list of platform where the differential download is disabled
-    const platforms = this.getDisableDifferentialDownloadPlatform();
-    // 2. try to find a match between the current platform and the list of disabled platform
-    return platforms.some(platform => {
-      switch (platform) {
-        case DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.WINDOWS:
-          return isWindows();
-        case DIFFERENTIAL_DOWNLOAD_PLATFORM_SUPPORT.MACOS:
-          return isMac();
-      }
-    });
-  }
-
   public init(): Disposable {
     // disable auto download
     autoUpdater.autoDownload = false;
@@ -475,7 +445,7 @@ export class Updater {
      *
      * https://github.com/podman-desktop/podman-desktop/issues/12035
      */
-    autoUpdater.disableDifferentialDownload = this.isDifferentialDownloadDisabled();
+    autoUpdater.disableDifferentialDownload = this.getDisableDifferentialDownloadConfigurationValue();
 
     this.registerDefaultCommands();
 
