@@ -66,22 +66,14 @@ export interface MessageBoxOptions {
    */
   cancelId?: number;
   /**
-<<<<<<< HEAD
    * An additional (optional) markdown detailed message aligned to center
-=======
-   * An additional (optional) markdown description
->>>>>>> d9cfc4a3b3 (chore(deps-dev): bump the typescript-eslint group with 3 updates)
    */
   footerMarkdownDescription?: string;
 }
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
-<<<<<<< HEAD
   dropdownIndex?: number;
-=======
-  option: number | undefined;
->>>>>>> d9cfc4a3b3 (chore(deps-dev): bump the typescript-eslint group with 3 updates)
 }
 
 export class MessageBox {
@@ -155,15 +147,7 @@ export class MessageBox {
   }
 
   // this method is called by the frontend when the user selected a button
-<<<<<<< HEAD
   async onDidSelectButton(id: number, selectedIndex?: number, dropdownIndex?: number): Promise<void> {
-=======
-  async onDidSelectButton(
-    id: number,
-    selectedIndex: number | undefined,
-    selectedOption: number | undefined,
-  ): Promise<void> {
->>>>>>> d9cfc4a3b3 (chore(deps-dev): bump the typescript-eslint group with 3 updates)
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 
@@ -172,11 +156,7 @@ export class MessageBox {
       // grab item
       const val: MessageBoxReturnValue = {
         response: selectedIndex,
-<<<<<<< HEAD
         dropdownIndex: dropdownIndex,
-=======
-        option: selectedOption,
->>>>>>> d9cfc4a3b3 (chore(deps-dev): bump the typescript-eslint group with 3 updates)
       };
       // resolve the promise
       callback.resolve(val);
