@@ -204,13 +204,15 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
 // to avoid having multiple notification of the same nature in the notifications list
 // we first dispose the old one and then push the same again
 function notifySetupPodman(): void {
-  notificationDisposable?.dispose();
-  notificationDisposable = extensionApi.window.showNotification(setupPodmanNotification);
+  if (!notificationDisposable) {
+    notificationDisposable = extensionApi.window.showNotification(setupPodmanNotification);
+  }
 }
 
 function notifyDisguisedPodmanSocket(): void {
-  disguisedPodmanNotificationDisposable?.dispose();
-  disguisedPodmanNotificationDisposable = extensionApi.window.showNotification(disguisedPodmanNotification);
+  if (!disguisedPodmanNotificationDisposable) {
+    disguisedPodmanNotificationDisposable = extensionApi.window.showNotification(disguisedPodmanNotification);
+  }
 }
 
 async function checkAndNotifySetupPodmanMacHelper(): Promise<void> {
@@ -227,6 +229,7 @@ async function checkAndNotifySetupPodmanMacHelper(): Promise<void> {
 
   // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
   // and we are on macOS, as the helper is only required for macOS.
+  // We also only notify if the actual notification is undefined (already disposed / not exists)
   if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
     notifySetupPodmanMacHelper();
   } else {
@@ -483,7 +486,8 @@ async function doUpdateMachines(
     }
   }
 
-  if (extensionApi.env.isMac) {
+  // Only do the check if the provider is ready
+  if (extensionApi.env.isMac && provider.status === 'ready') {
     // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
     // and if we should notify that we need to run podman-mac-helper, we do so.
     await checkAndNotifySetupPodmanMacHelper();
@@ -1533,8 +1537,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // Only on macOS
-    if (extensionApi.env.isMac) {
+    // Only on macOS, and only do the check if the provider is actually ready.
+    if (extensionApi.env.isMac && provider.status === 'ready') {
       // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
       // extension activation so that the user isn't constantly prompted with the error message.
       await checkAndNotifyDisguisedPodman();
