@@ -2,7 +2,9 @@
   "name": "@podman-desktop/podman-extension-api",
   "version": "0.0.1",
   "description": "API for Podman Desktop Podman extension",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
   "publishConfig": {
+    "provenance": true,
     "access": "public"
   },
   "license": "Apache-2.0",

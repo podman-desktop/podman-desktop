@@ -2,7 +2,12 @@
   "name": "@podman-desktop/ui-svelte",
   "version": "0.0.1",
   "type": "module",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
   "scripts": {
     "build": "svelte-package",
     "watch": "svelte-package -w",
