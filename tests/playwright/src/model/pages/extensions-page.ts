@@ -84,7 +84,8 @@ export class ExtensionsPage {
   }
 
   public async openInstalledTab(): Promise<void> {
-    await this.installedTab.click();
+    await playExpect(this.installedTab).toBeVisible({ timeout: 10_000 });
+    await this.installedTab.click({ force: true });
   }
 
   public async openCatalogTab(): Promise<void> {
