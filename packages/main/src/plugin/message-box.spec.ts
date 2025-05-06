@@ -44,7 +44,7 @@ test('Should return option one if dropdown clicked is the first', async () => {
   const messageBox = new MessageBox({} as ApiSenderType);
   vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
     response: 0,
-    option: 1,
+    dropdownIndex: 1,
   });
 
   const dropdown: DropdownType = {
@@ -60,7 +60,7 @@ test('Should return option one if dropdown clicked is the second', async () => {
   const messageBox = new MessageBox({} as ApiSenderType);
   vi.spyOn(messageBox, 'showMessageBox').mockResolvedValue({
     response: 1,
-    option: 0,
+    dropdownIndex: 0,
   });
 
   const dropdown: DropdownType = {

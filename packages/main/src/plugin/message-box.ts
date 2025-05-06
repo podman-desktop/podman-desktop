@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { IconDefinition } from '/@api/icon-info.js';
-
 import type { ApiSenderType } from './api.js';
 import { Deferred } from './util/deferred.js';
 
@@ -27,12 +25,7 @@ export interface DropdownType {
   buttons: string[];
 }
 
-export interface IconButtonType {
-  label: string;
-  icon: IconDefinition;
-}
-
-export type ButtonsType = string | DropdownType | IconButtonType;
+export type ButtonsType = string | DropdownType;
 
 /**
  * Options to configure the behavior of the message box UI.
@@ -66,15 +59,11 @@ export interface MessageBoxOptions {
    * The (optional) index of the button to be used to cancel the dialog.
    */
   cancelId?: number;
-  /**
-   * An additional (optional) markdown description
-   */
-  footerMarkdownDescription?: string;
 }
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
-  option?: number;
+  dropdownIndex?: number;
 }
 
 export class MessageBox {
@@ -103,7 +92,6 @@ export class MessageBox {
       type: options.type,
       defaultId: options.defaultId,
       cancelId: options.cancelId,
-      footerMarkdownDescription: options.footerMarkdownDescription,
     };
 
     // need to send the options to the frontend
@@ -138,8 +126,8 @@ export class MessageBox {
 
     if (result.response !== undefined && result.response >= 0) {
       const response = items[result.response];
-      if (result.option !== undefined && result.option >= 0) {
-        if (this.isDropdownType(response)) return response.buttons[result.option];
+      if (result.dropdownIndex !== undefined && result.dropdownIndex >= 0) {
+        if (this.isDropdownType(response)) return response.buttons[result.dropdownIndex];
       }
       if (typeof response === 'string') return response;
     }
@@ -148,7 +136,7 @@ export class MessageBox {
   }
 
   // this method is called by the frontend when the user selected a button
-  async onDidSelectButton(id: number, selectedIndex?: number, selectedOption?: number): Promise<void> {
+  async onDidSelectButton(id: number, selectedIndex?: number, dropdownIndex?: number): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 
@@ -157,7 +145,7 @@ export class MessageBox {
       // grab item
       const val: MessageBoxReturnValue = {
         response: selectedIndex,
-        option: selectedOption,
+        dropdownIndex: dropdownIndex,
       };
       // resolve the promise
       callback.resolve(val);

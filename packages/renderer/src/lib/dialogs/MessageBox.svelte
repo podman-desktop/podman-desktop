@@ -86,9 +86,9 @@ function cleanup(): void {
   message = '';
 }
 
-async function clickButton(index?: number, option?: number): Promise<void> {
+async function clickButton(index?: number, dropdownIndex?: number): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, index, option);
+  await window.sendShowMessageBoxOnSelect(currentId, index, dropdownIndex);
 }
 
 async function onClose(): Promise<void> {
