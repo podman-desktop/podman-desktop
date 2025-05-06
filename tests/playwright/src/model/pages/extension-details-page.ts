@@ -77,7 +77,10 @@ export class ExtensionDetailsPage extends BasePage {
   async removeExtension(): Promise<ExtensionsPage> {
     return test.step(`Remove extension: ${this.extensionName}`, async () => {
       await this.disableExtension();
+
+      await playExpect(this.removeExtensionButton).toBeVisible();
       await this.removeExtensionButton.click();
+      await playExpect(this.removeExtensionButton).not.toBeVisible({ timeout: 30_000 });
       return new ExtensionsPage(this.page);
     });
   }
