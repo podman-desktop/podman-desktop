@@ -61,7 +61,7 @@ let kindResourceCard: ResourceConnectionCardPage;
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
-test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
 
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('kind-e2e');

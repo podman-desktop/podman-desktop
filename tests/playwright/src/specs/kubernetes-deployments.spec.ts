@@ -55,7 +55,7 @@ const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'k
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
 
-test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(350_000);

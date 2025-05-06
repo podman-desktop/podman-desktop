@@ -46,7 +46,7 @@ const localPort: number = 50000;
 const forwardAddress: string = `http://localhost:${localPort}/`;
 const responseMessage: string = 'Welcome to nginx!';
 
-test.skip(!canRunKindTests, `This test can't run on a windows rootless machine`);
+test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(200_000);
