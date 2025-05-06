@@ -20,6 +20,6 @@
     "@types/node": "^22",
     "electron": "36.1.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.3"
   }
 }
