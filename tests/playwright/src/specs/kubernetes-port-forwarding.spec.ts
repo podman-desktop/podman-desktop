@@ -84,7 +84,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
   test('Prepare deployment on the cluster', async ({ page, navigationBar }) => {
-    test.setTimeout(150_000);
+    test.setTimeout(120_000);
     //Pull image
     let imagesPage = await navigationBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();
