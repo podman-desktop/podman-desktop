@@ -267,7 +267,7 @@ function Testimonials(): JSX.Element {
     <section className="text-white body-font py-24 bg-[#1e041f]">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 ">What People Are Saying ✨</h2>
-        <div className="grid grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10">
           <TestimonialCard
             username="Ayush Pande"
             source="XDA Developers"
