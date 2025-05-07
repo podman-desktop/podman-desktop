@@ -1875,7 +1875,12 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('kubernetesDuplicateContext', async (contextName: string): Promise<void> => {
     return ipcInvoke('kubernetes-client:duplicateContext', contextName);
   });
-
+  contextBridge.exposeInMainWorld(
+    'kubernetesUpdateContext',
+    async (contextName: string, newContextName: string, newContextNamespace: string): Promise<Context[]> => {
+      return ipcInvoke('kubernetes-client:updateContext', contextName, newContextName, newContextNamespace);
+    },
+  );
   contextBridge.exposeInMainWorld('kubernetesDeleteContext', async (contextName: string): Promise<Context[]> => {
     return ipcInvoke('kubernetes-client:deleteContext', contextName);
   });

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faCopy, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
@@ -17,6 +17,7 @@ import { kubernetesContexts } from '../../stores/kubernetes-contexts';
 import { clearKubeUIContextErrors, setKubeUIContextError } from '../kube/KubeContextUI';
 import EngineIcon from '../ui/EngineIcon.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
+import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
 interface KubeContextWithStates extends KubeContext {
@@ -112,8 +113,19 @@ async function handleDeleteContext(contextName: string): Promise<void> {
   }
 }
 
+let editContextModal: boolean = $state(false);
+let contextToEdit: KubeContext | undefined = $state();
+function closeModals(): void {
+  editContextModal = false;
+}
+
 async function handleDuplicateContext(contextName: string): Promise<void> {
   await window.kubernetesDuplicateContext(contextName);
+}
+
+async function handleEditContext(context: KubeContextWithStates): Promise<void> {
+  contextToEdit = context as KubeContext;
+  editContextModal = true;
 }
 
 function isContextReachable(contextName: string, experimental: boolean): boolean {
@@ -259,8 +271,10 @@ async function connect(contextName: string): Promise<void> {
                 icon={faRightToBracket}
                 onClick={(): Promise<void> => handleSetContext(context.name)}></ListItemButtonIcon>
             {/if}
+            <ListItemButtonIcon title="Edit Context" icon={faPenToSquare} onClick={(): Promise<void> => handleEditContext(context)}
+              ></ListItemButtonIcon>
             <ListItemButtonIcon title="Duplicate Context" icon={faCopy} onClick={(): Promise<void> => handleDuplicateContext(context.name)}
-            ></ListItemButtonIcon>
+              ></ListItemButtonIcon>
             <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
             ></ListItemButtonIcon>
           </div>
@@ -391,4 +405,10 @@ async function connect(contextName: string): Promise<void> {
       </div>
     {/each}
   </div>
+  {#if editContextModal && contextToEdit}
+    <PreferencesKubernetesContextsRenderingEditModal
+      contextToEdit={contextToEdit}
+      detailed={true}
+      closeCallback={closeModals} />
+  {/if}
 </SettingsPage>
