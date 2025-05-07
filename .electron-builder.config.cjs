@@ -200,16 +200,21 @@ const config = {
     },
   },
   dmg: {
+    background: 'buildResources/dmg-background@2x.png',
+    window: {
+      width: 540,
+      height: 380
+    },
     contents: [
       {
         x: 410,
-        y: 150,
+        y: 166,
         type: 'link',
         path: '/Applications',
       },
       {
         x: 130,
-        y: 150,
+        y: 166,
         type: 'file',
       },
     ],
