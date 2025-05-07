@@ -2594,6 +2594,24 @@ export class PluginSystem {
       },
     );
 
+    this.ipcHandle(
+      'kubernetes-client:duplicateContext',
+      async (_listener, contextName: string): Promise<KubernetesContext[]> => {
+        return kubernetesClient.duplicateContext(contextName);
+      },
+    );
+    this.ipcHandle(
+      'kubernetes-client:updateContext',
+      async (
+        _listener,
+        contextName: string,
+        newContextName: string,
+        newContextNamespace: string,
+      ): Promise<KubernetesContext[]> => {
+        return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
+      },
+    );
+
     this.ipcHandle('kubernetes-client:setContext', async (_listener, contextName: string): Promise<void> => {
       return kubernetesClient.setContext(contextName);
     });

@@ -365,6 +365,72 @@ export class KubernetesClient {
     return kubeContexts;
   }
 
+  async duplicateContext(contextName: string): Promise<Context[]> {
+    const newConfig = new KubeConfig();
+
+    let counter = 1;
+    let newName = `${contextName}-${counter}`;
+    // Keep creating new name by adding 1 to name until not existing name is found
+    while (this.kubeConfig.contexts.find(context => context.name === newName)) {
+      counter += 1;
+      newName = `${contextName}-${counter}`;
+    }
+
+    const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
+    if (!originalContext) return this.getContexts();
+
+    newConfig.loadFromOptions({
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.kubeConfig.currentContext,
+      contexts: [
+        ...this.kubeConfig.contexts,
+        {
+          ...originalContext,
+          name: newName,
+        },
+      ],
+    });
+
+    await this.saveKubeConfig(newConfig);
+    // the config is saved back only if saving the file succeeds
+    this.kubeConfig = newConfig;
+    // We send an update event here, even if another one will be sent after the file change is detected,
+    // because that one can get some time to be sent (as cluster connectivity will be tested)
+    this.apiSender.send('kubernetes-context-update');
+    return this.getContexts();
+  }
+
+  async updateContext(contextName: string, newContextName: string, newContextNamespace: string): Promise<Context[]> {
+    const newConfig = new KubeConfig();
+
+    const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
+    const newContexts = this.kubeConfig.contexts.filter(ctx => ctx.name !== contextName);
+    if (!originalContext) return this.getContexts();
+
+    newConfig.loadFromOptions({
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.currentContextName === contextName ? newContextName : this.kubeConfig.currentContext,
+      contexts: [
+        ...newContexts,
+        {
+          ...originalContext,
+          name: newContextName,
+          namespace: newContextNamespace,
+        },
+      ],
+    });
+
+    await this.saveKubeConfig(newConfig);
+    // the config is saved back only if saving the file succeeds
+    this.kubeConfig = newConfig;
+    // We send an update event here, even if another one will be sent after the file change is detected,
+    // because that one can get some time to be sent (as cluster connectivity will be tested)
+    this.apiSender.send('kubernetes-context-update');
+    return this.getContexts();
+  }
+
   async deleteContext(contextName: string): Promise<Context[]> {
     const previousContexts = this.kubeConfig.contexts;
     const newContexts = this.kubeConfig.contexts.filter(ctx => ctx.name !== contextName);
