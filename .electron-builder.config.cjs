@@ -203,7 +203,7 @@ const config = {
     background: 'buildResources/dmg-background@2x.png',
     window: {
       width: 540,
-      height: 380
+      height: 380,
     },
     contents: [
       {
