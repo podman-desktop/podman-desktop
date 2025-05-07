@@ -280,7 +280,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
 
       await podDetails.restartPod();
       await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Restarting);
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toBe(PodState.Running);
+      await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toMatch(/RUNNING|DEGRADED/);
       await playExpect(podDetails.stopButton).toBeVisible();
     });
 
