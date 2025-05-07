@@ -3,6 +3,7 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
+import { showFeedbackDialog } from '/@/stores/feedbackForm';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -44,10 +45,12 @@ function onWindowClick(e: Event): void {
 
 function unpin(providerId: string): void {
   window.unpinStatusBar(providerId).catch(console.error);
+  setTimeout(() => showFeedbackDialog('statusbarProviders.showProviders'), 60000);
 }
 
 function pin(providerId: string): void {
   window.pinStatusBar(providerId).catch(console.error);
+  setTimeout(() => showFeedbackDialog('statusbarProviders.showProviders'), 60000);
 }
 </script>
 
