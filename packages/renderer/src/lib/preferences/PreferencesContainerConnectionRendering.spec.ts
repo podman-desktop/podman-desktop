@@ -33,6 +33,32 @@ import type { ProviderInfo } from '/@api/provider-info';
 import { providerInfos } from '../../stores/providers';
 import PreferencesContainerConnectionRendering from './PreferencesContainerConnectionRendering.svelte';
 
+const EMPTY_PROVIDER_MOCK: ProviderInfo = {
+  id: 'podman',
+  name: 'podman',
+  images: {
+    icon: 'img',
+  },
+  status: 'started',
+  warnings: [],
+  containerProviderConnectionCreation: true,
+  detectionChecks: [],
+  installationSupport: false,
+  internalId: '0',
+  containerConnections: [],
+  kubernetesConnections: [],
+  kubernetesProviderConnectionCreation: true,
+  vmConnections: [],
+  vmProviderConnectionCreation: false,
+  vmProviderConnectionInitialization: false,
+  links: [],
+  containerProviderConnectionInitialization: false,
+  containerProviderConnectionCreationDisplayName: 'Podman machine',
+  kubernetesProviderConnectionInitialization: false,
+  extensionId: '',
+  cleanupSupport: false,
+};
+
 test('Expect that the right machine is displayed', async () => {
   const socketPath = '/my/common-socket-path';
   const podmanMachineName1 = 'podman machine 1';
@@ -40,15 +66,7 @@ test('Expect that the right machine is displayed', async () => {
   const podmanMachineName3 = 'podman machine 3';
 
   const providerInfo: ProviderInfo = {
-    id: 'podman',
-    name: 'podman',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
+    ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
       {
         name: podmanMachineName1,
@@ -78,19 +96,6 @@ test('Expect that the right machine is displayed', async () => {
         type: 'podman',
       },
     ],
-    installationSupport: false,
-    internalId: '0',
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: true,
-    vmConnections: [],
-    vmProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
   };
 
   // 3 connections with the same socket path
@@ -124,15 +129,7 @@ test('Expect that removing the connection is going back to the previous page', a
   (window as any).deleteProviderConnectionLifecycle = deleteMock;
 
   const providerInfo: ProviderInfo = {
-    id: 'podman',
-    name: 'podman',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
+    ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
       {
         name: podmanMachineName1,
@@ -163,19 +160,6 @@ test('Expect that removing the connection is going back to the previous page', a
         type: 'podman',
       },
     ],
-    installationSupport: false,
-    internalId: '0',
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: true,
-    vmConnections: [],
-    vmProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
   };
 
   // 3 connections with the same socket path
@@ -238,15 +222,7 @@ test('Expect to see error message if action fails', async () => {
   (window as any).deleteProviderConnectionLifecycle = deleteMock;
 
   const providerInfo: ProviderInfo = {
-    id: 'podman',
-    name: 'podman',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
+    ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
       {
         name: podmanMachineName,
@@ -259,19 +235,6 @@ test('Expect to see error message if action fails', async () => {
         lifecycleMethods: ['delete'],
       },
     ],
-    installationSupport: false,
-    internalId: '0',
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: true,
-    vmConnections: [],
-    vmProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
   };
 
   providerInfos.set([providerInfo]);
@@ -321,15 +284,7 @@ test('Expect startContainerProvider to only be called once when restarting', asy
   (window as any).startProviderConnectionLifecycle = startConnectionMock;
 
   const providerInfo: ProviderInfo = {
-    id: 'podman',
-    name: 'podman',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
+    ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
       {
         name: podmanMachineName,
@@ -342,19 +297,6 @@ test('Expect startContainerProvider to only be called once when restarting', asy
         lifecycleMethods: ['start', 'stop'],
       },
     ],
-    installationSupport: false,
-    internalId: '0',
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: true,
-    vmConnections: [],
-    vmProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
   };
 
   providerInfos.set([providerInfo]);
@@ -404,15 +346,7 @@ test('Expect display name to be used in favor of name for page title', async () 
   (window as any).startProviderConnectionLifecycle = startConnectionMock;
 
   const providerInfo: ProviderInfo = {
-    id: 'podman',
-    name: 'podman',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
+    ...EMPTY_PROVIDER_MOCK,
     containerConnections: [
       {
         name: podmanMachineName,
@@ -425,19 +359,6 @@ test('Expect display name to be used in favor of name for page title', async () 
         lifecycleMethods: ['start', 'stop'],
       },
     ],
-    installationSupport: false,
-    internalId: '0',
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: true,
-    vmConnections: [],
-    vmProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
   };
 
   providerInfos.set([providerInfo]);
@@ -457,4 +378,42 @@ test('Expect display name to be used in favor of name for page title', async () 
   expect(header).toBeDefined();
   expect(header instanceof HTMLHeadingElement).toBeTruthy();
   expect(header.textContent).toBe(podmanMachineDisplayName);
+});
+
+test('expect terminal tab to be visible if shellAccess is truthy', async () => {
+  const socketPath = '/my/common-socket-path';
+  const podmanMachineName = 'podman-machine-default';
+  const podmanMachineDisplayName = 'Dummy Podman Display Name';
+
+  const providerInfo: ProviderInfo = {
+    ...EMPTY_PROVIDER_MOCK,
+    containerConnections: [
+      {
+        name: podmanMachineName,
+        displayName: podmanMachineDisplayName,
+        status: 'started',
+        endpoint: {
+          socketPath,
+        },
+        shellAccess: true,
+        type: 'podman',
+      },
+    ],
+  };
+
+  providerInfos.set([providerInfo]);
+
+  // encode name with base64 of the second machine
+  const name = Buffer.from(podmanMachineName).toString('base64');
+
+  const connection = Buffer.from(socketPath).toString('base64');
+
+  const { getByText } = render(PreferencesContainerConnectionRendering, {
+    name,
+    connection,
+    providerInternalId: '0',
+  });
+
+  const tab = getByText('Terminal');
+  expect(tab.id).toBe('open-tabs-list-terminal-link');
 });

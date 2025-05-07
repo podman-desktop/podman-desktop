@@ -2007,6 +2007,65 @@ describe('startProvider', () => {
 });
 
 describe('shellInProviderConnection', () => {
+  test('connection without shell access should have falsy info shellAccess', () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    provider.registerContainerProviderConnection({
+      name: 'connection',
+      displayName: 'connection',
+      type: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status() {
+        return 'started';
+      },
+      vmType: 'libkrun',
+    });
+
+    const connections = providerRegistry.getContainerConnections();
+    expect(connections).toHaveLength(1);
+    assert(connections[0], 'connection should be defined');
+
+    const { shellAccess } = providerRegistry.getProviderContainerConnectionInfo(connections[0].connection);
+    expect(shellAccess).toBeFalsy();
+  });
+
+  test('connection without shell access should have truthy info shellAccess', () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    provider.registerContainerProviderConnection({
+      name: 'connection',
+      displayName: 'connection',
+      type: 'podman',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      shellAccess: {
+        open: vi.fn(),
+      },
+      status() {
+        return 'started';
+      },
+      vmType: 'libkrun',
+    });
+
+    const connections = providerRegistry.getContainerConnections();
+    expect(connections).toHaveLength(1);
+    assert(connections[0], 'connection should be defined');
+
+    const { shellAccess } = providerRegistry.getProviderContainerConnectionInfo(connections[0].connection);
+    expect(shellAccess).toBeTruthy();
+  });
+
   test('check if are all listeners disposed before calling close with container connection', async () => {
     const provider = providerRegistry.createProvider('id', 'name', {
       id: 'internal',

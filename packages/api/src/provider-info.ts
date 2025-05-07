@@ -37,6 +37,11 @@ export interface ProviderContainerConnectionInfo {
     socketPath: string;
   };
   lifecycleMethods?: LifecycleMethod[];
+  /**
+   * Specify if the corresponding {@link import('@podman-desktop/api').ProviderContainerConnection} instance
+   * has a shellAccess available
+   */
+  shellAccess?: boolean;
   type: 'docker' | 'podman';
   vmType?: { id: string; name: string };
 }
