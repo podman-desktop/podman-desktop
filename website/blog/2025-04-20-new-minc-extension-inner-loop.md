@@ -92,7 +92,7 @@ Then, using Podman Desktop, build the image providing the name `minc/nginx:hello
 Inside the MicroShift container, run:
 
 ```bash
-crictl  images | grep hello
+crictl images | grep hello
 ```
 
 You should see something like:
