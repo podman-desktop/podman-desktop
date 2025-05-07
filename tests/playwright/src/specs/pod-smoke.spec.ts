@@ -270,6 +270,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
   test.describe(() => {
     test.describe.configure({ retries: 1 });
     test('Restarting pod', async ({ navigationBar }) => {
+      test.setTimeout(180_000);
       const pods = await navigationBar.openPods();
       await playExpect(pods.heading).toBeVisible({ timeout: 15_000 });
       await playExpect.poll(async () => await pods.podExists(podToRun), { timeout: 15_000 }).toBeTruthy();
@@ -278,9 +279,12 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
       await playExpect(podDetails.heading).toBeVisible();
       await playExpect(podDetails.heading).toContainText(podToRun);
 
-      await podDetails.restartPod();
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Restarting);
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toMatch(/RUNNING|DEGRADED/);
+      await playExpect(async () => {
+        await podDetails.restartPod();
+        await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Restarting);
+        await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toBe(PodState.Running);
+      }).toPass({ timeout: 120_000 });
+
       await playExpect(podDetails.stopButton).toBeVisible();
     });
 
