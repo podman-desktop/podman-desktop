@@ -2035,7 +2035,7 @@ describe('shellInProviderConnection', () => {
     expect(shellAccess).toBeFalsy();
   });
 
-  test('connection without shell access should have truthy info shellAccess', () => {
+  test('connection with shell access should have truthy info shellAccess', () => {
     const provider = providerRegistry.createProvider('id', 'name', {
       id: 'internal',
       name: 'internal',
