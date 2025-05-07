@@ -141,7 +141,7 @@ $ podman ps
 
 :::note
 
-You can also use the --connection argument to target only the connection you want, for example, podman --connection=my-remote-machine ps.
+You can also use the `--connection` argument to target only the connection you want, for example, `podman --connection=my-remote-machine ps`.
 
 :::
 
