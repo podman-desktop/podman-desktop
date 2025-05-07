@@ -47,8 +47,8 @@ Your public SSH key needs to be copied to the `~/.ssh/authorized_keys` file on t
 
 <TabItem value="win" label="Windows">
 
-```shell-session
-type ~\.ssh\id_ed25519.pub | ssh user@my-server-ip "cat >> .ssh/authorized_keys"
+```sh
+$ type ~\.ssh\id_ed25519.pub | ssh user@my-server-ip "cat >> .ssh/authorized_keys"
 ```
 
 </TabItem>
@@ -107,7 +107,7 @@ $ podman system connection add my-remote-machine --identity ~/.ssh/id_ed25519 ss
 
 :::warning
 
-On Windows, you need to use **an absolute path** for the identities, path with `~` will not resolve
+On Windows, you need to use an absolute path for the identities; a path with ~ will not resolve.
 
 :::
 
@@ -141,7 +141,7 @@ $ podman ps
 
 :::note
 
-You can also use the `--connection` argument to only target the connection you want. (E.g. `podman --connection=my-remote-machine ps`)
+You can also use the --connection argument to target only the connection you want, for example, podman --connection=my-remote-machine ps.
 
 :::
 
