@@ -43,7 +43,7 @@ Make sure the machine is running in rootful mode, or create a new one using the 
 
 In the Resources view, click the MINC card and select Create new…. For now, no customization is needed—just click Next. The cluster will start automatically.
 
-1. Verify kubectl setup
+1. Verify `kubectl` setup
 
 MINC updates your `$HOME/.kube/config` file with a new `microshift` entry. Check in the bottom left of the status bar, you should see a `microshift` entry as the default Kubernetes context.
 
