@@ -70,6 +70,7 @@ test('expect notification added to the queue', async () => {
   expect(createNotificationtaskMock).toBeCalledWith({
     title: 'title',
     body: 'description',
+    type: 'info',
   });
 });
 

@@ -216,6 +216,8 @@ jobs:
     needs: [tag, release]
     name: Publish
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -238,32 +240,32 @@ jobs:
         run: |
           echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/extension-api/package.json
-          cd packages/extension-api && pnpm publish --tag latest --no-git-checks --access public
+          cd packages/extension-api && pnpm publish --provenance --tag latest --no-git-checks --access public
 
       - name: Publish Webview API to npmjs
         run: |
           echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/webview-api/package.json
-          cd packages/webview-api && pnpm publish --tag latest --no-git-checks --access public
+          cd packages/webview-api && pnpm publish --provenance --tag latest --no-git-checks --access public
 
       - name: Publish ui/svelte to npmjs
         run: |
           echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/ui/package.json
-          cd packages/ui && pnpm build && pnpm publish --tag latest --no-git-checks --access public
+          cd packages/ui && pnpm build && pnpm publish --provenance --tag latest --no-git-checks --access public
 
       - name: Publish tests-playwright to npmjs
         run: |
           echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" tests/playwright/package.json
-          cd tests/playwright && pnpm build && pnpm publish --tag latest --no-git-checks --access public
+          cd tests/playwright && pnpm build && pnpm publish --provenance --tag latest --no-git-checks --access public
 
       - name: Publish Podman Extension API to npmjs
         run: |
           echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/podman/packages/api/package.json
           cd extensions/podman/packages/api
-          pnpm publish --tag latest --no-git-checks --access public
+          pnpm publish --provenance --tag latest --no-git-checks --access public
 
   # publish the pnpm store for flathub builds
   pnpm-store:

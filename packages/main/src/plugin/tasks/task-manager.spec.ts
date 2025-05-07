@@ -194,6 +194,30 @@ test('create notification task with body', async () => {
       name: task.name,
       body: task.body,
       markdownActions: task.markdownActions,
+      status: 'success',
+    }),
+  );
+});
+
+test('create error notification task', async () => {
+  const taskManager = new TaskManager(apiSender, statusBarRegistry, commandRegistry, configurationRegistry);
+  const task = taskManager.createNotificationTask({
+    title: 'title',
+    body: 'body',
+    type: 'error',
+  });
+  expect(task.id).equal('notification-1');
+  expect(task.name).equal('title');
+  expect(task.body).equal('body');
+  expect(task.markdownActions).toBeUndefined();
+  expect(apiSenderSendMock).toBeCalledWith(
+    'task-created',
+    expect.objectContaining({
+      id: task.id,
+      name: task.name,
+      body: task.body,
+      markdownActions: task.markdownActions,
+      status: 'failure',
     }),
   );
 });
