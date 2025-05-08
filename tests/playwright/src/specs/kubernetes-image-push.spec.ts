@@ -1,0 +1,135 @@
+/**********************************************************************
+ * Copyright (C) 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { PlayYamlRuntime } from '../model/core/operations';
+import { KubernetesResourceState } from '../model/core/states';
+import { KubernetesResources } from '../model/core/types';
+import { canRunKindTests } from '../setupFiles/setup-kind';
+import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
+import { expect as playExpect, test } from '../utility/fixtures';
+import {
+  checkKubernetesResourceState,
+  createKubernetesResource,
+  deleteKubernetesResource,
+} from '../utility/kubernetes';
+import { ensureCliInstalled } from '../utility/operations';
+import { waitForPodmanMachineStartup } from '../utility/wait';
+
+const CLUSTER_NAME: string = 'kind-cluster';
+const CLUSTER_CREATION_TIMEOUT: number = 300_000;
+const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
+const RESOURCE_NAME: string = 'kind';
+const KUBERNETES_CONTEXT = `kind-${CLUSTER_NAME}`;
+const KUBERNETES_NAMESPACE = 'default';
+const DEPLOYMENT_NAME = 'test-image-push';
+const KUBERNETES_RUNTIME = {
+  runtime: PlayYamlRuntime.Kubernetes,
+  kubernetesContext: KUBERNETES_CONTEXT,
+  kubernetesNamespace: KUBERNETES_NAMESPACE,
+};
+const IMAGE_NAME = 'ghcr.io/linuxcontainers/alpine';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${DEPLOYMENT_NAME}.yaml`);
+
+const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
+const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
+
+test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
+
+test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
+  test.setTimeout(350_000);
+  runner.setVideoAndTraceName('kubernetes-image-push');
+
+  await welcomePage.handleWelcomePage(true);
+  await waitForPodmanMachineStartup(page);
+  if (!skipKindInstallation) {
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.cliToolsTab.click();
+
+    await ensureCliInstalled(page, 'Kind');
+  }
+
+  if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+    await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+      providerType: providerTypeGHA,
+      useIngressController: false,
+    });
+  } else {
+    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+  }
+});
+
+test.afterAll(async ({ runner, page }) => {
+  test.setTimeout(90_000);
+  try {
+    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+  } finally {
+    await runner.close();
+  }
+});
+
+test.describe.serial(
+  'Kubernetes pushing an image to the cluster and reusing it with a pod E2E Test',
+  { tag: '@k8s_e2e' },
+  () => {
+    test('Pull image and push it to the cluster', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(IMAGE_NAME);
+      await imagesPage.waitForImageExists(IMAGE_NAME);
+
+      const imageDetails = await imagesPage.openImageDetails(IMAGE_NAME);
+      await imageDetails.pushImageToKindCluster();
+    });
+    test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
+      const kubernetesBar = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+
+      await playExpect.poll(async () => kubernetesPodsPage.content.textContent()).toContain('No pods');
+    });
+    test('Create a Kubernetes deployment resource', async ({ page }) => {
+      await page.waitForTimeout(10000);
+      test.setTimeout(80_000); //TEMPORARY
+      //TODO: re-try logic to prevent flakyness (default service account takes some time to be available)
+      await createKubernetesResource(
+        page,
+        KubernetesResources.Pods,
+        DEPLOYMENT_NAME + '-pod',
+        DEPLOYMENT_YAML_PATH,
+        KUBERNETES_RUNTIME,
+      );
+
+      await checkKubernetesResourceState(
+        page,
+        KubernetesResources.Pods,
+        DEPLOYMENT_NAME + '-pod',
+        KubernetesResourceState.Running,
+        80_000,
+      );
+    });
+
+    test('Delete the Kubernetes pod', async ({ page }) => {
+      await deleteKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME);
+    });
+  },
+);
