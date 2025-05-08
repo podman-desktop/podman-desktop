@@ -117,7 +117,17 @@ function FAQ(): JSX.Element {
               </p>
             }
           />
-          <ExpandableFAQ title="Is Podman Desktop suitable for enterprise use?" text={<p></p>} />
+          <ExpandableFAQ
+            title="Is Podman Desktop suitable for enterprise use?"
+            text={
+              <p>
+                Yes, Podman Desktop is well-suited for enterprise use, offering a robust and secure application for
+                managing containers and Kubernetes. Its support for rootless containers enhances security and simplifies
+                compliance, while its compatibility with Docker and seamless integration with existing enterprise tools
+                and workflows make it an attractive option for organizations looking to modernize their development.
+              </p>
+            }
+          />
           <ExpandableFAQ
             title="How do I get involved on the project?"
             text={
@@ -136,7 +146,7 @@ function FAQ(): JSX.Element {
             text={
               <p>
                 Yes, Podman Desktop supports Compose. You can download the Compose extension to help set up Compose if
-                it is not yet installed. For more information and example, visit our{' '}
+                it is not yet installed. For more information and examples, visit our{' '}
                 <Link title="Getting started with Compose" to="/tutorial/getting-started-with-compose">
                   Getting started with Compose
                 </Link>{' '}
