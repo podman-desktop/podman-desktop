@@ -2604,7 +2604,7 @@ export class PluginSystem {
         contextName: string,
         newContextName: string,
         newContextNamespace: string,
-      ): Promise<KubernetesContext[]> => {
+      ): Promise<void> => {
         return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
       },
     );

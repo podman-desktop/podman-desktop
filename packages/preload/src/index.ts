@@ -1877,7 +1877,7 @@ export function initExposure(): void {
   });
   contextBridge.exposeInMainWorld(
     'kubernetesUpdateContext',
-    async (contextName: string, newContextName: string, newContextNamespace: string): Promise<Context[]> => {
+    async (contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
       return ipcInvoke('kubernetes-client:updateContext', contextName, newContextName, newContextNamespace);
     },
   );

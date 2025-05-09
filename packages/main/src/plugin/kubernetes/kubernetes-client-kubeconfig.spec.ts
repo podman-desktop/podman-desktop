@@ -194,6 +194,26 @@ describe('context tests', () => {
     expect(newContextName).toBe('ctx1-2-1-1');
   });
 
+  test('should update context from config', async () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
+    }
+
+    await client.updateContext(originalContexts[0].name, 'new-name', 'new-namespace');
+    const contexts = client.getContexts();
+    expect(contexts.length).toBe(2);
+    expect(client.getContexts().length).toBe(2);
+
+    if (!contexts[0]?.name) {
+      throw new Error('contexts[0].name should be defined');
+    }
+
+    expect(contexts[0].name).toBe('new-name');
+    expect(contexts[0].namespace).toBe('new-namespace');
+  });
+
   test('should be a no-op if the context name is not found', async () => {
     client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
 
