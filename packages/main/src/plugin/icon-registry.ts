@@ -102,7 +102,7 @@ export class IconRegistry {
       if (isWindows()) {
         cleanedIconFontLocation = cleanedIconFontLocation.replace(/\\/g, '/');
       }
-      const browserURL = `url('file://${cleanedIconFontLocation}')`;
+      const browserURL = `url('media://${cleanedIconFontLocation}')`;
 
       // font definition
       const fontDefinition: FontDefinition = {
