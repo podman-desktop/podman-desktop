@@ -28,7 +28,7 @@ let kubeConfig = $state('~/.kube/config');
 $effect(() => {
   const context = contexts?.find(ctx => ctx.name === contextName);
   // Show error when is the new name identical with any other context name in the kubeConfig
-  if (context) {
+  if (context && context.name !== contextToEdit.name) {
     contextNameErrorMessage = `This context name already exists in ${kubeConfig}`;
   } else {
     contextNameErrorMessage = contextName === '' ? 'Please enter a value' : '';
@@ -69,7 +69,7 @@ async function editContext(contextName: string, contextNamespace: string): Promi
     title="Edit Context"
     on:close={closeCallback}>
     <div slot="content" class="w-full">
-    <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Context Name</label>
+    <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Name</label>
     <Input
         bind:value={contextName}
         name="contextName"
@@ -82,7 +82,7 @@ async function editContext(contextName: string, contextNamespace: string): Promi
         <ErrorMessage error={contextNameErrorMessage} />
     {/if}
 
-    <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Context Namespace</label>
+    <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
     <Input
         bind:value={contextNamespace}
         name="contextNamespace"
