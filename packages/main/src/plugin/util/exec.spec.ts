@@ -40,6 +40,7 @@ vi.mock('../../util', async () => {
     isWindows: vi.fn(),
     isMac: vi.fn(),
     isLinux: vi.fn(),
+    isUnixLike: vi.fn(),
   };
 });
 
@@ -376,11 +377,11 @@ describe('exec', () => {
     expect(stdout).toContain('Hello, World!');
   });
 
-  test('should run the command with privileges on Linux', async () => {
+  test('should run the command with privileges on Unix-like OS', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    (util.isLinux as Mock).mockReturnValue(true);
+    (util.isUnixLike as Mock).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -414,6 +415,7 @@ describe('exec', () => {
     const args = ['Hello, World!'];
 
     (util.isLinux as Mock).mockReturnValue(true);
+    (util.isUnixLike as Mock).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -524,6 +526,7 @@ describe('exec', () => {
     const args = ['Hello, World!'];
 
     (util.isLinux as Mock).mockReturnValue(true);
+    (util.isUnixLike as Mock).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
