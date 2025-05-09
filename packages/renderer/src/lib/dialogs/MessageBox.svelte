@@ -5,6 +5,7 @@ import { Button, type ButtonType } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import Markdown from '../markdown/Markdown.svelte';
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
 
@@ -17,6 +18,7 @@ let type: string | undefined;
 let cancelId = -1;
 let defaultId: number;
 let buttonOrder: number[];
+let footerMarkdownDescription: string | undefined;
 
 let display = false;
 
@@ -30,6 +32,8 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   } else {
     detail = undefined;
   }
+
+  footerMarkdownDescription = options.footerMarkdownDescription;
 
   // use provided buttons, or a single 'OK' button if none are provided
   if (options?.buttons && options.buttons.length > 0) {
@@ -125,6 +129,12 @@ function getButtonType(b: boolean): ButtonType {
 
     <svelte:fragment slot="content">
       <div class="leading-5 whitespace-pre-wrap" aria-label="Dialog Message">{message}</div>
+
+      {#if footerMarkdownDescription}
+        <div class="pt-4 flex justify-center" aria-label="Footer Description">
+          <Markdown markdown={footerMarkdownDescription} />
+        </div>
+      {/if}
 
       {#if detail}
         <div class="pt-4 leading-5" aria-label="Dialog Details">{detail}</div>

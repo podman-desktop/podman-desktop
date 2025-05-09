@@ -49,6 +49,7 @@ describe('MessageBox', () => {
       title: 'My custom title',
       message: 'My message',
       detail: 'A more detailed message',
+      footerMarkdownDescription: 'Footer message in markdown',
       buttons: ['OK', 'Not OK'],
     };
 
@@ -66,6 +67,8 @@ describe('MessageBox', () => {
     expect(message).toBeInTheDocument();
     const detail = await screen.findByText(messageBoxOptions.detail ?? '');
     expect(detail).toBeInTheDocument();
+    const footerMarkdownDescription = await screen.findByText(messageBoxOptions.footerMarkdownDescription ?? '');
+    expect(footerMarkdownDescription).toBeInTheDocument();
     const button1 = await screen.findByText(messageBoxOptions.buttons?.[0] ?? '');
     expect(button1).toBeInTheDocument();
     const button2 = await screen.findByText(messageBoxOptions.buttons?.[1] ?? '');
