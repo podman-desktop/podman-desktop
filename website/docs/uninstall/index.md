@@ -41,10 +41,10 @@ You can delete all pods, containers, and images by removing the Podman machine.
    ```
 1. Uninstall Podman from the Start menu, Settings, or Control Panel. For more details, see the [resource](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98).
 1. Remove Podman files and configurations:
-   ```sh
-   rm -rf ~/.local/share/containers/podman
-   rm -rf ~/.config/containers/
-   rm -rf ~/AppData/Roaming/containers
+   ```powershell
+   rm -Recurse -Force ~/.local/share/containers/podman
+   rm -Recurse -Force ~/.config/containers/
+   rm -Recurse -Force ~/AppData/Roaming/containers
    ```
 
 </TabItem>
@@ -135,13 +135,13 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
    </details>
 
 1. Remove the Podman Desktop configuration files:
-   ```sh
-   $ rm -rf ~/.local/share/containers/podman-desktop/
-   $ rm -rf ~/AppData/Roaming/Podman Desktop
+   ```powershell
+   $ rm -Recurse -Force ~/.local/share/containers/podman-desktop/
+   $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
    ```
 1. Remove temporary files, caches, and blobs:
-   ```sh
-   $ rm -rf ~/AppData/Roaming/Podman Desktop
+   ```powershell
+   $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
    ```
 
 </TabItem>
