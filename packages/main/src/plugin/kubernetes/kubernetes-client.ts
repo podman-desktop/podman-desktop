@@ -413,12 +413,12 @@ export class KubernetesClient {
       users: this.kubeConfig.users,
       currentContext: this.currentContextName === contextName ? newContextName : this.kubeConfig.currentContext,
       contexts: [
-        ...newContexts,
         {
           ...originalContext,
           name: newContextName,
           namespace: newContextNamespace,
         },
+        ...newContexts,
       ],
     });
 
