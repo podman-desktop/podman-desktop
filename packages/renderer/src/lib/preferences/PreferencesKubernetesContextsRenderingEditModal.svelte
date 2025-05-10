@@ -41,15 +41,20 @@ onMount(async () => {
   kubeConfig = (await window.getConfigurationValue('kubernetes.Kubeconfig')) ?? kubeConfig;
 });
 
-function disableSave(name: string): boolean {
-  return (
-    name.trim() === '' || contexts?.find(ctx => ctx.name === contextName) !== undefined || name === contextToEdit.name
-  );
+function disableSave(name: string, namespace: string): boolean {
+  // Name is invalid when:
+  // 1. is empty
+  // 2. is default value (without change)
+  // 3. current name is same as other context name in kubeconfig
+  const invalidName =
+    name.trim() === '' || contexts?.find(ctx => ctx.name === contextName) !== undefined || name === contextToEdit.name;
+  const invalidNamespace = namespace === (contextToEdit.namespace ?? '');
+  return invalidName && invalidNamespace;
 }
 
 async function editContext(contextName: string, contextNamespace: string): Promise<void> {
   const context = contexts?.find(ctx => ctx.name === contextName);
-  if (context) return;
+  if (context && context.namespace === contextNamespace) return;
 
   try {
     await window.kubernetesUpdateContext(contextToEdit.name, contextName, contextNamespace);
@@ -102,7 +107,7 @@ async function editContext(contextName: string, contextNamespace: string): Promi
         on:click={closeCallback}>Cancel</Button>
     <Button
         class="col-start-4"
-        disabled={disableSave(contextName)}
+        disabled={disableSave(contextName, contextNamespace)}
         on:click={async (): Promise<void> => {
         await editContext(contextName, contextNamespace);
         }}>Save</Button>
