@@ -1242,6 +1242,7 @@ export function initExposure(): void {
       eventCollect: (key: symbol, eventName: 'finish' | 'stream' | 'error', data: string) => void,
       cancellableTokenId?: number,
       buildargs?: { [key: string]: string },
+      taskId?: number,
     ): Promise<unknown> => {
       onDataCallbacksBuildImageId++;
       onDataCallbacksBuildImage.set(onDataCallbacksBuildImageId, eventCollect);
@@ -1256,6 +1257,7 @@ export function initExposure(): void {
         onDataCallbacksBuildImageId,
         cancellableTokenId,
         buildargs,
+        taskId,
       );
     },
   );
