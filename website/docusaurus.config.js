@@ -446,11 +446,6 @@ const config = {
             type: 'custom-downloadButton',
             position: 'right',
           },
-          {
-            href: 'https://github.com/podman-desktop/podman-desktop',
-            className: 'header-github-link',
-            position: 'right',
-          },
         ],
       },
       footer: {
