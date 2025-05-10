@@ -8,7 +8,7 @@ tags: [ai, llm, generative ai]
 
 # Starting an inference server for a model
 
-Once a model is downloaded, a model service can be started. A model service is an inference server that is running in a container and exposing the model through the well-known chat API common to many providers.
+Once a model is downloaded, a model service can be started. A model service is an inference server that runs in a container and exposes the model through the well-known chat API common to many providers.
 
 #### Prerequisites
 
@@ -17,15 +17,25 @@ Once a model is downloaded, a model service can be started. A model service is a
 
 #### Procedure
 
-1. Click the Podman AI Lab icon in the navigation bar
-1. In the Podman AI Lab navigation bar, click **Models > Services** menu item.
-1. Click the **New Model Service** button on the top right.
-1. Select the model you want to start an inference server for in the **Model** list and click the **Create Service** button.
-1. The inference server for the model is being started and after a while, click on the **Open service details** button.
+1. Click the Podman AI Lab icon in the left navigation pane.
+1. In the Podman AI Lab navigation bar, click **Services**.
+1. Click the **New Model Service** button at the top right corner of the page. The Creating Model service page opens.
+
+   :::note
+
+   On a macOS machine, you get a notification to [create a GPU-enabled Podman machine](/docs/podman/creating-a-podman-machine) to run your GPU workloads. Click the **Create GPU enabled machine** button to proceed.
+
+   :::
+
+1. Select the model for which you want to start an inference server from the dropdown list, and edit the port number if needed.
+1. Click **Create service**. The inference server for the model is being started, and this requires some time.
+   ![creating a service](img/creating-a-service.png)
+
+1. Click the **Open service details** button.
 
 #### Verification
 
-1. Once the inference server is started, the details for the inference server allows you to generate code snippets in various languages to access the model through the inference server.
+1. View the details of the inference server.
    ![inference server](img/inference-server-curl.png)
-1. You can change the target language, here for Java and Quarkus.
+1. Optional: Customize the client code based on your programming language to access the model through the inference server. For example, set the code language to `Java` and `Quarkus Langchain4J`, and view the updated code snippet.
    ![inference server](img/inference-server-quarkus.png)

@@ -16,14 +16,12 @@ Podman AI Lab provides a curated list of open source AI models and LLMs. Once do
 
 #### Procedure
 
-1. Click the Podman AI Lab icon in the navigation bar
-1. In the Podman AI Lab navigation bar, click **Models > Catalog** menu item.
-1. The curated list of models is now displayed.
-   ![Podman AI Lab models](img/models.png)
-1. Click on the download icon on the right side of the list to start downloading a model.
+1. Click the Podman AI Lab icon in the left navigation pane.
+1. In the Podman AI Lab navigation bar, click **Catalog**. The curated list of models is now displayed.
+1. Click the download icon corresponding to the model you want to use.
    ![model downloading](img/model-downloading.png)
 
 #### Verification
 
-1. Once the model is downloaded, the curated models list is updated and the icon next to the model is green and new actions are available on the left.
+1. Once the model is downloaded, the curated models list is updated, and new actions become available for use.
    ![model downloaded](img/model-downloaded.png)

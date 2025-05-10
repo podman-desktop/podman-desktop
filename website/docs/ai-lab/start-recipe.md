@@ -10,7 +10,7 @@ tags: [ai, llm, generative ai]
 
 Once an AI model is available through a well known endpoint, it's easy to imagine a new world of applications that will connect and use the AI model. Podman AI Lab support AI applications as a set of containers that are connected together.
 
-Podman AI Lab ships with a so-called Recipes Catalog that helps you navigate a number of core AI use cases and problem domains such as Chat Bots, Code Generators and Text Summarizers. Each recipe comes with detailed explanations and sample applications that can be run with various large language models (LLMs). Experimenting with multiple models allows finding the optimal one for your use case.
+Podman AI Lab ships with a so-called Recipes Catalog that helps you navigate a number of core AI use cases and problem domains, such as chatbots, code generators, and text summarizers. Each recipe includes detailed explanations and sample applications that can be run with various large language models (LLMs). Experimenting with multiple models allows you to find the optimal one for your use case.
 
 #### Prerequisites
 
@@ -19,14 +19,20 @@ Podman AI Lab ships with a so-called Recipes Catalog that helps you navigate a n
 
 #### Procedure
 
-1. Click the Podman AI Lab icon in the navigation bar
-1. In the Podman AI Lab navigation bar, click **AI Apps > Recipes Catalog** menu item.
-1. The list of available recipes is displayed. Click on the **Chatbot** recipe card.
-   ![chatbot recipe](img/chatbot-recipe.png)
-1. Click the **Start AI App** button to start the containers for this recipe.
+1. Click the Podman AI Lab icon in the left navigation pane.
+1. In the Podman AI Lab navigation bar, click **Recipe Catalog**.
+1. Optional: Filter the recipe catalog based on the required tool, framework, or programming language.
+1. Click the **More details** link for the recipe that you want to start. The recipe summary page opens.
+   ![more details](img/more-details-link.png)
+1. Click **Start**. The Start recipe page opens.
+   ![start a recipe](img/starting-a-recipe.png)
+1. Select a model from the dropdown list.
+1. Click **Start ChatBot recipe**. This step might take some time to pull the recipe, copy the model to your Podman machine, start the inference server, load configurations, and create the application.
 
 #### Verification
 
-1. Once the AI app is started, the details for the recipe are updated and the recipe is switched to RUNNING mode.
-   ![chatbot recipe](img/chatbot-recipe-started.png)
-1. To test the application, click on the <Icon icon="fa-solid fa-arrow-up-right-from-square" size="lg" /> icon and your browser will be connected to the client application.
+1. Click **Open details** after the processing completes.
+   ![opening details](img/opening-application-details.png)
+1. View the created AI application.
+1. Click the **Open AI APP** icon to view the running application in your browser.
+   ![opening details](img/opening-ai-app.png)

@@ -18,14 +18,20 @@ The integrated Playground environments allow for experimenting with available mo
 
 #### Procedure
 
-1. Click the Podman AI Lab icon in the navigation bar
-1. In the Podman AI Lab navigation bar, click **Models > Playgrounds** menu item.
-1. Click the **New Playground** button on the top right.
-1. Select the model you want to start an inference server for in the **Model** list and click the **Create playground** button.
-1. The playground for the model is being started and after a while, a chat interface is displayed.
-   ![playground](img/playground.png)
+1. Click the Podman AI Lab icon in the left navigation pane.
+1. In the Podman AI Lab navigation bar, click **Playgrounds**.
+1. Click the **New Playground** button at the top right corner of the page.
+1. Select the model for which you want to start an inference server from the **Model** list.
+1. Click the **Create playground** button.
+   ![create a playground](img/creating-playground.png)
 
 #### Verification
 
-1. On the chat interface, you can optionally set the system prompt.
-1. Enter text in the prompt field and press the **ENTER** key.
+1. View the created playground on the same page.
+   ![playground](img/playground.png)
+1. Click the name of the playground to experiment with model settings. The Playground page opens.
+1. Perform any of the following tasks:
+   - Edit the value of the model parameters.
+   - Add a system prompt by clicking the **Edit system prompt** icon.
+   - Enter your question in the prompt box and analyze the accuracy of the answer.
+     ![experiment with model settings](img/playground-settings.png)

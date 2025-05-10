@@ -8,15 +8,20 @@ tags: [ai, llm, generative ai]
 
 # Installing the Podman AI Lab extension
 
-The AI Lab extension extends the capabilities of Podman Desktop for Large Language Models (LLMs). It has to be installed before you can use it. Installation is just a click if you have Podman Desktop installed already.
+The AI Lab extension extends the capabilities of Podman Desktop for Large Language Models (LLMs). Its installation is just a click away if you already have Podman Desktop installed.
+
+#### Prerequisites
+
+- [Install Podman Desktop](/docs/installation).
 
 #### Procedure
 
-If you have Podman Desktop already installed, <a href="podman-desktop:extension/redhat.ai-lab">**click to launch the installation**</a> of Podman AI Lab in Podman Desktop.
+Perform one of the following steps:
 
-If not, please [install Podman Desktop](/docs/installation) first.
+- <a href="podman-desktop:extension/redhat.ai-lab">**Click to launch the installation**</a> of Podman AI Lab in Podman Desktop.
+- Go to **Extensions > Catalog** and [install the Podman AI Lab extension](/tutorial/running-an-ai-application#installing-the-extension).
 
 #### Verification
 
-1. The navigation bar should contain the Podman AI Lab icon.
+1. Check the left navigation pane, which shows the Podman AI Lab icon.
    ![Podman AI Lab icon](img/ai-lab-icon.png)
