@@ -20,6 +20,7 @@ import React from 'react';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
+import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 
 function Hero(): JSX.Element {
@@ -264,6 +265,66 @@ function Configure(): JSX.Element {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQ(): JSX.Element {
+  return (
+    <section className="text-white py-24 font-body text-4xl font-bold leading-[1.2] bg-[url(/img/gradient.png)] bg-cover bg-top bg-black/60 bg-blend-darken">
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
+        <div className="p-8">
+          <ExpandableFAQ
+            title="Is Podman Desktop free?"
+            text={
+              <p>
+                Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License
+                (LGPL). This means that it is freely available for use, modification, and distribution by anyone,
+                without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it
+                accessible to individuals and organizations alike.
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="Is Podman Desktop suitable for enterprise use?"
+            text={
+              <p>
+                Yes, Podman Desktop is well-suited for enterprise use, offering a robust and secure application for
+                managing containers and Kubernetes. Its support for rootless containers enhances security and simplifies
+                compliance, while its compatibility with Docker and seamless integration with existing enterprise tools
+                and workflows make it an attractive option for organizations looking to modernize their development.
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="How do I get involved on the project?"
+            text={
+              <p>
+                You can get invloved with the project by visiting our{' '}
+                <Link title="GitHub page" href="https://github.com/podman-desktop/podman-desktop">
+                  GitHub page
+                </Link>{' '}
+                and open a PR, report bugs, suggest new features and enhancements, provide feedback, and more. Every
+                action counts and helps us improve Podman Desktop
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="Does Podman Desktop support Compose?"
+            text={
+              <p>
+                Yes, Podman Desktop supports Compose. You can download the Compose extension to help set up Compose if
+                it is not yet installed. For more information and examples, visit our{' '}
+                <Link title="Getting started with Compose" to="/tutorial/getting-started-with-compose">
+                  Getting started with Compose
+                </Link>{' '}
+                page
+              </p>
+            }
+          />
         </div>
       </div>
     </section>
@@ -608,6 +669,7 @@ export default function Home(): JSX.Element {
       <Extensibility />
       <KeepUpToDate />
       <EnterpriseReady />
+      <FAQ />
     </Layout>
   );
 }
