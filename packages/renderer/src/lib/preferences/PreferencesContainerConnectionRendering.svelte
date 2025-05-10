@@ -165,6 +165,8 @@ function setNoLogs(): void {
         <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
         {#if connectionInfo.lifecycleMethods && connectionInfo.lifecycleMethods.length > 0}
           <Tab title="Logs" selected={isTabSelected($router.path, 'logs')} url={getTabUrl($router.path, 'logs')} />
+        {/if}
+        {#if connectionInfo.shellAccess}
           <Tab
             title="Terminal"
             selected={isTabSelected($router.path, 'terminal')}

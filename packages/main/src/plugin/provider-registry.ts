@@ -687,6 +687,7 @@ export class ProviderRegistry {
         endpoint: {
           socketPath: connection.endpoint.socketPath,
         },
+        shellAccess: !!connection.shellAccess,
         vmType: connection.vmType
           ? {
               id: connection.vmType,
