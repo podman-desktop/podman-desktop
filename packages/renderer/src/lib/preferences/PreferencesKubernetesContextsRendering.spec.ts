@@ -97,12 +97,15 @@ const kubernetesGetCurrentContextNameMock = vi.fn();
 
 const showMessageBoxMock = vi.fn();
 
+const kubernetesDuplicateContextMock = vi.fn();
+
 beforeAll(() => {
   Object.defineProperty(window, 'kubernetesGetContextsGeneralState', {
     value: vi.fn().mockResolvedValue(new Map<string, ContextGeneralState>()),
   });
   Object.defineProperty(window, 'kubernetesGetCurrentContextName', { value: kubernetesGetCurrentContextNameMock });
   Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
+  Object.defineProperty(window, 'kubernetesDuplicateContext', { value: kubernetesDuplicateContextMock });
 });
 
 beforeEach(() => {
@@ -188,6 +191,36 @@ test('when deleting the non current context, no popup should ask confirmation', 
   expect(deleteBtn).toBeInTheDocument();
   await fireEvent.click(deleteBtn);
   expect(showMessageBoxMock).not.toHaveBeenCalled();
+});
+
+test('when duplicating context, kubernetesDuplicateContext should be called', async () => {
+  vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
+  vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
+  render(PreferencesKubernetesContextsRendering, {});
+  // Get first context
+  const currentContext = screen.getAllByRole('row')[0];
+  expect(currentContext).toBeInTheDocument();
+
+  const duplicateBtn = within(currentContext).getByRole('button', { name: 'Duplicate Context' });
+  expect(duplicateBtn).toBeInTheDocument();
+  await fireEvent.click(duplicateBtn);
+
+  expect(kubernetesDuplicateContextMock).toHaveBeenCalledOnce();
+});
+
+test('when editing context a modal dialog should be oppened', async () => {
+  vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
+  vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
+  render(PreferencesKubernetesContextsRendering, {});
+  // Get first context
+  const currentContext = screen.getAllByRole('row')[0];
+  expect(currentContext).toBeInTheDocument();
+
+  const editBtn = within(currentContext).getByRole('button', { name: 'Edit Context' });
+  expect(editBtn).toBeInTheDocument();
+  await fireEvent.click(editBtn);
+
+  expect(screen.getByRole('dialog', { name: 'Edit Context' })).toBeVisible();
 });
 
 describe.each([
