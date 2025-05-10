@@ -26,6 +26,7 @@ import type {
   Cluster,
   Context,
   KubernetesObject,
+  User,
   V1ConfigMap,
   V1CronJob,
   V1Deployment,
@@ -1877,8 +1878,21 @@ export function initExposure(): void {
   });
   contextBridge.exposeInMainWorld(
     'kubernetesUpdateContext',
-    async (contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
-      return ipcInvoke('kubernetes-client:updateContext', contextName, newContextName, newContextNamespace);
+    async (
+      contextName: string,
+      newContextName: string,
+      newContextNamespace: string,
+      newContextCluster: string,
+      newContextUser: string,
+    ): Promise<void> => {
+      return ipcInvoke(
+        'kubernetes-client:updateContext',
+        contextName,
+        newContextName,
+        newContextNamespace,
+        newContextCluster,
+        newContextUser,
+      );
     },
   );
   contextBridge.exposeInMainWorld('kubernetesDeleteContext', async (contextName: string): Promise<Context[]> => {
@@ -1934,6 +1948,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('kubernetesGetClusters', async (): Promise<Cluster[]> => {
     return ipcInvoke('kubernetes-client:getClusters');
+  });
+
+  contextBridge.exposeInMainWorld('kubernetesGetUsers', async (): Promise<User[]> => {
+    return ipcInvoke('kubernetes-client:getUsers');
   });
 
   contextBridge.exposeInMainWorld('kubernetesGetCurrentNamespace', async (): Promise<string | undefined> => {

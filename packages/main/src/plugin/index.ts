@@ -27,6 +27,7 @@ import type {
   Cluster,
   Context as KubernetesContext,
   KubernetesObject,
+  User,
   V1ConfigMap,
   V1CronJob,
   V1Deployment,
@@ -2579,6 +2580,10 @@ export class PluginSystem {
       return kubernetesClient.getClusters();
     });
 
+    this.ipcHandle('kubernetes-client:getUsers', async (): Promise<User[]> => {
+      return kubernetesClient.getUsers();
+    });
+
     this.ipcHandle('kubernetes-client:getCurrentNamespace', async (): Promise<string | undefined> => {
       return kubernetesClient.getCurrentNamespace();
     });
@@ -2599,8 +2604,21 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'kubernetes-client:updateContext',
-      async (_listener, contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
-        return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
+      async (
+        _listener,
+        contextName: string,
+        newContextName: string,
+        newContextNamespace: string,
+        newContextCluster: string,
+        newContextUser: string,
+      ): Promise<void> => {
+        return kubernetesClient.updateContext(
+          contextName,
+          newContextName,
+          newContextNamespace,
+          newContextCluster,
+          newContextUser,
+        );
       },
     );
 

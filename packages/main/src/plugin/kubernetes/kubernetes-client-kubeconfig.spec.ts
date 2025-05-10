@@ -38,9 +38,6 @@ class TestKubernetesClient extends KubernetesClient {
   public setContexts(contexts: Context[]): void {
     this.kubeConfig.contexts = contexts;
   }
-  public getUsers(): User[] {
-    return this.kubeConfig.users;
-  }
   public setCurrentContext(name: string): void {
     this.currentContextName = name;
   }
@@ -201,7 +198,7 @@ describe('context tests', () => {
       throw new Error('originalContexts[0].name should be defined');
     }
 
-    await client.updateContext(originalContexts[0].name, 'new-name', 'new-namespace');
+    await client.updateContext(originalContexts[0].name, 'new-name', 'new-namespace', '', '');
     const contexts = client.getContexts();
     expect(contexts.length).toBe(2);
     expect(client.getContexts().length).toBe(2);
@@ -221,7 +218,7 @@ describe('context tests', () => {
       throw new Error('originalContexts[0].name should be defined');
     }
 
-    await client.updateContext(originalContexts[0].name, originalContexts[0].name, '');
+    await client.updateContext(originalContexts[0].name, originalContexts[0].name, '', '', '');
     const contexts = client.getContexts();
     expect(contexts.length).toBe(2);
     expect(client.getContexts().length).toBe(2);
@@ -232,6 +229,44 @@ describe('context tests', () => {
 
     expect(contexts[0].name).toBe(originalContexts[0].name);
     expect(contexts[0].namespace).toBeUndefined();
+  });
+
+  test('should update the cluster updating context from config', async () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
+    }
+
+    await client.updateContext(originalContexts[0].name, originalContexts[0].name, 'namespace', 'cluster2', 'user1');
+    const contexts = client.getContexts();
+    expect(contexts.length).toBe(2);
+    expect(client.getContexts().length).toBe(2);
+
+    if (!contexts[0]?.name) {
+      throw new Error('contexts[0].name should be defined');
+    }
+
+    expect(contexts[0].cluster).toBe('cluster2');
+  });
+
+  test('should update the user updating context from config', async () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
+    }
+
+    await client.updateContext(originalContexts[0].name, originalContexts[0].name, 'namespace', 'cluster1', 'user2');
+    const contexts = client.getContexts();
+    expect(contexts.length).toBe(2);
+    expect(client.getContexts().length).toBe(2);
+
+    if (!contexts[0]?.name) {
+      throw new Error('contexts[0].name should be defined');
+    }
+
+    expect(contexts[0].user).toBe('user2');
   });
 
   test('should be a no-op if the context name is not found', async () => {
