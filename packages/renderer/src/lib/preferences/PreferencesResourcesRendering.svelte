@@ -675,7 +675,11 @@ function handleError(errorMessage: string): void {
             </div>
             <div class="flex mt-1" aria-label="Connection Status">
               <ConnectionStatus status={vmConnection.status} />
-            </div>            
+              {#if containerConnectionStatus.has(getProviderConnectionName(provider, vmConnection))}
+                {@const status = containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
+                <ConnectionErrorInfoButton status={status} />
+              {/if}
+            </div>
             <PreferencesConnectionActions
               provider={provider}
               connection={vmConnection}
