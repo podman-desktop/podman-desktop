@@ -65,6 +65,125 @@ function FeatureManageImages(): JSX.Element {
   );
 }
 
+function FeatureMultiArchitectureSupport(): JSX.Element {
+  return (
+    <div>
+      <section className="text-gray-900 bg-zinc-200 dark:bg-charcoal-600 dark:text-gray-700 body-font">
+        <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
+          <div className="lg:grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
+            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900 dark:text-white">
+              Multi Architecture Support.
+              <br className="hidden lg:inline-block" />
+            </h1>
+            <p className="mb-8 leading-relaxed dark:text-gray-300 text-gray-900">
+              Run Podman Desktop on ARM64 or AMD64 architecture across multiple operating systems.
+            </p>
+          </div>
+          <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
+            <ThemedImage
+              className="py-4"
+              alt="Multi architecture support"
+              sources={{
+                light: useBaseUrl('img/features/manage-containers.webp'),
+                dark: useBaseUrl('img/features/manage-containers.webp'),
+              }}
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FeatureVirtualizationEngines(): JSX.Element {
+  return (
+    <section className="text-gray-900 bg-zinc-100 dark:text-gray-700 dark:bg-charcoal-800 body-font">
+      <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
+        <div className="w-5/6 mb-10 md:mb-0">
+          <ThemedImage
+            className="py-4"
+            alt="Pull image and manage registries"
+            sources={{
+              light: useBaseUrl('img/features/images.webp'),
+              dark: useBaseUrl('img/features/images.webp'),
+            }}
+          />
+        </div>
+        <div className="lg:grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
+          <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900 dark:text-white">
+            Create different virtualization engines.
+          </h1>
+
+          <p className="leading-relaxed list-item dark:text-gray-300 text-gray-900">
+            MacOS: VFKit or Libkrun with GPU acceleration
+          </p>
+          <p className="leading-relaxed list-item dark:text-gray-300 text-gray-900">Windows: WSL or HyperV engines</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureDockerCompatibility(): JSX.Element {
+  return (
+    <div>
+      <section className="text-gray-900 bg-zinc-200 dark:bg-charcoal-600 dark:text-gray-700 body-font">
+        <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
+          <div className="lg:grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center">
+            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900 dark:text-white">
+              Docker Compatibility.
+              <br className="hidden lg:inline-block" />
+            </h1>
+            <p className="mb-8 leading-relaxed dark:text-gray-300 text-gray-900">
+              Switch from Docker to Podman easily by using this feature
+            </p>
+          </div>
+          <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
+            <ThemedImage
+              className="py-4"
+              alt="Manage containers"
+              sources={{
+                light: useBaseUrl('img/features/manage-containers.webp'),
+                dark: useBaseUrl('img/features/manage-containers.webp'),
+              }}
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FeatureKubernetesCapabilites(): JSX.Element {
+  return (
+    <section className="text-gray-900 bg-zinc-100 dark:text-gray-700 dark:bg-charcoal-800 body-font">
+      <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
+        <div className="w-5/6 mb-10 md:mb-0">
+          <ThemedImage
+            className="py-4"
+            alt="Pull image and manage registries"
+            sources={{
+              light: useBaseUrl('img/features/images.webp'),
+              dark: useBaseUrl('img/features/images.webp'),
+            }}
+          />
+        </div>
+        <div className="lg:grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
+          <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900 dark:text-white">
+            Manage your Kubernetes clusters easily.
+          </h1>
+
+          <p className="leading-relaxed list-item dark:text-gray-300 text-gray-900">Build images from the tool.</p>
+          <p className="leading-relaxed list-item dark:text-gray-300 text-gray-900">
+            Pull and push images by managing registries.
+          </p>
+          <p className="leading-relaxed list-item dark:text-gray-300 text-gray-900">Run containers from these images</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FeatureManagementFromTrayIcon(): JSX.Element {
   return (
     <div>
@@ -206,6 +325,10 @@ export default function Home(): JSX.Element {
       <TailWindThemeSelector />
       <FeatureManageContainers />
       <FeatureManageImages />
+      <FeatureMultiArchitectureSupport />
+      <FeatureVirtualizationEngines />
+      <FeatureDockerCompatibility />
+      <FeatureKubernetesCapabilites />
       <FeatureManagementFromTrayIcon />
       <FeatureManageResources />
       <FeatureManagePods />
