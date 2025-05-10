@@ -1,4 +1,5 @@
 ---
+sidebar_position: 102
 title: OpenShift Local
 description: Creating an OpenShift Local instance
 keywords: [podman desktop, podman, containers, pods, migrating, kubernetes, openshift]
