@@ -18,13 +18,42 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { Cluster, User } from '@kubernetes/client-node';
+import { Dropdown } from '@podman-desktop/ui-svelte';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { tick } from 'svelte';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { KubeContext } from '/@api/kubernetes-context';
 
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
+
+vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    Dropdown: vi.fn(),
+  };
+});
+
+const mockUser1: User = {
+  name: 'user-name',
+};
+const mockUser2: User = {
+  name: 'user-name-2',
+};
+
+const mockCluster1: Cluster = {
+  name: 'cluster-name',
+  server: 'https://server-name',
+  skipTLSVerify: true,
+};
+const mockCluster2: Cluster = {
+  name: 'cluster-name-2',
+  server: 'https://server-name-2',
+  skipTLSVerify: false,
+};
 
 const mockContext1: KubeContext = {
   name: 'context-name',
@@ -153,5 +182,101 @@ describe('UpdateContext', () => {
     await userEvent.clear(contextName);
 
     expect(await screen.findByText('Please enter a value')).toBeInTheDocument();
+  });
+
+  test('dropdown value should match window#kubernetesGetUsers', async () => {
+    vi.mocked(window.kubernetesGetUsers).mockResolvedValue([mockUser1, mockUser2]);
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    // wait until is the component rendered
+    await tick();
+
+    expect(Dropdown).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        options: [mockUser1, mockUser2].map(user => ({
+          value: user.name,
+          label: user.name,
+        })),
+      }),
+    );
+  });
+
+  test('dropdown value should match window#kubernetesGetClusters', async () => {
+    vi.mocked(window.kubernetesGetClusters).mockResolvedValue([mockCluster1, mockCluster2]);
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    // wait until is the component rendered
+    await tick();
+
+    expect(Dropdown).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        options: [mockCluster1, mockCluster2].map(cluster => ({
+          value: cluster.name,
+          label: cluster.name,
+        })),
+      }),
+    );
+  });
+
+  test('dropdown#onUserStateChange should update value', async () => {
+    vi.mocked(window.kubernetesGetUsers).mockResolvedValue([mockUser1, mockUser2]);
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    expect(Dropdown).toHaveBeenCalled();
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+
+    const label = 'user-name';
+    assert(label, 'user name label should be defined');
+
+    expect(onChange).toBeDefined();
+    onChange?.(label);
+
+    // dropdown component should have been updated with user value
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: label,
+        }),
+      );
+    });
+  });
+
+  test('dropdown#onClusterStateChange should update value', async () => {
+    vi.mocked(window.kubernetesGetClusters).mockResolvedValue([mockCluster1, mockCluster2]);
+    render(PreferencesKubernetesContextsRenderingEditModal, {
+      contextToEdit: mockContext1,
+      closeCallback: closeCallback,
+    });
+
+    expect(Dropdown).toHaveBeenCalled();
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+
+    const label = 'cluster-name';
+    assert(label, 'cluster name label should be defined');
+
+    expect(onChange).toBeDefined();
+    onChange?.(label);
+
+    // dropdown component should have been updated with cluster value
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: label,
+        }),
+      );
+    });
   });
 });

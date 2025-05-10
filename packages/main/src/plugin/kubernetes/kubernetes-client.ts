@@ -29,6 +29,7 @@ import type {
   KubernetesObject,
   RequestContext,
   ResponseContext,
+  User,
   V1APIGroup,
   V1APIResource,
   V1ConfigMap,
@@ -329,6 +330,10 @@ export class KubernetesClient {
 
   getClusters(): Cluster[] {
     return this.kubeConfig.clusters;
+  }
+
+  getUsers(): User[] {
+    return this.kubeConfig.users;
   }
 
   getCurrentNamespace(): string | undefined {

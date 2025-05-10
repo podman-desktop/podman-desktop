@@ -26,6 +26,7 @@ import type {
   Cluster,
   Context,
   KubernetesObject,
+  User,
   V1ConfigMap,
   V1CronJob,
   V1Deployment,
@@ -1934,6 +1935,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('kubernetesGetClusters', async (): Promise<Cluster[]> => {
     return ipcInvoke('kubernetes-client:getClusters');
+  });
+
+  contextBridge.exposeInMainWorld('kubernetesGetUsers', async (): Promise<User[]> => {
+    return ipcInvoke('kubernetes-client:getUsers');
   });
 
   contextBridge.exposeInMainWorld('kubernetesGetCurrentNamespace', async (): Promise<string | undefined> => {

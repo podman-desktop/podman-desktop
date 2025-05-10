@@ -38,9 +38,6 @@ class TestKubernetesClient extends KubernetesClient {
   public setContexts(contexts: Context[]): void {
     this.kubeConfig.contexts = contexts;
   }
-  public getUsers(): User[] {
-    return this.kubeConfig.users;
-  }
   public setCurrentContext(name: string): void {
     this.currentContextName = name;
   }
