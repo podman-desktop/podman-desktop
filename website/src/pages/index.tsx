@@ -511,7 +511,7 @@ function Pods(): JSX.Element {
     <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-tr dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-right w-full mb-5">
-          <div className="flex md:flex-row flex-col-reverse items-center md:space-x-6">
+          <div className="flex md:flex-row flex-col-reverse items-center space-x-10 xl:space-x-44">
             <ThemedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
               alt="Streamline Kubernetes workflows"
@@ -536,7 +536,7 @@ function Pods(): JSX.Element {
               <ReadTheDocsButton />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 space-x-4 pt-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 space-x-4 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/4"
