@@ -17,7 +17,7 @@ export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
   return (
     <div className="relative min-w-fit w-full h-full bg-gradient-to-br from-sky-500 to-fuschia-500 p-[2px] rounded-lg ">
       <img src="/img/quote.svg" alt="Quote symbol" className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 " />
-      <div className="bg-[#230524] rounded-lg p-6 h-full">
+      <div className="bg-[#1e041f] rounded-lg p-6 h-full">
         <div className="flex flex-row items-center">
           <FontAwesomeIcon
             size="3x"
