@@ -46,7 +46,11 @@ export function GitHubStarsButton(): JSX.Element {
       className="inline-flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg navbar__item navbar__link font-medium">
       <FontAwesomeIcon icon={faGithub} />
       <span>Star</span>
-      {stars && <span className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs">{stars}</span>}
+      {stars && (
+        <span id="github-stars-badge" className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs">
+          {stars}
+        </span>
+      )}
     </a>
   );
 }
