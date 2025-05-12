@@ -25,8 +25,6 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import MessageBox from './MessageBox.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
 
-const sendShowMessageBoxValuesMock = vi.fn();
-const sendShowMessageBoxOnSelect = vi.fn();
 const receiveFunctionMock = vi.fn();
 
 // mock some methods of the window object
@@ -34,8 +32,6 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  Object.defineProperty(window, 'sendShowMessageBoxValues', { value: sendShowMessageBoxValuesMock });
-  Object.defineProperty(window, 'sendShowMessageBoxOnSelect', { value: sendShowMessageBoxOnSelect });
 });
 
 describe('MessageBox', () => {
@@ -93,7 +89,7 @@ describe('MessageBox', () => {
     const ok = await screen.findByText('OK');
     expect(ok).toBeInTheDocument();
     await fireEvent.click(ok);
-    expect(sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
 
   test('Expect that Esc closes', async () => {
@@ -114,7 +110,7 @@ describe('MessageBox', () => {
     render(MessageBox, {});
 
     await userEvent.keyboard('{Escape}');
-    expect(sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, undefined);
+    expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, undefined);
   });
 
   test('Expect that tabbing works', async () => {
