@@ -282,7 +282,7 @@ function Testimonials(): JSX.Element {
             text="Dude ... podman. And Podman Desktop. Seriously. Open Source and doesn't run as root."
           />
           <TestimonialCard
-            username="anonymus"
+            username="anonymous"
             source="GitHub discussions"
             date="April 5 2024"
             text="I have spent a lot of hours trying out various projects in the past few months for my homelab to test some custom workloads.... OpenStack (Devstack), k3s, rancher, portainer, minikube, docker desktop, etc. and I have found what I needed with your Podman Desktop."
