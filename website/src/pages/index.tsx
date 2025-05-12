@@ -399,7 +399,7 @@ function MainFeatures(): JSX.Element {
     <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-bl dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-left w-full mb-5">
-          <div className="flex md:flex-row flex-col items-center md:space-x-6">
+          <div className="flex md:flex-row flex-col items-center space-x-10 xl:space-x-44">
             <div className="lg:grow md:w-1/2 flex flex-col md:items-start md:text-left items-center text-center">
               <SectionLabel name="Essential Features for Containers" />
               <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white">
@@ -422,7 +422,7 @@ function MainFeatures(): JSX.Element {
               }}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 space-x-4 pt-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 space-x-10 xl:space-x-44 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 w-1/8"
@@ -451,7 +451,7 @@ function MainFeatures(): JSX.Element {
                 }}
               />
               <h2 className="title-font sm:text-3xl text2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
-                Container with Security
+                Containers with Security
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
                 Podman is a secure container runtime through its focus on daemonless, rootless containers, SELinux
