@@ -70,10 +70,6 @@ let binaryPath: string | undefined;
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   initTelemetryLogger();
-
-  binaryVersion = undefined;
-  binaryPath = undefined;
-
   // Check kubectl binary has been downloaded and update both
   // the configuration setting and the context accordingly
   await handler.updateConfigAndContextKubectlBinary(extensionContext);
