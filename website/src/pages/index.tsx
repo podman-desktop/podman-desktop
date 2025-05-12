@@ -102,7 +102,7 @@ function Testimonials(): JSX.Element {
 
 function FAQ(): JSX.Element {
   return (
-    <section className="text-white py-24 font-body text-4xl font-bold leading-[1.2] bg-[url(/img/gradient.png)] bg-cover bg-top bg-black/60 bg-blend-darken">
+    <section className="text-white py-24 font-body text-4xl font-bold leading-[1.2] bg-black bg-gradient-to-br from-fuschia-500/40 via-red-900/40 to-purple-700/40">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
         <div className="p-8">
@@ -132,12 +132,12 @@ function FAQ(): JSX.Element {
             title="How do I get involved on the project?"
             text={
               <p>
-                You can get invloved with the project by visiting our{' '}
+                You can get invloved in the project by visiting our{' '}
                 <Link title="GitHub page" href="https://github.com/podman-desktop/podman-desktop">
                   GitHub page
                 </Link>{' '}
-                and open a PR, report bugs, suggest new features and enhancements, provide feedback, and more. Every
-                action counts and helps us improve Podman Desktop
+                and opening a PR, reporting bugs, suggesting new features and enhancements, providing feedback, and
+                more. Every action counts and helps us improve Podman Desktop.
               </p>
             }
           />
@@ -149,8 +149,8 @@ function FAQ(): JSX.Element {
                 it is not yet installed. For more information and examples, visit our{' '}
                 <Link title="Getting started with Compose" to="/tutorial/getting-started-with-compose">
                   Getting started with Compose
-                </Link>{' '}
-                page
+                </Link>
+                . page.
               </p>
             }
           />
