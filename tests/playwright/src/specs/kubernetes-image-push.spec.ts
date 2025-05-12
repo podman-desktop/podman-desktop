@@ -94,23 +94,26 @@ test.describe.serial(
   () => {
     test('Pull image and push it to the cluster', async ({ navigationBar }) => {
       let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
       const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
       imagesPage = await pullImagePage.pullImage(IMAGE_NAME);
-      await imagesPage.waitForImageExists(IMAGE_NAME);
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_NAME, 30_000), { timeout: 0 }).toBeTruthy();
 
       const imageDetails = await imagesPage.openImageDetails(IMAGE_NAME);
+      await playExpect(imageDetails.heading).toBeVisible();
       await imageDetails.pushImageToKindCluster();
     });
     test('Kubernetes Pods page should be empty', async ({ navigationBar }) => {
       const kubernetesBar = await navigationBar.openKubernetes();
       const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+      await playExpect(kubernetesPodsPage.heading).toBeVisible();
 
       await playExpect.poll(async () => kubernetesPodsPage.content.textContent()).toContain('No pods');
     });
     test('Create a Kubernetes deployment resource', async ({ page }) => {
-      await page.waitForTimeout(10000);
-      test.setTimeout(80_000); //TEMPORARY
-      //TODO: re-try logic to prevent flakyness (default service account takes some time to be available)
+      test.setTimeout(80_000);
       await createKubernetesResource(
         page,
         KubernetesResources.Pods,
