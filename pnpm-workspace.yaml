@@ -5,7 +5,6 @@ packages:
   - 'storybook'
   - 'website'
   - 'website-argos'
-  - 'tools'
   - 'tests/*'
   - 'scripts'
 onlyBuiltDependencies:

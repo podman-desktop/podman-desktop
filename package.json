@@ -69,7 +69,6 @@
     "test:extensions:kubectl-cli": "vitest --run --project=kubectl-cli --passWithNoTests",
     "test:renderer": "pnpm run build:preload:types && pnpm run build:ui && vitest --run --project=renderer --passWithNoTests",
     "test:ui": "vitest --run --project=@podman-desktop/ui-svelte --passWithNoTests",
-    "test:tools": "vitest --run --project=release-notes-generator --passWithNoTests",
     "test:scripts:stylesheet": "vitest --run --project=scripts --passWithNoTests",
     "test:watch": "vitest watch",
     "test:website": "vitest --run --project=docs --passWithNoTests",

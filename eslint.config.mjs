@@ -51,7 +51,6 @@ const TYPESCRIPT_PROJECTS = [
   './extensions/*/tsconfig.json',
   './extensions/*/packages/*/tsconfig.json',
   './tests/playwright/tsconfig.json',
-  './tools/tsconfig.json',
   './storybook/tsconfig.json',
 ];
 
