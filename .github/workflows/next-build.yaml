@@ -27,6 +27,9 @@ env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   DEBUG: electron-builder
 
+permissions:
+  contents: read
+
 jobs:
 
   tag:
