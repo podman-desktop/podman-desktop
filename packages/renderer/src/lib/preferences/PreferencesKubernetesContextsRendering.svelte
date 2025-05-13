@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
@@ -110,6 +110,10 @@ async function handleDeleteContext(contextName: string): Promise<void> {
       $kubernetesContexts = setKubeUIContextError($kubernetesContexts, contextName, e);
     }
   }
+}
+
+async function handleDuplicateContext(contextName: string): Promise<void> {
+  await window.kubernetesDuplicateContext(contextName);
 }
 
 function isContextReachable(contextName: string, experimental: boolean): boolean {
@@ -255,6 +259,8 @@ async function connect(contextName: string): Promise<void> {
                 icon={faRightToBracket}
                 onClick={(): Promise<void> => handleSetContext(context.name)}></ListItemButtonIcon>
             {/if}
+            <ListItemButtonIcon title="Duplicate Context" icon={faCopy} onClick={(): Promise<void> => handleDuplicateContext(context.name)}
+            ></ListItemButtonIcon>
             <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
             ></ListItemButtonIcon>
           </div>

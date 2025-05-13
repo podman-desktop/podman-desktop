@@ -150,6 +150,36 @@ describe('context tests', () => {
     expect(client.getClusters().length).toBe(2);
   });
 
+  test('should duplicate context from config', async () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
+    }
+
+    await client.duplicateContext(originalContexts[0].name);
+    let contexts = client.getContexts();
+    expect(contexts.length).toBe(3);
+    expect(client.getContexts().length).toBe(3);
+
+    if (!contexts[2]?.name) {
+      throw new Error('contexts[2].name should be defined');
+    }
+
+    expect(contexts[2].name).toBe('ctx1-1');
+
+    await client.duplicateContext(originalContexts[0].name);
+    contexts = client.getContexts();
+    expect(contexts.length).toBe(4);
+    expect(client.getContexts().length).toBe(4);
+
+    if (!contexts[3]?.name) {
+      throw new Error('contexts[3].name should be defined');
+    }
+
+    expect(contexts[3].name).toBe('ctx1-2');
+  });
+
   test('should be a no-op if the context name is not found', async () => {
     client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
 
