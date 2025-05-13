@@ -2,16 +2,7 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
-import {
-  faCertificate,
-  faCloudArrowDown,
-  faCogs,
-  faDiagramProject,
-  faGaugeHigh,
-  faGears,
-  faRocket,
-  faRotateRight,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCertificate, faCloudArrowDown, faCogs, faRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
