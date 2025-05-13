@@ -59,6 +59,10 @@ export interface MessageBoxOptions {
    * The (optional) index of the button to be used to cancel the dialog.
    */
   cancelId?: number;
+  /**
+   * An additional (optional) markdown detailed message aligned to center
+   */
+  footerMarkdownDescription?: string;
 }
 
 export interface MessageBoxReturnValue {
@@ -92,6 +96,7 @@ export class MessageBox {
       type: options.type,
       defaultId: options.defaultId,
       cancelId: options.cancelId,
+      footerMarkdownDescription: options.footerMarkdownDescription,
     };
 
     // need to send the options to the frontend
