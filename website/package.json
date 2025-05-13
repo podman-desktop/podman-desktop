@@ -46,7 +46,7 @@
     "@docusaurus/types": "^3.7.0",
     "@tailwindcss/postcss": "^4.1.6",
     "markdownlint": "^0.38.0",
-    "markdownlint-cli2": "^0.17.2",
+    "markdownlint-cli2": "^0.18.0",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.6",
