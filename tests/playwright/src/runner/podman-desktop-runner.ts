@@ -199,7 +199,7 @@ export class Runner {
     }
   }
 
-  public async close(): Promise<void> {
+  public async close(timeout: number = 30_000): Promise<void> {
     // Stop playwright tracing
     await this.stopTracing();
 
@@ -209,7 +209,6 @@ export class Runner {
 
     if (this.getElectronApp()) {
       const pid = this.getElectronApp()?.process()?.pid;
-      const timeout = 30000;
       console.log(`Closing Podman Desktop with a timeout of ${timeout} ms`);
       try {
         await Promise.race([
