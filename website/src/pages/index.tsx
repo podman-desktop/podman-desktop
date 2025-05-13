@@ -411,7 +411,7 @@ function MainFeatures(): JSX.Element {
                 you're building, debugging, or deploying, Podman Desktop provides robust features and seamless controls,
                 empowering you to work smarter and faster with containers.
               </p>
-              <ReadTheDocsButton />
+              <ReadTheDocsButton to="/docs/containers" />
             </div>
             <ThemedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
