@@ -658,8 +658,8 @@ export default function Home(): JSX.Element {
       <Hero />
       <RunAnywhere />
       <MainFeatures />
-      <AdditionalFeatures />
       <Pods />
+      <AdditionalFeatures />
       <Configure />
       <Extensibility />
       <KeepUpToDate />
