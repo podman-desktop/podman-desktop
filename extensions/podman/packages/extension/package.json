@@ -151,7 +151,8 @@
           "type": "string",
           "format": "file",
           "scope": "ContainerProviderConnectionFactory",
-          "description": "Image Path (Optional)"
+          "description": "Image Path (Optional)",
+          "readonly": false
         },
         "podman.factory.machine.image-uri": {
           "type": "string",
