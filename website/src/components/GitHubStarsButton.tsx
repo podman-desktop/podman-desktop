@@ -43,11 +43,13 @@ export function GitHubStarsButton(): JSX.Element {
       href="https://github.com/podman-desktop/podman-desktop"
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg navbar__item navbar__link font-medium">
+      className="hidden lg:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg navbar__item navbar__link font-medium min-w-[9rem]">
       <FontAwesomeIcon icon={faGithub} />
       <span>Star</span>
       {stars && (
-        <span id="github-stars-badge" className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs">
+        <span
+          id="github-stars-badge"
+          className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs min-w-[2.5rem] text-center">
           {stars}
         </span>
       )}
