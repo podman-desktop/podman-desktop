@@ -646,8 +646,8 @@ importers:
         specifier: ^10.1.6
         version: 10.1.6
       humanize-duration:
-        specifier: ^3.32.1
-        version: 3.32.1
+        specifier: ^3.32.2
+        version: 3.32.2
       jsdom:
         specifier: ^27.0.0-beta.1
         version: 27.0.0-beta.1
@@ -715,8 +715,8 @@ importers:
         specifier: ^6.7.2
         version: 6.7.2
       humanize-duration:
-        specifier: ^3.32.1
-        version: 3.32.1
+        specifier: ^3.32.2
+        version: 3.32.2
       moment:
         specifier: ^2.30.1
         version: 2.30.1
@@ -7565,8 +7565,8 @@ packages:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
 
-  humanize-duration@3.32.1:
-    resolution: {integrity: sha512-inh5wue5XdfObhu/IGEMiA1nUXigSGcaKNemcbLRKa7jXYGDZXr3LoT9pTIzq2hPEbld7w/qv9h+ikWGz8fL1g==}
+  humanize-duration@3.32.2:
+    resolution: {integrity: sha512-jcTwWYeCJf4dN5GJnjBmHd42bNyK94lY49QTkrsAQrMTUoIYLevvDpmQtg5uv8ZrdIRIbzdasmSNZ278HHUPEg==}
 
   humanize-ms@1.2.1:
     resolution: {integrity: sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==}
@@ -20519,7 +20519,7 @@ snapshots:
 
   human-signals@2.1.0: {}
 
-  humanize-duration@3.32.1: {}
+  humanize-duration@3.32.2: {}
 
   humanize-ms@1.2.1:
     dependencies:
