@@ -193,21 +193,6 @@ test('when deleting the non current context, no popup should ask confirmation', 
   expect(showMessageBoxMock).not.toHaveBeenCalled();
 });
 
-test('when duplicating context, kubernetesDuplicateContext should be called', async () => {
-  vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
-  vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
-  render(PreferencesKubernetesContextsRendering, {});
-  // Get first context
-  const currentContext = screen.getAllByRole('row')[0];
-  expect(currentContext).toBeInTheDocument();
-
-  const duplicateBtn = within(currentContext).getByRole('button', { name: 'Duplicate Context' });
-  expect(duplicateBtn).toBeInTheDocument();
-  await fireEvent.click(duplicateBtn);
-
-  expect(kubernetesDuplicateContextMock).toHaveBeenCalledOnce();
-});
-
 test('when editing context a modal dialog should be oppened', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());

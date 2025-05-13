@@ -2599,12 +2599,7 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'kubernetes-client:updateContext',
-      async (
-        _listener,
-        contextName: string,
-        newContextName: string,
-        newContextNamespace: string,
-      ): Promise<void> => {
+      async (_listener, contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
         return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
       },
     );

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
@@ -117,10 +117,6 @@ let editContextModal: boolean = $state(false);
 let contextToEdit: KubeContext | undefined = $state();
 function closeModals(): void {
   editContextModal = false;
-}
-
-async function handleDuplicateContext(contextName: string): Promise<void> {
-  await window.kubernetesDuplicateContext(contextName);
 }
 
 async function handleEditContext(context: KubeContextWithStates): Promise<void> {
@@ -272,8 +268,6 @@ async function connect(contextName: string): Promise<void> {
                 onClick={(): Promise<void> => handleSetContext(context.name)}></ListItemButtonIcon>
             {/if}
             <ListItemButtonIcon title="Edit Context" icon={faPenToSquare} onClick={(): Promise<void> => handleEditContext(context)}
-              ></ListItemButtonIcon>
-            <ListItemButtonIcon title="Duplicate Context" icon={faCopy} onClick={(): Promise<void> => handleDuplicateContext(context.name)}
               ></ListItemButtonIcon>
             <ListItemButtonIcon title="Delete Context" icon={faTrash} onClick={(): Promise<void> => handleDeleteContext(context.name)}
             ></ListItemButtonIcon>
