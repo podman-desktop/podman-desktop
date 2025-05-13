@@ -533,7 +533,7 @@ function Pods(): JSX.Element {
                 configure, and orchestrate your pods, services, and deployments with ease, making Kubernetes management
                 both powerful and user-friendly.
               </p>
-              <ReadTheDocsButton />
+              <ReadTheDocsButton to="docs/kubernetes" />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 space-x-4 pt-16">
