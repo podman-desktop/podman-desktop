@@ -416,7 +416,7 @@ function MainFeatures(): JSX.Element {
           <div className="grid grid-cols-1 sm:grid-cols-2 space-x-10 xl:space-x-44 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/8"
+                className="py-4 h-[90px]"
                 alt="Intuitive Graphical Interface"
                 sources={{
                   light: useBaseUrl('img/graphical.svg'),
@@ -434,7 +434,7 @@ function MainFeatures(): JSX.Element {
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/8"
+                className="py-4 h-[90px]"
                 alt="Container with Security"
                 sources={{
                   light: useBaseUrl('img/secured_container.svg'),
@@ -453,7 +453,7 @@ function MainFeatures(): JSX.Element {
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/8"
+                className="py-4 h-[90px]"
                 alt="Cross-Platform Support"
                 sources={{
                   light: useBaseUrl('img/platforms.svg'),
@@ -471,7 +471,7 @@ function MainFeatures(): JSX.Element {
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/8 "
+                className="py-4 h-[90px]"
                 alt="Built with Container Standards"
                 sources={{
                   light: useBaseUrl('img/certified_container.svg'),
