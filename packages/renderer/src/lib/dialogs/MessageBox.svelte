@@ -5,7 +5,7 @@ import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
-import { type ButtonsType, type DropdownType } from '../../../../main/src/plugin/message-box';
+import { type ButtonsType, type DropdownType, type IconButtonType } from '../../../../main/src/plugin/message-box';
 import Markdown from '../markdown/Markdown.svelte';
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
@@ -101,7 +101,7 @@ async function clickButton(index?: number, dropdownIndex?: number): Promise<void
 
 async function onClose(): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined, undefined);
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
@@ -132,9 +132,7 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="content">
-      <div class="leading-5" aria-label="Dialog Message">
-        <Markdown markdown={message} />
-      </div>
+      <div class="leading-5 whitespace-pre-wrap" aria-label="Dialog Message">{message}</div>
 
       {#if footerMarkdownDescription}
         <div class="pt-4 flex justify-center" aria-label="Footer Description">
@@ -165,7 +163,8 @@ function getButtonType(b: boolean): ButtonType {
               }}
               options={dropdownButtons.buttons.map(button => ({label: button, value: button}))}/>
           {:else}
-            <Button type="primary" icon={buttons[i].icon} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i].label}</Button>
+            {@const button = buttons[i] as IconButtonType}
+            <Button type="primary" icon={button.icon} on:click={async (): Promise<void> => await clickButton(i)}>{button.label}</Button>
           {/if}
         {:else}
           <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttons[i]}</Button>
