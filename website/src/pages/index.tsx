@@ -264,10 +264,12 @@ function Configure(): JSX.Element {
 
 function Testimonials(): JSX.Element {
   return (
-    <section className="relative text-white body-font py-24 bg-fuschia-900">
-      <div className="absolute bg-black/70 top-0 bottom-0 right-0 left-0 z-0"></div>
+    <section className="relative text-gray-900 dark:text-white body-font py-24 dark:bg-fuschia-900 bg-purple-200">
+      <div className="absolute bg-white/50 dark:bg-black/70 top-0 bottom-0 right-0 left-0 z-0"></div>
       <div className="container mx-auto flex flex-col">
-        <h2 className="text-4xl/[1.5] font-bold mb-6 text-white pb-11 z-10">What People Are Saying ✨</h2>
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-gray-900 dark:text-white pb-11 z-10">
+          What People Are Saying ✨
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
           <TestimonialCard
             username="Ayush Pande"
