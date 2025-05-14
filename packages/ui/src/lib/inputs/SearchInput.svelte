@@ -5,7 +5,7 @@ import { Input } from '..';
 
 interface Props {
   title?: string;
-  searchTerm: string;
+  searchTerm?: string;
   oninput?: (event: Event) => void;
   class?: string;
 }

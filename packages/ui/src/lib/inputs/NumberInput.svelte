@@ -23,12 +23,12 @@ interface Props {
 
 let {
   name,
-  value,
+  value = $bindable(),
   required = false,
   disabled = false,
   minimum,
   maximum,
-  error,
+  error = $bindable(),
   showError = true,
   type,
   step,
