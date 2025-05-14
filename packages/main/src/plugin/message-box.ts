@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+
 import type { ApiSenderType } from './api.js';
 import { Deferred } from './util/deferred.js';
 
@@ -25,7 +27,12 @@ export interface DropdownType {
   buttons: string[];
 }
 
-export type ButtonsType = string | DropdownType;
+export interface IconButtonType {
+  label: string;
+  icon: IconDefinition;
+}
+
+export type ButtonsType = string | DropdownType | IconButtonType;
 
 /**
  * Options to configure the behavior of the message box UI.
