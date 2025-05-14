@@ -272,11 +272,13 @@ function Testimonials(): JSX.Element {
           <TestimonialCard
             username="Ayush Pande"
             source="XDA Developers"
+            userImage="https://static1.xdaimages.com/wordpress%2Fwp-content%2Fauthors%2F66963136cc077-ayush-pande.jpg?q=50&fit=crop&w=360&h=360&dpr=1.5"
             date="April 20 2025"
             text="Unlike its rival, Podman Desktop not only supports multiple container runtimes (including Docker Desktop), but also includes a ton of extensions to boost your workstation's capabilities."
           />
           <TestimonialCard
             username="DonSchenck"
+            userImage="https://pbs.twimg.com/profile_images/1774956557161115648/Y_GLSoGT_400x400.jpg"
             source="X"
             date="April 25 2025"
             text="Dude ... podman. And Podman Desktop. Seriously. Open Source and doesn't run as root."
@@ -289,6 +291,7 @@ function Testimonials(): JSX.Element {
           />
           <TestimonialCard
             username="José Bayoán Santiago Calderón"
+            userImage="https://media.licdn.com/dms/image/v2/D5635AQG6ohtsrwtWFA/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1737612334868?e=1747674000&v=beta&t=EruTwnMCgArUXZfCBwBZzWQJUbbQMaUB-whOPJag6QU"
             source="LinkedIn"
             text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
           />

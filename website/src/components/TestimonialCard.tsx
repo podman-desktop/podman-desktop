@@ -7,6 +7,7 @@ export type TestimonialCardProps = {
   text: string;
   source?: string;
   date?: string;
+  userImage?: string;
 };
 
 export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
@@ -14,17 +15,29 @@ export const TestimonialCard = (props: TestimonialCardProps): JSX.Element => {
   if (props.source && props.date) {
     separator = ', ';
   }
+
+  const [showIcon, setShowIcon] = React.useState(false);
+
   return (
     <div className="relative min-w-fit w-full h-full bg-gradient-to-br from-sky-500 to-fuschia-500 p-[2px] rounded-lg ">
       <img src="/img/quote.svg" alt="Quote symbol" className="absolute right-1/15 -top-6.5 rounded-full w-13 h-13 " />
       <div className="bg-fuschia-900 rounded-lg h-full">
         <div className="rounded-lg p-6 h-full bg-black/70">
           <div className="flex flex-row items-center">
-            <FontAwesomeIcon
-              size="3x"
-              icon={faCircleUser}
-              className="w-13 h-13 text-sky-800 bg-white border-2 border-white rounded-full"
-            />
+            {props.userImage && !showIcon ? (
+              <img
+                src={props.userImage}
+                onError={() => setShowIcon(true)}
+                alt="user profile image"
+                className="w-13 h-13 rounded-full"
+              />
+            ) : (
+              <FontAwesomeIcon
+                size="3x"
+                icon={faCircleUser}
+                className="w-13 h-13 text-sky-800 bg-white border-2 border-white rounded-full"
+              />
+            )}
             <div className="ml-6">
               <p className="font-semibold text-lg m-0 leading-1.6">@{props.username}</p>
               {(props?.source ?? props?.date) && (
