@@ -36,7 +36,7 @@ let {
 }: Props = $props();
 
 let opened: boolean = $state(false);
-let selectLabel: string = $state('');
+let selectLabel: string = $derived('');
 let highlightIndex: number = $state(-1);
 let comp: HTMLElement;
 

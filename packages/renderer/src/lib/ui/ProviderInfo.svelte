@@ -14,7 +14,7 @@ interface Props {
 let { provider = '', context = '' }: Props = $props();
 
 // providerName: name of the provider in lowercase (e.g. podman, docker, kubernetes)
-let providerName: ProviderNameType = $state(undefined);
+let providerName: ProviderNameType = $derived(undefined);
 
 function getProviderName(providerName: string): ProviderNameType {
   switch (providerName?.toLowerCase()) {
