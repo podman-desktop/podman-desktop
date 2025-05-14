@@ -162,22 +162,30 @@ describe('context tests', () => {
     expect(contexts.length).toBe(3);
     expect(client.getContexts().length).toBe(3);
 
-    if (!contexts[2]?.name) {
-      throw new Error('contexts[2].name should be defined');
-    }
-
-    expect(contexts[2].name).toBe('ctx1-1');
-
     await client.duplicateContext(originalContexts[0].name);
     contexts = client.getContexts();
     expect(contexts.length).toBe(4);
     expect(client.getContexts().length).toBe(4);
+  });
 
-    if (!contexts[3]?.name) {
-      throw new Error('contexts[3].name should be defined');
+  test('should create unique context name', () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
     }
 
-    expect(contexts[3].name).toBe('ctx1-2');
+    let newContextName = client.findNewContextName(originalContexts[0].name);
+    expect(newContextName).toBe('ctx1-1');
+
+    const newContext1 = { name: 'ctx1-1', user: 'user1', cluster: 'cluster1', currentContext: true };
+    const newContext2 = { name: 'ctx1-2', user: 'user1', cluster: 'cluster1', currentContext: true };
+    client.setContexts([newContext1, newContext2]);
+    newContextName = client.findNewContextName(newContext2.name);
+    expect(newContextName).toBe('ctx1-2-1');
+
+    newContextName = client.findNewContextName(newContextName);
+    expect(newContextName).toBe('ctx1-2-1-1');
   });
 
   test('should be a no-op if the context name is not found', async () => {
