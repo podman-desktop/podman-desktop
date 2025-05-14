@@ -180,7 +180,13 @@ describe('context tests', () => {
 
     const newContext1 = { name: 'ctx1-1', user: 'user1', cluster: 'cluster1', currentContext: true };
     const newContext2 = { name: 'ctx1-2', user: 'user1', cluster: 'cluster1', currentContext: true };
-    client.setContexts([newContext1, newContext2]);
+    client.setContexts([newContext1]);
+
+    newContextName = client.findNewContextName(originalContexts[0].name);
+    expect(newContextName).toBe('ctx1-2');
+
+    client.setContexts([newContext2]);
+
     newContextName = client.findNewContextName(newContext2.name);
     expect(newContextName).toBe('ctx1-2-1');
 
