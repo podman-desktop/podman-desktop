@@ -7,8 +7,8 @@ import React from 'react';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
-import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import { ExpandableFAQ } from '../components/ExpandableFAQ';
+import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
 
@@ -102,7 +102,7 @@ function Testimonials(): JSX.Element {
 
 function FAQ(): JSX.Element {
   return (
-    <section className="text-white py-24 font-body text-4xl font-bold leading-[1.2] bg-black bg-gradient-to-br from-fuschia-500/40 via-red-900/40 to-purple-700/40">
+    <section className="dark:text-white text-gray-900 py-24 font-body text-4xl font-bold leading-[1.2] bg-white dark:bg-black bg-gradient-to-br from-purple-400/70 via-purple-300/50 dark:via-purple-700/40 to-transparent">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
         <div className="p-8">
