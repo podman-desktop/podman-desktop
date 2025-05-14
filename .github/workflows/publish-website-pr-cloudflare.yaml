@@ -46,6 +46,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: podman-desktop-website-pr
-          deploymentName: Preview
+          deploymentName: Website Preview
           comment: false
           directory: content/website/build
