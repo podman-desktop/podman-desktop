@@ -12,7 +12,7 @@ Developers working locally often seek a fast inner loop for coding, building, an
 
 For instance, when testing a new image in a Kubernetes pod, the image must be accessible either by pushing it to a private or public registry or by ensuring it's available on the Kubernetes cluster nodes. This often requires additional commands such as `kind load docker-image`, `minikube cache add <image>`, or publishing the image to a third-party registry.
 
-In this blog post, we’ll introduce a new extension called `MINC`, which provides a MicroShift cluster running within an existing Podman Machine environment.
+In this blog post, we’ll introduce a new extension called `MINC (MicroShift IN Container)`, which provides a [MicroShift](https://github.com/openshift/microshift) cluster running within an existing Podman Machine environment.
 
 ![hero](/img/blog/iterate-quickly-inner-loop-with-a-kubernetes-cluster/iterate-quickly-inner-loop-with-a-kubernetes-cluster.png)
 
@@ -36,6 +36,7 @@ A key benefit is that the MINC container shares Podman’s image storage. When y
 
 :::note[MINC requires a rootful Podman machine]
 Make sure the machine is running in rootful mode, or create a new one using the `--rootful` option.
+:::
 
 ## Creating a Local Kubernetes/MicroShift Cluster
 
@@ -43,7 +44,9 @@ Make sure the machine is running in rootful mode, or create a new one using the 
 
 In the Resources view, click the MINC card and select "Create new…". For now, no customization is needed—just click "Next". The cluster will start automatically.
 
-1. Verify `kubectl` setup
+1. Verify that now you see in bottom left in the status bar `microshift` as the default Kubernetes context and if you go in the left navbar in the Kubernetes section you can see in the Nodes entry the MicroShift node.
+
+1. Verify `kubectl` setup using a CLI
 
 MINC updates your `$HOME/.kube/config` file with a new `microshift` entry. Check in the bottom left of the status bar, you should see a `microshift` entry as the default Kubernetes context.
 
@@ -103,7 +106,11 @@ docker.io/minc/nginx                                                            
 
 The image is now available in the MicroShift cluster.
 
-#### Deploy a pod from this image
+#### Create a Pod from the UI
+
+Click on the play button from the image to start a new container. Then select the container and click on "Create Pod".
+
+#### Deploy a pod from this image using the CLI
 
 Use `kubectl` to deploy a pod from the image:
 
@@ -125,7 +132,14 @@ NAME              READY   STATUS    RESTARTS   AGE
 hello-world-pod   1/1     Running   0          6s
 ```
 
-#### Create a Service for the Pod
+# Deploy this podman Pod to Kubernetes/MINC
+
+Select the pod and click on `Deploy to Kubernetes...` in the Kebab menu.
+Your Pod is now deployed to the MINC cluster.
+
+If you want to use the CLI/manual steps :
+
+**Create a Service for the Pod using the CLI**
 
 Expose the pod with a service:
 
@@ -133,7 +147,7 @@ Expose the pod with a service:
 kubectl expose pod hello-world-pod --port=80 --target-port=80 --name=hello-world-service
 ```
 
-#### Create a Route (Requires oc CLI)
+**Create a Route (Requires oc CLI)**
 
 Assuming the `oc` CLI (OpenShift client) is available in your `PATH`, create a route:
 
@@ -148,6 +162,10 @@ oc get routes
 ```
 
 #### Access the Nginx Container
+
+Clicking on the route in the UI will redirect you to the page.
+
+Without the UI it's also possible to get that information.
 
 Check that the nginx container is reachable using the route. Use the `-k` flag with curl to ignore the self-signed certificate warning:
 
@@ -165,8 +183,20 @@ You should see the message: "Hello from MINC" 🎉
 
 This confirms that your inner development loop is working. Once the image is built, it’s instantly available in the cluster.
 
+### Video walkthrough
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/BsPvfnYdRjA"
+  title="MINC extension"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
 ### Conclusion
 
 Using MINC and the MINC extension significantly reduces the turnaround time between building and testing container images.
 
-Have feedback? Share it on the [Podman Desktop issue tracker](https://github.com/podman-desktop/podman-desktop/issues)
+Have feedback? Share it on the [MINC extension issue tracker](https://github.com/minc-org/minc-extension/issues)
