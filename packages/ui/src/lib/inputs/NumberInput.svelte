@@ -1,28 +1,56 @@
 <script lang="ts">
+import type { Booleanish, FormEventHandler } from 'svelte/elements';
+
 import Input from './Input.svelte';
 
-export let name: string | undefined = undefined;
-export let value: number;
-export let required: boolean = false;
-export let disabled: boolean = false;
-export let minimum: number | undefined = undefined;
-export let maximum: number | undefined = undefined;
-export let error: string | undefined = undefined;
-export let showError: boolean = true;
-export let type: 'number' | 'integer';
-export let step: number | undefined = undefined;
+interface Props {
+  name?: string;
+  value: number;
+  required?: boolean;
+  disabled?: boolean;
+  minimum?: number;
+  maximum?: number;
+  error?: string;
+  showError?: boolean;
+  type: 'number' | 'integer';
+  step?: number;
+  oninput?: FormEventHandler<HTMLInputElement>;
+  onValidation?: (value: number, error?: string) => void;
+  class?: string;
+  'aria-label'?: string;
+  'aria-invalid'?: Booleanish | 'grammar' | 'spelling' | null;
+}
+
+let {
+  name,
+  value,
+  required = false,
+  disabled = false,
+  minimum,
+  maximum,
+  error,
+  showError = true,
+  type,
+  step,
+  oninput,
+  onValidation = (_value: number, _error?: string): void => {},
+  class: className = '',
+  'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+}: Props = $props();
 
 // callback after validation occurs
-export let onValidation = (_value: number, _error?: string): void => {};
+// export let onValidation = (_value: number, _error?: string): void => {};
 
-let minimumEnabled: boolean;
-let maximumEnabled: boolean;
-let valueAsString: string | undefined = undefined;
-$: valueAsString = value !== undefined ? String(value) : undefined;
+let minimumEnabled: boolean | undefined = $state();
+let maximumEnabled: boolean | undefined = $state();
+let valueAsString = $derived(value !== undefined ? String(value) : undefined);
 
-$: if (valueAsString !== undefined || disabled) {
-  validateNumber();
-}
+$effect(() => {
+  if (valueAsString !== undefined || disabled) {
+    validateNumber();
+  }
+});
 
 function validateNumber(): void {
   const numberToValidate = Number(valueAsString);
@@ -91,36 +119,36 @@ function onIncrement(e: MouseEvent): void {
 </script>
 
 <Input
-  class={$$props.class ?? ''}
+  class={className}
   inputClass="text-center"
   name={name}
   bind:value={valueAsString}
-  on:keypress={onKeyPress}
-  on:input
+  onkeypress={onKeyPress}
+  oninput={oninput}
   showError={showError}
   error={error}
   disabled={disabled}
   required={required}
-  aria-label={$$props['aria-label']}
-  aria-invalid={$$props['aria-invalid']}>
-  <button
-    class="pr-0.5"
-    class:text-[var(--pd-input-field-stroke)]={minimumEnabled}
-    class:text-[var(--pd-input-field-disabled-text)]={!minimumEnabled}
-    class:group-hover:text-[var(--pd-input-field-hover-stroke)]={minimumEnabled}
-    data-action="decrement"
-    aria-label="decrement"
-    on:click={onDecrement}
-    disabled={!minimumEnabled}
-    slot="left">-</button>
-  <button
-    class="pl-0.5"
-    class:text-[var(--pd-input-field-stroke)]={maximumEnabled}
-    class:text-[var(--pd-input-field-disabled-text)]={!maximumEnabled}
-    class:group-hover:text-[var(--pd-input-field-hover-stroke)]={maximumEnabled}
-    data-action="increment"
-    aria-label="increment"
-    on:click={onIncrement}
-    disabled={!maximumEnabled}
-    slot="right">+</button>
+  aria-label={ariaLabel}
+  aria-invalid={ariaInvalid}>
+  {#snippet left()}
+    <button
+      class="pr-0.5"
+      class:text-[var(--pd-input-field-stroke)]={minimumEnabled}
+      class:text-[var(--pd-input-field-disabled-text)]={!minimumEnabled}
+      class:group-hover:text-[var(--pd-input-field-hover-stroke)]={minimumEnabled}
+      data-action="decrement"
+      aria-label="decrement"
+      onclick={onDecrement}
+      disabled={!minimumEnabled}>-</button>
+    <button
+      class="pl-0.5"
+      class:text-[var(--pd-input-field-stroke)]={maximumEnabled}
+      class:text-[var(--pd-input-field-disabled-text)]={!maximumEnabled}
+      class:group-hover:text-[var(--pd-input-field-hover-stroke)]={maximumEnabled}
+      data-action="increment"
+      aria-label="increment"
+      onclick={onIncrement}
+      disabled={!maximumEnabled}>+</button>
+  {/snippet}
 </Input>

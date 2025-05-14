@@ -25,8 +25,8 @@ import { expect, test } from 'vitest';
 
 import SearchInput from './SearchInput.svelte';
 
-function renderInput(title: string, value: string, searchTerm?: string): void {
-  render(SearchInput, { title: title, value: value, searchTerm: searchTerm });
+function renderInput(title: string, searchTerm: string): void {
+  render(SearchInput, { title: title, searchTerm: searchTerm });
 }
 
 test('Expect basic styling', async () => {
@@ -38,14 +38,14 @@ test('Expect basic styling', async () => {
 });
 
 test('Expect placeholder', async () => {
-  renderInput('a-title', 'a value');
+  renderInput('a-title', 'a search term');
 
   const element = screen.getByRole('textbox');
   expect(element).toHaveProperty('placeholder', 'Search a-title...');
 });
 
 test('Expect id and name', async () => {
-  renderInput('a-title', 'a value');
+  renderInput('a-title', 'a search term');
 
   const element = screen.getByRole('textbox');
   expect(element).toHaveProperty('id', 'search-a-title');
@@ -53,13 +53,13 @@ test('Expect id and name', async () => {
 });
 
 test('Expect aria-label', async () => {
-  renderInput('a-title', 'a value');
+  renderInput('a-title', 'a search term');
 
   screen.getByLabelText('search a-title');
 });
 
 test('Expect value', async () => {
-  renderInput('a-title', 'a value', 'a search term');
+  renderInput('a-title', 'a search term');
 
   const element = screen.getByRole('textbox');
   expect(element).toHaveValue('a search term');

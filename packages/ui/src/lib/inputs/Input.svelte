@@ -1,33 +1,67 @@
 <script lang="ts">
 import { faCircleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher, type Snippet } from 'svelte';
+import type { Booleanish, FormEventHandler, KeyboardEventHandler } from 'svelte/elements';
+import { createBubbler } from 'svelte/legacy';
 import Fa from 'svelte-fa';
 
-export let placeholder: string | undefined = undefined;
-export let id: string | undefined = undefined;
-export let name: string | undefined = undefined;
-export let value: string | undefined = undefined;
-export let readonly: boolean = false;
-export let required: boolean = false;
-export let clearable: boolean = false;
-export let disabled: boolean = false;
-export let error: string | undefined = undefined;
-export let inputClass: string | undefined = undefined;
-export let showError: boolean = true;
-
-export let element: HTMLInputElement | undefined = undefined;
-
-let enabled: boolean = true;
-$: enabled = !readonly && !disabled;
-
 const dispatch = createEventDispatcher();
+const bubble = createBubbler();
+
+interface Props {
+  placeholder?: string;
+  id?: string;
+  name?: string;
+  value?: string;
+  readonly?: boolean;
+  required?: boolean;
+  clearable?: boolean;
+  disabled?: boolean;
+  error?: string;
+  class?: string;
+  inputClass?: string;
+  showError?: boolean;
+  element?: HTMLInputElement;
+  'aria-label'?: string;
+  'aria-invalid'?: Booleanish | 'grammar' | 'spelling' | null;
+  left?: Snippet;
+  right?: Snippet;
+  oninput?: FormEventHandler<HTMLInputElement>;
+  onkeypress?: KeyboardEventHandler<HTMLInputElement>;
+  title?: string;
+}
+
+let {
+  left,
+  right,
+  placeholder,
+  id,
+  name,
+  value = $bindable(),
+  readonly = $bindable(false),
+  required = false,
+  clearable = false,
+  disabled = false,
+  error,
+  inputClass = '',
+  class: propsClass = '',
+  showError = true,
+  element = $bindable(),
+  'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+  oninput = bubble('input'),
+  onkeypress = bubble('keypress'),
+  title = '',
+}: Props = $props();
+
+let enabled = $derived(!readonly && !disabled);
 
 // clear the value if the parent doesn't override
 async function onClear(): Promise<void> {
   if (dispatch('action', { cancelable: true })) {
     value = '';
     if (element) {
-      // need to trigger normal input event for on:input listeners
+      // need to trigger normal input event for oninput listeners
       element.value = value;
       element.dispatchEvent(new InputEvent('input'));
     }
@@ -37,8 +71,7 @@ async function onClear(): Promise<void> {
 
 <div class="flex flex-col grow">
   <div
-    class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {$$props.class ??
-      ''}"
+    class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent {propsClass}"
     class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={enabled}
     class:focus-within:bg-[var(--pd-input-field-focused-bg)]={enabled}
     class:focus-within:rounded-md={enabled}
@@ -49,28 +82,28 @@ async function onClear(): Promise<void> {
     class:focus-within:border-[var(--pd-input-field-hover-stroke)]={enabled && !error}
     class:focus-within:border-[var(--pd-input-field-stroke-error)]={enabled && error}
     class:border-b-[var(--pd-input-field-stroke-readonly)]={readonly || disabled}>
-    <slot name="left" />
+    {@render left?.()}
     <input
       bind:this={element}
-      on:input
-      on:keypress
-      class="w-full px-0.5 outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] overflow-hidden {inputClass ??
-        ''}"
+      oninput={oninput}
+      onkeypress={onkeypress}
+      class="w-full px-0.5 outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] overflow-hidden {inputClass}"
       class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
       class:text-[color:var(--pd-input-field-disabled-text)]={disabled}
       class:group-hover:bg-[var(--pd-input-field-hover-bg)]={enabled}
       class:group-focus-within:bg-[var(--pd-input-field-hover-bg)]={enabled}
       class:group-hover-placeholder:text-[color:var(--pd-input-field-placeholder-text)]={enabled}
-      name={name}
+      {name}
       type="text"
-      disabled={disabled}
-      readonly={readonly}
-      required={required}
-      placeholder={placeholder}
-      id={id}
-      aria-label={$$props['aria-label']}
-      aria-invalid={$$props['aria-invalid']}
-      bind:value={value} />
+      {disabled}
+      {readonly}
+      {required}
+      {placeholder}
+      {id}
+      {title}
+      aria-label={ariaLabel}
+      aria-invalid={ariaInvalid}
+      bind:value />
     {#if error && showError}
       <span class="px-0.5 text-[color:var(--pd-input-field-error-text)]" aria-label="error">
         <Fa icon={faCircleExclamation} />
@@ -81,11 +114,11 @@ async function onClear(): Promise<void> {
         class="px-0.5 cursor-pointer text-[color:var(--pd-input-field-icon)] group-hover:text-[color:var(--pd-input-field-hover-icon)] group-focus-within:text-[color:var(--pd-input-field-focused-icon)]"
         class:hidden={!value || readonly || disabled}
         aria-label="clear"
-        on:click={onClear}>
+        onclick={onClear}>
         <Fa icon={faXmark} />
       </button>
     {/if}
-    <slot name="right" />
+    {@render right?.()}
   </div>
   {#if error && error.length > 0 && showError}
     <span class="text-sm text-[color:var(--pd-input-field-error-text)]">{error}</span>

@@ -28,11 +28,10 @@ import Input from './Input.svelte';
 function renderInput(
   value: string,
   placeholder?: string,
-  readonly?: boolean,
+  readonly: boolean = false,
   disabled?: boolean,
   clearable?: boolean,
   error?: string,
-  onClick?: any,
   inputClass?: string,
 ): void {
   render(Input, {
@@ -42,7 +41,6 @@ function renderInput(
     readonly: readonly,
     clearable: clearable,
     error: error,
-    onClick: onClick,
     inputClass: inputClass,
   });
 }
@@ -157,7 +155,7 @@ test('Expect basic error styling', async () => {
 test('Expect inputClass styling', async () => {
   const value = 'test';
   const thisClass = 'this-class';
-  renderInput(value, value, false, false, true, undefined, undefined, thisClass);
+  renderInput(value, value, false, false, true, undefined, thisClass);
 
   const element = screen.getByRole('textbox');
   expect(element).toBeInTheDocument();
