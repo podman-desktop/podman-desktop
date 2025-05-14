@@ -102,7 +102,7 @@ async function clickButton(index?: number, dropdownIndex?: number): Promise<void
 
 async function onClose(): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined, undefined);
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
@@ -133,9 +133,7 @@ function getButtonType(b: boolean): ButtonType {
     </svelte:fragment>
 
     <svelte:fragment slot="content">
-      <div class="leading-5" aria-label="Dialog Message">
-        <Markdown markdown={message} />
-      </div>
+      <div class="leading-5 whitespace-pre-wrap" aria-label="Dialog Message">{message}</div>
 
       {#if footerMarkdownDescription}
         <div class="pt-4 flex justify-center" aria-label="Footer Description">
