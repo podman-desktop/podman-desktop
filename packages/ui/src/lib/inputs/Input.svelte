@@ -112,9 +112,10 @@ async function onClear(): Promise<void> {
     {#if clearable}
       <button
         class="px-0.5 cursor-pointer text-[color:var(--pd-input-field-icon)] group-hover:text-[color:var(--pd-input-field-hover-icon)] group-focus-within:text-[color:var(--pd-input-field-focused-icon)]"
-        class:hidden={!value || readonly || disabled}
+        class:hidden={!value || disabled}
         aria-label="clear"
-        onclick={onClear}>
+        onclick={onClear}
+        type="button">
         <Fa icon={faXmark} />
       </button>
     {/if}

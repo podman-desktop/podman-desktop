@@ -29,6 +29,7 @@ function onChangeFileInput(value: string): void {
     bind:value={value}
     onChange={onChangeFileInput}
     readonly={record.readonly ?? true}
+    clearable={true}
     placeholder={record.placeholder}
     options={dialogOptions}
     aria-invalid={invalidEntry}

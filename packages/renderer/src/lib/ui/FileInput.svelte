@@ -10,6 +10,7 @@ export let value: string | undefined = undefined;
 export let options: OpenDialogOptions;
 export let readonly: boolean = false;
 export let required: boolean = false;
+export let clearable: boolean = false;
 export let onChange: (value: string) => void = () => {};
 
 async function openDialog(): Promise<void> {
@@ -37,6 +38,7 @@ function onInput(event: Event): void {
     placeholder={placeholder}
     readonly={readonly}
     required={required}
+    clearable={clearable}
     aria-label={$$props['aria-label']}
     aria-invalid={$$props['aria-invalid']}>
   </Input>
