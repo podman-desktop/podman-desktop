@@ -55,11 +55,19 @@ function setupFeedback(): void {
       experimentalProperty => experimentalProperty.experimental?.githubDiscussionLink,
     );
 
+    const propertyEnabled = new Map();
+
+    experimentalProperties.forEach(async (property) => {
+      const propertyID = property.id;
+      if (!propertyID) return;
+      propertyEnabled.set(propertyID, (await window.getConfigurationValue<boolean>(propertyID)) ?? false);
+    });
+
     feedbackFormNotifications.update(store => {
-      experimentalProperties.forEach(async (property): Promise<void> => {
+      experimentalProperties.forEach(async (property) => {
         const propertyID = property.id;
         if (!propertyID) return;
-        const enabled = (await window.getConfigurationValue<boolean>(propertyID)) ?? false;
+        const enabled = propertyEnabled.get(propertyID)
 
         // Get record from store
         const record = store.get(propertyID);
@@ -179,5 +187,8 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
     remindLater(featureID, 'Don\'t show again');
   }
   // Option from Dropdown was selected
-  else if (response.response === 0 && response.option) remindLater(featureID, buttonOptions[response.option]);
+  else if (response.response === 0 && response.dropdownIndex) {
+    const remindOption: RemindOption = buttonOptions[response.dropdownIndex] as RemindOption;
+    remindLater(featureID, remindOption);
+  }
 }

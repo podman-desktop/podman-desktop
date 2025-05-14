@@ -102,7 +102,7 @@ async function clickButton(index?: number, dropdownIndex?: number): Promise<void
 
 async function onClose(): Promise<void> {
   cleanup();
-  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined, undefined);
+  await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
 }
 
 function getButtonType(b: boolean): ButtonType {
