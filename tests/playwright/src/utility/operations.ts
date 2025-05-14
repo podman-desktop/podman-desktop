@@ -320,9 +320,12 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
   return test.step('Create Podman machine from CLI', async () => {
     if (isLinux) return;
 
+    const podmanMachineMode = process.env.PODMAN_ROOTFUL === '0' ? '' : '--rootful';
+    const userModeNetworking = process.env.PODMAN_NETWORKING === '1' ? '--user-networking' : '';
+
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      execSync('podman machine init --rootful');
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
+      execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM already exists')) {
         console.log(`Podman machine already exists, skipping creation.`);
