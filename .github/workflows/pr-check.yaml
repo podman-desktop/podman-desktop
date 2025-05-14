@@ -194,7 +194,7 @@ jobs:
       - name: Run website
         run: pnpm website:build
 
-      - name: Store pull request details for publish-netlify
+      - name: Store pull request details for publish-cloudflare
         run: |
           echo "${{ github.event.number }}" > PR_NUMBER
           echo "${{ github.event.pull_request.head.sha }}" > PR_SHA
