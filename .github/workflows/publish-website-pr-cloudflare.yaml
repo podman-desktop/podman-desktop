@@ -40,7 +40,7 @@ jobs:
           allow_forks: true
 
       - name: Deploy to Cloudflare Pages
-        uses: AdrianGonz97/refined-cf-pages-action@6f7dc14a750d860b899996c827c94925b798cb38 # v1.2.6
+        uses: AdrianGonz97/refined-cf-pages-action@45ea15c1c69a7bce8ffbb79ba114daa2b52f0cff # v1.3.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_AUTH_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
