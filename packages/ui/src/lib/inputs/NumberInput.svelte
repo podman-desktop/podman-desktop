@@ -39,9 +39,13 @@ let {
   'aria-invalid': ariaInvalid,
 }: Props = $props();
 
-let minimumEnabled: boolean | undefined = $state();
-let maximumEnabled: boolean | undefined = $state();
 let valueAsString = $derived(value !== undefined ? String(value) : undefined);
+let minimumEnabled: boolean | undefined = $derived(
+  !disabled && (minimum === undefined || minimum < Number(valueAsString)),
+);
+let maximumEnabled: boolean | undefined = $derived(
+  !disabled && (maximum === undefined || maximum > Number(valueAsString)),
+);
 
 $effect(() => {
   if (valueAsString !== undefined || disabled) {
@@ -58,8 +62,6 @@ function validateNumber(): void {
   } else {
     error = undefined;
   }
-  minimumEnabled = !disabled && (minimum === undefined || minimum < numberToValidate);
-  maximumEnabled = !disabled && (maximum === undefined || maximum > numberToValidate);
 
   // update converted value
   value = numberToValidate;
