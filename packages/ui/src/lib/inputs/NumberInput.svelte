@@ -33,14 +33,11 @@ let {
   type,
   step,
   oninput,
-  onValidation = (_value: number, _error?: string): void => {},
+  onValidation = (_value: number, _error?: string): void => {}, // callback after validation occurs
   class: className = '',
   'aria-label': ariaLabel,
   'aria-invalid': ariaInvalid,
 }: Props = $props();
-
-// callback after validation occurs
-// export let onValidation = (_value: number, _error?: string): void => {};
 
 let minimumEnabled: boolean | undefined = $state();
 let maximumEnabled: boolean | undefined = $state();
