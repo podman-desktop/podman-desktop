@@ -47,4 +47,5 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: podman-desktop-website-pr
           deploymentName: Preview
+          comment: false
           directory: content/website/build
