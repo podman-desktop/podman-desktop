@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="63.185001"
+   height="63.185001"
+   id="screenshot-9c482190-dd43-806e-8006-140bd67de800"
+   viewBox="0 0 63.185 63.185"
+   fill="none"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs3">
+    <defs
+       id="defs2">
+      <linearGradient
+         id="fill-color-gradient-render-2-0"
+         x1="0.84529525"
+         y1="0.92796642"
+         x2="0.061524786"
+         y2="0.13331117">
+        <stop
+           offset="0"
+           stop-color="#2f88c8"
+           stop-opacity="1"
+           id="stop1" />
+        <stop
+           offset="1"
+           stop-color="#d721ff"
+           stop-opacity="1"
+           id="stop2" />
+      </linearGradient>
+      <pattern
+         patternUnits="userSpaceOnUse"
+         x="5.5922786881837965"
+         y="5.592278688183569"
+         width="52"
+         height="52"
+         id="fill-0-render-2">
+        <g
+           id="g2">
+          <rect
+             width="52"
+             height="52"
+             style="fill: url(&quot;#fill-color-gradient-render-2-0&quot;);"
+             id="rect2" />
+        </g>
+      </pattern>
+    </defs>
+  </defs>
+  <g
+     id="g6">
+    <g
+       id="g5">
+      <g
+         class="fills"
+         id="fills-9c482190-dd43-806e-8006-140bbe47d4f3">
+        <circle
+           cx="31.592279"
+           cy="31.592279"
+           transform="rotate(-165.77349,31.592276,31.592273)"
+           fill="url(#fill-0-render-2)"
+           id="ellipse2"
+           r="26" />
+      </g>
+    </g>
+  </g>
+  <g
+     id="shape-9c482190-dd43-806e-8006-140bbe47d4fb"
+     style="display:none;fill:#000000">
+    <g
+       class="fills"
+       id="fills-9c482190-dd43-806e-8006-140bbe47d4fb">
+      <rect
+         width="58"
+         height="58"
+         x="3"
+         style="fill:none"
+         ry="0"
+         fill="none"
+         rx="0"
+         y="3"
+         id="rect3" />
+    </g>
+  </g>
+  <g
+     id="shape-9c482190-dd43-806e-8006-140bbe47d4fc"
+     style="fill:#000000">
+    <g
+       class="fills"
+       id="fills-9c482190-dd43-806e-8006-140bbe47d4fc">
+      <g
+         id="g4">
+        <path
+           d="m 18.285,43.6 4.471,-7.794 c -1.893,0 -3.564,-0.751 -5.014,-2.254 -1.45,-1.502 -2.175,-3.309 -2.175,-5.419 0,-2.175 0.745,-4.007 2.235,-5.498 1.49,-1.49 3.323,-2.235 5.498,-2.235 2.175,0 4.008,0.745 5.498,2.235 1.49,1.491 2.235,3.323 2.235,5.498 0,0.604 -0.09,1.219 -0.272,1.843 -0.181,0.624 -0.453,1.279 -0.815,1.964 L 23.3,43.6 Z m 17.4,0 4.471,-7.794 c -1.893,0 -3.564,-0.751 -5.014,-2.254 -1.45,-1.502 -2.175,-3.309 -2.175,-5.419 0,-2.175 0.745,-4.007 2.235,-5.498 1.49,-1.49 3.323,-2.235 5.498,-2.235 2.175,0 4.008,0.745 5.498,2.235 1.49,1.491 2.235,3.323 2.235,5.498 0,0.685 -0.09,1.35 -0.272,1.994 -0.181,0.645 -0.433,1.249 -0.755,1.813 L 40.7,43.6 Z"
+           style="fill:#ffffff;fill-opacity:1"
+           id="path3" />
+      </g>
+    </g>
+  </g>
+</svg>
