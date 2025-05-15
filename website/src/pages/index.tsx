@@ -1,9 +1,5 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { faApple, faLinux, faWindows } from '@fortawesome/free-brands-svg-icons';
-import { faCertificate, faCloudArrowDown, faCogs, faRotateRight } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
@@ -52,16 +48,6 @@ function Hero(): JSX.Element {
   );
 }
 
-function SectionTitle(props: Readonly<{ name: string }>): JSX.Element {
-  return (
-    <div>
-      <p className="inline-block px-3 py-px mb-4 text-xs font-semibold tracking-wider text-purple-800 uppercase rounded-full dark:bg-purple-400 bg-purple-400">
-        {props.name}
-      </p>
-    </div>
-  );
-}
-
 function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
   return (
     <div className="text-right p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
@@ -69,196 +55,6 @@ function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
         {props.name}
       </p>
     </div>
-  );
-}
-
-function KeepUpToDate(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font">
-      <div className="container px-5 py-24 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="update" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Install and keep up to date <span className="font-bold">Podman</span>
-          </h2>
-        </div>
-
-        <div className="flex flex-col w-full text-center">
-          <div className="mx-10">
-            <FontAwesomeIcon size="3x" icon={faRotateRight} className="ml-2 mb-4 text-gray-900 dark:text-gray-300" />
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="leading-relaxed text-base">
-              Install Podman and other dependencies directly from Podman Desktop if not yet installed.
-            </p>
-            <p className="leading-relaxed text-base">Check for updates and get notified about new changes.</p>
-            <p className="leading-relaxed text-base">
-              Available on{' '}
-              <a href="/downloads/windows" className="text-purple-600 dark:text-purple-400" target="_blank">
-                Windows
-              </a>{' '}
-              and{' '}
-              <a href="/downloads/macos" className="text-purple-600 dark:text-purple-400" target="_blank">
-                macOS
-              </a>
-              !
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Extensibility(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font">
-      <div className="container px-5 py-24 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="extensibility" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-light leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Bring new features to Podman Desktop with extensions
-          </h2>
-        </div>
-
-        <div className="flex flex-col w-full text-center">
-          <div className="flex flex-col items-center">
-            <p className="text-base lg:w-2/3 text-center mx-auto">
-              Podman Desktop is built around extension points. You can easily create a new extension using our pre-made
-              templates, easy-to-use API and UI components. Integrate your own tools into Podman Desktop with ease to
-              enrich with your own developer tools and experiences.
-            </p>
-            <ul className="list-disc list-inside text-center">
-              <li>
-                Explore our{' '}
-                <Link title="catalog of extensions" to="/extensions">
-                  catalog of extensions
-                </Link>
-                .
-              </li>
-              <li>
-                Learn to{' '}
-                <Link title="develop your own extensions" to="/docs/extensions/developing">
-                  develop your own extensions
-                </Link>
-                .
-              </li>
-              <li>
-                Want to use a Docker Desktop extension? Extensions such as{' '}
-                <Link title="trivy" to="https://github.com/aquasecurity/trivy-docker-extension">
-                  Trivy
-                </Link>{' '}
-                work out of the box with Podman Desktop.
-              </li>
-            </ul>
-          </div>
-
-          <ThemedImage
-            className="sm:w-full md:w-full lg:w-10/12 sm:pl-8 md:pl-12 lg:pl-24 text-center"
-            alt="Reuse Docker Desktop extensions"
-            sources={{
-              light: useBaseUrl('img/ddextensions/dd-support.png'),
-              dark: useBaseUrl('img/ddextensions/dd-support.png'),
-            }}
-          />
-
-          <div className="flex flex-col items-center">
-            <Link
-              title="Extend Podman Desktop"
-              className="no-underline hover:no-underline text-gray-900 dark:text-white dark:hover:text-violet-600 "
-              to="/extend">
-              <div className="mt-3 text-purple-800 dark:text-purple-400 inline-flex items-center">
-                Learn More
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="w-4 h-4 ml-2"
-                  viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Configure(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-800 bg-zinc-100 body-font py-24">
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="Configure" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Multiple configuration options
-          </h2>
-        </div>
-
-        <div className="container px-5 pb-5 mx-auto">
-          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Registries</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/containers/registries">Manage OCI registries. Add/edit/delete registries.</a>
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Proxy</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Configure your proxy settings.</a>
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Resources Utilization
-                </h2>
-                <p className="leading-relaxed text-base">Configure CPU/Memory/Disk of Podman machines.</p>
-              </div>
-            </div>
-
-            <div className="p-4 md:w-1/4 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">
-                  Container Engines
-                </h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/onboarding/containers">
-                    Handle multiple container engines at the same time: Podman, Docker.
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -297,130 +93,6 @@ function Testimonials(): JSX.Element {
             source="LinkedIn"
             text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
           />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EnterpriseReady(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font py-24">
-      <div className="container px-5 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <SectionTitle name="enterprise" />
-
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Enterprise ready
-          </h2>
-        </div>
-        <div className="container px-5 pb-5 mx-auto">
-          <h1 className="sm:text-3xl text-2xl font-medium title-font text-center text-gray-900 dark:text-gray-100 mb-20">
-            Match configuration options.
-          </h1>
-          <div className="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4 md:space-y-0 space-y-6">
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-700 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCertificate} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Code signing</h2>
-
-                <p className="leading-relaxed text-base">
-                  <a href="/downloads">Signed binaries for both macOS and Windows</a>
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCloudArrowDown} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100  text-lg title-font font-medium mb-2">Proxy</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Configure proxy within the tool. Avoid any painful files to edit.</a>
-                </p>
-              </div>
-            </div>
-            <div className="p-4 md:w-1/3 flex">
-              <div className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-700 text-purple-800 mb-4 shrink-0">
-                <FontAwesomeIcon size="2x" icon={faCogs} className="w-6 h-6 " />
-              </div>
-              <div className="grow pl-6">
-                <h2 className="text-gray-900 dark:text-gray-100 text-lg title-font font-medium mb-2">Registries</h2>
-                <p className="leading-relaxed text-base">
-                  <a href="/docs/proxy">Manage OCI registries. Add/edit/delete registries.</a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function RunAnywhere(): JSX.Element {
-  return (
-    <section className="text-gray-900 dark:text-gray-400 dark:bg-charcoal-600 bg-zinc-200 body-font">
-      <div className="container px-5 py-24 mx-auto flex flex-wrap">
-        <div className="flex flex-col text-center w-full mb-5">
-          <h2 className="max-w-lg mb-6 font-sans text-3xl font-bold leading-none tracking-tight text-gray-900 dark:text-white sm:text-4xl md:mx-auto">
-            Available on Windows, Mac and Linux
-          </h2>
-          <p className="text-base text-gray-900 md:text-lg dark:text-gray-400">
-            Use the same UI across different operating systems
-          </p>
-        </div>
-        <div className="flex flex-wrap w-full justify-center">
-          <Link
-            title="Download for Windows"
-            className="p-4 w-11/12 md:w-1/2 lg:w-1/3 no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white"
-            to="/downloads/windows">
-            <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faWindows} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> Windows</h2>
-              </div>
-
-              <div className="grow">
-                <div className="grow w-full">
-                  <p className="text-base text-center">exe or setup.exe</p>
-                </div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            title="Download for macOS"
-            className="no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white p-4 w-11/12 md:w-1/2 lg:w-1/3"
-            to="/downloads/macos">
-            <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faApple} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> macOS</h2>
-              </div>
-              <div className="grow w-full">
-                <p className="text-base text-center">arm64, x64 or unified dmg</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            title="Download for Linux"
-            className="no-underline hover:no-underline hover:text-white text-gray-900 dark:text-white p-4 w-11/12 md:w-1/2 lg:w-1/3"
-            to="/downloads/linux">
-            <div className="flex rounded-lg h-full bg-zinc-100  hover:bg-purple-500 dark:hover:bg-purple-700 dark:bg-charcoal-800 bg-opacity-60 p-8 flex-col">
-              <div className="flex items-center mb-3 flex-col">
-                <FontAwesomeIcon size="4x" icon={faLinux} />
-                <div className="inline-flex items-center justify-center rounded-full text-gray-900 dark:text-gray-400 shrink-0"></div>
-                <h2 className=" text-lg title-font font-medium"> Linux</h2>
-              </div>
-              <div className="grow">
-                <p className="text-base text-center">Flatpak or AMD64 binary (tar.gz)</p>
-              </div>
-            </div>
-          </Link>
         </div>
       </div>
     </section>
@@ -698,15 +370,10 @@ export default function Home(): JSX.Element {
       <TailWindThemeSelector />
       <CommunityBanner />
       <Hero />
-      <RunAnywhere />
       <MainFeatures />
       <Pods />
       <AdditionalFeatures />
       <Testimonials />
-      <Configure />
-      <Extensibility />
-      <KeepUpToDate />
-      <EnterpriseReady />
     </Layout>
   );
 }
