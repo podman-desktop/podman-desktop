@@ -36,7 +36,7 @@ let {
 }: Props = $props();
 
 let opened: boolean = $state(false);
-let selectLabel: string = $derived('');
+let selectLabel: string = $derived(options.find(o => o.value === value)?.label ?? value ?? '');
 let highlightIndex: number = $state(-1);
 let comp: HTMLElement;
 
@@ -46,10 +46,6 @@ onMount(() => {
   if (!value && options?.length > 0) {
     value = options[0].value;
   }
-});
-
-$effect(() => {
-  selectLabel = options.find(o => o.value === value)?.label ?? value ?? '';
 });
 
 function onKeyDown(e: KeyboardEvent): void {
