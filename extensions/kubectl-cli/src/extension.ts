@@ -65,14 +65,16 @@ const kubectlCliDisplayName = 'kubectl';
 const kubectlCliDescription = `A command line tool for communicating with a Kubernetes cluster's control plane, using the Kubernetes API.\n\nMore information: [kubernetes.io](https://kubernetes.io/docs/reference/kubectl/)`;
 const imageLocation = './icon.png';
 
-let binaryVersion: string | undefined;
-let binaryPath: string | undefined;
+interface KubectlState {
+  version?: string;
+  path?: string;
+}
+
+// State machine for version and path
+export const vp_state: KubectlState = {};
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
   initTelemetryLogger();
-  // Global vars for version and path
-  let binaryVersion: string | undefined;
-  let binaryPath: string | undefined;
   // Check kubectl binary has been downloaded and update both
   // the configuration setting and the context accordingly
   await handler.updateConfigAndContextKubectlBinary(extensionContext);
@@ -143,15 +145,15 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         // We are all done, so we can set the context value to false / downloaded to true
         extensionApi.context.setValue('kubectlIsNotDownloaded', false, 'onboarding');
         // update the cli version
-        binaryVersion = kubectlVersionMetadata?.tag.slice(1);
-        if (!binaryVersion) {
+        vp_state.version = kubectlVersionMetadata?.tag.slice(1);
+        if (!vp_state.version) {
           return;
         }
-        binaryPath = getSystemBinaryPath(kubectlCliName);
+        vp_state.path = getSystemBinaryPath(kubectlCliName);
         // update the version and the path
         kubectlCliTool?.updateVersion({
-          version: binaryVersion,
-          path: binaryPath,
+          version: vp_state.version,
+          path: vp_state.path,
           installationSource: 'extension',
         });
         downloaded = true;
@@ -262,12 +264,12 @@ export async function findKubeCtl(extensionContext: extensionApi.ExtensionContex
       '-o',
       'json',
     ]);
-    binaryVersion = extractVersion(result.stdout);
+    vp_state.version = extractVersion(result.stdout);
     // grab full path for Linux and mac
     if (extensionApi.env.isLinux || extensionApi.env.isMac) {
       try {
         const { stdout: fullPath } = await extensionApi.process.exec('which', [kubectlExecutableName]);
-        binaryPath = fullPath;
+        vp_state.path = fullPath;
       } catch (err) {
         console.warn('Error getting kubectl full path', err);
       }
@@ -277,13 +279,13 @@ export async function findKubeCtl(extensionContext: extensionApi.ExtensionContex
         const { stdout: fullPath } = await extensionApi.process.exec('where', [kubectlExecutableName]);
         // remove all line break/carriage return characters from full path
         const withoutCR = fullPath.replace(/(\r\n|\n|\r)/gm, '');
-        binaryPath = withoutCR;
+        vp_state.path = withoutCR;
       } catch (err) {
         console.warn('Error getting kubectl full path', err);
       }
     }
 
-    binaryPath ??= 'kubectl';
+    vp_state.path ??= 'kubectl';
   } catch (e) {
     console.warn(`Error getting kubectl from user PATH: ${e}, trying from extension storage path`);
     try {
@@ -294,13 +296,13 @@ export async function findKubeCtl(extensionContext: extensionApi.ExtensionContex
         '-o',
         'json',
       ]);
-      binaryVersion = extractVersion(result.stdout);
-      binaryPath = getStorageKubectlPath(extensionContext);
+      vp_state.version = extractVersion(result.stdout);
+      vp_state.path = getStorageKubectlPath(extensionContext);
     } catch (error) {
       console.warn('Error getting kubectl version system from extension storage path', error);
     }
   }
-  return { version: binaryVersion, path: binaryPath };
+  return { version: vp_state.version, path: vp_state.path };
 }
 
 // Activate the CLI tool (check version, etc) and register the CLi so it does not block activation.
@@ -311,12 +313,12 @@ async function postActivate(
   await findKubeCtl(extensionContext);
 
   let installationSource: extensionApi.CliToolInstallationSource | undefined;
-  if (binaryPath) {
+  if (vp_state.path) {
     const systemPath = getSystemBinaryPath(kubectlCliName);
     const localStorage = getStorageKubectlPath(extensionContext);
     installationSource =
-      path.normalize(binaryPath) === path.normalize(systemPath) ||
-      path.normalize(binaryPath) === path.normalize(localStorage)
+      path.normalize(vp_state.path) === path.normalize(systemPath) ||
+      path.normalize(vp_state.path) === path.normalize(localStorage)
         ? 'extension'
         : 'external';
   }
@@ -330,8 +332,8 @@ async function postActivate(
     images: {
       icon: imageLocation,
     },
-    version: binaryVersion,
-    path: binaryPath,
+    version: vp_state.version,
+    path: vp_state.path,
     installationSource,
   });
 
@@ -374,7 +376,12 @@ async function postActivate(
         version: releaseVersionToUpdateTo,
         installationSource: 'extension',
       });
-      binaryVersion = releaseVersionToUpdateTo;
+      vp_state.version = releaseVersionToUpdateTo;
+      if (releaseToUpdateTo === latestAsset) {
+        delete update.version;
+      } else {
+        update.version = latestAsset?.tag.slice(1);
+      }
       releaseVersionToUpdateTo = undefined;
       releaseToUpdateTo = undefined;
     },
@@ -388,8 +395,8 @@ async function postActivate(
       return releaseVersionToInstall;
     },
     doInstall: async _logger => {
-      if (binaryVersion) {
-        throw new Error(`Cannot install ${kubectlCliName}. Version ${binaryVersion} is already installed.`);
+      if (vp_state.version) {
+        throw new Error(`Cannot install ${kubectlCliName}. Version ${vp_state.version} is already installed.`);
       }
       if (!releaseToInstall || !releaseVersionToInstall) {
         throw new Error(`Cannot update ${kubectlCliName}. No release selected.`);
@@ -401,12 +408,12 @@ async function postActivate(
         version: releaseVersionToInstall,
         installationSource: 'extension',
       });
-      binaryVersion = releaseVersionToInstall;
+      vp_state.version = releaseVersionToInstall;
       releaseVersionToInstall = undefined;
       releaseToInstall = undefined;
     },
     doUninstall: async _logger => {
-      if (!binaryVersion) {
+      if (!vp_state.version) {
         throw new Error(`Cannot uninstall ${kubectlCliName}. No version detected.`);
       }
 
@@ -419,7 +426,7 @@ async function postActivate(
       await deleteExecutableAsAdmin(systemPath);
 
       // update the version to undefined
-      binaryVersion = undefined;
+      vp_state.version = undefined;
     },
   });
 
