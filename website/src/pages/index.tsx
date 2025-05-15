@@ -13,11 +13,11 @@ import { TestimonialCard } from '../components/TestimonialCard';
 
 function Hero(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 body-font">
+    <section className="text-charcoal-300 dark:text-gray-400 body-font">
       <div className="container mx-auto flex px-5 pb-24 pt-4 items-center justify-center flex-col">
         <div className="text-center lg:w-3/4 w-full bg-hero-pattern bg-no-repeat bg-center">
           <div className="bg-white/30 dark:bg-transparent">
-            <h1 className="title-font text-4xl leading-[3rem] lg:text-5xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white mt-[80px] lg:w-3/4 mx-auto">
+            <h1 className="title-font text-4xl leading-[3rem] lg:text-5xl lg:leading-[4rem] font-extrabold text-charcoal-300 dark:text-white mt-[80px] lg:w-3/4 mx-auto">
               Best Free &amp; Open Source Tool for Containers &amp; Kubernetes
             </h1>
             <p className="text-base font-bold leading-[1.9rem] md:text-lg md:leading-[1.9rem] mt-[88px]">
@@ -51,7 +51,7 @@ function Hero(): JSX.Element {
 function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
   return (
     <div className="text-right p-[2px] rounded-full border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit mb-5">
-      <p className="inline-block bg-white dark:bg-charcoal-400 text-gray-900 dark:text-white px-3 py-1 rounded-full transition-colors duration-200 mb-0 text-sm">
+      <p className="inline-block bg-white dark:bg-charcoal-400 text-charcoal-300 dark:text-white px-3 py-1 rounded-full transition-colors duration-200 mb-0 text-sm">
         {props.name}
       </p>
     </div>
@@ -60,10 +60,10 @@ function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
 
 function Testimonials(): JSX.Element {
   return (
-    <section className="relative text-gray-900 dark:text-white body-font py-24 dark:bg-fuschia-900 bg-purple-200">
+    <section className="relative text-charcoal-300 dark:text-white body-font py-24 dark:bg-fuschia-900 bg-purple-200">
       <div className="absolute bg-white/50 dark:bg-black/70 top-0 bottom-0 right-0 left-0 z-0"></div>
       <div className="container mx-auto flex flex-col">
-        <h2 className="text-4xl/[1.5] font-bold mb-6 text-gray-900 dark:text-white pb-11 z-10">
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-charcoal-300 dark:text-white pb-11 z-10">
           What People Are Saying ✨
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
@@ -101,16 +101,16 @@ function Testimonials(): JSX.Element {
 
 function MainFeatures(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-bl dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
+    <section className="text-charcoal-300 dark:text-gray-400 bg-gradient-to-bl dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-left w-full mb-5">
           <div className="flex md:flex-row flex-col items-center space-x-10 xl:space-x-44">
             <div className="lg:grow md:w-1/2 flex flex-col md:items-start md:text-left items-center text-center">
               <SectionLabel name="Essential Features for Containers" />
-              <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white">
+              <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-charcoal-300 dark:text-white">
                 Simplify Container Management and Boost Developer Productivity
               </h1>
-              <p className="leading-relaxed py-5 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-5 dark:text-gray-300 text-charcoal-300">
                 Podman Desktop enhances developer productivity by integrating with popular container runtimes,
                 registries, and developer tools, making it easier to handle containerized applications locally. Whether
                 you're building, debugging, or deploying, Podman Desktop provides robust features and seamless controls,
@@ -137,10 +137,10 @@ function MainFeatures(): JSX.Element {
                   dark: useBaseUrl('img/graphical.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Intuitive Graphical Interface
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Podman Desktop provides a simple and user-friendly interface for managing containers, making it easier
                 for developers to focus on writing code rather than manually handling container configurations.
               </p>
@@ -155,10 +155,10 @@ function MainFeatures(): JSX.Element {
                   dark: useBaseUrl('img/secured_container.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
+              <h2 className="title-font sm:text-3xl text2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Containers with Security
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Podman is a secure container runtime through its focus on daemonless, rootless containers, SELinux
                 support, network policy enforcement, immutable containers. This ensures robust security foundations for
                 running Linux containers and Kubernetes workloads.
@@ -174,10 +174,10 @@ function MainFeatures(): JSX.Element {
                   dark: useBaseUrl('img/platforms.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Cross-Platform Support
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Available on Linux®, macOS, and Windows, Podman Desktop lets developers create, manage, and delete
                 containers without the need for complex scripting or manual intervention.
               </p>
@@ -192,10 +192,10 @@ function MainFeatures(): JSX.Element {
                   dark: useBaseUrl('img/certified_container.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-gray-900 dark:text-white font-bold">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Built with Container Standards
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Podman supports industry-standard container technologies like OCI, and Compose. This compatibility
                 ensures a smooth transition without disrupting existing workflows or requiring extensive retooling.
               </p>
@@ -209,9 +209,9 @@ function MainFeatures(): JSX.Element {
 
 function AdditionalFeatures(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-white bg-white dark:bg-black bg-gradient-to-b from-purple-300 to-transparent dark:from-transparent dark:to-purple-700/40  py-24 body-font md:w-full">
+    <section className="text-charcoal-300 dark:text-white bg-white dark:bg-black bg-gradient-to-b from-purple-300 to-transparent dark:from-transparent dark:to-purple-700/40  py-24 body-font md:w-full">
       <div className="container mx-auto flex flex-col flex-wrap">
-        <h2 className="text-4xl/[1.5] font-bold mb-6 text-gray-900 dark:text-white pb-11 ">
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-charcoal-300 dark:text-white pb-11 ">
           And Many More Features ✨
         </h2>
         <div className="flex flex-row flex-wrap items-stretch justify-center gap-7">
@@ -258,7 +258,7 @@ function AdditionalFeatures(): JSX.Element {
 
 function Pods(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 bg-gradient-to-tr dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
+    <section className="text-charcoal-300 dark:text-gray-400 bg-gradient-to-tr dark:from-black dark:to-purple-700 from-purple-300 to-gray-200 body-font py-24">
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-right w-full mb-5">
           <div className="flex md:flex-row flex-col-reverse items-center space-x-10 xl:space-x-44">
@@ -272,10 +272,10 @@ function Pods(): JSX.Element {
             />
             <div className="lg:grow md:w-1/2 flex flex-col md:items-end md:text-right items-center text-center">
               <SectionLabel name="Crafted for Kubernetes" />
-              <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-gray-900 dark:text-white">
+              <h1 className="title-font text-3xl leading-[3rem] lg:text-4xl lg:leading-[4rem] font-extrabold text-charcoal-300 dark:text-white">
                 Streamline Kubernetes workflows
               </h1>
-              <p className="leading-relaxed py-5 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-5 dark:text-gray-300 text-charcoal-300">
                 Podman Desktop isn't just a container manager; it's built with Kubernetes at its core. This deep
                 integration means seamless workflows for developers. Work with Podman's native Kubernetes support or
                 effortlessly spin up local Kind or Minikube clusters, bridge to remote environments, and manage your
@@ -296,10 +296,10 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/developtest.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
                 Develop and Test
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Iterate faster with streamlined workflows enabling developers to develop locally and reducing
                 turnarounds cycles.
               </p>
@@ -313,10 +313,10 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/grow.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
                 Grow Skills at Your Pace
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Start with containers and seamlessly transition to Kubernetes concepts with Podman capabilities. Podman
                 Desktop makes learning and adoption Kubernetes easy.
               </p>
@@ -330,10 +330,10 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/troubleshoot1.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Whether working natively with Kubernetes objects or managing local or remote clusters, Podman Desktop
                 streamlines your workflows with its intuitive graphical interface.
               </p>
@@ -347,10 +347,10 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/troubleshoot2.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-gray-900 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>
-              <p className="leading-relaxed py-3 dark:text-gray-300 text-gray-900">
+              <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Directly access logs, metrics and debug tools with Podman Desktop intuitive graphical interface to
                 resolve issues efficiently.
               </p>

@@ -2,7 +2,7 @@ import Link from '@docusaurus/Link';
 
 export function CNCFCommunityBanner(): JSX.Element {
   return (
-    <section className="text-gray-900 dark:text-gray-400 body-font py-18 w-full">
+    <section className="text-charcoal-300 dark:text-gray-400 body-font py-18 w-full">
       <div className="relative rounded-xl p-[2px] bg-gradient-to-r from-sky-500 to-purple-500 mx-auto w-full max-w-5xl">
         <div className="container px-4 text-center rounded-xl p-10 bg-white dark:bg-charcoal-800 relative overflow-hidden">
           <h2 className="text-3xl md:text-3xl font-semibold mb-6">
@@ -43,7 +43,7 @@ export function CNCFCommunityBanner(): JSX.Element {
               <div className="p-[2px] rounded border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit z-10 relative">
                 <Link
                   to="/community"
-                  className="inline-block bg-white dark:bg-charcoal-800 text-gray-900 dark:text-white py-3 px-6 rounded hover:bg-purple-600 hover:text-white transition-colors duration-200 font-semibold text-base">
+                  className="inline-block bg-white dark:bg-charcoal-800 text-charcoal-300 dark:text-white py-3 px-6 rounded hover:bg-purple-600 hover:text-white transition-colors duration-200 font-semibold text-base">
                   Interested to join the tribe?
                 </Link>
               </div>
