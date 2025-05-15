@@ -48,7 +48,7 @@ export const feedbackFormNotifications: Writable<Map<string, FeedbackNotificatio
 
 let experimentalProperties: IConfigurationPropertyRecordedSchema[] = [];
 
-function setupFeedback(): void {
+export function setupFeedback(): void {
   configurationProperties.subscribe(configurations => {
     // Get only experimental properties
     experimentalProperties = configurations.filter(
@@ -57,17 +57,17 @@ function setupFeedback(): void {
 
     const propertyEnabled = new Map();
 
-    experimentalProperties.forEach(async (property) => {
+    experimentalProperties.forEach(async property => {
       const propertyID = property.id;
       if (!propertyID) return;
       propertyEnabled.set(propertyID, (await window.getConfigurationValue<boolean>(propertyID)) ?? false);
     });
 
     feedbackFormNotifications.update(store => {
-      experimentalProperties.forEach(async (property) => {
+      experimentalProperties.forEach(async property => {
         const propertyID = property.id;
         if (!propertyID) return;
-        const enabled = propertyEnabled.get(propertyID)
+        const enabled = propertyEnabled.get(propertyID);
 
         // Get record from store
         const record = store.get(propertyID);
@@ -87,19 +87,19 @@ function setupFeedback(): void {
       });
       return store;
     });
-  });
-};
+  })();
+}
 
 setupFeedback();
 
-function updateNotifyAtDate(id: string, notifyAtDate: Date | undefined): void {
+export function updateNotifyAtDate(id: string, notifyAtDate: Date | undefined): void {
   return feedbackFormNotifications.subscribe(map => {
     const feedbackNotification = map.get(id);
     if (feedbackNotification) map.set(id, { ...feedbackNotification, notifyAtDate: notifyAtDate, wasOpened: true });
   })();
 }
 
-function remindLater(id: string, remindOption: RemindOption): void {
+export function remindLater(id: string, remindOption: RemindOption): void {
   let daysAhead = 0;
   if (remindOption === 'Remind me in 2 days') daysAhead = 2;
   else if (remindOption === 'Remind me tomorrow') daysAhead = 1;
@@ -111,7 +111,7 @@ function remindLater(id: string, remindOption: RemindOption): void {
   return updateNotifyAtDate(id, remindDate);
 }
 
-function formatName(id: string): string {
+export function formatName(id: string): string {
   // Changes id to nicely formated human readable string (same as in experimental features page)
   return id
     .replace(/([A-Z])/g, ' $1')
@@ -121,9 +121,9 @@ function formatName(id: string): string {
     });
 }
 
-function canBeOpened(featureID: ExperimentalFeatures): boolean {
+export function canBeOpened(featureID: ExperimentalFeatures): boolean {
   let canOpen = true;
-  const unsubscriber = feedbackFormNotifications.subscribe(store => {
+  feedbackFormNotifications.subscribe(store => {
     const record = store.get(featureID);
     // If is feature disabled don't show the dialog
     if (!record || record.featureDisabled) {
@@ -146,9 +146,8 @@ function canBeOpened(featureID: ExperimentalFeatures): boolean {
     // If is todays date before notifyAtDate => don't show dialog, otherwise show
     const date = new Date();
     canOpen = record.notifyAtDate.getTime() <= date.getTime() ? true : false;
-  });
+  })();
 
-  unsubscriber();
   return canOpen;
 }
 
@@ -184,7 +183,7 @@ export async function showFeedbackDialog(featureID: ExperimentalFeatures): Promi
   // Share Feedback on GitHub was selected
   if (response.response === 1) {
     await window.openExternal(featureGitHubLink);
-    remindLater(featureID, 'Don\'t show again');
+    remindLater(featureID, "Don't show again");
   }
   // Option from Dropdown was selected
   else if (response.response === 0 && response.dropdownIndex) {
