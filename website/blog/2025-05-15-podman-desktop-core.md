@@ -46,7 +46,7 @@ Now that our webserver container is running we can inspect it in the UI
 We can click the Open Browser button to see the webserver in our browser:
 ![Webserver open in browser](img/podman-desktop-core-blog/nginx-in-container.png)
 
-Monitoring container logs is crucial for debugging and understanding application behavior. Lets use Podman Desktop to view the logs of the newly created container.
+Monitoring container logs is crucial for debugging and understanding application behavior. Let's use Podman Desktop to view the logs of the newly created container.
 
 1. Select your running container from the "Containers" list
 2. Click on the "Logs" tab to view the container's logs
@@ -56,13 +56,13 @@ Monitoring container logs is crucial for debugging and understanding application
 
 With that, we can continue the development process. We are able to rebuild our container when we have updated code. On top of that we can share our Containerfile with our team who will be able to reproduce the exact same environment as us to build and test their code.
 
-## Integrating working with Kubernetes and Openshift
+## Working with Kubernetes and OpenShift
 
 Now that we have a development setup up and running it’s time to get ready for production. In today's world it is natural for us to move to Kubernetes. Having a locally running cluster, we are able to iterate quickly but still have an environment that is as close to production as possible. This aids in a smoother migration in the future. Podman Desktop is here to help you test and execute that migration.
 
 With [kind](https://kind.sigs.k8s.io/) or [minikube](https://minikube.sigs.k8s.io/docs/) we are able to have a locally running Kubernetes cluster in minutes. This will allow us to test our application in a Kubernetes environment. Kind comes installed together with Podman Desktop so you will be able to get started instantly.
 
-1. Start by Navigating to the “Kubernetes” page
+1. Start by navigating to the “Kubernetes” page
 2. Click on the “Create new Kind cluster” button
 
 ![Create kind cluster](img/podman-desktop-core-blog/create-kind-cluster.png)
@@ -87,7 +87,7 @@ Now that the image is available we can use the Podman Desktop UI to Deploy our c
 ![Deploy to Kubernetes](img/podman-desktop-core-blog/deploy-to-kubernetes.png)
 
 1. Navigate to the “Containers” section
-2. On the webserver container, Click the “Deploy to Kubernetes” button
+2. On the webserver container, click the “Deploy to Kubernetes” button
 3. Choose your kind cluster
 
 The conversion from containers to Kubernetes manifests is particularly valuable, eliminating the need to manually write YAML files for simple deployments.
@@ -96,7 +96,7 @@ The conversion from containers to Kubernetes manifests is particularly valuable,
 
 Understanding what's happening in your Kubernetes cluster is essential for effective development. In the latest version of Podman Desktop you can now check the events of your Kubernetes Pods in the UI.
 
-Lets check if our pod was created and running successfully.
+Let's check if our pod was created and running successfully.
 
 1. Navigate to the “Kubernetes” in the left-navigation
 2. Click on the “Pods” sub-navigation
@@ -114,11 +114,10 @@ We can also check out the “Logs” tab to see the logs of the running Pod.
 Podman Desktop significantly streamlines the container and Kubernetes development experience by providing:
 
 - A unified interface for building and managing containers
-- Seamless integration with Kubernetes and Openshift
+- Seamless integration with Kubernetes and OpenShift
 - Powerful logging and debugging tools
-- Easy extensibility
 - A bridge between local development and production Kubernetes environments
 
 Whether you're just starting with containers or managing complex Kubernetes deployments, Podman Desktop offers tools that simplify your workflow and increase productivity. As a CNCF project, it continues to evolve with the needs of the cloud-native community, making it an increasingly valuable tool in any developer's toolkit.
 
-Try Podman Desktop today and experience how it can transform your container, Kubernetes and Openshift workflows\!
+Try Podman Desktop today and experience how it can transform your container, Kubernetes and OpenShift workflows\!
