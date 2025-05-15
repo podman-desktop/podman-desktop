@@ -53,7 +53,7 @@ describe('context tests', () => {
     { name: 'cluster2', server: 'server2' } as Cluster,
   ];
   const originalContexts = [
-    { name: 'ctx1', user: 'user1', cluster: 'cluster1', currentContext: true },
+    { name: 'ctx1', user: 'user1', cluster: 'cluster1', currentContext: true, namespace: 'namespace1' },
     { name: 'ctx1bis', user: 'user1', cluster: 'cluster1' },
   ];
 
@@ -212,6 +212,26 @@ describe('context tests', () => {
 
     expect(contexts[0].name).toBe('new-name');
     expect(contexts[0].namespace).toBe('new-namespace');
+  });
+
+  test('should remove the namespace when updating context from config', async () => {
+    client.saveKubeConfig = vi.fn().mockImplementation((_config: KubeConfig) => {});
+
+    if (!originalContexts[0]?.name) {
+      throw new Error('originalContexts[0].name should be defined');
+    }
+
+    await client.updateContext(originalContexts[0].name, originalContexts[0].name, '');
+    const contexts = client.getContexts();
+    expect(contexts.length).toBe(2);
+    expect(client.getContexts().length).toBe(2);
+
+    if (!contexts[0]?.name) {
+      throw new Error('contexts[0].name should be defined');
+    }
+
+    expect(contexts[0].name).toBe(originalContexts[0].name);
+    expect(contexts[0].namespace).toBeUndefined();
   });
 
   test('should be a no-op if the context name is not found', async () => {
