@@ -27,19 +27,18 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { InputBoxOptions, QuickPickOptions } from './quickpick-input';
 import QuickPickInput from './QuickPickInput.svelte';
 
-const sendShowQuickPickValuesMock = vi.fn();
-const sendShowInputBoxValueMock = vi.fn();
-const sendShowQuickPickOnSelectMock = vi.fn();
 const receiveFunctionMock = vi.fn();
+const sendShowQuickPickOnSelectMock = vi.fn().mockResolvedValue(undefined);
+const sendShowQuickPickValuesMock = vi.fn().mockResolvedValue(undefined);
 
 // mock some methods of the window object
 beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  (window as any).sendShowQuickPickValues = sendShowQuickPickValuesMock;
-  (window as any).sendShowInputBoxValue = sendShowInputBoxValueMock;
-  (window as any).sendShowQuickPickOnSelect = sendShowQuickPickOnSelectMock.mockResolvedValue(undefined);
+
+  (window.sendShowQuickPickOnSelect as unknown) = sendShowQuickPickOnSelectMock;
+  (window.sendShowQuickPickValues as unknown) = sendShowQuickPickValuesMock;
 });
 
 describe('QuickPickInput', () => {
@@ -66,10 +65,10 @@ describe('QuickPickInput', () => {
     await userEvent.keyboard('{Escape}');
 
     // check we received the answer for showQuickPick
-    expect(sendShowQuickPickValuesMock).toBeCalledWith(idRequest);
+    expect(window.sendShowQuickPickValues).toBeCalledWith(idRequest);
 
     // and not for showInputBox
-    expect(sendShowInputBoxValueMock).not.toBeCalled();
+    expect(window.sendShowInputBoxValue).not.toBeCalled();
   });
 
   test('Expect that title is displayed', async () => {
@@ -431,8 +430,9 @@ describe('QuickPickInput', () => {
     });
 
     // when getting the response of the first quickpick, we ask to display the second quickpick
-    sendShowQuickPickValuesMock.mockImplementation(() => {
+    vi.mocked(window.sendShowQuickPickValues).mockImplementation(() => {
       eventCallback?.(quickPickOptions2);
+      return Promise.resolve();
     });
 
     // render the first quickpick
@@ -453,7 +453,7 @@ describe('QuickPickInput', () => {
     await userEvent.keyboard('{Escape}');
 
     // check we received the answer for showQuickPick
-    expect(sendShowQuickPickValuesMock).toBeCalledWith(idRequest);
+    expect(window.sendShowQuickPickValues).toBeCalledWith(idRequest);
 
     // and the next quickpick should be displayed
     const itemFoo = getByTitle('Select foo');
