@@ -29,7 +29,9 @@ const filteredInstalledExtensions: Readable<CombinedExtensionInfoUI[]> = derived
   [combinedInstalledExtensions, combinedInstalledExtensionSearchPattern],
   ([$combinedInstalledExtensions, $combinedInstalledExtensionSearchPattern]) => {
     return $combinedInstalledExtensions.filter(extension => {
-      return extension.displayName.toLowerCase().includes($combinedInstalledExtensionSearchPattern.toLowerCase());
+      return `${extension.displayName} ${extension.description}`
+        .toLowerCase()
+        .includes($combinedInstalledExtensionSearchPattern.toLowerCase());
     });
   },
 );
@@ -53,7 +55,9 @@ const filteredCatalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
   [enhancedCatalogExtensions, catalogExtensionSearchPattern],
   ([$enhancedCatalogExtensions, $catalogExtensionSearchPattern]) => {
     return $enhancedCatalogExtensions.filter(extension => {
-      return extension.displayName.toLowerCase().includes($catalogExtensionSearchPattern.toLowerCase());
+      return `${extension.displayName} ${extension.shortDescription}`
+        .toLowerCase()
+        .includes($catalogExtensionSearchPattern.toLowerCase());
     });
   },
 );

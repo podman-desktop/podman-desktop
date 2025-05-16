@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -35,7 +35,7 @@ beforeEach(() => {
 export const aFakeExtension: CatalogExtension = {
   id: 'idAInstalled',
   publisherName: 'FooPublisher',
-  shortDescription: 'this is short A',
+  shortDescription: 'this is short A. The word bar appears here but not in the title',
   publisherDisplayName: 'Foo Publisher',
   extensionName: 'a-extension',
   displayName: 'A Extension',
@@ -88,6 +88,7 @@ const combined: CombinedExtensionInfoUI[] = [
   {
     id: 'idAInstalled',
     displayName: 'A installed Extension',
+    description: 'The word bar appears here but not in the title',
     removable: true,
     state: 'started',
   },
@@ -168,4 +169,46 @@ test('Expect to see empty screens on both pages', async () => {
 
   title = screen.getByText(`No extensions matching 'foo' found`);
   expect(title).toBeInTheDocument();
+});
+
+test('Search extension page searches also description', async () => {
+  catalogExtensionInfos.set([aFakeExtension]);
+  extensionInfos.set(combined);
+
+  render(ExtensionList, { searchTerm: 'bar' });
+
+  const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
+  expect(myExtension1).toBeInTheDocument();
+
+  // second extension should not be there as only in catalog (not installed) and doesn't have "bar" in the description
+  const extensionIdB = screen.queryByRole('group', { name: 'B Extension' });
+  expect(extensionIdB).not.toBeInTheDocument();
+
+  cleanup();
+
+  // Change the search
+  render(ExtensionList, { searchTerm: 'foo' });
+
+  // The extension should not be there as it doesn't have "foo" in the description
+  const myExtension2 = screen.queryByRole('region', { name: 'idAInstalled' });
+  expect(myExtension2).not.toBeInTheDocument();
+});
+
+test('Search catalog page searches also description', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set([]);
+
+  render(ExtensionList, { searchTerm: 'bar' });
+
+  // Click on the catalog
+  const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+  await fireEvent.click(catalogTab);
+
+  // Verify that the extension containing "bar" in the description is displayed
+  const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
+  expect(myExtension1).toBeInTheDocument();
+
+  // Verify that the other extension that doesn't contain "bar" is not displayed
+  const extensionIdB = screen.queryByRole('group', { name: 'B Extension' });
+  expect(extensionIdB).not.toBeInTheDocument();
 });
