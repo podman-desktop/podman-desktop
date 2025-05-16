@@ -73,7 +73,7 @@ function updateSearchValue(event: any): void {
 
 <Route path="/" breadcrumb={key}>
   <SettingsPage title="Preferences">
-    <SearchInput slot="header" title="preferences" class="mt-4" on:input={updateSearchValue} />
+    <SearchInput slot="header" title="preferences" class="mt-4" oninput={updateSearchValue} />
     <div class="flex flex-col space-y-5 text-[var(--pd-content-header)]">
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>

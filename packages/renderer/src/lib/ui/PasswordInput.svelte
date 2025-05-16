@@ -36,7 +36,7 @@ async function onShowHide(): Promise<void> {
   bind:readonly={readonly}
   on:input
   bind:element={element}>
-  <svelte:fragment slot="right">
+  {#snippet right()}
     <button
       class="px-1 cursor-pointer text-[var(--pd-input-field-stroke)] group-hover:text-[var(--pd-input-field-hover-stroke)] group-focus-within:text-[var(--pd-input-field-hover-stroke)]"
       class:hidden={!password || readonly}
@@ -48,5 +48,5 @@ async function onShowHide(): Promise<void> {
         <Fa icon={faEyeSlash} />
       {/if}
     </button>
-  </svelte:fragment>
+  {/snippet}
 </Input>

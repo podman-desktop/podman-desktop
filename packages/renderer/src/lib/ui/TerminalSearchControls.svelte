@@ -66,9 +66,8 @@ function onKeyUp(e: KeyboardEvent): void {
       bind:element={input}
       placeholder="Find"
       aria-label="Find"
-      type="text"
-      on:keypress={onKeyPressed}
-      on:input={onSearch}
+      onkeypress={onKeyPressed}
+      oninput={onSearch}
       value={searchTerm}
     />
   </div>
