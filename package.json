@@ -210,7 +210,7 @@
     "undici": "^7.9.0",
     "win-ca": "^3.5.1",
     "winreg": "^1.2.5",
-    "yaml": "^2.7.1"
+    "yaml": "^2.8.0"
   },
   "pnpm": {
     "overrides": {
