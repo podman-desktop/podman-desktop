@@ -134,7 +134,10 @@ function FAQ(): JSX.Element {
             text={
               <p>
                 You can get invloved in the project by visiting our{' '}
-                <Link title="GitHub page" href="https://github.com/podman-desktop/podman-desktop">
+                <Link
+                  title="GitHub page"
+                  href="https://github.com/podman-desktop/podman-desktop"
+                  className="dark:text-purple-300">
                   GitHub page
                 </Link>{' '}
                 and opening a PR, reporting bugs, suggesting new features and enhancements, providing feedback, and
@@ -148,7 +151,10 @@ function FAQ(): JSX.Element {
               <p>
                 Yes, Podman Desktop supports Compose. You can download the Compose extension to help set up Compose if
                 it is not yet installed. For more information and examples, visit our{' '}
-                <Link title="Getting started with Compose" to="/tutorial/getting-started-with-compose">
+                <Link
+                  title="Getting started with Compose"
+                  to="/tutorial/getting-started-with-compose"
+                  className="dark:text-purple-300">
                   Getting started with Compose
                 </Link>
                 . page.
