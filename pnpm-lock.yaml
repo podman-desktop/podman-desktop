@@ -670,8 +670,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(picomatch@4.0.2)(svelte@5.28.2)(typescript@5.8.3)
       svelte-eslint-parser:
-        specifier: ^1.1.3
-        version: 1.1.3(svelte@5.28.2)
+        specifier: ^1.2.0
+        version: 1.2.0(svelte@5.28.2)
       svelte-fa:
         specifier: ^4.0.4
         version: 4.0.4(svelte@5.28.2)
@@ -764,8 +764,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(picomatch@4.0.2)(svelte@5.28.2)(typescript@5.8.3)
       svelte-eslint-parser:
-        specifier: ^1.1.3
-        version: 1.1.3(svelte@5.28.2)
+        specifier: ^1.2.0
+        version: 1.2.0(svelte@5.28.2)
       tailwindcss:
         specifier: ^4.1.6
         version: 4.1.6
@@ -11001,15 +11001,6 @@ packages:
     peerDependencies:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
-
-  svelte-eslint-parser@1.1.3:
-    resolution: {integrity: sha512-DUc/z/vk+AFVoxGv54+BOBFqUrmUgNg2gSO2YqrE3OL6ro19/0azPmQj/4wN3s9RxuF5l7G0162q/Ddk4LJhZA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      svelte: ^3.37.0 || ^4.0.0 || ^5.0.0
-    peerDependenciesMeta:
-      svelte:
-        optional: true
 
   svelte-eslint-parser@1.2.0:
     resolution: {integrity: sha512-mbPtajIeuiyU80BEyGvwAktBeTX7KCr5/0l+uRGLq1dafwRNrjfM5kHGJScEBlPG3ipu6dJqfW/k0/fujvIEVw==}
@@ -24543,17 +24534,6 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - picomatch
-
-  svelte-eslint-parser@1.1.3(svelte@5.28.2):
-    dependencies:
-      eslint-scope: 8.3.0
-      eslint-visitor-keys: 4.2.0
-      espree: 10.3.0
-      postcss: 8.5.3
-      postcss-scss: 4.0.9(postcss@8.5.3)
-      postcss-selector-parser: 7.1.0
-    optionalDependencies:
-      svelte: 5.28.2
 
   svelte-eslint-parser@1.2.0(svelte@5.28.2):
     dependencies:
