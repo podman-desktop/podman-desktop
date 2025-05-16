@@ -411,20 +411,22 @@ export class KubernetesClient {
     if (!originalContext) throw new Error('Context name was not found in kube config');
 
     const namespaceField = newContextNamespace !== '' ? { namespace: newContextNamespace } : {};
-    delete (originalContext as { namespace?: string }).namespace;
+
+    const editedContext = {
+      ...originalContext,
+      name: newContextName,
+      ...namespaceField,
+    };
+
+    if (newContextNamespace === '') {
+      delete editedContext.namespace;
+    }
 
     newConfig.loadFromOptions({
       clusters: this.kubeConfig.clusters,
       users: this.kubeConfig.users,
       currentContext: this.currentContextName === contextName ? newContextName : this.kubeConfig.currentContext,
-      contexts: [
-        {
-          ...originalContext,
-          name: newContextName,
-          ...namespaceField,
-        },
-        ...newContexts,
-      ],
+      contexts: [editedContext, ...newContexts],
     });
 
     await this.saveKubeConfig(newConfig);
