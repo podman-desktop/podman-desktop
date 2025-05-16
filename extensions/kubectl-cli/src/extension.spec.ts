@@ -87,7 +87,7 @@ vi.mock('@podman-desktop/api', () => {
 
 const downloadReleaseAssetMock = vi.fn();
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     update: vi.fn(),
   } as unknown as Configuration);
@@ -104,6 +104,9 @@ beforeEach(() => {
     getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
     downloadReleaseAsset: downloadReleaseAssetMock,
   } as unknown as KubectlGitHubReleases);
+
+  KubectlExtension.vp_state.version = undefined;
+  KubectlExtension.vp_state.path = undefined;
 });
 
 afterEach(() => {
