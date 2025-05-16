@@ -103,9 +103,9 @@ test(`Test navigationHandle for ${NavigationPage.IMAGES}`, () => {
 });
 
 test(`Test navigationHandle for ${NavigationPage.IMAGE_BUILD}`, () => {
-  handleNavigation({ page: NavigationPage.IMAGE_BUILD });
+  handleNavigation({ page: NavigationPage.IMAGE_BUILD, parameters: { taskId: 1 } });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build?taskId=1');
 });
 
 test(`Test navigationHandle for ${NavigationPage.IMAGE}`, () => {
