@@ -24,16 +24,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { tick } from 'svelte';
+import type { Mock } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
-
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-}));
 
 const containerConnection: ProviderContainerConnectionInfo = {
   name: 'connection',
@@ -45,10 +42,18 @@ const containerConnection: ProviderContainerConnectionInfo = {
   type: 'podman',
 };
 
-beforeAll(() => {
-  (window as any).getConfigurationValue = vi.fn();
-  (window as any).startReceiveLogs = vi.fn();
+beforeAll(async () => {
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+  }));
+
   Terminal.prototype.open = vi.fn();
+  Terminal.prototype.write = vi.fn();
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
 test('Expect that the no logs view is displayed', async () => {
@@ -73,4 +78,40 @@ test('Expect that the terminal is displayed', async () => {
   });
   const divTerminal = screen.getByLabelText('terminal');
   expect(divTerminal).toBeInTheDocument();
+});
+
+test('Should call startReceiveLogs with empty colour codes', async () => {
+  render(PreferencesConnectionDetailsLogs, {
+    providerInternalId: 'abc123',
+    connectionInfo: containerConnection,
+    setNoLogs: () => {
+      // nothing
+    },
+    noLog: false,
+  });
+
+  await tick();
+  // second tick need to process all await statements in onMount method
+  await tick();
+
+  expect(window.startReceiveLogs).toHaveBeenCalledTimes(1);
+
+  const args = (window.startReceiveLogs as Mock).mock.calls[0];
+  const [id, cb1, cb2, cb3] = args;
+  expect(id).toBe('abc123');
+  [cb1, cb2, cb3].forEach(cb => expect(typeof cb).toBe('function'));
+
+  cb1(['first']);
+  cb2(['second']);
+  cb3(['third']);
+
+  expect(Terminal.prototype.write).toHaveBeenCalledTimes(4);
+
+  //disable cursor
+  expect((Terminal.prototype.write as Mock).mock.calls[0][0]).toBe('\x1b[?25l');
+
+  //expected calls
+  expect((Terminal.prototype.write as Mock).mock.calls[1][0]).toBe('first\r');
+  expect((Terminal.prototype.write as Mock).mock.calls[2][0]).toBe('second\r');
+  expect((Terminal.prototype.write as Mock).mock.calls[3][0]).toBe('third\r');
 });
