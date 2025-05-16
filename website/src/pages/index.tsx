@@ -103,7 +103,7 @@ function Testimonials(): JSX.Element {
 
 function FAQ(): JSX.Element {
   return (
-    <section className="dark:text-white text-charcoal-300 py-24 font-body text-4xl font-bold leading-[1.2] bg-white dark:bg-black bg-gradient-to-br from-purple-400/70 via-purple-300/50 dark:via-purple-700/40 to-transparent">
+    <section className="dark:text-white text-charcoal-300 py-24 font-body text-4xl font-bold leading-[1.2] bg-white dark:bg-black bg-gradient-to-br from-purple-300/70 dark:from-purple-800 to-transparent">
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
         <div className="p-8">

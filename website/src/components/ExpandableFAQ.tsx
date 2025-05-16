@@ -18,7 +18,7 @@ export const ExpandableFAQ = (props: ExpandableFAQProps): JSX.Element => {
         </div>
         <span className="text-xl font-semibold leading-1.8">{props.title}</span>
       </button>
-      <div className="w-full h-1 dark:bg-white bg-charcoal-300"></div>
+      <div className="w-full h-[3px] dark:bg-white bg-charcoal-300"></div>
       {expanded && <p className="text-base leading-[1.8] mx-13.5 my-6 font-normal tracking-[0.2px]">{props.text}</p>}
     </div>
   );
