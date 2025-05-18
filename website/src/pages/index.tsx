@@ -364,7 +364,7 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/developtest.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Develop and Test
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
@@ -381,7 +381,7 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/grow.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Grow Skills at Your Pace
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
@@ -398,7 +398,7 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/troubleshoot1.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
@@ -415,7 +415,7 @@ function Pods(): JSX.Element {
                   dark: useBaseUrl('img/troubleshoot2.svg'),
                 }}
               />
-              <h2 className="title-font sm:text-3xl text-2xl py-3 font-bold text-charcoal-300 dark:text-white mb-0">
+              <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
