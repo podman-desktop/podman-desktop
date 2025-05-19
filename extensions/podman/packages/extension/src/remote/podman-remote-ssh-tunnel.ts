@@ -70,8 +70,6 @@ export class PodmanRemoteSshTunnel implements ProviderConnectionShellAccess, Dis
   }
 
   open(): ProviderConnectionShellAccessSession {
-    if (!this.isListening()) throw new Error('cannot create shell session: not connected');
-
     let mStream: ClientChannel | undefined;
 
     // create event emitters
