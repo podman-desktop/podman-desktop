@@ -640,8 +640,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
       eslint-plugin-svelte:
-        specifier: ^3.7.0
-        version: 3.7.0(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
+        specifier: ^3.8.1
+        version: 3.8.1(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
@@ -752,8 +752,8 @@ importers:
         specifier: ^8.32.1
         version: 8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)
       eslint-plugin-svelte:
-        specifier: ^3.7.0
-        version: 3.7.0(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
+        specifier: ^3.8.1
+        version: 3.8.1(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
       jsdom:
         specifier: ^27.0.0-beta.1
         version: 27.0.0-beta.1
@@ -854,8 +854,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       eslint-plugin-svelte:
-        specifier: ^3.7.0
-        version: 3.7.0(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
+        specifier: ^3.8.1
+        version: 3.8.1(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2)
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
@@ -6685,8 +6685,8 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-svelte@3.7.0:
-    resolution: {integrity: sha512-/MQ9gYLbA24AFUN0QwpzRqi4VCISaRyt8xa2t3iVnI5mWa38xuTXM+iz/8LxKCg34jX2PfPcEkZH7CUem/Eugw==}
+  eslint-plugin-svelte@3.8.1:
+    resolution: {integrity: sha512-w6NQifz1xBIFcs4XMLYT36xukgN1xgzoPGk1nJLC1UeZ8O4CUCCSZx1tgwq3yRNkMSXMUqbMJjslFweWsDlAoA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
@@ -19291,12 +19291,13 @@ snapshots:
       semver: 7.7.1
       typescript: 5.8.3
 
-  eslint-plugin-svelte@3.7.0(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2):
+  eslint-plugin-svelte@3.8.1(eslint@9.26.0(jiti@2.4.2))(svelte@5.28.2):
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@9.26.0(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.0
       eslint: 9.26.0(jiti@2.4.2)
       esutils: 2.0.3
+      globals: 16.1.0
       known-css-properties: 0.36.0
       postcss: 8.5.3
       postcss-load-config: 3.1.4(postcss@8.5.3)
