@@ -1,15 +1,19 @@
+<script module>
+export interface Person {
+  name: string;
+  // do not allow children to have children
+  children: Array<Person & { children: [] }>;
+}
+</script>
+
 <script lang="ts">
 import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-interface Person {
-  name: string;
-  // do not allow children to have children
-  children: Array<Person & { children: [] }>;
-}
 
-export interface Props {
+
+interface Props {
   people: Array<Person>;
 }
 
