@@ -46,13 +46,14 @@ const notesInfo =
 const notesText = 'import a\ntest1 release title!\n![test1-release](img1)\nello world\n';
 
 const notesPoints =
-  '- **line1**:line1 info\n- **line2**:line2 info\n- **line3**:line3 info\n- **line4**:line4 info\n- **line5**:line5 info\n';
+  '- **line1**:line1 info\n- **line2**:line2 info <!-- :link[action text]{href=/go/here title="action title"} -->\n- **line3**:line3 info\n- **line4**:line4 info\n- **line5**:line5 info\n';
 
 const jsonResult = {
   image: 'https://podman-desktop.io/img/blog/podman-desktop-release-test1/test1.png',
   blog: 'https://podman-desktop.io/blog/podman-desktop-release-test1',
   title: 'test1 release title!',
-  summary: '- **line1**:line1 info\n- **line2**:line2 info\n- **line3**:line3 info\n- **line4**:line4 info',
+  summary:
+    '- **line1**:line1 info\n- **line2**:line2 info :link[action text]{href=/go/here title="action title"}\n- **line3**:line3 info\n- **line4**:line4 info',
 };
 
 const defaultParseFrontMatterMock = vi.fn();
@@ -82,7 +83,7 @@ test('create release-notes directory when it does not exist', async () => {
   expect(mocks.mkdirMock).toHaveBeenCalled();
 });
 
-test('Do not create release-nnotes directory when it exists', async () => {
+test('Do not create release-notes directory when it exists', async () => {
   await createNotesFiles(params);
   expect(mocks.mkdirMock).not.toHaveBeenCalled();
 });
