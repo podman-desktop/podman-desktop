@@ -109,6 +109,18 @@ Let's check if our pod was created and running successfully.
 We can also check out the “Logs” tab to see the logs of the running Pod.
 ![View pod logs](img/podman-desktop-core-blog/kubernetes-pod-logs.png)
 
+### Video walkthrough
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/orEZhYDf6sA"
+  title="Containers and Kubernetes development with Podman Desktop"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
 ## Conclusion
 
 Podman Desktop significantly streamlines the container and Kubernetes development experience by providing:
