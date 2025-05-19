@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Red Hat, Inc.
+# Copyright (C) 2024-2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -89,15 +89,21 @@ jobs:
           ELECTRON_VERSION=$(jq -r '.devDependencies.electron' podman-desktop-package.json)
           echo "Found electron ${ELECTRON_VERSION}"
 
+          # electron root url
+          export ELECTRON_BASE_URL="https://github.com/electron/electron/releases/download/v${ELECTRON_VERSION}"
+          export ELECTRON_BASE_URL_SHA=$(echo -n "$ELECTRON_BASE_URL" | sha256sum | cut -d ' ' -f 1)
+          export ELECTRON_CACHE_DIRECTORY="electron-cache/${ELECTRON_BASE_URL_SHA}"
+          export ELECTRON_CACHE_DIRECTORY_SLASH="${ELECTRON_CACHE_DIRECTORY}/"
+
           # download electron binary (amd64)
-          export ELECTRON_AMD64_URL="https://github.com/electron/electron/releases/download/v${ELECTRON_VERSION}/electron-v${ELECTRON_VERSION}-linux-x64.zip"
+          export ELECTRON_AMD64_URL="${ELECTRON_BASE_URL}/electron-v${ELECTRON_VERSION}-linux-x64.zip"
           wget ${ELECTRON_AMD64_URL} -qO electron-x64.zip
           # compute shasum
           export ELECTRON_AMD64_SHASUM=$(shasum -a 256 electron-x64.zip | awk '{print $1}')
           echo "electron x64 zip sha256 is ${ELECTRON_AMD64_SHASUM}"
 
           # download electron binary (arm64)
-          export ELECTRON_ARM64_URL="https://github.com/electron/electron/releases/download/v${ELECTRON_VERSION}/electron-v${ELECTRON_VERSION}-linux-arm64.zip"
+          export ELECTRON_ARM64_URL="${ELECTRON_BASE_URL}/electron-v${ELECTRON_VERSION}-linux-arm64.zip"
           wget ${ELECTRON_ARM64_URL} -qO electron-arm64.zip
           # compute shasum
           export ELECTRON_ARM64_SHASUM=$(shasum -a 256 electron-arm64.zip | awk '{print $1}')
@@ -107,8 +113,8 @@ jobs:
           cp io.podman_desktop.PodmanDesktop.yml io.podman_desktop.PodmanDesktop.ori
 
           # update the url and sha256 for the electron binaries for amd64 and arm64
-          yq -i '(.modules[].sources[] | select(.url == "*electron*x64*")) += {"url":strenv(ELECTRON_AMD64_URL), "sha256":strenv(ELECTRON_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
-          yq -i '(.modules[].sources[] | select(.url == "*electron*arm64*")) += {"url":strenv(ELECTRON_ARM64_URL), "sha256":strenv(ELECTRON_ARM64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*electron*x64*")) += {"url":strenv(ELECTRON_AMD64_URL), "dest":strenv(ELECTRON_CACHE_DIRECTORY_SLASH), "sha256":strenv(ELECTRON_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*electron*arm64*")) += {"url":strenv(ELECTRON_ARM64_URL), "dest":strenv(ELECTRON_CACHE_DIRECTORY_SLASH), "sha256":strenv(ELECTRON_ARM64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
 
           # update the pnpm store url/sha256
           yq -i '(.modules[].sources[] | select(.url == "*store-cache-pnpm*amd64*")) += {"url":strenv(PNPM_STORE_CACHE_AMD64_URL), "sha256":strenv(PODMAN_DESKTOP_PNPM_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
@@ -116,6 +122,9 @@ jobs:
 
           # update the source url/sha256 of podman desktop
           yq -i '(.modules[].sources[] | select(.url == "*podman-desktop*refs*tags*")) += {"url":strenv(PODMAN_DESKTOP_SOURCE_URL), "sha256":strenv(PODMAN_DESKTOP_SOURCE_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+
+          # update the version of the cache for the env variable
+          sed -i -E "s|^(- export ELECTRON_CACHE=\").*(\")|\1\$(pwd)/${ELECTRON_CACHE_DIRECTORY}\2|" io.podman_desktop.PodmanDesktop.yml
 
         env:
           GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
