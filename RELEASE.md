@@ -103,15 +103,7 @@ The link to the PR is at https://github.com/flathub/io.podman_desktop.PodmanDesk
 
 #### Brew
 
-Publish to brew. The workflow will create an automated PR to the brew cask repository https://github.com/Homebrew/homebrew-cask/
-
-1. Go to https://github.com/containers/podman-desktop/actions/workflows/publish-to-brew.yaml
-1. Click on the top right drop-down `Run workflow`
-1. Select the release (under tags), which would be `v0.12.0`
-1. Enter the release version `0.12.0`. DO NOT add the `v`
-1. Click `Run workflow`
-
-You can view the PR at: https://github.com/Homebrew/homebrew-cask/pulls?q=is%3Apr+podman-desktop
+⏭️ Brew bot automation handles the update on the Brew side. No manual action is necessary.
 
 #### Winget
 
