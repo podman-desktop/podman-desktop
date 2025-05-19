@@ -31,11 +31,16 @@ env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   DEBUG: electron-builder
 
+permissions:
+  contents: read
+
 jobs:
 
   tag:
     name: Tagging
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     outputs:
       githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
       desktopVersion: ${{ steps.TAG_UTIL.outputs.desktopVersion}}
@@ -200,6 +205,8 @@ jobs:
   release:
     needs: [tag, build]
     name: Release
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     steps:
       - name: id
@@ -272,6 +279,8 @@ jobs:
     needs: [tag, release]
     name: pnpm-store-${{ matrix.arch }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     strategy:
       matrix:
         arch: [amd64, arm64]
