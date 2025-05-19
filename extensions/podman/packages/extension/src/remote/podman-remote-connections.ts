@@ -182,6 +182,7 @@ export class PodmanRemoteConnections {
         endpoint: {
           socketPath: localPath,
         },
+        shellAccess: sshTunnel,
       });
       this.#extensionContext.subscriptions.push(connectionDisposable);
       const remoteConnection: RemoteSystemConnection = {
