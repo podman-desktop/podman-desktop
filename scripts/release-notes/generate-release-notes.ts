@@ -58,6 +58,9 @@ class ReleaseNotesPreparator {
     private milestone: string,
     private username: string,
     private model: string | undefined,
+    private port: string,
+    private endpoint: string,
+    private useOllama: boolean,
   ) {
     this.octokit = new Octokit({ auth: token });
   }
@@ -144,7 +147,9 @@ class ReleaseNotesPreparator {
 
       if (firstTimeContributorsMap[username]) {
         // Get only the oldest one
-        if (new Date(newPRInfo.created_at) > new Date(firstTimeContributorsMap[username].created_at)) {
+        if (
+          new Date(newPRInfo.created_at as string) > new Date(firstTimeContributorsMap[username].created_at as string)
+        ) {
           firstTimeContributorsMap[username] = newPRInfo;
         }
       } else {
@@ -152,7 +157,6 @@ class ReleaseNotesPreparator {
       }
     }
 
-    // Vrátíme pole PRInfo z naší mapy
     return Object.values(firstTimeContributorsMap);
   }
 
@@ -198,6 +202,117 @@ class ReleaseNotesPreparator {
     );
 
     return prs;
+  }
+
+  private async fetchFromOllama(content: string): Promise<HighlitedPR[]> {
+    const body = {
+      model: this.model,
+      stream: false,
+      prompt: `Instruction: Identify the 4 most interesting PRs from the list provided. For each of them, generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use word PR in the longDesc and shortDesc. DATA: ${content}`,
+      format: {
+        type: 'object',
+        properties: {
+          prs: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                shortDesc: { type: 'string' },
+                longDesc: { type: 'string' },
+              },
+              required: ['title', 'shortDesc', 'longDesc'],
+            },
+          },
+        },
+        required: ['prs'],
+      },
+    };
+
+    return await fetch(`http://localhost:${this.port}${this.endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+      .then(async response => {
+        if (!response.ok) {
+          console.error(`HTTP error! Status: ${response.status}`);
+          return [];
+        }
+
+        try {
+          const prs = JSON.parse((await response.json()).response).prs;
+          return prs;
+        } catch (e: unknown) {
+          // We didn't get data from correct JSON format
+          console.error(
+            `Got error ${e}.\nGenerated data from AI was not valid JSON format, generating release notes without highlights.`,
+          );
+          return [];
+        }
+      })
+      .then(async result => {
+        return result as HighlitedPR[];
+      })
+      .catch(async (error: unknown) => {
+        console.error(
+          `Got error ${error}.\nThere was a problem when generating highlited PRs. Generating release notes without highlights.`,
+        );
+        return [];
+      });
+  }
+
+  private async fetchFromAiLab(content: string): Promise<HighlitedPR[]> {
+    const body = {
+      model: 'AI Lab model',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant that returns only JSON complying exactly with the provided schema.',
+        },
+        {
+          role: 'user',
+          content: `Instruction: Identify the 4 most interesting PRs from the list provided. For each of them, generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use word PR in the longDesc and shortDesc. DATA: ${content}`,
+        },
+      ],
+    };
+
+    return await fetch(`http://localhost:${this.port}${this.endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+      .then(async response => {
+        if (!response.ok) {
+          console.error(`HTTP error! Status: ${response.status}`);
+          return [];
+        }
+
+        try {
+          console.log((await response.json()).choices[0].message.content);
+          const prs = JSON.parse(await response.json()).choices;
+          return prs;
+        } catch (e: unknown) {
+          // We didn't get data from correct JSON format
+          console.error(
+            `Got error ${e}.\nGenerated data from AI was not valid JSON format, generating release notes without highlights.`,
+          );
+          return [];
+        }
+      })
+      .then(async result => {
+        return result as HighlitedPR[];
+      })
+      .catch(async (error: unknown) => {
+        console.error(
+          `Got error ${error}.\nThere was a problem when generating highlited PRs. Generating release notes without highlights.`,
+        );
+        return [];
+      });
   }
 
   public async generate(): Promise<void> {
@@ -246,7 +361,7 @@ class ReleaseNotesPreparator {
 
     const changelog: PRCategory[] = Object.values(categorizedPRsMap);
 
-    if (!this.model) {
+    if (!this.port) {
       // skip generating higlited PRs
       return await this.generateMD(changelog, firstTimeContributorPRs, []);
     }
@@ -258,63 +373,10 @@ class ReleaseNotesPreparator {
     );
     const content = features.map((pr, index) => `PR${index + 1}: ${pr.title} - ${pr.body}\n}`).join('');
 
-    const body = {
-      model: this.model,
-      stream: false,
-      prompt: `Instruction: Identify the 4 most interesting PRs from the list provided. For each of them, generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use word PR in the longDesc and shortDesc. DATA: ${content}`,
-      format: {
-        type: 'object',
-        properties: {
-          prs: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                shortDesc: { type: 'string' },
-                longDesc: { type: 'string' },
-              },
-              required: ['title', 'shortDesc', 'longDesc'],
-            },
-          },
-        },
-        required: ['prs'],
-      },
-    };
-
-    await fetch('http://localhost:11434/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-      .then(async response => {
-        if (!response.ok) {
-          console.error(`HTTP error! Status: ${response.status}`);
-          return [];
-        }
-
-        try {
-          const prs = JSON.parse((await response.json()).response).prs;
-          return prs;
-        } catch (e: unknown) {
-          // We didn't get data from correct JSON format
-          console.error(
-            `Got error ${e}.\nGenerated data from AI was not valid JSON format, generating release notes without highlights.`,
-          );
-          return [];
-        }
-      })
-      .then(async result => {
-        // Generate the output with highlited features
-        await this.generateMD(changelog, firstTimeContributorPRs, result as HighlitedPR[]);
-      })
-      .catch(async (error: unknown) => {
-        // Generate the output without highlited features
-        console.error(`Fetch error: ${error}\nGenerating release notes without highlights.`);
-        await this.generateMD(changelog, firstTimeContributorPRs, []);
-      });
+    let result: HighlitedPR[];
+    if (this.useOllama) result = await this.fetchFromOllama(content);
+    else result = await this.fetchFromAiLab(content);
+    await this.generateMD(changelog, firstTimeContributorPRs, result);
   }
 }
 
@@ -327,8 +389,13 @@ function showHelp(): void {
     '--username - GitHub username which will be used in release notes (GITHUB_USERNAME env variable can be used)',
   );
   console.log('--milestone - GitHub milestone for which we want to generate release notes e.g. 1.18.0');
+  console.log('--ollama - script will try to use ollama when model is provided');
   console.log(
     '--model - name of ollama model for generating highlited PRs e.g. gemma3:27b (before running this script run "ollama run gemma3:27b")',
+  );
+  console.log('--port - port on which is service running');
+  console.log(
+    '--endpoint - endpoint of a running service, default is "/v1/chat/completions" for AI Lab and "/api/generate" for Ollama',
   );
 }
 
@@ -340,34 +407,77 @@ async function run(): Promise<void> {
   let repo = 'podman-desktop';
   let model: string | undefined = undefined;
   let milestone: string = '';
+  let port: string | undefined = undefined;
+  let endpoint: string | undefined = undefined;
   let username = process.env.GITHUB_USERNAME;
+  let useOllama = false;
   if (args.length === 0) {
     showHelp();
     return;
   }
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--token') {
-      token = args[++i];
-    } else if (args[i] === '--org') {
-      organization = args[++i];
-    } else if (args[i] === '--repo') {
-      repo = args[++i];
-    } else if (args[i] === '--username') {
-      username = args[++i];
-    } else if (args[i] === '--milestone') {
-      milestone = args[++i];
-    } else if (args[i] === '--model') {
-      model = args[++i];
-    } else if (args[i] === '--help' || args[i] === '-h') {
-      showHelp();
-      return;
+    switch (args[i]) {
+      case '--token':
+        token = args[++i];
+        break;
+      case '--org':
+        organization = args[++i];
+        break;
+      case '--repo':
+        repo = args[++i];
+        break;
+      case '--username':
+        username = args[++i];
+        break;
+      case '--milestone':
+        milestone = args[++i];
+        break;
+      case '--model':
+        model = args[++i];
+        break;
+      case '--port':
+        port = args[++i];
+        break;
+      case '--endpoint':
+        endpoint = args[++i];
+        break;
+      case '--ollama':
+        useOllama = true;
+        break;
+      case '--help':
+      case '-h':
+        showHelp();
+        return;
+      default:
+        console.warn(`Unknown option: ${args[i]}`);
     }
   }
+
+  if (useOllama && !model) {
+    console.error('When using --ollama, you need to specify --model argument');
+    process.exit(1);
+  }
+
+  if (useOllama) {
+    port ??= '11434';
+    endpoint ??= '/api/generate';
+  } else {
+    port ??= '45621';
+    endpoint ??= '/v1/chat/completions';
+  }
+
   if (token && username) {
-    if (!model) {
-      console.log('Generating release notes without highlited PRs');
-    }
-    await new ReleaseNotesPreparator(token, organization, repo, milestone, username, model).generate();
+    await new ReleaseNotesPreparator(
+      token,
+      organization,
+      repo,
+      milestone,
+      username,
+      model,
+      port,
+      endpoint,
+      useOllama,
+    ).generate();
   } else {
     console.log('No token or username found. Use either GITHUB_TOKEN, GITHUB_USERNAME or pass it as an argument');
   }
