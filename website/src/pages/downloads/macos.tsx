@@ -108,7 +108,7 @@ export function MacOSDownloads(): JSX.Element {
     });
   }, []);
   return (
-    <div className="basis-1/3 py-2 rounded-lg dark:text-gray-400 text-gray-900  bg-zinc-300/25 dark:bg-zinc-700/25 bg-blend-multiply text-center items-center">
+    <div className="basis-1/3 py-2 rounded-lg dark:text-gray-400 text-charcoal-300 bg-zinc-300/25 dark:bg-zinc-700/25 bg-blend-multiply text-center items-center">
       <FontAwesomeIcon size="4x" icon={faApple} className="my-4" />
       <h2 className="w-full text-center text-4xl title-font font-medium pb-3 border-purple-500 border-b-2">macOS</h2>
       <div className="flex p-1 flex-col md:flex-col items-center align-top">
@@ -213,7 +213,7 @@ export default function Home(): JSX.Element {
       <TailWindThemeSelector />
       <section className="container mx-auto flex justify-center flex-col">
         <div className="w-full flex flex-col">
-          <h1 className="title-font sm:text-3xl text-2xl lg:text-5xl mb-10 font-medium text-gray-900 dark:text-white">
+          <h1 className="title-font sm:text-3xl text-2xl lg:text-5xl mb-10 font-medium text-charcoal-300 dark:text-white">
             macOS Downloads
           </h1>
           <main className="h-screen">

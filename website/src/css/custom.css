@@ -29,6 +29,7 @@
   --ifm-navbar-height: 85px;
   --ifm-navbar-shadow: none;
   --ifm-divider: #e2e2e3;
+  --ifm-footer-link-color: #464649;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */

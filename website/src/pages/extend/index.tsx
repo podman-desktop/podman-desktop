@@ -14,10 +14,10 @@ export default function Home(): JSX.Element {
     <Layout title={siteConfig.title} description="Extensibility">
       <TailWindThemeSelector />
 
-      <section className="text-gray-900 dark:text-gray-700 body-font">
+      <section className="text-charcoal-300 dark:text-gray-700 body-font">
         <div className="container mx-auto flex px-5 py-24 items-center justify-center flex-col">
           <div className="text-center lg:w-2/3 w-full">
-            <h1 className="title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+            <h1 className="title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Extensibility Documentation and Resources
             </h1>
             <p>Explore our comprehensive guides on extending Podman Desktop:</p>
@@ -46,7 +46,7 @@ export default function Home(): JSX.Element {
               </ul>
             </div>
 
-            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               What are Extensions?
             </h1>
             <p>
@@ -60,7 +60,7 @@ export default function Home(): JSX.Element {
               <li>Automating tasks and integrating with external services.</li>
             </ul>
 
-            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Getting Started with Extensions
             </h1>
             <p>
@@ -94,7 +94,7 @@ export default function Home(): JSX.Element {
               .
             </p>
 
-            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Visualizing Extension Capabilities
             </h1>
             <ThemedImage
@@ -106,7 +106,7 @@ export default function Home(): JSX.Element {
               }}
             />
 
-            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-gray-900 dark:text-white">
+            <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Extend Podman Desktop with Docker Desktop Extensions
             </h1>
             <p>
