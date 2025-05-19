@@ -9,7 +9,7 @@ interface Person {
   children: Array<Person & { children: [] }>;
 }
 
-interface Props {
+export interface Props {
   people: Array<Person>;
 }
 
