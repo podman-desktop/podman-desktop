@@ -1,8 +1,8 @@
 <script lang="ts">
 import SimpleColumn from './SimpleColumn.svelte';
-import type { Person } from './table';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
+import type { Person } from './test-table';
 
 interface Props {
   people: Array<Person>;

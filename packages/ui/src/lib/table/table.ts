@@ -120,12 +120,3 @@ export interface RowInformation<Type, ChildType> {
 export class Row<Type, ChildType = Type> {
   constructor(readonly info: RowInformation<Type, ChildType>) {}
 }
-
-/**
- * A person object.
- */
-export interface Person {
-  name: string;
-  // do not allow children to have children
-  children: Array<Person & { children: [] }>;
-}
