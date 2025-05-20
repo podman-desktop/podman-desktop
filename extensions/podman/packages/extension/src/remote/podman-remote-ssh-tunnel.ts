@@ -126,7 +126,7 @@ export class PodmanRemoteSshTunnel implements ProviderConnectionShellAccess, Dis
 
   dispose(): void {
     this.#shells.forEach(shell => shell.dispose());
-    this.disconnect();
+    this.disconnect().catch(console.error);
   }
 
   status(): ProviderConnectionStatus {
@@ -229,11 +229,12 @@ export class PodmanRemoteSshTunnel implements ProviderConnectionShellAccess, Dis
     }
   }
 
-  disconnect(): void {
+  protected async disconnect(): Promise<void> {
     // Set the reconnect flag to false to prevent reconnecting
     this.#reconnect = false;
     this.#client?.end();
-    this.#server?.close();
+    this.#client = undefined;
+    await this.#server?.[Symbol.asyncDispose]();
   }
 
   isConnected(): Promise<boolean> {

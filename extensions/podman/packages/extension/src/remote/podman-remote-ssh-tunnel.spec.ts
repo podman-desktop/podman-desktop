@@ -70,8 +70,12 @@ vi.mock('@podman-desktop/api', () => {
 });
 
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
-  isListening(): boolean {
+  override isListening(): boolean {
     return super.isListening();
+  }
+
+  override disconnect(): Promise<void> {
+    return super.disconnect();
   }
 }
 
@@ -131,14 +135,14 @@ beforeEach(async () => {
     socketOrNpipePathLocal = join(tmpdir(), 'test-local.sock');
     socketOrNpipePathRemote = join(tmpdir(), 'test-remote.sock');
   }
+});
+
+afterEach(async () => {
+  sshServer.close();
 
   // delete file if exists
   await rm(socketOrNpipePathLocal, { force: true });
   await rm(socketOrNpipePathRemote, { force: true });
-});
-
-afterEach(() => {
-  sshServer.close();
 });
 
 test('should be able to connect', async () => {
@@ -173,8 +177,13 @@ test('should be able to connect', async () => {
 
   await vi.waitFor(() => expect(connectedToLocal).toBeTruthy());
 
+  client.destroy();
   client.end();
   npipeServer.close();
+
+  await vi.waitFor(() => client.closed);
+
+  await podmanRemoteSshTunnel.disconnect();
 });
 
 describe('shell', () => {
