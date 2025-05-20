@@ -13,13 +13,22 @@ In the world of modern software development, containers and Kubernetes are no lo
 First, let's start by building an application in a container with Podman Desktop.We need our application code and a Containerfile. For a simple application, your Containerfile might look something like:
 
 ```Dockerfile
-FROM nginx
+FROM docker.io/nginx:stable
 
-COPY ./index.html /usr/share/nginx/html/
+COPY <<EOF /usr/share/nginx/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Nginx Container</title>
+</head>
+<body>
+    <h1>Hello from my Podman Nginx Container!</h1>
+    <p>This content is being served by Nginx running on a Podman container.</p>
+</body>
+</html>
+EOF
 
 EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
 ```
 
 Once your application and Containerfile are ready, Podman Desktop makes the build process straightforward:
@@ -27,7 +36,7 @@ Once your application and Containerfile are ready, Podman Desktop makes the buil
 
 1. Navigate to the "Images" section
 2. Select your Containerfile
-3. Provide a name for your image
+3. Provide a name for your image (e.g. webserver)
 4. Click "Build"
 
 After building your image, you can immediately run it with a single click, and your container will appear in the "Containers" list.
@@ -130,6 +139,6 @@ Podman Desktop significantly streamlines the container and Kubernetes developmen
 - Powerful logging and debugging tools
 - A bridge between local development and production Kubernetes environments
 
-Whether you're just starting with containers or managing complex Kubernetes deployments, Podman Desktop offers tools that simplify your workflow and increase productivity. As a CNCF project, it continues to evolve with the needs of the cloud-native community, making it an increasingly valuable tool in any developer's toolkit.
+Whether you're just starting with containers or managing complex Kubernetes deployments, Podman Desktop offers tools that simplify your workflow and increase productivity. As [a CNCF project](https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf), it continues to evolve with the needs of the cloud-native community, making it an increasingly valuable tool in any developer's toolkit.
 
 Try Podman Desktop today and experience how it can transform your container, Kubernetes and OpenShift workflows\!
