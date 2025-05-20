@@ -131,14 +131,14 @@ beforeEach(async () => {
     socketOrNpipePathLocal = join(tmpdir(), 'test-local.sock');
     socketOrNpipePathRemote = join(tmpdir(), 'test-remote.sock');
   }
-});
-
-afterEach(async () => {
-  sshServer.close();
 
   // delete file if exists
   await rm(socketOrNpipePathLocal, { force: true });
   await rm(socketOrNpipePathRemote, { force: true });
+});
+
+afterEach(() => {
+  sshServer.close();
 });
 
 test('should be able to connect', async () => {
@@ -248,6 +248,8 @@ describe('shell', () => {
     await vi.waitFor(() => {
       expect(shellDataListener).toHaveBeenCalledWith(Buffer.from('ping'));
     });
+
+    podmanRemoteSshTunnel.dispose();
   });
 
   test('server to client data', async () => {
@@ -273,6 +275,8 @@ describe('shell', () => {
         data: Buffer.from('ping'),
       });
     });
+
+    podmanRemoteSshTunnel.dispose();
   });
 
   test('shell closing should trigger onEnd', async () => {
@@ -296,6 +300,8 @@ describe('shell', () => {
     await vi.waitFor(() => {
       expect(shellDataListener).toHaveBeenCalledOnce();
     });
+
+    podmanRemoteSshTunnel.dispose();
   });
 
   test('resize should request resize', async () => {
@@ -323,5 +329,7 @@ describe('shell', () => {
 
     expect(info.rows).toEqual(88);
     expect(info.cols).toEqual(32);
+
+    podmanRemoteSshTunnel.dispose();
   });
 });
