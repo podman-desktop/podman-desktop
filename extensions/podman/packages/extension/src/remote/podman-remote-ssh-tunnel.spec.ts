@@ -131,14 +131,14 @@ beforeEach(async () => {
     socketOrNpipePathLocal = join(tmpdir(), 'test-local.sock');
     socketOrNpipePathRemote = join(tmpdir(), 'test-remote.sock');
   }
+});
+
+afterEach(async () => {
+  sshServer.close();
 
   // delete file if exists
   await rm(socketOrNpipePathLocal, { force: true });
   await rm(socketOrNpipePathRemote, { force: true });
-});
-
-afterEach(() => {
-  sshServer.close();
 });
 
 test('should be able to connect', async () => {
