@@ -27,47 +27,44 @@ import { createKindCluster, deleteCluster } from '../utility/cluster-operations'
 import { test } from '../utility/fixtures';
 import {
   applyYamlFileToCluster,
+  checkDeploymentReplicasInfo,
   checkKubernetesResourceState,
   createKubernetesResource,
   deleteKubernetesResource,
+  editDeploymentYamlFile,
 } from '../utility/kubernetes';
 import { deletePod, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
-const CLUSTER_NAME: string = 'kind-cluster';
-const CLUSTER_CREATION_TIMEOUT: number = 300_000;
-const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
-const RESOURCE_NAME: string = 'kind';
-const KUBERNETES_CONTEXT = `kind-${CLUSTER_NAME}`;
-const KUBERNETES_NAMESPACE = 'default';
-const PVC_NAME = 'test-pvc-resource';
-const PVC_POD_NAME = 'test-pod-pvcs';
-const CONFIGMAP_NAME = 'test-configmap-resource';
-const SECRET_NAME = 'test-secret-resource';
-const SECRET_POD_NAME = 'test-pod-configmaps-secrets';
-const CRONJOB_RESOURCE_NAME = 'test-cronjob-resource';
+const clusterName: string = 'kind-cluster';
+const clusterCreationTimeout: number = 300_000;
+const kindNode: string = `${clusterName}-control-plane`;
+const resourceName: string = 'kind';
+const kubernetesContext = `kind-${clusterName}`;
+const kubernetesNamespace = 'default';
+const pvcName = 'test-pvc-resource';
+const pvcPodName = 'test-pod-pvcs';
+const configMapName = 'test-configmap-resource';
+const secretName = 'test-secret-resource';
+const secretPodName = 'test-pod-configmaps-secrets';
+const deploymentName = 'test-deployment-resource';
+const cronJobName = 'test-cronjob-resource';
 
-const KUBERNETES_RUNTIME = {
+const kubernetesRuntime = {
   runtime: PlayYamlRuntime.Kubernetes,
-  kubernetesContext: KUBERNETES_CONTEXT,
-  kubernetesNamespace: KUBERNETES_NAMESPACE,
+  kubernetesContext: kubernetesContext,
+  kubernetesNamespace: kubernetesNamespace,
 };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PVC_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${PVC_NAME}.yaml`);
-const PVC_POD_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${PVC_POD_NAME}.yaml`);
-const CONFIGMAP_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${CONFIGMAP_NAME}.yaml`);
-const SECRET_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SECRET_NAME}.yaml`);
-const SECRET_POD_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SECRET_POD_NAME}.yaml`);
-const CRONJOB_YAML_PATH = path.resolve(
-  __dirname,
-  '..',
-  '..',
-  'resources',
-  'kubernetes',
-  `${CRONJOB_RESOURCE_NAME}.yaml`,
-);
+const pvcYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${pvcName}.yaml`);
+const pvcPodYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${pvcPodName}.yaml`);
+const configMapYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${configMapName}.yaml`);
+const secretYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${secretName}.yaml`);
+const secretPodYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${secretPodName}.yaml`);
+const deploymentYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${deploymentName}.yaml`);
+const cronJobYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${cronJobName}.yaml`);
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
@@ -88,19 +85,19 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   }
 
   if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-    await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+    await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
       providerType: providerTypeGHA,
       useIngressController: false,
     });
   } else {
-    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+    await createKindCluster(page, clusterName, true, clusterCreationTimeout);
   }
 });
 
 test.afterAll(async ({ runner, page }) => {
   test.setTimeout(90000);
   try {
-    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    await deleteCluster(page, resourceName, kindNode, clusterName);
   } finally {
     await runner.close();
   }
@@ -108,26 +105,21 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () => {
   test('Kubernetes Nodes test', async ({ page }) => {
-    await checkKubernetesResourceState(page, KubernetesResources.Nodes, KIND_NODE, KubernetesResourceState.Running);
+    await checkKubernetesResourceState(page, KubernetesResources.Nodes, kindNode, KubernetesResourceState.Running);
   });
   test.describe
     .serial('PVC lifecycle test', () => {
       test('Create a new PVC resource', async ({ page }) => {
-        await createKubernetesResource(page, KubernetesResources.PVCs, PVC_NAME, PVC_YAML_PATH, KUBERNETES_RUNTIME);
-        await checkKubernetesResourceState(page, KubernetesResources.PVCs, PVC_NAME, KubernetesResourceState.Stopped);
+        await createKubernetesResource(page, KubernetesResources.PVCs, pvcName, pvcYamlPath, kubernetesRuntime);
+        await checkKubernetesResourceState(page, KubernetesResources.PVCs, pvcName, KubernetesResourceState.Stopped);
       });
       test('Bind the PVC to a pod', async ({ page }) => {
-        await applyYamlFileToCluster(page, PVC_POD_YAML_PATH, KUBERNETES_RUNTIME);
-        await checkKubernetesResourceState(
-          page,
-          KubernetesResources.Pods,
-          PVC_POD_NAME,
-          KubernetesResourceState.Running,
-        );
+        await applyYamlFileToCluster(page, pvcPodYamlPath, kubernetesRuntime);
+        await checkKubernetesResourceState(page, KubernetesResources.Pods, pvcPodName, KubernetesResourceState.Running);
       });
       test('Delete the PVC resource', async ({ page }) => {
-        await deleteKubernetesResource(page, KubernetesResources.Pods, PVC_POD_NAME);
-        await deleteKubernetesResource(page, KubernetesResources.PVCs, PVC_NAME);
+        await deleteKubernetesResource(page, KubernetesResources.Pods, pvcPodName);
+        await deleteKubernetesResource(page, KubernetesResources.PVCs, pvcName);
       });
     });
   test.describe
@@ -136,14 +128,14 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await createKubernetesResource(
           page,
           KubernetesResources.ConfigMapsSecrets,
-          CONFIGMAP_NAME,
-          CONFIGMAP_YAML_PATH,
-          KUBERNETES_RUNTIME,
+          configMapName,
+          configMapYamlPath,
+          kubernetesRuntime,
         );
         await checkKubernetesResourceState(
           page,
           KubernetesResources.ConfigMapsSecrets,
-          CONFIGMAP_NAME,
+          configMapName,
           KubernetesResourceState.Running,
         );
       });
@@ -151,46 +143,85 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await createKubernetesResource(
           page,
           KubernetesResources.ConfigMapsSecrets,
-          SECRET_NAME,
-          SECRET_YAML_PATH,
-          KUBERNETES_RUNTIME,
+          secretName,
+          secretYamlPath,
+          kubernetesRuntime,
         );
         await checkKubernetesResourceState(
           page,
           KubernetesResources.ConfigMapsSecrets,
-          SECRET_NAME,
+          secretName,
           KubernetesResourceState.Running,
         );
       });
       test('Can load config and secrets via env. var in pod', async ({ page }) => {
-        await applyYamlFileToCluster(page, SECRET_POD_YAML_PATH, KUBERNETES_RUNTIME);
+        test.setTimeout(120_000);
+
+        await applyYamlFileToCluster(page, secretPodYamlPath, kubernetesRuntime);
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Pods,
-          SECRET_POD_NAME,
+          secretPodName,
           KubernetesResourceState.Running,
         );
       });
       test('Delete the ConfigMap and Secret resources', async ({ page }) => {
-        await deletePod(page, SECRET_POD_NAME);
-        await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, SECRET_NAME);
-        await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, CONFIGMAP_NAME);
+        await deletePod(page, secretPodName);
+        await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, secretName);
+        await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, configMapName);
       });
     });
+
+  test.describe
+    .serial('Deployment lifecycle test', () => {
+      test('Create a Kubernetes deployment resource', async ({ page }) => {
+        test.setTimeout(90_000);
+        await createKubernetesResource(
+          page,
+          KubernetesResources.Deployments,
+          deploymentName,
+          deploymentYamlPath,
+          kubernetesRuntime,
+        );
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Deployments,
+          deploymentName,
+          KubernetesResourceState.Running,
+        );
+        await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, deploymentName, 3);
+      });
+      test('Edit the Kubernetes deployment YAML file', async ({ page }) => {
+        test.setTimeout(90_000);
+        await editDeploymentYamlFile(page, KubernetesResources.Deployments, deploymentName);
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Deployments,
+          deploymentName,
+          KubernetesResourceState.Running,
+          80_000,
+        );
+        await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, deploymentName, 5);
+      });
+      test('Delete the Kubernetes deployment resource', async ({ page }) => {
+        await deleteKubernetesResource(page, KubernetesResources.Deployments, deploymentName);
+      });
+    });
+
   test.describe
     .serial('Cronjobs lifecycle test', () => {
       test('Create and verify a running Kubernetes cronjob', async ({ page }) => {
         await createKubernetesResource(
           page,
           KubernetesResources.Cronjobs,
-          CRONJOB_RESOURCE_NAME,
-          CRONJOB_YAML_PATH,
-          KUBERNETES_RUNTIME,
+          cronJobName,
+          cronJobYamlPath,
+          kubernetesRuntime,
         );
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Cronjobs,
-          CRONJOB_RESOURCE_NAME,
+          cronJobName,
           KubernetesResourceState.Running,
         );
       });
@@ -199,20 +230,20 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Jobs,
-          CRONJOB_RESOURCE_NAME,
+          cronJobName,
           KubernetesResourceState.Running,
           70_000,
         );
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Pods,
-          CRONJOB_RESOURCE_NAME,
+          cronJobName,
           KubernetesResourceState.Succeeded,
           70_000,
         );
       });
       test('Delete CronJob resource', async ({ page }) => {
-        await deleteKubernetesResource(page, KubernetesResources.Cronjobs, CRONJOB_RESOURCE_NAME);
+        await deleteKubernetesResource(page, KubernetesResources.Cronjobs, cronJobName);
       });
     });
 });

@@ -56,7 +56,7 @@ export class KubernetesResourceDetailsPage extends DetailsPage {
         if (currentState === state) return state;
       }
 
-      return KubernetesResourceState.Unknown;
+      return currentState ?? KubernetesResourceState.Unknown;
     });
   }
 

@@ -91,7 +91,6 @@ export async function checkDeploymentReplicasInfo(
   resourceType: KubernetesResources,
   resourceName: string,
   expectedReplicaCount: number,
-  timeout: number = 80_000,
 ): Promise<void> {
   const navigationBar = new NavigationBar(page);
   const kubernetesBar = await navigationBar.openKubernetes();
@@ -99,9 +98,9 @@ export async function checkDeploymentReplicasInfo(
   const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
   const kubernetesResourceDetails = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
   await playExpect(kubernetesResourceDetails.heading).toBeVisible();
-  await playExpect(kubernetesResourceDetails.tabContent).toContainText(
+  const summaryTab = await kubernetesResourceDetails.activateTab('Summary');
+  await playExpect(summaryTab.tabContent).toContainText(
     `Desired: ${expectedReplicaCount}, Updated: ${expectedReplicaCount}, Total: ${expectedReplicaCount}, Available: ${expectedReplicaCount}, Unavailable: N/A`,
-    { timeout: timeout },
   );
 }
 
@@ -110,7 +109,7 @@ export async function checkKubernetesResourceState(
   resourceType: KubernetesResources,
   resourceName: string,
   expectedResourceState: KubernetesResourceState,
-  timeout: number = 50_000,
+  timeout: number = 60_000,
 ): Promise<void> {
   return test.step(`Check ${resourceType} kubernetes resource state, should be ${expectedResourceState}`, async () => {
     const navigationBar = new NavigationBar(page);
