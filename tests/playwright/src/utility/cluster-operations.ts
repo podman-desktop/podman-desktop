@@ -51,8 +51,13 @@ export async function createKindCluster(
     await playExpect(kindResourceCard.createButton).toBeVisible();
 
     if (await kindResourceCard.doesResourceElementExist()) {
-      console.log(`Kind cluster [${clusterName}] already present, skipping creation.`);
-      return;
+      if ((await kindResourceCard.resourceElementConnectionStatus.textContent()) !== ResourceElementState.Running) {
+        console.log(`Kind cluster [${clusterName}] already present, but not running. Delete the cluster...`);
+        await deleteCluster(page);
+      } else {
+        console.log(`Kind cluster [${clusterName}] already present, skipping creation.`);
+        return;
+      }
     }
 
     await kindResourceCard.createButton.click();
@@ -85,12 +90,11 @@ export async function deleteCluster(
   resourceName: string = 'kind',
   containerName: string = 'kind-cluster-control-plane',
   clusterName: string = 'kind-cluster',
-  timeout: number = 30_000,
+  timeout: number = 50_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceName} cluster`, async () => {
     const navigationBar = new NavigationBar(page);
     const resourceCard = new ResourceConnectionCardPage(page, resourceName, clusterName);
-    const volumeName = await getVolumeNameForContainer(page, containerName);
 
     await navigationBar.openSettings();
     const resourcesPage = new ResourcesPage(page);
@@ -108,6 +112,7 @@ export async function deleteCluster(
     await playExpect(resourceCard.markdownContent).toBeVisible({
       timeout: timeout,
     });
+    const volumeName = await getVolumeNameForContainer(page, containerName);
     await validateClusterResourcesDeletion(page, clusterName, containerName, volumeName);
   });
 }
