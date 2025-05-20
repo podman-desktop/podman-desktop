@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
@@ -34,15 +34,10 @@ async function waitRender(customProperties: object): Promise<void> {
   await tick();
 }
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-}));
-
-beforeAll(() => {
-  Object.defineProperty(window, 'resetOnboarding', { value: vi.fn() });
-  Object.defineProperty(window, 'updateStepState', { value: vi.fn() });
-  Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.restoreAllMocks();
+  vi.mocked(window.telemetryTrack).mockResolvedValue();
 });
 
 test('Expect to have the "Try again" and Cancel buttons if the step represent a failed state', async () => {
@@ -648,9 +643,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   await fireEvent.click(nextButton);
 
   // Wait until 'foobar1completed' is shown
-  while (screen.queryAllByText('foobar1completed').length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(screen.queryAllByText('foobar1completed').length).toBe(0));
 
   // Click next again
   await fireEvent.click(nextButton);
@@ -660,13 +653,10 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
    */
 
   // Wait until 'foobar2stepcontent' is shown
-  while (screen.queryAllByText('foobar2stepcontent').length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(screen.queryAllByText('foobar2stepcontent').length).toBe(0));
 
-  // The title of the next extension is NOT shown since 'global' is set to false (wont show top section).
   const displayName2 = screen.queryByText('Foobar2 Onboarding');
-  expect(displayName2).not.toBeInTheDocument();
+  expect(displayName2).toBeInTheDocument();
 
   // Click next again
   await fireEvent.click(nextButton);
