@@ -46,30 +46,32 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
     bind:this={outsideWindow}
     class="fixed bottom-8 right-4 bg-[var(--pd-modal-bg)] min-h-96 h-3/4 w-[calc(100%-52px-(var(--spacing-leftnavbar)))] z-40 border border-[var(--pd-modal-border)] rounded-md  shadow-xl shadow-black">
     <NavPage title="Tasks" bind:searchTerm={searchTerm}>
-      <svelte:fragment slot="additional-actions">
+      {#snippet additionalActions()}
         <TaskManagerClearAllButton />
         <CloseButton onclick={hide} />
-      </svelte:fragment>
+      {/snippet}
 
-      <svelte:fragment slot="tabs">
+      {#snippet tabs()}
         <TaskManagerTabs bind:searchTerm={searchTerm} />
-      </svelte:fragment>
+      {/snippet}
 
-      <svelte:fragment slot="bottom-additional-actions">
+      {#snippet bottomAdditionalActions()}
         {#if selectedItemsNumber > 0}
           <TaskManagerBulkDeleteButton
             title="Delete {selectedItemsNumber} selected {taskWordPlural}"
             bulkOperationTitle="delete {selectedItemsNumber} {taskWordPlural}" />
           <span>On {selectedItemsNumber} selected {taskWordPlural}.</span>
         {/if}
-      </svelte:fragment>
+      {/snippet}
 
-      <div class="flex min-w-full h-full" slot="content">
+      {#snippet content()}
+      <div class="flex min-w-full h-full">
         <TaskManagerTable bind:selectedItemsNumber={selectedItemsNumber} tasks={$filtered} />
         {#if $filtered.length === 0}
           <TaskManagerNoFilteredTasks bind:searchTerm={searchTerm} />
         {/if}
       </div>
+      {/snippet}
     </NavPage>
   </div>
   <TaskManagerBottomArrow />

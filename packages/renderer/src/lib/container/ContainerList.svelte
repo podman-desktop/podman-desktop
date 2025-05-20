@@ -381,14 +381,14 @@ $: containersAndGroups = containerGroups.map(group =>
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
-  <svelte:fragment slot="additional-actions">
+  {#snippet additionalActions()}
     <!-- Only show if there are containers-->
     {#if $containersInfos.length > 0}
       <Prune type="containers" engines={enginesList} />
     {/if}
     <Button on:click={toggleCreateContainer} icon={faPlusCircle} title="Create a container">Create</Button>
-  </svelte:fragment>
-  <svelte:fragment slot="bottom-additional-actions">
+  {/snippet}
+  {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <div class="inline-flex space-x-2">
         <Button
@@ -412,48 +412,50 @@ $: containersAndGroups = containerGroups.map(group =>
       </div>
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="tabs">
+  {#snippet tabs()}
     <Button type="tab" on:click={resetRunningFilter} selected={containerUtils.filterIsAll(searchTerm)}
       >All</Button>
     <Button type="tab" on:click={setRunningFilter} selected={containerUtils.filterIsRunning(searchTerm)}
       >Running</Button>
     <Button type="tab" on:click={setStoppedFilter} selected={containerUtils.filterIsStopped(searchTerm)}
       >Stopped</Button>
-  </svelte:fragment>
+  {/snippet}
 
-  <div class="flex min-w-full h-full" slot="content">
-    <Table
-      kind="container"
-      bind:this={table}
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={containersAndGroups}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Name"
-      on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
-    </Table>
-
-    {#if providerConnections.length === 0}
-      <NoContainerEngineEmptyScreen />
-    {:else if containerGroups.length === 0}
-      {#if containerUtils.filterSearchTerm(searchTerm)}
-        <FilteredEmptyScreen
-          icon={ContainerIcon}
-          kind="containers"
-          on:resetFilter={(e): void => {
-            searchTerm = containerUtils.filterResetSearchTerm(searchTerm);
-            e.preventDefault();
-          }}
-          searchTerm={containerUtils.filterSearchTerm(searchTerm)} />
-      {:else}
-        <ContainerEmptyScreen
-          runningOnly={containerUtils.filterIsRunning(searchTerm)}
-          stoppedOnly={containerUtils.filterIsStopped(searchTerm)} />
+  {#snippet content()}
+    <div class="flex min-w-full h-full">
+      <Table
+        kind="container"
+        bind:this={table}
+        bind:selectedItemsNumber={selectedItemsNumber}
+        data={containersAndGroups}
+        columns={columns}
+        row={row}
+        defaultSortColumn="Name"
+        on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+      </Table>
+    
+      {#if providerConnections.length === 0}
+        <NoContainerEngineEmptyScreen />
+      {:else if containerGroups.length === 0}
+        {#if containerUtils.filterSearchTerm(searchTerm)}
+          <FilteredEmptyScreen
+            icon={ContainerIcon}
+            kind="containers"
+            on:resetFilter={(e): void => {
+              searchTerm = containerUtils.filterResetSearchTerm(searchTerm);
+              e.preventDefault();
+            }}
+            searchTerm={containerUtils.filterSearchTerm(searchTerm)} />
+        {:else}
+          <ContainerEmptyScreen
+            runningOnly={containerUtils.filterIsRunning(searchTerm)}
+            stoppedOnly={containerUtils.filterIsStopped(searchTerm)} />
+        {/if}
       {/if}
-    {/if}
-  </div>
+    </div>
+  {/snippet}
 </NavPage>
 
 {#if openChoiceModal}

@@ -44,7 +44,8 @@ const row = new TableRow<ForwardConfig>({});
 </script>
 
 <NavPage searchEnabled={false} title="Port forwarding">
-  <div class="flex min-w-full h-full" slot="content">
+  {#snippet content()}
+  <div class="flex min-w-full h-full">
     {#if $kubernetesCurrentContextPortForwards.length > 0}
       <Table
         kind="port"
@@ -57,4 +58,5 @@ const row = new TableRow<ForwardConfig>({});
       <EmptyScreen message="To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)" icon={faEthernet} title="No port forwarding configured"/>
     {/if}
   </div>
+  {/snippet}
 </NavPage>

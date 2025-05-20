@@ -271,7 +271,7 @@ const row = new TableRow<ImageInfoUI>({
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="images">
-  <svelte:fragment slot="additional-actions">
+  {#snippet additionalActions()}
     {#if $imagesInfos.length > 0}
       <Prune type="images" engines={enginesList} />
     {/if}
@@ -291,9 +291,9 @@ const row = new TableRow<ImageInfoUI>({
     </Button>
     <Button on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
     <Button on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="bottom-additional-actions">
+  {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <Button
         on:click={(): void =>
@@ -311,9 +311,10 @@ const row = new TableRow<ImageInfoUI>({
         icon={faDownload} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <div class="flex min-w-full h-full" slot="content">
+  {#snippet content()}
+  <div class="flex min-w-full h-full">
     <Table
       kind="image"
       bind:this={table}
@@ -335,4 +336,5 @@ const row = new TableRow<ImageInfoUI>({
       {/if}
     {/if}
   </div>
+  {/snippet}
 </NavPage>

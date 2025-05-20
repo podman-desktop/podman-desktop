@@ -68,7 +68,7 @@ let installManualImageModal: boolean = false;
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="extensions">
-  <svelte:fragment slot="additional-actions">
+  {#snippet additionalActions()}
     <Button
       on:click={(): void => {
         installManualImageModal = true;
@@ -76,9 +76,9 @@ let installManualImageModal: boolean = false;
       icon={faCloudDownload}
       title="Install manually an extension"
       aria-label="Install custom">Install custom...</Button>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="bottom-additional-actions">
+  {#snippet bottomAdditionalActions()}
     <!-- display filter out items-->
     {#if filteredInstalledItems > 0 && screen === 'installed'}
       <div class="text-sm text-[var(--pd-content-text)]">
@@ -89,9 +89,9 @@ let installManualImageModal: boolean = false;
         Filtered out {filteredCatalogItems} items of {$enhancedCatalogExtensions.length}
       </div>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="tabs">
+  {#snippet tabs()}
     <Button
       type="tab"
       on:click={(): void => {
@@ -104,9 +104,10 @@ let installManualImageModal: boolean = false;
         screen = 'catalog';
       }}
       selected={screen === 'catalog'}>Catalog</Button>
-  </svelte:fragment>
+  {/snippet}
 
-  <div class="flex min-w-full h-full" slot="content">
+  {#snippet content()}
+  <div class="flex min-w-full h-full">
     {#if screen === 'installed'}
       {#if searchTerm && $filteredInstalledExtensions.length === 0}
         <FilteredEmptyScreen
@@ -127,6 +128,7 @@ let installManualImageModal: boolean = false;
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={$filteredCatalogExtensions} />
     {/if}
   </div>
+  {/snippet}
 </NavPage>
 
 {#if installManualImageModal}

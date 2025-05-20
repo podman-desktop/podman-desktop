@@ -125,11 +125,11 @@ let table: Table;
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
-  <svelte:fragment slot="additional-actions">
+  {#snippet additionalActions()}
     <KubeActions />
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="bottom-additional-actions">
+  {#snippet bottomAdditionalActions()}
     {#if kinds[0].resource !== 'nodes'}
       <NamespaceDropdown/>
     {/if}
@@ -148,9 +148,10 @@ let table: Table;
     <div class="flex grow justify-end">
       <KubernetesCurrentContextConnectionBadge />
     </div>
-  </svelte:fragment>
+  {/snippet}
 
-  <div class="flex min-w-full h-full" slot="content">
+  {#snippet content()}
+  <div class="flex min-w-full h-full">
     <Table
       kind={singular}
       bind:this={table}
@@ -173,4 +174,5 @@ let table: Table;
       {/if}
     {/if}
   </div>
+  {/snippet}
 </NavPage>

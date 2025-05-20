@@ -1,9 +1,27 @@
 <script lang="ts">
+import type { Snippet } from 'svelte';
+
 import SearchInput from '../inputs/SearchInput.svelte';
 
-export let title: string;
-export let searchTerm = '';
-export let searchEnabled = true;
+interface Props {
+  title: string;
+  searchTerm?: string;
+  searchEnabled?: boolean;
+  additionalActions?: Snippet;
+  bottomAdditionalActions?: Snippet;
+  tabs?: Snippet;
+  content?: Snippet;
+}
+
+let {
+  title,
+  searchTerm = $bindable(''),
+  searchEnabled = true,
+  additionalActions,
+  bottomAdditionalActions,
+  tabs,
+  content,
+}: Props = $props();
 </script>
 
 <div class="flex flex-col w-full h-full">
@@ -14,9 +32,9 @@ export let searchEnabled = true;
       </div>
       <div class="flex flex-1 justify-end">
         <div class="px-5" role="group" aria-label="additionalActions">
-          {#if $$slots['additional-actions']}
+          {#if additionalActions}
             <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
-              <slot name="additional-actions" />
+              {@render additionalActions()}
             </div>
           {:else}&nbsp;{/if}
         </div>
@@ -28,23 +46,23 @@ export let searchEnabled = true;
           <SearchInput bind:searchTerm={searchTerm} title={title} />
         </div>
         <div class="flex flex-1 px-5" role="group" aria-label="bottomAdditionalActions">
-          {#if $$slots['bottom-additional-actions']}
+          {#if bottomAdditionalActions}
             <div class="space-x-2 flex flex-row justify-start items-center w-full text-[var(--pd-content-text)]">
-              <slot name="bottom-additional-actions" />
+              {@render bottomAdditionalActions()}
             </div>
           {:else}&nbsp;{/if}
         </div>
       </div>
     {/if}
 
-    {#if $$slots.tabs}
+    {#if tabs}
       <div class="flex flex-row mx-5 px-2 mb-2 border-b border-[var(--pd-content-divider)]">
-        <slot name="tabs" />
+        {@render tabs()}
       </div>
     {/if}
 
     <div class="flex w-full h-full overflow-auto" role="region" aria-label="content">
-      <slot name="content" />
+      {@render content?.()}
     </div>
   </div>
 </div>

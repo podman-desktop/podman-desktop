@@ -177,7 +177,7 @@ const row = new TableRow<VolumeInfoUI>({
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
-  <svelte:fragment slot="additional-actions">
+  {#snippet additionalActions()}
     {#if $volumeListInfos.map(volumeInfo => volumeInfo.Volumes).flat().length > 0}
       <Prune type="volumes" engines={enginesList} />
 
@@ -192,9 +192,9 @@ const row = new TableRow<VolumeInfoUI>({
       <Button on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
         >Create</Button>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="bottom-additional-actions">
+  {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <Button
         on:click={(): void =>
@@ -207,9 +207,10 @@ const row = new TableRow<VolumeInfoUI>({
         icon={faTrash} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <div class="flex min-w-full h-full" slot="content">
+  {#snippet content()}
+  <div class="flex min-w-full h-full">
     <Table
       kind="volume"
       bind:this={table}
@@ -231,4 +232,5 @@ const row = new TableRow<VolumeInfoUI>({
       {/if}
     {/if}
   </div>
+  {/snippet}
 </NavPage>
