@@ -10,7 +10,6 @@ export let titleDetail: string | undefined = undefined;
 export let subtitle: string | undefined = undefined;
 export let breadcrumbLeftPart: string | undefined = undefined;
 export let breadcrumbRightPart: string | undefined = undefined;
-export let breadcrumbTitle: string | undefined = '';
 export let hasClose: boolean = true;
 export let inProgress: boolean = false;
 

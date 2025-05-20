@@ -8,7 +8,6 @@ interface Props {
   inProgress?: boolean;
   breadcrumbLeftPart?: string;
   breadcrumbRightPart?: string;
-  breadcrumbTitle?: string;
   onclose?: () => void;
   onbreadcrumbClick?: () => void;
   icon?: Snippet;
@@ -21,7 +20,6 @@ const {
   inProgress = false,
   breadcrumbLeftPart = undefined,
   breadcrumbRightPart = undefined,
-  breadcrumbTitle = '',
   onclose = (): void => {},
   onbreadcrumbClick = (): void => {},
   icon,
@@ -34,7 +32,6 @@ const {
   title={title}
   breadcrumbLeftPart={breadcrumbLeftPart}
   breadcrumbRightPart={breadcrumbRightPart}
-  breadcrumbTitle={breadcrumbTitle}
   inProgress={inProgress}
   onclose={onclose}
   onbreadcrumbClick={onbreadcrumbClick}>

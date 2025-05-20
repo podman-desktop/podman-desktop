@@ -6,8 +6,7 @@ import DetailsPage from './DetailsPage.svelte';
   titleDetail="my-details"
   subtitle="my-subtitle"
   breadcrumbLeftPart="bcLeft"
-  breadcrumbRightPart="bcRight"
-  breadcrumbTitle="bcTitle">
+  breadcrumbRightPart="bcRight">
 
   {#snippet contentSnippet()}My content slot{/snippet}
   {#snippet tabsSnippet()}My tabs slot{/snippet}

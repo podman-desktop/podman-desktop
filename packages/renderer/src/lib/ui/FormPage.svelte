@@ -25,7 +25,6 @@ export function goToPreviousPage(): void {
   inProgress={inProgress}
   breadcrumbLeftPart={$lastPage.name}
   breadcrumbRightPart={$currentPage.name}
-  breadcrumbTitle="Go back to {$lastPage.name}"
   onclose={goToPreviousPage}
   onbreadcrumbClick={goToPreviousPage}>
   {#snippet icon()}{@render localIcon?.()}{/snippet}

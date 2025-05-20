@@ -9,7 +9,6 @@ interface Props {
   subtitle?: string;
   breadcrumbLeftPart?: string;
   breadcrumbRightPart?: string;
-  breadcrumbTitle?: string;
   onclose?: () => void;
   onbreadcrumbClick?: () => void;
   contentSnippet?: Snippet;
@@ -26,7 +25,6 @@ const {
   subtitle = undefined,
   breadcrumbLeftPart = undefined,
   breadcrumbRightPart = undefined,
-  breadcrumbTitle = '',
   onclose = (): void => {},
   onbreadcrumbClick = (): void => {},
   contentSnippet,
@@ -44,7 +42,6 @@ const {
   subtitle={subtitle}
   breadcrumbLeftPart={breadcrumbLeftPart}
   breadcrumbRightPart={breadcrumbRightPart}
-  breadcrumbTitle={breadcrumbTitle}
   onclose={onclose}
   onbreadcrumbClick={onbreadcrumbClick}>
   <div slot="content" class="h-full bg-[var(--pd-details-bg)] min-h-0">

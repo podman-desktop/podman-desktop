@@ -41,7 +41,6 @@ export function close(): void {
   subtitle={subtitle}
   breadcrumbLeftPart={$lastPage.name}
   breadcrumbRightPart={$currentPage.name}
-  breadcrumbTitle="Go back to {$lastPage.name}"
   onclose={close}
   onbreadcrumbClick={close}>
 
