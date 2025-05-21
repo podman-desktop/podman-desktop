@@ -10,10 +10,10 @@ In the world of modern software development, containers and Kubernetes are no lo
 
 ## Building Containerized Applications with Podman Desktop
 
-First, let's start by building an application in a container with Podman Desktop.We need our application code and a Containerfile. For a simple application, your Containerfile might look something like:
+First, let's start by building an application in a container with Podman Desktop. We need our application code and a Containerfile. For a simple application, your Containerfile might look something like:
 
 ```Dockerfile
-FROM docker.io/nginx:stable
+FROM nginxinc/nginx-unprivileged
 
 COPY <<EOF /usr/share/nginx/html/index.html
 <!DOCTYPE html>
@@ -27,8 +27,6 @@ COPY <<EOF /usr/share/nginx/html/index.html
 </body>
 </html>
 EOF
-
-EXPOSE 80
 ```
 
 Once your application and Containerfile are ready, Podman Desktop makes the build process straightforward:
@@ -63,13 +61,13 @@ Monitoring container logs is crucial for debugging and understanding application
 
 ![View container logs](img/podman-desktop-core-blog/container-logs.png)
 
-With that, we can continue the development process. We are able to rebuild our container when we have updated code. On top of that we can share our Containerfile with our team who will be able to reproduce the exact same environment as us to build and test their code.
+With that, we can continue the development process. We are able to rebuild our container when we have updated code. On top of that, we can share our Containerfile with our team who will be able to reproduce the exact same environment as us to build and test their code.
 
 ## Working with Kubernetes and OpenShift
 
-Now that we have a development setup up and running it’s time to get ready for production. In today's world it is natural for us to move to Kubernetes. Having a locally running cluster, we are able to iterate quickly but still have an environment that is as close to production as possible. This aids in a smoother migration in the future. Podman Desktop is here to help you test and execute that migration.
+Now that we have a development setup up and running, it’s time to get ready for production. In today's world, it is natural for us to move to Kubernetes. Having a locally running cluster, we are able to iterate quickly but still have an environment that is as close to production as possible. This aids in a smoother migration in the future. Podman Desktop is here to help you test and execute that migration.
 
-With [kind](https://kind.sigs.k8s.io/) or [minikube](https://minikube.sigs.k8s.io/docs/) we are able to have a locally running Kubernetes cluster in minutes. This will allow us to test our application in a Kubernetes environment. Kind comes installed together with Podman Desktop so you will be able to get started instantly.
+With [kind](https://kind.sigs.k8s.io/) or [minikube](https://minikube.sigs.k8s.io/docs/), we are able to have a locally running Kubernetes cluster in minutes. This will allow us to test our application in a Kubernetes environment. Kind comes installed together with Podman Desktop so you will be able to get started instantly.
 
 1. Start by navigating to the “Kubernetes” page
 2. Click on the “Create new Kind cluster” button
@@ -87,7 +85,7 @@ This dashboard not only gives you an overview of your cluster but it also provid
 
 ### Creating the Pod on your local Kubernetes cluster
 
-With a running Kubernetes cluster, we can now create our pod in the Kubernetes cluster. Using Podman Desktop we can convert our previously created container into a Pod in our kind cluster.
+With a running Kubernetes cluster, we can now create our pod in the Kubernetes cluster. Using Podman Desktop, we can convert our previously created container into a Pod in our kind cluster.
 
 First we have to push our image to our kind cluster.
 ![Push image to kind](img/podman-desktop-core-blog/push-image-to-kind.png)
@@ -103,7 +101,7 @@ The conversion from containers to Kubernetes manifests is particularly valuable,
 
 ## Monitoring Kubernetes Events and Resources
 
-Understanding what's happening in your Kubernetes cluster is essential for effective development. In the latest version of Podman Desktop you can now check the events of your Kubernetes Pods in the UI.
+Understanding what's happening in your Kubernetes cluster is essential for effective development. In the latest version of Podman Desktop, you can now check the events of your Kubernetes Pods in the UI.
 
 Let's check if our pod was created and running successfully.
 
