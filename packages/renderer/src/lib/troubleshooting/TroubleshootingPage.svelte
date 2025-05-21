@@ -25,10 +25,13 @@ onMount(async () => {
 });
 </script>
 
-<Page title="Troubleshooting" on:close={goToPreviousPage}>
-  <i slot="icon" class="fas fa-lightbulb fa-2x" aria-hidden="true"></i>
+<Page title="Troubleshooting" onclose={goToPreviousPage}>
+  {#snippet icon()}
+  <i class="fas fa-lightbulb fa-2x" aria-hidden="true"></i>
+  {/snippet}
 
-  <div slot="tabs" class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
+  {#snippet tabs()}
+  <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
     <Tab
       title="Repair & Connections"
       selected={isTabSelected($router.path, 'repair-connections')}
@@ -43,7 +46,9 @@ onMount(async () => {
       <Tab title="Kubernetes" selected={isTabSelected($router.path, 'kubernetes')} url={getTabUrl($router.path, 'kubernetes')} />
     {/if}
   </div>
-  <div class="flex w-full h-full overflow-auto" slot="content">
+  {/snippet}
+  {#snippet content()}
+  <div class="flex w-full h-full overflow-auto">
     <Route path="/repair-connections" breadcrumb="Repair & Connections" navigationHint="tab">
       <TroubleshootingPageProviders />
     </Route>
@@ -66,4 +71,5 @@ onMount(async () => {
       </Route>
     {/if}
   </div>
+  {/snippet}
 </Page>

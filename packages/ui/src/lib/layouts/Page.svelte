@@ -1,22 +1,55 @@
 <script lang="ts">
-import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+import { createEventDispatcher, onDestroy, onMount, type Snippet } from 'svelte';
 
 import { LinearProgress } from '..';
 import CloseButton from '../button/CloseButton.svelte';
 import Link from '../link/Link.svelte';
 
-export let title: string;
-export let titleDetail: string | undefined = undefined;
-export let subtitle: string | undefined = undefined;
-export let breadcrumbLeftPart: string | undefined = undefined;
-export let breadcrumbRightPart: string | undefined = undefined;
-export let hasClose: boolean = true;
-export let inProgress: boolean = false;
+interface Props {
+  title: string;
+  titleDetail?: string;
+  subtitle?: string;
+  breadcrumbLeftPart?: string;
+  breadcrumbRightPart?: string;
+  hasClose?: boolean;
+  inProgress?: boolean;
+  onclose?: () => void;
+  onbreadcrumbClick?: () => void;
+  icon?: Snippet;
+  subtitleSnippet?: Snippet;
+  actions?: Snippet;
+  detail?: Snippet;
+  tabs?: Snippet;
+  content?: Snippet;
+}
+
+const {
+  title,
+  titleDetail = undefined,
+  subtitle = undefined,
+  breadcrumbLeftPart = undefined,
+  breadcrumbRightPart = undefined,
+  hasClose = true,
+  inProgress = false,
+  onclose = (): void => {
+    dispatchClose('close');
+  },
+  onbreadcrumbClick = (): void => {
+    dispatchBreadCrumb('breadcrumbClick');
+  },
+  icon,
+  subtitleSnippet,
+  actions,
+  detail,
+  tabs,
+  content,
+}: Props = $props();
+
+let heightOfDetail = $state(0);
 
 let showBreadcrumb = breadcrumbLeftPart ?? breadcrumbRightPart;
 let detailSlot: HTMLDivElement;
 let observer: MutationObserver;
-let heightOfDetail = 0;
 
 onMount(() => {
   observer = new MutationObserver(() => updateHeight());
@@ -35,14 +68,8 @@ function updateHeight(): void {
 }
 
 const dispatchClose = createEventDispatcher<{ close: undefined }>();
-export let onclose: () => void = () => {
-  dispatchClose('close');
-};
 
 const dispatchBreadCrumb = createEventDispatcher<{ breadcrumbClick: undefined }>();
-export let onbreadcrumbClick: () => void = () => {
-  dispatchBreadCrumb('breadcrumbClick');
-};
 
 function handleKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape') {
@@ -76,9 +103,9 @@ function handleKeydown(e: KeyboardEvent): void {
         </div>
       {/if}
       <div class="flex flex-row items-center pt-1">
-        {#if $$slots.icon}
+        {#if icon}
           <div class="pr-3">
-            <slot name="icon" />
+            {@render icon()}
           </div>
         {/if}
         <div class="flex flex-col grow pr-2">
@@ -93,16 +120,16 @@ function handleKeydown(e: KeyboardEvent): void {
           <div>
             <span class="text-sm leading-none text-[var(--pd-content-sub-header)] line-clamp-1" class:hidden={!subtitle}
               >{subtitle}</span>
-            <slot name="subtitle" />
+            {@render subtitleSnippet?.()}
           </div>
         </div>
         <div class="flex flex-col">
           <div class="flex flex-nowrap justify-self-end pl-3 space-x-2" aria-label="Control Actions" role="group">
-            <slot name="actions" />
+            {@render actions?.()}
           </div>
           <div class="relative">
             <div bind:this={detailSlot} class="absolute top-0 right-0">
-              <slot name="detail" />
+              {@render detail?.()}
             </div>
           </div>
           {#if !showBreadcrumb}
@@ -120,9 +147,9 @@ function handleKeydown(e: KeyboardEvent): void {
     style="padding-top: {heightOfDetail > 50 ? '1rem' : '0px'}"
     aria-label="Tabs"
     role="region">
-    <slot name="tabs" />
+    {@render tabs?.()}
   </div>
   <div class="h-full min-h-0" aria-label="Tab Content" role="region">
-    <slot name="content" />
+    {@render content?.()}
   </div>
 </div>

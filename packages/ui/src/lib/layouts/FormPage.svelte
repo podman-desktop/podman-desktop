@@ -22,9 +22,9 @@ const {
   breadcrumbRightPart = undefined,
   onclose = (): void => {},
   onbreadcrumbClick = (): void => {},
-  icon,
-  actions,
-  content,
+  icon: thisIcon,
+  actions: thisActions,
+  content: thisContent,
 }: Props = $props();
 </script>
 
@@ -35,13 +35,15 @@ const {
   inProgress={inProgress}
   onclose={onclose}
   onbreadcrumbClick={onbreadcrumbClick}>
-  <svelte:fragment slot="icon">
-    {@render icon?.()}
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
-    {@render actions?.()}
-  </svelte:fragment>
-  <div slot="content" class="flex w-full h-full overflow-auto">
-    {@render content?.()}
-  </div>
+  {#snippet icon()}
+    {@render thisIcon?.()}
+  {/snippet}
+  {#snippet actions()}
+    {@render thisActions?.()}
+  {/snippet}
+  {#snippet content()}
+    <div class="flex w-full h-full overflow-auto">
+      {@render thisContent?.()}
+    </div>
+  {/snippet}
 </Page>
