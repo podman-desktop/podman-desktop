@@ -140,6 +140,8 @@ function onIncrement(e: MouseEvent): void {
       aria-label="decrement"
       onclick={onDecrement}
       disabled={!minimumEnabled}>-</button>
+  {/snippet}
+  {#snippet right()}
     <button
       class="pl-0.5"
       class:text-[var(--pd-input-field-stroke)]={maximumEnabled}

@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { expect, test } from 'vitest';
+import { assert, expect, test } from 'vitest';
 
 import NumberInput from './NumberInput.svelte';
 
@@ -252,6 +252,22 @@ test('Expect decrement works with custom step', async () => {
   await userEvent.click(increment);
 
   expect(input).toHaveValue('4.2');
+});
+
+test('Expect increment and decrement button to be position on left and right', async () => {
+  renderInput('test', 0, false, 0, 10, 'number', 0.15);
+
+  const input = screen.getByRole('textbox');
+  const parent = input.parentNode;
+  assert(parent, 'input must have a parent node');
+
+  // expect first element to be our decrement button
+  expect(parent.firstElementChild).toBeInstanceOf(HTMLButtonElement);
+  expect(parent.firstElementChild?.ariaLabel).toEqual('decrement');
+
+  // expect last element to be our increment button
+  expect(parent.lastElementChild).toBeInstanceOf(HTMLButtonElement);
+  expect(parent.lastElementChild?.ariaLabel).toEqual('increment');
 });
 
 test('Expect multiple increment with floating values', async () => {
