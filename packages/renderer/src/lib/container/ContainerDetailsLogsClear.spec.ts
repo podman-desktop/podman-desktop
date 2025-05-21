@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { Terminal } from '@xterm/xterm';
 import { expect, test, vi } from 'vitest';
 
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
@@ -35,9 +34,8 @@ vi.mock('@xterm/xterm', () => {
 });
 
 test('expect clear button is working', async () => {
-  const terminal = new Terminal();
-
-  render(ContainerDetailsLogsClear, { terminal });
+  const onclear = vi.fn();
+  render(ContainerDetailsLogsClear, { onclear });
 
   // expect the button to clear
   const clearButton = screen.getByRole('button', { name: 'Clear logs' });
@@ -47,5 +45,25 @@ test('expect clear button is working', async () => {
   await fireEvent.click(clearButton);
 
   // check we have called the clear function
-  await waitFor(() => expect(terminal.clear).toHaveBeenCalled());
+  await waitFor(() => expect(onclear).toHaveBeenCalled());
+});
+
+test('expect clear button is changed to Restore button', async () => {
+  const onclear = vi.fn();
+  const rendered = render(ContainerDetailsLogsClear, { onclear });
+
+  // expect the button to clear
+  screen.getByRole('button', { name: 'Clear logs' });
+
+  rendered.component.setRevert(true);
+
+  await vi.waitFor(() => {
+    screen.getByRole('button', { name: 'Restore logs' });
+  });
+
+  rendered.component.setRevert(false);
+
+  await vi.waitFor(() => {
+    screen.getByRole('button', { name: 'Clear logs' });
+  });
 });

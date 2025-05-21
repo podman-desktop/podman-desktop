@@ -18,9 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import * as xterm from '@xterm/xterm';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { Terminal } from '@xterm/xterm';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import { containerLogsCleared } from '/@/stores/container-logs-cleared';
 
 import ContainerDetailsLogs from './ContainerDetailsLogs.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
@@ -28,26 +30,21 @@ import type { ContainerInfoUI } from './ContainerInfoUI';
 vi.mock('@xterm/addon-search');
 
 vi.mock('@xterm/xterm', () => {
-  const writeMock = vi.fn();
-  return {
-    writeMock,
-    Terminal: vi.fn().mockReturnValue({
-      loadAddon: vi.fn(),
-      open: vi.fn().mockImplementation((div: HTMLDivElement) => {
-        // create a dummy div element
-        const h = document.createElement('H1');
-        const t = document.createTextNode('dummy element');
-        h.appendChild(t);
-        div.appendChild(h);
-      }),
-      write: writeMock,
-      clear: vi.fn(),
-      dispose: vi.fn(),
-    }),
+  const Terminal = vi.fn();
+  Terminal.prototype = {
+    loadAddon: vi.fn(),
+    open: vi.fn(),
+    write: vi.fn(),
+    clear: vi.fn(),
+    reset: vi.fn(),
+    dispose: vi.fn(),
   };
+  return { Terminal };
 });
 
-beforeAll(() => {
+beforeEach(() => {
+  vi.resetAllMocks();
+  containerLogsCleared.set(new Map());
   // Mock returned values with fake ones
   const mockComputedStyle = {
     getPropertyValue: vi.fn().mockReturnValue('#ffffff'),
@@ -60,6 +57,7 @@ beforeAll(() => {
       getConfigurationValue: vi.fn(),
       getComputedStyle: vi.fn().mockReturnValue(mockComputedStyle),
       dispatchEvent: vi.fn(),
+      getCancellableTokenSource: vi.fn(),
     },
     writable: true,
   });
@@ -70,12 +68,6 @@ const container: ContainerInfoUI = {
 } as unknown as ContainerInfoUI;
 
 test('Render container logs ', async () => {
-  // grab the xterm mock
-  let writeMock: unknown | undefined;
-  if ('writeMock' in xterm) {
-    writeMock = xterm.writeMock;
-  }
-
   // Mock compose has no containers, so expect No Log to appear
   render(ContainerDetailsLogs, { container });
 
@@ -90,10 +82,90 @@ test('Render container logs ', async () => {
 
   // expect logs to have been called
   await vi.waitFor(() => {
-    expect(vi.mocked(writeMock)).toHaveBeenCalled();
+    expect(Terminal.prototype.write).toHaveBeenCalledWith('hello world\r');
   });
 
   // expect the button to clear
   const clearButton = screen.getByRole('button', { name: 'Clear logs' });
   expect(clearButton).toBeInTheDocument();
+});
+
+test('Clear container logs and clear button', async () => {
+  // Mock compose has no containers, so expect No Log to appear
+  render(ContainerDetailsLogs, { container });
+
+  // expect a call to logsContainer
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalled();
+  });
+  // now, get the callback of the method
+  const params = vi.mocked(window.logsContainer).mock.calls[0][0];
+  // call the callback with an empty array
+  params.callback('data', 'hello world');
+
+  // expect logs to have been called
+  await vi.waitFor(() => {
+    expect(Terminal.prototype.write).toHaveBeenCalled();
+  });
+
+  // expect the button to clear
+  const clearButton = screen.getByRole('button', { name: 'Clear logs' });
+  expect(clearButton).toBeInTheDocument();
+
+  await fireEvent.click(clearButton);
+
+  // expect the restore button
+  const restoreButton = screen.getByRole('button', { name: 'Restore logs' });
+  expect(restoreButton).toBeInTheDocument();
+
+  params.callback('data', 'hello world');
+
+  // expect the clear button again when new logs are displayed
+  await vi.waitFor(() => {
+    screen.getByRole('button', { name: 'Clear logs' });
+  });
+});
+
+test('Clear container logs and terminal content', async () => {
+  // Mock compose has no containers, so expect No Log to appear
+  render(ContainerDetailsLogs, { container });
+
+  // expect a call to logsContainer
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalled();
+  });
+  // now, get the callback of the method
+  const params = vi.mocked(window.logsContainer).mock.calls[0][0];
+  // call the callback with an empty array
+  params.callback('data', 'hello world');
+
+  // expect logs to have been called
+  expect(Terminal.prototype.write).toHaveBeenCalledWith('hello world\r');
+
+  // expect the button to clear
+  const clearButton = screen.getByRole('button', { name: 'Clear logs' });
+  expect(clearButton).toBeInTheDocument();
+
+  // Clear the logs
+  await fireEvent.click(clearButton);
+
+  // Logs should be fetched again
+  await vi.waitFor(() => {
+    expect(window.logsContainer).toHaveBeenCalled();
+  });
+
+  const params2 = vi.mocked(window.logsContainer).mock.calls[0][0];
+
+  vi.mocked(Terminal.prototype.write).mockClear();
+  vi.mocked(Terminal.prototype.clear).mockClear();
+
+  params2.callback('first-message', '');
+  expect(Terminal.prototype.clear).toHaveBeenCalled();
+
+  params2.callback('data', 'hello world');
+  params2.callback('data', 'next...');
+
+  // expect new logs only to have been called
+  expect(Terminal.prototype.write).not.toHaveBeenCalledWith('hello world\r');
+  expect(Terminal.prototype.write).toHaveBeenCalledWith('next...\r');
 });
