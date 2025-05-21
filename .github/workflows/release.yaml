@@ -128,6 +128,8 @@ jobs:
   build:
     name: Build / ${{ matrix.os }} ${{ matrix.airgap == 'true' && '(Air Gap)' || ''  }}
     needs: tag
+    permissions:
+      contents: write
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -196,7 +198,7 @@ jobs:
           echo "AZURE_KEY_VAULT_TENANT_ID=${{secrets.AZURE_KEY_VAULT_TENANT_ID}}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "AZURE_KEY_VAULT_URL=${{secrets.AZURE_KEY_VAULT_URL}}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Run Build
+      - name: Build & Publish artifacts
         timeout-minutes: 40
         env:
           AIRGAP_DOWNLOAD: ${{ matrix.airgap == 'true' && '1' || ''  }}
