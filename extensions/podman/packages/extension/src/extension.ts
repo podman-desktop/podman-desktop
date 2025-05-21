@@ -1431,7 +1431,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     },
     {
       title: 'Docker compatibility guide',
-      url: 'https://podman-desktop.io/docs/troubleshooting#warning-about-docker-compatibility-mode',
+      url: 'https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility',
     },
     {
       title: 'Join the community',
