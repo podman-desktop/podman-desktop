@@ -44,15 +44,29 @@ export interface BuildImageInfo {
   taskId: number;
 }
 
+let taskCounter = 0;
+
+export function getNextTaskId(): number {
+  return ++taskCounter;
+}
+
 export function cleanupBuildImageInfo(taskId: number): void {
   const map = get(buildImagesInfo);
   map.delete(taskId);
   buildImagesInfo.set(map);
 }
 
+export function cloneBuildImageInfo(original: BuildImageInfo): BuildImageInfo {
+  return {
+    ...original,
+    taskId: 0,
+    buildArgs: original.buildArgs.map(originalArg => ({ ...originalArg })),
+  };
+}
+
 export function createDefaultBuildImageInfo(): BuildImageInfo {
   return {
-    taskId: get(buildImagesInfo).size + 1,
+    taskId: 0,
     containerImageName: '',
     buildRunning: false,
     buildFinished: false,

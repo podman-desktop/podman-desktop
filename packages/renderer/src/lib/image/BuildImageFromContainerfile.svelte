@@ -2,17 +2,23 @@
 /* eslint-disable no-useless-escape */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import type { OpenDialogOptions } from '@podman-desktop/api';
+import { type OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
 import { handleNavigation } from '/@/navigation';
-import { type BuildImageInfo, buildImagesInfo, createDefaultBuildImageInfo } from '/@/stores/build-images';
+import {
+  type BuildImageInfo,
+  buildImagesInfo,
+  cloneBuildImageInfo,
+  createDefaultBuildImageInfo,
+  getNextTaskId,
+} from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
+import type { ProviderInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
@@ -31,9 +37,7 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 export let taskId: number = 0;
 
 let buildImageInfo: BuildImageInfo = createDefaultBuildImageInfo();
-
 let providers: ProviderInfo[] = [];
-let providerConnections: ProviderContainerConnectionInfo[] = [];
 
 const containerFileDialogOptions: OpenDialogOptions = {
   title: 'Select Containerfile to build',
@@ -41,31 +45,35 @@ const containerFileDialogOptions: OpenDialogOptions = {
 const contextDialogOptions: OpenDialogOptions = { title: 'Select Root Context', selectors: ['openDirectory'] };
 
 $: platforms = buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : [];
-$: if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
+$: containerFilePath = buildImageInfo.containerFilePath;
+$: containerBuildContextDirectory = buildImageInfo.containerBuildContextDirectory;
+$: if (containerFilePath && !containerBuildContextDirectory) {
   // select the parent directory of the file as default
-  buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
-    .replace(/\\/g, '/')
-    .replace(/\/[^\/]*$/, '');
+  buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
 }
+$: containerImageName = buildImageInfo.containerImageName;
+$: providerConnections = providers.map(provider => provider.containerConnections).flat();
+$: selectedProvider = providerConnections.find(
+  providerContainerConnection => providerContainerConnection.status === 'started',
+);
+$: buildImageInfo.selectedProvider = selectedProvider;
 $: hasInvalidFields =
-  !buildImageInfo.containerFilePath ||
-  !buildImageInfo.containerBuildContextDirectory ||
-  (platforms.length > 1 && !buildImageInfo.containerImageName) ||
+  !containerFilePath ||
+  !containerBuildContextDirectory ||
+  (platforms.length > 1 && !containerImageName) ||
   platforms.length === 0 ||
-  !buildImageInfo.selectedProvider;
+  !selectedProvider;
 
 $: if (taskId && taskId !== buildImageInfo.taskId) {
   if (buildImageInfo.buildImageKey) {
     disconnectUI(buildImageInfo.buildImageKey);
   }
   buildImageInfo.logsTerminal?.reset();
-  const currentTerminal = buildImageInfo.logsTerminal;
-
   const buildImagesInfoMap = get(buildImagesInfo);
   const bgBuildImageInfo = buildImagesInfoMap.get(taskId);
   if (bgBuildImageInfo) {
+    bgBuildImageInfo.logsTerminal = buildImageInfo.logsTerminal;
     buildImageInfo = bgBuildImageInfo;
-    bgBuildImageInfo.logsTerminal = currentTerminal;
     if (buildImageInfo.buildImageKey) {
       reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
     }
@@ -152,8 +160,11 @@ async function buildSinglePlatformImage(): Promise<void> {
   );
 
   buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
-
-  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
+  buildImagesInfo.update(map => {
+    taskId = getNextTaskId();
+    buildImageInfo.taskId = taskId;
+    return map.set(taskId, buildImageInfo);
+  });
   try {
     if (!buildImageInfo.selectedProvider) {
       throw new Error('There is no container engine available.');
@@ -262,37 +273,19 @@ function cleanupBuild(): void {
   handleNavigation({ page: NavigationPage.IMAGES });
 }
 
-let buildImagesInfoUnsubscriber: Unsubscriber;
-
-onMount(async () => {
-  providers = get(providerInfos);
-  providerConnections = providers
-    .map(provider => provider.containerConnections)
-    .flat()
-    .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-
-  if (
-    !buildImageInfo.selectedProvider ||
-    (buildImageInfo.selectedProvider && !providerConnections.includes(buildImageInfo.selectedProvider))
-  ) {
-    buildImageInfo.selectedProvider = providerConnections.length > 0 ? providerConnections[0] : undefined;
+let buildImagesInfoUnsubscriber: Unsubscriber = buildImagesInfo.subscribe(map => {
+  // called when build started or stopped
+  const bgBuildImageInfo = map.get(taskId);
+  if (bgBuildImageInfo?.buildFinished) {
+    taskId = 0;
+    buildImageInfo = cloneBuildImageInfo(buildImageInfo);
+  } else {
+    buildImageInfo = bgBuildImageInfo ?? buildImageInfo;
   }
+});
 
-  if (taskId) {
-    const buildImagesInfoMap = get(buildImagesInfo);
-    const bgBuildImageInfo = buildImagesInfoMap.get(taskId);
-    if (bgBuildImageInfo) {
-      buildImageInfo = bgBuildImageInfo;
-    }
-  }
-  // trigger re-rendering at the end of the build
-  // in case of reconnecting UI
-  buildImagesInfoUnsubscriber = buildImagesInfo.subscribe(map => {
-    const bgBuildImageInfo = map.get(taskId);
-    if (bgBuildImageInfo) {
-      buildImageInfo = bgBuildImageInfo;
-    }
-  });
+let providerInfosUnsubscriber: Unsubscriber = providerInfos.subscribe(infos => {
+  providers = infos;
 });
 
 function onInit(): void {
@@ -305,7 +298,8 @@ onDestroy(() => {
   if (buildImageInfo.buildImageKey && !buildImageInfo.buildFinished) {
     disconnectUI(buildImageInfo.buildImageKey);
   }
-  buildImagesInfoUnsubscriber?.();
+  buildImagesInfoUnsubscriber();
+  providerInfosUnsubscriber();
 });
 
 async function abortBuild(): Promise<void> {
@@ -326,99 +320,101 @@ async function abortBuild(): Promise<void> {
     <i class="fas fa-cube fa-2x" aria-hidden="true"></i>
   {/snippet}
   {#snippet content()}
-  <div class="space-y-6">
-    <div hidden={buildImageInfo.buildRunning}>
-      <label for="containerFilePath" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Containerfile path</label>
-      <FileInput
-        name="containerFilePath"
-        id="containerFilePath"
-        bind:value={buildImageInfo.containerFilePath}
-        placeholder="Containerfile to build"
-        options={containerFileDialogOptions}
-        class="w-full"/>
-    </div>
-
-    <div hidden={buildImageInfo.buildRunning}>
-      <label
-        for="containerBuildContextDirectory"
-        class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Build context directory</label>
-      <FileInput
-        name="containerBuildContextDirectory"
-        id="containerBuildContextDirectory"
-        bind:value={buildImageInfo.containerBuildContextDirectory}
-        placeholder="Directory to build in"
-        options={contextDialogOptions}
-        class="w-full"/>
-    </div>
-
-    <div hidden={buildImageInfo.buildRunning}>
-      <label for="containerImageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Image name</label>
-      <Input
-        bind:value={buildImageInfo.containerImageName}
-        name="containerImageName"
-        id="containerImageName"
-        placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
-        class="w-full"/>
-    </div>
-
-    {#if providerConnections.length > 1}
+    <div class="space-y-6">
       <div hidden={buildImageInfo.buildRunning}>
-        <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-          >Container engine</label>
-        <ContainerConnectionDropdown
-          id="providerChoice"
-          name="providerChoice"
-          bind:value={buildImageInfo.selectedProvider}
-          connections={providerConnections}/>
+        <label for="containerFilePath" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Containerfile path</label>
+        <FileInput
+          name="containerFilePath"
+          id="containerFilePath"
+          bind:value={buildImageInfo.containerFilePath}
+          placeholder="Containerfile to build"
+          options={containerFileDialogOptions}
+          class="w-full" />
       </div>
-    {/if}
 
-    <div hidden={buildImageInfo.buildRunning}>
-      <label for="inputKey" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Build arguments</label>
-      {#each buildImageInfo.buildArgs as buildArg, index (index)}
-        <div class="flex flex-row items-center space-x-2 mb-2">
-          <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="grow" required />
-          <Input bind:value={buildArg.value} placeholder="Value" class="grow" required />
-          <Button
-            on:click={(): void => deleteBuildArg(index)}
-            icon={faMinusCircle}
-            disabled={buildImageInfo.buildArgs.length === 1 && buildArg.key === '' && buildArg.value === ''}
-            aria-label="Delete build argument" />
-          <Button on:click={addBuildArg} icon={faPlusCircle} title="Add build argument" />
+      <div hidden={buildImageInfo.buildRunning}>
+        <label
+          for="containerBuildContextDirectory"
+          class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Build context directory</label>
+        <FileInput
+          name="containerBuildContextDirectory"
+          id="containerBuildContextDirectory"
+          bind:value={buildImageInfo.containerBuildContextDirectory}
+          placeholder="Directory to build in"
+          options={contextDialogOptions}
+          class="w-full" />
+      </div>
+
+      <div hidden={buildImageInfo.buildRunning}>
+        <label for="containerImageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Image name</label>
+        <Input
+          bind:value={buildImageInfo.containerImageName}
+          name="containerImageName"
+          id="containerImageName"
+          placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
+          class="w-full" />
+      </div>
+
+      {#if providerConnections.length > 1}
+        <div hidden={buildImageInfo.buildRunning}>
+          <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+            >Container engine</label>
+          <ContainerConnectionDropdown
+            id="providerChoice"
+            name="providerChoice"
+            bind:value={buildImageInfo.selectedProvider}
+            connections={providerConnections} />
         </div>
-      {/each}
-    </div>
-
-    <div hidden={buildImageInfo.buildRunning}>
-      <label for="containerBuildPlatform" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Platform</label>
-      {#if platforms.length > 1}
-        <p class="text-[var(--pd-content-text)] mb-2">Multiple platforms selected, a manifest will be created</p>
-      {/if}
-      <BuildImageFromContainerfileCards bind:platforms={buildImageInfo.containerBuildPlatform} />
-    </div>
-
-    <div class="w-full flex flex-row space-x-4">
-      {#if !buildImageInfo.buildRunning}
-        <Button on:click={buildContainerImage} disabled={hasInvalidFields} class="w-full" icon={faCube}>Build</Button>
       {/if}
 
-      {#if buildImageInfo.buildFinished}
-        <Button on:click={cleanupBuild} class="w-full">Done</Button>
-      {/if}
-    </div>
+      <div hidden={buildImageInfo.buildRunning}>
+        <label for="inputKey" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Build arguments</label>
+        {#each buildImageInfo.buildArgs as buildArg, index (index)}
+          <div class="flex flex-row items-center space-x-2 mb-2">
+            <Input bind:value={buildArg.key} name="inputKey" placeholder="Key" class="grow" required />
+            <Input bind:value={buildArg.value} placeholder="Value" class="grow" required />
+            <Button
+              on:click={(): void => deleteBuildArg(index)}
+              icon={faMinusCircle}
+              disabled={buildImageInfo.buildArgs.length === 1 && buildArg.key === '' && buildArg.value === ''}
+              aria-label="Delete build argument" />
+            <Button on:click={addBuildArg} icon={faPlusCircle} title="Add build argument" />
+          </div>
+        {/each}
+      </div>
 
-    <RecommendedRegistry bind:imageError={buildImageInfo.buildError} imageName={buildImageInfo.buildParentImageName} />
+      <div hidden={buildImageInfo.buildRunning}>
+        <label for="containerBuildPlatform" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Platform</label>
+        {#if platforms.length > 1}
+          <p class="text-[var(--pd-content-text)] mb-2">Multiple platforms selected, a manifest will be created</p>
+        {/if}
+        <BuildImageFromContainerfileCards bind:platforms={buildImageInfo.containerBuildPlatform} />
+      </div>
 
-    <TerminalWindow on:init={onInit} bind:terminal={buildImageInfo.logsTerminal} />
-    <div class="w-full">
-      {#if buildImageInfo.buildRunning}
-        <Button on:click={abortBuild} class="w-full">Cancel</Button>
-      {/if}
+      <div class="w-full flex flex-row space-x-4">
+        {#if !buildImageInfo.buildRunning}
+          <Button on:click={buildContainerImage} disabled={hasInvalidFields} class="w-full" icon={faCube}>Build</Button>
+        {/if}
+
+        {#if buildImageInfo.buildFinished}
+          <Button on:click={cleanupBuild} class="w-full">Done</Button>
+        {/if}
+      </div>
+
+      <RecommendedRegistry
+        bind:imageError={buildImageInfo.buildError}
+        imageName={buildImageInfo.buildParentImageName} />
+
+      <TerminalWindow on:init={onInit} bind:terminal={buildImageInfo.logsTerminal} />
+      <div class="w-full">
+        {#if buildImageInfo.buildRunning}
+          <Button on:click={abortBuild} class="w-full">Cancel</Button>
+        {/if}
+      </div>
     </div>
-  </div>
   {/snippet}
 </EngineFormPage>
