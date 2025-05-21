@@ -118,19 +118,6 @@ function onUserStateChange(key: unknown): void {
         <ErrorMessage error={contextNameErrorMessage} />
     {/if}
 
-    <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
-    <Input
-        bind:value={contextNamespace}
-        name="contextNamespace"
-        id="contextNamespace"
-        placeholder="Enter context namespace (e.g. production)"
-        aria-invalid={contextNamespaceErrorMessage !== ''}
-        aria-label="contextNamespace"
-        required />
-    {#if contextNamespaceErrorMessage}
-        <ErrorMessage error={contextNamespaceErrorMessage} />
-    {/if}
-
     <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Cluster</label>
     <Dropdown
       class="text-sm"
@@ -154,6 +141,19 @@ function onUserStateChange(key: unknown): void {
         label: user.name,
       }))}>
     </Dropdown>
+
+    <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
+    <Input
+        bind:value={contextNamespace}
+        name="contextNamespace"
+        id="contextNamespace"
+        placeholder="Enter context namespace (e.g. production)"
+        aria-invalid={contextNamespaceErrorMessage !== ''}
+        aria-label="contextNamespace"
+        required />
+    {#if contextNamespaceErrorMessage}
+        <ErrorMessage error={contextNamespaceErrorMessage} />
+    {/if}
     </div>
     <svelte:fragment slot="buttons">
     <Button
