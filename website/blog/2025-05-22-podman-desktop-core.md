@@ -23,7 +23,7 @@ COPY <<EOF /usr/share/nginx/html/index.html
 </head>
 <body>
     <h1>Hello from my Podman NGINX Container!</h1>
-    <p>This content is being served by NGINX running on a Podman container.</p>
+    <p>This content is being served by NGINX running in a Podman container.</p>
 </body>
 </html>
 EOF
