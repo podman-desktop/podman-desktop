@@ -11,15 +11,23 @@ import TerminalWindow from '../ui/TerminalWindow.svelte';
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
+interface Props {
+  container: ContainerInfoUI;
+}
 
-// Log
-let refContainer: ContainerInfoUI;
+const { container }: Props = $props();
+
 // logs has been initialized
-let noLogs = true;
+let noLogs = $state(true);
+
+// the terminal displaying the logs
+let logsTerminal = $state<Terminal>();
+
+// save previous container
+let refContainer: ContainerInfoUI;
 
 // need to refresh logs when container is switched or state changes
-$: {
+$effect(() => {
   if (
     refContainer &&
     (refContainer.id !== container.id || (refContainer.state !== container.state && container.state !== 'EXITED'))
@@ -28,10 +36,10 @@ $: {
     fetchContainerLogs().catch((err: unknown) => console.error(`Error fetching container logs ${container.id}`, err));
   }
   refContainer = container;
-}
-let terminalParentDiv: HTMLDivElement;
+});
 
-let logsTerminal: Terminal;
+// the div containing the terminal
+let terminalParentDiv: HTMLDivElement;
 
 function callback(name: string, data: string): void {
   if (name === 'first-message') {
@@ -57,6 +65,9 @@ async function fetchContainerLogs(): Promise<void> {
 }
 
 function afterTerminalInit(): void {
+  if (!logsTerminal) {
+    throw new Error('terminal was not set by TerminalWindow. Should not happen');
+  }
   // mount the svelte5 component to the terminal xterm element
   let xtermElement = terminalParentDiv.querySelector('.xterm');
   xtermElement ??= terminalParentDiv;
