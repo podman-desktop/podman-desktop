@@ -99,7 +99,6 @@ function afterTerminalInit(): void {
   const { setRevert } = mount(ContainerDetailsLogsClear, {
     target: xtermElement,
     props: {
-      terminal: logsTerminal,
       onclear: async () => {
         if (logsLength === skip) {
           setSkip(0);
@@ -114,13 +113,11 @@ function afterTerminalInit(): void {
 }
 
 function setSkip(n: number): void {
-  const storeValue = $containerLogsCleared;
   if (n) {
-    storeValue.set(getKeyValue(container.id, container.engineId), n);
+    $containerLogsCleared.set(getKeyValue(container.id, container.engineId), n);
   } else {
-    storeValue.delete(getKeyValue(container.id, container.engineId));
+    $containerLogsCleared.delete(getKeyValue(container.id, container.engineId));
   }
-  containerLogsCleared.set(storeValue);
 }
 
 function clearTerminal(): void {
