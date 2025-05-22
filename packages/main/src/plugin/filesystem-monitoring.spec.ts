@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,8 @@ test('should send event onDidCreate when a directory is created into a watched d
     expect(readyListener).toHaveBeenCalled();
   });
 
-  expect(createListener).toHaveBeenCalledWith(Uri.file(rootdir));
+  // expect no calls as since we're watching, no files/folders have been created/modified/deleted
+  expect(createListener).not.toHaveBeenCalled();
   expect(changeListener).not.toHaveBeenCalled();
   expect(unlinkListener).not.toHaveBeenCalled();
 
