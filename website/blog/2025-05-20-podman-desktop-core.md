@@ -13,7 +13,7 @@ In the world of modern software development, containers and Kubernetes are no lo
 First, let's start by building an application in a container with Podman Desktop. We need our application code and a Containerfile. For a simple application, your Containerfile might look something like:
 
 ```Dockerfile
-FROM nginxinc/nginx-unprivileged
+FROM docker.io/nginxinc/nginx-unprivileged
 
 COPY <<EOF /usr/share/nginx/html/index.html
 <!DOCTYPE html>
@@ -28,6 +28,8 @@ COPY <<EOF /usr/share/nginx/html/index.html
 </html>
 EOF
 ```
+
+We use the `nginx-unprivileged` base image as a deliberate choice for enhanced security. This non-root approach adheres to the principle of least privilege, significantly limiting potential damage if the application is compromised and ensuring better compatibility with secure production environments like Kubernetes and OpenShift.
 
 Once your application and Containerfile are ready, Podman Desktop makes the build process straightforward:
 ![Build image](img/podman-desktop-core-blog/build-image.png)
