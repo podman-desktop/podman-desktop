@@ -59,7 +59,7 @@ const fakedManifest: ImageInfoUI = {
   base64RepoTag: 'base64RepoTag',
   selected: false,
   status: 'UNUSED',
-  icon: {},
+  icon: undefined,
   badges: [],
   isManifest: true,
   digest: 'sha256:1234567890',
