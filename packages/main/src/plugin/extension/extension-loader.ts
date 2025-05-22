@@ -732,7 +732,7 @@ export class ExtensionLoader {
 
         telemetryOptions['loadingRuntimeDuration'] = afterLoadingRuntime - beforeLoadingRuntime;
 
-        await this.activateExtension(extension, runtime as unknown as Record<string, unknown>);
+        await this.activateExtension(extension, runtime);
       } else {
         console.log(`Extension (${extension.id}) not activated because it is disabled`);
       }
@@ -1543,10 +1543,7 @@ export class ExtensionLoader {
     return undefined;
   }
 
-  async activateExtension(
-    extension: AnalyzedExtension,
-    extensionMain: Record<string, unknown> | undefined,
-  ): Promise<void> {
+  async activateExtension(extension: AnalyzedExtension, extensionMain: object | undefined): Promise<void> {
     this.extensionState.set(extension.id, 'starting');
     this.extensionStateErrors.delete(extension.id);
     this.apiSender.send('extension-starting', {});
@@ -1572,7 +1569,7 @@ export class ExtensionLoader {
       secrets,
     };
     let deactivateFunction: (() => Promise<void>) | undefined = undefined;
-    if (typeof extensionMain?.['deactivate'] === 'function') {
+    if (extensionMain && 'deactivate' in extensionMain && typeof extensionMain?.['deactivate'] === 'function') {
       deactivateFunction = extensionMain['deactivate'] as () => Promise<void>;
     }
 
@@ -1582,7 +1579,7 @@ export class ExtensionLoader {
     };
     let exports: unknown;
     try {
-      if (typeof extensionMain?.['activate'] === 'function') {
+      if (extensionMain && 'activate' in extensionMain && typeof extensionMain?.['activate'] === 'function') {
         // maximum time to wait for the extension to activate by reading from configuration
         const delayInSeconds: number = this.configurationRegistry
           .getConfiguration(ExtensionLoaderSettings.SectionName)
