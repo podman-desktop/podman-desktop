@@ -29,7 +29,7 @@ COPY <<EOF /usr/share/nginx/html/index.html
 EOF
 ```
 
-We use the `nginx-unprivileged` base image as a deliberate choice for enhanced security. This non-root approach adheres to the principle of least privilege, significantly limiting potential damage if the application is compromised and ensuring better compatibility with secure production environments like Kubernetes and OpenShift.
+To enhance security, we utilize the `nginx-unprivileged` image. This helps avoid root access, which is enforced by default in some Kubernetes distributions like OpenShift. The default NGINX image uses port 80, which is forbidden in rootless mode.
 
 Once your application and Containerfile are ready, Podman Desktop makes the build process straightforward:
 ![Build image](img/podman-desktop-core-blog/build-image.png)
