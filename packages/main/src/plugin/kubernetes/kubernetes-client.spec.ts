@@ -61,6 +61,8 @@ import type { PodCreationSource, ScalableControllerType } from './kubernetes-cli
 import { KubernetesClient } from './kubernetes-client.js';
 import { ResizableTerminalWriter } from './kubernetes-exec-transmitter.js';
 
+vi.mock(import('node:fs'));
+
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
 const configurationRegistry: ConfigurationRegistry = {
   onDidChangeConfiguration: _onDidChangeConfiguration.event,
@@ -1122,6 +1124,7 @@ test('Expect applyResourcesFromYAML to correctly call applyResources after loadi
 });
 
 test('setupWatcher sends kubernetes-context-update when kubeconfig file changes', async () => {
+  vi.mocked(fs.existsSync).mockReturnValue(true);
   const client = createTestClient();
   const fileSystemMonitoringSpy = vi.spyOn(fileSystemMonitoring, 'createFileSystemWatcher');
   const onDidChangeMock = vi.fn();
