@@ -14,15 +14,27 @@ import TerminalWindow from '../ui/TerminalWindow.svelte';
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-export let container: ContainerInfoUI;
+const {
+  container,
+}: {
+  container: ContainerInfoUI;
+} = $props();
 
-// Log
-let refContainer: ContainerInfoUI;
 // logs has been initialized
-let noLogs = true;
+let noLogs = $state(true);
+// the terminal displaying the logs
+let logsTerminal = $state<Terminal>();
+
+// the length of logs received
+let logsLength = $state(0);
+// the length of logs to skip displaying
+let skip = $state(0);
+
+// the container to get the logs from
+let refContainer: ContainerInfoUI;
 
 // need to refresh logs when container is switched or state changes
-$: {
+$effect(() => {
   if (
     refContainer &&
     (refContainer.id !== container.id || (refContainer.state !== container.state && container.state !== 'EXITED'))
@@ -31,25 +43,21 @@ $: {
     fetchContainerLogs().catch((err: unknown) => console.error(`Error fetching container logs ${container.id}`, err));
   }
   refContainer = container;
-}
-let terminalParentDiv: HTMLDivElement;
+});
 
-let logsTerminal: Terminal;
-
-let logsLength = 0;
-let skip = 0;
-let cancellableTokenId: number | undefined = undefined;
-let containerLogsClearedUnsubscriber: Unsubscriber | undefined = undefined;
-
-let containerDetailsLogsClearSetRevert: ((revert: boolean) => void) | undefined = undefined;
-
-$: {
+// Change the clear button to restore when logs cleared when no more logs have been displayed
+$effect(() => {
   if (skip > 0 && logsLength === skip) {
     containerDetailsLogsClearSetRevert?.(true);
   } else {
     containerDetailsLogsClearSetRevert?.(false);
   }
-}
+});
+
+let terminalParentDiv: HTMLDivElement;
+let cancellableTokenId: number | undefined = undefined;
+let containerLogsClearedUnsubscriber: Unsubscriber | undefined = undefined;
+let containerDetailsLogsClearSetRevert: ((revert: boolean) => void) | undefined = undefined;
 
 function callback(name: string, data: string): void {
   if (name === 'first-message') {
