@@ -261,8 +261,8 @@ export class KubernetesClient {
         if (!val?.trim()) {
           val = defaultKubeconfigPath;
         }
-        this.setupWatcher(val);
         await this.setKubeconfig(Uri.file(val));
+        this.setupWatcher(val);
       }
     });
   }
@@ -278,6 +278,17 @@ export class KubernetesClient {
     this.kubeConfigWatcher = this.fileSystemMonitoring.createFileSystemWatcher(kubeconfigFile);
 
     const location = Uri.file(kubeconfigFile);
+    const notifyKubeConfigExist = async (): Promise<void> => {
+      await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
+      this.apiSender.send('kubernetes-context-update');
+    };
+
+    if (fs.existsSync(kubeconfigFile)) {
+      notifyKubeConfigExist().catch((error: unknown) => {
+        console.error('Error while checking kubeconfig', error);
+      });
+    }
 
     // needs to refresh
     this.kubeConfigWatcher.onDidChange(async () => {
@@ -287,9 +298,7 @@ export class KubernetesClient {
     });
 
     this.kubeConfigWatcher.onDidCreate(async () => {
-      await this.refresh();
-      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
-      this.apiSender.send('kubernetes-context-update');
+      await notifyKubeConfigExist();
     });
 
     this.kubeConfigWatcher.onDidDelete(() => {
