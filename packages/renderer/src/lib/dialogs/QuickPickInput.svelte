@@ -146,7 +146,14 @@ const onClose = async (): Promise<void> => {
 };
 
 async function onInputChange(event: Event): Promise<void> {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+  const target = event.target;
+
+  // Verify that target is an HTMLInputElement or HTMLTextAreaElement
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+    console.warn('Unexpected event target:', target);
+    return;
+  }
+
   // in case of quick pick, filter the items
   if (mode === 'QuickPick') {
     let val = target.value.toLowerCase();
