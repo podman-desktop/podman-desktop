@@ -61,8 +61,8 @@ importers:
         specifier: ^4.0.6
         version: 4.0.6
       electron-context-menu:
-        specifier: 4.0.5
-        version: 4.0.5
+        specifier: 4.1.0
+        version: 4.1.0
       electron-updater:
         specifier: 6.6.2
         version: 6.6.2
@@ -573,8 +573,8 @@ importers:
         specifier: ^0.9.6
         version: 0.9.6(svelte@5.28.2)
       electron-context-menu:
-        specifier: 4.0.5
-        version: 4.0.5
+        specifier: 4.1.0
+        version: 4.1.0
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6405,8 +6405,8 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  electron-context-menu@4.0.5:
-    resolution: {integrity: sha512-sYoH7sK6wlVoheoePwFDALvyeQdDXxerSIBhCzc1F0PIVhBWNWupBS2atK0ytAIHcvX1Qwj/LocMXbpmA77Ukg==}
+  electron-context-menu@4.1.0:
+    resolution: {integrity: sha512-mvV7YAIaAvMdxqkdDDHXehe5FPyFKXOyuJqgLwXSrWRjdmDBZQREvgcphKbAVgFU5XjYG5R6PAL00+b8Q6SKqg==}
     engines: {node: '>=18'}
 
   electron-dl@4.0.0:
@@ -8801,6 +8801,10 @@ packages:
 
   mime-db@1.53.0:
     resolution: {integrity: sha512-oHlN/w+3MQ3rba9rqFr6V/ypF10LSkdwUysQL7GkXoTgIWeV+tcXGA852TBxH+gsh8UWoyhR1hKcoMJTuWflpg==}
+    engines: {node: '>= 0.6'}
+
+  mime-db@1.54.0:
+    resolution: {integrity: sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ==}
     engines: {node: '>= 0.6'}
 
   mime-types@2.1.18:
@@ -18788,7 +18792,7 @@ snapshots:
       - electron-builder-squirrel-windows
       - supports-color
 
-  electron-context-menu@4.0.5:
+  electron-context-menu@4.1.0:
     dependencies:
       cli-truncate: 4.0.0
       electron-dl: 4.0.0
@@ -19525,7 +19529,7 @@ snapshots:
 
   ext-list@2.2.2:
     dependencies:
-      mime-db: 1.53.0
+      mime-db: 1.54.0
 
   ext-name@5.0.0:
     dependencies:
@@ -21887,6 +21891,8 @@ snapshots:
   mime-db@1.52.0: {}
 
   mime-db@1.53.0: {}
+
+  mime-db@1.54.0: {}
 
   mime-types@2.1.18:
     dependencies:

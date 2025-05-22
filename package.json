@@ -191,7 +191,7 @@
     "compare-versions": "^6.1.1",
     "date.js": "^0.3.3",
     "dockerode": "^4.0.6",
-    "electron-context-menu": "4.0.5",
+    "electron-context-menu": "4.1.0",
     "electron-updater": "6.6.2",
     "electron-util": "^0.18.1",
     "express": "^4.21.2",
