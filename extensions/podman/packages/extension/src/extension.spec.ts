@@ -254,6 +254,7 @@ vi.mock('@podman-desktop/api', async () => {
       isWindows: false,
       isMac: false,
       isLinux: false,
+      isUnixLike: false,
     },
     containerEngine: {
       info: vi.fn(),
@@ -350,6 +351,7 @@ beforeEach(() => {
 
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.mocked(extensionApi.env).isWindows = false;
 
   const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
@@ -1203,7 +1205,7 @@ test('test checkDefaultMachine, if the default connection is not in sync with th
 });
 
 test('ensure started machine reports default configuration', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
+  vi.mocked(extensionApi.env).isUnixLike = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
@@ -1233,7 +1235,7 @@ test('ensure started machine reports default configuration', async () => {
 
 test('ensure stopped machine reports stopped provider', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.mocked(extensionApi.env).isMac = true;
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
@@ -1263,7 +1265,7 @@ test('ensure stopped machine reports stopped provider', async () => {
 
 test('ensure running and starting machine reports starting provider', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.mocked(extensionApi.env).isMac = true;
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
@@ -1294,7 +1296,7 @@ test('ensure running and starting machine reports starting provider', async () =
 
 test('ensure running and not starting machine reports ready provider', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.mocked(extensionApi.env).isMac = true;
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
@@ -1362,7 +1364,7 @@ test('ensure started machine reports configuration', async () => {
 
 test('ensure stopped machine reports configuration', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
-  vi.mocked(extensionApi.env).isLinux = true;
+  vi.mocked(extensionApi.env).isUnixLike = true;
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
       new Promise<extensionApi.RunResult>(resolve => {
@@ -1511,8 +1513,8 @@ test('provider is registered without edit capabilities on Windows', async () => 
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
 });
 
-test('provider is registered without edit capabilities on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
+test('provider is registered without edit capabilities on Unix-like OS', async () => {
+  vi.mocked(extensionApi.env).isUnixLike = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
   spyExecPromise.mockImplementation(() => {
@@ -1529,8 +1531,8 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
 });
 
-test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
+test('Even with getJSONMachineList erroring, do not show setup notification on Unix-like OSes', async () => {
+  vi.mocked(extensionApi.env).isUnixLike = true;
   vi.spyOn(extensionApi.process, 'exec').mockRejectedValue({
     name: 'name',
     message: 'description',
@@ -1540,8 +1542,8 @@ test('Even with getJSONMachineList erroring, do not show setup notification on L
   expect(extensionApi.window.showNotification).not.toBeCalled();
 });
 
-test('If machine list is empty, do not show setup notification on Linux', async () => {
-  vi.mocked(extensionApi.env).isLinux = true;
+test('If machine list is empty, do not show setup notification on Unix-like OSes', async () => {
+  vi.mocked(extensionApi.env).isUnixLike = true;
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
   spyExecPromise.mockResolvedValue({ stdout: '[]' } as extensionApi.RunResult);
   await extension.updateMachines(provider, podmanConfiguration);
@@ -1568,7 +1570,7 @@ test('Should notify clean machine if getJSONMachineList is erroring due to an in
 });
 
 test('No updates of machines in parallel', async () => {
-  vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.mocked(extensionApi.env).isMac = true;
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
   spyExecPromise.mockResolvedValue({ stdout: '[]' } as extensionApi.RunResult);
@@ -2487,7 +2489,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    vi.mocked(extensionApi.env).isLinux = true;
+    vi.mocked(extensionApi.env).isUnixLike = true;
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
@@ -2515,7 +2517,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    (extensionApi.env.isLinux as boolean) = true;
+    (extensionApi.env.isUnixLike as boolean) = true;
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
@@ -2660,10 +2662,11 @@ async function testAudit(path: string, uri: string, condition: typeof expect | t
   expect(auditRecords.records).toEqual(condition.arrayContaining([expect.objectContaining({ type: 'error' })]));
 }
 
-test('activate on mac register commands for setting compatibility moide ', async () => {
+test('activate on mac register commands for setting compatibility mode ', async () => {
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(extensionApi.env).isWindows = false;
   vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
@@ -2741,13 +2744,14 @@ test('activate on mac register commands for setting compatibility moide ', async
   expect(enableMock).toBeCalled();
 });
 
-describe.each(['windows', 'mac', 'linux'])('podman machine properties audit on %s', os => {
+describe.each(['windows', 'mac', 'linux', 'freebsd'])('podman machine properties audit on %s', os => {
   beforeEach(() => {
     vi.mocked(extensionApi.env).isWindows = os === 'windows';
     vi.mocked(extensionApi.env).isMac = os === 'mac';
     vi.mocked(extensionApi.env).isLinux = os === 'windows';
+    vi.mocked(extensionApi.env).isUnixLike = os === 'windows';
   });
-  if (os === 'linux') {
+  if (os === 'linux' || os === 'freebsd') {
     test('is not used', async () => {
       vi.spyOn(fs, 'existsSync').mockImplementation((path: fs.PathLike) => {
         if (path.toString().endsWith('/podman/podman.sock')) {
@@ -3128,6 +3132,7 @@ test('activate and autostart should not duplicate machines ', async () => {
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(extensionApi.env).isWindows = false;
   vi.mocked(extensionApi.env).isLinux = false;
+  vi.mocked(extensionApi.env).isUnixLike = false;
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
