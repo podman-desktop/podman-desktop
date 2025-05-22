@@ -27,6 +27,6 @@ video {
 }
 
 /* Hide the GitHub stars badge, since this dynamically changes, it would create false errors in Argos */
-#github-stars-badge {
+#github-stars-button {
   visibility: hidden;
 }
