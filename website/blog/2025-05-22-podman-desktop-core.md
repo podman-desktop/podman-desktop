@@ -19,11 +19,11 @@ COPY <<EOF /usr/share/nginx/html/index.html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Nginx Container</title>
+    <title>Simple NGINX Container</title>
 </head>
 <body>
-    <h1>Hello from my Podman Nginx Container!</h1>
-    <p>This content is being served by Nginx running on a Podman container.</p>
+    <h1>Hello from my Podman NGINX Container!</h1>
+    <p>This content is being served by NGINX running on a Podman container.</p>
 </body>
 </html>
 EOF
