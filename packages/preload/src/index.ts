@@ -538,6 +538,7 @@ export function initExposure(): void {
       containerId: string;
       callback: (name: string, data: string) => void;
       cancellableTokenId?: number;
+      sinceDurationInSeconds?: number;
     }): Promise<void> => {
       onDataCallbacksLogsContainerId++;
       onDataCallbacksLogsContainer.set(onDataCallbacksLogsContainerId, logsParams.callback);
@@ -546,6 +547,7 @@ export function initExposure(): void {
         containerId: logsParams.containerId,
         onDataId: onDataCallbacksLogsContainerId,
         cancellableTokenId: logsParams.cancellableTokenId,
+        sinceDurationInSeconds: logsParams.sinceDurationInSeconds,
       });
     },
   );

@@ -25,10 +25,7 @@ let noLogs = $state(true);
 // the terminal displaying the logs
 let logsTerminal = $state<Terminal>();
 
-// the length of logs received
-let logsLength = $state(0);
-// the length of logs to skip displaying
-let skip = $state(0);
+let skip = $state<number>();
 
 // the container to get the logs from
 let refContainer: ContainerInfoUI;
@@ -47,7 +44,7 @@ $effect(() => {
 
 // Change the clear button to restore when logs cleared when no more logs have been displayed
 $effect(() => {
-  if (skip > 0 && logsLength === skip) {
+  if (skip) {
     containerDetailsLogsClearSetRevert?.(true);
   } else {
     containerDetailsLogsClearSetRevert?.(false);
@@ -88,7 +85,13 @@ async function fetchContainerLogs(): Promise<void> {
   }
   cancellableTokenId = await window.getCancellableTokenSource();
   // grab logs of the container
-  await window.logsContainer({ engineId: container.engineId, containerId: container.id, callback, cancellableTokenId });
+  await window.logsContainer({
+    engineId: container.engineId,
+    containerId: container.id,
+    callback,
+    cancellableTokenId,
+    sinceDurationInSeconds: skip ? new Date().getTime() / 1000 - skip : undefined,
+  });
 }
 
 function afterTerminalInit(): void {
@@ -100,12 +103,8 @@ function afterTerminalInit(): void {
     target: xtermElement,
     props: {
       onclear: async () => {
-        if (logsLength === skip) {
-          setSkip(0);
-        } else {
-          setSkip(logsLength);
-        }
-        await fetchContainerLogs();
+        setSkip(new Date().getTime() / 1000);
+        logsTerminal?.clear();
       },
     },
   });
@@ -113,23 +112,15 @@ function afterTerminalInit(): void {
 }
 
 function setSkip(n: number): void {
-  if (n) {
-    $containerLogsCleared.set(getKeyValue(container.id, container.engineId), n);
-  } else {
-    $containerLogsCleared.delete(getKeyValue(container.id, container.engineId));
-  }
+  $containerLogsCleared.set(getKeyValue(container.id, container.engineId), n);
 }
 
 function clearTerminal(): void {
   logsTerminal?.clear();
-  logsLength = 0;
 }
 
 function addDataToTerminal(data: string): void {
-  if (logsLength >= skip) {
-    logsTerminal?.write(data + '\r');
-  }
-  logsLength += data.length + 1;
+  logsTerminal?.write(data + '\r');
 }
 
 onMount(async () => {

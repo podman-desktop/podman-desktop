@@ -1151,7 +1151,13 @@ export class PluginSystem {
       'container-provider-registry:logsContainer',
       async (
         _listener,
-        logsParams: { engineId: string; containerId: string; onDataId: number; cancellableTokenId?: number },
+        logsParams: {
+          engineId: string;
+          containerId: string;
+          onDataId: number;
+          cancellableTokenId?: number;
+          sinceDurationInSeconds?: number;
+        },
       ): Promise<void> => {
         const abortController = this.createAbortControllerOnCancellationToken(
           cancellationTokenRegistry,
@@ -1170,6 +1176,7 @@ export class PluginSystem {
             );
           },
           abortController,
+          sinceDurationInSeconds: logsParams.sinceDurationInSeconds,
         });
       },
     );

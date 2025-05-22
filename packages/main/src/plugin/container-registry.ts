@@ -1679,17 +1679,22 @@ export class ContainerProviderRegistry {
     id: string;
     callback: (name: string, data: string) => void;
     abortController?: AbortController;
+    sinceDurationInSeconds?: number;
   }): Promise<void> {
     let telemetryOptions = {};
     let firstMessage = true;
     const container = this.getMatchingContainer(logsParams.engineId, logsParams.id);
+    const apiLogsParams: Dockerode.ContainerLogsOptions & { follow: true } = {
+      follow: true,
+      stdout: true,
+      stderr: true,
+      abortSignal: logsParams.abortController?.signal,
+    };
+    if (logsParams.sinceDurationInSeconds) {
+      apiLogsParams['since'] = `${logsParams.sinceDurationInSeconds}s`;
+    }
     container
-      .logs({
-        follow: true,
-        stdout: true,
-        stderr: true,
-        abortSignal: logsParams.abortController?.signal,
-      })
+      .logs(apiLogsParams)
       .then(containerStream => {
         containerStream.on('end', () => {
           logsParams.callback('end', '');
