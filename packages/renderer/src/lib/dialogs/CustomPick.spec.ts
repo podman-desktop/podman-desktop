@@ -25,8 +25,6 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import CustomPick from './CustomPick.svelte';
 import type { CustomPickOptions } from './quickpick-input';
 
-const sendCustomPickItemsOnConfirmation = vi.fn();
-const closeCustomPick = vi.fn();
 const receiveFunctionMock = vi.fn();
 
 // mock some methods of the window object
@@ -34,8 +32,6 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
-  Object.defineProperty(window, 'sendCustomPickItemsOnConfirmation', { value: sendCustomPickItemsOnConfirmation });
-  Object.defineProperty(window, 'closeCustomPick', { value: closeCustomPick });
 });
 
 describe('CustomPick', () => {
@@ -138,7 +134,7 @@ describe('CustomPick', () => {
 
     await userEvent.click(button);
 
-    expect(closeCustomPick).toHaveBeenCalled();
+    expect(window.closeCustomPick).toHaveBeenCalled();
   });
 
   test('Expect that by clicking the next button it calls the senditemms and close command', async () => {
@@ -174,7 +170,7 @@ describe('CustomPick', () => {
     expect(button).toBeInTheDocument();
 
     await userEvent.click(button);
-    expect(sendCustomPickItemsOnConfirmation).toHaveBeenCalled();
-    expect(closeCustomPick).toHaveBeenCalled();
+    expect(window.sendCustomPickItemsOnConfirmation).toHaveBeenCalled();
+    expect(window.closeCustomPick).toHaveBeenCalled();
   });
 });
