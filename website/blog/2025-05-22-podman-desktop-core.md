@@ -78,6 +78,7 @@ With [kind](https://kind.sigs.k8s.io/) or [minikube](https://minikube.sigs.k8s.i
 
 3. Click “Create”
 4. Wait until the kind cluster gets created
+5. Once the cluster is created, Podman Desktop will automatically switch your Kubernetes context to the new kind cluster. If you want to change your cluster, you can switch contexts in the statusbar.
 
 We now have a locally running Kubernetes cluster which we can explore on the Kubernetes dashboard.
 
