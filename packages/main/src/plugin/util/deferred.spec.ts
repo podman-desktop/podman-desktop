@@ -15,21 +15,20 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { expect, test } from 'vitest';
 
-import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
+import { isAsyncFunction } from '/@/plugin/util/deferred.js';
 
-export interface SelectableExtensionDevelopmentFolderInfoUI extends ExtensionDevelopmentFolderInfo {
-  selected: boolean;
-  name: string;
-  extension?: {
-    id: string;
-    name: string;
-    state?: string;
-  };
-}
+test('normal function not detected as async', () => {
+  const func = (): boolean => true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const result = isAsyncFunction(func);
+  expect(result).toBe(false);
+});
 
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-
-export function isAsyncFunction(fn: unknown): boolean {
-  return fn?.constructor === AsyncFunction;
-}
+test('async function detected as async', () => {
+  const func = async (): Promise<boolean> => Promise.resolve(true);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const result = isAsyncFunction(func);
+  expect(result).toBe(true);
+});
