@@ -122,7 +122,7 @@ export class InputQuickPickRegistry {
         // no selection
         callback.deferred.resolve(undefined);
       } else if (callback.options?.canPickMany) {
-        const allItems = indexes.map(index => callback.items[index]);
+        const allItems = indexes.map(index => callback.items[index]).filter(item => item !== undefined);
         // resolve the promise
         callback.deferred.resolve(allItems);
       } else if (indexes[0] !== undefined) {
@@ -177,7 +177,7 @@ export class InputQuickPickRegistry {
     items: readonly (string | QuickPickItem)[] | Promise<readonly (string | QuickPickItem)[]>,
     options?: QuickPickOptions,
     token?: CancellationToken,
-  ): Promise<unknown[] | unknown | undefined> {
+  ): Promise<(string | QuickPickItem)[] | string | QuickPickItem | undefined> {
     // keep track of this request
     this.callbackId++;
 

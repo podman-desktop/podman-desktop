@@ -31,6 +31,7 @@ import {
 } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { isAsyncFunction } from '/@/plugin/util/deferred.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IAsyncDisposable } from '/@api/async-disposable.js';
@@ -1061,12 +1062,14 @@ export class ExtensionLoader implements IAsyncDisposable {
         return inputQuickPickRegistry.showInputBox(options, token);
       },
 
-      showQuickPick<T extends string | containerDesktopAPI.QuickPickItem>(
-        items: readonly T[] | Promise<readonly T[]>,
+      showQuickPick<T extends containerDesktopAPI.QuickPickItem>(
+        items: readonly (string | T)[] | Promise<readonly (string | T)[]>,
         options?: containerDesktopAPI.QuickPickOptions,
         token?: containerDesktopAPI.CancellationToken,
-      ): Promise<T | T[] | undefined> {
-        return inputQuickPickRegistry.showQuickPick(items, options, token) as Promise<T | T[] | undefined>;
+      ): Promise<(string | T) | (string | T)[] | undefined> {
+        return inputQuickPickRegistry.showQuickPick(items, options, token) as Promise<
+          (string | T) | (string | T)[] | undefined
+        >;
       },
 
       withProgress: <R>(
@@ -1728,7 +1731,12 @@ export class ExtensionLoader implements IAsyncDisposable {
       secrets,
     };
     let deactivateFunction: (() => Promise<void>) | undefined = undefined;
-    if (extensionMain && 'deactivate' in extensionMain && typeof extensionMain?.['deactivate'] === 'function') {
+    if (
+      extensionMain &&
+      'deactivate' in extensionMain &&
+      typeof extensionMain?.['deactivate'] === 'function' &&
+      isAsyncFunction(extensionMain?.['deactivate'])
+    ) {
       deactivateFunction = extensionMain['deactivate'] as () => Promise<void>;
     }
 
