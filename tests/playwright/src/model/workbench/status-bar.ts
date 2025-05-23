@@ -32,6 +32,8 @@ export class StatusBar extends BasePage {
   readonly troubleshootingButton: Locator;
   readonly tasksButton: Locator;
   readonly helpButton: Locator;
+  readonly pinProvidersButton: Locator;
+  readonly pinMenu: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -46,6 +48,8 @@ export class StatusBar extends BasePage {
     this.troubleshootingButton = this.content.getByRole('button').and(this.content.getByTitle('Troubleshooting'));
     this.tasksButton = this.content.getByRole('button').and(this.content.getByTitle('Tasks'));
     this.helpButton = this.content.getByRole('button').and(this.content.getByTitle('Help'));
+    this.pinProvidersButton = this.content.getByRole('button', { name: 'Pin' });
+    this.pinMenu = this.page.getByTitle('Pin Menu');
   }
 
   public async installKindCLI(): Promise<void> {
@@ -69,5 +73,43 @@ export class StatusBar extends BasePage {
     await playExpect(this.tasksButton).toBeVisible();
     await this.tasksButton.click();
     return new TasksPage(this.page);
+  }
+
+  public async getProviderButton(providerName: string): Promise<Locator> {
+    await playExpect(this.pinProvidersButton, 'status bar providers must be turned on').toBeVisible();
+    return this.content.getByRole('button', { name: providerName });
+  }
+
+  public async pinProvider(providerName: string, pin: boolean): Promise<void> {
+    const barProviderButton = await this.getProviderButton(providerName);
+    if ((await barProviderButton.isVisible()) === pin) {
+      return;
+    }
+
+    const pinMenuProviderButton = this.pinMenu.getByRole('button', { name: providerName, exact: true });
+    await playExpect(this.pinMenu).toBeHidden({ timeout: 5000 });
+
+    await playExpect(this.pinProvidersButton).toBeVisible();
+    await this.pinProvidersButton.click();
+    await playExpect(this.pinMenu).toBeVisible({ timeout: 5000 });
+    await playExpect(pinMenuProviderButton).toBeVisible();
+
+    await pinMenuProviderButton.click();
+    playExpect(await barProviderButton.isVisible()).toEqual(pin);
+
+    //close the menu
+    await this.pinProvidersButton.click();
+    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5000 });
+  }
+
+  public async isProviderResourceRunning(providerName: string, resourceName: string): Promise<boolean> {
+    const barProviderButton = await this.getProviderButton(providerName);
+    await playExpect(barProviderButton).toBeVisible();
+    const providerArea = barProviderButton.locator('..').locator('..');
+    const providerTooltip = providerArea.getByLabel('tooltip');
+
+    await barProviderButton.hover();
+    await playExpect(providerTooltip).toBeVisible();
+    return (await providerTooltip.innerText()).includes('Running\n: ' + resourceName);
   }
 }
