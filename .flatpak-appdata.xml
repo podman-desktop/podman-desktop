@@ -36,7 +36,7 @@
   <screenshots>
     <screenshot type="default">
       <caption>Podman Desktop UI</caption>
-      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop/media/screenshot.png</image>
+      <image type="source">https://github.com/podman-desktop/podman-desktop/raw/refs/tags/v1.19.1/website/static/img/features/homepage.webp</image>
     </screenshot>
   </screenshots>
   <content_rating type="oars-1.1" />
