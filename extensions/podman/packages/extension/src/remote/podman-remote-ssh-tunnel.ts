@@ -17,11 +17,19 @@
  ***********************************************************************/
 import * as net from 'node:net';
 
-import type { ProviderConnectionStatus } from '@podman-desktop/api';
-import type { ConnectConfig } from 'ssh2';
+import type {
+  ProviderConnectionShellAccess,
+  ProviderConnectionShellAccessData,
+  ProviderConnectionShellAccessError,
+  ProviderConnectionShellAccessSession,
+  ProviderConnectionShellDimensions,
+  ProviderConnectionStatus,
+} from '@podman-desktop/api';
+import { Disposable, EventEmitter } from '@podman-desktop/api';
+import type { ClientChannel, ConnectConfig } from 'ssh2';
 import { Client } from 'ssh2';
 
-export class PodmanRemoteSshTunnel {
+export class PodmanRemoteSshTunnel implements ProviderConnectionShellAccess, Disposable {
   #sshConfig: ConnectConfig;
 
   #client: Client | undefined;
@@ -39,6 +47,8 @@ export class PodmanRemoteSshTunnel {
   #connected: Promise<boolean>;
 
   #listening: boolean = false;
+
+  #shells: Array<Disposable> = [];
 
   constructor(
     private host: string,
@@ -59,8 +69,64 @@ export class PodmanRemoteSshTunnel {
     });
   }
 
+  open(): ProviderConnectionShellAccessSession {
+    let mStream: ClientChannel | undefined;
+
+    // create event emitters
+    const onDataEmit = new EventEmitter<ProviderConnectionShellAccessData>();
+    const onErrorEmit = new EventEmitter<ProviderConnectionShellAccessError>();
+    const onEndEmit = new EventEmitter<void>();
+
+    // create disposable
+    const disposable = Disposable.create(() => {
+      mStream?.close();
+      mStream?.destroy();
+
+      onDataEmit.dispose();
+      onErrorEmit.dispose();
+      onEndEmit.dispose();
+
+      mStream = undefined;
+    });
+
+    this.#shells.push(disposable);
+
+    this.#client?.shell((err, stream) => {
+      if (err) {
+        console.error(err);
+        onErrorEmit.fire({ error: err.message });
+        return;
+      }
+      mStream = stream;
+
+      stream
+        .on('close', () => {
+          onEndEmit.fire();
+          // dispose on close
+          disposable?.dispose();
+        })
+        .on('data', (data: string) => {
+          onDataEmit.fire({ data: data });
+        });
+    });
+
+    return {
+      onData: onDataEmit.event,
+      onError: onErrorEmit.event,
+      onEnd: onEndEmit.event,
+      write: (data): void => {
+        mStream?.write(data);
+      },
+      resize: (dimensions: ProviderConnectionShellDimensions): void => {
+        mStream?.setWindow(dimensions.rows, dimensions.cols, 0, 0);
+      },
+      close: disposable.dispose,
+    };
+  }
+
   dispose(): void {
-    this.disconnect();
+    this.#shells.forEach(shell => shell.dispose());
+    this.disconnect().catch(console.error);
   }
 
   status(): ProviderConnectionStatus {
@@ -163,11 +229,12 @@ export class PodmanRemoteSshTunnel {
     }
   }
 
-  disconnect(): void {
+  protected async disconnect(): Promise<void> {
     // Set the reconnect flag to false to prevent reconnecting
     this.#reconnect = false;
     this.#client?.end();
-    this.#server?.close();
+    this.#client = undefined;
+    await this.#server?.[Symbol.asyncDispose]();
   }
 
   isConnected(): Promise<boolean> {

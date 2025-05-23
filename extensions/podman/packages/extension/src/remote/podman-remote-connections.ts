@@ -182,6 +182,7 @@ export class PodmanRemoteConnections {
         endpoint: {
           socketPath: localPath,
         },
+        shellAccess: sshTunnel,
       });
       this.#extensionContext.subscriptions.push(connectionDisposable);
       const remoteConnection: RemoteSystemConnection = {
@@ -200,7 +201,7 @@ export class PodmanRemoteConnections {
     for (const connection of connections) {
       const remoteConnection = this.#currentConnections.get(connection.name);
       if (remoteConnection) {
-        remoteConnection.sshTunnel.disconnect();
+        remoteConnection.sshTunnel.dispose();
         this.#currentConnections.delete(connection.name);
         // unregister the connection
         remoteConnection.connectionDisposable.dispose();
