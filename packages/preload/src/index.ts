@@ -537,6 +537,7 @@ export function initExposure(): void {
       engineId: string;
       containerId: string;
       callback: (name: string, data: string) => void;
+      cancellableTokenId?: number;
     }): Promise<void> => {
       onDataCallbacksLogsContainerId++;
       onDataCallbacksLogsContainer.set(onDataCallbacksLogsContainerId, logsParams.callback);
@@ -544,6 +545,7 @@ export function initExposure(): void {
         engineId: logsParams.engineId,
         containerId: logsParams.containerId,
         onDataId: onDataCallbacksLogsContainerId,
+        cancellableTokenId: logsParams.cancellableTokenId,
       });
     },
   );
