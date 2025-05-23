@@ -23,42 +23,52 @@ import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { test } from '../utility/fixtures';
+import { expect as playExpect, test } from '../utility/fixtures';
 import {
   checkKubernetesResourceState,
+  configurePortForwarding,
   createKubernetesResource,
   deleteKubernetesResource,
+  deployContainerToCluster,
   monitorPodStatusInClusterContainer,
   verifyLocalPortResponse,
+  verifyPortForwardingConfiguration,
 } from '../utility/kubernetes';
-import { ensureCliInstalled } from '../utility/operations';
+import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
-const CLUSTER_NAME: string = 'kind-cluster';
-const CLUSTER_CREATION_TIMEOUT: number = 300_000;
-const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
-const RESOURCE_NAME: string = 'kind';
-const KUBERNETES_CONTEXT: string = `kind-${CLUSTER_NAME}`;
-const KUBERNETES_NAMESPACE: string = 'default';
+const clusterName: string = 'kind-cluster';
+const clusterCreationTimeout: number = 300_000;
+const kindNode: string = `${clusterName}-control-plane`;
+const resourceName: string = 'kind';
+const kubernetesContext: string = `kind-${clusterName}`;
+const kubernetesNamespace: string = 'default';
 
-const DEPLOYMENT_NAME: string = 'test-deployment-resource';
-const SERVICE_NAME: string = 'test-service-resource';
-const INGERSS_NAME: string = 'test-ingress-resource';
-const KUBERNETES_RUNTIME = {
+const deploymentName: string = 'test-deployment-resource';
+const serviceName: string = 'test-service-resource';
+const ingerssName: string = 'test-ingress-resource';
+const kubernetesRuntime = {
   runtime: PlayYamlRuntime.Kubernetes,
-  kubernetesContext: KUBERNETES_CONTEXT,
-  kubernetesNamespace: KUBERNETES_NAMESPACE,
+  kubernetesContext: kubernetesContext,
+  kubernetesNamespace: kubernetesNamespace,
 };
-const COMMAND_TO_EXECUTE: string = 'kubectl get pods -n projectcontour';
+const imageName: string = 'ghcr.io/podmandesktop-ci/nginx';
+const pullImageName: string = `${imageName}:latest`;
+const containerName: string = 'nginx-container';
+const podName: string = containerName;
+
+const ingressControllerCommand: string = 'kubectl get pods -n projectcontour';
+const remotePort: number = 80;
+const localPort: number = 50000;
+const portForwardingAddress: string = `http://localhost:${localPort}/`;
+const serviceAddress: string = `http://localhost:9090/`;
+const responseMessage: string = 'Welcome to nginx!';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DEPLOYMENT_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${DEPLOYMENT_NAME}.yaml`);
-const SERVICE_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${SERVICE_NAME}.yaml`);
-const INGRESS_YAML_PATH = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${INGERSS_NAME}.yaml`);
-
-const FORWARD_ADRESS: string = `http://localhost:9090/`;
-const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
+const deploymentYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${deploymentName}.yaml`);
+const serviceYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${serviceName}.yaml`);
+const ingressYamlPath = path.resolve(__dirname, '..', '..', 'resources', 'kubernetes', `${ingerssName}.yaml`);
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
@@ -77,85 +87,152 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   }
 
   if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-    await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
+    await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
       providerType: providerTypeGHA,
       useIngressController: true,
     });
   } else {
-    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
+    await createKindCluster(page, clusterName, true, clusterCreationTimeout);
   }
 });
 
 test.afterAll(async ({ runner, page }) => {
   test.setTimeout(90_000);
   try {
-    await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
+    await deleteContainer(page, containerName);
+    await deleteImage(page, imageName);
+    await deleteCluster(page, resourceName, kindNode, clusterName);
   } finally {
     await runner.close();
   }
 });
 
-test.describe.serial('Kubernetes newtworking E2E tests', { tag: '@k8s_e2e' }, () => {
-  test('Check Ingress controller pods status', async ({ page }) => {
-    test.setTimeout(160_000);
-    await monitorPodStatusInClusterContainer(page, KIND_NODE, COMMAND_TO_EXECUTE);
-  });
+test.describe('Kubernetes newtworking E2E test', { tag: '@k8s_e2e' }, () => {
+  test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
+    test('Prepare deployment on the cluster', async ({ page, navigationBar }) => {
+      test.setTimeout(120_000);
+      //Pull image
+      let imagesPage = await navigationBar.openImages();
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(pullImageName);
+      await playExpect.poll(async () => imagesPage.waitForImageExists(imageName, 10_000)).toBeTruthy();
 
-  test('Create and verify a running Kubernetes deployment', async ({ page }) => {
-    test.setTimeout(80_000);
-    await createKubernetesResource(
-      page,
-      KubernetesResources.Deployments,
-      DEPLOYMENT_NAME,
-      DEPLOYMENT_YAML_PATH,
-      KUBERNETES_RUNTIME,
-    );
-    await checkKubernetesResourceState(
-      page,
-      KubernetesResources.Deployments,
-      DEPLOYMENT_NAME,
-      KubernetesResourceState.Running,
-      80_000,
-    );
+      //Push image to the cluster
+      const imageDetailPage = await imagesPage.openImageDetails(imageName);
+      await imageDetailPage.pushImageToKindCluster();
+
+      //Create container
+      imagesPage = await navigationBar.openImages();
+      await imagesPage.startContainerWithImage(imageName, containerName);
+      const containersPage = await navigationBar.openContainers();
+      await playExpect
+        .poll(async () => containersPage.containerExists(containerName), { timeout: 15_000 })
+        .toBeTruthy();
+      await containersPage.openContainersDetails(containerName);
+
+      //Deploy pod to the cluster
+      await deployContainerToCluster(page, containerName, kubernetesContext, podName);
+    });
+
+    test('Create port forwarding configuration', async ({ page }) => {
+      //Open pod details and create port forwarding configuration
+      await configurePortForwarding(page, KubernetesResources.Pods, podName);
+    });
+
+    test('Verify new local port response', async () => {
+      await verifyLocalPortResponse(portForwardingAddress, responseMessage);
+    });
+
+    test('Verify Kubernetes port forwarding page', async ({ page }) => {
+      await verifyPortForwardingConfiguration(page, containerName, localPort, remotePort);
+    });
+
+    test('Delete configuration', async ({ page }) => {
+      await deleteKubernetesResource(page, KubernetesResources.PortForwarding, containerName);
+    });
+
+    test('Verify UI components after removal', async ({ page, navigationBar }) => {
+      //Verify Kubernetes port forwarding page
+      const noForwardingsMessage = page.getByText('No port forwarding configured');
+      await playExpect(noForwardingsMessage).toBeVisible();
+
+      //Verify Pod details page
+      const kubernetesBar = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+      await playExpect.poll(async () => kubernetesPodsPage.getRowByName(podName), { timeout: 15_000 }).toBeTruthy();
+      const podDetailPage = await kubernetesPodsPage.openResourceDetails(podName, KubernetesResources.Pods);
+      await podDetailPage.activateTab('Summary');
+      const forwardButton = page.getByRole('button', { name: `Forward...` });
+      await playExpect(forwardButton).toBeVisible();
+    });
+
+    test('Verify link response after removal', async () => {
+      await verifyLocalPortResponse(portForwardingAddress, responseMessage); //expect to contain to pass until #11210 is resolved
+    });
   });
-  test('Create and verify a running Kubernetes service', async ({ page }) => {
-    await createKubernetesResource(
-      page,
-      KubernetesResources.Services,
-      SERVICE_NAME,
-      SERVICE_YAML_PATH,
-      KUBERNETES_RUNTIME,
-    );
-    await checkKubernetesResourceState(
-      page,
-      KubernetesResources.Services,
-      SERVICE_NAME,
-      KubernetesResourceState.Running,
-      10_000,
-    );
-  });
-  test('Create and verify a running Kubernetes ingress', async ({ page }) => {
-    await createKubernetesResource(
-      page,
-      KubernetesResources.IngeressesRoutes,
-      INGERSS_NAME,
-      INGRESS_YAML_PATH,
-      KUBERNETES_RUNTIME,
-    );
-    await checkKubernetesResourceState(
-      page,
-      KubernetesResources.IngeressesRoutes,
-      INGERSS_NAME,
-      KubernetesResourceState.Running,
-      10_000,
-    );
-  });
-  test(`Verify the availability of the ${SERVICE_NAME} service.`, async () => {
-    await verifyLocalPortResponse(FORWARD_ADRESS, RESPONSE_MESSAGE);
-  });
-  test('Delete Kubernetes resources', async ({ page }) => {
-    await deleteKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGERSS_NAME);
-    await deleteKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME);
-    await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
-  });
+  test.describe
+    .serial('Ingress routing workflow verification', () => {
+      test('Check Ingress controller pods status', async ({ page }) => {
+        test.setTimeout(160_000);
+        await monitorPodStatusInClusterContainer(page, kindNode, ingressControllerCommand);
+      });
+
+      test('Create and verify a running Kubernetes deployment', async ({ page }) => {
+        test.setTimeout(80_000);
+        await createKubernetesResource(
+          page,
+          KubernetesResources.Deployments,
+          deploymentName,
+          deploymentYamlPath,
+          kubernetesRuntime,
+        );
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Deployments,
+          deploymentName,
+          KubernetesResourceState.Running,
+          80_000,
+        );
+      });
+      test('Create and verify a running Kubernetes service', async ({ page }) => {
+        await createKubernetesResource(
+          page,
+          KubernetesResources.Services,
+          serviceName,
+          serviceYamlPath,
+          kubernetesRuntime,
+        );
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Services,
+          serviceName,
+          KubernetesResourceState.Running,
+          10_000,
+        );
+      });
+      test('Create and verify a running Kubernetes ingress', async ({ page }) => {
+        await createKubernetesResource(
+          page,
+          KubernetesResources.IngeressesRoutes,
+          ingerssName,
+          ingressYamlPath,
+          kubernetesRuntime,
+        );
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.IngeressesRoutes,
+          ingerssName,
+          KubernetesResourceState.Running,
+          10_000,
+        );
+      });
+      test(`Verify the availability of the ${serviceName} service.`, async () => {
+        await verifyLocalPortResponse(serviceAddress, responseMessage);
+      });
+      test('Delete Kubernetes resources', async ({ page }) => {
+        await deleteKubernetesResource(page, KubernetesResources.IngeressesRoutes, ingerssName);
+        await deleteKubernetesResource(page, KubernetesResources.Services, serviceName);
+        await deleteKubernetesResource(page, KubernetesResources.Deployments, deploymentName);
+      });
+    });
 });
