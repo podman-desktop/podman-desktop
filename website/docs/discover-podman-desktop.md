@@ -14,7 +14,16 @@ The key differentiator is its intuitive UI that allows you to visualize your dev
 
 In addition, you can run this tool on three different operating systems; macOS, Windows, and Linux. Podman Desktop runs your workloads on a Podman engine and therefore, provides you Podman-native capabilities to interact with your applications. But, this does not mean you cannot run your Docker applications. You can use the Docker compatibility UI feature for a smooth transition to Podman Desktop.
 
-Let’s quickly explore this tool’s key functionalities.
+Let’s quickly explore this tool’s key functionalities:
+
+[Manage containerized environment](/docs/discover-podman-desktop#manage-containerized-environment)
+[Podify your containers](/docs/discover-podman-desktop#podify-your-containers)
+[Manage images](/docs/discover-podman-desktop#manage-images)
+[Manage Kubernetes-based environment](/docs/discover-podman-desktop#manage-kubernetes-based-environment)
+[Manage Docker compatibility](/docs/discover-podman-desktop#manage-docker-compatibility)
+[Integrate your tools using extensions](/docs/discover-podman-desktop#integrate-your-tools-using-extensions)
+[Manage settings](/docs/discover-podman-desktop#manage-settings)
+[Customize the UI](/docs/discover-podman-desktop#customize-the-ui)
 
 ### Manage containerized environment
 
@@ -149,3 +158,23 @@ The page helps you to:
 
 - Enable all experimental features simultaneously or enable an experimental feature individually.
 - Share any feedback or suggestions on the dedicated discussion pages created on GitHub.
+
+### Customize the UI
+
+You can customize the UI based on your needs and to keep your view tidy. For example, the left navigation pane continually expands as new extensions are added for use. These new additions might make the navigation pane a bit cluttered. For a better experience, you can customize the pane to include only relevant components.
+
+**Customize the left navigation pane**
+
+By default, all UI components are selected and visible in the pane. To deselect any UI components that you do not want to view:
+
+- Linux and Windows: Right-click the left navigation pane.
+- macOS: Press Control and click.
+
+**Customize other UI elements**
+
+Go to **Settings > Preferences** and configure the required settings. You can set the following:
+
+- UI appearance
+- Navigation bar layout
+- Provider's view in the status bar (experimental)
+- Running tasks' view in the status bar (experimental)
