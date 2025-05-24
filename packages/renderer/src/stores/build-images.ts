@@ -16,13 +16,66 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Terminal } from '@xterm/xterm';
 import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
-export interface BuildImageInfo {
-  buildImageKey: symbol;
-  buildRunning: boolean;
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
+
+export interface BuildArg {
+  key: string;
+  value: string;
 }
 
-// current build key
-export const buildImagesInfo: Writable<BuildImageInfo> = writable();
+export interface BuildImageInfo {
+  buildImageKey?: symbol;
+  buildRunning: boolean;
+  buildFinished: boolean;
+  containerImageName: string;
+  containerFilePath: string;
+  containerBuildContextDirectory: string;
+  containerBuildPlatform: string;
+  buildParentImageName?: string;
+  buildError?: string;
+  buildArgs: BuildArg[];
+  cancellableTokenId?: number;
+  selectedProvider?: ProviderContainerConnectionInfo;
+  logsTerminal?: Terminal;
+  taskId: number;
+}
+
+let taskCounter = 0;
+
+export function getNextTaskId(): number {
+  return ++taskCounter;
+}
+
+export function cleanupBuildImageInfo(taskId: number): void {
+  const map = get(buildImagesInfo);
+  map.delete(taskId);
+  buildImagesInfo.set(map);
+}
+
+export function cloneBuildImageInfo(original: BuildImageInfo): BuildImageInfo {
+  return {
+    ...original,
+    taskId: 0,
+    buildArgs: original.buildArgs.map(originalArg => ({ ...originalArg })),
+  };
+}
+
+export function createDefaultBuildImageInfo(): BuildImageInfo {
+  return {
+    taskId: 0,
+    containerImageName: '',
+    buildRunning: false,
+    buildFinished: false,
+    containerFilePath: '',
+    containerBuildContextDirectory: '',
+    containerBuildPlatform: '',
+    buildArgs: [{ key: '', value: '' }],
+  };
+}
+
+export const buildImagesInfo: Writable<Map<number, BuildImageInfo>> = writable(new Map());
+export const lastUpdatedTaskId: Writable<number | undefined> = writable();

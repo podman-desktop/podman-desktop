@@ -23,6 +23,11 @@ import { disconnectUI, eventCollect, reconnectUI, startBuild } from './build-ima
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (window.events as unknown) = {
+    receive: (_channel: string, func: () => void): void => {
+      func();
+    },
+  };
 });
 
 test('check start build', async () => {
@@ -52,16 +57,16 @@ test('check reconnect', async () => {
   const firstKey = startBuild(dummyCallback);
 
   // stream some stuff
-  eventCollect(firstKey.buildImageKey, 'stream', 'hello');
-  eventCollect(firstKey.buildImageKey, 'stream', 'world');
+  eventCollect(firstKey, 'stream', 'hello');
+  eventCollect(firstKey, 'stream', 'world');
 
-  disconnectUI(firstKey.buildImageKey);
+  disconnectUI(firstKey);
 
   // send event while there is no UI connected
-  eventCollect(firstKey.buildImageKey, 'stream', 'during disconnect');
-  eventCollect(firstKey.buildImageKey, 'finish', '');
+  eventCollect(firstKey, 'stream', 'during disconnect');
+  eventCollect(firstKey, 'finish', '');
 
-  reconnectUI(firstKey.buildImageKey, newCallback);
+  reconnectUI(firstKey, newCallback);
 
   // check that we've replayed everything (including events that happened while there was no UI connected)
   expect(newCallback.onStream).toHaveBeenCalledWith('hello\rworld\rduring disconnect\r');
@@ -78,8 +83,8 @@ test('check error', async () => {
 
   const key = startBuild(dummyCallback);
 
-  eventCollect(key.buildImageKey, 'stream', 'hello');
-  eventCollect(key.buildImageKey, 'error', 'world');
+  eventCollect(key, 'stream', 'hello');
+  eventCollect(key, 'error', 'world');
 
   expect(dummyCallback.onStream).toHaveBeenCalledWith('hello');
   expect(dummyCallback.onError).toHaveBeenCalledWith('world');
