@@ -1347,10 +1347,13 @@ export class PluginSystem {
           },
         });
 
+        task.onUpdate(e => apiSender.send(`build-image-task-${e.action}`, taskId));
+
         const abortController = this.createAbortControllerOnCancellationToken(
           cancellationTokenRegistry,
           cancellableTokenId,
         );
+
         return containerProviderRegistry
           .buildImage(
             containerBuildContextDirectory,

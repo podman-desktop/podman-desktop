@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { buildImagesInfo } from '/@/stores/build-images';
+
 export interface BuildImageCallback {
   // callback on stream
   onStream: (data: string) => void;
@@ -106,3 +108,16 @@ export function eventCollect(key: symbol, eventName: 'finish' | 'stream' | 'erro
     callback?.onEnd();
   }
 }
+
+window.events?.receive('build-image-task-delete', (taskId: unknown) => {
+  const id = taskId as number;
+  // remove task from buildImagesInfo
+  buildImagesInfo.update(map => {
+    const buildImageInfo = map.get(id);
+    if (buildImageInfo) {
+      clearBuildTask(buildImageInfo.buildImageKey);
+    }
+    map.delete(id);
+    return map;
+  });
+});

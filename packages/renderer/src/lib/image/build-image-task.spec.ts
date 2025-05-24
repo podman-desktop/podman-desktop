@@ -23,6 +23,11 @@ import { disconnectUI, eventCollect, reconnectUI, startBuild } from './build-ima
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (window.events as unknown) = {
+    receive: (_channel: string, func: () => void): void => {
+      func();
+    },
+  };
 });
 
 test('check start build', async () => {

@@ -16,6 +16,7 @@ import {
   cloneBuildImageInfo,
   createDefaultBuildImageInfo,
   getNextTaskId,
+  lastUpdatedTaskId,
 } from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -23,18 +24,11 @@ import type { ProviderInfo } from '/@api/provider-info';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
-import {
-  type BuildImageCallback,
-  clearBuildTask,
-  disconnectUI,
-  eventCollect,
-  reconnectUI,
-  startBuild,
-} from './build-image-task';
+import { type BuildImageCallback, disconnectUI, eventCollect, reconnectUI, startBuild } from './build-image-task';
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
-export let taskId: number = 0;
+export let taskId: number | undefined;
 
 let buildImageInfo: BuildImageInfo = createDefaultBuildImageInfo();
 let providers: ProviderInfo[] = [];
@@ -52,10 +46,11 @@ $: if (containerFilePath && !containerBuildContextDirectory) {
   buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
 }
 $: containerImageName = buildImageInfo.containerImageName;
-$: providerConnections = providers.map(provider => provider.containerConnections).flat();
-$: selectedProvider = providerConnections.find(
-  providerContainerConnection => providerContainerConnection.status === 'started',
-);
+$: providerConnections = providers
+  .map(provider => provider.containerConnections)
+  .flat()
+  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+$: selectedProvider = providerConnections.length > 0 ? providerConnections[0] : undefined;
 $: buildImageInfo.selectedProvider = selectedProvider;
 $: hasInvalidFields =
   !containerFilePath ||
@@ -65,15 +60,22 @@ $: hasInvalidFields =
   !selectedProvider;
 
 $: if (taskId && taskId !== buildImageInfo.taskId) {
+  // switching previous task wich could be finished or still running
   if (buildImageInfo.buildImageKey) {
+    // disconnect UI regardless of state
     disconnectUI(buildImageInfo.buildImageKey);
   }
-  buildImageInfo.logsTerminal?.reset();
-  const buildImagesInfoMap = get(buildImagesInfo);
-  const bgBuildImageInfo = buildImagesInfoMap.get(taskId);
+  buildImageInfo.logsTerminal?.reset(); // clean up terminal before loading the state
+  const buildImagesInfoMap = get(buildImagesInfo); // get background task states
+  const bgBuildImageInfo = buildImagesInfoMap.get(taskId); // get state for loading task
   if (bgBuildImageInfo) {
     bgBuildImageInfo.logsTerminal = buildImageInfo.logsTerminal;
-    buildImageInfo = bgBuildImageInfo;
+    if (bgBuildImageInfo.buildRunning) {
+      buildImageInfo = bgBuildImageInfo;
+    } else {
+      buildImageInfo = cloneBuildImageInfo(bgBuildImageInfo);
+      taskId = 0;
+    }
     if (buildImageInfo.buildImageKey) {
       reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
     }
@@ -148,6 +150,7 @@ async function buildContainerImage(): Promise<void> {
 }
 
 // Function to handle the building of a container image for a single platform
+// Can be running in current page or in background without page
 async function buildSinglePlatformImage(): Promise<void> {
   buildImageInfo.buildFinished = false;
   buildImageInfo.buildImageKey = startBuild(getTerminalCallback());
@@ -160,10 +163,11 @@ async function buildSinglePlatformImage(): Promise<void> {
   );
 
   buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
+
   buildImagesInfo.update(map => {
     taskId = getNextTaskId();
     buildImageInfo.taskId = taskId;
-    return map.set(taskId, buildImageInfo);
+    return map.set(buildImageInfo.taskId, buildImageInfo);
   });
   try {
     if (!buildImageInfo.selectedProvider) {
@@ -183,12 +187,16 @@ async function buildSinglePlatformImage(): Promise<void> {
       buildImageInfo.taskId,
     );
   } catch (error) {
-    buildImageInfo.logsTerminal?.write(`Error:${error}\r\n`);
+    eventCollect(buildImageInfo.buildImageKey, 'error', String(error));
   }
-  buildImageInfo.cancellableTokenId = undefined;
-  buildImageInfo.buildRunning = false;
-  buildImageInfo.buildFinished = true;
-  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
+  buildImagesInfo.update(map => {
+    buildImageInfo.cancellableTokenId = undefined;
+    buildImageInfo.buildRunning = false;
+    buildImageInfo.buildFinished = true;
+    $lastUpdatedTaskId = buildImageInfo.taskId;
+    return map.set(buildImageInfo.taskId, buildImageInfo);
+  });
+  $lastUpdatedTaskId = undefined; // in case nobody listening
 }
 
 // Function to handle the building of container images for multiple platforms and creating a manifest
@@ -208,6 +216,8 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
     buildImageInfo.containerFilePath,
   );
 
+  buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
+
   try {
     // We'll iterate over each platform and build the image
     for (const platform of platforms) {
@@ -216,8 +226,12 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
       }
       // We'll be using the same terminal for all builds (getTerminalCallback)
       // similar to how Podman CLI does it.
-      buildImageInfo.cancellableTokenId = await window.getCancellableTokenSource();
-      buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
+
+      buildImagesInfo.update(map => {
+        taskId = getNextTaskId();
+        buildImageInfo.taskId = taskId;
+        return map.set(buildImageInfo.taskId, buildImageInfo);
+      });
       // Store the key
       // Build the image for the current platform
       // NOTE: We purporsely pass in '' as the container name so that the built image is
@@ -253,35 +267,50 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         name: buildImageInfo.containerImageName!,
       });
     } catch (error) {
-      console.error('Error creating manifest: ', error);
-      buildImageInfo.logsTerminal?.write(`Error:${error}\r`);
+      eventCollect(buildImageInfo.buildImageKey, 'error', `${String(error)}\r\n`);
     }
   } catch (error) {
-    buildImageInfo.logsTerminal?.write(`Error:${error}\r\n`);
+    eventCollect(buildImageInfo.buildImageKey, 'error', `${String(error)}\r\n`);
   } finally {
     buildImageInfo.cancellableTokenId = undefined;
     buildImageInfo.buildRunning = false;
-    // Finally mark the build as finished
     buildImageInfo.buildFinished = true;
   }
-  buildImagesInfo.update(map => map.set(buildImageInfo.taskId, buildImageInfo));
+  buildImagesInfo.update(map => {
+    buildImageInfo.cancellableTokenId = undefined;
+    buildImageInfo.buildRunning = false;
+    buildImageInfo.buildFinished = true;
+    $lastUpdatedTaskId = buildImageInfo.taskId;
+    return map.set(buildImageInfo.taskId, buildImageInfo);
+  });
+  $lastUpdatedTaskId = undefined; // in case nobody listening
 }
 
 function cleanupBuild(): void {
-  clearBuildTask(buildImageInfo?.buildImageKey);
-  // redirect to the image list
   handleNavigation({ page: NavigationPage.IMAGES });
 }
 
+// when subscribe callback called first time during initialization or
+// from background build the taskId is NaN
 let buildImagesInfoUnsubscriber: Unsubscriber = buildImagesInfo.subscribe(map => {
-  // called when build started or stopped
-  const bgBuildImageInfo = map.get(taskId);
-  if (bgBuildImageInfo?.buildFinished) {
-    taskId = 0;
-    buildImageInfo = cloneBuildImageInfo(buildImageInfo);
-  } else {
-    buildImageInfo = bgBuildImageInfo ?? buildImageInfo;
+  if ($lastUpdatedTaskId && $lastUpdatedTaskId === taskId) {
+    // change event came form loaded page
+    if (buildImageInfo.buildFinished) {
+      buildImageInfo = cloneBuildImageInfo(buildImageInfo);
+      taskId = 0;
+    }
   }
+  if (taskId && buildImageInfo.taskId === 0) {
+    // initial loading
+    const bgBuildImageInfo = map.get(taskId);
+    if (bgBuildImageInfo?.buildFinished) {
+      buildImageInfo = cloneBuildImageInfo(bgBuildImageInfo);
+      taskId = 0;
+    } else if (bgBuildImageInfo) {
+      buildImageInfo = bgBuildImageInfo;
+    }
+  }
+  $lastUpdatedTaskId = undefined;
 });
 
 let providerInfosUnsubscriber: Unsubscriber = providerInfos.subscribe(infos => {

@@ -78,3 +78,4 @@ export function createDefaultBuildImageInfo(): BuildImageInfo {
 }
 
 export const buildImagesInfo: Writable<Map<number, BuildImageInfo>> = writable(new Map());
+export const lastUpdatedTaskId: Writable<number | undefined> = writable();

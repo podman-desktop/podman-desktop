@@ -47,11 +47,6 @@ vi.mock('@xterm/xterm', () => {
 
 // fake the window.events object
 beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
 });
@@ -97,7 +92,6 @@ function setup(): void {
     installationSupport: undefined,
   } as unknown as ProviderInfo;
   providerInfos.set([providerInfo]);
-  buildImagesInfo.set(new Map());
 }
 
 test('Expect Build button is disabled', async () => {
