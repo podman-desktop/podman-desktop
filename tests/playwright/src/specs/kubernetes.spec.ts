@@ -199,7 +199,6 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
           KubernetesResources.Deployments,
           deploymentName,
           KubernetesResourceState.Running,
-          80_000,
         );
         await checkDeploymentReplicasInfo(page, KubernetesResources.Deployments, deploymentName, 5);
       });

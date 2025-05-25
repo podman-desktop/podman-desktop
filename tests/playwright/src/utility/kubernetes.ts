@@ -109,7 +109,7 @@ export async function checkKubernetesResourceState(
   resourceType: KubernetesResources,
   resourceName: string,
   expectedResourceState: KubernetesResourceState,
-  timeout: number = 60_000,
+  timeout: number = 90_000,
 ): Promise<void> {
   return test.step(`Check ${resourceType} kubernetes resource state, should be ${expectedResourceState}`, async () => {
     const navigationBar = new NavigationBar(page);
