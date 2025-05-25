@@ -92,7 +92,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
+test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
   test.describe
     .serial('Kind installation', () => {
       test('Install Kind CLI', async ({ page, navigationBar }) => {
@@ -119,131 +119,138 @@ test.describe.serial('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(resourceName)).toBeTruthy();
       });
     });
-  test.describe('Kind cluster validation tests', () => {
-    test('Create a Kind cluster', async ({ page }) => {
-      test.setTimeout(clusterCreationTimeout);
-      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-      } else {
-        await createKindCluster(page, clusterName, true, clusterCreationTimeout);
-      }
-    });
+  test.describe
+    .serial('Kind cluster validation tests', () => {
+      test('Create a Kind cluster', async ({ page }) => {
+        test.setTimeout(clusterCreationTimeout);
+        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+          await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
+            providerType: providerTypeGHA,
+            useIngressController: false,
+          });
+        } else {
+          await createKindCluster(page, clusterName, true, clusterCreationTimeout);
+        }
+      });
 
-    test('Check resources added with the Kind cluster', async ({ page }) => {
-      await checkClusterResources(page, kindContainer);
-    });
+      test('Check resources added with the Kind cluster', async ({ page }) => {
+        await checkClusterResources(page, kindContainer);
+      });
 
-    test('Kind cluster operations - STOP', async ({ page }) => {
-      await resourceConnectionAction(page, kindResourceCard, ResourceElementActions.Stop, ResourceElementState.Off);
-    });
+      test('Kind cluster operations - STOP', async ({ page }) => {
+        await resourceConnectionAction(page, kindResourceCard, ResourceElementActions.Stop, ResourceElementState.Off);
+      });
 
-    test('Kind cluster operations - START', async ({ page }) => {
-      await resourceConnectionAction(
-        page,
-        kindResourceCard,
-        ResourceElementActions.Start,
-        ResourceElementState.Running,
-      );
-    });
+      test('Kind cluster operations - START', async ({ page }) => {
+        await resourceConnectionAction(
+          page,
+          kindResourceCard,
+          ResourceElementActions.Start,
+          ResourceElementState.Running,
+        );
+      });
 
-    test('Kind cluster operations - RESTART', async ({ page }) => {
-      await resourceConnectionAction(
-        page,
-        kindResourceCard,
-        ResourceElementActions.Restart,
-        ResourceElementState.Running,
-      );
-    });
+      test('Kind cluster operations - RESTART', async ({ page }) => {
+        await resourceConnectionAction(
+          page,
+          kindResourceCard,
+          ResourceElementActions.Restart,
+          ResourceElementState.Running,
+        );
+      });
 
-    test('Kind cluster operations - DELETE', async ({ page }) => {
-      await deleteCluster(page, resourceName, kindContainer, clusterName);
+      test('Kind cluster operations - DELETE', async ({ page }) => {
+        await deleteCluster(page, resourceName, kindContainer, clusterName);
+      });
     });
-  });
-  test.describe('Kind cluster operations - Details', () => {
-    test('Create a Kind cluster', async ({ page }) => {
-      test.setTimeout(clusterCreationTimeout);
-      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-      } else {
-        await createKindCluster(page, clusterName, true, clusterCreationTimeout);
-      }
-    });
+  test.describe
+    .serial('Kind cluster operations - Details', () => {
+      test('Create a Kind cluster', async ({ page }) => {
+        test.setTimeout(clusterCreationTimeout);
+        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+          await createKindCluster(page, clusterName, false, clusterCreationTimeout, {
+            providerType: providerTypeGHA,
+            useIngressController: false,
+          });
+        } else {
+          await createKindCluster(page, clusterName, true, clusterCreationTimeout);
+        }
+      });
 
-    test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
-      const imagesPage = await navigationBar.openImages();
-      const pullImagePage = await imagesPage.openPullImage();
-      await pullImagePage.pullImage(imageToPull, imageTag);
-      await playExpect.poll(async () => imagesPage.waitForImageExists(imageToPull, 10_000)).toBeTruthy();
-      const containersPage = await imagesPage.startContainerWithImage(imageToPull, containerName, containerStartParams);
-      await playExpect
-        .poll(async () => containersPage.containerExists(containerName), {
-          timeout: 15_000,
-        })
-        .toBeTruthy();
-      const containerDetails = await containersPage.openContainersDetails(containerName);
-      await playExpect(containerDetails.heading).toBeVisible();
-      await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
-      await deployContainerToCluster(page, containerName, kubernetesContext, deployedPodName);
-    });
+      test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
+        const imagesPage = await navigationBar.openImages();
+        const pullImagePage = await imagesPage.openPullImage();
+        await pullImagePage.pullImage(imageToPull, imageTag);
+        await playExpect.poll(async () => imagesPage.waitForImageExists(imageToPull, 10_000)).toBeTruthy();
+        const containersPage = await imagesPage.startContainerWithImage(
+          imageToPull,
+          containerName,
+          containerStartParams,
+        );
+        await playExpect
+          .poll(async () => containersPage.containerExists(containerName), {
+            timeout: 15_000,
+          })
+          .toBeTruthy();
+        const containerDetails = await containersPage.openContainersDetails(containerName);
+        await playExpect(containerDetails.heading).toBeVisible();
+        await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
+        await deployContainerToCluster(page, containerName, kubernetesContext, deployedPodName);
+      });
 
-    test('Kind cluster operations details - STOP', async ({ page }) => {
-      await resourceConnectionActionDetails(
-        page,
-        kindResourceCard,
-        clusterName,
-        ResourceElementActions.Stop,
-        ResourceElementState.Off,
-      );
-    });
+      test('Kind cluster operations details - STOP', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          clusterName,
+          ResourceElementActions.Stop,
+          ResourceElementState.Off,
+        );
+      });
 
-    test('Kind cluster operations details - START', async ({ page }) => {
-      await resourceConnectionActionDetails(
-        page,
-        kindResourceCard,
-        clusterName,
-        ResourceElementActions.Start,
-        ResourceElementState.Running,
-      );
-    });
+      test('Kind cluster operations details - START', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          clusterName,
+          ResourceElementActions.Start,
+          ResourceElementState.Running,
+        );
+      });
 
-    test('Kind cluster operations details - RESTART', async ({ page }) => {
-      await resourceConnectionActionDetails(
-        page,
-        kindResourceCard,
-        clusterName,
-        ResourceElementActions.Restart,
-        ResourceElementState.Running,
-      );
-    });
+      test('Kind cluster operations details - RESTART', async ({ page }) => {
+        await resourceConnectionActionDetails(
+          page,
+          kindResourceCard,
+          clusterName,
+          ResourceElementActions.Restart,
+          ResourceElementState.Running,
+        );
+      });
 
-    test('Kind cluster operations details - DELETE', async ({ page }) => {
-      await deleteClusterFromDetails(page, resourceName, kindContainer, clusterName);
+      test('Kind cluster operations details - DELETE', async ({ page }) => {
+        await deleteClusterFromDetails(page, resourceName, kindContainer, clusterName);
+      });
     });
-  });
-  test.describe('Kind cluster creation with custom config file', () => {
-    test('Create a Kind cluster using the custom config file', async ({ page }) => {
-      test.setTimeout(clusterCreationTimeout);
-      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, customConfigClusterName, false, clusterCreationTimeout, {
-          configFilePath: CUSTOM_CONFIG_FILE_PATH,
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-      } else {
-        await createKindCluster(page, customConfigClusterName, false, clusterCreationTimeout, {
-          configFilePath: CUSTOM_CONFIG_FILE_PATH,
-        });
-      }
-      await checkClusterResources(page, cusotmConfigKindContainer);
+  test.describe
+    .serial('Kind cluster creation with custom config file', () => {
+      test('Create a Kind cluster using the custom config file', async ({ page }) => {
+        test.setTimeout(clusterCreationTimeout);
+        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+          await createKindCluster(page, customConfigClusterName, false, clusterCreationTimeout, {
+            configFilePath: CUSTOM_CONFIG_FILE_PATH,
+            providerType: providerTypeGHA,
+            useIngressController: false,
+          });
+        } else {
+          await createKindCluster(page, customConfigClusterName, false, clusterCreationTimeout, {
+            configFilePath: CUSTOM_CONFIG_FILE_PATH,
+          });
+        }
+        await checkClusterResources(page, cusotmConfigKindContainer);
+      });
+      test('Delete the Kind cluster', async ({ page }) => {
+        await deleteClusterFromDetails(page, resourceName, cusotmConfigKindContainer, customConfigClusterName);
+      });
     });
-    test('Delete the Kind cluster', async ({ page }) => {
-      await deleteClusterFromDetails(page, resourceName, cusotmConfigKindContainer, customConfigClusterName);
-    });
-  });
 });
