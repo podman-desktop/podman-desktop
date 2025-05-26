@@ -93,6 +93,7 @@ export async function deleteCluster(
   timeout: number = 50_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceName} cluster`, async () => {
+    const volumeName = await getVolumeNameForContainer(page, containerName);
     const navigationBar = new NavigationBar(page);
     const resourceCard = new ResourceConnectionCardPage(page, resourceName, clusterName);
 
@@ -112,7 +113,6 @@ export async function deleteCluster(
     await playExpect(resourceCard.markdownContent).toBeVisible({
       timeout: timeout,
     });
-    const volumeName = await getVolumeNameForContainer(page, containerName);
     await validateClusterResourcesDeletion(page, clusterName, containerName, volumeName);
   });
 }
