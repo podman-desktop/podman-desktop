@@ -105,10 +105,10 @@ jobs:
         run: |
           # allow unprivileged user namespace
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      
+
       # Enables multi-architecture support for building multi-arch manifests
       - name: Install QEMU for Multi-Arch
-        run: | 
+        run: |
           sudo apt install -y qemu-user-static
 
       - name: Set cgroup_manager to 'cgroupfs' instead of systemd
