@@ -420,6 +420,48 @@ test('ipcMain.handle returns caught error as objects message property if it is n
   expect(handleReturn.error).toEqual({ message: nonErrorInstance });
 });
 
+test('container-provider-registry:logsContainer calls logsContainer without abortController if no tokenId is passed', async () => {
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  const handle = handlers.get('container-provider-registry:logsContainer');
+  expect(handle).not.equal(undefined);
+
+  const logsContainerSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'logsContainer');
+
+  await handle(undefined, {
+    engineId: 'engine1',
+    containerId: 'container1',
+    onDataId: 1,
+  });
+
+  expect(logsContainerSpy).toHaveBeenCalled();
+  const params = vi.mocked(logsContainerSpy).mock.calls[0]?.[0];
+  const abortController = params?.abortController;
+  expect(abortController).toBeUndefined();
+});
+
+test('container-provider-registry:logsContainer calls logsContainer with abortController if tokenId is passed', async () => {
+  const cancellationTokenRegistry = new CancellationTokenRegistry();
+  const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
+
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  const handle = handlers.get('container-provider-registry:logsContainer');
+  expect(handle).not.equal(undefined);
+
+  const logsContainerSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'logsContainer');
+
+  await handle(undefined, {
+    engineId: 'engine1',
+    containerId: 'container1',
+    onDataId: 1,
+    cancellableTokenId: tokenId,
+  });
+
+  expect(logsContainerSpy).toHaveBeenCalled();
+  const params = vi.mocked(logsContainerSpy).mock.calls[0]?.[0];
+  const abortController = params?.abortController;
+  expect(abortController).toBeDefined();
+});
+
 describe.each<{
   handler: string;
   methodName: 'createContainerProviderConnection' | 'createKubernetesProviderConnection' | 'createVmProviderConnection';
