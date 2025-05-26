@@ -34,9 +34,77 @@
   </description>
   <launchable type="desktop-id">io.podman_desktop.PodmanDesktop.desktop</launchable>
   <screenshots>
-    <screenshot type="default">
-      <caption>Podman Desktop UI</caption>
-      <image type="source">https://github.com/podman-desktop/podman-desktop/raw/refs/tags/v1.19.1/website/static/img/features/homepage.webp</image>
+    <!-- Dashboard -->
+    <screenshot type="default" environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/dashboard.png</image>
+      <caption>Main dashboard</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/dashboard.png</image>
+      <caption>Main dashboard</caption>
+    </screenshot>
+    <!-- Containers -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/containers.png</image>
+      <caption>List view of running containers</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/containers.png</image>
+      <caption>List view of running containers</caption>
+    </screenshot>
+    <!-- Pods -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/pods.png</image>
+      <caption>List view of running pods</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/pods.png</image>
+      <caption>List view of running pods</caption>
+    </screenshot>
+    <!-- Images -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/images.png</image>
+      <caption>List view of downloaded images</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/images.png</image>
+      <caption>List view of downloaded images</caption>
+    </screenshot>
+    <!-- Volumes -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/volumes.png</image>
+      <caption>List view of existing volumes</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/volumes.png</image>
+      <caption>List view of existing volumes</caption>
+    </screenshot>
+    <!-- Kubernetes -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/kubernetes.png</image>
+      <caption>Overview of Kubernetes clusters</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/kubernetes.png</image>
+      <caption>Overview of Kubernetes clusters</caption>
+    </screenshot>
+    <!-- Extensions -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/extensions.png</image>
+      <caption>List of supported extensions</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/extensions.png</image>
+      <caption>List of supported extensions</caption>
+    </screenshot>
+    <!-- Settings -->
+    <screenshot environment="gnome">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/light/settings.png</image>
+      <caption>Overview of supported customizations</caption>
+    </screenshot>
+    <screenshot environment="gnome:dark">
+      <image type="source">https://raw.githubusercontent.com/containers/podman-desktop-media/8786db2a59e62d7bebbe4602c0475a1cadf2f54c/screenshots/linux/dark/settings.png</image>
+      <caption>Overview of supported customizations</caption>
     </screenshot>
   </screenshots>
   <content_rating type="oars-1.1" />
