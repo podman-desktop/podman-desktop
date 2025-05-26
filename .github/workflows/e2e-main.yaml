@@ -58,10 +58,15 @@ on:
         - 'true'
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   e2e-tests:
     name: Run All E2E tests
     runs-on: ubuntu-24.04
+    permissions:
+      checks: write # required for mikepenz/action-junit-report
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -170,6 +175,8 @@ jobs:
   win-update-e2e-test:
     name: win update e2e tests - ${{ matrix.installation }}
     runs-on: windows-2022
+    permissions:
+      checks: write # required for mikepenz/action-junit-report
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
