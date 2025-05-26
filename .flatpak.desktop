@@ -6,4 +6,5 @@ Type=Application
 Icon=io.podman_desktop.PodmanDesktop
 StartupWMClass=Podman Desktop
 Categories=Development;
+Keywords=container;pod;image;volume;kubernetes;docker;kind;kubectl;
 X-Flatpak=io.podman_desktop.PodmanDesktop
