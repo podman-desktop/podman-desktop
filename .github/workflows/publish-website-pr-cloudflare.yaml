@@ -26,6 +26,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     name: Publish content of the website pull request on cloudflare pages
