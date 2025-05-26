@@ -30,7 +30,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import type { Headers, PackOptions } from 'tar-fs';
 import * as tarstream from 'tar-stream';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
@@ -2772,6 +2772,43 @@ test('container logs callback notified when messages arrive', async () => {
   expect(callback).toHaveBeenCalledWith('data', 'log message');
   expect(callback).toHaveBeenCalledWith('end', '');
   expect(telemetry.track).toHaveBeenCalled();
+});
+
+test('container logs since a period of time', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+  await containerRegistry.logsContainer({
+    engineId: 'podman',
+    id: 'containerId',
+    callback: (): void => {},
+    sinceDurationInSeconds: 70,
+  });
+  expect(dockerodeContainer.logs).toHaveBeenCalledWith(
+    expect.objectContaining({
+      since: '70s',
+    }),
+  );
+});
+
+test('container logs without since parameter', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+  await containerRegistry.logsContainer({
+    engineId: 'podman',
+    id: 'containerId',
+    callback: (): void => {},
+  });
+  const params = vi.mocked(dockerodeContainer.logs).mock.calls[0]?.[0];
+  assert(params);
+  expect(params.since).toBeUndefined();
 });
 
 describe('createContainer', () => {

@@ -1149,7 +1149,15 @@ export class PluginSystem {
     );
     this.ipcHandle(
       'container-provider-registry:logsContainer',
-      async (_listener, logsParams: { engineId: string; containerId: string; onDataId: number }): Promise<void> => {
+      async (
+        _listener,
+        logsParams: {
+          engineId: string;
+          containerId: string;
+          onDataId: number;
+          sinceDurationInSeconds?: number;
+        },
+      ): Promise<void> => {
         return containerProviderRegistry.logsContainer({
           engineId: logsParams.engineId,
           id: logsParams.containerId,
@@ -1161,6 +1169,7 @@ export class PluginSystem {
               data,
             );
           },
+          sinceDurationInSeconds: logsParams.sinceDurationInSeconds,
         });
       },
     );
