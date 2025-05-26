@@ -49,8 +49,8 @@ jobs:
             let totalLinux = 0;
 
             // count the total number of downloads for each release for mac,windows,linux assests
-            releases.forEach((release) => { 
-                release.assets = release.assets.filter((asset) => { 
+            releases.forEach((release) => {
+                release.assets = release.assets.filter((asset) => {
                     if (asset.name.endsWith(".dmg") || (asset.name.endsWith("arm64.zip") || asset.name.endsWith("x64.zip") || asset.name.endsWith("universal.zip")) ){
                         totalMac += asset.download_count;
                     } else if (asset.name.endsWith(".exe")){
@@ -68,7 +68,7 @@ jobs:
             core.exportVariable('totalMac', totalMac);
             core.exportVariable('totalWin', totalWin);
             core.exportVariable('totalLinux', totalLinux);
-        
+
       - name: send-event-4
         run: |
             curl https://api.segment.io/v1/track \
