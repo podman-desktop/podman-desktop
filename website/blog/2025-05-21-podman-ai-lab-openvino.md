@@ -44,7 +44,7 @@ This feature is only available on Intel based systems, as OpenVINO is optimized 
 4. Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the _Model_ list and click the _Create Service_ button.
 5. The inference server for the model is being started and after a while, click on the _Open service_ details button.
 
-![OpenVINO inference server details](img/podman-ai-lab-OpenVINO/OpenVINO-inference-server-details.png)
+![OpenVINO inference server details](img/podman-ai-lab-openvino/openvino-inference-server-details.png)
 
 Using the terminal shell, execute the given curl command and see the inference result output.
 
@@ -56,11 +56,11 @@ Using the terminal shell, execute the given curl command and see the inference r
 4. Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the _Model_ list and click the _Create playground_ button.
 5. The playground for the model is being started and after a while, a chat interface is displayed.
 
-![Initial playground on OpenVINO model](img/podman-ai-lab-OpenVINO/OpenVINO-playground1.png)
+![Initial playground on OpenVINO model](img/podman-ai-lab-openvino/openvino-playground1.png)
 
 Enter 'What is OpenVINO ?' in the prompt and click the _Send_ button. The OpenVINO model will respond with an answer.
 
-![OpenVINO model response in the playground](img/podman-ai-lab-OpenVINO/OpenVINO-playground2.png)
+![OpenVINO model response in the playground](img/podman-ai-lab-openvino/openvino-playground2.png)
 
 ## Consistency with OpenShift AI + OpenVINO
 
