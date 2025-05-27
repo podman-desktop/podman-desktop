@@ -43,11 +43,11 @@ interface EventStoreInfoEvent {
   humanDuration?: number;
 }
 
-interface WithStringKey {
+interface KeyEvent {
   key: string;
 }
 
-function isWithStringKey(value: unknown): value is WithStringKey {
+function isKeyEvent(value: unknown): value is KeyEvent {
   return !!value && typeof value === 'object' && 'key' in value && typeof value.key === 'string';
 }
 
@@ -271,7 +271,7 @@ export class EventStore<T> {
       const [eventName, key] = eventNameWithOptionalKey.split(':');
       window.events?.receive(eventName, (...args: unknown[]) => {
         if (key) {
-          if (args.length === 1 && isWithStringKey(args[0]) && key === args[0].key) {
+          if (args.length === 1 && isKeyEvent(args[0]) && key === args[0].key) {
             update(eventNameWithOptionalKey, args).catch((error: unknown) => {
               console.error(`Failed to update ${this.name}`, error);
             });

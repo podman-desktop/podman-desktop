@@ -72,7 +72,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     // now look if we have this value
     const localView = this.getLocalView();
 
-    const eventArg: Omit<IConfigurationChangeEvent, 'scope'> = {
+    const configurationChangedEvent: Omit<IConfigurationChangeEvent, 'scope'> = {
       key: localKey,
       value,
     };
@@ -82,12 +82,12 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
       if (localView[localKey]) {
         delete localView[section];
         delete this[localKey];
-        this.apiSender.send('configuration-changed', eventArg);
+        this.apiSender.send('configuration-changed', configurationChangedEvent);
       }
     } else {
       localView[localKey] = value;
       this[section] = value;
-      this.apiSender.send('configuration-changed', eventArg);
+      this.apiSender.send('configuration-changed', configurationChangedEvent);
     }
     // call only for default scope to save
     this.updateCallback(section, this.scope);
