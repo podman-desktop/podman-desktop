@@ -72,10 +72,9 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     // now look if we have this value
     const localView = this.getLocalView();
 
-    const eventArg: IConfigurationChangeEvent = {
+    const eventArg: Omit<IConfigurationChangeEvent, 'scope'> = {
       key: localKey,
       value,
-      scope: this.scope,
     };
 
     // remove the value if undefined
