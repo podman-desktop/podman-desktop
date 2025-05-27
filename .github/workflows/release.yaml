@@ -308,30 +308,3 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: store-cache-pnpm-${{ matrix.arch }}.tgz
           tag: ${{ needs.tag.outputs.githubTag }}
-
-  generate-sbom:
-    name: Generate SBOM file
-    needs: [tag, release]
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      contents: write
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: ${{ needs.tag.outputs.githubTag}}
-
-      - name: Generate sbom file
-        uses: anchore/sbom-action@v0
-        with:
-          path: ./
-          output-file: ./podman-desktop-sbom.spdx.json
-          artifact-name: podman-desktop-sbom.spdx.json
-
-      - name: Upload sbom file to release
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./podman-desktop-sbom.spdx.json
-          tag: ${{ needs.tag.outputs.githubTag }}

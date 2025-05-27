@@ -1,0 +1,52 @@
+#
+# Copyright (C) 2025 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Generate sbom for release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version for sbom generation (e.g. v0.0.1)'
+        required: true
+
+jobs:
+  generate-sbom:
+    name: Generate SBOM file
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Generate sbom file
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          output-file: ./podman-desktop-sbom.spdx.json
+          artifact-name: podman-desktop-sbom.spdx.json
+
+      - name: Upload sbom file to release
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./podman-desktop-sbom.spdx.json
+          tag: ${{ inputs.version }}
