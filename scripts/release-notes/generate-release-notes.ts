@@ -270,13 +270,35 @@ class ReleaseNotesPreparator {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that returns only JSON complying exactly with the provided schema.',
+          content:
+            'You are a helpful assistant that returns only JSON containing exactly with the provided schema with property "prs" which is an array of objects descirbed in the prompt. In the response dont adress the content as a "This PR" etc. adress it like it is a feature or fix',
         },
         {
           role: 'user',
-          content: `Instruction: Identify the 4 most interesting PRs from the list provided. For each of them, generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use word PR in the longDesc and shortDesc. DATA: ${content}`,
+          content: `Instruction: Identify the 4 most interesting PRs from the list provided. Return them in JSON schema with property "prs" which is an array of objects. For each of them (those objects), generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use/speak about the feature as of a "PR" in the generated text. DATA: ${content}`,
         },
       ],
+      response_format: {
+        type: 'json_object',
+        schema: {
+          type: 'object',
+          properties: {
+            prs: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  shortDesc: { type: 'string' },
+                  longDesc: { type: 'string' },
+                },
+                required: ['title', 'shortDesc', 'longDesc'],
+              },
+            },
+          },
+          required: ['prs'],
+        },
+      },
     };
 
     return await fetch(`http://localhost:${this.port}${this.endpoint}`, {
@@ -293,8 +315,7 @@ class ReleaseNotesPreparator {
         }
 
         try {
-          console.log((await response.json()).choices[0].message.content);
-          const prs = JSON.parse(await response.json()).choices;
+          const prs = JSON.parse((await response.json()).choices[0].message.content).prs;
           return prs;
         } catch (e: unknown) {
           // We didn't get data from correct JSON format
@@ -315,12 +336,29 @@ class ReleaseNotesPreparator {
       });
   }
 
+  async includeDataFromIssue(owner: string, repo: string, pr: Issue): Promise<Issue> {
+    // Tries to find "Closes #12345" or "Fixes #42"
+    const issueMatch = pr.body?.match(/(Closes|Fixes)\s#\d+/i);
+    if (!issueMatch) return pr;
+
+    const issueNumber = issueMatch[0].split('#')[1];
+    const response = await this.octokit.issues.get({
+      owner,
+      repo,
+      issue_number: issueNumber,
+    });
+
+    if (response && response.data) return { ...pr, body: response.data.body + pr.body };
+    return pr;
+  }
+
   public async generate(): Promise<void> {
     let prs: Issue[] = await this.getPRsByMilestone(this.organization, this.repo, this.milestone);
     const firstTimeContributorPRs = await this.getFirstTimeContributors(prs);
     const categorizedPRsMap: Record<string, PRCategory> = {};
 
-    for (const pr of prs) {
+    for (let i = 0; i < prs.length; i++) {
+      const pr = prs[i];
       const match = pr.title.match(/^\s*(chore|feat|docs|fix|refactor|test|ci)/i);
       if (!match) {
         // Skip others
@@ -355,6 +393,9 @@ class ReleaseNotesPreparator {
           prs: [],
         };
       }
+
+      // Update PR bodu with desc from issue which it closes/fixes
+      prs[i] = await this.includeDataFromIssue(this.organization, this.repo, pr);
 
       categorizedPRsMap[category].prs.push(prInfo);
     }
