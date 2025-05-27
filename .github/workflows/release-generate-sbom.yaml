@@ -21,8 +21,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version for sbom generation (e.g. v0.0.1)'
+        description: 'Release version for sbom generation (e.g. 0.0.1)'
         required: true
+
+env:
+  RELEASE_TAG: v${{ inputs.version }}
 
 jobs:
   generate-sbom:
@@ -35,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Generate sbom file
         uses: anchore/sbom-action@v0
@@ -49,4 +52,4 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./podman-desktop-sbom.spdx.json
-          tag: ${{ inputs.version }}
+          tag: ${{ env.RELEASE_TAG }}
