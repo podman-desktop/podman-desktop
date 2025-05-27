@@ -173,7 +173,8 @@ test('Expect not a local image to have an active pull image and run button', asy
   expect(inputBox).toBeInTheDocument();
   await userEvent.type(inputBox, 'image12');
 
-  await waitFor(() => {
+  await waitFor(async () => {
+    await tick();
     const list = screen.getByRole('row');
     const items = within(list).getAllByRole('button');
     expect(items.length).toBe(2);

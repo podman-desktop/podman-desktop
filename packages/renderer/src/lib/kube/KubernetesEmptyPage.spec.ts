@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
@@ -129,7 +130,8 @@ test('expect to have links for each Kubernetes provider', async () => {
 
   providerInfos.set([]);
   // Links should be updated (removed)
-  await waitFor(() => {
+  await waitFor(async () => {
+    await tick();
     expect(screen.queryByLabelText(/Go create/)).toBeNull();
     expect(screen.queryByLabelText(/Create new/)).toBeNull();
   });

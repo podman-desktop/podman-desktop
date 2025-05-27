@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { render } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -118,7 +119,8 @@ test('expect binding to properly work', async () => {
 
   onChange?.(value);
 
-  alert = await vi.waitFor(() => {
+  alert = await vi.waitFor(async () => {
+    await tick();
     return getByRole('alert');
   });
   expect(alert).toBeDefined();
