@@ -106,6 +106,11 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   // TODO set to days
+  /**
+   * Updates timestamp for given experimental feature
+   * @param feature in format feature.name
+   * @param days timeout in days
+   */
   setTimestamp(feature: string, days: number | undefined): void {
     let date: undefined | number = undefined;
     if (days) {
@@ -116,6 +121,10 @@ export class ExperimentalFeatureFeedbackForm {
     this.save().catch(console.error);
   }
 
+  /**
+   * Decides which value should be used for setting timestamp of given feature
+   * @param configurationName in format feature.name
+   */
   setReminder(configurationName: string): void {
     const splittedName = configurationName.split('.');
     if (splittedName.length >= 2 && splittedName[1]) {
@@ -128,14 +137,22 @@ export class ExperimentalFeatureFeedbackForm {
     }
   }
 
-  formatName(id: string): string {
+  /**
+   * Formats id to better readable one
+   * @param id in format feature.name
+   * @returns nicely formated name e.g. feature Name
+   */
+  protected formatName(id: string): string {
     return id
       .split('.')
       .map(part => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
       .join(' ');
   }
 
-  async showFeedbackDialog(): Promise<void> {
+  /**
+   * Goes through each enabled experimenatl feature and shows dialog if current timestamp is greater than stored value 
+   */
+  protected async showFeedbackDialog(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
     this.#timestamps.forEach((timestamp: Timestamp, key: string) => {
       const featureGitHubLink = configurationProperties[key]?.experimental?.githubDiscussionLink;
@@ -178,11 +195,18 @@ export class ExperimentalFeatureFeedbackForm {
           }
           // Option from Dropdown was selected
           else if (response.response === 0 && response.dropdownIndex) {
-            // Default is "Dont show again"
-            let remindInDays = MAX_NUMBER;
-            const selectedOption = options[response.dropdownIndex];
-            if (selectedOption === 'Remind me tomorrow') remindInDays = 1;
-            else if (selectedOption === 'Remind me in 2 days') remindInDays = 2;
+            let remindInDays;
+            switch (options[response.dropdownIndex]) {
+              case 'Remind me tomorrow':
+                remindInDays = 1;
+                break;
+              case 'Remind me in 2 days':
+                remindInDays = 2; 
+                break;
+              case 'Don\'t show again':
+              default:
+                remindInDays = MAX_NUMBER;
+            }
             this.setTimestamp(key, remindInDays);
           }
         })
