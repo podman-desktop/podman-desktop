@@ -180,6 +180,7 @@
   },
   "dependencies": {
     "@docker/extension-api-client-types": "0.3.4",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@kubernetes/client-node": "^1.1.2",
     "@segment/analytics-node": "^2.2.1",
     "@types/semver": "^7.7.0",

@@ -27,6 +27,9 @@ importers:
       '@docker/extension-api-client-types':
         specifier: 0.3.4
         version: 0.3.4
+      '@fortawesome/free-solid-svg-icons':
+        specifier: ^6.7.2
+        version: 6.7.2
       '@kubernetes/client-node':
         specifier: ^1.1.2
         version: 1.1.2(encoding@0.1.13)
@@ -16670,6 +16673,15 @@ snapshots:
       msw: 2.8.4(@types/node@22.13.10)(typescript@5.8.3)
       vite: 6.3.5(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0)
 
+  '@vitest/mocker@3.1.4(msw@2.8.4(@types/node@22.15.21)(typescript@5.8.3))(vite@6.3.5(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))':
+    dependencies:
+      '@vitest/spy': 3.1.4
+      estree-walker: 3.0.3
+      magic-string: 0.30.17
+    optionalDependencies:
+      msw: 2.8.4(@types/node@22.15.21)(typescript@5.8.3)
+      vite: 6.3.5(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0)
+
   '@vitest/mocker@3.1.4(msw@2.8.4(@types/node@22.15.21)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))':
     dependencies:
       '@vitest/spy': 3.1.4
@@ -25042,7 +25054,7 @@ snapshots:
   vitest@3.1.4(@types/debug@4.1.12)(@types/node@22.15.21)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.8.4(@types/node@22.15.21)(typescript@5.8.3))(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 3.1.4
-      '@vitest/mocker': 3.1.4(msw@2.8.4(@types/node@22.15.21)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))
+      '@vitest/mocker': 3.1.4(msw@2.8.4(@types/node@22.15.21)(typescript@5.8.3))(vite@6.3.5(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))
       '@vitest/pretty-format': 3.1.4
       '@vitest/runner': 3.1.4
       '@vitest/snapshot': 3.1.4
