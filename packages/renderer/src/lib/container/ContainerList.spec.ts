@@ -877,3 +877,93 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.deleteContainer).toHaveBeenCalled());
 });
+
+test('Try to run pods in bulk', async () => {
+  vi.mocked(window.startPod).mockClear();
+  vi.mocked(window.startContainer).mockClear();
+  vi.mocked(window.listContainers).mockResolvedValue([]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  // wait for the store to be cleared
+  while (get(containersInfos).length !== 0) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  const podId = 'pod-id3';
+  const containerId = 'sha256:56789012345';
+
+  const singleContainer = {
+    Id: containerId,
+    Image: 'sha256:567',
+    Names: ['foo'],
+    Status: 'Stopped',
+    engineId: 'podman',
+    engineName: 'podman',
+    ImageID: 'dummy-image-id',
+  };
+
+  // one single container and a container as part of a pod
+  const mockedContainers = [
+    singleContainer as ContainerInfo,
+    {
+      Id: 'sha256:7897891234567890123',
+      Image: 'sha256:345',
+      Names: ['container-in-pod'],
+      Status: 'Stopped',
+      pod: {
+        name: 'my-pod3',
+        id: podId,
+        status: 'Stopped',
+      },
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+  ];
+
+  vi.mocked(window.listContainers).mockResolvedValue(mockedContainers);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  // wait until the store is populated
+  while (get(containersInfos).length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  await waitRender({});
+
+  // select the pod checkbox
+  const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle container' });
+  expect(checkboxes[0]).toBeInTheDocument();
+  expect(checkboxes[1]).toBeInTheDocument();
+  await fireEvent.click(checkboxes[0]);
+  await fireEvent.click(checkboxes[1]);
+
+  // click on the bulk run button
+  const runBulkButton = screen.getByRole('button', { name: 'Run selected containers and pods' });
+  expect(runBulkButton).toBeInTheDocument();
+  await fireEvent.click(runBulkButton);
+
+  // wait until startPodMock is called
+  while (vi.mocked(window.startPod).mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // wait until startContainerMock is called
+  while (vi.mocked(window.startContainer).mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // expect that the pod is running
+  expect(window.startPod).toHaveBeenCalledWith('podman', podId);
+  expect(window.startPod).toHaveBeenCalledOnce();
+
+  // expect that the container is running
+  expect(window.startContainer).toHaveBeenCalledWith('podman', containerId);
+  expect(window.startContainer).toHaveBeenCalledOnce();
+});
