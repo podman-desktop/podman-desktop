@@ -21,6 +21,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 
 import type { ApiSenderType } from './api.js';
+import type { IConfigurationChangeEvent } from './configuration-registry.js';
 
 /**
  * Local view of the configuration values for a given scope
@@ -68,21 +69,26 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
 
   async update(section: string, value: unknown): Promise<void> {
     const localKey = this.getLocalKey(section);
-
     // now look if we have this value
     const localView = this.getLocalView();
+
+    const eventArg: IConfigurationChangeEvent = {
+      key: localKey,
+      value,
+      scope: this.scope,
+    };
 
     // remove the value if undefined
     if (value === undefined) {
       if (localView[localKey]) {
         delete localView[section];
         delete this[localKey];
-        this.apiSender.send('configuration-changed');
+        this.apiSender.send('configuration-changed', eventArg);
       }
     } else {
       localView[localKey] = value;
       this[section] = value;
-      this.apiSender.send('configuration-changed');
+      this.apiSender.send('configuration-changed', eventArg);
     }
     // call only for default scope to save
     this.updateCallback(section, this.scope);

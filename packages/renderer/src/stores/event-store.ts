@@ -43,6 +43,14 @@ interface EventStoreInfoEvent {
   humanDuration?: number;
 }
 
+interface WithStringKey {
+  key: string;
+}
+
+function isWithStringKey(value: unknown): value is WithStringKey {
+  return !!value && typeof value === 'object' && 'key' in value && typeof value.key === 'string';
+}
+
 export interface EventStoreInfo {
   name: string;
 
@@ -255,11 +263,20 @@ export class EventStore<T> {
       }
     };
 
-    this.windowEvents.forEach(eventName => {
-      window.events?.receive(eventName, (args?: unknown) => {
-        update(eventName, args as unknown[]).catch((error: unknown) => {
-          console.error(`Failed to update ${this.name}`, error);
-        });
+    this.windowEvents.forEach(eventNameWithOptionalKey => {
+      const [eventName, key] = eventNameWithOptionalKey.split(':');
+      window.events?.receive(eventName, (...args: unknown[]) => {
+        if (key) {
+          if (args.length === 1 && isWithStringKey(args[0]) && key === args[0].key) {
+            update(eventNameWithOptionalKey, args).catch((error: unknown) => {
+              console.error(`Failed to update ${this.name}`, error);
+            });
+          }
+        } else {
+          update(eventNameWithOptionalKey, args).catch((error: unknown) => {
+            console.error(`Failed to update ${this.name}`, error);
+          });
+        }
       });
     });
 
