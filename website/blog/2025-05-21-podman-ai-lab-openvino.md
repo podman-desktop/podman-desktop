@@ -38,7 +38,7 @@ This feature is only available on Intel based systems, as OpenVINO is optimized 
 
 ## Starting an OpenVINO inference server
 
-1. Click the Podman AI Lab icon in the navigation bar
+1. Click the Podman AI Lab icon in the navigation bar.
 2. In the Podman AI Lab navigation bar, click _Models > Services_ menu item.
 3. Click the _New Model Service_ button on the top right.
 4. Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the _Model_ list and click the _Create Service_ button.
@@ -50,11 +50,11 @@ Using the terminal shell, execute the given curl command and see the inference r
 
 ## Starting a playground with an OpenVINO compatible model
 
-1. Click the Podman AI Lab icon in the navigation bar
+1. Click the Podman AI Lab icon in the navigation bar.
 2. In the Podman AI Lab navigation bar, click _Models > Playgrounds_ menu item.
 3. Click the _New Playground_ button on the top right.
 4. Select an OpenVINO compatible model in the list (e.g. OpenVINO/mistral-7B-instruct-v0.2-int4-ov) in the _Model_ list and click the _Create playground_ button.
-5. The playground for the model is being started and after a while, a chat interface is displayed
+5. The playground for the model is being started and after a while, a chat interface is displayed.
 
 ![Initial playground on OpenVINO model](img/podman-ai-lab-OpenVINO/OpenVINO-playground1.png)
 
