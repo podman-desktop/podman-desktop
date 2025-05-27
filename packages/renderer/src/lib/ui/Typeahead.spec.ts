@@ -108,6 +108,7 @@ test('should list the result after the delay, and display spinner during loading
   screen.getByRole('progressbar');
 
   await new Promise(resolve => setTimeout(resolve, 100));
+  await tick();
   expect(screen.queryByRole('progressbar')).toBeNull();
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });

@@ -20,6 +20,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
@@ -78,6 +79,7 @@ test('Expect valid source and alt text with light mode', async () => {
 
   // wait for image to be loaded
   await new Promise(resolve => setTimeout(resolve, 200));
+  await tick();
 
   // grab image element
   const imageElement = image.getByRole('img');
@@ -99,6 +101,7 @@ test('Expect no alt attribute if missing and default image', async () => {
 
   // wait for image to be loaded
   await new Promise(resolve => setTimeout(resolve, 200));
+  await tick();
 
   // grab image element
   const imageElement = image.getByRole('img');
@@ -116,7 +119,7 @@ test('Expect string as image', async () => {
 
   // wait for image to be loaded
   await new Promise(resolve => setTimeout(resolve, 200));
-
+  await tick();
   // grab image element
   const imageElement = image.getByRole('img');
 

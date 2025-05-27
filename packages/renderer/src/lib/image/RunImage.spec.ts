@@ -487,6 +487,7 @@ describe('RunImage', () => {
     await new Promise(resolve => setTimeout(resolve, 600));
 
     const button = screen.getByRole('button', { name: 'Start Container' });
+    await tick();
     expect((button as HTMLButtonElement).disabled).toBeTruthy();
   });
 
