@@ -186,4 +186,12 @@ export const extensionsInstallationSmokeList = [
   openshiftLocalExtension,
   openshiftCheckerExtension,
 ];
+export const extensionsRHPackList = [
+  podmanAILabExtension,
+  bootcExtension,
+  ssoExtension,
+  openshiftLocalExtension,
+  developerSandboxExtension,
+  openshiftCheckerExtension,
+];
 export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension];
