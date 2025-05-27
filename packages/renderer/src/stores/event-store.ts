@@ -93,6 +93,7 @@ export class EventStore<T> {
 
     // The list of window events and listeners to listen for to trigger an update, for example:
     // Window event: 'extension-started'
+    // Window event with key: 'configuration-changed:extensions.ignoreRecommendations'
     // Window listener: 'extensions-already-started''
     private windowEvents: string[],
     private windowListeners: string[],
@@ -102,6 +103,9 @@ export class EventStore<T> {
     // or a function with parameters such as "fetchPodsForNamespace(namespace: string)"
     // or even a simple window call such as "window.listPods()"
     // Whatever is returned from the "updater" function will be set to the writeable store above.
+    //
+    // When called for a window event with a key (`eventName:key`), args[0] will contain an object
+    // with a `key` value (and potentially other values, depending on the eventName).
     private updater: (...args: unknown[]) => Promise<T>,
 
     // Optional icon component to display in the UI
