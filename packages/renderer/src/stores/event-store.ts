@@ -93,7 +93,7 @@ export class EventStore<T> {
 
     // The list of window events and listeners to listen for to trigger an update, for example:
     // Window event: 'extension-started'
-    // Window event with key: 'configuration-changed:extensions.ignoreRecommendations'
+    // Window event with keys: 'configuration-changed:extensions.ignoreRecommendations,ignoreBannerRecommendations'
     // Window listener: 'extensions-already-started''
     private windowEvents: string[],
     private windowListeners: string[],
@@ -104,8 +104,8 @@ export class EventStore<T> {
     // or even a simple window call such as "window.listPods()"
     // Whatever is returned from the "updater" function will be set to the writeable store above.
     //
-    // When called for a window event with a key (`eventName:key`), args[0] will contain an object
-    // with a `key` value (and potentially other values, depending on the eventName).
+    // When called for a window event with one or several keys (`eventName:key1,key2`), args[0] will contain an object
+    // with the matching `key` value (and potentially other values, depending on the eventName).
     private updater: (...args: unknown[]) => Promise<T>,
 
     // Optional icon component to display in the UI
@@ -267,17 +267,21 @@ export class EventStore<T> {
       }
     };
 
-    this.windowEvents.forEach(eventNameWithOptionalKey => {
-      const [eventName, key] = eventNameWithOptionalKey.split(':');
+    this.windowEvents.forEach(eventNameWithOptionalKeys => {
+      const [eventName, commaSeparatedKeys] = eventNameWithOptionalKeys.split(':');
       window.events?.receive(eventName, (...args: unknown[]) => {
-        if (key) {
-          if (args.length === 1 && isKeyEvent(args[0]) && key === args[0].key) {
-            update(eventNameWithOptionalKey, args).catch((error: unknown) => {
+        if (commaSeparatedKeys) {
+          // if the window event specifies one or several keys, wre call `update`
+          // only if the received event is related to one of these keys
+          const keys = commaSeparatedKeys.split(',');
+          if (args.length === 1 && isKeyEvent(args[0]) && keys.includes(args[0].key)) {
+            update(eventNameWithOptionalKeys, args).catch((error: unknown) => {
               console.error(`Failed to update ${this.name}`, error);
             });
           }
         } else {
-          update(eventNameWithOptionalKey, args).catch((error: unknown) => {
+          // the window event does not specify any key, call `update` for any event with the matching name
+          update(eventNameWithOptionalKeys, args).catch((error: unknown) => {
             console.error(`Failed to update ${this.name}`, error);
           });
         }

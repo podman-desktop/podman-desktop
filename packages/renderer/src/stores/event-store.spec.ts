@@ -119,6 +119,15 @@ test.each<{
     updaterShouldBeCalled: true,
     updaterShouldBeCalledWith: [{ key: 'other-key', foo: 'bar' }],
   },
+  {
+    name: 'matching window event and one key matching out of several',
+    listenedWindowEvent: 'my-event:key1,key2,key3',
+    sentEvent: 'my-event',
+    sentArg: { key: 'key2', foo: 'bar' },
+    eventShouldBeRegistered: true,
+    updaterShouldBeCalled: true,
+    updaterShouldBeCalledWith: [{ key: 'key2', foo: 'bar' }],
+  },
 ])(
   '$name',
   async ({
