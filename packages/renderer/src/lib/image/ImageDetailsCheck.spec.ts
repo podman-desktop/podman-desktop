@@ -113,11 +113,9 @@ test('expect to cancel when clicking the Cancel button', async () => {
     await fireEvent.click(abortBtn);
   });
 
-  await vi.waitFor(async () => {
-    await tick();
-    const msg = screen.getByRole('status', { name: 'Analysis Status' });
-    expect(msg).toHaveTextContent('Image analysis canceled');
-  });
+  await tick();
+  const msg = screen.getByRole('status', { name: 'Analysis Status' });
+  expect(msg).toHaveTextContent('Image analysis canceled');
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
 });
@@ -194,11 +192,9 @@ test('expect to not cancel again when destroying the component after manual canc
     await fireEvent.click(abortBtn);
   });
 
-  await vi.waitFor(async () => {
-    await tick();
-    const msg = screen.getByRole('status', { name: 'Analysis Status' });
-    expect(msg).toHaveTextContent('Image analysis canceled');
-  });
+  await tick();
+  const msg = screen.getByRole('status', { name: 'Analysis Status' });
+  expect(msg).toHaveTextContent('Image analysis canceled');
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
 
