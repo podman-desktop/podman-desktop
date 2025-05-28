@@ -119,6 +119,13 @@ Kubernetes questions & development:
 
 - [#podman-desktop](https://app.slack.com/client/T09NY5SBT/C04A0L7LUFM) on the [Kubernetes Slack](https://slack.k8s.io/)
 
+### Social networks
+
+- [Follow us on Mastodon](https://fosstodon.org/@podmandesktop)
+- [Follow us on Bluesky](https://bsky.app/profile/podman-desktop.io)
+- [Follow us on X](https://x.com/Podman_io)
+- [Follow us on LinkedIn](https://www.linkedin.com/company/podman-desktop)
+
 ### Adopters
 
 Check out the [list of companies](./ADOPTERS.md) already using Podman Desktop.
