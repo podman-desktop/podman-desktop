@@ -19,7 +19,7 @@
 import { process } from '@podman-desktop/api';
 import { expect, test, vi } from 'vitest';
 
-import { WSLVersionCheck } from './wsl2-version-check';
+import { WSLVersionCheck } from './wsl-version-check';
 
 vi.mock('@podman-desktop/api', () => ({
   process: {
