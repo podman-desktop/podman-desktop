@@ -75,7 +75,6 @@ test('Expect faded icon for other states', async () => {
   render(ExtensionIcon, { extension: extension });
 
   // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
   await tick();
 
   const icon = screen.getByRole('img');

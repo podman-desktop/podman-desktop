@@ -78,7 +78,6 @@ test('Expect valid source and alt text with light mode', async () => {
   const image = render(IconImage, { image: { light: 'light.png', dark: 'dark.png' }, alt: 'this is alt text' });
 
   // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
   await tick();
 
   // grab image element
@@ -100,7 +99,6 @@ test('Expect no alt attribute if missing and default image', async () => {
   const image = render(IconImage, { image: 'image.png' });
 
   // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
   await tick();
 
   // grab image element
@@ -118,8 +116,8 @@ test('Expect string as image', async () => {
   const image = render(IconImage, { image: 'image1', alt: 'this is alt text' });
 
   // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
   await tick();
+
   // grab image element
   const imageElement = image.getByRole('img');
 

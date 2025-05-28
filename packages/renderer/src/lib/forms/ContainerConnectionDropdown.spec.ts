@@ -119,10 +119,8 @@ test('expect binding to properly work', async () => {
 
   onChange?.(value);
 
-  alert = await vi.waitFor(async () => {
-    await tick();
-    return getByRole('alert');
-  });
+  await tick();
+  alert = getByRole('alert');
   expect(alert).toBeDefined();
   expect(alert).toHaveTextContent(CONTAINER_CONNECTION_INFO.name);
 });

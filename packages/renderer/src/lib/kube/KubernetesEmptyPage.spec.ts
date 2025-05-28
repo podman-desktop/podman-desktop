@@ -130,9 +130,7 @@ test('expect to have links for each Kubernetes provider', async () => {
 
   providerInfos.set([]);
   // Links should be updated (removed)
-  await waitFor(async () => {
-    await tick();
-    expect(screen.queryByLabelText(/Go create/)).toBeNull();
-    expect(screen.queryByLabelText(/Create new/)).toBeNull();
-  });
+  await tick();
+  expect(screen.queryByLabelText(/Go create/)).toBeNull();
+  expect(screen.queryByLabelText(/Create new/)).toBeNull();
 });
