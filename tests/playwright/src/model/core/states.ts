@@ -62,3 +62,10 @@ export enum KubernetesResourceState {
   Unknown = 'UNKNOWN',
   Succeeded = 'SUCCEEDED',
 }
+export enum ExtensionState {
+  Disabled = 'DISABLED',
+  Active = 'ACTIVE',
+  Running = 'RUNNING',
+  NotInstalled = 'NOT-INSTALLED',
+  Downloadable = 'DOWNLOADABLE',
+}
