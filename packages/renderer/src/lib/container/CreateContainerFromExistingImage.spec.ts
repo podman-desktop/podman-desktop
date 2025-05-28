@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import type { ImageSearchResult } from '/@api/image-registry';
@@ -117,6 +117,7 @@ const providerInfo = {
 } as unknown as ProviderInfo;
 
 beforeEach(() => {
+  vi.useFakeTimers();
   vi.resetAllMocks();
   vi.mocked(window.listImages).mockResolvedValue(localImageList);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
@@ -132,6 +133,10 @@ beforeEach(() => {
   });
 
   providerInfos.set([providerInfo]);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 test('Expect that textbox and two buttons show up when page opened', async () => {
@@ -153,7 +158,10 @@ test('Expect that typeahead menu has Local Images and Registry Images headings',
 
   const inputBox = screen.getByPlaceholderText('Select or enter an image to run');
   expect(inputBox).toBeInTheDocument();
-  await userEvent.type(inputBox, 'f');
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTime,
+  });
+  await user.type(inputBox, 'f');
 
   await waitFor(() => {
     expect(screen.queryByRole('row')).toBeInTheDocument();
@@ -171,23 +179,27 @@ test('Expect not a local image to have an active pull image and run button', asy
 
   const inputBox = screen.getByPlaceholderText('Select or enter an image to run');
   expect(inputBox).toBeInTheDocument();
-  await userEvent.type(inputBox, 'image12');
-
-  await waitFor(async () => {
-    await tick();
-    const list = screen.getByRole('row');
-    const items = within(list).getAllByRole('button');
-    expect(items.length).toBe(2);
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTime,
   });
+  await user.type(inputBox, 'image12');
 
-  await userEvent.keyboard('[ArrowDown]');
+  // wait typeahead delay
+  await vi.advanceTimersByTimeAsync(250);
+
+  await tick();
+  const list = screen.getByRole('row');
+  const items = within(list).getAllByRole('button');
+  expect(items.length).toBe(2);
+
+  await user.keyboard('[ArrowDown]');
 
   const pullImagebutton = screen.getByRole('button', { name: 'Pull Image and Run' });
 
   expect(pullImagebutton).toBeInTheDocument();
   expect(pullImagebutton).not.toBeDisabled();
 
-  await userEvent.click(pullImagebutton);
+  await user.click(pullImagebutton);
   expect(window.pullImage).toHaveBeenCalledWith(pInfo, 'docker.io/image12', expect.any(Function));
 });
 
@@ -200,7 +212,10 @@ test('Expect a local image to have an active run image button', async () => {
 
   const inputBox = screen.getByPlaceholderText('Select or enter an image to run');
   expect(inputBox).toBeInTheDocument();
-  await userEvent.type(inputBox, 'fedora');
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTime,
+  });
+  await user.type(inputBox, 'fedora');
 
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
 
@@ -208,14 +223,14 @@ test('Expect a local image to have an active run image button', async () => {
   const items = within(list).getAllByRole('button');
   expect(items.length).toBe(6);
 
-  await userEvent.keyboard('[ArrowDown]');
+  await user.keyboard('[ArrowDown]');
 
   const selectImagebutton = screen.getByRole('button', { name: 'Run Image' });
 
   expect(selectImagebutton).toBeInTheDocument();
   expect(selectImagebutton).not.toBeDisabled();
 
-  await userEvent.click(selectImagebutton);
+  await user.click(selectImagebutton);
   expect(router.goto).toHaveBeenCalledWith('/image/run/basic');
 });
 
@@ -228,7 +243,10 @@ test('Expect no user input to show only local images', async () => {
 
   const inputBox = screen.getByPlaceholderText('Select or enter an image to run');
   expect(inputBox).toBeInTheDocument();
-  await userEvent.type(inputBox, ' ');
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTime,
+  });
+  await user.type(inputBox, ' ');
 
   await waitFor(() => expect(screen.queryByRole('row')).toBeInTheDocument());
 
@@ -302,7 +320,10 @@ describe('container connections', () => {
     expect(inputBox).toBeInTheDocument();
 
     // type fedora
-    await userEvent.type(inputBox, 'fedora');
+    const user = userEvent.setup({
+      advanceTimers: vi.advanceTimersByTime,
+    });
+    await user.type(inputBox, 'fedora');
 
     // Get the run button and click on it
     const runBtn = getByRole('button', { name: 'Pull Image and Run' });
@@ -311,7 +332,7 @@ describe('container connections', () => {
     const { promise } = Promise.withResolvers<void>();
     vi.mocked(window.pullImage).mockReturnValue(promise);
 
-    await userEvent.click(runBtn);
+    await user.click(runBtn);
 
     // the dropdown should be disabled while we are pulling the image
     await vi.waitFor(() => {
