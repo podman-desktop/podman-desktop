@@ -26,7 +26,7 @@ import * as extensionObj from '../extension';
 import { releaseNotes } from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import type { Installer, PodmanInfo, UpdateCheck } from './podman-install';
-import { getBundledPodmanVersion, PodmanInstall, WinInstaller, WSL2Check, WSLVersionCheck } from './podman-install';
+import { getBundledPodmanVersion, PodmanInstall, WinInstaller, WSL2Check } from './podman-install';
 import * as podmanInstallObj from './podman-install';
 import * as utils from './util';
 
@@ -311,86 +311,6 @@ test('expect winMemory preflight check return failure result if the machine has 
   expect(result.docLinksDescription).toBeUndefined();
   expect(result.docLinks).toBeUndefined();
   expect(result.fixCommand).toBeUndefined();
-});
-
-test('expect WSLVersion preflight check return fail result if wsl --version command fails its execution', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockRejectedValue('');
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
-});
-
-test('expect WSLVersion preflight check return fail result if first line output do not contain any colon symbol', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'unknown message',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
-});
-
-test('expect WSLVersion preflight check return fail result if first line output do not contain any wsl word', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'unknown message: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.description).equal('WSL version should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-  );
-});
-
-test('expect WSLVersion preflight check return fail result if first line output contain an invalid version', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'WSL version: 1.1.3',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.description).equal('Your WSL version is 1.1.3 but it should be >= 1.2.5.');
-  expect(result.docLinksDescription).equal(
-    `Call 'wsl --update' to update your WSL installation. If you do not have access to the Windows store you can run 'wsl --update --web-download'. If you still receive an error please contact your IT administator as 'Windows Store Applications' may have been disabled.`,
-  );
-});
-
-test('expect WSLVersion preflight check return fail result if first line output contain a version equal to the minimum supported version', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'WSL version: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.successful).toBeTruthy();
-});
-
-test('expect WSLVersion preflight check return fail result if first line output contain a version greater than the minimum supported version', async () => {
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'WSL version: 2.4.0',
-    stderr: '',
-    command: 'command',
-  });
-
-  const winWSLCheck = new WSLVersionCheck();
-  const result = await winWSLCheck.execute();
-  expect(result.successful).toBeTruthy();
 });
 
 test('expect winWSL2 preflight check return successful result if the machine has WSL2 installed and do not need to reboot', async () => {

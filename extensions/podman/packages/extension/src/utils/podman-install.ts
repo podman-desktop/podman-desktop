@@ -28,6 +28,7 @@ import { getDetectionChecks } from '../checks/detection-checks';
 import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
+import { WSLVersionCheck } from '../checks/wsl2-version-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import type { MachineJSON } from '../extension';
@@ -43,7 +44,6 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
-import { WslHelper } from '../helpers/wsl-helper';
 import * as podman5JSON from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
@@ -797,34 +797,5 @@ export class WSL2Check extends BaseCheck {
       }
     }
     return false;
-  }
-}
-
-export class WSLVersionCheck extends BaseCheck {
-  title = 'WSL Version';
-
-  minVersion = '1.2.5';
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const wslHelper = new WslHelper();
-      const wslVersionData = await wslHelper.getWSLVersionData();
-      if (wslVersionData.wslVersion) {
-        if (compare(wslVersionData.wslVersion, this.minVersion, '>=')) {
-          return this.createSuccessfulResult();
-        } else {
-          return this.createFailureResult({
-            description: `Your WSL version is ${wslVersionData.wslVersion} but it should be >= ${this.minVersion}.`,
-            docLinksDescription: `Call 'wsl --update' to update your WSL installation. If you do not have access to the Windows store you can run 'wsl --update --web-download'. If you still receive an error please contact your IT administator as 'Windows Store Applications' may have been disabled.`,
-          });
-        }
-      }
-    } catch (err) {
-      // ignore error
-    }
-    return this.createFailureResult({
-      description: `WSL version should be >= ${this.minVersion}.`,
-      docLinksDescription: `Call 'wsl --update' and 'wsl --version' in a terminal to check your wsl version.`,
-    });
   }
 }
