@@ -178,6 +178,14 @@ test('Check icon button with fab prefix is visible', async () => {
   expect(img).toBeInTheDocument();
 });
 
+test('Check icon button with class image is visible', async () => {
+  render(Button, { icon: 'fa-brands fa-github' });
+
+  // check for a few elements of the styling
+  const img = screen.getByRole('img', { hidden: true });
+  expect(img).toBeInTheDocument();
+});
+
 test('Button inProgress must have a spinner', async () => {
   // render the component
   render(Button, { inProgress: true });
