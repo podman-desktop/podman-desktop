@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ImageChecks } from '@podman-desktop/api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -112,10 +113,9 @@ test('expect to cancel when clicking the Cancel button', async () => {
     await fireEvent.click(abortBtn);
   });
 
-  await vi.waitFor(() => {
-    const msg = screen.getByRole('status', { name: 'Analysis Status' });
-    expect(msg).toHaveTextContent('Image analysis canceled');
-  });
+  await tick();
+  const msg = screen.getByRole('status', { name: 'Analysis Status' });
+  expect(msg).toHaveTextContent('Image analysis canceled');
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
 });
@@ -192,10 +192,9 @@ test('expect to not cancel again when destroying the component after manual canc
     await fireEvent.click(abortBtn);
   });
 
-  await vi.waitFor(() => {
-    const msg = screen.getByRole('status', { name: 'Analysis Status' });
-    expect(msg).toHaveTextContent('Image analysis canceled');
-  });
+  await tick();
+  const msg = screen.getByRole('status', { name: 'Analysis Status' });
+  expect(msg).toHaveTextContent('Image analysis canceled');
 
   expect(cancelTokenSpy).toHaveBeenCalledWith(tokenID);
 

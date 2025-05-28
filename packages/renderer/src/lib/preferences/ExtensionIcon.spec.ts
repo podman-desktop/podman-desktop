@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { ExtensionInfo } from '/@api/extension-info';
@@ -74,7 +75,7 @@ test('Expect faded icon for other states', async () => {
   render(ExtensionIcon, { extension: extension });
 
   // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
+  await tick();
 
   const icon = screen.getByRole('img');
   expect(icon).toBeInTheDocument();
