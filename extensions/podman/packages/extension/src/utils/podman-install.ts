@@ -28,7 +28,7 @@ import { getDetectionChecks } from '../checks/detection-checks';
 import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
-import { WSLVersionCheck } from '../checks/wsl2-version-check';
+import { WSLVersionCheck } from '../checks/wsl-version-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import type { MachineJSON } from '../extension';
