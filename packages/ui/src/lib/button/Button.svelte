@@ -1,10 +1,9 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import { createEventDispatcher } from 'svelte';
-import Fa from 'svelte-fa';
 
+import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
-import { isFontAwesomeIcon } from '../utils/icon-utils';
 import type { ButtonType } from './Button';
 
 interface Props {
@@ -41,8 +40,6 @@ let {
   onclick = dispatch.bind(undefined, 'click'),
   children,
 }: Props = $props();
-
-let iconType: string = $derived(isFontAwesomeIcon(icon) ? 'fa' : 'unknown');
 
 let classes = $derived.by(() => {
   let result: string = '';
@@ -100,11 +97,8 @@ let classes = $derived.by(() => {
       class:py-[3px]={!children}>
       {#if inProgress}
         <Spinner size="1em" />
-      {:else if isFontAwesomeIcon(icon)}
-        <Fa icon={icon} />
-      {:else if iconType === 'unknown'}
-        {@const Icon = icon}
-        <Icon/>
+      {:else}
+        <Icon icon={icon}/>
       {/if}
       {#if children}
         <span>{@render children()}</span>
