@@ -36,7 +36,7 @@ import ContainerList from './ContainerList.svelte';
 beforeAll(() => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
-
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   (window.events as unknown) = {
     receive: (_channel: string, func: unknown): void => {
       (func as () => void)();
