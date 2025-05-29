@@ -137,6 +137,27 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         await checkClusterResources(page, kindContainer);
       });
 
+      test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
+        const imagesPage = await navigationBar.openImages();
+        const pullImagePage = await imagesPage.openPullImage();
+        await pullImagePage.pullImage(imageToPull, imageTag);
+        await playExpect.poll(async () => imagesPage.waitForImageExists(imageToPull, 10_000)).toBeTruthy();
+        const containersPage = await imagesPage.startContainerWithImage(
+          imageToPull,
+          containerName,
+          containerStartParams,
+        );
+        await playExpect
+          .poll(async () => containersPage.containerExists(containerName), {
+            timeout: 15_000,
+          })
+          .toBeTruthy();
+        const containerDetails = await containersPage.openContainersDetails(containerName);
+        await playExpect(containerDetails.heading).toBeVisible();
+        await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
+        await deployContainerToCluster(page, containerName, kubernetesContext, deployedPodName);
+      });
+
       test('Kind cluster operations - STOP', async ({ page }) => {
         await resourceConnectionAction(page, kindResourceCard, ResourceElementActions.Stop, ResourceElementState.Off);
       });
@@ -175,27 +196,6 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         } else {
           await createKindCluster(page, clusterName, true, clusterCreationTimeout);
         }
-      });
-
-      test('Deploy a container to the Kind cluster', async ({ page, navigationBar }) => {
-        const imagesPage = await navigationBar.openImages();
-        const pullImagePage = await imagesPage.openPullImage();
-        await pullImagePage.pullImage(imageToPull, imageTag);
-        await playExpect.poll(async () => imagesPage.waitForImageExists(imageToPull, 10_000)).toBeTruthy();
-        const containersPage = await imagesPage.startContainerWithImage(
-          imageToPull,
-          containerName,
-          containerStartParams,
-        );
-        await playExpect
-          .poll(async () => containersPage.containerExists(containerName), {
-            timeout: 15_000,
-          })
-          .toBeTruthy();
-        const containerDetails = await containersPage.openContainersDetails(containerName);
-        await playExpect(containerDetails.heading).toBeVisible();
-        await playExpect.poll(async () => containerDetails.getState()).toBe(ContainerState.Running);
-        await deployContainerToCluster(page, containerName, kubernetesContext, deployedPodName);
       });
 
       test('Kind cluster operations details - STOP', async ({ page }) => {
