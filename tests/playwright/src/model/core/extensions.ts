@@ -160,6 +160,13 @@ export const registriesExtension: ExtensionType = {
   extensionFullLabel: 'podman-desktop.registries',
 };
 
+export const openshiftDockerExtension: ExtensionType = {
+  extensionName: 'OpenShift',
+  extensionFullName: 'OpenShift extension',
+  extensionLabel: 'OpenShift',
+  extensionFullLabel: 'OpenShift',
+};
+
 export const extensionsBuiltInList = [
   composeExtension,
   dockerExtension,
@@ -185,5 +192,6 @@ export const extensionsInstallationSmokeList = [
   developerSandboxExtension,
   openshiftLocalExtension,
   openshiftCheckerExtension,
+  openshiftDockerExtension,
 ];
 export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension];

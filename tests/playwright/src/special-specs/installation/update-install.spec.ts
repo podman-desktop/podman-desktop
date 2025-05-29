@@ -92,7 +92,7 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
           await test.step('Extension is installed', async () => {
             await extensionsPage.openInstalledTab();
             await playExpect
-              .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionLabel))
+              .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionFullLabel))
               .toBeTruthy();
             const extensionDetailsPage = await extensionsPage.openExtensionDetails(
               extension.extensionLabel,

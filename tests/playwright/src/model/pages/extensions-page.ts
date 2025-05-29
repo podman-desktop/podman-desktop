@@ -106,7 +106,7 @@ export class ExtensionsPage {
 
   public async extensionIsInstalled(label: string): Promise<boolean> {
     await this.openInstalledTab();
-    const extension = this.content.getByRole('region', { name: label });
+    const extension = this.content.getByRole('region', { name: label, exact: true });
     return (await extension.count()) > 0;
   }
 
