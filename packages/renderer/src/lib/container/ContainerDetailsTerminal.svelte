@@ -148,8 +148,24 @@ onMount(async () => {
   await executeShellIntoContainer();
 });
 
+function removePromptFromTheEnd(terminal: string): string {
+  const firstSpaceIndex = terminal.indexOf(' ');
+  if (firstSpaceIndex === -1) {
+    return terminal;
+  }
+  const firstWord = terminal.slice(0, firstSpaceIndex);
+  const suffix = firstWord + ' ';
+  if (terminal.endsWith(suffix)) {
+    return terminal.slice(0, -suffix.length);
+  }
+  return terminal;
+}
+
 onDestroy(() => {
-  terminalContent = serializeAddon.serialize();
+  // remove first prompt text to avoid prompt duplication
+  // when restoring terminal after switching between tabs
+  terminalContent = removePromptFromTheEnd(serializeAddon.serialize());
+
   // register terminal for reusing it
   registerTerminal({
     engineId: container.engineId,
