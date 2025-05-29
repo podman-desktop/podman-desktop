@@ -36,6 +36,7 @@ const DOWNLOADABLE = 'DOWNLOADABLE';
 const OPENSHIFT_LOCAL = 'Red Hat Openshift Local';
 const OPENSHIFT_SANDBOX = 'Developer Sandbox';
 const OPENSHIFT_CHECKER = 'Red Hat Openshift Checker';
+const OPENSHIFT_DOCKER = 'OpenShift';
 
 let pdRunner: Runner;
 let page: Page;
@@ -73,6 +74,10 @@ const extentionTypes = [
     extensionName: 'openshift-checker',
     extensionType: OPENSHIFT_CHECKER,
   },
+  {
+    extensionName: 'OpenShift',
+    extensionType: OPENSHIFT_DOCKER,
+  },
 ];
 
 for (const { extensionName, extensionType } of extentionTypes) {
@@ -90,8 +95,8 @@ for (const { extensionName, extensionType } of extentionTypes) {
     });
 
     test('Install extension through Extensions Catalog', async () => {
-      test.skip(extensionType === OPENSHIFT_CHECKER);
-      test.setTimeout(200000);
+      test.skip(extensionType === OPENSHIFT_CHECKER || extensionType === OPENSHIFT_DOCKER);
+      test.setTimeout(200_000);
 
       const extensionsPage = new ExtensionsPage(page);
       await playExpect(extensionsPage.heading).toBeVisible();
@@ -101,23 +106,25 @@ for (const { extensionName, extensionType } of extentionTypes) {
       await playExpect(extensionCatalog.parent).toBeVisible();
 
       await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeFalsy();
-      await extensionCatalog.install(180000);
+      await extensionCatalog.install(180_000);
 
       await extensionsPage.openInstalledTab();
       await playExpect.poll(async () => await extensionsPage.extensionIsInstalled(extensionLabel)).toBeTruthy();
     });
 
     test('Install extension from OCI Image', async () => {
-      test.skip(extensionType !== OPENSHIFT_CHECKER);
+      test.skip(extensionType !== OPENSHIFT_CHECKER && extensionType !== OPENSHIFT_DOCKER);
       test.setTimeout(200_000);
 
       const extensionsPage = new ExtensionsPage(page);
 
       await extensionsPage.installExtensionFromOCIImage(ociImageUrl);
-      await extensionsPage.openCatalogTab();
-      const extensionCatalog = new ExtensionCatalogCardPage(page, extensionType);
-      await playExpect(extensionCatalog.parent).toBeVisible();
-      await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
+      if (extensionType === OPENSHIFT_CHECKER) {
+        await extensionsPage.openCatalogTab();
+        const extensionCatalog = new ExtensionCatalogCardPage(page, extensionType);
+        await playExpect(extensionCatalog.parent).toBeVisible();
+        await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
+      }
 
       await extensionsPage.openInstalledTab();
       await playExpect.poll(async () => await extensionsPage.extensionIsInstalled(extensionLabel)).toBeTruthy();
@@ -158,6 +165,8 @@ for (const { extensionName, extensionType } of extentionTypes) {
 
         test.describe
           .serial('Extension can be disabled and reenabled', () => {
+            test.skip(extensionType === OPENSHIFT_DOCKER, 'OpenShift Docker extension cannot be disabled');
+
             test('Disable extension and verify Dashboard and Resources components if present', async () => {
               const extensionsPage = await navigationBar.openExtensions();
               const extensionPage = await extensionsPage.openExtensionDetails(
@@ -233,16 +242,22 @@ for (const { extensionName, extensionType } of extentionTypes) {
             extensionType,
           );
 
-          await extensionDetails.disableExtension();
-          await extensionDetails.removeExtension();
+          if (extensionType !== OPENSHIFT_DOCKER) {
+            await extensionDetails.disableExtension();
+          }
+          await extensionDetails.removeExtension(false);
 
           // now if deleted from extension details, the page details still there, just different
-          await playExpect(extensionDetails.status).toHaveText(DOWNLOADABLE);
-          await playExpect(extensionDetails.page.getByRole('button', { name: installButtonLabel })).toBeVisible();
+          if (extensionType !== OPENSHIFT_DOCKER) {
+            await playExpect(extensionDetails.status).toHaveText(DOWNLOADABLE);
+            await playExpect(extensionDetails.page.getByRole('button', { name: installButtonLabel })).toBeVisible();
+          }
 
           await goToDashboard();
           extensionsPage = await navigationBar.openExtensions();
-          playExpect(await extensionsPage.extensionIsInstalled(extensionLabel)).toBeFalsy();
+          await playExpect
+            .poll(async () => extensionsPage.extensionIsInstalled(extensionLabel), { timeout: 15_000 })
+            .toBeFalsy();
         });
       });
   });
@@ -276,6 +291,15 @@ function initializeLocators(extensionType: string): void {
       extensionLabel = 'redhat.openshift-checker';
       resourceLabel = undefined;
       ociImageUrl = 'ghcr.io/redhat-developer/podman-desktop-image-checker-openshift-ext:0.1.5';
+      break;
+    }
+    case OPENSHIFT_DOCKER: {
+      extensionDashboardStatus = undefined;
+      extensionDashboardProvider = undefined;
+      installButtonLabel = '';
+      extensionLabel = 'OpenShift';
+      resourceLabel = undefined;
+      ociImageUrl = 'redhatdeveloper/openshift-dd-ext:0.0.1-100';
       break;
     }
   }
