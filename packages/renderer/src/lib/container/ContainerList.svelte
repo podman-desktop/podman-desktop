@@ -1,10 +1,11 @@
 <script lang="ts">
-import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
   NavPage,
   Table,
+  type Table as TableComponentType,
   TableColumn,
   TableDurationColumn,
   TableRow,
@@ -69,18 +70,24 @@ $: providerConnections = $providerInfos
   .flat()
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
+// filter containers by group type pod
+function filterContainersByGroupTypePod(): ContainerGroupInfoUI[] {
+  return containerGroups.filter(group => group.type === ContainerGroupInfoTypeUI.POD).filter(pod => pod.selected);
+}
+
+// filter containers by group type different than pod
+function filterContainersByGroupTypeNotPod(): ContainerInfoUI[] {
+  return containerGroups
+    .filter(group => group.type !== ContainerGroupInfoTypeUI.POD)
+    .flatMap(group => group.containers)
+    .filter(container => container.selected);
+}
+
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
 async function deleteSelectedContainers(): Promise<void> {
-  const podGroups = containerGroups
-    .filter(group => group.type === ContainerGroupInfoTypeUI.POD)
-    .filter(pod => pod.selected);
-  const selectedContainers = containerGroups
-    .filter(group => group.type !== ContainerGroupInfoTypeUI.POD)
-    .map(group => group.containers)
-    .flat()
-    .filter(container => container.selected);
-
+  const podGroups = filterContainersByGroupTypePod();
+  const selectedContainers = filterContainersByGroupTypeNotPod();
   if (podGroups.length + selectedContainers.length === 0) {
     return;
   }
@@ -128,6 +135,65 @@ async function deleteSelectedContainers(): Promise<void> {
     );
   }
   bulkDeleteInProgress = false;
+}
+
+// run the items selected in the list
+let bulkRunInProgress = false;
+async function runSelectedContainers(): Promise<void> {
+  const podGroups = filterContainersByGroupTypePod();
+  const selectedContainers = filterContainersByGroupTypeNotPod();
+  if (podGroups.length + selectedContainers.length === 0) {
+    return;
+  }
+  bulkRunInProgress = true;
+  podGroups.forEach(pod => {
+    if (pod.status !== 'RUNNING') pod.status = 'STARTING';
+  });
+  selectedContainers.forEach(container => {
+    if (container.state !== 'RUNNING') container.state = 'STARTING';
+  });
+  containerGroups = [...containerGroups];
+
+  // runs pods first if any
+  if (podGroups.length > 0) {
+    await Promise.all(
+      podGroups.map(async podGroup => {
+        if (podGroup.engineId && podGroup.id && podGroup.status !== 'RUNNING') {
+          try {
+            await window.startPod(podGroup.engineId, podGroup.id);
+          } catch (e) {
+            console.error('error while running pod', e);
+          }
+        }
+      }),
+    );
+  }
+
+  // then containers (that are not inside a pod)
+  if (selectedContainers.length > 0) {
+    await Promise.all(
+      selectedContainers.map(async container => {
+        if (container.state === 'RUNNING') {
+          return; // skip already running containers
+        }
+        container.actionInProgress = true;
+        // reset error when starting task
+        container.actionError = '';
+        containerGroups = [...containerGroups];
+        try {
+          await window.startContainer(container.engineId, container.id);
+        } catch (e) {
+          console.log('error while runnings container', e);
+          container.actionError = String(e);
+          container.state = 'ERROR';
+        } finally {
+          container.actionInProgress = false;
+          containerGroups = [...containerGroups];
+        }
+      }),
+    );
+  }
+  bulkRunInProgress = false;
 }
 
 function createPodFromContainers(): void {
@@ -300,7 +366,7 @@ function setStoppedFilter(): void {
 }
 
 let selectedItemsNumber: number;
-let table: Table;
+let table: TableComponentType;
 
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
   align: 'center',
@@ -391,6 +457,14 @@ $: containersAndGroups = containerGroups.map(group =>
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <div class="inline-flex space-x-2">
+        <Button
+          on:click={(): Promise<void> =>
+           runSelectedContainers()}
+          aria-label="Run selected containers and pods"
+          title="Run {selectedItemsNumber} selected items"
+          inProgress={bulkRunInProgress}
+          icon={faPlay}>
+        </Button>
         <Button
           on:click={(): void =>
             withBulkConfirmation(
