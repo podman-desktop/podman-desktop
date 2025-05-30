@@ -286,6 +286,13 @@ export class Runner {
   }
 
   private defaultOptions(): object {
+    const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
+    const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
+    if (pdArgs && pdBinary) {
+      throw new Error(
+        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY are both set, cannot run tests in development and production mode at the same time...',
+      );
+    }
     const directory = join(this._testOutput, 'videos');
     const tracesDir = join(this._testOutput, 'traces', 'raw');
     console.log(`video will be written to: ${directory}`);
@@ -297,14 +304,9 @@ export class Runner {
         height: 700,
       },
     };
-    let executablePath: string | undefined = undefined;
-    let args: string[] = ['.'];
-    if (process.env.PODMAN_DESKTOP_BINARY) {
-      executablePath = process.env.PODMAN_DESKTOP_BINARY;
-    }
-    if (process.env.PODMAN_DESKTOP_ARGS) {
-      args = [process.env.PODMAN_DESKTOP_ARGS];
-    }
+    const args = pdArgs ? [pdArgs] : ['.'];
+    // executablePath defaults to this package's installation location: node_modules/.bin/electron
+    const executablePath = pdArgs ? join(pdArgs, 'node_modules', '.bin', 'electron') : (pdBinary ?? undefined);
     const timeout = 45000;
     return {
       args,
