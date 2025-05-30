@@ -52,18 +52,16 @@ export class KubernetesResourceDetailsPage extends DetailsPage {
   async getState(): Promise<string> {
     return test.step('Get resource state', async () => {
       const currentState = await this.header.getByRole('status').getAttribute('title');
-      for (const state of Object.values(KubernetesResourceState)) {
-        if (currentState === state) return state;
-      }
-
-      return KubernetesResourceState.Unknown;
+      return currentState ?? KubernetesResourceState.Unknown;
     });
   }
 
   public async editKubernetsYamlFile(textToBeChanged: string, newText: string): Promise<void> {
     return test.step('Edit Kubernetes YAML file', async () => {
       await this.activateTab(KubernetesResourceDetailsPage.KUBE_TAB);
-      await this.tabContent.click();
+      const presentaion = this.tabContent.getByRole('presentation');
+      await playExpect(presentaion).toBeVisible();
+      await presentaion.click();
       if (isMac) {
         await this.page.keyboard.press('Meta+F');
       } else {
