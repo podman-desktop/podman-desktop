@@ -41,9 +41,15 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
-      await playExpect
-        .poll(async () => await images.waitForRowToExists(`localhost/my-image-${imgNum}`), { timeout: 0 })
-        .toBeTruthy();
+      const imgName = `localhost/my-image-${imgNum}`;
+      await playExpect.poll(async () => await images.waitForRowToExists(imgName), { timeout: 10_000 }).toBeTruthy();
+
+      const imgRowLocator = await images.getImageRowByName(imgName);
+      if (imgRowLocator === undefined) {
+        throw Error(`Image: '${imgName}' does not exist`);
+      }
+      await imgRowLocator.scrollIntoViewIfNeeded();
+      await playExpect(imgRowLocator).toBeVisible();
     }
   });
 
@@ -57,9 +63,17 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
+      const containerName = `my-container-${containerNum}`;
       await playExpect
-        .poll(async () => await containers.waitForRowToExists(`my-container-${containerNum}`), { timeout: 0 })
+        .poll(async () => await containers.waitForRowToExists(containerName), { timeout: 0 })
         .toBeTruthy();
+
+      const containerRowLocator = await containers.getContainerRowByName(containerName);
+      if (containerRowLocator === undefined) {
+        throw Error(`Container: '${containerName}' does not exist`);
+      }
+      await containerRowLocator.scrollIntoViewIfNeeded();
+      await playExpect(containerRowLocator).toBeVisible();
     }
   });
 
@@ -71,7 +85,15 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      await playExpect.poll(async () => await pods.waitForRowToExists(`my-pod-${podNum}`), { timeout: 0 }).toBeTruthy();
+      const podName = `my-pod-${podNum}`;
+      await playExpect.poll(async () => await pods.waitForRowToExists(podName), { timeout: 0 }).toBeTruthy();
+
+      const podRowLocator = await pods.getPodRowByName(podName);
+      if (podRowLocator === undefined) {
+        throw Error(`Pod: '${podName}' does not exist`);
+      }
+      await podRowLocator.scrollIntoViewIfNeeded();
+      await playExpect(podRowLocator).toBeVisible();
     }
   });
 });
