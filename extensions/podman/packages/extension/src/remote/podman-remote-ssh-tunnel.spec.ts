@@ -21,28 +21,61 @@ import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { Event, EventEmitter } from '@podman-desktop/api';
+import { Disposable } from '@podman-desktop/api';
+import type { ServerChannel, WindowChangeInfo } from 'ssh2';
 import { Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
 // mock the API
-vi.mock('@podman-desktop/api', async () => {
+vi.mock('@podman-desktop/api', () => {
+  /**
+   * Mock the {@link EventEmitter} class logic
+   */
+  class EventEmitterMock<T> implements EventEmitter<T> {
+    #set: Set<(t: T) => void> = new Set();
+
+    get event(): Event<T> {
+      return (listener: (t: T) => void): Disposable => {
+        this.#set.add(listener);
+        return {
+          dispose: (): void => {
+            this.#set.delete(listener);
+          },
+        };
+      };
+    }
+
+    fire(data: T): void {
+      this.#set.forEach(listener => listener(data));
+    }
+
+    dispose(): void {
+      this.#set.clear();
+    }
+  }
+
   return {
     process: {
       exec: vi.fn(),
     },
+    EventEmitter: EventEmitterMock,
+    Disposable: {
+      create: vi.fn(),
+    },
   };
 });
 
-beforeEach(() => {
-  vi.resetAllMocks();
-});
-
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
-  isListening(): boolean {
+  override isListening(): boolean {
     return super.isListening();
+  }
+
+  override disconnect(): Promise<void> {
+    return super.disconnect();
   }
 }
 
@@ -52,13 +85,27 @@ beforeAll(async () => {
   dummyKey = generatePrivateKey('ed25519').toString('ssh');
 });
 
-test('should be able to connect', async () => {
-  let sshPort = 0;
-  let connected = false;
-  let authenticated = false;
+let sshPort: number;
+let connected: boolean;
+let authenticated: boolean;
+let sshServer: Server;
 
-  // create ssh server
-  const sshServer = new Server(
+// create a npipe/socket server
+// on windows it's an npipe, on macOS a socket file
+let socketOrNpipePathLocal: string;
+let socketOrNpipePathRemote: string;
+
+beforeEach(async () => {
+  vi.resetAllMocks();
+
+  vi.mocked(Disposable.create).mockReturnValue({
+    dispose: vi.fn(),
+  });
+
+  sshPort = 0;
+  connected = false;
+  authenticated = false;
+  sshServer = new Server(
     {
       hostKeys: [dummyKey],
     },
@@ -81,10 +128,6 @@ test('should be able to connect', async () => {
   // wait that the server is listening
   await vi.waitFor(() => expect(sshPort).toBeGreaterThan(0));
 
-  // create a npipe/socket server
-  // on windows it's an npipe, on macOS a socket file
-  let socketOrNpipePathLocal: string;
-  let socketOrNpipePathRemote: string;
   if (process.platform === 'win32') {
     socketOrNpipePathLocal = '\\\\.\\pipe\\test-local';
     socketOrNpipePathRemote = '\\\\.\\pipe\\test-remote';
@@ -92,14 +135,20 @@ test('should be able to connect', async () => {
     socketOrNpipePathLocal = join(tmpdir(), 'test-local.sock');
     socketOrNpipePathRemote = join(tmpdir(), 'test-remote.sock');
   }
+});
+
+afterEach(async () => {
+  sshServer.close();
 
   // delete file if exists
   await rm(socketOrNpipePathLocal, { force: true });
   await rm(socketOrNpipePathRemote, { force: true });
+});
 
+test('should be able to connect', async () => {
   let listenReady = false;
 
-  // start a remote server
+  // start a remote server (fake podman socket)
   const npipeServer = createServer(_socket => {}).listen(socketOrNpipePathRemote, () => {
     listenReady = true;
   });
@@ -128,6 +177,168 @@ test('should be able to connect', async () => {
 
   await vi.waitFor(() => expect(connectedToLocal).toBeTruthy());
 
+  client.destroy();
   client.end();
   npipeServer.close();
+
+  await vi.waitFor(() => client.closed);
+
+  await podmanRemoteSshTunnel.disconnect();
+});
+
+describe('shell', () => {
+  let shellServerChannel: ServerChannel | undefined;
+  let windowChangeInfo: WindowChangeInfo | undefined;
+
+  beforeEach(() => {
+    shellServerChannel = undefined;
+    windowChangeInfo = undefined;
+
+    // our custom SSH server need to handle the shell & pty to avoid having Channel open failure
+    sshServer.on('connection', connection => {
+      connection.on('session', accept => {
+        const session = accept();
+
+        session.on('pty', accept => {
+          accept(); // Accept pseudo-terminal request
+        });
+
+        session.on('shell', accept => {
+          shellServerChannel = accept();
+        });
+
+        session.on('window-change', (_accept, _reject, info) => {
+          windowChangeInfo = info;
+        });
+      });
+    });
+  });
+
+  afterEach(() => {
+    shellServerChannel?.close();
+  });
+
+  async function getPodmanRemote(): Promise<PodmanRemoteSshTunnel> {
+    const podmanRemoteSshTunnel = new TestPodmanRemoteSshTunnel(
+      'localhost',
+      sshPort,
+      'foo',
+      '',
+      socketOrNpipePathRemote,
+      socketOrNpipePathLocal,
+    );
+
+    podmanRemoteSshTunnel.connect();
+
+    // wait authenticated and connected
+    await vi.waitFor(() => expect(connected && authenticated && podmanRemoteSshTunnel.isListening()).toBeTruthy());
+
+    return podmanRemoteSshTunnel;
+  }
+
+  test('client to server data', async () => {
+    const podmanRemoteSshTunnel = await getPodmanRemote();
+
+    // open shell
+    const session = podmanRemoteSshTunnel.open();
+
+    // wait for server to receive the shell
+    await vi.waitFor(() => {
+      expect(shellServerChannel).toBeDefined();
+    });
+
+    // create listener and attach it to server channel
+    const shellDataListener = vi.fn();
+    shellServerChannel?.on('data', shellDataListener);
+
+    // write client => server
+    session.write('ping');
+
+    await vi.waitFor(() => {
+      expect(shellDataListener).toHaveBeenCalledWith(Buffer.from('ping'));
+    });
+
+    podmanRemoteSshTunnel.dispose();
+  });
+
+  test('server to client data', async () => {
+    const podmanRemoteSshTunnel = await getPodmanRemote();
+
+    // open shell
+    const session = podmanRemoteSshTunnel.open();
+
+    // wait for server to receive the shell
+    await vi.waitFor(() => {
+      expect(shellServerChannel).toBeDefined();
+    });
+
+    // create listener and attach it to client event emitter
+    const shellDataListener = vi.fn();
+    session.onData(shellDataListener);
+
+    // write server => client
+    shellServerChannel?.write('ping');
+
+    await vi.waitFor(() => {
+      expect(shellDataListener).toHaveBeenCalledWith({
+        data: Buffer.from('ping'),
+      });
+    });
+
+    podmanRemoteSshTunnel.dispose();
+  });
+
+  test('shell closing should trigger onEnd', async () => {
+    const podmanRemoteSshTunnel = await getPodmanRemote();
+
+    // open shell
+    const session = podmanRemoteSshTunnel.open();
+
+    // wait for server to receive the shell
+    await vi.waitFor(() => {
+      expect(shellServerChannel).toBeDefined();
+    });
+
+    // create listener and attach it to client event emitter
+    const shellDataListener = vi.fn();
+    session.onEnd(shellDataListener);
+
+    // close the channel
+    shellServerChannel?.close();
+
+    await vi.waitFor(() => {
+      expect(shellDataListener).toHaveBeenCalledOnce();
+    });
+
+    podmanRemoteSshTunnel.dispose();
+  });
+
+  test('resize should request resize', async () => {
+    const podmanRemoteSshTunnel = await getPodmanRemote();
+
+    // open shell
+    const session = podmanRemoteSshTunnel.open();
+
+    // wait for server to receive the shell
+    await vi.waitFor(() => {
+      expect(shellServerChannel).toBeDefined();
+    });
+
+    expect(windowChangeInfo).toBeUndefined();
+
+    session.resize({
+      rows: 88,
+      cols: 32,
+    });
+
+    const info = await vi.waitFor<WindowChangeInfo>(() => {
+      expect(windowChangeInfo).toBeDefined();
+      return windowChangeInfo as WindowChangeInfo;
+    });
+
+    expect(info.rows).toEqual(88);
+    expect(info.cols).toEqual(32);
+
+    podmanRemoteSshTunnel.dispose();
+  });
 });
