@@ -16,14 +16,14 @@ In addition, you can run this tool on three different operating systems; macOS, 
 
 Let’s quickly explore this tool’s key functionalities:
 
-[Manage containerized environment](/docs/discover-podman-desktop#manage-containerized-environment)
-[Podify your containers](/docs/discover-podman-desktop#podify-your-containers)
-[Manage images](/docs/discover-podman-desktop#manage-images)
-[Manage Kubernetes-based environment](/docs/discover-podman-desktop#manage-kubernetes-based-environment)
-[Manage Docker compatibility](/docs/discover-podman-desktop#manage-docker-compatibility)
-[Integrate your tools using extensions](/docs/discover-podman-desktop#integrate-your-tools-using-extensions)
-[Manage settings](/docs/discover-podman-desktop#manage-settings)
-[Customize the UI](/docs/discover-podman-desktop#customize-the-ui)
+- [Manage containerized environment](/docs/discover-podman-desktop#manage-containerized-environment)
+- [Podify your containers](/docs/discover-podman-desktop#podify-your-containers)
+- [Manage images](/docs/discover-podman-desktop#manage-images)
+- [Manage Kubernetes-based environment](/docs/discover-podman-desktop#manage-kubernetes-based-environment)
+- [Manage Docker compatibility](/docs/discover-podman-desktop#manage-docker-compatibility)
+- [Integrate your tools using extensions](/docs/discover-podman-desktop#integrate-your-tools-using-extensions)
+- [Manage settings](/docs/discover-podman-desktop#manage-settings)
+- [Customize the UI](/docs/discover-podman-desktop#customize-the-ui)
 
 ### Manage containerized environment
 
