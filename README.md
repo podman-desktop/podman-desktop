@@ -123,7 +123,7 @@ Kubernetes questions & development:
 
 - [Follow us on Mastodon](https://fosstodon.org/@podmandesktop)
 - [Follow us on Bluesky](https://bsky.app/profile/podman-desktop.io)
-- [Follow us on X](https://x.com/Podman_io)
+- [Follow us on X](https://x.com/podmandesktop)
 - [Follow us on LinkedIn](https://www.linkedin.com/company/podman-desktop)
 
 ### Adopters

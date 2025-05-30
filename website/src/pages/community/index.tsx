@@ -76,7 +76,7 @@ export default function Home(): JSX.Element {
                   </a>
                 </li>
                 <li>
-                  <a href="https://x.com/Podman_io" target="_blank" rel="noopener noreferrer">
+                  <a href="https://x.com/podmandesktop" target="_blank" rel="noopener noreferrer">
                     Follow us on X
                   </a>
                 </li>
