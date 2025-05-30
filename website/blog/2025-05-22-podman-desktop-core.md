@@ -100,7 +100,7 @@ Now that the image is available we can use the Podman Desktop UI to Deploy our c
 2. On the webserver container, click the “Deploy to Kubernetes” button
 3. Choose your kind cluster
 
-The conversion from containers to Kubernetes manifests is particularly valuable, eliminating the need to manually write YAML files for simple deployments.
+The conversion from containers to Kubernetes manifests is particularly valuable, eliminating the need to manually write YAML files for simple deployments. Podman Desktop adds `imagePullPolicy: IfNotPresent` to the generated Kubernetes YAML. This ensures that we use the image that we just pushed to the cluster is also the one we will use. Make sure to add this to your Kubernetes YAML or use a specific tag on your image to avoid the [default pull policy](https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting) (`Always`).
 
 ## Monitoring Kubernetes Events and Resources
 
