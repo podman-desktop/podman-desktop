@@ -4305,6 +4305,15 @@ declare module '@podman-desktop/api' {
     export const isLinux: boolean;
 
     /**
+     * Flag indicating whether we are running on any Unix-like operating system,
+     * for instance Linux or FreeBSD.
+     *
+     * If the value of this flag is true, it means the current system is Unix-like.
+     * If the value is false, it means the current system is not Unix-like.
+     */
+    export const isUnixLike: boolean;
+
+    /**
      * Indicates whether the users has telemetry enabled.
      * Can be observed to determine if the extension should send telemetry.
      */
