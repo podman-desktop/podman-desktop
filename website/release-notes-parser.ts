@@ -60,7 +60,7 @@ export async function createNotesFiles(
         .split('\n');
 
       const summary = text.filter(line => line.includes('- **')); // all summary bullet points start with "- **"
-      const summaryText = summary.slice(0, 4).join('\n'); // limit the number of bullet points to 4
+      const summaryText = addExperimentalFeaturesLink(summary); // limit the number of bullet points to 4
       const titleText = text.filter(line => !line.includes('import') && line)[0];
 
       const jsonInput = { image: imageUrl, blog: blogUrl, title: titleText, summary: summaryText };
@@ -77,4 +77,16 @@ export async function createNotesFiles(
     }
   }
   return result;
+}
+
+function addExperimentalFeaturesLink(summary: string[]): string {
+  const linkCommentRegex = /<!-- :link(.+) -->/;
+  const summaryWithLinks = summary.slice(0, 4);
+  summaryWithLinks.forEach((line, index) => {
+    const regexMatch = linkCommentRegex.exec(line)?.[1];
+    if (regexMatch) {
+      summaryWithLinks[index] = line.replace(linkCommentRegex, `:link${regexMatch}`);
+    }
+  });
+  return summaryWithLinks.join('\n');
 }
