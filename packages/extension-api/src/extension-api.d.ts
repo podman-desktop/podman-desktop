@@ -3932,12 +3932,14 @@ declare module '@podman-desktop/api' {
      * @param imageName the name of the image to pull
      * @param callback the function called when new logs are emitted during the pull operation
      * @param platform the platform of the image to pull (optional, by default it will pull the same architecture as the host)
+     * @param token an optional {@link CancellationToken} to cancel the pull operation
      */
     export function pullImage(
       containerProviderConnection: ContainerProviderConnection,
       imageName: string,
       callback: (event: PullEvent) => void,
       platform?: string,
+      token?: CancellationToken,
     ): Promise<void>;
 
     /**

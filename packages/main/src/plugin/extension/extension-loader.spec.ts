@@ -181,6 +181,7 @@ const containerProviderRegistry: ContainerProviderRegistry = {
   listImages: vi.fn(),
   podmanListImages: vi.fn(),
   listInfos: vi.fn(),
+  pullImage: vi.fn(),
 } as unknown as ContainerProviderRegistry;
 
 const inputQuickPickRegistry: InputQuickPickRegistry = {} as unknown as InputQuickPickRegistry;
@@ -1930,6 +1931,10 @@ describe('window', async () => {
 });
 
 describe('containerEngine', async () => {
+  const CONTAINER_PROVIDER_MOCK = {
+    name: 'dummyProvider',
+  } as unknown as containerDesktopAPI.ContainerProviderConnection;
+
   describe('buildImage', () => {
     let api: typeof containerDesktopAPI;
     beforeEach(() => {
@@ -2046,15 +2051,11 @@ describe('containerEngine', async () => {
     expect(api).toBeDefined();
 
     const images = await api.containerEngine.listImages({
-      provider: {
-        name: 'dummyProvider',
-      } as unknown as containerDesktopAPI.ContainerProviderConnection,
+      provider: CONTAINER_PROVIDER_MOCK,
     });
     expect(images.length).toBe(0);
     expect(containerProviderRegistry.podmanListImages).toHaveBeenCalledWith({
-      provider: {
-        name: 'dummyProvider',
-      },
+      provider: CONTAINER_PROVIDER_MOCK,
     });
   });
 
@@ -2075,16 +2076,68 @@ describe('containerEngine', async () => {
     expect(api).toBeDefined();
 
     const infos = await api.containerEngine.listInfos({
-      provider: {
-        name: 'dummyProvider',
-      } as unknown as containerDesktopAPI.ContainerProviderConnection,
+      provider: CONTAINER_PROVIDER_MOCK,
     });
     expect(infos.length).toBe(0);
     expect(containerProviderRegistry.listInfos).toHaveBeenCalledWith({
-      provider: {
-        name: 'dummyProvider',
-      },
+      provider: CONTAINER_PROVIDER_MOCK,
     });
+  });
+
+  test('pullImage with minimal arguments', async () => {
+    const CALLBACK_MOCK = vi.fn();
+    const api = createApi();
+    expect(api).toBeDefined();
+
+    await api.containerEngine.pullImage(CONTAINER_PROVIDER_MOCK, 'dummy-image:tag', CALLBACK_MOCK);
+    expect(containerProviderRegistry.pullImage).toHaveBeenCalledWith(
+      CONTAINER_PROVIDER_MOCK,
+      'dummy-image:tag',
+      CALLBACK_MOCK,
+      undefined, // platform
+      undefined, // abort controller
+    );
+  });
+
+  test('pullImage with a cancellation token', async () => {
+    const CANCELLATION_TOKEN: containerDesktopAPI.CancellationToken = {
+      onCancellationRequested: vi.fn(),
+      isCancellationRequested: false,
+    };
+    const api = createApi();
+    expect(api).toBeDefined();
+
+    // pass out cancellation token to the containerEngine api
+    await api.containerEngine.pullImage(
+      CONTAINER_PROVIDER_MOCK,
+      'dummy-image:tag',
+      vi.fn(),
+      undefined,
+      CANCELLATION_TOKEN,
+    );
+
+    // ensure an abort controller has been passed to pull image
+    expect(containerProviderRegistry.pullImage).toHaveBeenCalledWith(
+      CONTAINER_PROVIDER_MOCK,
+      'dummy-image:tag',
+      expect.any(Function),
+      undefined, // platform
+      expect.any(AbortController), // abort controller
+    );
+
+    // get back the controller using vi.mocked
+    const controller: AbortController | undefined = vi.mocked(containerProviderRegistry.pullImage).mock.calls[0]?.[4];
+    expect(controller).toBeDefined();
+    // ensure it is not aborted
+    expect(controller?.signal.aborted).toBeFalsy();
+
+    // expect one subscriber, and get it
+    expect(CANCELLATION_TOKEN.onCancellationRequested).toHaveBeenCalledOnce();
+    const callback = vi.mocked(CANCELLATION_TOKEN.onCancellationRequested).mock.calls[0]?.[0];
+    callback?.(undefined);
+
+    // the signal should be marked as aborted
+    expect(controller?.signal.aborted).toBeTruthy();
   });
 });
 

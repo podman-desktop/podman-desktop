@@ -1147,8 +1147,19 @@ export class ExtensionLoader {
         imageName: string,
         callback: (event: containerDesktopAPI.PullEvent) => void,
         platform?: string,
+        token?: containerDesktopAPI.CancellationToken,
       ): Promise<void> {
-        return containerProviderRegistry.pullImage(providerContainerConnection, imageName, callback, platform);
+        // transform the extension cancellation token to an abort controller
+        const abortController: AbortController | undefined = token ? new AbortController() : undefined;
+        token?.onCancellationRequested(() => abortController?.abort());
+
+        return containerProviderRegistry.pullImage(
+          providerContainerConnection,
+          imageName,
+          callback,
+          platform,
+          abortController,
+        );
       },
       tagImage(engineId: string, imageId: string, repo: string, tag: string | undefined): Promise<void> {
         return containerProviderRegistry.tagImage(engineId, imageId, repo, tag);
