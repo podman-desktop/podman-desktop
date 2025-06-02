@@ -18,9 +18,13 @@
 
 import os from 'node:os';
 
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { WinMemoryCheck } from './win-memory-check';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 test('expect winMemory preflight check return successful result if the machine has more than 5GB of memory', async () => {
   const SYSTEM_MEM = 7 * 1024 * 1024 * 1024;
