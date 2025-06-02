@@ -28,17 +28,14 @@ import type { InputBoxOptions, QuickPickOptions } from './quickpick-input';
 import QuickPickInput from './QuickPickInput.svelte';
 
 const receiveFunctionMock = vi.fn();
-const sendShowQuickPickOnSelectMock = vi.fn().mockResolvedValue(undefined);
-const sendShowQuickPickValuesMock = vi.fn().mockResolvedValue(undefined);
-
 // mock some methods of the window object
 beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
 
-  (window.sendShowQuickPickOnSelect as unknown) = sendShowQuickPickOnSelectMock;
-  (window.sendShowQuickPickValues as unknown) = sendShowQuickPickValuesMock;
+  vi.mocked(window.sendShowQuickPickOnSelect).mockResolvedValue(undefined);
+  vi.mocked(window.sendShowQuickPickValues).mockResolvedValue(undefined);
 });
 
 describe('QuickPickInput', () => {
@@ -240,9 +237,8 @@ describe('QuickPickInput', () => {
     const itemB1 = await screen.findByText('itemB');
     expect(itemB1).toBeInTheDocument();
 
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, 0);
-    sendShowQuickPickOnSelectMock.mockClear();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, 0);
 
     await userEvent.type(input, 'B');
 
@@ -251,9 +247,8 @@ describe('QuickPickInput', () => {
     const itemB2 = await screen.findByText('itemB');
     expect(itemB2).toBeInTheDocument();
 
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, 1);
-    sendShowQuickPickOnSelectMock.mockClear();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, 1);
   });
 
   test('Expect that filtering is case insensitive', async () => {
@@ -285,9 +280,8 @@ describe('QuickPickInput', () => {
     const itemB1 = await screen.findByText('itemB');
     expect(itemB1).toBeInTheDocument();
 
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, 0);
-    sendShowQuickPickOnSelectMock.mockClear();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, 0);
 
     await userEvent.type(input, 'a');
 
@@ -295,9 +289,8 @@ describe('QuickPickInput', () => {
     expect(itemA2).toBeInTheDocument();
     const itemB2 = screen.queryByText('itemB');
     expect(itemB2).not.toBeInTheDocument();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, 0);
-    sendShowQuickPickOnSelectMock.mockClear();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, 0);
   });
 
   test('Expect that invalid filter clears selection', async () => {
@@ -329,9 +322,8 @@ describe('QuickPickInput', () => {
     const itemB1 = await screen.findByText('itemB');
     expect(itemB1).toBeInTheDocument();
 
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, 0);
-    sendShowQuickPickOnSelectMock.mockClear();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, 0);
 
     await userEvent.type(input, 'q');
 
@@ -340,8 +332,8 @@ describe('QuickPickInput', () => {
     const itemB3 = screen.queryByText('itemB');
     expect(itemB3).not.toBeInTheDocument();
 
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalled();
-    expect(sendShowQuickPickOnSelectMock).toHaveBeenCalledWith(123, -1);
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalled();
+    expect(window.sendShowQuickPickOnSelect).toHaveBeenCalledWith(123, -1);
   });
 
   test('Expect item label to have ellipsis class', async () => {

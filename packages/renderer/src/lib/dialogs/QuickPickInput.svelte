@@ -150,7 +150,6 @@ async function onInputChange(event: Event): Promise<void> {
 
   // Verify that target is an HTMLInputElement or HTMLTextAreaElement
   if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
-    console.warn('Unexpected event target:', target);
     return;
   }
 
