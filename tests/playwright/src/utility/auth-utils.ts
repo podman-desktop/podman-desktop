@@ -18,12 +18,18 @@
 
 import { join } from 'node:path';
 
-import type { Browser, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
 import { chromium, expect as playExpect } from '@playwright/test';
 
 import { TroubleshootingPage } from '../model/pages/troubleshooting-page';
 import { StatusBar } from '../model/workbench/status-bar';
 import { waitUntil } from './wait';
+
+export type ConfirmInputValue = {
+  inputLocator: Locator;
+  inputValue: string;
+  confirmLocator: Locator;
+};
 
 export async function findPageWithTitleInBrowser(browser: Browser, expectedTitle: string): Promise<Page | undefined> {
   await waitUntil(async () => browser.contexts().length > 0, {
@@ -65,6 +71,30 @@ export async function performBrowserLoginToRH(page: Page, username: string, pass
   await page.screenshot({ path: join(path, 'screenshots', 'after_clck_go_back.png'), type: 'png', fullPage: true });
 }
 
+export async function performBrowserLogin(
+  page: Page,
+  title: string | RegExp,
+  usernameAction: ConfirmInputValue,
+  passwordAction: ConfirmInputValue,
+  postLoginAction: (myPage: Page) => Promise<void>,
+): Promise<void> {
+  console.log(`Performing browser login...`);
+  // title
+  await playExpect(page).toHaveTitle(title);
+  // username
+  await playExpect(usernameAction.inputLocator).toBeVisible();
+  await usernameAction.inputLocator.fill(usernameAction.inputValue);
+  await playExpect(usernameAction.confirmLocator).toBeEnabled();
+  await usernameAction.confirmLocator.click();
+  // password
+  await playExpect(passwordAction.inputLocator).toBeVisible();
+  await passwordAction.inputLocator.fill(passwordAction.inputValue);
+  await playExpect(passwordAction.confirmLocator).toBeEnabled();
+  await passwordAction.confirmLocator.click();
+  // custom doing...
+  await postLoginAction(page);
+}
+
 export async function startChromium(port: string, tracesPath: string): Promise<Browser> {
   console.log('Starting a web server on port 9222');
   const browserLaunch = await chromium.launch({
@@ -74,13 +104,14 @@ export async function startChromium(port: string, tracesPath: string): Promise<B
     slowMo: 200,
   });
 
+  // hard wait
   await waitUntil(async () => browserLaunch?.isConnected(), {
     timeout: 10_000,
     message: 'Waiting for browser to be connected',
     sendError: false,
   });
   // Connect to the same Chrome instance via CDP
-  // possible option is to use connectOverCDP(`http://localhost:${port}`);
+  // possible option is to use chromium.connectOverCDP(`http://localhost:${port}`);
   if (!browserLaunch) {
     throw new Error('Browser object was not initialized properly');
   }
