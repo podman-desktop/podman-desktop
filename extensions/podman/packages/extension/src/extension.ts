@@ -32,6 +32,7 @@ import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { HyperVCheck } from './checks/hyperv-check';
 import { WSLVersionCheck } from './checks/wsl-version-check';
+import { WSL2Check } from './checks/wsl2-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { KrunkitHelper } from './helpers/krunkit-helper';
@@ -44,7 +45,7 @@ import { getSocketCompatibility } from './utils/compatibility-mode';
 import type { InstalledPodman } from './utils/podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
-import { PodmanInstall, WSL2Check } from './utils/podman-install';
+import { PodmanInstall } from './utils/podman-install';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
 import {
