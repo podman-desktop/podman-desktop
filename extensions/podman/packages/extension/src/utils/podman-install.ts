@@ -28,6 +28,7 @@ import { getDetectionChecks } from '../checks/detection-checks';
 import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
+import { WinMemoryCheck } from '../checks/win-memory-check';
 import { WSLVersionCheck } from '../checks/wsl-version-check';
 import { WSL2Check } from '../checks/wsl2-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
@@ -648,22 +649,6 @@ class WinVersionCheck extends BaseCheck {
           url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
           title: 'WSL2 Manual Installation Steps',
         },
-      });
-    }
-  }
-}
-
-class WinMemoryCheck extends BaseCheck {
-  title = 'RAM';
-  private REQUIRED_MEM = 5 * 1024 * 1024 * 1024; // 5Gb
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    const totalMem = os.totalmem();
-    if (this.REQUIRED_MEM <= totalMem) {
-      return this.createSuccessfulResult();
-    } else {
-      return this.createFailureResult({
-        description: 'You need at least 5GB to run Podman.',
       });
     }
   }
