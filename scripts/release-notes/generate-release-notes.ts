@@ -73,7 +73,7 @@ export class ReleaseNotesPreparator {
     const date = new Date();
     const formattedDate = date.toISOString().split('T')[0];
     const version = this.milestone.slice(0, -2);
-    const releaseNotesTemplate = fs.readFileSync('./scripts/release-notes/release-notes.mustache', 'utf8');
+    const releaseNotesTemplate = await fs.promises.readFile('./scripts/release-notes/release-notes.mustache', 'utf8');
     const renderedMarkdown = mustache.render(releaseNotesTemplate, {
       firstTimeContributors: firstTimeContributors,
       changelog: changelog,
