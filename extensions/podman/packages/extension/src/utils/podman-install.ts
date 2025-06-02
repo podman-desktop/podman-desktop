@@ -29,6 +29,7 @@ import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
 import { WinMemoryCheck } from '../checks/win-memory-check';
+import { WinVersionCheck } from '../checks/win-version-check';
 import { WSLVersionCheck } from '../checks/wsl-version-check';
 import { WSL2Check } from '../checks/wsl2-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
@@ -610,40 +611,6 @@ class WinBitCheck extends BaseCheck {
     } else {
       return this.createFailureResult({
         description: 'WSL2 works only on 64bit OS.',
-        docLinksDescription: 'Learn about WSL requirements:',
-        docLinks: {
-          url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-          title: 'WSL2 Manual Installation Steps',
-        },
-      });
-    }
-  }
-}
-
-class WinVersionCheck extends BaseCheck {
-  title = 'Windows Version';
-
-  private MIN_BUILD = 19043; //it represents version 21H1 windows 10
-  async execute(): Promise<extensionApi.CheckResult> {
-    const winRelease = os.release();
-    if (winRelease.startsWith('10.0.')) {
-      const splitRelease = winRelease.split('.');
-      const winBuild = splitRelease[2];
-      if (Number.parseInt(winBuild) >= this.MIN_BUILD) {
-        return { successful: true };
-      } else {
-        return this.createFailureResult({
-          description: `To be able to run WSL2 you need Windows 10 Build ${this.MIN_BUILD} or later.`,
-          docLinksDescription: 'Learn about WSL requirements:',
-          docLinks: {
-            url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-            title: 'WSL2 Manual Installation Steps',
-          },
-        });
-      }
-    } else {
-      return this.createFailureResult({
-        description: 'WSL2 works only on Windows 10 and newest OS',
         docLinksDescription: 'Learn about WSL requirements:',
         docLinks: {
           url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
