@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { MainPage } from '/@/model/pages/main-page';
+
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { waitForPodmanMachineStartup } from '../../utility/wait';
 
@@ -44,12 +46,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       const imgName = `localhost/my-image-${imgNum}`;
       await playExpect.poll(async () => await images.waitForRowToExists(imgName), { timeout: 10_000 }).toBeTruthy();
 
-      const imgRowLocator = await images.getImageRowByName(imgName);
-      if (imgRowLocator === undefined) {
-        throw Error(`Image: '${imgName}' does not exist`);
-      }
-      await imgRowLocator.scrollIntoViewIfNeeded();
-      await playExpect(imgRowLocator).toBeVisible();
+      await scrollRowIntoView(images, imgName);
     }
   });
 
@@ -68,12 +65,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
         .poll(async () => await containers.waitForRowToExists(containerName), { timeout: 0 })
         .toBeTruthy();
 
-      const containerRowLocator = await containers.getContainerRowByName(containerName);
-      if (containerRowLocator === undefined) {
-        throw Error(`Container: '${containerName}' does not exist`);
-      }
-      await containerRowLocator.scrollIntoViewIfNeeded();
-      await playExpect(containerRowLocator).toBeVisible();
+      await scrollRowIntoView(containers, containerName);
     }
   });
 
@@ -88,12 +80,16 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       const podName = `my-pod-${podNum}`;
       await playExpect.poll(async () => await pods.waitForRowToExists(podName), { timeout: 0 }).toBeTruthy();
 
-      const podRowLocator = await pods.getPodRowByName(podName);
-      if (podRowLocator === undefined) {
-        throw Error(`Pod: '${podName}' does not exist`);
-      }
-      await podRowLocator.scrollIntoViewIfNeeded();
-      await playExpect(podRowLocator).toBeVisible();
+      await scrollRowIntoView(pods, podName);
     }
   });
 });
+
+async function scrollRowIntoView(page: MainPage, rowName: string): Promise<void> {
+  const rowLocator = await page.getRowByName(rowName);
+  if (rowLocator === undefined) {
+    throw Error(`Row: '${rowName}' does not exist`);
+  }
+  await rowLocator.scrollIntoViewIfNeeded();
+  await playExpect(rowLocator).toBeVisible();
+}
