@@ -5,7 +5,6 @@ import {
   FilteredEmptyScreen,
   NavPage,
   Table,
-  type Table as TableComponentType,
   TableColumn,
   TableDurationColumn,
   TableRow,
@@ -161,6 +160,7 @@ async function runSelectedContainers(): Promise<void> {
         if (podGroup.engineId && podGroup.id && podGroup.status !== 'RUNNING') {
           try {
             await window.startPod(podGroup.engineId, podGroup.id);
+            podGroup.status = 'RUNNING';
           } catch (e) {
             console.error('error while running pod', e);
           }
@@ -182,6 +182,7 @@ async function runSelectedContainers(): Promise<void> {
         containerGroups = [...containerGroups];
         try {
           await window.startContainer(container.engineId, container.id);
+          container.state = 'RUNNING';
         } catch (e) {
           console.log('error while runnings container', e);
           container.actionError = String(e);
@@ -366,7 +367,6 @@ function setStoppedFilter(): void {
 }
 
 let selectedItemsNumber: number;
-let table: TableComponentType;
 
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
   align: 'center',
@@ -501,7 +501,6 @@ $: containersAndGroups = containerGroups.map(group =>
     <div class="flex min-w-full h-full">
       <Table
         kind="container"
-        bind:this={table}
         bind:selectedItemsNumber={selectedItemsNumber}
         data={containersAndGroups}
         columns={columns}
