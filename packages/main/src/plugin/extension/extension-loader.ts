@@ -431,11 +431,34 @@ export class ExtensionLoader {
     // now we have all extensions, we can load them
     await this.loadExtensions(analyzedExtensions);
 
+    // Send telemetry of all the providers which were activated by the extensions
+    try {
+      await this.sendTelemetryProviderInfos();
+    } catch (error: unknown) {
+      // We do not care about the error as we never want it to fail the loading of extensions
+      console.error('Error while sending telemetry for created providers', error);
+    }
+
     // handle the reload extensions callback
     this.extensionWatcher.onNeedToReloadExtension(extension => {
       this.reloadExtension(extension, false).catch((error: unknown) => {
         console.error('error while reloading extension', error);
       });
+    });
+  }
+
+  // Send telemetry of all the providers which were activated by the extensions
+  // Payload ex. { "id": "provider.podman", "name": "Podman", "status": "started", "version": "5.0.0" }
+  async sendTelemetryProviderInfos(): Promise<void> {
+    const providerInfos = this.providerRegistry.getProviderInfos();
+    const providersDetailed = providerInfos.map(p => ({
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      version: p.version ?? 'unknown',
+    }));
+    this.telemetry.track('createdProviders', {
+      providers: providersDetailed,
     });
   }
 

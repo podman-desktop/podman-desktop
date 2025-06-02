@@ -35,6 +35,7 @@ import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { BuildImageOptions as InternalBuildImageOptions } from '/@api/image-info.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
+import type { ProviderInfo } from '/@api/provider-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
 import { getBase64Image } from '../../util.js';
@@ -135,7 +136,10 @@ const menuRegistry: MenuRegistry = {} as unknown as MenuRegistry;
 
 const kubernetesGeneratorRegistry: KubeGeneratorRegistry = {} as unknown as KubeGeneratorRegistry;
 
-const providerRegistry: ProviderRegistry = {} as unknown as ProviderRegistry;
+const providerRegistry: ProviderRegistry = {
+  getContainerConnections: vi.fn(),
+  getProviderInfos: vi.fn(),
+} as unknown as ProviderRegistry;
 
 const configurationRegistryGetConfigurationMock = vi.fn();
 const configurationRegistryUpdateConfigurationMock = vi.fn();
@@ -267,6 +271,7 @@ const dialogRegistry: DialogRegistry = {
 const certificates: Certificates = {} as unknown as Certificates;
 
 const extensionWatcher = {
+  onNeedToReloadExtension: vi.fn(),
   monitor: vi.fn(),
   untrack: vi.fn(),
   stop: vi.fn(),
@@ -2515,4 +2520,30 @@ describe('loadDevelopmentFolderExtensions', () => {
 
     consoleErrorSpy.mockRestore();
   });
+});
+
+test('Verify telemetry.track("createdProviders", …) is called with all provider details', async () => {
+  // Fake the loading of extensions
+  // we specifically use spyOn, since we use 'TestExtensionLoader' as the extension loader
+  // using vi.mocked would not work in this case
+  vi.spyOn(extensionLoader, 'setupScanningDirectory').mockResolvedValue();
+  vi.spyOn(extensionLoader, 'loadExtensions').mockResolvedValue();
+  vi.spyOn(extensionLoader, 'createApi').mockReturnValue({} as any);
+
+  // Fake the provideders returned by getProviderInfos
+  const fakeProviders: ProviderInfo[] = [
+    { id: 'prov1', name: 'Provider One', status: 'started', version: '5.0.0' } as unknown as ProviderInfo,
+    { id: 'prov2', name: 'Provider Two', status: 'stopped', version: undefined } as unknown as ProviderInfo,
+  ];
+  vi.mocked(providerRegistry.getProviderInfos).mockReturnValue(fakeProviders as unknown as ProviderInfo[]);
+
+  // Start the extension
+  await extensionLoader.start();
+
+  // We expect that the above is provided, as well as the fact that version: undefined appears as 'unknown'
+  const expectedDetailed = [
+    { id: 'prov1', name: 'Provider One', status: 'started', version: '5.0.0' },
+    { id: 'prov2', name: 'Provider Two', status: 'stopped', version: 'unknown' },
+  ];
+  expect(vi.mocked(telemetry.track)).toHaveBeenCalledWith('createdProviders', { providers: expectedDetailed });
 });
