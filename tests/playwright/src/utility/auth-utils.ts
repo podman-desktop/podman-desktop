@@ -23,28 +23,25 @@ import { chromium, expect as playExpect } from '@playwright/test';
 
 import { TroubleshootingPage } from '../model/pages/troubleshooting-page';
 import { StatusBar } from '../model/workbench/status-bar';
+import { waitUntil } from './wait';
 
 export async function findPageWithTitleInBrowser(browser: Browser, expectedTitle: string): Promise<Page | undefined> {
-  let chromePage: Page | undefined;
+  await waitUntil(async () => browser.contexts().length > 0, {
+    timeout: 10_000,
+    message: 'Waiting for browser contexts to be available',
+    sendError: false,
+  });
+  const pages = browser.contexts().flatMap(context => context.pages());
+  const pagesTitles = await Promise.all(pages.map(async page => ({ page, title: await page.title() })));
 
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const pages = browser.contexts().flatMap(context => context.pages());
-    const pagesTitles = await Promise.all(pages.map(async page => ({ page, title: await page.title() })));
-
-    chromePage = pagesTitles.find(p => p.title.includes(expectedTitle))?.page;
-    if (chromePage) {
-      break;
-    }
-  }
-
+  const chromePage = pagesTitles.find(p => p.title.includes(expectedTitle))?.page;
   if (!chromePage) {
     console.error(`No page found with title: ${expectedTitle}`);
   }
   return chromePage;
 }
 
-export async function performBrowserLogin(page: Page, username: string, pass: string, path: string): Promise<void> {
+export async function performBrowserLoginToRH(page: Page, username: string, pass: string, path: string): Promise<void> {
   console.log(`Performing browser login...`);
   await playExpect(page).toHaveTitle(/Log In/);
   await playExpect(page.getByRole('heading', { name: 'Log in to your Red Hat' })).toBeVisible();
@@ -77,14 +74,15 @@ export async function startChromium(port: string, tracesPath: string): Promise<B
     slowMo: 200,
   });
 
-  // hard wait
-  await new Promise(resolve => setTimeout(resolve, 5_000));
+  await waitUntil(async () => browserLaunch?.isConnected(), {
+    timeout: 10_000,
+    message: 'Waiting for browser to be connected',
+    sendError: false,
+  });
   // Connect to the same Chrome instance via CDP
-  // possible option is to use chromium.connectOverCDP(`http://localhost:${port}`);
+  // possible option is to use connectOverCDP(`http://localhost:${port}`);
   if (!browserLaunch) {
     throw new Error('Browser object was not initialized properly');
-  } else {
-    console.log(`Browser connected: ${browserLaunch.isConnected()}`);
   }
   return browserLaunch;
 }
@@ -109,8 +107,8 @@ export async function getEntryFromLogs(
     await playExpect(logLine).toContainText(lineContains);
   }
   const logText = await logLine.innerText();
-  console.log(`The whole log line with url to openid: ${logText}`);
-  // parse the url:
+  console.log(`The whole log line: ${logText}`);
+  // parse the line using regex:
   const parsedString = regex.exec(logText);
   const urlMatch = parsedString ? parsedString[1] : undefined;
   console.log(`Matched string: ${urlMatch}`);
