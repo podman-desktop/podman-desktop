@@ -89,7 +89,85 @@ test('recommendedRegistries should be updated in case of an extension is stopped
   // wait a little
   await new Promise(resolve => setTimeout(resolve, 100));
 
+  expect(getRecommendedRegistriesMock).toHaveBeenCalled();
+
   // check if the registries are updated
   const registries2 = get(recommendedRegistries);
   expect(registries2.length).toBe(0);
+});
+
+test('recommendedRegistries should be updated in case configuration changed is called with expected key', async () => {
+  getRecommendedRegistriesMock.mockResolvedValue([
+    {
+      extensionId: 'my.extensionId',
+      name: 'Hello',
+      id: 'my.registry.com',
+      errors: ['foo'],
+    } as unknown as RecommendedRegistry,
+  ]);
+  recommendedRegistriesEventStore.setup();
+
+  const callback = callbacks.get('extensions-already-started');
+  // send 'extensions-already-started' event
+  expect(callback).toBeDefined();
+  await callback();
+
+  // now ready to fetch recommended registries
+  await fetchRecommendedRegistries();
+
+  // now get list
+  const registries = get(recommendedRegistries);
+  expect(registries.length).toBe(1);
+  expect(registries[0].extensionId).toEqual('my.extensionId');
+
+  // ok now mock the getRecommendedRegistries function to return an empty list
+  getRecommendedRegistriesMock.mockResolvedValue([]);
+  getRecommendedRegistriesMock.mockClear();
+  // call 'container-removed-event' event
+  const configurationChangedCallback = callbacks.get('configuration-changed');
+  expect(configurationChangedCallback).toBeDefined();
+  await configurationChangedCallback({ key: 'extensions.ignoreRecommendations' });
+
+  // wait a little
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  expect(getRecommendedRegistriesMock).toHaveBeenCalled();
+});
+
+test('recommendedRegistries should not be updated in case configuration changed is called with unexpected key', async () => {
+  getRecommendedRegistriesMock.mockResolvedValue([
+    {
+      extensionId: 'my.extensionId',
+      name: 'Hello',
+      id: 'my.registry.com',
+      errors: ['foo'],
+    } as unknown as RecommendedRegistry,
+  ]);
+  recommendedRegistriesEventStore.setup();
+
+  const callback = callbacks.get('extensions-already-started');
+  // send 'extensions-already-started' event
+  expect(callback).toBeDefined();
+  await callback();
+
+  // now ready to fetch recommended registries
+  await fetchRecommendedRegistries();
+
+  // now get list
+  const registries = get(recommendedRegistries);
+  expect(registries.length).toBe(1);
+  expect(registries[0].extensionId).toEqual('my.extensionId');
+
+  // ok now mock the getRecommendedRegistries function to return an empty list
+  getRecommendedRegistriesMock.mockResolvedValue([]);
+  getRecommendedRegistriesMock.mockClear();
+  // call 'container-removed-event' event
+  const configurationChangedCallback = callbacks.get('configuration-changed');
+  expect(configurationChangedCallback).toBeDefined();
+  await configurationChangedCallback({ key: 'extensions.otherKey' });
+
+  // wait a little
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  expect(getRecommendedRegistriesMock).not.toHaveBeenCalled();
 });
