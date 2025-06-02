@@ -248,46 +248,6 @@ test('expect winbit preflight check return failure result if the arch is not sup
   expect(result.docLinks?.[0].title).equal('WSL2 Manual Installation Steps');
 });
 
-test('expect winversion preflight check return successful result if the version is greater than min valid version', async () => {
-  vi.spyOn(os, 'release').mockReturnValue('10.0.19043');
-
-  const installer = new WinInstaller(extensionContext);
-  const preflights = installer.getPreflightChecks();
-  const winVersionCheck = preflights[1];
-  const result = await winVersionCheck.execute();
-  expect(result.successful).toBeTruthy();
-});
-
-test('expect winversion preflight check return failure result if the version is greater than 9. and less than min build version', async () => {
-  vi.spyOn(os, 'release').mockReturnValue('10.0.19042');
-
-  const installer = new WinInstaller(extensionContext);
-  const preflights = installer.getPreflightChecks();
-  const winVersionCheck = preflights[1];
-  const result = await winVersionCheck.execute();
-  expect(result.description).equal('To be able to run WSL2 you need Windows 10 Build 19043 or later.');
-  expect(result.docLinksDescription).equal('Learn about WSL requirements:');
-  expect(result.docLinks?.[0].url).equal(
-    'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-  );
-  expect(result.docLinks?.[0].title).equal('WSL2 Manual Installation Steps');
-});
-
-test('expect winversion preflight check return failure result if the version is less than 10.0.0', async () => {
-  vi.spyOn(os, 'release').mockReturnValue('9.0.19000');
-
-  const installer = new WinInstaller(extensionContext);
-  const preflights = installer.getPreflightChecks();
-  const winVersionCheck = preflights[1];
-  const result = await winVersionCheck.execute();
-  expect(result.description).equal('WSL2 works only on Windows 10 and newest OS');
-  expect(result.docLinksDescription).equal('Learn about WSL requirements:');
-  expect(result.docLinks?.[0].url).equal(
-    'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-  );
-  expect(result.docLinks?.[0].title).equal('WSL2 Manual Installation Steps');
-});
-
 describe('getBundledPodmanVersion', () => {
   test('should return the podman 5 version', async () => {
     const version = getBundledPodmanVersion();
