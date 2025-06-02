@@ -250,12 +250,6 @@ if (process.env.AIRGAP_DOWNLOAD) {
   };
 }
 
-if (process.env.APPLE_TEAM_ID) {
-  config.mac.notarize = {
-    teamId: process.env.APPLE_TEAM_ID,
-  };
-}
-
 /**
  * @deprecated use {@link import('electron-builder').Configuration#win#azureSignOptions}
  * @param filePath
