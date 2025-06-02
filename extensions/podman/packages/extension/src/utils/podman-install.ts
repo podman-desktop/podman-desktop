@@ -23,11 +23,12 @@ import { promisify } from 'node:util';
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 
-import { BaseCheck, OrCheck, SequenceCheck } from '../checks/base-check';
+import { OrCheck, SequenceCheck } from '../checks/base-check';
 import { getDetectionChecks } from '../checks/detection-checks';
 import { HyperVCheck } from '../checks/hyperv-check';
 import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
+import { WinBitCheck } from '../checks/win-bit-check';
 import { WinMemoryCheck } from '../checks/win-memory-check';
 import { WinVersionCheck } from '../checks/win-version-check';
 import { WSLVersionCheck } from '../checks/wsl-version-check';
@@ -595,28 +596,5 @@ class MacOSInstaller extends BaseInstaller {
 
   getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
     return [new MacPodmanInstallCheck()];
-  }
-}
-
-class WinBitCheck extends BaseCheck {
-  title = 'Windows 64bit';
-
-  private ARCH_X64 = 'x64';
-  private ARCH_ARM = 'arm64';
-
-  async execute(): Promise<extensionApi.CheckResult> {
-    const currentArch = process.arch;
-    if (this.ARCH_X64 === currentArch || this.ARCH_ARM === currentArch) {
-      return this.createSuccessfulResult();
-    } else {
-      return this.createFailureResult({
-        description: 'WSL2 works only on 64bit OS.',
-        docLinksDescription: 'Learn about WSL requirements:',
-        docLinks: {
-          url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-          title: 'WSL2 Manual Installation Steps',
-        },
-      });
-    }
   }
 }
