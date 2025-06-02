@@ -349,8 +349,9 @@ export class ContextsManagerExperimental {
                 });
               }
             });
-            informer.onOffline((_e: OfflineEvent) => {
+            informer.onOffline((e: OfflineEvent) => {
               this.#onOfflineChange.fire();
+              this.#objectCaches.removeForContext(e.kubeconfig.getKubeConfig().currentContext);
             });
             const cache = informer.start();
             this.#objectCaches.set(contextName, resource, cache);

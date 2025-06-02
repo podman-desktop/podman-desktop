@@ -18,7 +18,8 @@
 
 import type { Cluster, KubernetesObject, ObjectCache } from '@kubernetes/client-node';
 import { KubeConfig } from '@kubernetes/client-node';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { Event } from '@podman-desktop/api';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
@@ -31,10 +32,10 @@ import { ContextsManagerExperimental } from './contexts-manager-experimental.js'
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import type { ResourceFactory } from './resource-factory.js';
 import { ResourceFactoryBase } from './resource-factory.js';
-import type { CacheUpdatedEvent, ResourceInformer } from './resource-informer.js';
+import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resource-informer.js';
 
-const onCacheUpdatedMock = vi.fn();
-const onOfflineMock = vi.fn();
+const onCacheUpdatedMock = vi.fn<Event<CacheUpdatedEvent>>();
+const onOfflineMock = vi.fn<Event<OfflineEvent>>();
 const startMock = vi.fn();
 const informerDisposeMock = vi.fn();
 
@@ -573,6 +574,9 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           resourceName: 'resource1',
           countChanged: true,
         } as CacheUpdatedEvent);
+        return {
+          dispose: (): void => {},
+        };
       });
       const onResourceUpdatedCB = vi.fn();
       const onResourceCountUpdatedCB = vi.fn();
@@ -600,6 +604,9 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           resourceName: 'resource1',
           countChanged: false,
         } as CacheUpdatedEvent);
+        return {
+          dispose: (): void => {},
+        };
       });
       const onResourceUpdatedCB = vi.fn();
       const onResourceCountUpdatedCB = vi.fn();
@@ -709,6 +716,73 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           items: [{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }],
         },
       ]);
+    });
+
+    test('one offline informer clears all caches', async () => {
+      vi.mocked(ContextPermissionsChecker).mockImplementation(
+        () =>
+          ({
+            start: permissionsStartMock,
+            onPermissionResult: onPermissionResultMock,
+            contextName: 'ctx1',
+          }) as unknown as ContextPermissionsChecker,
+      );
+      const listMock = vi.fn();
+      startMock.mockReturnValue({
+        list: listMock,
+        get: vi.fn(),
+      } as ObjectCache<KubernetesObject>);
+      listMock.mockReturnValueOnce([{ metadata: { name: 'obj1' } }]);
+      listMock.mockReturnValueOnce([{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }]);
+      await manager.update(kc);
+      const resources = manager.getResources(['context1', 'context2'], 'resource1');
+      // At this point, resources are in caches for both contexts
+      expect(resources).toEqual([
+        {
+          contextName: 'context1',
+          items: [{ metadata: { name: 'obj1' } }],
+        },
+        {
+          contextName: 'context2',
+          items: [{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }],
+        },
+      ]);
+
+      expect(onOfflineMock).toHaveBeenCalledTimes(2);
+      const onOfflineCB = onOfflineMock.mock.calls[0]?.[0];
+      assert(onOfflineCB);
+
+      // Let's declare informer for resource1 in context1 offline
+      onOfflineCB({
+        kubeconfig: kcSingle1,
+        resourceName: 'resource1',
+        offline: true,
+        reason: 'because',
+      });
+
+      listMock.mockReturnValueOnce([{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }]);
+      const resourcesAfter = manager.getResources(['context1', 'context2'], 'resource1');
+
+      // Caches for context1 are removed
+      expect(resourcesAfter).toEqual([
+        {
+          contextName: 'context2',
+          items: [{ metadata: { name: 'obj2' } }, { metadata: { name: 'obj3' } }],
+        },
+      ]);
+
+      // Let's declare informer for resource1 in context2 offline
+      onOfflineCB({
+        kubeconfig: kcSingle2,
+        resourceName: 'resource1',
+        offline: true,
+        reason: 'because',
+      });
+
+      const resourcesAfter2 = manager.getResources(['context1', 'context2'], 'resource1');
+
+      // Caches for context1 are removed
+      expect(resourcesAfter2).toEqual([]);
     });
   });
 });
