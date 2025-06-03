@@ -1,5 +1,4 @@
 import Link from '@docusaurus/Link';
-import Image from '@theme/IdealImage';
 
 export function CNCFCommunityBanner(): JSX.Element {
   return (
@@ -19,23 +18,23 @@ export function CNCFCommunityBanner(): JSX.Element {
           <div className="relative flex justify-center mb-10">
             <div className="relative inline-block">
               {/* Floating containers around the button */}
-              <Image
-                img="/img/container.svg"
+              <img
+                src="/img/container.svg"
                 alt="Left Container"
                 className="hidden md:block absolute left-[-140px] top-[-30px] w-22"
               />
-              <Image
-                img="/img/container_semibold.svg"
+              <img
+                src="/img/container_semibold.svg"
                 alt="Right Container 1"
                 className="hidden md:block absolute right-[-80px] top-[30px] w-18"
               />
-              <Image
-                img="/img/container.svg"
+              <img
+                src="/img/container.svg"
                 alt="Right Container 2"
                 className="hidden md:block absolute right-[-70px] top-[-10px] w-7"
               />
-              <Image
-                img="/img/container_bold.svg"
+              <img
+                src="/img/container_bold.svg"
                 alt="Right Container 3"
                 className="hidden md:block absolute right-[-120px] bottom-[10px] w-10"
               />
@@ -53,8 +52,8 @@ export function CNCFCommunityBanner(): JSX.Element {
 
           {/* CNCF Logo */}
           <div className="absolute bottom-5 right-5">
-            <Image img="/img/cncf-logo-dark.svg" alt="Cloud Native Computing Foundation" className="w-48 dark:inline" />
-            <Image img="/img/cncf-logo.svg" alt="Cloud Native Computing Foundation" className="w-48 dark:hidden" />
+            <img src="/img/cncf-logo-dark.svg" alt="Cloud Native Computing Foundation" className="w-48 dark:inline" />
+            <img src="/img/cncf-logo.svg" alt="Cloud Native Computing Foundation" className="w-48 dark:hidden" />
           </div>
         </div>
       </div>

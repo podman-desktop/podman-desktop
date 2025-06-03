@@ -3,8 +3,8 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { faBook, faCertificate, faCloudArrowDown, faGears, faRocket } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
-import Image from '@theme/IdealImage';
 import Layout from '@theme/Layout';
+import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
 export default function Home(): JSX.Element {
@@ -97,7 +97,14 @@ export default function Home(): JSX.Element {
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Visualizing Extension Capabilities
             </h1>
-            <Image className="py-4" alt="Extensibility diagram" img={useBaseUrl('img/extend/extend-light.png')} />
+            <ThemedImage
+              className="py-4"
+              alt="Extensibility diagram"
+              sources={{
+                light: useBaseUrl('img/extend/extend-light.png'),
+                dark: useBaseUrl('img/extend/extend-dark.png'),
+              }}
+            />
 
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Extend Podman Desktop with Docker Desktop Extensions
@@ -107,10 +114,13 @@ export default function Home(): JSX.Element {
               API calls, making integration seamless. Use Docker Desktop extensions to further enhance Podman Desktop’s
               capabilities.
             </p>
-            <Image
+            <ThemedImage
               className="py-4"
               alt="Extend with Docker Desktop extensions"
-              img={useBaseUrl('img/extend/extend-dd-light.png')}
+              sources={{
+                light: useBaseUrl('img/extend/extend-dd-light.png'),
+                dark: useBaseUrl('img/extend/extend-dd-dark.png'),
+              }}
             />
           </div>
         </div>

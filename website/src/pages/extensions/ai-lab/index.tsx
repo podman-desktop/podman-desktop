@@ -13,7 +13,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getGradient, GradientText } from '@site/src/components/GradientText';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
-import Image from '@theme/IdealImage';
 import Layout from '@theme/Layout';
 import React from 'react';
 
@@ -112,8 +111,8 @@ export default function Home(): JSX.Element {
                     src="https://github.com/containers/podman-desktop-media/raw/ai-lab/videos/homepage/ai-lab-hero.mp4"
                     type="video/mp4"
                   />
-                  <Image
-                    img={useBaseUrl('img/extensions/ai-lab/model-service-details.png')}
+                  <img
+                    src={useBaseUrl('img/extensions/ai-lab/model-service-details.png')}
                     alt={'AI-Lab Model service page'}
                   />
                 </video>

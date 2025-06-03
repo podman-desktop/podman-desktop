@@ -1,8 +1,8 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import Image from '@theme/IdealImage';
 import Layout from '@theme/Layout';
+import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
@@ -38,10 +38,10 @@ function Hero(): JSX.Element {
           </div>
         </div>
         <div className="sm:pl-8 md:pl-12 lg:pl-36 text-center w-full">
-          <Image
+          <img
             className="sm:w-full md:w-full lg:w-10/12"
             alt="Podman Desktop home page"
-            img="img/features/homepage.webp"
+            src="img/features/homepage.webp"
           />
         </div>
         <CNCFCommunityBanner />
@@ -186,18 +186,24 @@ function MainFeatures(): JSX.Element {
               </p>
               <ReadTheDocsButton to="/docs/containers" />
             </div>
-            <Image
+            <ThemedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
               alt="Essential Features for Containers"
-              img={useBaseUrl('img/features/containers.png')}
+              sources={{
+                light: useBaseUrl('img/features/containers.png'),
+                dark: useBaseUrl('img/features/containers.png'),
+              }}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 space-x-10 xl:space-x-44 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image
+              <ThemedImage
                 className="py-4 h-[90px]"
                 alt="Intuitive Graphical Interface"
-                img={useBaseUrl('img/graphical.svg')}
+                sources={{
+                  light: useBaseUrl('img/graphical.svg'),
+                  dark: useBaseUrl('img/graphical.svg'),
+                }}
               />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Intuitive Graphical Interface
@@ -209,10 +215,13 @@ function MainFeatures(): JSX.Element {
             </div>
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image
+              <ThemedImage
                 className="py-4 h-[90px]"
                 alt="Container with Security"
-                img={useBaseUrl('img/secured_container.svg')}
+                sources={{
+                  light: useBaseUrl('img/secured_container.svg'),
+                  dark: useBaseUrl('img/secured_container.svg'),
+                }}
               />
               <h2 className="title-font sm:text-3xl text2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Containers with Security
@@ -225,7 +234,14 @@ function MainFeatures(): JSX.Element {
             </div>
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image className="py-4 h-[90px]" alt="Cross-Platform Support" img={useBaseUrl('img/platforms.svg')} />
+              <ThemedImage
+                className="py-4 h-[90px]"
+                alt="Cross-Platform Support"
+                sources={{
+                  light: useBaseUrl('img/platforms.svg'),
+                  dark: useBaseUrl('img/platforms.svg'),
+                }}
+              />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Cross-Platform Support
               </h2>
@@ -236,10 +252,13 @@ function MainFeatures(): JSX.Element {
             </div>
 
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image
+              <ThemedImage
                 className="py-4 h-[90px]"
                 alt="Built with Container Standards"
-                img={useBaseUrl('img/certified_container.svg')}
+                sources={{
+                  light: useBaseUrl('img/certified_container.svg'),
+                  dark: useBaseUrl('img/certified_container.svg'),
+                }}
               />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white font-bold">
                 Built with Container Standards
@@ -311,10 +330,13 @@ function Pods(): JSX.Element {
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-right w-full mb-5">
           <div className="flex md:flex-row flex-col-reverse items-center space-x-10 xl:space-x-44">
-            <Image
+            <ThemedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
               alt="Streamline Kubernetes workflows"
-              img={useBaseUrl('img/features/kubernetes.png')}
+              sources={{
+                light: useBaseUrl('img/features/kubernetes.png'),
+                dark: useBaseUrl('img/features/kubernetes.png'),
+              }}
             />
             <div className="lg:grow md:w-1/2 flex flex-col md:items-end md:text-right items-center text-center">
               <SectionLabel name="Crafted for Kubernetes" />
@@ -334,7 +356,14 @@ function Pods(): JSX.Element {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 space-x-4 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image className="py-4 h-[90px]" alt="Develop and Test" img={useBaseUrl('img/developtest.svg')} />
+              <ThemedImage
+                className="py-4 h-[90px]"
+                alt="Develop and Test"
+                sources={{
+                  light: useBaseUrl('img/developtest.svg'),
+                  dark: useBaseUrl('img/developtest.svg'),
+                }}
+              />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Develop and Test
               </h2>
@@ -344,7 +373,14 @@ function Pods(): JSX.Element {
               </p>
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image className="py-4 h-[90px]" alt="Grow Your Skills at Your Pace" img={useBaseUrl('img/grow.svg')} />
+              <ThemedImage
+                className="py-4 h-[90px]"
+                alt="Grow Your Skills at Your Pace"
+                sources={{
+                  light: useBaseUrl('img/grow.svg'),
+                  dark: useBaseUrl('img/grow.svg'),
+                }}
+              />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Grow Skills at Your Pace
               </h2>
@@ -354,7 +390,14 @@ function Pods(): JSX.Element {
               </p>
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image className="py-4 h-[90px]" alt="Troubleshoot with Ease" img={useBaseUrl('img/troubleshoot1.svg')} />
+              <ThemedImage
+                className="py-4 h-[90px]"
+                alt="Troubleshoot with Ease"
+                sources={{
+                  light: useBaseUrl('img/troubleshoot1.svg'),
+                  dark: useBaseUrl('img/troubleshoot1.svg'),
+                }}
+              />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>
@@ -364,7 +407,14 @@ function Pods(): JSX.Element {
               </p>
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
-              <Image className="py-4 h-[90px]" alt="Troubleshoot with Ease" img={useBaseUrl('img/troubleshoot2.svg')} />
+              <ThemedImage
+                className="py-4 h-[90px]"
+                alt="Troubleshoot with Ease"
+                sources={{
+                  light: useBaseUrl('img/troubleshoot2.svg'),
+                  dark: useBaseUrl('img/troubleshoot2.svg'),
+                }}
+              />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
                 Troubleshoot with Ease
               </h2>

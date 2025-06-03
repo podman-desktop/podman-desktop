@@ -41,7 +41,6 @@ const config = {
       };
     },
     'docusaurus-plugin-goatcounter',
-    '@docusaurus/plugin-ideal-image',
     [
       '@docusaurus/plugin-client-redirects',
       {

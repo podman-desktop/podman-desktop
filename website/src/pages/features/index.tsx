@@ -1,8 +1,8 @@
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
-import Image from '@theme/IdealImage';
 import Layout from '@theme/Layout';
+import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
 
 function FeatureManageContainers(): JSX.Element {
@@ -20,7 +20,14 @@ function FeatureManageContainers(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <Image className="py-4" alt="Manage containers" img={useBaseUrl('img/features/manage-containers.webp')} />
+            <ThemedImage
+              className="py-4"
+              alt="Manage containers"
+              sources={{
+                light: useBaseUrl('img/features/manage-containers.webp'),
+                dark: useBaseUrl('img/features/manage-containers.webp'),
+              }}
+            />
           </div>
         </div>
       </section>
@@ -33,7 +40,14 @@ function FeatureManageImages(): JSX.Element {
     <section className="text-charcoal-300 bg-zinc-100 dark:text-gray-700 dark:bg-charcoal-800 body-font">
       <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
         <div className="w-5/6 mb-10 md:mb-0">
-          <Image className="py-4" alt="Pull image and manage registries" img={useBaseUrl('img/features/images.webp')} />
+          <ThemedImage
+            className="py-4"
+            alt="Pull image and manage registries"
+            sources={{
+              light: useBaseUrl('img/features/images.webp'),
+              dark: useBaseUrl('img/features/images.webp'),
+            }}
+          />
         </div>
         <div className="lg:grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
           <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-charcoal-300 dark:text-white">
@@ -74,10 +88,13 @@ function FeatureManagementFromTrayIcon(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <Image
+            <ThemedImage
               className="rounded-lg shadow-lg md:mx-16 lg:mx-20"
               alt="Manage Podman Machine"
-              img={useBaseUrl('img/features/management-from-tray-icon.png')}
+              sources={{
+                light: useBaseUrl('img/features/management-from-tray-icon.png'),
+                dark: useBaseUrl('img/features/management-from-tray-icon.png'),
+              }}
             />
           </div>
         </div>
@@ -92,10 +109,13 @@ function FeatureManageResources(): JSX.Element {
       <section className="text-charcoal-300 bg-zinc-100 dark:bg-charcoal-800 dark:text-gray-700 body-font">
         <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <Image
+            <ThemedImage
               className="py-4"
               alt="Manage Podman Machine"
-              img={useBaseUrl('img/features/manage-podman-machine.webp')}
+              sources={{
+                light: useBaseUrl('img/features/manage-podman-machine.webp'),
+                dark: useBaseUrl('img/features/manage-podman-machine.webp'),
+              }}
             />
           </div>
           <div className="lg:grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
@@ -137,7 +157,14 @@ function FeatureManagePods(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <Image className="py-4" alt="Manage Pods" img={useBaseUrl('img/features/manage-pods.webp')} />
+            <ThemedImage
+              className="py-4"
+              alt="Manage Pods"
+              sources={{
+                light: useBaseUrl('img/features/manage-pods.webp'),
+                dark: useBaseUrl('img/features/manage-pods.webp'),
+              }}
+            />
           </div>
         </div>
       </section>
@@ -150,10 +177,13 @@ function FeatureDDExtensions(): JSX.Element {
     <section className="text-charcoal-300 bg-zinc-100 dark:bg-charcoal-800 dark:text-gray-700 body-font">
       <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
         <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-          <Image
+          <ThemedImage
             className="py-4"
             alt="Pull image and manage registries"
-            img={useBaseUrl('img/ddextensions/dd-support.png')}
+            sources={{
+              light: useBaseUrl('img/ddextensions/dd-support.png'),
+              dark: useBaseUrl('img/ddextensions/dd-support.png'),
+            }}
           />
         </div>
         <div className="lg:grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
