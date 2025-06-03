@@ -38,6 +38,7 @@ $effect(() => {
 });
 
 async function restartTerminal(): Promise<void> {
+  ignoreFirstData = true;
   await executeShellIntoContainer();
   window.dispatchEvent(new Event('resize'));
 }
@@ -47,16 +48,25 @@ router.subscribe(route => {
   currentRouterPath = route.path;
 });
 
-// update terminal when receiving data
-function receiveDataCallback(data: Buffer): void {
-  shellTerminal.write(data.toString());
+let ignoreFirstData = false;
+
+function createDataCallback(): (data: Buffer) => void {
+  let ignorePrompt = ignoreFirstData;
+  ignoreFirstData = false;
+  return (data: Buffer) => {
+    if (ignorePrompt) {
+      ignorePrompt = false;
+      return;
+    }
+    shellTerminal.write(data.toString());
+  };
 }
 
 function receiveEndCallback(): void {
   // need to reopen a new terminal if container is running
   if (sendCallbackId && containerState === 'RUNNING') {
     window
-      .shellInContainer(container.engineId, container.id, receiveDataCallback, () => {}, receiveEndCallback)
+      .shellInContainer(container.engineId, container.id, createDataCallback(), () => {}, receiveEndCallback)
       .then(id => {
         sendCallbackId = id;
         shellTerminal?.onData(async data => {
@@ -72,12 +82,11 @@ async function executeShellIntoContainer(): Promise<void> {
   if (container.state !== 'RUNNING') {
     return;
   }
-
   // grab logs of the container
   const callbackId = await window.shellInContainer(
     container.engineId,
     container.id,
-    receiveDataCallback,
+    createDataCallback(),
     () => {},
     receiveEndCallback,
   );
@@ -116,6 +125,7 @@ async function refreshTerminal(): Promise<void> {
     theme: getTerminalTheme(),
   });
   if (existingTerminal) {
+    ignoreFirstData = true;
     shellTerminal.options = {
       fontSize,
       lineHeight,
