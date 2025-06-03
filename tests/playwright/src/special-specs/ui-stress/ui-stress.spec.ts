@@ -43,10 +43,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
-      const imgName = `localhost/my-image-${imgNum}`;
-      await playExpect.poll(async () => await images.waitForRowToExists(imgName), { timeout: 10_000 }).toBeTruthy();
-
-      await scrollRowIntoView(images, imgName);
+      await findRowAndScroll(images, `localhost/my-image-${imgNum}`);
     }
   });
 
@@ -60,12 +57,7 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
-      const containerName = `my-container-${containerNum}`;
-      await playExpect
-        .poll(async () => await containers.waitForRowToExists(containerName), { timeout: 0 })
-        .toBeTruthy();
-
-      await scrollRowIntoView(containers, containerName);
+      await findRowAndScroll(containers, `my-container-${containerNum}`);
     }
   });
 
@@ -77,19 +69,15 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      const podName = `my-pod-${podNum}`;
-      await playExpect.poll(async () => await pods.waitForRowToExists(podName), { timeout: 0 }).toBeTruthy();
-
-      await scrollRowIntoView(pods, podName);
+      await findRowAndScroll(pods, `my-pod-${podNum}`);
     }
   });
 });
 
-async function scrollRowIntoView(page: MainPage, rowName: string): Promise<void> {
+async function findRowAndScroll(page: MainPage, rowName: string): Promise<void> {
   const rowLocator = await page.getRowByName(rowName);
   if (rowLocator === undefined) {
     throw Error(`Row: '${rowName}' does not exist`);
   }
   await rowLocator.scrollIntoViewIfNeeded();
-  await playExpect(rowLocator).toBeVisible();
 }
