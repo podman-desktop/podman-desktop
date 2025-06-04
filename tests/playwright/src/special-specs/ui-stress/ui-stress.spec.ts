@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { MainPage } from '/@/model/pages/main-page';
-
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { waitForPodmanMachineStartup } from '../../utility/wait';
 
@@ -43,7 +41,8 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
     await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
-      await findRowAndScroll(images, `localhost/my-image-${imgNum}`);
+      const imgRowLocator = await images.getRowByName(`localhost/my-image-${imgNum}`);
+      await imgRowLocator?.scrollIntoViewIfNeeded();
     }
   });
 
@@ -57,7 +56,8 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
       .poll(async () => await containers.countRowsFromTable(), { timeout: 10_000 })
       .toBe(3 * numberOfObjects);
     for (let containerNum = 1; containerNum <= numberOfObjects; containerNum++) {
-      await findRowAndScroll(containers, `my-container-${containerNum}`);
+      const containerRowLocator = await containers.getRowByName(`my-container-${containerNum}`);
+      await containerRowLocator?.scrollIntoViewIfNeeded();
     }
   });
 
@@ -69,15 +69,8 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     //count pods => 1 manually created * numberOfObjects = numberOfObjects
     await playExpect.poll(async () => await pods.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects);
     for (let podNum = 1; podNum <= numberOfObjects; podNum++) {
-      await findRowAndScroll(pods, `my-pod-${podNum}`);
+      const podRowLocator = await pods.getRowByName(`my-pod-${podNum}`);
+      await podRowLocator?.scrollIntoViewIfNeeded();
     }
   });
 });
-
-async function findRowAndScroll(page: MainPage, rowName: string): Promise<void> {
-  const rowLocator = await page.getRowByName(rowName);
-  if (rowLocator === undefined) {
-    throw Error(`Row: '${rowName}' does not exist`);
-  }
-  await rowLocator.scrollIntoViewIfNeeded();
-}
