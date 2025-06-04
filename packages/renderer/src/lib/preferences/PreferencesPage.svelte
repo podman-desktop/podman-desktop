@@ -49,7 +49,7 @@ onMount(async () => {
       empty
     {/if}
   </Route>
-  <Route path="/experimental" breadcrumb="Preferences">
+  <Route path="/experimental" breadcrumb="Experimental Features">
     <ExperimentalPage properties={properties}/>
   </Route>
   <Route path="/default/:key/*" breadcrumb="Preferences" let:meta>
