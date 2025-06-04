@@ -59,9 +59,9 @@ export class KubernetesResourceDetailsPage extends DetailsPage {
   public async editKubernetsYamlFile(textToBeChanged: string, newText: string): Promise<void> {
     return test.step('Edit Kubernetes YAML file', async () => {
       await this.activateTab(KubernetesResourceDetailsPage.KUBE_TAB);
-      const presentaion = this.tabContent.getByRole('presentation');
-      await playExpect(presentaion).toBeVisible();
-      await presentaion.click();
+      const presentation = this.tabContent.getByRole('presentation');
+      await playExpect(presentation).toBeVisible();
+      await presentation.click();
       if (isMac) {
         await this.page.keyboard.press('Meta+F');
       } else {
