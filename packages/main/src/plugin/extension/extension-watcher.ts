@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { FileSystemWatcher } from '@podman-desktop/api';
+import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
 
 import type { Event } from '../events/emitter.js';
@@ -83,9 +83,9 @@ export class ExtensionWatcher implements IDisposable {
     const extensionWatcher = this.#fileSystemMonitoring.createFileSystemWatcher(extension.path);
     this.#watcherExtensions.set(extension.id, extensionWatcher);
 
-    extensionWatcher.onDidChange(async event => {
-      // check if it's matching the source pattern of an existing typescript config
+    const callback = (event: Uri): void => {
       let isInSource = false;
+      // check if it's matching the source pattern of an existing typescript config
       const hasTsConfig = tsConfigFileMatcher !== undefined;
       if (tsConfigFileMatcher) {
         const matchingJsonEvent = tsConfigFileMatcher(event.fsPath);
@@ -95,6 +95,17 @@ export class ExtensionWatcher implements IDisposable {
       if (!hasTsConfig || !isInSource) {
         this.reloadExtension(extension);
       }
+    };
+
+    extensionWatcher.onDidCreate(async event => {
+      callback(event);
+    });
+    extensionWatcher.onDidDelete(async event => {
+      callback(event);
+    });
+
+    extensionWatcher.onDidChange(async event => {
+      callback(event);
     });
   }
 

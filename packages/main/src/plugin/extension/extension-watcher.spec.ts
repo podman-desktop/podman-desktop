@@ -59,6 +59,8 @@ const fakeActivatedExtension = {
 } as unknown as ActivatedExtension;
 
 const fileSystemOnDidChangeMock = vi.fn();
+const fileSystemOnDidCreateMock = vi.fn();
+const fileSystemOnDidDeleteMock = vi.fn();
 const fileSystemDisposeMock = vi.fn();
 
 beforeEach(() => {
@@ -68,6 +70,8 @@ beforeEach(() => {
   // mock createFileSystemWatcher
   vi.mocked(fileSystemMonitoring.createFileSystemWatcher).mockReturnValue({
     onDidChange: fileSystemOnDidChangeMock,
+    onDidCreate: fileSystemOnDidCreateMock,
+    onDidDelete: fileSystemOnDidDeleteMock,
     dispose: fileSystemDisposeMock,
   } as unknown as FileSystemWatcher);
 
@@ -84,12 +88,36 @@ describe('monitor', () => {
     // check that we called the createFileSystemWatcher method on fileSystemMonitoring
     expect(fileSystemMonitoring.createFileSystemWatcher).toHaveBeenCalled();
 
+    // check with onDidCreate
+    const onDidCreateCallback = fileSystemOnDidCreateMock.mock.calls[0]?.[0];
+    expect(onDidCreateCallback).toBeDefined();
+    // call the callback
+    onDidCreateCallback({ fsPath: 'fakePath' });
+
+    // check that we call reloadExtension method
+    await vi.waitFor(() => expect(reloadSpy).toHaveBeenCalled());
+
+    // clear the calls on reloadSpy
+    reloadSpy.mockClear();
+
     //get argument of onDidChangeMock
     const onDidChangeCallback = fileSystemOnDidChangeMock.mock.calls[0]?.[0];
     expect(onDidChangeCallback).toBeDefined();
 
     // call the callback
     onDidChangeCallback({ fsPath: 'fakePath' });
+
+    // check that we call reloadExtension method
+    await vi.waitFor(() => expect(reloadSpy).toHaveBeenCalled());
+
+    // clear the calls on reloadSpy
+    reloadSpy.mockClear();
+
+    // check with onDidDelete
+    const onDidDeleteCallback = fileSystemOnDidDeleteMock.mock.calls[0]?.[0];
+    expect(onDidDeleteCallback).toBeDefined();
+    // call the callback
+    onDidDeleteCallback({ fsPath: 'fakePath' });
 
     // check that we call reloadExtension method
     await vi.waitFor(() => expect(reloadSpy).toHaveBeenCalled());
