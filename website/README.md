@@ -54,3 +54,7 @@ If you are using GitHub pages for hosting, this command is a convenient way to b
    $ git checkout HEAD -- pnpm-lock.yaml
    $ pnpm install
    ```
+
+## Documentation
+
+- [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) - Guide to the automatic image optimization system
