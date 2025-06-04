@@ -71,6 +71,7 @@ async function installExtension(): Promise<void> {
 }
 </script>
 
+<ErrorMessage icon wrapMessage class="-top-[15px] right-0 absolute" error={errorInstall}/>
 <button
   aria-label="Install {extension.id} Extension"
   on:click={installExtension}
@@ -89,7 +90,4 @@ async function installExtension(): Promise<void> {
     class:hidden={!installInProgress}
     class="absolute -top-[15px] right-0 text-[var(--pd-action-button-spinner)]"
     style="font-size: 8px">{percentage}</span>
-  <div class:hidden={!errorInstall} class="absolute w-56 -top-[25px] right-0" style="font-size: 8px">
-    <ErrorMessage error={errorInstall} />
-  </div>
 </button>
