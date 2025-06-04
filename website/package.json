@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "NODE_ENV=production node scripts/optimize-images.js --production && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -19,7 +19,8 @@
     "markdownlint:fix": "markdownlint-cli2 --fix --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\"",
     "lint:check": "cd .. && eslint --cache --cache-location website/.eslintcache website --ext js,ts,tsx",
     "lint:fix": "cd .. && eslint --cache --cache-location website/.eslintcache website --fix --ext js,ts,tsx",
-    "lint:clean": "rimraf .eslintcache"
+    "lint:clean": "rimraf .eslintcache",
+    "optimize-images": "node scripts/optimize-images.js"
   },
   "dependencies": {
     "@docusaurus/core": "^3.7.0",
@@ -45,14 +46,17 @@
     "@docusaurus/tsconfig": "^3.7.0",
     "@docusaurus/types": "^3.7.0",
     "@tailwindcss/postcss": "^4.1.8",
+    "glob": "^11.0.2",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
     "postcss": "^8.5.4",
+    "sharp": "^0.34.2",
     "tailwindcss": "^4.1.8",
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.2",
     "typescript": "^5.8.3",
+    "unist-util-visit": "^5.0.0",
     "vitest": "^3.1.4"
   },
   "browserslist": {
