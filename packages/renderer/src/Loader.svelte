@@ -76,6 +76,10 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
   }
 });
 
+window.events?.receive('open:experimental-features', () => {
+  router.goto('/preferences/experimental');
+});
+
 // Wait that the server-side is ready
 window.events.receive('starting-extensions', (value: unknown) => {
   systemReady = value === 'true';
