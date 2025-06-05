@@ -63,7 +63,7 @@ export abstract class CreateClusterBasePage extends BasePage {
           throw new Error(`Failed to create cluster: ${error.message} with dialog error: ${errorText}`);
         }
 
-        throw new Error(`Failed to create cluster: ${error}`);
+        throw new Error(`Failed to create cluster: ${error} with dialog error: ${errorText}`);
       }
     });
   }
