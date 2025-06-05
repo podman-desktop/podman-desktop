@@ -97,16 +97,9 @@ export class ExtensionWatcher implements IDisposable {
       }
     };
 
-    extensionWatcher.onDidCreate(async event => {
-      callback(event);
-    });
-    extensionWatcher.onDidDelete(async event => {
-      callback(event);
-    });
-
-    extensionWatcher.onDidChange(async event => {
-      callback(event);
-    });
+    extensionWatcher.onDidCreate(event => callback(event));
+    extensionWatcher.onDidDelete(event => callback(event));
+    extensionWatcher.onDidChange(event => callback(event));
   }
 
   protected getWatcher(extension: ActivatedExtension): FileSystemWatcher | undefined {
