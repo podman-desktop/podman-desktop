@@ -1150,8 +1150,11 @@ export class ExtensionLoader {
         token?: containerDesktopAPI.CancellationToken,
       ): Promise<void> {
         // transform the extension cancellation token to an abort controller
-        const abortController: AbortController | undefined = token ? new AbortController() : undefined;
-        token?.onCancellationRequested(() => abortController?.abort());
+        let abortController: AbortController | undefined;
+        if (token) {
+          abortController = new AbortController();
+          token.onCancellationRequested(() => abortController?.abort());
+        }
 
         return containerProviderRegistry.pullImage(
           providerContainerConnection,
