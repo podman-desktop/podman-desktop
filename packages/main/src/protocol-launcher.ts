@@ -29,6 +29,8 @@ export class ProtocolLauncher {
   sanitizeProtocolForExtension(url: string): string {
     if (url.startsWith('podman-desktop://extension/')) {
       url = url.replace('podman-desktop://extension/', 'podman-desktop:extension/');
+    } else if (url.startsWith('podman-desktop://experimental')) {
+      url = url.replace('podman-desktop://experimental', 'podman-desktop:experimental');
     }
 
     return url;
@@ -55,20 +57,29 @@ export class ProtocolLauncher {
     // if url starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
     url = this.sanitizeProtocolForExtension(url);
 
-    if (!url.startsWith('podman-desktop:extension/')) {
+    if (url.startsWith('podman-desktop:extension/')) {
+      // grab the extension id
+      const extensionId = url.substring('podman-desktop:extension/'.length);
+
+      // wait that the window is ready
+      this.browserWindow.promise
+        .then(w => {
+          w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
+        })
+        .catch((error: unknown) => {
+          console.error('Error sending open-url event to webcontents', error);
+        });
+    } else if (url.startsWith('podman-desktop:experimental')) {
+      this.browserWindow.promise
+        .then(w => {
+          w.webContents.send('podman-desktop-protocol:open-experimental-features');
+        })
+        .catch((error: unknown) => {
+          console.error('Error sending open-url event to webcontents', error);
+        });
+    } else {
       console.log(`url ${url} does not start with podman-desktop:extension/, skipping.`);
       return;
     }
-    // grab the extension id
-    const extensionId = url.substring('podman-desktop:extension/'.length);
-
-    // wait that the window is ready
-    this.browserWindow.promise
-      .then(w => {
-        w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
-      })
-      .catch((error: unknown) => {
-        console.error('Error sending open-url event to webcontents', error);
-      });
   }
 }
