@@ -48,19 +48,23 @@ export abstract class CreateClusterBasePage extends BasePage {
 
   async createCluster(timeout: number = 300_000): Promise<void> {
     return test.step('Create cluster', async () => {
-      await Promise.race([
-        (async (): Promise<void> => {
-          await playExpect(this.clusterCreationButton).toBeEnabled();
-          await this.clusterCreationButton.click();
-          await this.logsButton.scrollIntoViewIfNeeded();
-          await this.logsButton.click();
-          await playExpect(this.goBackButton).toBeVisible({ timeout: timeout });
-          await this.goBackButton.click();
-        })(),
-        this.errorMessage.waitFor({ state: 'visible', timeout: timeout }).then(async () => {
-          throw new Error(`${await this.errorMessage.textContent()}`);
-        }),
-      ]);
+      try {
+        await playExpect(this.clusterCreationButton).toBeEnabled();
+        await this.clusterCreationButton.click();
+        await this.logsButton.scrollIntoViewIfNeeded();
+        await this.logsButton.click();
+        await playExpect(this.goBackButton).toBeVisible({ timeout: timeout });
+        await this.goBackButton.click();
+      } catch (error) {
+        let errorText = '';
+        if (await this.errorMessage.count()) errorText = (await this.errorMessage.textContent()) ?? '';
+
+        if (error instanceof Error) {
+          throw new Error(`Failed to create cluster: ${error.message} with dialog error: ${errorText}`);
+        }
+
+        throw new Error(`Failed to create cluster: ${error}`);
+      }
     });
   }
 }
