@@ -25,9 +25,9 @@ export let onclose: () => void = () => {
 
   <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5">
     {#if $$slots.validation}
-    <div class="grow">
-      <slot name="validation" />
-    </div>
+      <div class="grow">
+        <slot name="validation" />
+      </div>
     {/if}
     <slot name="buttons" />
   </div>
