@@ -22,6 +22,7 @@ import { providerInfos } from '../../stores/providers';
 import ContributionActions from '../actions/ContributionActions.svelte';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
+import ProviderUpdateButton from '../dashboard/ProviderUpdateButton.svelte';
 import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
 import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '../ui/ConnectionStatus.svelte';
@@ -411,7 +412,7 @@ function handleError(errorMessage: string): void {
       href="/extensions"
       class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
   </span>
-  <div class="h-full" role="region" aria-label="Featured Provider Resources">
+  <div class="h-full w-full" role="region" aria-label="Featured Provider Resources">
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}
@@ -423,12 +424,12 @@ function handleError(errorMessage: string): void {
       <div
         id={provider.id}
         bind:this={providerElementMap[provider.id]}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex w-full"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup">
+        <div role="region" aria-label="Provider Setup" class="min-w-[170px] w-[30%]">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="min-w-[170px] max-w-[200px]">
+          <div class="mr-2">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
@@ -451,7 +452,7 @@ function handleError(errorMessage: string): void {
                   Setup ...
                 </Button>
               {:else}
-                <div class="flex flex-row justify-around">
+                <div class="flex flex-row justify-evenly flex-wrap w-full gap-2">
                   {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
                     {@const providerDisplayName =
                       (provider.containerProviderConnectionCreation
@@ -493,6 +494,9 @@ function handleError(errorMessage: string): void {
                       <Fa size="0.9x" icon={faGear} />
                     </Button>
                   {/if}
+                  {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
+                    <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
+                  {/if}
                 </div>
               {/if}
             </div>
@@ -500,7 +504,7 @@ function handleError(errorMessage: string): void {
         </div>
         <!-- providers columns -->
         <div
-          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)]"
+          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)] w-full"
           role="region"
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
