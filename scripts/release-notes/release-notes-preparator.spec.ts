@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { ReleaseNotesPreparator, HighlitedPR, PRCategory, PRInfo } from './release-notes-preparator';
+import { ReleaseNotesPreparator, HighlightedPR, PRCategory, PRInfo } from './release-notes-preparator';
 import { Octokit } from '@octokit/rest';
 import * as fsOriginal from 'fs';
 import mustache from 'mustache';
@@ -30,7 +30,7 @@ type Contributor = components['schemas']['contributor'];
 const fetchMock = vi.fn();
 
 export class TestReleaseNotesPreparator extends ReleaseNotesPreparator {
-  generateMD(changelog: PRCategory[], firstTimeContributors: PRInfo[], highlighted: HighlitedPR[]): Promise<void> {
+  generateMD(changelog: PRCategory[], firstTimeContributors: PRInfo[], highlighted: HighlightedPR[]): Promise<void> {
     return super.generateMD(changelog, firstTimeContributors, highlighted);
   }
 
@@ -50,7 +50,7 @@ export class TestReleaseNotesPreparator extends ReleaseNotesPreparator {
     return super.getPRsByMilestone(owner, repo, milestoneTitle);
   }
 
-  fetchDataFromService(content: string): Promise<HighlitedPR[]> {
+  fetchDataFromService(content: string): Promise<HighlightedPR[]> {
     return super.fetchDataFromService(content);
   }
 

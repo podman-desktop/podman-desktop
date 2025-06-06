@@ -25,7 +25,7 @@ import mustache from 'mustache';
 export type Issue = components['schemas']['issue'];
 export type Milestone = components['schemas']['milestone'];
 
-export interface HighlitedPR {
+export interface HighlightedPR {
   title: string;
   shortDesc: string;
   longDesc: string;
@@ -68,7 +68,7 @@ export class ReleaseNotesPreparator {
   protected async generateMD(
     changelog: PRCategory[],
     firstTimeContributors: PRInfo[],
-    highlighted: HighlitedPR[],
+    highlighted: HighlightedPR[],
   ): Promise<void> {
     const date = new Date();
     const formattedDate = date.toISOString().split('T')[0];
@@ -204,7 +204,7 @@ export class ReleaseNotesPreparator {
     return prs;
   }
 
-  protected async fetchDataFromService(content: string): Promise<HighlitedPR[]> {
+  protected async fetchDataFromService(content: string): Promise<HighlightedPR[]> {
     const schema = {
       type: 'object',
       properties: {
@@ -282,7 +282,7 @@ export class ReleaseNotesPreparator {
         }
       })
       .then(async result => {
-        return result as HighlitedPR[];
+        return result as HighlightedPR[];
       })
       .catch(async (error: unknown) => {
         console.error(
@@ -361,11 +361,11 @@ export class ReleaseNotesPreparator {
     // Generating highlighted features
     prs = prs.map(pr => ({ ...pr, body: pr.body ? pr.body.replace(/### Screenshot \/ video of UI[\s\S]*/, '') : '' }));
     const features = prs.filter(
-      issue => issue.pull_request && issue.title.startsWith('feat') && issue.title.startsWith('chore'),
+      issue => (issue.pull_request && issue.title.startsWith('feat')) || issue.title.startsWith('chore'),
     );
     const content = features.map((pr, index) => `PR${index + 1}: ${pr.title} - ${pr.body}\n}`).join('');
 
-    let result: HighlitedPR[] = await this.fetchDataFromService(content);
+    let result: HighlightedPR[] = await this.fetchDataFromService(content);
     await this.generateMD(changelog, firstTimeContributorPRs, result);
   }
 }
