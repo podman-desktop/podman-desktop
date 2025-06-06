@@ -45,6 +45,7 @@ UI guidelines -->
 </style>
 
 <script lang="ts">
+import { decode } from 'he';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
@@ -92,13 +93,24 @@ onMount(() => {
     htmlExtensions: [directiveHtml({ button, link, warnings })],
   });
 
+  console.log(
+    decode(
+      micromark(text, {
+        extensions: [directive()],
+        htmlExtensions: [directiveHtml({ button })],
+      }),
+    ),
+  );
+
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
   const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
+  const doc = parser.parseFromString(decode(html), 'text/html');
   const links = doc.querySelectorAll('a');
   links.forEach(link => {
+    console.log(link);
     const currentHref = link.getAttribute('href');
+    console.log(currentHref);
     // remove and replace href attribute if matching
     if (currentHref?.startsWith('#')) {
       // get current value of href
@@ -112,6 +124,11 @@ onMount(() => {
 
       // add a class for cursor
       link.classList.add('cursor-pointer');
+    } else if (link.getAttribute('href')?.startsWith('podman-desktop://')) {
+      let internalLink = '';
+      internalLink = link.getAttribute('href')?.replace('podman-desktop://', '/') ?? '';
+      console.log(internalLink);
+      link.setAttribute('href', internalLink);
     }
   });
 
