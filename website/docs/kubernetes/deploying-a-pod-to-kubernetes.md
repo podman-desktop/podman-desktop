@@ -12,9 +12,11 @@ With Podman Desktop, you can deploy a pod to your Kubernetes cluster with an act
 
 #### Prerequisites
 
-- Your are using the Podman container engine.
+- You are using the Podman container engine.
 - Your pod, running or stopped, is available on the **Pods** page: _&lt;your_pod&gt;_.
 - You registered the Kubernetes cluster in your kubeconfig file: _&lt;your_kubernetes_cluster&gt;_. For example, [Creating a kind cluster](/docs/kind/creating-a-kind-cluster).
+- The cluster is reachable.
+  - Go to **Settings > Kubernetes**, and click **Connect** in the cluster tile.
 - The Kubernetes namespace to deploy to already exists.
 - Your container has a port that is exposed correctly to generate a service.
 
