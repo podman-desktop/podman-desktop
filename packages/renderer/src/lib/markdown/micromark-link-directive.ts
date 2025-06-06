@@ -32,6 +32,7 @@ import type { Directive } from 'micromark-extension-directive';
  * @type {import('micromark-extension-directive').Handle}
  */
 export function link(d: Directive): boolean {
+  console.log(d);
   // Make sure it's not part of a text directive
   if (d.type !== 'textDirective') {
     return false;
