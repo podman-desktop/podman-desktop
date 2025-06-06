@@ -28,6 +28,8 @@ Make sure you have:
 - [Installed Podman Desktop](/docs/installation).
 - [A running Podman machine](/docs/podman/creating-a-podman-machine).
 - [A running Kubernetes cluster](/docs/kind/creating-a-kind-cluster).
+- A reachable cluster connection:
+  - Go to **Settings > Kubernetes**, and click **Connect** in the cluster tile.
 - A developer role.
 - Created a `Deployment` file using the following code, if you do not have one on your machine:
 
