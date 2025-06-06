@@ -29,7 +29,7 @@
     "@xterm/addon-serialize": "^0.13.0",
     "eslint-plugin-svelte": "^3.9.1",
     "filesize": "^10.1.6",
-    "humanize-duration": "^3.32.2",
+    "humanize-duration": "^3.33.0",
     "jsdom": "^27.0.0-beta.1",
     "micromark": "^4.0.2",
     "micromark-extension-directive": "^4.0.0",
