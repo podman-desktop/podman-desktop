@@ -64,7 +64,7 @@ export class MacosStartup {
     // so we check the configuration within the function
     const preferencesConfig = this.configurationRegistry.getConfiguration('preferences');
     const minimize = preferencesConfig.get<boolean>('login.minimize');
-    const minimizeSettings = minimize ? '<string>--minimize</string>' : '';
+    const minimizeSettings = minimize ? '--minimize' : '';
 
     // comes from a volume ? do nothing
     if (this.podmanDesktopBinaryPath.startsWith('/Volumes/')) {
@@ -76,8 +76,7 @@ export class MacosStartup {
     const stderrPath = `${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stderr.log`;
 
     // write the file
-    const plistContent =
-      `<?xml version="1.0" encoding="UTF-8"?>
+    const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -87,10 +86,7 @@ export class MacosStartup {
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>/usr/bin/truncate -s 0 '${stdoutPath}'; /usr/bin/truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}'</string>
-        ` +
-      minimizeSettings +
-      `
+        <string>/usr/bin/truncate -s 0 '${stdoutPath}'; /usr/bin/truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}' ${minimizeSettings}</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
