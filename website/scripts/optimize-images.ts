@@ -27,7 +27,7 @@ const quality = {
   png: 95,
 };
 
-function compreseImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
+function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
   switch (format) {
     case 'png':
       sharpInstance = sharpInstance.png({ compressionLevel: 9 });
@@ -140,7 +140,7 @@ async function optimizeImages(): Promise<void> {
             fit: 'inside',
           });
 
-          sharpInstance = compreseImage(sharpInstance, format);
+          sharpInstance = compressImage(sharpInstance, format);
 
           const outputBuffer = await sharpInstance.toBuffer();
           await fs.writeFile(outputPath, outputBuffer);
@@ -183,7 +183,7 @@ async function optimizeImages(): Promise<void> {
 
         let sharpInstance = sharp(imagePath);
 
-        sharpInstance = compreseImage(sharpInstance, format);
+        sharpInstance = compressImage(sharpInstance, format);
 
         const fullSizeBuffer = await sharpInstance.toBuffer();
         await fs.writeFile(fullSizePath, fullSizeBuffer);
