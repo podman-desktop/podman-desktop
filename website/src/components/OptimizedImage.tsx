@@ -69,29 +69,12 @@ export default function OptimizedImage({
   const optimizedBase = `optimized-images/${imagePath}`.replace(/\.(png|jpg|jpeg|webp)$/i, '');
   const optimizedBaseUrl = useBaseUrl(optimizedBase);
 
-  // Detect small images that should only use basic optimized formats (no responsive sizes)
-  const isSmallImage =
-    imageSrc.includes('/banner/') ||
-    imageSrc.includes('/icon') ||
-    imageSrc.includes('/tray/') ||
-    className?.includes('h-');
-
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>): void => {
     const img = e.target as HTMLImageElement;
     if (img.src !== originalUrl) {
       img.src = originalUrl;
     }
   };
-
-  if (isSmallImage) {
-    return (
-      <picture className={className}>
-        <source type="image/avif" srcSet={`${optimizedBaseUrl}.avif`} />
-        <source type="image/webp" srcSet={`${optimizedBaseUrl}.webp`} />
-        <img src={originalUrl} alt={alt} loading={loading} onError={handleImageError} className="inline-block" />
-      </picture>
-    );
-  }
 
   // Responsive breakpoints matching Tailwind CSS
   const widths = [640, 768, 1024, 1280, 1536];
