@@ -198,11 +198,15 @@ test('Should return getWindowsSystemLogs if the platform is win32', async () => 
   );
 });
 
-test('test generateLogFileName', async () => {
+// test generateLogFileName for different cases
+test.each([
+  { file: 'test', extension: undefined, expected: /test-\d{14}\.txt/ }, // default to txt
+  { file: 'test', extension: 'customExtension', expected: /test-\d{14}\.customExtension/ }, // use provided extension
+  { file: 'test.log', extension: undefined, expected: /test-\d{14}\.log/ }, // use extension from filename
+  { file: 'test.log', extension: 'customExtension', expected: /test-\d{14}\.customExtension/ }, //use provided extension
+])('test generateLogFileName, file: $file, extension: $extension', async ({ file, extension, expected }) => {
   const ts = new Troubleshooting();
-  const filename = ts.generateLogFileName('test');
-
-  // Simple regex to check that the file name is in the correct format (YYYMMDDHHmmss)
-  expect(filename).toMatch(/\d{14}/);
-  expect(filename).toContain('test');
+  const filename = ts.generateLogFileName(file, extension);
+  // Check the format of "name"-"date(14digits)"-"extension"
+  expect(filename).toMatch(new RegExp(expected));
 });

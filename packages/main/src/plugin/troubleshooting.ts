@@ -104,7 +104,7 @@ export class Troubleshooting {
     // otherwise just use .txt
     const filenameParts = filename.split('.');
     // Use the file extension if it's provided, otherwise use the one from the file name, or default to txt
-    const fileExtension = (extension ?? filenameParts.length > 1) ? filenameParts[1] : 'txt';
+    const fileExtension = extension ?? (filenameParts.length > 1 ? filenameParts[1] : 'txt');
     return `${filenameParts[0]}-${moment().format('YYYYMMDDHHmmss')}.${fileExtension}`;
   }
 }
