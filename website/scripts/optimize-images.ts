@@ -67,7 +67,7 @@ async function optimizeImages(): Promise<void> {
   console.log('Starting image optimization...');
 
   // Find all images in static and blog directories
-  const rootSearchDirs = ['static', 'blog'].map(dir => path.resolve(dir));
+  const rootSearchDirs = ['static', 'blog'];
 
   const allImages = (await Promise.all(rootSearchDirs.map(dir => walk(dir, inputFormats)))).flat();
 
@@ -94,9 +94,17 @@ async function optimizeImages(): Promise<void> {
 
     const parsedPath = path.parse(imagePath);
     let relativeDir = parsedPath.dir;
-    if (relativeDir.startsWith('static/')) {
-      relativeDir = relativeDir.slice(7);
+
+    // Get relative directory from static/ or blog/
+    if (relativeDir.startsWith('static')) {
+      relativeDir = path.relative('static', relativeDir);
+    } else if (relativeDir.startsWith('blog/img')) {
+      // Images from `blog/img/...` should be mapped to `img/blog/...` to match `static/img/blog/...`
+      relativeDir = path.join('img/blog', path.relative('blog/img', relativeDir));
+    } else if (relativeDir.startsWith('blog')) {
+      relativeDir = path.relative('blog', relativeDir);
     }
+
     const outputDir = path.join(buildDir, relativeDir);
 
     await fs.mkdir(outputDir, { recursive: true });
@@ -176,7 +184,7 @@ async function optimizeImages(): Promise<void> {
         }
       }
     } catch (error: unknown) {
-      console.error(`  Error processing ${imagePath}: ${error.message}`);
+      console.error(`  Error processing ${imagePath}:`, error);
     }
   }
 
