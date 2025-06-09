@@ -24,7 +24,7 @@ let {
   'aria-label': ariaLabel,
   'aria-hidden': ariaHidden,
   role = 'img',
-  solid = true,
+  solid = false,
 }: Props = $props();
 
 const IconComponent = icon;
@@ -36,5 +36,5 @@ const IconComponent = icon;
 {:else if typeof icon === 'string' && (icon.startsWith('fas fa-') || icon.startsWith('far fa-'))}
     <i class={`${icon} ${size} ${className}`} aria-label={ariaLabel} aria-hidden={ariaHidden ? Boolean(ariaHidden) : false} {role}></i>
 {:else if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
-    <IconComponent class={className} {size} {role} {solid}/>
+    <span {role}><IconComponent class={className} {size} {solid}/></span>
 {/if}
