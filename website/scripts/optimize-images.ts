@@ -20,6 +20,7 @@ import sharp from 'sharp';
 const inputFormats = ['png', 'jpg', 'jpeg', 'webp'];
 const outputFormats = ['webp', 'avif', 'png'];
 const sizes = [640, 768, 1024, 1280, 1536];
+const largestResponsiveSize = Math.max(...sizes);
 const quality = {
   webp: 85,
   avif: 80,
@@ -120,10 +121,6 @@ async function optimizeImages(): Promise<void> {
 
         // Generate responsive sizes
         for (const width of sizes) {
-          if (metadata.width && metadata.width < width) {
-            continue;
-          }
-
           const outputName = `${parsedPath.name}-${width}w.${format}`;
           const outputPath = path.join(outputDir, outputName);
 
@@ -156,10 +153,24 @@ async function optimizeImages(): Promise<void> {
           processedCount++;
         }
 
-        // Generate full-size optimized version
-        const fullSizeName = `${parsedPath.name}.${format}`;
+        // Generate full-size optimized version, suffixed with its width
+        const imageWidth = metadata.width;
+
+        // Skip creating an original-sized version if it's larger than the max responsive size.
+        // The responsive loop has already generated a scaled-down version at largestResponsiveSize.
+        if (!imageWidth || imageWidth > largestResponsiveSize) {
+          continue;
+        }
+
+        // Skip if the responsive loop already created this file
+        if (sizes.includes(imageWidth)) {
+          continue;
+        }
+
+        const fullSizeName = `${parsedPath.name}-${imageWidth}w.${format}`;
         const fullSizePath = path.join(outputDir, fullSizeName);
 
+        // Skip if already exists and is newer
         try {
           const fullSizeStats = await fs.stat(fullSizePath);
           if (fullSizeStats.mtime > stats.mtime) {
@@ -167,21 +178,23 @@ async function optimizeImages(): Promise<void> {
             continue;
           }
         } catch (e: unknown) {
-          let sharpInstance = sharp(imagePath);
-
-          sharpInstance = compreseImage(sharpInstance, format);
-
-          const fullSizeBuffer = await sharpInstance.toBuffer();
-          await fs.writeFile(fullSizePath, fullSizeBuffer);
-
-          const savedPercent = (((stats.size - fullSizeBuffer.length) / stats.size) * 100).toFixed(1);
-          savedBytes += stats.size - fullSizeBuffer.length;
-
-          console.log(
-            `  Created ${fullSizeName} (${(fullSizeBuffer.length / 1024).toFixed(0)} KB, saved ${savedPercent}%)`,
-          );
-          processedCount++;
+          // File doesn't exist, proceed with optimization
         }
+
+        let sharpInstance = sharp(imagePath);
+
+        sharpInstance = compreseImage(sharpInstance, format);
+
+        const fullSizeBuffer = await sharpInstance.toBuffer();
+        await fs.writeFile(fullSizePath, fullSizeBuffer);
+
+        const savedPercent = (((stats.size - fullSizeBuffer.length) / stats.size) * 100).toFixed(1);
+        savedBytes += stats.size - fullSizeBuffer.length;
+
+        console.log(
+          `  Created ${fullSizeName} (${(fullSizeBuffer.length / 1024).toFixed(0)} KB, saved ${savedPercent}%)`,
+        );
+        processedCount++;
       }
     } catch (error: unknown) {
       console.error(`  Error processing ${imagePath}:`, error);
