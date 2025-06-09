@@ -11,17 +11,37 @@
  * - Configures webpack aliases and dev server for proper image serving
  */
 
-const path = require('path');
+import path from 'node:path';
 
-module.exports = function (context, options) {
+import type { ConfigureWebpackUtils, LoadContext, Plugin, PluginOptions, Props } from '@docusaurus/types';
+import type { ConfigureWebpackResult } from '@docusaurus/types/src/plugin';
+import type { Configuration } from 'webpack';
+
+interface CustomConfifureWebpackResult extends ConfigureWebpackResult {
+  devServer: {
+    static: [
+      {
+        directory: string;
+        publicPath: string;
+        serveIndex: boolean;
+      },
+    ];
+  };
+}
+
+module.exports = function (context: LoadContext, _options: PluginOptions): Plugin<void> {
   return {
     name: 'docusaurus-plugin-optimized-images',
 
-    configureWebpack(config, isServer, utils) {
+    configureWebpack(
+      config: Configuration,
+      _isServer: boolean,
+      _utils: ConfigureWebpackUtils,
+    ): CustomConfifureWebpackResult {
       return {
         resolve: {
           alias: {
-            ...config.resolve.alias,
+            ...config.resolve?.alias,
             '/optimized-images': path.join(context.siteDir, 'static/optimized-images'),
           },
         },
@@ -37,7 +57,7 @@ module.exports = function (context, options) {
       };
     },
 
-    async postBuild({ siteDir, outDir }) {
+    async postBuild(_props: Props): Promise<void> {
       // Optimized images are automatically copied by Docusaurus
       console.log('Optimized images ready for production build');
     },

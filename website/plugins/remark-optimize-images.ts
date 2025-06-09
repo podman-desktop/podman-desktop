@@ -15,16 +15,21 @@
  * Output: <picture> with AVIF, WebP, and PNG sources with full responsive srcsets
  */
 
-const { visit } = require('unist-util-visit');
-const path = require('path');
+import path from 'node:path';
+
+import { visit } from 'unist-util-visit';
 
 function remarkOptimizeImages() {
-  return (tree, file) => {
+  return (tree, _file): void => {
     visit(tree, 'image', (node, index, parent) => {
       const { url, alt } = node;
 
       // Skip external URLs
       if (url.startsWith('http://') || url.startsWith('https://')) {
+        return;
+      }
+
+      if (typeof index !== 'number') {
         return;
       }
 
@@ -60,7 +65,7 @@ function remarkOptimizeImages() {
     src="${url}"
     srcset="${sizes.map(size => `/optimized-images${imageDir}/${imageName}-${size}w.png ${size}w`).join(', ')}"
     sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px"
-    alt="${alt || ''}"
+    alt="${alt ?? ''}"
     loading="lazy"
   />
 </picture>`;

@@ -363,7 +363,7 @@ const config = {
         storybookStatic: '../storybook/storybook-static',
       },
     ],
-    './plugins/docusaurus-plugin-optimized-images',
+    resolve('./plugins/docusaurus-plugin-optimized-images.ts'),
   ],
   presets: [
     [

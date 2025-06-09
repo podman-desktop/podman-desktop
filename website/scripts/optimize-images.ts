@@ -12,32 +12,73 @@
  * - Intelligent filtering of already optimized images
  */
 
-const sharp = require('sharp');
-const glob = require('glob');
-const path = require('path');
-const fs = require('fs').promises;
+import * as fs from 'node:fs/promises';
+import path from 'node:path';
 
-async function optimizeImages() {
+import sharp from 'sharp';
+
+const inputFormats = ['png', 'jpg', 'jpeg', 'webp'];
+const outputFormats = ['webp', 'avif', 'png'];
+const sizes = [640, 768, 1024, 1280, 1536];
+const quality = {
+  webp: 85,
+  avif: 80,
+  png: 95,
+};
+
+function compreseImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
+  switch (format) {
+    case 'png':
+      sharpInstance = sharpInstance.png({ compressionLevel: 9 });
+      break;
+    case 'avif':
+      sharpInstance = sharpInstance.avif({ quality: quality['avif'] });
+      break;
+    case 'webp':
+      sharpInstance = sharpInstance.webp({ quality: quality['webp'] });
+      break;
+  }
+
+  return sharpInstance;
+}
+
+// Source: https://cheatcode.co/blog/how-to-read-and-filter-a-directory-recursively-in-node-js
+async function walk(dir: string, allowedExts: string[]): Promise<(string | undefined)[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async entry => {
+      const res: string = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return walk(res, allowedExts);
+      } else if (entry.isFile()) {
+        const fileExt = path.extname(res).toLowerCase();
+        if (allowedExts.includes(fileExt.substring(1))) {
+          return res;
+        }
+      }
+    }),
+  );
+
+  return files.flat();
+}
+
+async function optimizeImages(): Promise<void> {
   const startTime = Date.now();
   console.log('Starting image optimization...');
 
-  const inputFormats = ['png', 'jpg', 'jpeg', 'webp'];
-  const outputFormats = ['webp', 'avif', 'png'];
-  const sizes = [640, 768, 1024, 1280, 1536];
-  const quality = {
-    webp: 85,
-    avif: 80,
-    png: 95,
-  };
-
   // Find all images in static and blog directories
-  const imagePattern = `{static,blog}/**/*.{${inputFormats.join(',')}}`;
-  const allImages = glob.sync(imagePattern, { cwd: __dirname + '/..' });
+  const rootSearchDirs = ['static', 'blog'].map(dir => path.resolve(dir));
+
+  const allImages = (await Promise.all(rootSearchDirs.map(dir => walk(dir, inputFormats)))).flat();
 
   // Filter out already optimized images
-  const images = allImages.filter(
-    imagePath => !imagePath.includes('optimized-images') && !imagePath.match(/-\d+w\.(png|jpg|jpeg|webp)$/i),
-  );
+  const unwantedPatternRegex = /(?:optimized-images)|(?:-\d+w\.(png|jpg|jpeg|webp)$)/i;
+  const images = allImages.filter(imagePath => {
+    if (!imagePath) {
+      return false;
+    }
+    return !unwantedPatternRegex.exec(imagePath);
+  });
 
   const buildDir = path.join(__dirname, '..', 'static', 'optimized-images');
   console.log(`Output directory: ${buildDir}`);
@@ -46,8 +87,8 @@ async function optimizeImages() {
   let savedBytes = 0;
 
   for (const imagePath of images) {
-    const fullPath = path.join(__dirname, '..', imagePath);
-    const stats = await fs.stat(fullPath);
+    if (!imagePath) return;
+    const stats = await fs.stat(imagePath);
 
     console.log(`Processing: ${imagePath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
 
@@ -61,7 +102,7 @@ async function optimizeImages() {
     await fs.mkdir(outputDir, { recursive: true });
 
     try {
-      const metadata = await sharp(fullPath).metadata();
+      const metadata = await sharp(imagePath).metadata();
 
       for (const format of outputFormats) {
         // Skip WebP generation if input is already WebP (but still process AVIF and PNG)
@@ -89,16 +130,12 @@ async function optimizeImages() {
             // File doesn't exist, proceed with optimization
           }
 
-          let sharpInstance = sharp(fullPath).resize(width, null, {
+          let sharpInstance = sharp(imagePath).resize(width, null, {
             withoutEnlargement: true,
             fit: 'inside',
           });
 
-          if (format === 'png') {
-            sharpInstance = sharpInstance.png({ compressionLevel: 9 });
-          } else {
-            sharpInstance = sharpInstance.toFormat(format, { quality: quality[format] });
-          }
+          sharpInstance = compreseImage(sharpInstance, format);
 
           const outputBuffer = await sharpInstance.toBuffer();
           await fs.writeFile(outputPath, outputBuffer);
@@ -121,14 +158,10 @@ async function optimizeImages() {
             console.log(`  Skipping ${fullSizeName} (already up to date)`);
             continue;
           }
-        } catch (e) {
-          let sharpInstance = sharp(fullPath);
+        } catch (e: unknown) {
+          let sharpInstance = sharp(imagePath);
 
-          if (format === 'png') {
-            sharpInstance = sharpInstance.png({ compressionLevel: 9 });
-          } else {
-            sharpInstance = sharpInstance.toFormat(format, { quality: quality[format] });
-          }
+          sharpInstance = compreseImage(sharpInstance, format);
 
           const fullSizeBuffer = await sharpInstance.toBuffer();
           await fs.writeFile(fullSizePath, fullSizeBuffer);
@@ -142,8 +175,8 @@ async function optimizeImages() {
           processedCount++;
         }
       }
-    } catch (error) {
-      console.error(`  Error processing ${imagePath}:`, error.message);
+    } catch (error: unknown) {
+      console.error(`  Error processing ${imagePath}: ${error.message}`);
     }
   }
 
@@ -161,4 +194,4 @@ if (require.main === module) {
   optimizeImages().catch(console.error);
 }
 
-module.exports = { optimizeImages };
+module.exports = optimizeImages;

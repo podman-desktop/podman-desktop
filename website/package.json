@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "NODE_ENV=production node scripts/optimize-images.js --production && docusaurus build",
+    "build": "NODE_ENV=production tsx ./scripts/optimize-images.ts --production && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -20,7 +20,7 @@
     "lint:check": "cd .. && eslint --cache --cache-location website/.eslintcache website --ext js,ts,tsx",
     "lint:fix": "cd .. && eslint --cache --cache-location website/.eslintcache website --fix --ext js,ts,tsx",
     "lint:clean": "rimraf .eslintcache",
-    "optimize-images": "node scripts/optimize-images.js"
+    "optimize-images": "tsx ./scripts/optimize-images.ts"
   },
   "dependencies": {
     "@docusaurus/core": "^3.7.0",
