@@ -12,6 +12,7 @@
  * - Intelligent filtering of already optimized images
  */
 
+import type { Stats } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -27,14 +28,23 @@ const quality = {
   png: 95,
 };
 
+/**
+ * Compress an image using the appropriate format.
+ *
+ * @param sharpInstance - The Sharp instance to compress.
+ * @param format - The format to compress to.
+ * @returns The compressed Sharp instance.
+ */
 function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
   switch (format) {
     case 'png':
       sharpInstance = sharpInstance.png({ compressionLevel: 9 });
       break;
+
     case 'avif':
       sharpInstance = sharpInstance.avif({ quality: quality['avif'] });
       break;
+
     case 'webp':
       sharpInstance = sharpInstance.webp({ quality: quality['webp'] });
       break;
@@ -43,7 +53,13 @@ function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp 
   return sharpInstance;
 }
 
-// Source: https://cheatcode.co/blog/how-to-read-and-filter-a-directory-recursively-in-node-js
+/**
+ * Walk a directory and return all files with the given extensions.
+ *
+ * @param dir - The directory to walk.
+ * @param allowedExts - The extensions to allow.
+ * @returns A promise that resolves to an array of file paths.
+ */
 async function walk(dir: string, allowedExts: string[]): Promise<(string | undefined)[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -63,8 +79,88 @@ async function walk(dir: string, allowedExts: string[]): Promise<(string | undef
   return files.flat();
 }
 
+/**
+ * Get the relative output directory for an image.
+ *
+ * @param dir - The directory of the image.
+ * @returns The relative output directory.
+ */
+function getRelativeOutputDir(dir: string): string {
+  if (dir.startsWith('static')) {
+    return path.relative('static', dir);
+  }
+
+  if (dir.startsWith('blog/img')) {
+    // Images from `blog/img/...` should be mapped to `img/blog/...` to match `static/img/blog/...`
+    return path.join('img/blog', path.relative('blog/img', dir));
+  }
+
+  if (dir.startsWith('blog')) {
+    return path.relative('blog', dir);
+  }
+  return dir;
+}
+
+/**
+ * Generate an optimized image.
+ *
+ * @param imagePath - The path to the image to optimize.
+ * @param outputPath - The path to the output image.
+ * @param format - The format to compress to.
+ * @param originalFileStats - The stats of the original file.
+ * @param resizeOptions - The options to resize the image.
+ * @returns A promise that resolves to an object with the processed flag and the saved bytes.
+ */
+async function generateOptimizedImage(
+  imagePath: string,
+  outputPath: string,
+  format: string,
+  originalFileStats: Stats,
+  resizeOptions?: { width: number },
+): Promise<{ processed: boolean; savedBytes: number }> {
+  try {
+    const outputStats = await fs.stat(outputPath);
+
+    if (outputStats.mtime > originalFileStats.mtime) {
+      console.log(`  Skipping ${path.basename(outputPath)} (already up to date)`);
+      return { processed: false, savedBytes: 0 };
+    }
+  } catch (e) {
+    // File doesn't exist, proceed with optimization
+  }
+
+  let sharpInstance = sharp(imagePath);
+
+  if (resizeOptions) {
+    sharpInstance = sharpInstance.resize(resizeOptions.width, null, {
+      withoutEnlargement: true,
+      fit: 'inside',
+    });
+  }
+
+  sharpInstance = compressImage(sharpInstance, format);
+
+  const outputBuffer = await sharpInstance.toBuffer();
+
+  await fs.writeFile(outputPath, outputBuffer);
+
+  const outputSize = outputBuffer.length;
+  const savedBytes = originalFileStats.size - outputSize;
+  const savedPercent = ((savedBytes / originalFileStats.size) * 100).toFixed(1);
+
+  console.log(`  Created ${path.basename(outputPath)} (${(outputSize / 1024).toFixed(0)} KB, saved ${savedPercent}%)`);
+
+  return { processed: true, savedBytes };
+}
+
+/**
+ * Optimize all images in the static and blog directories.
+ *
+ * @returns A promise that resolves when the optimization is complete.
+ */
 async function optimizeImages(): Promise<void> {
   const startTime = Date.now();
+
   console.log('Starting image optimization...');
 
   const rootSearchDirs = ['static', 'blog'];
@@ -75,21 +171,23 @@ async function optimizeImages(): Promise<void> {
     if (!imagePath) {
       return false;
     }
+
     return !unwantedPatternRegex.exec(imagePath);
   });
 
   const buildDir = path.join(__dirname, '..', 'static', 'optimized-images');
+
   console.log(`Output directory: ${buildDir}`);
 
   const processingPromises = images.map(imagePath => {
     if (!imagePath) {
       return Promise.resolve({ processedCount: 0, savedBytes: 0 });
     }
+
     return optimizeImage(imagePath, buildDir);
   });
 
   const results = await Promise.all(processingPromises);
-
   const processedCount = results.reduce((total, result) => total + result.processedCount, 0);
   const savedBytes = results.reduce((total, result) => total + result.savedBytes, 0);
   const endTime = Date.now();
@@ -102,123 +200,97 @@ async function optimizeImages(): Promise<void> {
   console.log(`Duration: ${duration} seconds`);
 }
 
+/**
+ * Optimize an image.
+ *
+ * @param imagePath - The path to the image to optimize.
+ * @param buildDir - The directory to build the optimized image.
+ * @returns A promise that resolves to an object with the processed count and the saved bytes.
+ */
 async function optimizeImage(
   imagePath: string,
   buildDir: string,
 ): Promise<{ processedCount: number; savedBytes: number }> {
+  try {
+    const stats = await fs.stat(imagePath);
+
+    console.log(`Processing: ${imagePath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+
+    const parsedPath = path.parse(imagePath);
+    const relativeDir = getRelativeOutputDir(parsedPath.dir);
+    const outputDir = path.join(buildDir, relativeDir);
+
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const metadata = await sharp(imagePath).metadata();
+
+    return await processImageFormats(imagePath, outputDir, parsedPath, stats, metadata);
+  } catch (error: unknown) {
+    console.error(`  Error processing ${imagePath}:`, error);
+
+    return { processedCount: 0, savedBytes: 0 };
+  }
+}
+
+/**
+ * Process an image into different formats and sizes.
+ *
+ * @param imagePath - The path to the image to optimize.
+ * @param outputDir - The directory to output the optimized images.
+ * @param parsedPath - The parsed path of the original image.
+ * @param stats - The stats of the original file.
+ * @param metadata - The metadata of the original image.
+ * @returns A promise that resolves to an object with the processed count and the saved bytes.
+ */
+async function processImageFormats(
+  imagePath: string,
+  outputDir: string,
+  parsedPath: path.ParsedPath,
+  stats: Stats,
+  metadata: sharp.Metadata,
+): Promise<{ processedCount: number; savedBytes: number }> {
   let processedCount = 0;
   let savedBytes = 0;
 
-  const stats = await fs.stat(imagePath);
+  for (const format of outputFormats) {
+    // Skip WebP generation if input is already WebP (but still process AVIF and PNG)
+    if (imagePath.endsWith(`.${format}`) && format === 'webp') {
+      continue;
+    }
 
-  console.log(`Processing: ${imagePath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+    // Generate responsive sizes
+    for (const width of sizes) {
+      const outputName = `${parsedPath.name}-${width}w.${format}`;
+      const outputPath = path.join(outputDir, outputName);
+      const result = await generateOptimizedImage(imagePath, outputPath, format, stats, { width });
 
-  const parsedPath = path.parse(imagePath);
-  let relativeDir = parsedPath.dir;
-
-  // Get relative directory from static/ or blog/
-  if (relativeDir.startsWith('static')) {
-    relativeDir = path.relative('static', relativeDir);
-  } else if (relativeDir.startsWith('blog/img')) {
-    // Images from `blog/img/...` should be mapped to `img/blog/...` to match `static/img/blog/...`
-    relativeDir = path.join('img/blog', path.relative('blog/img', relativeDir));
-  } else if (relativeDir.startsWith('blog')) {
-    relativeDir = path.relative('blog', relativeDir);
-  }
-
-  const outputDir = path.join(buildDir, relativeDir);
-
-  await fs.mkdir(outputDir, { recursive: true });
-
-  try {
-    const metadata = await sharp(imagePath).metadata();
-
-    for (const format of outputFormats) {
-      // Skip WebP generation if input is already WebP (but still process AVIF and PNG)
-      if (imagePath.endsWith(`.${format}`) && format === 'webp') {
-        continue;
-      }
-
-      // Generate responsive sizes
-      for (const width of sizes) {
-        const outputName = `${parsedPath.name}-${width}w.${format}`;
-        const outputPath = path.join(outputDir, outputName);
-
-        // Skip if already exists and is newer
-        try {
-          const outputStats = await fs.stat(outputPath);
-          if (outputStats.mtime > stats.mtime) {
-            console.log(`  Skipping ${outputName} (already up to date)`);
-            continue;
-          }
-        } catch (e) {
-          // File doesn't exist, proceed with optimization
-        }
-
-        let sharpInstance = sharp(imagePath).resize(width, null, {
-          withoutEnlargement: true,
-          fit: 'inside',
-        });
-
-        sharpInstance = compressImage(sharpInstance, format);
-
-        const outputBuffer = await sharpInstance.toBuffer();
-        await fs.writeFile(outputPath, outputBuffer);
-
-        const outputSize = outputBuffer.length;
-        const savedPercent = (((stats.size - outputSize) / stats.size) * 100).toFixed(1);
-        savedBytes += stats.size - outputSize;
-
-        console.log(`  Created ${outputName} (${(outputSize / 1024).toFixed(0)} KB, saved ${savedPercent}%)`);
+      if (result.processed) {
         processedCount++;
       }
 
-      // Generate full-size optimized version, suffixed with its width
-      const imageWidth = metadata.width;
+      savedBytes += result.savedBytes;
+    }
 
-      // Skip creating an original-sized version if it's larger than the max responsive size.
-      // The responsive loop has already generated a scaled-down version at largestResponsiveSize.
-      if (!imageWidth || imageWidth > largestResponsiveSize) {
-        continue;
-      }
+    // Generate full-size optimized version
+    const imageWidth = metadata.width;
 
-      // Skip if the responsive loop already created this file
-      if (sizes.includes(imageWidth)) {
-        continue;
-      }
+    // Skip creating an original-sized version if it's larger than the max responsive size,
+    // or if the responsive loop already created this file.
+    if (!imageWidth || imageWidth > largestResponsiveSize || sizes.includes(imageWidth)) {
+      continue;
+    }
 
-      const fullSizeName = `${parsedPath.name}-${imageWidth}w.${format}`;
-      const fullSizePath = path.join(outputDir, fullSizeName);
+    const fullSizeName = `${parsedPath.name}-${imageWidth}w.${format}`;
+    const fullSizePath = path.join(outputDir, fullSizeName);
+    const result = await generateOptimizedImage(imagePath, fullSizePath, format, stats);
 
-      // Skip if already exists and is newer
-      try {
-        const fullSizeStats = await fs.stat(fullSizePath);
-        if (fullSizeStats.mtime > stats.mtime) {
-          console.log(`  Skipping ${fullSizeName} (already up to date)`);
-          continue;
-        }
-      } catch (e: unknown) {
-        // File doesn't exist, proceed with optimization
-      }
-
-      let sharpInstance = sharp(imagePath);
-
-      sharpInstance = compressImage(sharpInstance, format);
-
-      const fullSizeBuffer = await sharpInstance.toBuffer();
-      await fs.writeFile(fullSizePath, fullSizeBuffer);
-
-      const savedPercent = (((stats.size - fullSizeBuffer.length) / stats.size) * 100).toFixed(1);
-      savedBytes += stats.size - fullSizeBuffer.length;
-
-      console.log(
-        `  Created ${fullSizeName} (${(fullSizeBuffer.length / 1024).toFixed(0)} KB, saved ${savedPercent}%)`,
-      );
+    if (result.processed) {
       processedCount++;
     }
-  } catch (error: unknown) {
-    console.error(`  Error processing ${imagePath}:`, error);
+
+    savedBytes += result.savedBytes;
   }
+
   return { processedCount, savedBytes };
 }
 
