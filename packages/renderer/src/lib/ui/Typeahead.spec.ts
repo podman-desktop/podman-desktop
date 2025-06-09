@@ -100,21 +100,19 @@ test('should list the result after the delay, and display spinner during loading
   assertIsListVisible(false);
 
   await userEvent.type(input, 'aze');
+  await waitFor(async () => {
+    // multiple tick() call is required because
+    // typing in the input triggers multiple async state updates
+    // and setTimeout is used to process input with delay
+    await tick();
+    assertIsListVisible(false);
+    expect(screen.queryByRole('progressbar')).toBeNull();
+    expect(searchResult.length > 0).toBeTruthy();
+  });
 
-  await new Promise(resolve => setTimeout(resolve, 5));
-  assertIsListVisible(false);
-  await new Promise(resolve => setTimeout(resolve, 10));
-  await tick();
-  screen.getByRole('progressbar');
-
-  await new Promise(resolve => setTimeout(resolve, 100));
-  await tick();
-  expect(screen.queryByRole('progressbar')).toBeNull();
-  await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
-  await tick();
-  assertIsListVisible(true);
 
+  assertIsListVisible(true);
   const list = screen.getByRole('row');
   const items = within(list).getAllByRole('button');
   expect(items.length).toBe(3);
@@ -140,9 +138,9 @@ test('should list items started with search term on top if no compare function i
   await userEvent.type(input, 'aze');
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
-  await tick();
 
-  await waitFor(() => {
+  await waitFor(async () => {
+    await tick();
     const list = screen.getByRole('row');
     const items = within(list).getAllByRole('button');
     expect(items.length).toBe(6);
@@ -184,7 +182,7 @@ test('should list items in order based on compare function if provided', async (
   await userEvent.type(input, 'a');
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
-  await tick();
+
   await waitFor(() => {
     const list = screen.getByRole('row');
     const items = within(list).getAllByRole('button');
@@ -217,74 +215,123 @@ test('should navigate in list with keys', async () => {
 
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
-  await tick();
 
-  await new Promise(resolve => setTimeout(resolve, 11));
+  await waitFor(() => {
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    expect(items.length).toBe(15);
 
-  let list = screen.getByRole('row');
-  let items = within(list).getAllByRole('button');
-  expect(items.length).toBe(15);
-
-  // No item is selected first
-  assertItemSelected(items, -1);
-  screen.getByDisplayValue('term');
+    // No item is selected first
+    assertItemSelected(items, -1);
+    screen.getByDisplayValue('term');
+  });
 
   await userEvent.keyboard('[ArrowDown]');
-  assertItemSelected(items, 0);
-  screen.getByDisplayValue('term01');
+
+  await waitFor(async () => {
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    await tick();
+    assertItemSelected(items, 0);
+    screen.getByDisplayValue('term01');
+  });
 
   await userEvent.keyboard('[ArrowDown]');
-  assertItemSelected(items, 1);
-  screen.getByDisplayValue('term02');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 1);
+    screen.getByDisplayValue('term02');
+  });
 
   await userEvent.keyboard('[PageDown]');
-  assertItemSelected(items, 11);
-  screen.getByDisplayValue('term12');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 11);
+    screen.getByDisplayValue('term12');
+  });
 
   await userEvent.keyboard('[PageDown]');
-  assertItemSelected(items, 14);
-  screen.getByDisplayValue('term15');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 14);
+    screen.getByDisplayValue('term15');
+  });
 
   await userEvent.keyboard('[ArrowUp]');
   await userEvent.keyboard('[ArrowUp]');
   await userEvent.keyboard('[ArrowUp]');
   await userEvent.keyboard('[ArrowUp]');
   await userEvent.keyboard('[ArrowUp]');
-  assertItemSelected(items, 9);
-  screen.getByDisplayValue('term10');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 9);
+    screen.getByDisplayValue('term10');
+  });
 
   await userEvent.keyboard('[PageUp]');
-  assertItemSelected(items, 0);
-  screen.getByDisplayValue('term01');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 0);
+    screen.getByDisplayValue('term01');
+  });
 
   // Close the list when pressing Up at top of the list
   await userEvent.keyboard('[ArrowUp]');
-  assertIsListVisible(false);
-  screen.getByDisplayValue('term');
+
+  await waitFor(async () => {
+    await tick();
+    assertIsListVisible(false);
+    screen.getByDisplayValue('term');
+  });
 
   // Down opens the list again, no item selected
   await userEvent.keyboard('[ArrowDown]');
-  assertIsListVisible(true);
 
-  list = screen.getByRole('row');
-  items = within(list).getAllByRole('button');
-  assertItemSelected(items, -1);
-  screen.getByDisplayValue('term');
-
-  await userEvent.keyboard('[ArrowDown]');
-  assertItemSelected(items, 0);
-  screen.getByDisplayValue('term01');
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertIsListVisible(true);
+    assertItemSelected(items, -1);
+    screen.getByDisplayValue('term');
+  });
 
   await userEvent.keyboard('[ArrowDown]');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 0);
+    screen.getByDisplayValue('term01');
+  });
+
   await userEvent.keyboard('[ArrowDown]');
-  assertItemSelected(items, 2);
-  screen.getByDisplayValue('term03');
+  await userEvent.keyboard('[ArrowDown]');
+
+  await waitFor(async () => {
+    await tick();
+    const items = within(screen.getByRole('row')).getAllByRole('button');
+    assertItemSelected(items, 2);
+    screen.getByDisplayValue('term03');
+  });
+
   // Select an item by pressing Enter
   await userEvent.keyboard('[Enter]');
-  // closes the list
-  assertIsListVisible(false);
-  // copies the item in the input
-  screen.getByDisplayValue('term03');
+
+  await waitFor(async () => {
+    await tick();
+    // closes the list
+    assertIsListVisible(false);
+    // copies the item in the input
+    screen.getByDisplayValue('term03');
+  });
 });
 
 test('should show clasic border', async () => {
@@ -338,7 +385,7 @@ test('should include heading based on given order and searchFunctions order', as
     searchResult = s ? [...result1, ...result2, ...result3, ...result4] : [];
   };
 
-  const { rerender } = render(Typeahead, {
+  const { rerender, getByRole } = render(Typeahead, {
     onInputChange: searchFunction,
     resultItems: searchResult,
     delay: 10,
@@ -350,10 +397,9 @@ test('should include heading based on given order and searchFunctions order', as
   await waitFor(() => expect(searchResult.length > 0).toBeTruthy());
   await rerender({ resultItems: searchResult });
 
-  await tick();
-
-  await waitFor(() => {
-    const list = screen.getByRole('row');
+  await waitFor(async () => {
+    await tick();
+    const list = getByRole('row');
     const items = within(list).getAllByRole('button');
     expect(items.length).toBe(18);
     expect(items[0].textContent).toBe('searchFunction1 results');
