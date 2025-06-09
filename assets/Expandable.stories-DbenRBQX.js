@@ -1,0 +1,7 @@
+import{p as c,i as x,t as r,b as n,c as _,n as f,d as u,e as h,h as b,g as E}from"./props-DdSFgPI-.js";import"./ErrorMessage-CeaILSO6.js";import"./Button-CnlOcDQb.js";import{E as i}from"./Table-Mb7vMHlj.js";import"./LinearProgress-CtdwwUpj.js";import"./Spinner-fLTdv80d.js";import"./EmptyScreen-fhs6AdUS.js";import{c as v,s as $,d as B}from"./create-runtime-stories-yd1Q-E2y.js";import"./this-DiiF92i_.js";import"./attributes-Dks34Mf1.js";import"./index-B5O8svG2.js";import"./fa-layers-text.svelte_svelte_type_style_lang-DHxoCemv.js";import"./StarIcon-vKroMUb9.js";import"./_commonjsHelpers-CqkleIqs.js";import"./index-DtmeDzJ6.js";import"./index-CfOrKyLd.js";const C=(o,t,p=f)=>{let a=()=>b(t==null?void 0:t(),[]);i(o,u(a,{children:(l,s)=>{var e=r();h(()=>E(e,a().children)),n(l,e)},$$slots:{default:!0}}))},T={component:i,title:"Expandable",tags:["autodocs"],parameters:{docs:{description:{component:"These are the stories for the `Expandable` component."}}}},{Story:P}=B();function d(o,t){c(t,!1),$(C),x(),P(o,{name:"Basic",children:(p,a)=>{i(p,{title:s=>{var e=r("Title");n(s,e)},children:(s,e)=>{var m=r("Children");n(s,m)},$$slots:{title:!0,default:!0}})},$$slots:{default:!0},parameters:{__svelteCsf:{rawCode:`<Expandable>
+  <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
+  {#snippet title()}
+    Title
+  {/snippet}
+  Children
+</Expandable>`}}}),_()}d.__docgen={keywords:[],data:[],name:"Expandable.stories.svelte"};const j=v(d,T),J=["Basic"],K=j.Basic;export{K as Basic,J as __namedExportsOrder,T as default};
