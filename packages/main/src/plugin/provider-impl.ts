@@ -281,10 +281,6 @@ export class ProviderImpl implements Provider, IDisposable {
     });
   }
 
-  editContainerProviderConnection(): void {
-    return this.containerRegistry.editContainerConnection();
-  }
-
   registerLifecycle(lifecycle: ProviderLifecycle): Disposable {
     return this.providerRegistry.registerLifecycle(this, lifecycle);
   }
