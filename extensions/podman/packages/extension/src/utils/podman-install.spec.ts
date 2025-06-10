@@ -65,7 +65,6 @@ const provider: extensionApi.Provider = {
   warnings: [],
   updateWarnings: vi.fn(),
   onDidUpdateDetectionChecks: vi.fn(),
-  editContainerProviderConnection: vi.fn(),
 };
 
 // mock ps-list

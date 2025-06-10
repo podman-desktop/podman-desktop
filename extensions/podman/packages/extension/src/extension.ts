@@ -913,7 +913,6 @@ export async function registerProviderFor(
         } finally {
           if (state === 'started') {
             await lifecycle.start?.(context, logger);
-            provider.editContainerProviderConnection();
           }
         }
       }
