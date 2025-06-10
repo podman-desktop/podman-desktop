@@ -704,6 +704,9 @@ declare module '@podman-desktop/api' {
 
     registerCleanup(cleanup: ProviderCleanup): Disposable;
 
+    // send an event to the front end that a provider's container connection has been updated/edited
+    editContainerProviderConnection(): void;
+
     dispose(): void;
     readonly name: string;
     readonly id: string;

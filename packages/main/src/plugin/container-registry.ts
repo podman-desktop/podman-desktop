@@ -383,6 +383,10 @@ export class ContainerProviderRegistry {
     });
   }
 
+  editContainerConnection(): void {
+    this.apiSender.send('provider-edit-container-connection');
+  }
+
   notifyConsole(message: string): void {
     if (this.notify) {
       console.log(message);
