@@ -334,7 +334,7 @@ test('should navigate in list with keys', async () => {
   });
 });
 
-test('should show clasic border', async () => {
+test('should show classic border', async () => {
   render(Typeahead, {
     initialFocus: true,
     error: false,
