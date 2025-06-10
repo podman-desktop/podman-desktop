@@ -481,6 +481,12 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
+async function isRootfulMachineInfo(machineInfo: MachineInfo): Promise<boolean | undefined> {
+  const machinesJSONList = (await getJSONMachineList()).list;
+  const machineJSON = machinesJSONList.find(machine => machine.Name === machineInfo.name);
+  return machineJSON ? isRootfulMachine(machineJSON) : undefined;
+}
+
 async function isRootfulMachine(machineJSON: MachineJSON): Promise<boolean> {
   let isRootful = false;
   try {
@@ -520,6 +526,7 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachineInfo(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -528,6 +535,10 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSize', machineInfo.diskSize);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -788,6 +799,9 @@ export async function registerProviderFor(
         } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
           args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
           effective = true;
+        } else if (key === 'podman.machine.rootful') {
+          args.push(`--rootful=${params[key]}`);
+          effective = true;
         }
       }
       if (effective) {
@@ -802,6 +816,7 @@ export async function registerProviderFor(
         } finally {
           if (state === 'started') {
             await lifecycle.start?.(context, logger);
+            provider.editContainerProviderConnection();
           }
         }
       }
@@ -834,6 +849,7 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachineInfo(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -842,6 +858,10 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.cpusUsage', machineInfo.cpuUsage);
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);

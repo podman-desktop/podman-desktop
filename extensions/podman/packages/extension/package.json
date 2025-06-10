@@ -112,6 +112,14 @@
           "description": "Disk size usage",
           "readonly": true
         },
+        "podman.machine.rootful": {
+          "type": "boolean",
+          "default": true,
+          "scope": "ContainerConnection",
+          "description": "Machine with root privileges",
+          "when": "podman.isRootfulMachineInitSupported == true",
+          "hidden": true
+        },
         "podman.factory.machine.name": {
           "type": "string",
           "default": "podman-machine-default",

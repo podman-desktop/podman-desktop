@@ -29,6 +29,7 @@ const windowEvents = [
   'extension-started',
   'extension-stopped',
   'provider-change',
+  'provider-edit-container-connection',
   'container-stopped-event',
   'container-die-event',
   'container-kill-event',
