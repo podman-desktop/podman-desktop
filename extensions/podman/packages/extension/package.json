@@ -175,11 +175,8 @@
         },
         "podman.factory.machine.provider": {
           "type": "string",
-          "default": "default (Apple HyperVisor)",
-          "enum": [
-            "default (Apple HyperVisor)",
-            "GPU enabled (LibKrun)"
-          ],
+          "default": "default GPU enabled (LibKrun)",
+          "enum": ["default GPU enabled (LibKrun)", "Apple HyperVisor"],
           "scope": "ContainerProviderConnectionFactory",
           "description": "Provider Type",
           "when": "podman.isLibkrunSupported"
