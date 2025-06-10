@@ -16,8 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
+import type { PodmanVirtualizationProviders } from '../core/types';
+import { ResourceConnectionCardPage } from './resource-connection-card-page';
 import { SettingsPage } from './settings-page';
 
 export class ResourcesPage extends SettingsPage {
@@ -47,5 +50,28 @@ export class ResourcesPage extends SettingsPage {
 
   private resourceCardLocatorGenerator(resourceCardAriaLabel: string): Locator {
     return this.content.getByRole('region', { name: resourceCardAriaLabel, exact: true });
+  }
+
+  /**
+   * Verifies that a Podman machine has the specified virtualization provider type.
+   * This method checks that the machine card exists and displays the correct connection type.
+   *
+   * @param machineName - The name of the machine to verify
+   * @param virtualizationProvider - The expected virtualization provider type (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.QEMU, PodmanVirtualizationProviders.HyperV)
+   * @returns A Promise that resolves when the verification is complete
+   * @throws Will throw an error if the expected virtualization provider is not found or doesn't match
+   */
+  public async verifyVirtualizationProvider(
+    machineName: string,
+    virtualizationProvider: PodmanVirtualizationProviders,
+  ): Promise<void> {
+    return test.step(`Verify Podman Provider is ${virtualizationProvider}`, async () => {
+      await playExpect(this.heading).toBeVisible();
+      const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
+      await playExpect.poll(async () => await machineCard.doesResourceElementExist(), { timeout: 15_000 }).toBeTruthy();
+      await playExpect(machineCard.card.getByLabel(machineName).getByLabel('Connection Type')).toContainText(
+        virtualizationProvider,
+      );
+    });
   }
 }
