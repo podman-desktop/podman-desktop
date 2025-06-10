@@ -83,7 +83,6 @@ const provider: extensionApi.Provider = {
   warnings: [],
   updateWarnings: updateWarningsMock,
   onDidUpdateDetectionChecks: vi.fn(),
-  editContainerProviderConnection: vi.fn(),
 };
 
 // Use 'provider', but just replace status with 'ready'

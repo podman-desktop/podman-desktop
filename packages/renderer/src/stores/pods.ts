@@ -34,7 +34,7 @@ const windowEvents = [
   'container-created-event',
   'container-started-event',
   'provider-change',
-  'provider-edit-container-connection',
+  'provider-container-connection-update-status',
   'pod-event',
   'extensions-started',
 ];
