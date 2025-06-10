@@ -1306,13 +1306,18 @@ export class ProviderRegistry {
     containerConnection: ContainerProviderConnection,
   ): void {
     // notify listeners
+    const providerInfo = this.toProviderInfo(provider);
+    const providerConnectionInfo = this.getProviderContainerConnectionInfo(containerConnection);
     this.containerConnectionLifecycleListeners.forEach(listener => {
-      listener(
-        'provider-container-connection:update-status',
-        this.toProviderInfo(provider),
-        this.getProviderContainerConnectionInfo(containerConnection),
-      );
+      listener('provider-container-connection:update-status', providerInfo, providerConnectionInfo);
     });
+    const event = {
+      providerId: provider.id,
+      connection: containerConnection,
+      status: containerConnection.status(),
+    };
+    this._onDidUpdateContainerConnection.fire(event);
+    this._onAfterDidUpdateContainerConnection.fire(event);
   }
 
   onDidUnregisterContainerConnectionCallback(
