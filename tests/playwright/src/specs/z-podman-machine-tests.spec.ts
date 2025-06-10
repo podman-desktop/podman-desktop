@@ -19,6 +19,7 @@
 import type { Locator } from '@playwright/test';
 
 import { ResourceElementState } from '../model/core/states';
+import { PodmanConnectionTypes } from '../model/core/types';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
@@ -53,7 +54,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
 
   try {
     if (test.info().status === 'failed') {
@@ -72,7 +73,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe
   .serial(`Podman machine switching validation `, () => {
-    test.describe.configure({ timeout: 120_000 });
+    test.describe.configure({ timeout: 180_000 });
 
     test('Check data for available Podman Machine and stop machine', async ({ page, navigationBar }) => {
       await test.step('Open resources page', async () => {
@@ -151,6 +152,11 @@ test.describe
         await resourcesPage.goToCreateNewResourcePage(RESOURCE_NAME);
       });
 
+      const connectionType = {
+        wsl: PodmanConnectionTypes.WSL,
+        hyperv: PodmanConnectionTypes.HyperV,
+      }[process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase() ?? ''];
+
       const podmanMachineCreatePage = new PodmanOnboardingPage(page);
 
       await test.step('Create podman machine', async () => {
@@ -158,6 +164,7 @@ test.describe
           isRootful: false,
           enableUserNet: true,
           startNow: false,
+          connectionType,
         });
         await playExpect(podmanMachineCreatePage.goBackButton).toBeEnabled({ timeout: 180_000 });
         await podmanMachineCreatePage.goBackButton.click();

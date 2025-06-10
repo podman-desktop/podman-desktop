@@ -84,3 +84,8 @@ export const KubernetesResourceAttributes: Record<KubernetesResources, string[]>
   ],
   [KubernetesResources.Jobs]: ['Selected', 'Status', 'Name', 'Conditions', 'Completions', 'Age', 'Actions'],
 };
+
+export enum PodmanConnectionTypes {
+  WSL = 'Wsl',
+  HyperV = 'Hyperv',
+}
