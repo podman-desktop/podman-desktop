@@ -32,6 +32,7 @@ const windowEvents = [
   'provider:update-status',
   'provider:update-warnings',
   'provider:update-version',
+  'provider-edit-container-connection',
   'provider-register-kubernetes-connection',
   'provider-unregister-kubernetes-connection',
   'provider-register-vm-connection',
