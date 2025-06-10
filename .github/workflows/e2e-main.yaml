@@ -50,6 +50,13 @@ on:
         - docker
         - podman
         required: false
+      podman_provider:
+        description: 'Podman machine virtualization provider'
+        type: choice
+        options:
+        - wsl
+        - hyperv
+        required: true
       update_with_extensions:
         description: 'Installation extensions before update'
         type: choice
@@ -81,9 +88,11 @@ jobs:
         env:
           DEFAULT_NPM_TARGET: 'test:e2e'
           DEFAULT_KIND_PROVIDER: 'docker'
+          DEFAULT_PODMAN_PROVIDER: 'wsl'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "KIND_PROVIDER=${{ github.event.inputs.kind_provider || env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
+          echo "PODMAN_PROVIDER=${{ github.event.inputs.podman_provider || env.DEFAULT_PODMAN_PROVIDER }}" >> $GITHUB_ENV
 
       - name: Update podman
         run: |
@@ -144,6 +153,7 @@ jobs:
           TEST_PODMAN_MACHINE: 'true'
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
+          PODMAN_PROVIDER_GHA: ${{ env.PODMAN_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
         run: |
           echo "Compiling the Podman Desktop in production mode"
