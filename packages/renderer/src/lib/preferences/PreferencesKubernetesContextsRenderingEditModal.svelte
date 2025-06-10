@@ -41,10 +41,10 @@ $effect(() => {
 });
 
 onMount(async () => {
-  contextName = contextToEdit?.name;
-  contextNamespace = contextToEdit?.namespace ?? '';
-  contextCluster = contextToEdit?.cluster;
-  contextUser = contextToEdit?.user;
+  contextName = contextToEdit.name;
+  contextNamespace = contextToEdit.namespace ?? '';
+  contextCluster = contextToEdit.cluster;
+  contextUser = contextToEdit.user;
   clusters = await window.kubernetesGetClusters();
   users = await window.kubernetesGetUsers();
   kubeConfig = (await window.getConfigurationValue('kubernetes.Kubeconfig')) ?? kubeConfig;
@@ -63,10 +63,12 @@ function disableSave(name: string, namespace: string): boolean {
   return invalidName && invalidNamespace && invalidCluster && invalidUser;
 }
 
-async function editContext(contextName: string, contextNamespace: string): Promise<void> {
-  const context = contexts?.find(ctx => ctx.name === contextName);
-  if (context && context.namespace === contextNamespace) return;
-
+async function editContext(
+  contextName: string,
+  contextNamespace: string,
+  contextUser: string,
+  contextCluster: string,
+): Promise<void> {
   try {
     await window.kubernetesUpdateContext(
       contextToEdit.name,
@@ -164,7 +166,7 @@ function onUserStateChange(key: unknown): void {
         class="col-start-4"
         disabled={disableSave(contextName, contextNamespace)}
         on:click={async (): Promise<void> => {
-        await editContext(contextName, contextNamespace);
+        await editContext(contextName, contextNamespace, contextUser, contextCluster);
         }}>Save</Button>
     </svelte:fragment>
 </Dialog>
