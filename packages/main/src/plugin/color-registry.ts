@@ -595,11 +595,6 @@ export class ColorRegistry {
       light: colorPalette.gray[200],
     });
 
-    this.registerColor(`${ct}card-contrast-border`, {
-      dark: colorPalette.gray[800],
-      light: colorPalette.charcoal[100],
-    });
-
     this.registerColor(`${ct}card-border-selected`, {
       dark: colorPalette.dustypurple[700],
       light: colorPalette.purple[600],
