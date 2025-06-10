@@ -1,6 +1,7 @@
 name: Bug 🐞
 description: Report a bug report
 labels: [kind/bug 🐞]
+projects: ["podman-desktop/Podman Desktop Planning"]
 
 body:
   - type: markdown
