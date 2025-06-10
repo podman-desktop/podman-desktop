@@ -21,6 +21,7 @@ import * as os from 'node:os';
 import type { Locator, Page } from '@playwright/test';
 
 import { ResourceElementState } from '../model/core/states';
+import { PodmanVirtualizationProviders } from '../model/core/types';
 import type { DashboardPage } from '../model/pages/dashboard-page';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
@@ -30,6 +31,7 @@ import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
 import { isLinux } from '../utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const PODMAN_MACHINE_STARTUP_TIMEOUT: number = 360_000;
@@ -141,10 +143,14 @@ test.describe
           await playExpect(podmanOnboardingPage.machineCreationForm.rootPriviledgesCheckbox).toBeChecked();
           await playExpect(podmanOnboardingPage.machineCreationForm.startNowCheckbox).toBeChecked();
 
+          await podmanOnboardingPage.machineCreationForm.specifyVirtualizationProvider(getVirtualizationProvider());
+
           if (os.platform() === 'win32') {
-            await playExpect(podmanOnboardingPage.machineCreationForm.userModeNetworkingCheckbox).not.toBeChecked({
-              timeout: 30_000,
-            });
+            if (getVirtualizationProvider() !== PodmanVirtualizationProviders.HyperV) {
+              await playExpect(podmanOnboardingPage.machineCreationForm.userModeNetworkingCheckbox).not.toBeChecked({
+                timeout: 30_000,
+              });
+            }
           } else {
             await playExpect(podmanOnboardingPage.machineCreationForm.podmanMachineCPUs).toBeVisible({
               timeout: 30_000,
@@ -187,6 +193,10 @@ test.describe
                 PODMAN_MACHINE_NAME,
               );
               await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
+              await playExpect(resourcesPodmanConnections.connectionType).toBeVisible({ timeout: 10_000 });
+              await playExpect(resourcesPodmanConnections.connectionType).toHaveText(
+                getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+              );
               await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
               await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
               await resourcesPodmanConnections.resourceElementDetailsButton.click();
