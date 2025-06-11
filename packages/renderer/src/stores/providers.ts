@@ -34,6 +34,8 @@ const windowEvents = [
   'provider:update-version',
   'provider-register-kubernetes-connection',
   'provider-unregister-kubernetes-connection',
+  'provider-register-vm-connection',
+  'provider-unregister-vm-connection',
   'extensions-started',
 ];
 const windowListeners = ['system-ready', 'provider-lifecycle-change'];
