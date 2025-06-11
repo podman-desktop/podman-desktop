@@ -739,8 +739,8 @@ test('init', async () => {
   vi.spyOn(contributionManager, 'loadBase64Icon').mockResolvedValue('icon');
 
   vi.mocked(fs.promises.readdir).mockResolvedValue([
-    { isDirectory: () => true, name: 'contrib1' } as fs.Dirent,
-    { isDirectory: () => true, name: 'contrib2' } as fs.Dirent,
+    { isDirectory: () => true, name: 'contrib1' } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
+    { isDirectory: () => true, name: 'contrib2' } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
   ]);
 
   // initialize the contribution manager
