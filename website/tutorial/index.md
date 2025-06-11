@@ -16,12 +16,6 @@ Before going through each tutorial, familiarize yourself with the key UI compone
 
 1. **Left navigation pane**: Helps in accessing the dashboard and managing containers, images, pods, volumes, Kubernetes resources, and extensions. You can apply different actions from each component page.
 
-   :::note
-
-   The Kubernetes explorer component appears in the navigation pane only if you have set up a Kubernetes cluster.
-
-   :::
-
 2. **Accounts**: Provides easy access to the **Authentication** settings. You can add an authentication provider using the **Red Hat Authentication** extension.
 3. **Settings**: Helps you to:
 
@@ -32,10 +26,11 @@ Before going through each tutorial, familiarize yourself with the key UI compone
    - Configure a CLI tool
    - Configure a Kubernetes context
    - Configure the application appearance, extensions, the terminal size and line height, and the telemetry feature.
+   - Configure a Docker-compatible environment
 
 4. **Status bar**: Provides the following capabilities:
-   - Configure a Docker-compatible environment
-   - Set your kubernetes context
+
+   - Set your Kubernetes context
    - Share your feedback
    - Troubleshoot your container connections and view logs
    - View notifications and additional help resources

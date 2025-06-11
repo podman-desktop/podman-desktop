@@ -184,13 +184,13 @@ On the **Settings > Resources** page, perform any of the following actions:
 
 **_Managing your CLI tools_**
 
-If you have installed a CLI tool extension, you can set up the CLI tool and upgrade to its latest version from the UI.
+If you have installed a CLI tool extension, you can set up, upgrade, or downgrade the CLI tool from the UI.
 
 - On the **Settings > Resources** page, click **Setup** to download the CLI tool and install it system wide.
 
 ![CLI set up](img/set-up-cli.png)
 
-- On the **Settings > CLI tools** page, click the updates available icon to upgrade to the latest version of the CLI tool:
+- On the **Settings > CLI tools** page, click the **Upgrade/Downgrade** icon or link to update the version of the CLI tool.
 
 ![CLI update](img/cli-update.png)
 
