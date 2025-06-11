@@ -46,7 +46,7 @@ export async function checkForUpdate(): Promise<boolean> {
 
 export const providerInfos: Writable<ProviderInfo[]> = writable([]);
 
-const eventStore = new EventStore<ProviderInfo[]>(
+export const eventStore = new EventStore<ProviderInfo[]>(
   'providers',
   providerInfos,
   checkForUpdate,
