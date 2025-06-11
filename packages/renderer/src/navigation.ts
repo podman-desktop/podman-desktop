@@ -131,7 +131,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto(`/preferences/container-connection/edit/${request.parameters.provider}/${request.parameters.name}`);
       break;
     case NavigationPage.EXPERIMENTAL_FEATURES:
-      router.goto('preferences/experimental');
+      router.goto('/preferences/experimental');
       break;
   }
 };
