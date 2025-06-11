@@ -43,7 +43,10 @@ export class ProtocolLauncher {
       // now search if we have 'open-url' in the list of args and give it to the handler
       for (const arg of args) {
         const analyzedArg = this.sanitizeProtocolForExtension(arg);
-        if (analyzedArg.startsWith('podman-desktop:extension/')) {
+        if (
+          analyzedArg.startsWith('podman-desktop:extension/') ||
+          analyzedArg.startsWith('podman-desktop:experimental')
+        ) {
           this.handleOpenUrl(analyzedArg);
         }
       }
@@ -56,8 +59,6 @@ export class ProtocolLauncher {
 
     // if url starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
     url = this.sanitizeProtocolForExtension(url);
-
-    console.log('>>>>>>>>> ' + url);
 
     if (url.startsWith('podman-desktop:extension/')) {
       // grab the extension id
