@@ -363,6 +363,7 @@ const config = {
         storybookStatic: '../storybook/storybook-static',
       },
     ],
+    resolve('./plugins/docusaurus-plugin-optimized-images.ts'),
   ],
   presets: [
     [
@@ -384,6 +385,7 @@ const config = {
             type: 'all',
             copyright: `Copyright © ${new Date().getFullYear()} Podman Desktop`,
           },
+          remarkPlugins: [require('./plugins/remark-optimize-images')],
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
