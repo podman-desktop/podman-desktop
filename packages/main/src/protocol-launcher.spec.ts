@@ -79,31 +79,35 @@ test('should not send the URL for invalid URLs', async () => {
   expect(vi.mocked(BROWSER_WINDOW_MOCK.webContents.send)).not.toHaveBeenCalled();
 });
 
-test('should handle podman-desktop:extension/ URL on Windows', async () => {
+test.each([
+  {
+    url: 'podman-desktop:extension/my.extension',
+    webContentsSend: ['podman-desktop-protocol:install-extension', 'my.extension'],
+  },
+  { url: 'podman-desktop:experimental', webContentsSend: ['podman-desktop-protocol:open-experimental-features'] },
+])('should handle valid URL on Windows', async ({ url, webContentsSend }) => {
   vi.mocked(isWindows).mockReturnValue(true);
 
   const protocol = getProtocolLauncher();
-  protocol.handleAdditionalProtocolLauncherArgs(['podman-desktop:extension/my.extension']);
+  protocol.handleAdditionalProtocolLauncherArgs([url]);
 
   // expect handleOpenUrl not be called
-  await vi.waitFor(() =>
-    expect(BROWSER_WINDOW_MOCK.webContents.send).toHaveBeenCalledWith(
-      'podman-desktop-protocol:install-extension',
-      'my.extension',
-    ),
-  );
+  await vi.waitFor(() => expect(BROWSER_WINDOW_MOCK.webContents.send).toHaveBeenCalledWith(...webContentsSend));
 });
 
-test('should not do anything with podman-desktop:extension/ URL on OS different than Windows', async () => {
-  vi.mocked(isWindows).mockReturnValue(false);
+test.each(['podman-desktop:extension/my.extension', 'podman-desktop:experimental'])(
+  'should not do anything with valid URL on OS different than Windows',
+  async url => {
+    vi.mocked(isWindows).mockReturnValue(false);
 
-  const protocol = getProtocolLauncher();
+    const protocol = getProtocolLauncher();
 
-  protocol.handleAdditionalProtocolLauncherArgs(['podman-desktop:extension/my.extension']);
+    protocol.handleAdditionalProtocolLauncherArgs([url]);
 
-  // no called on it
-  expect(BROWSER_WINDOW_MOCK.webContents.send).not.toHaveBeenCalled();
-});
+    // no called on it
+    expect(BROWSER_WINDOW_MOCK.webContents.send).not.toHaveBeenCalled();
+  },
+);
 
 describe('sanitizeProtocolForExtension', () => {
   test('handle sanitizeProtocolForExtension', () => {
