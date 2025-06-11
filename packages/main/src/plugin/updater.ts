@@ -115,7 +115,7 @@ export class Updater {
 
     const urlVersionFormat = version.split('.', 2).join('.');
 
-    const notesURL = `http://localhost:3000/release-notes/1.19.json`;
+    const notesURL = `${rootPackage.homepage}/release-notes/${urlVersionFormat}.json`;
     let response = await fetch(notesURL);
     if (!response.ok) {
       response = await fetch(`${rootPackage.repository}/releases/tag/v${version}`);
