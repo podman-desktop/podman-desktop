@@ -2348,6 +2348,66 @@ test('test sync resources was called with no resourceVersion, uid, selfLink, or 
   );
 });
 
+test('test sync resources was called with no status being passed through', async () => {
+  const client = createTestClient('default');
+  const context = 'test-context';
+  const namespace = 'default';
+  const manifests = [
+    {
+      apiVersion: 'v1',
+      kind: 'Pod',
+      metadata: {
+        name: 'test-pod',
+        resourceVersion: '123',
+        uid: 'uid123',
+        selfLink: '/api/v1/namespaces/default/pods/test-pod',
+        creationTimestamp: new Date(42),
+      },
+      status: {
+        phase: 'Running',
+        conditions: [
+          {
+            type: 'Ready',
+            status: 'True',
+          },
+        ],
+      },
+    },
+  ];
+
+  const mockedPatch = vi.fn();
+
+  makeApiClientMock.mockReturnValue({
+    read: vi.fn(),
+    create: vi.fn(),
+    patch: mockedPatch,
+  });
+
+  // Call the syncResources method with 'create' action
+  await client.syncResources(context, manifests, 'apply', namespace);
+
+  // Expect patch method to have been called
+  expect(mockedPatch).toHaveBeenCalled();
+
+  // Expect it to be called with NO status
+  expect(mockedPatch).toHaveBeenCalledWith(
+    {
+      apiVersion: 'v1',
+      kind: 'Pod',
+      metadata: {
+        annotations: {
+          'kubectl.kubernetes.io/last-applied-configuration': expect.anything(),
+        },
+        name: 'test-pod',
+        namespace: 'default',
+      },
+    },
+    undefined,
+    undefined,
+    'podman-desktop',
+  );
+});
+
 describe('port forward', () => {
   const serviceMock: KubernetesPortForwardService = {
     createForward: vi.fn(),
