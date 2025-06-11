@@ -13,7 +13,7 @@
  */
 
 import type { Stats } from 'node:fs';
-import * as fs from 'node:fs/promises';
+import * as fs from 'node:fs';
 import path from 'node:path';
 
 import sharp from 'sharp';
@@ -35,7 +35,7 @@ const quality = {
  * @param format - The format to compress to.
  * @returns The compressed Sharp instance.
  */
-function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
+export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
   switch (format) {
     case 'png':
       sharpInstance = sharpInstance.png({ compressionLevel: 9 });
@@ -60,8 +60,8 @@ function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp 
  * @param allowedExts - The extensions to allow.
  * @returns A promise that resolves to an array of file paths.
  */
-async function walk(dir: string, allowedExts: string[]): Promise<(string | undefined)[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+export async function walk(dir: string, allowedExts: string[]): Promise<(string | undefined)[]> {
+  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
     entries.map(async entry => {
       const res: string = path.join(dir, entry.name);
@@ -76,7 +76,7 @@ async function walk(dir: string, allowedExts: string[]): Promise<(string | undef
     }),
   );
 
-  return files.flat();
+  return files.flat().filter(Boolean);
 }
 
 /**
@@ -85,7 +85,7 @@ async function walk(dir: string, allowedExts: string[]): Promise<(string | undef
  * @param dir - The directory of the image.
  * @returns The relative output directory.
  */
-function getRelativeOutputDir(dir: string): string {
+export function getRelativeOutputDir(dir: string): string {
   if (dir.startsWith('static')) {
     return path.relative('static', dir);
   }
@@ -111,7 +111,7 @@ function getRelativeOutputDir(dir: string): string {
  * @param resizeOptions - The options to resize the image.
  * @returns A promise that resolves to an object with the processed flag and the saved bytes.
  */
-async function generateOptimizedImage(
+export async function generateOptimizedImage(
   imagePath: string,
   outputPath: string,
   format: string,
@@ -119,8 +119,7 @@ async function generateOptimizedImage(
   resizeOptions?: { width: number },
 ): Promise<{ processed: boolean; savedBytes: number }> {
   try {
-    const outputStats = await fs.stat(outputPath);
-
+    const outputStats = await fs.promises.stat(outputPath);
     if (outputStats.mtime > originalFileStats.mtime) {
       console.log(`  Skipping ${path.basename(outputPath)} (already up to date)`);
       return { processed: false, savedBytes: 0 };
@@ -142,8 +141,7 @@ async function generateOptimizedImage(
 
   const outputBuffer = await sharpInstance.toBuffer();
 
-  await fs.writeFile(outputPath, outputBuffer);
-
+  await fs.promises.writeFile(outputPath, outputBuffer);
   const outputSize = outputBuffer.length;
   const savedBytes = originalFileStats.size - outputSize;
   const savedPercent = ((savedBytes / originalFileStats.size) * 100).toFixed(1);
@@ -158,7 +156,7 @@ async function generateOptimizedImage(
  *
  * @returns A promise that resolves when the optimization is complete.
  */
-async function optimizeImages(): Promise<void> {
+export async function optimizeImages(): Promise<void> {
   const startTime = Date.now();
 
   console.log('Starting image optimization...');
@@ -207,12 +205,12 @@ async function optimizeImages(): Promise<void> {
  * @param buildDir - The directory to build the optimized image.
  * @returns A promise that resolves to an object with the processed count and the saved bytes.
  */
-async function optimizeImage(
+export async function optimizeImage(
   imagePath: string,
   buildDir: string,
 ): Promise<{ processedCount: number; savedBytes: number }> {
   try {
-    const stats = await fs.stat(imagePath);
+    const stats = await fs.promises.stat(imagePath);
 
     console.log(`Processing: ${imagePath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
 
@@ -220,7 +218,7 @@ async function optimizeImage(
     const relativeDir = getRelativeOutputDir(parsedPath.dir);
     const outputDir = path.join(buildDir, relativeDir);
 
-    await fs.mkdir(outputDir, { recursive: true });
+    await fs.promises.mkdir(outputDir, { recursive: true });
 
     const metadata = await sharp(imagePath).metadata();
 
@@ -242,7 +240,7 @@ async function optimizeImage(
  * @param metadata - The metadata of the original image.
  * @returns A promise that resolves to an object with the processed count and the saved bytes.
  */
-async function processImageFormats(
+export async function processImageFormats(
   imagePath: string,
   outputDir: string,
   parsedPath: path.ParsedPath,

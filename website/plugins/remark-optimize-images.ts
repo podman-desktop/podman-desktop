@@ -19,7 +19,7 @@ import path from 'node:path';
 
 import { visit } from 'unist-util-visit';
 
-function remarkOptimizeImages() {
+export function remarkOptimizeImages() {
   return (tree, _file): void => {
     visit(tree, 'image', (node, index, parent) => {
       const { url, alt } = node;
