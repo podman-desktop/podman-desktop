@@ -29,8 +29,8 @@ export class ProtocolLauncher {
   sanitizeProtocolForExtension(url: string): string {
     if (url.startsWith('podman-desktop://extension/')) {
       url = url.replace('podman-desktop://extension/', 'podman-desktop:extension/');
-    } else if (url.startsWith('podman-desktop://experimental')) {
-      url = url.replace('podman-desktop://experimental', 'podman-desktop:experimental');
+    } else if (url.startsWith('podman-desktop://preferences/experimental')) {
+      url = url.replace('podman-desktop://preferences/experimental', 'podman-desktop:experimental');
     }
 
     return url;
@@ -56,6 +56,8 @@ export class ProtocolLauncher {
 
     // if url starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
     url = this.sanitizeProtocolForExtension(url);
+
+    console.log('>>>>>>>>> ' + url);
 
     if (url.startsWith('podman-desktop:extension/')) {
       // grab the extension id
