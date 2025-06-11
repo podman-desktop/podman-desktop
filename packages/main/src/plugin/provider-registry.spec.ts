@@ -1210,13 +1210,20 @@ test('should send events when container connection status change', async () => {
     expect(event.status).toBe('stopped');
     onAfterDidUpdateContainerConnectionCalled = true;
   });
-
+  let providerContainerConnectionLifecycleListenerCalled = false;
+  providerRegistry.addProviderContainerConnectionLifecycleListener((name, providerInfo, providerConnectionInfo) => {
+    expect(name).toBe('provider-container-connection:update-status');
+    expect(providerInfo.name).toBe('internal');
+    expect(providerConnectionInfo.name).toBe('connection');
+    providerContainerConnectionLifecycleListenerCalled = true;
+  });
   containerProviderConnection.status = (): ProviderConnectionStatus => 'stopped';
   providerRegistry.onDidChangeContainerProviderConnectionStatus(
     providerRegistry.getMatchingProvider('0'),
     containerProviderConnection,
   );
 
+  expect(providerContainerConnectionLifecycleListenerCalled).toBeTruthy();
   expect(onBeforeDidUpdateContainerConnectionCalled).toBeFalsy();
   expect(onDidUpdateContainerConnectionCalled).toBeTruthy();
   expect(onAfterDidUpdateContainerConnectionCalled).toBeTruthy();
