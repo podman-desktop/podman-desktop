@@ -100,3 +100,37 @@ export class MacPodmanInstallCheck extends BaseCheck {
     });
   }
 }
+
+export class MacKrunkitPodmanMachineCreationCheck extends BaseCheck {
+  title = 'Krunkit Installation';
+  async execute(): Promise<extensionApi.CheckResult> {
+    // we need to check if brew is installed to avoid unexpected error
+    try {
+      await extensionApi.process.exec('which', ['brew']);
+    } catch (err) {
+      // brew is not installed so do not check if krunkit has been installed with brew
+      return this.createSuccessfulResult();
+    }
+
+    // brew is installed, check if libKrun has been installed with brew
+    try {
+      const result = await extensionApi.process.exec('brew', ['list', '--verbose', 'krunkit'], {
+        env: { HOMEBREW_NO_AUTO_UPDATE: '1', HOMEBREW_NO_ANALYTICS: '1' },
+      });
+      if (!result.stderr) {
+        return this.createSuccessfulResult();
+      }
+    } catch (e: unknown) {
+      console.error(`Krunkit check failed with error: ${e}`);
+    }
+
+    return this.createFailureResult({
+      description:
+        'You have krunkit installed with "brew", run "brew update && brew upgrade krunkit" to install new version',
+      docLinks: {
+        url: 'https://docs.brew.sh/Manpage#upgrade-options-outdated_formulaoutdated_cask-',
+        title: 'Brew Documentation',
+      },
+    });
+  }
+}
