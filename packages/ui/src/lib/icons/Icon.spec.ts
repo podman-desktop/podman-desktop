@@ -65,15 +65,6 @@ describe('font awesome', () => {
     const path = img.querySelector('path');
     expect(path).toHaveAttribute('fill', 'currentColor');
   });
-
-  test('icon should reflect selected color', () => {
-    render(Icon, { icon: faGithub, color: 'blue' });
-
-    const img = screen.getByRole('img', { hidden: true });
-    expect(img).toBeInTheDocument();
-    const path = img.querySelector('path');
-    expect(path).toHaveAttribute('fill', 'blue');
-  });
 });
 
 describe('class icon', () => {

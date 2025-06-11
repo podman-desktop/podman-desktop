@@ -9,32 +9,19 @@ interface Props {
   icon: IconDefinition | Component | string;
   size?: IconSize | number | string;
   class?: string;
-  color?: string;
-  'aria-label'?: string;
-  'aria-hidden'?: string;
-  role?: string;
-  solid?: boolean;
 }
 
-let {
-  icon,
-  size,
-  class: className,
-  color,
-  'aria-label': ariaLabel,
-  'aria-hidden': ariaHidden,
-  role = 'img',
-  solid = false,
-}: Props = $props();
+let { icon, size, class: className }: Props = $props();
 
+const role = 'img';
 const IconComponent = icon;
 </script>
 
 
 {#if isFontAwesomeIcon(icon) && (typeof size === 'undefined' || isFontAwesomeSize(size))}
-    <Fa {icon} {size} class={className} {color}/>
+    <Fa {icon} {size} class={className}/>
 {:else if typeof icon === 'string' && (icon.startsWith('fas fa-') || icon.startsWith('far fa-'))}
-    <i class={`${icon} ${size} ${className}`} aria-label={ariaLabel} aria-hidden={ariaHidden ? Boolean(ariaHidden) : false} {role}></i>
+    <i class={`${icon} ${size} ${className}`} {role}></i>
 {:else if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
-    <span {role}><IconComponent class={className} {size} {solid}/></span>
+    <span {role}><IconComponent class={className} {size}/></span>
 {/if}
