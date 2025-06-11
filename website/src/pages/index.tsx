@@ -392,14 +392,14 @@ function Pods(): JSX.Element {
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
                 className="py-4 h-[90px]"
-                alt="Troubleshoot with Ease"
+                alt="Kubernetes Made Easy"
                 sources={{
                   light: useBaseUrl('img/troubleshoot1.svg'),
                   dark: useBaseUrl('img/troubleshoot1.svg'),
                 }}
               />
               <h2 className="title-font sm:text-3xl text-2xl py-3 font-medium text-charcoal-300 dark:text-white mb-0">
-                Troubleshoot with Ease
+                Kubernetes Made Easy
               </h2>
               <p className="leading-relaxed py-3 dark:text-gray-300 text-charcoal-300">
                 Whether working natively with Kubernetes objects or managing local or remote clusters, Podman Desktop
