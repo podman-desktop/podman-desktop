@@ -90,9 +90,7 @@ test.each([
   await callback();
 
   // wait listContainersMock is called
-  while (getProviderInfosMock.mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
+  await vi.waitFor(() => expect(getProviderInfosMock).toHaveBeenCalled());
 
   // now get list
   const providerListResult = get(providerInfos);
