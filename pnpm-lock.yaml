@@ -33,9 +33,6 @@ importers:
       '@segment/analytics-node':
         specifier: ^2.2.1
         version: 2.2.1(encoding@0.1.13)
-      '@types/he':
-        specifier: ^1.2.3
-        version: 1.2.3
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
@@ -81,9 +78,6 @@ importers:
       got:
         specifier: ^14.4.2
         version: 14.4.6
-      he:
-        specifier: ^1.2.0
-        version: 1.2.0
       hpagent:
         specifier: ^1.2.0
         version: 1.2.0
@@ -624,9 +618,6 @@ importers:
       '@tsconfig/svelte':
         specifier: ^5.0.4
         version: 5.0.4
-      '@types/he':
-        specifier: ^1.2.3
-        version: 1.2.3
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -654,9 +645,6 @@ importers:
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
-      he:
-        specifier: ^1.2.0
-        version: 1.2.0
       humanize-duration:
         specifier: ^3.33.0
         version: 3.33.0
@@ -4195,9 +4183,6 @@ packages:
 
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
-
-  '@types/he@1.2.3':
-    resolution: {integrity: sha512-q67/qwlxblDzEDvzHhVkwc1gzVWxaNxeyHUBF4xElrvjL11O+Ytze+1fGpBHlr/H9myiBUaUXNnNPmBHxxfAcA==}
 
   '@types/history@4.7.11':
     resolution: {integrity: sha512-qjDJRrmvBMiTx+jyLxvLfJU7UznFuokDv4f3WRuriHKERccVpFU+8XMQUAbDzoiJCsmexxRExQeMwwCdamSKDA==}
@@ -16301,8 +16286,6 @@ snapshots:
   '@types/hast@3.0.4':
     dependencies:
       '@types/unist': 3.0.3
-
-  '@types/he@1.2.3': {}
 
   '@types/history@4.7.11': {}
 
