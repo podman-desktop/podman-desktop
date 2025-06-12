@@ -18,10 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, type RenderResult, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
-import { tick } from 'svelte';
+import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { beforeAll, expect, test, vi } from 'vitest';
@@ -47,9 +47,10 @@ beforeAll(() => {
   };
 });
 
-async function waitRender(customProperties: object): Promise<void> {
-  render(ContainerList, { ...customProperties });
+async function waitRender(customProperties: object): Promise<RenderResult<Component<ComponentProps<ContainerList>>>> {
+  const result = render(ContainerList, { ...customProperties });
   await tick();
+  return result;
 }
 
 test('Expect no container engines being displayed', async () => {
@@ -966,4 +967,29 @@ test('Try to run pods in bulk', async () => {
   // expect that the container is running
   expect(window.startContainer).toHaveBeenCalledWith('podman', containerId);
   expect(window.startContainer).toHaveBeenCalledOnce();
+});
+
+test('Ensuring the table and empty screen are not visible at the same time', async () => {
+  // mock one container
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'sha256:7897891234567890123',
+      Image: 'sha256:345',
+      Names: ['container-in-pod'],
+      Status: 'Stopped',
+      engineId: 'podman',
+      engineName: 'podman',
+      ImageID: 'dummy-image-id',
+    } as ContainerInfo,
+  ]);
+  // mock zero provider infos
+  vi.mocked(window.getProviderInfos).mockResolvedValue([]);
+
+  const { getByRole, queryByRole } = await waitRender({});
+
+  const noEngine = getByRole('heading', { name: 'No Container Engine' });
+  expect(noEngine).toBeInTheDocument();
+
+  const table = queryByRole('table');
+  expect(table).toBeNull();
 });

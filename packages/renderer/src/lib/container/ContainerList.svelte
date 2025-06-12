@@ -499,16 +499,6 @@ $: containersAndGroups = containerGroups.map(group =>
 
   {#snippet content()}
     <div class="flex min-w-full h-full">
-      <Table
-        kind="container"
-        bind:selectedItemsNumber={selectedItemsNumber}
-        data={containersAndGroups}
-        columns={columns}
-        row={row}
-        defaultSortColumn="Name"
-        on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
-      </Table>
-    
       {#if providerConnections.length === 0}
         <NoContainerEngineEmptyScreen />
       {:else if containerGroups.length === 0}
@@ -526,6 +516,16 @@ $: containersAndGroups = containerGroups.map(group =>
             runningOnly={containerUtils.filterIsRunning(searchTerm)}
             stoppedOnly={containerUtils.filterIsStopped(searchTerm)} />
         {/if}
+      {:else}
+        <Table
+          kind="container"
+          bind:selectedItemsNumber={selectedItemsNumber}
+          data={containersAndGroups}
+          columns={columns}
+          row={row}
+          defaultSortColumn="Name"
+          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+        </Table>
       {/if}
     </div>
   {/snippet}
