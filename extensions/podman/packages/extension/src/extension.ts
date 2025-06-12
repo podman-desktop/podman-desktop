@@ -882,21 +882,24 @@ export async function registerProviderFor(
     },
   };
   //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac) {
+  if (extensionApi.env.isMac || extensionApi.env.isWindows) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
       for (const key of Object.keys(params)) {
-        if (key === 'podman.machine.cpus') {
-          args.push('--cpus', params[key]);
-          effective = true;
-        } else if (key === 'podman.machine.memory') {
-          args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
-          effective = true;
-        } else if (key === 'podman.machine.diskSize') {
-          args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
-          effective = true;
-        } else if (key === 'podman.machine.rootful') {
+        if (extensionApi.env.isMac) {
+          if (key === 'podman.machine.cpus') {
+            args.push('--cpus', params[key]);
+            effective = true;
+          } else if (key === 'podman.machine.memory') {
+            args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
+            effective = true;
+          } else if (key === 'podman.machine.diskSize') {
+            args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
+            effective = true;
+          }
+        }
+        if (key === 'podman.machine.rootful') {
           args.push(`--rootful=${params[key]}`);
           effective = true;
         }

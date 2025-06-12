@@ -1524,7 +1524,7 @@ test('display name is beautified version of the name', async () => {
   expect(registeredConnection?.name).toBe(machineDefaultName);
 });
 
-test('provider is registered without edit capabilities on Windows', async () => {
+test('provider is registered with limited edit capabilities on Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
@@ -1550,7 +1550,7 @@ test('provider is registered without edit capabilities on Windows', async () => 
   await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
-  expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
