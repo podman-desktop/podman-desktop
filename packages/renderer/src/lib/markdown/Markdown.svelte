@@ -45,7 +45,6 @@ UI guidelines -->
 </style>
 
 <script lang="ts">
-import { decode } from 'he';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
