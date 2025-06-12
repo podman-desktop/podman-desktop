@@ -2386,9 +2386,6 @@ test('test sync resources was called with no status being passed through', async
   // Call the syncResources method with 'create' action
   await client.syncResources(context, manifests, 'apply', namespace);
 
-  // Expect patch method to have been called
-  expect(mockedPatch).toHaveBeenCalled();
-
   // Expect it to be called with NO status
   expect(mockedPatch).toHaveBeenCalledWith(
     {
