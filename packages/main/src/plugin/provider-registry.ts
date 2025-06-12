@@ -1313,6 +1313,7 @@ export class ProviderRegistry {
         this.getProviderContainerConnectionInfo(containerConnection),
       );
     });
+    this.apiSender.send('provider-container-connection-update-status');
   }
 
   onDidUnregisterContainerConnectionCallback(
