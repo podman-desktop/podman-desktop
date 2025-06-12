@@ -121,16 +121,13 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   test.describe
     .serial('Kind cluster validation tests', () => {
-      test('Create a Kind cluster', async ({ page }) => {
+      test('Create a Kind cluster - With Ingress controller', async ({ page }) => {
         test.setTimeout(CLUSTER_CREATION_TIMEOUT);
-        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-          await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
-            providerType: providerTypeGHA,
-            useIngressController: false,
-          });
-        } else {
-          await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
-        }
+
+        await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+          providerType: providerTypeGHA,
+          useIngressController: true,
+        });
       });
 
       test('Check resources added with the Kind cluster', async ({ page }) => {
@@ -186,16 +183,13 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     });
   test.describe
     .serial('Kind cluster operations - Details', () => {
-      test('Create a Kind cluster', async ({ page }) => {
+      test('Create a Kind cluster - Without Ingress controller', async ({ page }) => {
         test.setTimeout(CLUSTER_CREATION_TIMEOUT);
-        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-          await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
-            providerType: providerTypeGHA,
-            useIngressController: false,
-          });
-        } else {
-          await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
-        }
+
+        await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+          providerType: providerTypeGHA,
+          useIngressController: false,
+        });
       });
 
       test('Kind cluster operations details - STOP', async ({ page }) => {
@@ -236,17 +230,12 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     .serial('Kind cluster creation with custom config file', () => {
       test('Create a Kind cluster using the custom config file', async ({ page }) => {
         test.setTimeout(CLUSTER_CREATION_TIMEOUT);
-        if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-          await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
-            configFilePath: CUSTOM_CONFIG_FILE_PATH,
-            providerType: providerTypeGHA,
-            useIngressController: false,
-          });
-        } else {
-          await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
-            configFilePath: CUSTOM_CONFIG_FILE_PATH,
-          });
-        }
+
+        await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+          configFilePath: CUSTOM_CONFIG_FILE_PATH,
+          providerType: providerTypeGHA,
+          useIngressController: false,
+        });
         await checkClusterResources(page, CUSTOM_CONFIG_KIND_CONTAINER);
       });
       test('Delete the Kind cluster', async ({ page }) => {
