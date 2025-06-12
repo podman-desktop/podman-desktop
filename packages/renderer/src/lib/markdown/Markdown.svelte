@@ -45,7 +45,6 @@ UI guidelines -->
 </style>
 
 <script lang="ts">
-import { decode } from 'he';
 import { micromark } from 'micromark';
 import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
@@ -81,6 +80,12 @@ $: markdown
       htmlExtensions: [directiveHtml({ button, link, warnings })],
     }))
   : undefined;
+
+function decode(htmlString: string): string {
+  let textArea = document.createElement('textarea');
+  textArea.innerHTML = htmlString;
+  return textArea.value;
+}
 
 onMount(() => {
   if (markdown) {
