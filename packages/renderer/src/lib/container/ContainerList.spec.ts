@@ -985,6 +985,13 @@ test('Ensuring the table and empty screen are not visible at the same time', asy
   // mock zero provider infos
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
 
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  // wait until the stores are populated
+  await vi.waitFor(() => get(containersInfos).length === 1 && get(providerInfos).length === 0);
+
   const { getByRole, queryByRole } = await waitRender({});
 
   const noEngine = getByRole('heading', { name: 'No Container Engine' });
