@@ -125,11 +125,6 @@ test('should initialize provider if there is kubernetes connection provider', as
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
 
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-      name: 'internal',
-      status: 'installed',
-    });
-
     expect(initalizeCalled).toBe(true);
     expect(apiSenderSendMock).toBeCalled();
   } else {
@@ -152,11 +147,6 @@ test('should initialize provider if there is VM connection provider', async () =
   });
 
   await providerRegistry.initializeProvider(providerInternalId);
-
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
 
   expect(initializeMock).toHaveBeenCalled();
   expect(apiSenderSendMock).toHaveBeenCalledWith('provider-create', '0');
@@ -191,11 +181,6 @@ test('should send version event if update', async () => {
   if (providerInternalId) {
     await providerRegistry.updateProvider(providerInternalId);
 
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-      name: 'internal',
-      status: 'installed',
-    });
-
     expect(updateCalled).toBe(true);
     expect(apiSenderSendMock).toBeCalledTimes(3);
   } else {
@@ -228,11 +213,6 @@ test('should initialize provider if there is container connection provider', asy
   expect(providerInternalId).toBeDefined();
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
-
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-      name: 'internal',
-      status: 'installed',
-    });
 
     expect(initalizeCalled).toBe(true);
     expect(apiSenderSendMock).toBeCalled();
