@@ -249,3 +249,9 @@ test(`Test navigationHandle for ${NavigationPage.EDIT_CONTAINER_CONNECTION}`, ()
     '/preferences/container-connection/edit/dummyProviderId/dummyProviderName',
   );
 });
+
+test(`Test navigationHandle for ${NavigationPage.EXPERIMENTAL_FEATURES}`, () => {
+  handleNavigation({ page: NavigationPage.EXPERIMENTAL_FEATURES });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/experimental');
+});
