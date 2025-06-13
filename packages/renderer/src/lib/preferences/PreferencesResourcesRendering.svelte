@@ -427,7 +427,7 @@ function handleError(errorMessage: string): void {
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup" class="">
+        <div role="region" aria-label="Provider Setup">
           <!-- left col - provider icon/name + "create new" button -->
           <div class="min-w-[170px] max-w-[200px]">
             <div class="flex">
