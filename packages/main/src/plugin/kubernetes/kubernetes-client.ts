@@ -29,6 +29,7 @@ import type {
   KubernetesObject,
   RequestContext,
   ResponseContext,
+  User,
   V1APIGroup,
   V1APIResource,
   V1ConfigMap,
@@ -341,6 +342,10 @@ export class KubernetesClient {
     return this.kubeConfig.clusters;
   }
 
+  getUsers(): User[] {
+    return this.kubeConfig.users;
+  }
+
   getCurrentNamespace(): string | undefined {
     return this.currentNamespace;
   }
@@ -413,7 +418,13 @@ export class KubernetesClient {
     this.apiSender.send('kubernetes-context-update');
   }
 
-  async updateContext(contextName: string, newContextName: string, newContextNamespace: string): Promise<void> {
+  async updateContext(
+    contextName: string,
+    newContextName: string,
+    newContextNamespace: string,
+    newContextCluster: string,
+    newContextUser: string,
+  ): Promise<void> {
     const newConfig = new KubeConfig();
 
     const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
@@ -425,6 +436,8 @@ export class KubernetesClient {
     const editedContext = {
       ...originalContext,
       name: newContextName,
+      cluster: newContextCluster,
+      user: newContextUser,
       ...namespaceField,
     };
 

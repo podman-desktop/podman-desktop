@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import type { Cluster, User } from '@kubernetes/client-node';
+import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -18,11 +19,15 @@ let { detailed = false, contextToEdit, closeCallback }: Props = $props();
 
 let contextName = $state('');
 let contextNamespace = $state('');
+let contextCluster = $state('');
+let contextUser = $state('');
 
 let contextNameErrorMessage = $state('');
 let contextNamespaceErrorMessage = $state('');
 
 let contexts: KubeContext[] = $state($kubernetesContexts);
+let users: User[] | undefined = $state();
+let clusters: Cluster[] | undefined = $state();
 let kubeConfig = $state('~/.kube/config');
 
 $effect(() => {
@@ -36,8 +41,12 @@ $effect(() => {
 });
 
 onMount(async () => {
-  contextName = contextToEdit?.name;
-  contextNamespace = contextToEdit?.namespace ?? '';
+  contextName = contextToEdit.name;
+  contextNamespace = contextToEdit.namespace ?? '';
+  contextCluster = contextToEdit.cluster;
+  contextUser = contextToEdit.user;
+  clusters = await window.kubernetesGetClusters();
+  users = await window.kubernetesGetUsers();
   kubeConfig = (await window.getConfigurationValue('kubernetes.Kubeconfig')) ?? kubeConfig;
 });
 
@@ -49,15 +58,25 @@ function disableSave(name: string, namespace: string): boolean {
   const invalidName =
     name.trim() === '' || contexts?.find(ctx => ctx.name === contextName) !== undefined || name === contextToEdit.name;
   const invalidNamespace = namespace === (contextToEdit.namespace ?? '');
-  return invalidName && invalidNamespace;
+  const invalidCluster = contextCluster === contextToEdit.cluster;
+  const invalidUser = contextUser === contextToEdit.user;
+  return invalidName && invalidNamespace && invalidCluster && invalidUser;
 }
 
-async function editContext(contextName: string, contextNamespace: string): Promise<void> {
-  const context = contexts?.find(ctx => ctx.name === contextName);
-  if (context && context.namespace === contextNamespace) return;
-
+async function editContext(
+  contextName: string,
+  contextNamespace: string,
+  contextUser: string,
+  contextCluster: string,
+): Promise<void> {
   try {
-    await window.kubernetesUpdateContext(contextToEdit.name, contextName, contextNamespace);
+    await window.kubernetesUpdateContext(
+      contextToEdit.name,
+      contextName,
+      contextNamespace,
+      contextCluster,
+      contextUser,
+    );
     closeCallback();
   } catch (error: unknown) {
     contextNameErrorMessage =
@@ -66,6 +85,20 @@ async function editContext(contextName: string, contextNamespace: string): Promi
 
   if (detailed) {
     router.goto('/preferences/kubernetes-contexts');
+  }
+}
+
+function onClusterStateChange(key: unknown): void {
+  const entry = clusters?.find(val => val.name === key);
+  if (entry) {
+    contextCluster = entry.name;
+  }
+}
+
+function onUserStateChange(key: unknown): void {
+  const entry = users?.find(val => val.name === key);
+  if (entry) {
+    contextUser = entry.name;
   }
 }
 </script>
@@ -86,6 +119,30 @@ async function editContext(contextName: string, contextNamespace: string): Promi
     {#if contextNameErrorMessage}
         <ErrorMessage error={contextNameErrorMessage} />
     {/if}
+
+    <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Cluster</label>
+    <Dropdown
+      class="text-sm"
+      id="contextCluster"
+      onChange={onClusterStateChange}
+      value={contextCluster}
+      options={clusters?.map((cluster) => ({
+        value: cluster.name,
+        label: cluster.name,
+      }))}>
+    </Dropdown>
+
+    <label for="contextUser" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">User</label>
+    <Dropdown
+      class="text-sm"
+      id="contextUser"
+      onChange={onUserStateChange}
+      value={contextUser}
+      options={users?.map((user) => ({
+        value: user.name,
+        label: user.name,
+      }))}>
+    </Dropdown>
 
     <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
     <Input
@@ -109,7 +166,7 @@ async function editContext(contextName: string, contextNamespace: string): Promi
         class="col-start-4"
         disabled={disableSave(contextName, contextNamespace)}
         on:click={async (): Promise<void> => {
-        await editContext(contextName, contextNamespace);
+        await editContext(contextName, contextNamespace, contextUser, contextCluster);
         }}>Save</Button>
     </svelte:fragment>
 </Dialog>
