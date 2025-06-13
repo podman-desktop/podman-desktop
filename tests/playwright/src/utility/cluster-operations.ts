@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,12 @@ import { getVolumeNameForContainer } from './operations';
 export async function createKindCluster(
   page: Page,
   clusterName: string,
-  usedefaultOptions: boolean,
   timeout: number = 300_000,
   { configFilePath, providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {},
 ): Promise<void> {
-  return test.step('Create Kind cluster', async () => {
+  return test.step(`Create Kind cluster with settings: configFilePath=${configFilePath}, 
+    providerType=${providerType}, httpPort=${httpPort},
+    httpsPort=${httpsPort}, ingressController=${useIngressController}`, async () => {
     const navigationBar = new NavigationBar(page);
     const statusBar = new StatusBar(page);
     const kindResourceCard = new ResourceConnectionCardPage(page, 'kind', clusterName);
@@ -61,22 +62,18 @@ export async function createKindCluster(
     }
 
     await kindResourceCard.createButton.click();
-    if (usedefaultOptions) {
-      await createKindClusterPage.createClusterDefault(clusterName, timeout);
-    } else {
-      await createKindClusterPage.createClusterParametrized(
-        clusterName,
-        {
-          configFilePath: configFilePath,
-          providerType: providerType,
-          httpPort: httpPort,
-          httpsPort: httpsPort,
-          useIngressController: useIngressController,
-          containerImage: containerImage,
-        },
-        timeout,
-      );
-    }
+    await createKindClusterPage.createKindCluster(
+      clusterName,
+      {
+        configFilePath: configFilePath,
+        providerType: providerType,
+        httpPort: httpPort,
+        httpsPort: httpsPort,
+        useIngressController: useIngressController,
+        containerImage: containerImage,
+      },
+      timeout,
+    );
     await playExpect(kindResourceCard.resourceElement).toBeVisible();
     await playExpect(kindResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Running, {
       timeout: 15_000,

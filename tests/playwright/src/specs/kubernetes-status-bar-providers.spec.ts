@@ -128,14 +128,10 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
   test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
     test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
     test.setTimeout(600_000);
-    if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-      await createKindCluster(page, kindClusterName, false, 550_000, {
-        providerType: providerTypeGHA,
-        useIngressController: false,
-      });
-    } else {
-      await createKindCluster(page, kindClusterName, true, 550_000);
-    }
+    await createKindCluster(page, kindClusterName, 550_000, {
+      providerType: providerTypeGHA,
+      useIngressController: false,
+    });
 
     //Verify its not pinned by default
     const kindStatusBarProviderButton = await statusBar.getProviderButton(kindProviderName);
