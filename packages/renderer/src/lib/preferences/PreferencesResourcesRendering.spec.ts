@@ -808,3 +808,21 @@ test('Expect to see the no resource message when there is no providers', async (
   const panel = screen.getByLabelText('no-resource-panel');
   expect(panel).toBeInTheDocument();
 });
+
+test('Expect update button to show up when an update is available to a new version', async () => {
+  vi.mocked(window.runUpdatePreflightChecks).mockResolvedValue(true);
+  vi.mocked(window.updateProvider).mockResolvedValue([{ name: 'podman', status: true }]);
+  providerInfos.set([providerInfo]);
+  const component = render(PreferencesResourcesRendering, {});
+  let updateButton = screen.queryByText('Update to');
+  expect(updateButton).not.toBeInTheDocument();
+
+  providerInfos.set([{ ...providerInfo, version: '0.0.1', updateInfo: { version: '0.0.2' } }]);
+  await component.rerender({});
+  updateButton = screen.getByText('Update to 0.0.2');
+  expect(updateButton).toBeInTheDocument();
+
+  await userEvent.click(updateButton);
+  expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
+  expect(window.updateProvider).toHaveBeenCalled();
+});
