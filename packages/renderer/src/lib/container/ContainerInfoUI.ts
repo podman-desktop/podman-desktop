@@ -34,8 +34,8 @@ export interface ContainerGroupPartInfoUI {
 
   // Information regarding the entire group (ex. name of the pod)
   // as well as the "engine" running the group (ex. podman or docker)
-  id?: string;
-  engineId?: string;
+  id: string;
+  engineId: string;
   engineName?: string;
   engineType?: 'podman' | 'docker';
   shortId?: string;

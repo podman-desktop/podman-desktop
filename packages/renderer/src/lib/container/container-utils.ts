@@ -42,7 +42,7 @@ export class ContainerUtils {
     // Safely determine if this is a compose project or not by checking the project label.
     const composeProject = containerInfo.Labels?.['com.docker.compose.project'];
 
-    /* 
+    /*
       When deploying with compose, the container name will be <project>-<service-name>-<container-number> under Names[0].
       This is added to the container name to make it unique.
       HOWEVER, if you specify container_name in the compose file, the container name will be whatever is is set to and
@@ -188,6 +188,7 @@ export class ContainerUtils {
     const composeProject = containerInfo.Labels?.['com.docker.compose.project'];
     if (composeProject) {
       return {
+        id: composeProject,
         name: composeProject,
         type: ContainerGroupInfoTypeUI.COMPOSE,
         engineId: containerInfo.engineId,
@@ -210,6 +211,8 @@ export class ContainerUtils {
 
     // else, standalone
     return {
+      id: containerInfo.Id,
+      engineId: containerInfo.engineId,
       name: this.getName(containerInfo),
       type: ContainerGroupInfoTypeUI.STANDALONE,
       status: (containerInfo.Status ?? '').toUpperCase(),
@@ -218,6 +221,8 @@ export class ContainerUtils {
   }
 
   getContainerGroups(containerInfos: ContainerInfoUI[]): ContainerGroupInfoUI[] {
+    console.log('getContainerGroups', containerInfos);
+
     // create a map from containers having the same group field
     const groups = new Map<string, ContainerGroupInfoUI>();
     containerInfos.forEach(containerInfo => {
@@ -232,8 +237,8 @@ export class ContainerUtils {
           allContainersCount: 1,
         });
       } else {
-        if (!groups.has(group.name)) {
-          groups.set(group.name, {
+        if (!groups.has(group.id)) {
+          groups.set(group.id, {
             selected: false,
             expanded: true,
             name: group.name,
@@ -246,7 +251,7 @@ export class ContainerUtils {
             containers: [],
           });
         }
-        groups.get(group.name)?.containers.push(containerInfo);
+        groups.get(group.id)?.containers.push(containerInfo);
       }
     });
     groups.forEach(group => (group.allContainersCount = group.containers.length));
