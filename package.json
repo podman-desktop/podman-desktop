@@ -107,7 +107,8 @@
     "storybook:dev": "pnpm run storybook:css && cd storybook && pnpm run dev",
     "storybook:build": "pnpm run build:ui && pnpm run storybook:css && cd storybook && pnpm run build",
     "prepare": "husky install",
-    "postinstall": "playwright install chromium"
+    "postinstall": "playwright install chromium",
+    "releasenotes": "tsx ./scripts/release-notes/generate-release-notes.ts"
   },
   "lint-staged": {
     "*.{js,ts,tsx,svelte}": [
