@@ -49,6 +49,8 @@ beforeAll(() => {
     addProviderListener: vi.fn(),
     addProviderLifecycleListener: vi.fn(),
     addProviderContainerConnectionLifecycleListener: vi.fn(),
+    getProviderInfo: vi.fn(),
+    getMatchingProviderInternalId: vi.fn(),
   } as unknown as ProviderRegistry;
   const telemetryService = {} as Telemetry;
   menuRegistry = new TrayMenuRegistry(trayMenu, commandRegistry, providerRegistry, telemetryService);
@@ -59,6 +61,18 @@ beforeEach(() => {
 });
 
 test('Should pass proper providerId field', () => {
+  // Mock providerInfo to return a specific internalId
+  const providerInfo: ProviderInfo = {
+    internalId: '1',
+    id: 'testId',
+  } as unknown as ProviderInfo;
+
+  // Mock getMatchingProviderInternalId to return '1'
+  vi.mocked(menuRegistry.providerRegistry.getMatchingProviderInternalId).mockReturnValue(providerInfo.internalId);
+
+  // Mock getProviderInfo to return the mocked providerInfo
+  vi.mocked(menuRegistry.providerRegistry.getProviderInfo).mockReturnValue(providerInfo);
+
   const ipcEmit = vi.spyOn(ipcMain, 'emit');
   menuRegistry.registerProvider({
     internalId: 'internalId',
@@ -72,7 +86,7 @@ test('Should pass proper providerId field', () => {
   expect(lastIpcArguments).not.toBeUndefined();
   expect(lastIpcArguments[0]).eqls('tray:add-provider-menu-item');
   expect(lastIpcArguments[1]).eqls('');
-  expect(lastIpcArguments[2]).eqls({ providerId: 'testId', menuItem: menuItem });
+  expect(lastIpcArguments[2]).eqls({ providerId: 'testId', menuItem: menuItem, providerInfo: providerInfo });
 });
 
 test('Should remove menu item on dispose', () => {
