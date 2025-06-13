@@ -412,7 +412,7 @@ function handleError(errorMessage: string): void {
       href="/extensions"
       class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
   </span>
-  <div class="h-full w-full" role="region" aria-label="Featured Provider Resources">
+  <div class="h-full" role="region" aria-label="Featured Provider Resources">
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}
@@ -424,12 +424,12 @@ function handleError(errorMessage: string): void {
       <div
         id={provider.id}
         bind:this={providerElementMap[provider.id]}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex w-full"
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup" class="min-w-[170px] w-[30%]">
+        <div role="region" aria-label="Provider Setup" class="">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="mr-2">
+          <div class="min-w-[170px] max-w-[200px]">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
@@ -452,7 +452,7 @@ function handleError(errorMessage: string): void {
                   Setup ...
                 </Button>
               {:else}
-                <div class="flex flex-row justify-evenly flex-wrap w-full gap-2">
+                <div class="flex flex-row justify-around flex-wrap gap-2">
                   {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
                     {@const providerDisplayName =
                       (provider.containerProviderConnectionCreation
@@ -504,7 +504,7 @@ function handleError(errorMessage: string): void {
         </div>
         <!-- providers columns -->
         <div
-          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)] w-full"
+          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)]"
           role="region"
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
