@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs/promises';
 import * as https from 'node:https';
 
 import { app, shell } from 'electron';
@@ -26,6 +27,7 @@ import {
   type UpdateDownloadedEvent,
   type UpdateInfo,
 } from 'electron-updater';
+import { getAppCacheDir } from 'electron-updater/out/AppAdapter.js';
 import { compare, valid } from 'semver';
 
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -35,7 +37,7 @@ import type { MessageBox } from '/@/plugin/message-box.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import { isLinux, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
 import rootPackage from '../../../../package.json' with { type: 'json' };
@@ -350,6 +352,14 @@ export class Updater {
     // Update the 'version' entry in the status bar to show that no update is available
     this.defaultVersionEntry();
     this.apiSender.send('app-update-available', false);
+
+    // Remove the Electron updater cache folder
+    if (isWindows() || isMac()) {
+      const cacheDir = getAppCacheDir();
+      fs.rm(cacheDir, { recursive: true, force: true })
+        .then(() => console.info(`Electron updater cache folder deleted: ${cacheDir}`))
+        .catch((error: unknown) => console.error(`Error deleting Electron updater cache folder ${cacheDir}: ${error}`));
+    }
   }
 
   /**
