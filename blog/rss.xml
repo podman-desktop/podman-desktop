@@ -2422,7 +2422,7 @@ release we received pull requests from the following people:</p>
 <li>feat: allow to ssh to podman virtual machine - api.d.ts changes by @gastoner in <a href="https://github.com/containers/podman-desktop/pull/9382" target="_blank" rel="noopener noreferrer">#9382</a></li>
 <li>feat: provide ability to easily get a shell in a machine - backend changes - additional changes by @gastoner in <a href="https://github.com/containers/podman-desktop/pull/9550" target="_blank" rel="noopener noreferrer">#9550</a></li>
 </ul>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="extensions-">extensions 🧩<a href="https://podman-desktop.io/blog/podman-desktop-release-1.14#extensions-" class="hash-link" aria-label="Direct link to extensions 🧩" title="Direct link to extensions ��🧩">​</a></h3>
+<h3 class="anchor anchorWithStickyNavbar_JmGV" id="extensions-">extensions 🧩<a href="https://podman-desktop.io/blog/podman-desktop-release-1.14#extensions-" class="hash-link" aria-label="Direct link to extensions 🧩" title="Direct link to extensions 🧩">​</a></h3>
 <ul>
 <li>fix: add implementation for compose update by @dgolovin in <a href="https://github.com/containers/podman-desktop/pull/9402" target="_blank" rel="noopener noreferrer">#9402</a></li>
 <li>fix: check if newly installed extensions dependencies are already installed by @SoniaSandler in <a href="https://github.com/containers/podman-desktop/pull/9596" target="_blank" rel="noopener noreferrer">#9596</a></li>
