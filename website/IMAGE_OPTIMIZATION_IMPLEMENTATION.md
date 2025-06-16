@@ -8,7 +8,7 @@ This implementation provides automatic image optimization for the Podman Desktop
 
 ### 1. Build-time image optimization script
 
-- **File**: `website/scripts/optimize-images.js`
+- **File**: `website/scripts/optimize-images.ts`
 - **Purpose**: Automatically converts images to modern formats during build
 - **Features**:
   - Converts to WebP (85% quality), AVIF (80% quality), and PNG (for compatibility)
@@ -34,7 +34,7 @@ This implementation provides automatic image optimization for the Podman Desktop
 
 ### 3. Remark plugin for automatic blog post optimization
 
-- **File**: `website/plugins/remark-optimize-images.js`
+- **File**: `website/plugins/remark-optimize-images.ts`
 - **Purpose**: Automatically transforms markdown images to use optimized versions
 - **Features**:
   - Converts `![alt](image.png)` to `<picture>` elements with AVIF/WebP/PNG sources
@@ -45,7 +45,7 @@ This implementation provides automatic image optimization for the Podman Desktop
 
 ### 4. Docusaurus plugin for optimized images
 
-- **File**: `website/plugins/docusaurus-plugin-optimized-images.js`
+- **File**: `website/plugins/docusaurus-plugin-optimized-images.ts`
 - **Purpose**: Configures Docusaurus to properly serve optimized images
 - **Features**:
   - Ensures optimized images are accessible at `/optimized-images` URL path
@@ -55,9 +55,9 @@ This implementation provides automatic image optimization for the Podman Desktop
 ### 5. Integration with build process
 
 - **Modified**: `website/package.json` and main `package.json`
-- **Website build script**: `"build": "NODE_ENV=production node scripts/optimize-images.js --production && docusaurus build"`
+- **Website build script**: `"build": "NODE_ENV=production node scripts/optimize-images.ts --production && docusaurus build"`
 - **Main project script**: `"website:build": "pnpm run storybook:build && cd website && pnpm run docusaurus clear && pnpm run optimize-images && pnpm run docusaurus build --no-minify"`
-- **Also added**: Standalone script: `"optimize-images": "node scripts/optimize-images.js"`
+- **Also added**: Standalone script: `"optimize-images": "node scripts/optimize-images.ts"`
 
 ### 6. Docusaurus configuration integration
 
@@ -91,12 +91,20 @@ Testing on the largest images showed impressive results:
      className="w-full"
    />
 
-   // Light/dark theme variants
+   // Light/dark theme variants - using sources object
    <OptimizedImage
      sources={{
        light: "img/logo-light.png",
        dark: "img/logo-dark.png"
      }}
+     alt="Logo"
+     className="w-full"
+   />
+
+   // Alternative: Light/dark theme variants - using individual props
+   <OptimizedImage
+     src="img/logo-light.png"
+     darkSrc="img/logo-dark.png"
      alt="Logo"
      className="w-full"
    />
@@ -135,18 +143,35 @@ Testing on the largest images showed impressive results:
 - The system gracefully handles missing optimized images by falling back to originals
 - External URLs and SVG images are automatically skipped by all optimization components
 
+## Testing considerations
+
+The `OptimizedImage` component would benefit from unit tests covering:
+
+- Theme switching between light/dark modes
+- Fallback behavior when optimized images fail to load
+- Srcset generation for responsive images
+- Support for both `sources` object and individual `src`/`darkSrc` props
+
+To add tests, you would need to install additional testing dependencies:
+
+```bash
+pnpm add -D @testing-library/react @testing-library/dom @testing-library/user-event @vitest/ui jsdom
+```
+
+And configure Vitest to use jsdom environment in `vitest.config.ts`.
+
 ## File structure
 
 ```
 website/
 ├── scripts/
-│   └── optimize-images.js          # Build-time optimization script
+│   └── optimize-images.ts          # Build-time optimization script
 ├── src/
 │   └── components/
 │       └── OptimizedImage.tsx      # React component for optimized images
 ├── plugins/
-│   ├── remark-optimize-images.js   # Markdown transformation plugin
-│   └── docusaurus-plugin-optimized-images.js  # Docusaurus integration
+│   ├── remark-optimize-images.ts   # Markdown transformation plugin
+│   └── docusaurus-plugin-optimized-images.ts  # Docusaurus integration
 ├── static/
 │   ├── img/                        # Original images
 │   └── optimized-images/           # Generated optimized images (gitignored)

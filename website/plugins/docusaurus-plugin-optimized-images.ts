@@ -17,7 +17,7 @@ import type { ConfigureWebpackUtils, LoadContext, Plugin, PluginOptions, Props }
 import type { ConfigureWebpackResult } from '@docusaurus/types/src/plugin';
 import type { Configuration } from 'webpack';
 
-interface CustomConfifureWebpackResult extends ConfigureWebpackResult {
+interface CustomConfigureWebpackResult extends ConfigureWebpackResult {
   devServer: {
     static: [
       {
@@ -37,7 +37,7 @@ export default function (context: LoadContext, _options: PluginOptions): Plugin<
       config: Configuration,
       _isServer: boolean,
       _utils: ConfigureWebpackUtils,
-    ): CustomConfifureWebpackResult {
+    ): CustomConfigureWebpackResult {
       return {
         resolve: {
           alias: {

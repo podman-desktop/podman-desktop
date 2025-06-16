@@ -17,8 +17,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import React from 'react';
 
 interface OptimizedImageProps {
-  /** Single image source (use this OR sources, not both) */
+  /** Single image source (use this OR sources/darkSrc, not both) */
   readonly src?: string;
+
+  /** Dark theme image source (alternative to sources prop) */
+  readonly darkSrc?: string;
 
   /** Theme-specific image sources for light/dark mode support */
   readonly sources?: {
@@ -41,6 +44,7 @@ interface OptimizedImageProps {
 
 export default function OptimizedImage({
   src,
+  darkSrc,
   sources,
   alt,
   className,
@@ -49,7 +53,12 @@ export default function OptimizedImage({
 }: Readonly<OptimizedImageProps>): JSX.Element {
   const { colorMode } = useColorMode();
 
-  const imageSrc = sources ? sources[colorMode === 'dark' ? 'dark' : 'light'] : src;
+  // Support both sources object and individual src/darkSrc props
+  const imageSrc = sources
+    ? sources[colorMode === 'dark' ? 'dark' : 'light']
+    : colorMode === 'dark' && darkSrc
+      ? darkSrc
+      : src;
 
   if (!imageSrc) {
     throw new Error('OptimizedImage requires either src or sources prop');
