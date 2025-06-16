@@ -975,16 +975,11 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0(acorn@8.15.0)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@tailwindcss/postcss':
-<<<<<<< website_pagespeed_insights
-        specifier: ^4.1.8
-        version: 4.1.8
+        specifier: ^4.1.10
+        version: 4.1.10
       glob:
         specifier: ^11.0.3
         version: 11.0.3
-=======
-        specifier: ^4.1.10
-        version: 4.1.10
->>>>>>> main
       markdownlint:
         specifier: ^0.38.0
         version: 0.38.0
@@ -995,19 +990,14 @@ importers:
         specifier: ^0.0.7
         version: 0.0.7(markdownlint-cli2@0.18.1)
       postcss:
-<<<<<<< website_pagespeed_insights
-        specifier: ^8.5.4
-        version: 8.5.4
+        specifier: ^8.5.5
+        version: 8.5.5
       remark-parse:
         specifier: ^11.0.0
         version: 11.0.0
       sharp:
         specifier: ^0.34.2
         version: 0.34.2
-=======
-        specifier: ^8.5.5
-        version: 8.5.5
->>>>>>> main
       tailwindcss:
         specifier: ^4.1.10
         version: 4.1.10
@@ -9062,10 +9052,6 @@ packages:
     resolution: {integrity: sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw==}
     engines: {node: 20 || >=22}
 
-  minimatch@10.0.3:
-    resolution: {integrity: sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw==}
-    engines: {node: 20 || >=22}
-
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
 
@@ -14854,7 +14840,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1
+      debug: 4.4.0
       espree: 10.3.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -15124,14 +15110,10 @@ snapshots:
   '@img/sharp-win32-x64@0.33.5':
     optional: true
 
-<<<<<<< website_pagespeed_insights
   '@img/sharp-win32-x64@0.34.2':
     optional: true
 
-  '@inquirer/confirm@5.1.12(@types/node@22.13.10)':
-=======
   '@inquirer/confirm@5.1.12(@types/node@22.15.31)':
->>>>>>> main
     dependencies:
       '@inquirer/core': 10.1.13(@types/node@22.15.31)
       '@inquirer/type': 3.0.7(@types/node@22.15.31)
@@ -15180,12 +15162,6 @@ snapshots:
   '@inquirer/type@3.0.7(@types/node@24.0.0)':
     optionalDependencies:
       '@types/node': 24.0.0
-
-  '@isaacs/balanced-match@4.0.1': {}
-
-  '@isaacs/brace-expansion@5.0.0':
-    dependencies:
-      '@isaacs/balanced-match': 4.0.1
 
   '@isaacs/balanced-match@4.0.1': {}
 
@@ -19816,15 +19792,9 @@ snapshots:
       cross-spawn: 7.0.6
       debug: 4.4.1
       escape-string-regexp: 4.0.0
-<<<<<<< website_pagespeed_insights
-      eslint-scope: 8.3.0
-      eslint-visitor-keys: 4.2.1
-      espree: 10.3.0
-=======
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
->>>>>>> main
       esquery: 1.6.0
       esutils: 2.0.3
       fast-deep-equal: 3.1.3
@@ -19851,15 +19821,12 @@ snapshots:
       acorn: 8.15.0
       acorn-jsx: 5.3.2(acorn@8.15.0)
       eslint-visitor-keys: 4.2.1
-<<<<<<< website_pagespeed_insights
-=======
 
   espree@10.4.0:
     dependencies:
       acorn: 8.15.0
       acorn-jsx: 5.3.2(acorn@8.15.0)
       eslint-visitor-keys: 4.2.1
->>>>>>> main
 
   espree@9.2.0:
     dependencies:
@@ -20172,8 +20139,6 @@ snapshots:
   flat@5.0.2: {}
 
   flatted@3.3.3: {}
-
-  follow-redirects@1.15.9: {}
 
   follow-redirects@1.15.9(debug@4.4.1):
     optionalDependencies:
@@ -20838,7 +20803,7 @@ snapshots:
   http-proxy@1.18.1:
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.9
+      follow-redirects: 1.15.9(debug@4.4.1)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -22421,10 +22386,6 @@ snapshots:
       webpack: 5.96.1
 
   minimalistic-assert@1.0.1: {}
-
-  minimatch@10.0.3:
-    dependencies:
-      '@isaacs/brace-expansion': 5.0.0
 
   minimatch@10.0.3:
     dependencies:

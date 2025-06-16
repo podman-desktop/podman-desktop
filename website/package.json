@@ -45,29 +45,20 @@
     "@docusaurus/module-type-aliases": "^3.7.0",
     "@docusaurus/tsconfig": "^3.7.0",
     "@docusaurus/types": "^3.7.0",
-<<<<<<< website_pagespeed_insights
-    "@tailwindcss/postcss": "^4.1.8",
+    "@tailwindcss/postcss": "^4.1.10",
     "glob": "^11.0.3",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
-    "postcss": "^8.5.4",
-    "sharp": "^0.34.2",
-    "tailwindcss": "^4.1.8",
-=======
-    "@tailwindcss/postcss": "^4.1.10",
-    "markdownlint": "^0.38.0",
-    "markdownlint-cli2": "^0.18.1",
-    "markdownlint-cli2-formatter-summarize": "^0.0.7",
     "postcss": "^8.5.5",
+    "remark-parse": "^11.0.0",
+    "sharp": "^0.34.2",
     "tailwindcss": "^4.1.10",
->>>>>>> main
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.2",
     "typescript": "^5.8.3",
-    "unist-util-visit": "^5.0.0",
-    "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
     "vitest": "^3.1.4"
   },
   "browserslist": {
