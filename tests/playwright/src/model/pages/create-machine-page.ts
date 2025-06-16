@@ -19,8 +19,10 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { PodmanConnectionTypes } from '../core/types';
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
+import { ResourceConnectionCardPage } from './resource-connection-card-page';
 import { ResourcesPage } from './resources-page';
 
 export class CreateMachinePage extends BasePage {
@@ -42,10 +44,22 @@ export class CreateMachinePage extends BasePage {
     { isRootful = true, enableUserNet = false, startNow = true, setAsDefault = true },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
+      let expectedConnectionType: PodmanConnectionTypes | undefined;
+      switch (process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase()) {
+        case 'wsl':
+          expectedConnectionType = PodmanConnectionTypes.WSL;
+          break;
+        case 'hyperv':
+          expectedConnectionType = PodmanConnectionTypes.HyperV;
+          break;
+      }
+
+      const connectionTypeOption = expectedConnectionType ? { connectionType: expectedConnectionType } : {};
       await this.machineCreationForm.setupAndCreateMachine(machineName, {
         isRootful,
         enableUserNet,
         startNow,
+        ...connectionTypeOption,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
@@ -66,7 +80,17 @@ export class CreateMachinePage extends BasePage {
 
       await playExpect(goBackToResourcesButton).toBeEnabled();
       await goBackToResourcesButton.click();
-      return new ResourcesPage(this.page);
+
+      const resourcesPage = new ResourcesPage(this.page);
+      await playExpect(resourcesPage.heading).toBeVisible();
+      const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
+      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+
+      if (expectedConnectionType) {
+        playExpect(await machineCard.connectionType.innerText()).toContain(expectedConnectionType);
+      }
+
+      return resourcesPage;
     });
   }
 
