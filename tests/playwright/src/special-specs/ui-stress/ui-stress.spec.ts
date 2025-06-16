@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import { expect as playExpect, test } from '../../utility/fixtures';
+import { isLinux } from '../../utility/platform';
 import { waitForPodmanMachineStartup } from '../../utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
@@ -38,8 +39,9 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
 
     const images = await navigationBar.openImages();
     await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
-    //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods = numberOfObjects + 2
-    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(numberOfObjects + 2);
+    //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods (only ubuntu!) = numberOfObjects + 2
+    const expectedImages = isLinux ? numberOfObjects + 2 : numberOfObjects + 1;
+    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(expectedImages);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
       await playExpect
         .poll(async () => await images.waitForRowToExists(`localhost/my-image-${imgNum}`), { timeout: 0 })

@@ -126,6 +126,7 @@ function isV1ObjectMetaWithName(m: unknown): m is V1ObjectMetaWithName {
 interface KubernetesObjectWithKindAndName extends KubernetesObject {
   kind: string;
   metadata: V1ObjectMetaWithName;
+  status?: V1Status;
 }
 
 function isKubernetesObjectWithKindAndName(o: unknown): o is KubernetesObjectWithKindAndName {
@@ -1333,6 +1334,7 @@ export class KubernetesClient {
             delete spec.metadata?.uid;
             delete spec.metadata?.selfLink;
             delete spec.metadata?.creationTimestamp;
+            delete spec.status; // status is usually updated by the system, ignore it
 
             const response = await client.patch(
               spec,

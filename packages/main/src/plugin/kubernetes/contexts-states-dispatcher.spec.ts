@@ -58,6 +58,38 @@ test('ContextsStatesDispatcher should call updateHealthStates when onContextHeal
   expect(updatePermissionsSpy).not.toHaveBeenCalled();
 });
 
+test('ContextsStatesDispatcher should call updateHealthStates, updateResourcesCount and updateActiveResourcesCount when onOfflineChange event is fired', () => {
+  const manager: ContextsManagerExperimental = {
+    onContextHealthStateChange: vi.fn(),
+    onOfflineChange: vi.fn(),
+    onContextPermissionResult: vi.fn(),
+    onContextDelete: vi.fn(),
+    getHealthCheckersStates: vi.fn(),
+    getPermissions: vi.fn(),
+    onResourceCountUpdated: vi.fn(),
+    onResourceUpdated: vi.fn(),
+    isContextOffline: vi.fn(),
+  } as unknown as ContextsManagerExperimental;
+  const apiSender: ApiSenderType = {
+    send: vi.fn(),
+  } as unknown as ApiSenderType;
+  const dispatcher = new ContextsStatesDispatcher(manager, apiSender);
+  const updateHealthStatesSpy = vi.spyOn(dispatcher, 'updateHealthStates');
+  const updateResourcesCountSpy = vi.spyOn(dispatcher, 'updateResourcesCount');
+  const updateActiveResourcesCountSpy = vi.spyOn(dispatcher, 'updateActiveResourcesCount');
+  dispatcher.init();
+  expect(updateHealthStatesSpy).not.toHaveBeenCalled();
+  expect(updateResourcesCountSpy).not.toHaveBeenCalled();
+  expect(updateActiveResourcesCountSpy).not.toHaveBeenCalled();
+
+  vi.mocked(manager.onOfflineChange).mockImplementation(f => f() as IDisposable);
+  vi.mocked(manager.getHealthCheckersStates).mockReturnValue(new Map<string, ContextHealthState>());
+  dispatcher.init();
+  expect(updateHealthStatesSpy).toHaveBeenCalled();
+  expect(updateResourcesCountSpy).toHaveBeenCalled();
+  expect(updateActiveResourcesCountSpy).toHaveBeenCalled();
+});
+
 test('ContextsStatesDispatcher should call updatePermissions when onContextPermissionResult event is fired', () => {
   const manager: ContextsManagerExperimental = {
     onContextHealthStateChange: vi.fn(),

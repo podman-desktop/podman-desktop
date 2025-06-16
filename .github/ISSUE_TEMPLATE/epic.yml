@@ -1,6 +1,7 @@
 name: Epic ⚡
 description: A high-level feature
 labels: [kind/epic ⚡]
+projects: ["podman-desktop/Podman Desktop Planning","podman-desktop/NEW Podman Desktop Future Goals / Planning"]
 
 body:
   - type: markdown

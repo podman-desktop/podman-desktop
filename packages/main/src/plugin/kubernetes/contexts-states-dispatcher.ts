@@ -36,7 +36,11 @@ export class ContextsStatesDispatcher {
 
   init(): void {
     this.manager.onContextHealthStateChange((_state: ContextHealthState) => this.updateHealthStates());
-    this.manager.onOfflineChange(() => this.updateHealthStates());
+    this.manager.onOfflineChange(() => {
+      this.updateHealthStates();
+      this.updateResourcesCount();
+      this.updateActiveResourcesCount();
+    });
     this.manager.onContextPermissionResult((_permissions: ContextPermissionResult) => this.updatePermissions());
     this.manager.onContextDelete((_state: DispatcherEvent) => {
       this.updateHealthStates();

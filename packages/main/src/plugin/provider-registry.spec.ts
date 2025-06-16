@@ -71,6 +71,10 @@ class TestProviderRegistry extends ProviderRegistry {
   getVmProviders(): Map<string, VmProviderConnection> {
     return this.vmProviders;
   }
+
+  override getMatchingProvider(internalId: string): ProviderImpl {
+    return super.getMatchingProvider(internalId);
+  }
 }
 
 beforeEach(() => {
@@ -1141,6 +1145,86 @@ test('should send events when stopping a container connection', async () => {
   expect(stopMock).toBeCalled();
   expect(startMock).not.toBeCalled();
   expect(onBeforeDidUpdateContainerConnectionCalled).toBeTruthy();
+  expect(onDidUpdateContainerConnectionCalled).toBeTruthy();
+  expect(onAfterDidUpdateContainerConnectionCalled).toBeTruthy();
+});
+
+test('should send events when container connection status change', async () => {
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderContainerConnectionInfo = {
+    name: 'connection',
+    displayName: 'connection',
+    type: 'docker',
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    status: 'stopped',
+    vmType: {
+      id: 'libkrun',
+      name: 'libkrun',
+    },
+  };
+
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+  const containerProviderConnection: ContainerProviderConnection = {
+    name: 'connection',
+    displayName: 'connection',
+    type: 'docker',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    status() {
+      return 'started';
+    },
+    vmType: 'libkrun',
+  };
+  provider.registerContainerProviderConnection(containerProviderConnection);
+
+  let onBeforeDidUpdateContainerConnectionCalled = false;
+  providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+    expect(event.connection.name).toBe(connection.name);
+    expect(event.connection.type).toBe(connection.type);
+    expect(event.status).toBe('stopped');
+    onBeforeDidUpdateContainerConnectionCalled = true;
+  });
+  let onDidUpdateContainerConnectionCalled = false;
+  providerRegistry.onDidUpdateContainerConnection(event => {
+    expect(event.connection.name).toBe(connection.name);
+    expect(event.connection.type).toBe(connection.type);
+    expect(event.status).toBe('stopped');
+    onDidUpdateContainerConnectionCalled = true;
+  });
+  let onAfterDidUpdateContainerConnectionCalled = false;
+  providerRegistry.onAfterDidUpdateContainerConnection(event => {
+    expect(event.connection.name).toBe(connection.name);
+    expect(event.connection.type).toBe(connection.type);
+    expect(event.status).toBe('stopped');
+    onAfterDidUpdateContainerConnectionCalled = true;
+  });
+  let providerContainerConnectionLifecycleListenerCalled = false;
+  providerRegistry.addProviderContainerConnectionLifecycleListener((name, providerInfo, providerConnectionInfo) => {
+    expect(name).toBe('provider-container-connection:update-status');
+    expect(providerInfo.name).toBe('internal');
+    expect(providerConnectionInfo.name).toBe('connection');
+    providerContainerConnectionLifecycleListenerCalled = true;
+  });
+  containerProviderConnection.status = (): ProviderConnectionStatus => 'stopped';
+  providerRegistry.onDidChangeContainerProviderConnectionStatus(
+    providerRegistry.getMatchingProvider('0'),
+    containerProviderConnection,
+  );
+
+  expect(providerContainerConnectionLifecycleListenerCalled).toBeTruthy();
+  expect(onBeforeDidUpdateContainerConnectionCalled).toBeFalsy();
   expect(onDidUpdateContainerConnectionCalled).toBeTruthy();
   expect(onAfterDidUpdateContainerConnectionCalled).toBeTruthy();
 });

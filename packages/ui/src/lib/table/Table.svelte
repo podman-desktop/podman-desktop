@@ -234,7 +234,7 @@ function toggleChildren(name: string | undefined): void {
   <div role="rowgroup">
     {#each data as object (object)}
       {@const children = row.info.children?.(object) ?? []}
-      <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2">
+      <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
           class:rounded-t-lg={object.name &&

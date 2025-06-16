@@ -2106,7 +2106,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
       stderr: 'incompatible machine config',
     } as unknown as extensionApi.RunResult);
 
-    vi.mocked(fs.promises.readdir).mockResolvedValue(['foo.json'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.promises.readdir).mockResolvedValue(['foo.json'] as unknown as fs.Dirent<Buffer<ArrayBufferLike>>[]);
 
     // mock readfile
     vi.mocked(fs.promises.readFile).mockResolvedValueOnce('{"Driver": "podman"}');
@@ -2198,7 +2198,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
     vi.mocked(fs.promises.readdir).mockResolvedValue([
       'foo.json',
       'podman-machine-default.json',
-    ] as unknown as fs.Dirent[]);
+    ] as unknown as fs.Dirent<Buffer<ArrayBufferLike>>[]);
 
     // mock readfile
     vi.mocked(fs.promises.readFile).mockResolvedValueOnce('{"Driver": "podman"}');

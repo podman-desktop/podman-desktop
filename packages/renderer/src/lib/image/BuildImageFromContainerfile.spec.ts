@@ -26,7 +26,7 @@ import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import BuildImageFromContainerfile from '/@/lib/image/BuildImageFromContainerfile.svelte';
-import { buildImagesInfo } from '/@/stores/build-images';
+import { buildImagesInfo, getNextTaskId } from '/@/stores/build-images';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
@@ -554,7 +554,8 @@ test('Expect build page to load a state for a build requested by taskId', async 
   expect(buildButton).toBeVisible();
   expect(cancelButton).not.toBeVisible();
 
-  await rendering.rerender({ taskId: 9 });
+  //
+  await rendering.rerender({ taskId: getNextTaskId() - 2 });
 
   await waitFor(() => {
     expect(containerFilePath).not.toBeVisible();
@@ -586,4 +587,4 @@ test('Expect build page to load a state for a build requested by taskId', async 
   expect(containerFilePath).toHaveValue('/somepath/containerfile');
   expect(buildFolder).toHaveValue('/somepath');
   expect(containerImageName).toHaveValue('foobar');
-}, 100000);
+});

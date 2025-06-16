@@ -68,9 +68,10 @@ test('Test should render the terminal and being able to reconnect', async () => 
 
   onStdOutCallback(Buffer.from('hello\nworld'));
 
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
-  expect(terminalLinesLiveRegion).toHaveTextContent('hello world');
+  await waitFor(() => {
+    const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
+    expect(terminalLinesLiveRegion).toHaveTextContent('hello world');
+  });
 
   const terminals = get(terminalStates);
   expect(terminals.size).toBe(0);

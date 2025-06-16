@@ -599,6 +599,11 @@ export class ColorRegistry {
       dark: colorPalette.dustypurple[700],
       light: colorPalette.purple[600],
     });
+
+    this.registerColor(`${ct}table-border`, {
+      dark: colorPalette.charcoal[400],
+      light: colorPalette.gray[300],
+    });
   }
 
   // input boxes

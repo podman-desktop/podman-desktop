@@ -1,6 +1,7 @@
 name: UX Request
 description: UX Request Form
 labels: [UX/UI Issue, Graphic design]
+projects: ["podman-desktop/Podman Desktop Planning"]
 
 body:
   - type: markdown
