@@ -48,6 +48,7 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
+import { BaseInstaller } from '../installer/base-installer';
 import * as podman5JSON from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
@@ -456,20 +457,6 @@ export class PodmanInstall {
     }
 
     return undefined;
-  }
-}
-
-abstract class BaseInstaller implements Installer {
-  abstract install(): Promise<boolean>;
-
-  abstract update(): Promise<boolean>;
-
-  abstract getUpdatePreflightChecks(): extensionApi.InstallCheck[];
-
-  abstract getPreflightChecks(): extensionApi.InstallCheck[];
-
-  requireUpdate(installedVersion: string): boolean {
-    return compare(installedVersion, getBundledPodmanVersion(), '<');
   }
 }
 

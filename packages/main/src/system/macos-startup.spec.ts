@@ -53,6 +53,8 @@ let macosStartup: MacosStartup;
 const fakeAppExe = 'fakeAppExe';
 const fakeAppHome = 'fakeAppHome';
 
+const savedCommandLine = `/usr/bin/truncate -s 0 '${fakeAppHome}/Library/Logs/Podman Desktop/launchd-stdout.log'; /usr/bin/truncate -s 0 '${fakeAppHome}/Library/Logs/Podman Desktop/launchd-stderr.log'; '${fakeAppExe}' `;
+
 const originalConsoleInfo = console.info;
 const originalConsoleWarn = console.warn;
 
@@ -112,9 +114,7 @@ describe('enable', () => {
     // check content being written
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringContaining('fakeAppHome/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist'),
-      expect.stringContaining(
-        `/usr/bin/truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stdout.log'; /usr/bin/truncate -s 0 'fakeAppHome/Library/Logs/Podman Desktop/launchd-stderr.log'; 'fakeAppExe'`,
-      ),
+      expect.stringContaining(savedCommandLine),
       'utf-8',
     );
 
@@ -168,6 +168,31 @@ describe('enable', () => {
     // check console
     expect(console.info).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalled();
+  });
+
+  test('check writing the plist file according to login.minimize configuration value', async () => {
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
+      get: vi.fn().mockReturnValueOnce(true).mockReturnValueOnce(false),
+    } as unknown as Configuration);
+
+    await macosStartup.enable();
+
+    // check content being written
+    expect(writeFile).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining(`<string>${savedCommandLine}--minimize</string>`),
+      'utf-8',
+    );
+
+    vi.mocked(writeFile).mockReset();
+    await macosStartup.enable();
+
+    // check content being written
+    expect(writeFile).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining(`<string>${savedCommandLine}</string>`),
+      'utf-8',
+    );
   });
 });
 

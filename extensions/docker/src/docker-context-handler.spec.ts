@@ -211,11 +211,11 @@ describe('getContexts', () => {
       {
         isDirectory: () => true,
         name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
-      } as fs.Dirent,
+      } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
       {
         isDirectory: () => true,
         name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
-      } as fs.Dirent,
+      } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
     ]);
 
     const spyReadFile = vi.spyOn(fs.promises, 'readFile');
@@ -239,11 +239,11 @@ describe('getContexts', () => {
       {
         isDirectory: () => true,
         name: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
-      } as fs.Dirent,
+      } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
       {
         isDirectory: () => true,
         name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
-      } as fs.Dirent,
+      } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
     ]);
 
     const spyReadFile = vi.spyOn(fs.promises, 'readFile');
@@ -263,11 +263,11 @@ describe('getContexts', () => {
   test('should filter contexts if invalid sha', async () => {
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     vi.spyOn(fs.promises, 'readdir').mockResolvedValue([
-      { isDirectory: () => true, name: 'invalidsha' } as fs.Dirent,
+      { isDirectory: () => true, name: 'invalidsha' } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
       {
         isDirectory: () => true,
         name: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
-      } as fs.Dirent,
+      } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
     ]);
     const spyReadFile = vi.spyOn(fs.promises, 'readFile');
 
