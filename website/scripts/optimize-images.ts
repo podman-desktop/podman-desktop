@@ -28,6 +28,12 @@ const quality = {
   png: 95,
 };
 
+const compressors: Record<string, (i: sharp.Sharp) => sharp.Sharp> = {
+  png: i => i.png({ compressionLevel: 9 }),
+  avif: i => i.avif({ quality: quality.avif }),
+  webp: i => i.webp({ quality: quality.webp }),
+};
+
 /**
  * Compress an image using the appropriate format.
  *
@@ -36,47 +42,11 @@ const quality = {
  * @returns The compressed Sharp instance.
  */
 export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
-  switch (format) {
-    case 'png':
-      sharpInstance = sharpInstance.png({ compressionLevel: 9 });
-      break;
-
-    case 'avif':
-      sharpInstance = sharpInstance.avif({ quality: quality['avif'] });
-      break;
-
-    case 'webp':
-      sharpInstance = sharpInstance.webp({ quality: quality['webp'] });
-      break;
+  if (!compressors[format]) {
+    throw new Error(`Unsupported image format: ${format}`);
   }
 
-  return sharpInstance;
-}
-
-/**
- * Walk a directory and return all files with the given extensions.
- *
- * @param dir - The directory to walk.
- * @param allowedExts - The extensions to allow.
- * @returns A promise that resolves to an array of file paths.
- */
-export async function walk(dir: string, allowedExts: string[]): Promise<(string | undefined)[]> {
-  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async entry => {
-      const res: string = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        return walk(res, allowedExts);
-      } else if (entry.isFile()) {
-        const fileExt = path.extname(res).toLowerCase();
-        if (allowedExts.includes(fileExt.substring(1))) {
-          return res;
-        }
-      }
-    }),
-  );
-
-  return files.flat().filter(Boolean);
+  return compressors[format](sharpInstance);
 }
 
 /**
@@ -161,15 +131,14 @@ export async function optimizeImages(): Promise<void> {
 
   console.log('Starting image optimization...');
 
+  const { glob } = await import('glob');
+
   const rootSearchDirs = ['static', 'blog'];
-  const allImages = (await Promise.all(rootSearchDirs.map(dir => walk(dir, inputFormats)))).flat();
+  const patterns = rootSearchDirs.map(dir => `${dir}/**/*.{${inputFormats.join(',')}}`);
+  const allImages = await glob(patterns, { nodir: true });
   const unwantedPatternRegex = /(?:optimized-images)|(?:-\d+w\.(png|jpg|jpeg|webp)$)/i;
 
   const images = allImages.filter(imagePath => {
-    if (!imagePath) {
-      return false;
-    }
-
     return !unwantedPatternRegex.exec(imagePath);
   });
 
@@ -178,10 +147,6 @@ export async function optimizeImages(): Promise<void> {
   console.log(`Output directory: ${buildDir}`);
 
   const processingPromises = images.map(imagePath => {
-    if (!imagePath) {
-      return Promise.resolve({ processedCount: 0, savedBytes: 0 });
-    }
-
     return optimizeImage(imagePath, buildDir);
   });
 
@@ -247,49 +212,31 @@ export async function processImageFormats(
   stats: Stats,
   metadata: sharp.Metadata,
 ): Promise<{ processedCount: number; savedBytes: number }> {
-  let processedCount = 0;
-  let savedBytes = 0;
+  const widths = [
+    ...sizes,
+    metadata.width && !sizes.includes(metadata.width) && metadata.width <= largestResponsiveSize
+      ? metadata.width
+      : null,
+  ].filter(Boolean) as number[];
 
-  for (const format of outputFormats) {
-    // Skip WebP generation if input is already WebP (but still process AVIF and PNG)
-    if (imagePath.endsWith(`.${format}`) && format === 'webp') {
-      continue;
-    }
+  const tasks = outputFormats
+    .filter(fmt => !(fmt === 'webp' && imagePath.endsWith('.webp')))
+    .flatMap(fmt =>
+      widths.map(width => {
+        const name = `${parsedPath.name}-${width}w.${fmt}`;
+        const out = path.join(outputDir, name);
+        return generateOptimizedImage(imagePath, out, fmt, stats, { width });
+      }),
+    );
 
-    // Generate responsive sizes
-    for (const width of sizes) {
-      const outputName = `${parsedPath.name}-${width}w.${format}`;
-      const outputPath = path.join(outputDir, outputName);
-      const result = await generateOptimizedImage(imagePath, outputPath, format, stats, { width });
-
-      if (result.processed) {
-        processedCount++;
-      }
-
-      savedBytes += result.savedBytes;
-    }
-
-    // Generate full-size optimized version
-    const imageWidth = metadata.width;
-
-    // Skip creating an original-sized version if it's larger than the max responsive size,
-    // or if the responsive loop already created this file.
-    if (!imageWidth || imageWidth > largestResponsiveSize || sizes.includes(imageWidth)) {
-      continue;
-    }
-
-    const fullSizeName = `${parsedPath.name}-${imageWidth}w.${format}`;
-    const fullSizePath = path.join(outputDir, fullSizeName);
-    const result = await generateOptimizedImage(imagePath, fullSizePath, format, stats);
-
-    if (result.processed) {
-      processedCount++;
-    }
-
-    savedBytes += result.savedBytes;
-  }
-
-  return { processedCount, savedBytes };
+  const results = await Promise.all(tasks);
+  return results.reduce(
+    (acc, { processed, savedBytes }) => ({
+      processedCount: acc.processedCount + (processed ? 1 : 0),
+      savedBytes: acc.savedBytes + savedBytes,
+    }),
+    { processedCount: 0, savedBytes: 0 },
+  );
 }
 
 if (require.main === module) {

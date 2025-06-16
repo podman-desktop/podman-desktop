@@ -84,7 +84,7 @@ export default function OptimizedImage({
   const pngSrcSet = widths.map(w => `${optimizedBaseUrl}-${w}w.png ${w}w`).join(', ');
 
   return (
-    <picture className={className}>
+    <picture>
       <source type="image/avif" srcSet={avifSrcSet} sizes={sizes} />
       <source type="image/webp" srcSet={webpSrcSet} sizes={sizes} />
       <source type="image/png" srcSet={pngSrcSet} sizes={sizes} />
@@ -94,7 +94,7 @@ export default function OptimizedImage({
         loading={loading}
         sizes={sizes}
         onError={handleImageError}
-        className="inline-block"
+        className={className ? `inline-block ${className}` : 'inline-block'}
       />
     </picture>
   );

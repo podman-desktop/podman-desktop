@@ -28,7 +28,6 @@ import {
   getRelativeOutputDir,
   optimizeImage,
   processImageFormats,
-  walk,
 } from './optimize-images';
 
 const consoleLogMock = vi.fn();
@@ -122,26 +121,11 @@ describe('compressImage', () => {
     expect(mockSharpInstance.png).toBeCalled();
   });
 
-  test('compressImage should not compress invalid image format', () => {
-    compressImage(mockSharpInstance, 'pdf');
+  test('compressImage should throw error for invalid image format', () => {
+    expect(() => compressImage(mockSharpInstance, 'pdf')).toThrow('Unsupported image format: pdf');
     expect(mockSharpInstance.png).not.toBeCalled();
     expect(mockSharpInstance.avif).not.toBeCalled();
     expect(mockSharpInstance.webp).not.toBeCalled();
-  });
-});
-
-describe('walk', () => {
-  test('should get all files in right format', async () => {
-    const files = await walk(startDir, ['png', 'avif', 'webp']);
-    const expectedFiles = [
-      path.join(startDir, 'root-image.png'),
-      path.join(imagesDir, 'photo.avif'),
-      path.join(imagesDir, 'icon.webp'),
-      path.join(nestedDir, 'final.png'),
-    ];
-
-    expect(files.length).toBe(4);
-    expect(files).toEqual(expect.arrayContaining(expectedFiles));
   });
 });
 

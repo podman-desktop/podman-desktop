@@ -29,7 +29,7 @@ interface CustomConfifureWebpackResult extends ConfigureWebpackResult {
   };
 }
 
-module.exports = function (context: LoadContext, _options: PluginOptions): Plugin<void> {
+export default function (context: LoadContext, _options: PluginOptions): Plugin<void> {
   return {
     name: 'docusaurus-plugin-optimized-images',
 
@@ -62,4 +62,4 @@ module.exports = function (context: LoadContext, _options: PluginOptions): Plugi
       console.log('Optimized images ready for production build');
     },
   };
-};
+}
