@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "NODE_ENV=production tsx ./scripts/optimize-images.ts --production && docusaurus build",
+    "build": "NODE_ENV=production tsx ./scripts/optimize-images.ts && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

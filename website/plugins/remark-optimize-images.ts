@@ -34,7 +34,7 @@ export function remarkOptimizeImages() {
       }
 
       // Skip already optimized images
-      if (url.includes('-640w.') || url.includes('-768w.')) {
+      if (/-\d+w\./.test(url)) {
         return;
       }
 
