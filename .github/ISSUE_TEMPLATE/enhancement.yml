@@ -1,7 +1,7 @@
 name: Enhancement ✨
 description: Suggest an enhancement to an existing feature
 labels: [kind/enhancement ✨]
-projects: ["podman-desktop/Podman Desktop Planning"]
+projects: ["podman-desktop/4"]
 
 body:
   - type: markdown
