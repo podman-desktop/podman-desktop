@@ -1,8 +1,9 @@
 <script lang="ts">
 import { createEventDispatcher } from 'svelte';
 
+import type { ImageFilesystemLayerUI } from '/@api/image-filesystem-layers';
+
 import { ImageUtils } from './image-utils';
-import type { ImageFilesystemLayerUI } from './imageDetailsFiles';
 import ImageDetailsFilesExpandableCommand from './ImageDetailsFilesExpandableCommand.svelte';
 import { signedHumanSize } from './ImageDetailsFilesLayers';
 

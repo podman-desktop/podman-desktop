@@ -21,15 +21,16 @@ import type {
   ImageFilesCallbacks,
   ImageFilesProvider,
   ImageFilesProviderMetadata,
-  ImageFilesystemLayers,
   ImageInfo,
 } from '@podman-desktop/api';
 
 import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
+import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
 import type { ApiSenderType } from './api.js';
 import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
 import type { Context } from './context/context.js';
+import { toImageFilesystemLayerUIs } from './image-details-files.js';
 import { ImageFilesImpl } from './image-files-impl.js';
 
 export interface ImageFilesProviderWithMetadata {
@@ -114,11 +115,17 @@ export class ImageFilesRegistry {
     providerId: string,
     image: ImageInfo,
     token?: CancellationToken,
-  ): Promise<ImageFilesystemLayers | undefined> {
+  ): Promise<ImageFilesystemLayersUI | undefined> {
     const provider = this._imageFilesProviders.get(providerId);
     if (provider === undefined) {
       throw new Error('provider not found with id ' + providerId);
     }
-    return provider.provider.getFilesystemLayers(image, token);
+    const fsLayers = await provider.provider.getFilesystemLayers(image, token);
+    if (!fsLayers) {
+      return;
+    }
+    return {
+      layers: toImageFilesystemLayerUIs(fsLayers.layers),
+    };
   }
 }
