@@ -2070,6 +2070,13 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'extension-loader:ensureExtensionIsEnabled',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<void> => {
+        return this.extensionLoader.ensureExtensionIsEnabled(extensionId);
+      },
+    );
+
+    this.ipcHandle(
       'shell:openExternal',
       async (_listener: Electron.IpcMainInvokeEvent, link: string): Promise<void> => {
         if (securityRestrictionCurrentHandler.handler) {
