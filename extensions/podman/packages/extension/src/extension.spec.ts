@@ -1623,6 +1623,10 @@ test('provider is registered without edit capabilities on (non-HyperV) Windows',
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
           } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
         } else {
           reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
         }
@@ -1667,6 +1671,18 @@ test('provider is registered with limited capabilities on (HyperV) Windows', asy
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+
+  await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+    'podman.machine.cpus': 1,
+    'podman.machine.memory': 2,
+    'podman.machine.diskSize': 3,
+    'podman.machine.rootful': true,
+  });
+  expect(spyExecPromise).toBeCalledWith(
+    'podman.exe',
+    ['machine', 'set', machineInfo.name, '--rootful=true'],
+    expect.any(Object),
+  );
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
