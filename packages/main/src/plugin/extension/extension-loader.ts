@@ -707,6 +707,7 @@ export class ExtensionLoader {
     extension.api ??= this.createApi(extension);
     const extensionWithApi = extension as AnalyzedExtensionWithApi;
     this.analyzedExtensions.set(extension.id, extensionWithApi);
+    this.extensionDevelopmentFolder.addExternalExtensionId(extension.id);
     this.extensionState.delete(extension.id);
     this.extensionStateErrors.delete(extension.id);
 
@@ -1769,6 +1770,7 @@ export class ExtensionLoader {
         throw new Error(`Extension ${extensionId} is not removable`);
       }
       this.analyzedExtensions.delete(extensionId);
+      this.extensionDevelopmentFolder.removeExternalExtensionId(extensionId);
       this.apiSender.send('extension-removed');
       this._onDidChange.fire();
     }
