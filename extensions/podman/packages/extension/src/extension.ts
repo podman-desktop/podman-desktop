@@ -31,7 +31,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { HyperVCheck } from './checks/hyperv-check';
-import { MacKrunkitPodmanMachineCreationCheck } from './checks/macos-checks';
+import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { WSLVersionCheck } from './checks/wsl-version-check';
 import { WSL2Check } from './checks/wsl2-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
@@ -1863,12 +1863,16 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     });
   }
 
-  const krunKitCheck = new MacKrunkitPodmanMachineCreationCheck().execute();
-  if (!(await krunKitCheck).successful) {
-    records.push({
-      type: 'warning',
-      record: `There is an problem finding 'krunkit' binary. Try to install it manualy, or install Podman from installer.`,
-    });
+  const podmanCheck = new MacPodmanInstallCheck().execute();
+  // If is podman check not successful => installed with brew (does not contain krunkit & libkrun)
+  if (!(await podmanCheck).successful) {
+    const krunKitCheck = new MacKrunkitPodmanMachineCreationCheck().execute();
+    if (!(await krunKitCheck).successful) {
+      records.push({
+        type: 'warning',
+        record: `There is an problem finding 'krunkit' binary. Try to install it manualy, or install Podman from installer.`,
+      });
+    }
   }
 
   const winProvider = items['podman.factory.machine.win.provider'];
