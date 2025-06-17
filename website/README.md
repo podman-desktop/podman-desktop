@@ -20,7 +20,21 @@ This command starts a local development server and opens up a browser window. Mo
 $ pnpm build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+This command generates static content into the `build` directory and can be served using any static contents hosting service. The build process includes automatic image optimization for better web performance.
+
+**Note**: The build process is cross-platform compatible, using `cross-env` for Windows support.
+
+### Testing
+
+The test suite includes comprehensive coverage for:
+
+- image optimization components and plugins,
+- cross-platform compatibility,
+- accessibility compliance,
+- performance optimizations,
+- error handling and edge cases.
+
+All tests are well-documented with explanations of testing strategies and edge case coverage.
 
 ### Deployment
 
@@ -37,6 +51,16 @@ $ GIT_USER=<Your GitHub username> pnpm deploy
 ```
 
 If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+### Image Optimization
+
+The website includes an automatic image optimization system that runs during build:
+
+```shell-session
+$ pnpm run optimize-images
+```
+
+This converts images to modern formats (WebP, AVIF) with responsive sizes for better performance. The system is fully tested and documented. See [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) for details.
 
 ### Adding a Node.js module to the website
 
@@ -57,4 +81,4 @@ If you are using GitHub pages for hosting, this command is a convenient way to b
 
 ## Documentation
 
-- [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) - Guide to the automatic image optimization system
+- [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) - Comprehensive guide to the automatic image optimization system with testing and implementation details.
