@@ -881,7 +881,7 @@ export async function registerProviderFor(
       });
     },
   };
-  //support edit only on MacOS as Podman WSL is nop and generates errors
+  //support edit only on MacOS and limited edit on Windows as Podman WSL is nop and generates errors
   if (extensionApi.env.isMac || extensionApi.env.isWindows) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;

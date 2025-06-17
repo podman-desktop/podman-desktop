@@ -1537,6 +1537,10 @@ test('provider is registered with limited edit capabilities on Windows', async (
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
           } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
         } else {
           reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
         }
@@ -1551,6 +1555,18 @@ test('provider is registered with limited edit capabilities on Windows', async (
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+
+  await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+    'podman.machine.cpus': 1,
+    'podman.machine.memory': 2,
+    'podman.machine.diskSize': 3,
+    'podman.machine.rootful': true,
+  });
+  expect(spyExecPromise).toBeCalledWith(
+    'podman.exe',
+    ['machine', 'set', machineInfo.name, '--rootful=true'],
+    expect.any(Object),
+  );
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
