@@ -19,7 +19,7 @@
 const config = {
   test: {
     environment: 'node',
-    include: ['*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 
