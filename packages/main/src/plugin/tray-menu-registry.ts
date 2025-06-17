@@ -145,8 +145,15 @@ export class TrayMenuRegistry {
   }
 
   registerProviderMenuItem(providerId: string, menuItem: MenuItem): Disposable {
+    // Retrieve the provider info from the registry,
+    // this is necessary so that we can pass in the provider information
+    // in case we need to update / create a provider menu section.
+
+    // Get the matching internal provider id
+    const providerInternalId = this.providerRegistry.getMatchingProviderInternalId(providerId);
+    const providerInfo = this.providerRegistry.getProviderInfo(providerInternalId);
     this.menuItems.set(menuItem.id, menuItem);
-    ipcMain.emit('tray:add-provider-menu-item', '', { providerId, menuItem });
+    ipcMain.emit('tray:add-provider-menu-item', '', { providerId, providerInfo, menuItem });
     return Disposable.create(() => {
       this.trayMenu.deleteProviderItem(providerId, menuItem.id);
       this.menuItems.delete(menuItem.id);
