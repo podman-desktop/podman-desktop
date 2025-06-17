@@ -48,7 +48,7 @@
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
-    "postcss": "^8.5.5",
+    "postcss": "^8.5.6",
     "tailwindcss": "^4.1.10",
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.2",
