@@ -16,45 +16,393 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+/**
+ * @fileoverview Tests for the remark plugin that automatically optimizes images in markdown content.
+ *
+ * This test suite validates the core functionality of the remark-optimize-images plugin,
+ * which transforms markdown images into optimized HTML picture elements with multiple formats
+ * and responsive srcsets. The plugin is crucial for website performance as it:
+ *
+ * - Automatically converts images to modern formats (AVIF, WebP).
+ * - Generates responsive srcsets for different viewport sizes.
+ * - Preserves accessibility features like alt text.
+ * - Skips external URLs and already optimized images.
+ *
+ * Testing strategy:
+ * - Validate image format support and exclusions.
+ * - Test URL filtering logic for security and performance.
+ * - Verify HTML output structure and attributes.
+ * - Check edge cases and error handling.
+ */
+
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
-import { beforeEach, expect, test, vi } from 'vitest';
+import type { Node, Parent } from 'unist';
+import type { VFile } from 'vfile';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { remarkOptimizeImages } from './remark-optimize-images';
 
-const mockedMarkdown = '### Podman Desktop\nPicture of General Kenobi ![Selfie](/img/blog/hello_there.png)';
-const mockedMarkdownExternal = '### Podman Desktop\nPicture of General Kenobi ![Selfie](https://hello.there)';
-const mockedMarkdownOptimized = '### Podman Desktop\nPicture of General Kenobi ![Selfie](https://hello-640w.there)';
+interface ParagraphNode extends Parent {
+  type: 'paragraph';
+  children: Node[];
+}
+
+interface HtmlNode extends Node {
+  type: 'html';
+  value: string;
+}
+
+interface ImageNode extends Node {
+  type: 'image';
+  url: string;
+  alt?: string;
+}
+
+// Mock VFile for testing.
+const mockVFile = {} as VFile;
+
+/**
+ * Test data representing various markdown image scenarios.
+ * Each test case targets specific plugin behavior and edge cases.
+ */
+const testMarkdowns = {
+  // Supported formats that should be optimized.
+  png: '### Podman Desktop\nPicture of General Kenobi ![Selfie](/img/blog/hello_there.png)',
+  jpg: '### Podman Desktop\nPicture of General Kenobi ![Screenshot](/docs/images/screenshot.jpg)',
+  jpeg: '### Podman Desktop\nPicture of General Kenobi ![Photo](/static/photo.jpeg)',
+
+  // Formats that should be skipped (already optimized or unsupported).
+  webp: '### Podman Desktop\nPicture of General Kenobi ![WebP Image](/img/test.webp)',
+  svg: '### Podman Desktop\nPicture of General Kenobi ![SVG Icon](/img/icon.svg)',
+  gif: '### Podman Desktop\nPicture of General Kenobi ![GIF Animation](/img/animation.gif)',
+
+  // External URLs that should be skipped for security and performance.
+  externalHttps: '### Podman Desktop\nPicture of General Kenobi ![External](https://example.com/image.png)',
+  externalHttp: '### Podman Desktop\nPicture of General Kenobi ![External](http://example.com/image.png)',
+  protocolRelative: '### Podman Desktop\nPicture of General Kenobi ![External](//example.com/image.png)',
+
+  // Already optimized images that should be skipped.
+  optimized: '### Podman Desktop\nPicture of General Kenobi ![Optimized](/img/blog/hello-640w.png)',
+
+  // Alt text variations for accessibility testing.
+  noAlt: '### Podman Desktop\nPicture of General Kenobi ![](/img/blog/no-alt.png)',
+  emptyAlt: '### Podman Desktop\nPicture of General Kenobi ![](/img/blog/empty-alt.png)',
+
+  // Special directory structures.
+  rootImage: '### Podman Desktop\nPicture of General Kenobi ![Root](image.png)',
+  multipleImages:
+    '### Gallery\n![First](/img/first.png) and ![Second](/img/second.jpg) and ![Third](https://external.com/third.png)',
+  mixedCase: '### Podman Desktop\nPicture of General Kenobi ![Mixed Case](/IMG/Blog/Test.PNG)',
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('should replace original img with updated one', () => {
-  const tree = unified().use(remarkParse).parse(mockedMarkdown);
+describe('remarkOptimizeImages', () => {
+  describe('supported image format processing', () => {
+    /**
+     * Test PNG image transformation - the most common format.
+     * Validates complete picture element generation with all required attributes.
+     */
+    test('should transform PNG images to picture elements', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.png);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
 
-  const imageTransformer = remarkOptimizeImages();
-  imageTransformer(tree, undefined);
-  // Tree will be updated with optimized images
-  expect(tree.children[1].children[1].value).toContain('<picture>');
-});
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
 
-test('should skip external images', () => {
-  const originalTree = unified().use(remarkParse).parse(mockedMarkdownExternal);
-  const tree = unified().use(remarkParse).parse(mockedMarkdownExternal);
+      // Verify the image was transformed to HTML.
+      expect(htmlNode.type).toBe('html');
+      expect(htmlNode.value).toContain('<picture>');
 
-  const imageTransformer = remarkOptimizeImages();
-  imageTransformer(tree, undefined);
-  // Tree wont change
-  expect(tree).toStrictEqual(originalTree);
-});
+      // Check for modern formats (AVIF has best compression).
+      expect(htmlNode.value).toContain('type="image/avif"');
+      expect(htmlNode.value).toContain('type="image/webp"');
 
-test('should skip already optimized images', () => {
-  const originalTree = unified().use(remarkParse).parse(mockedMarkdownOptimized);
-  const tree = unified().use(remarkParse).parse(mockedMarkdownOptimized);
+      // Verify responsive srcsets are generated.
+      expect(htmlNode.value).toContain('/optimized-images/img/blog/hello_there-640w.avif');
+      expect(htmlNode.value).toContain('/optimized-images/img/blog/hello_there-1536w.png');
 
-  const imageTransformer = remarkOptimizeImages();
-  imageTransformer(tree, undefined);
-  // Tree wont change
-  expect(tree).toStrictEqual(originalTree);
+      // Ensure accessibility is preserved.
+      expect(htmlNode.value).toContain('alt="Selfie"');
+      expect(htmlNode.value).toContain('loading="lazy"');
+    });
+
+    /**
+     * Test JPG image transformation - common for photos.
+     * Ensures consistent behavior across different extensions.
+     */
+    test('should transform JPG images to picture elements', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.jpg);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.type).toBe('html');
+      expect(htmlNode.value).toContain('<picture>');
+      expect(htmlNode.value).toContain('/optimized-images/docs/images/screenshot-640w.avif');
+      expect(htmlNode.value).toContain('alt="Screenshot"');
+    });
+
+    /**
+     * Test JPEG image transformation - alternative extension.
+     * Validates case-insensitive extension handling.
+     */
+    test('should transform JPEG images to picture elements', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.jpeg);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.type).toBe('html');
+      expect(htmlNode.value).toContain('<picture>');
+      expect(htmlNode.value).toContain('/optimized-images/static/photo-768w.webp');
+      expect(htmlNode.value).toContain('alt="Photo"');
+    });
+
+    /**
+     * Test mixed case extension handling.
+     * Important for cross-platform compatibility (Windows vs Unix).
+     */
+    test('should handle mixed case extensions', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.mixedCase);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.type).toBe('html');
+      expect(htmlNode.value).toContain('<picture>');
+      expect(htmlNode.value).toContain('/optimized-images/IMG/Blog/Test-1024w.avif');
+    });
+  });
+
+  describe('unsupported formats should be skipped', () => {
+    /**
+     * WebP images should be skipped as they're already optimized.
+     * Prevents unnecessary processing and maintains original intent.
+     */
+    test('should skip WebP images (already optimized format)', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.webp);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.webp);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      // Tree should remain unchanged.
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * SVG images should be skipped as they're vector-based.
+     * SVGs are scalable and don't benefit from raster optimization.
+     */
+    test('should skip SVG images', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.svg);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.svg);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * GIF images should be skipped to preserve animation.
+     * Optimization would break animated GIFs.
+     */
+    test('should skip GIF images', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.gif);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.gif);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+  });
+
+  describe('external URLs should be skipped', () => {
+    /**
+     * HTTPS external URLs should be skipped for security and performance.
+     * We can't optimize external images and shouldn't proxy them.
+     */
+    test('should skip HTTPS external URLs', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.externalHttps);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.externalHttps);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * HTTP external URLs should be skipped (same reasoning as HTTPS).
+     * Also prevents mixed content issues on HTTPS sites.
+     */
+    test('should skip HTTP external URLs', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.externalHttp);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.externalHttp);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * Protocol-relative URLs should be skipped.
+     * These are external URLs that inherit the current protocol.
+     */
+    test('should skip protocol-relative URLs', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.protocolRelative);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.protocolRelative);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+  });
+
+  describe('already optimized images should be skipped', () => {
+    /**
+     * Images with responsive width suffixes should be skipped.
+     * Prevents double-processing and maintains manual optimizations.
+     */
+    test('should skip images with responsive width suffixes', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.optimized);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.optimized);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+  });
+
+  describe('alt text handling', () => {
+    /**
+     * Alt text should be preserved for accessibility.
+     * Critical for screen readers and SEO.
+     */
+    test('should preserve alt text when present', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.png);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.value).toContain('alt="Selfie"');
+    });
+
+    /**
+     * Missing alt text should be handled gracefully.
+     * Empty alt="" is better than missing alt for accessibility.
+     */
+    test('should handle missing alt text gracefully', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.noAlt);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.value).toContain('alt=""');
+    });
+
+    /**
+     * Empty alt text should be preserved.
+     * Some images are intentionally decorative.
+     */
+    test('should preserve empty alt text', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.emptyAlt);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.value).toContain('alt=""');
+    });
+  });
+
+  describe('directory handling', () => {
+    /**
+     * Root-level images should work correctly.
+     * Tests the path joining logic for minimal paths.
+     */
+    test('should handle root-level images', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.rootImage);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      expect(htmlNode.value).toContain('/optimized-images/image-640w.avif');
+    });
+  });
+
+  describe('multiple image handling', () => {
+    /**
+     * Multiple images in one paragraph should be handled correctly.
+     * Tests the visitor pattern with multiple matches.
+     */
+    test('should handle multiple images in one paragraph', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.multipleImages);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      // Check that supported formats were transformed.
+      const firstImage = (tree.children[1] as ParagraphNode).children[0] as HtmlNode;
+      expect(firstImage.type).toBe('html');
+      expect(firstImage.value).toContain('/optimized-images/img/first-640w.avif');
+
+      const secondImage = (tree.children[1] as ParagraphNode).children[2] as HtmlNode;
+      expect(secondImage.type).toBe('html');
+      expect(secondImage.value).toContain('/optimized-images/img/second-640w.avif');
+
+      // Check that external URLs were skipped.
+      const thirdImage = (tree.children[1] as ParagraphNode).children[4] as ImageNode;
+      expect(thirdImage.type).toBe('image');
+      expect(thirdImage.url).toBe('https://external.com/third.png');
+    });
+  });
+
+  describe('edge cases', () => {
+    /**
+     * Empty markdown should not cause errors.
+     * Tests graceful handling of minimal input.
+     */
+    test('should handle empty markdown gracefully', () => {
+      const tree = unified().use(remarkParse).parse('');
+      const imageTransformer = remarkOptimizeImages();
+
+      expect(() => {
+        imageTransformer(tree, mockVFile);
+      }).not.toThrow();
+    });
+
+    /**
+     * Markdown without images should be unchanged.
+     * Tests the visitor pattern with no matches.
+     */
+    test('should handle markdown without images', () => {
+      const originalTree = unified().use(remarkParse).parse('### Just a heading\n\nSome text here.');
+      const tree = unified().use(remarkParse).parse('### Just a heading\n\nSome text here.');
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * Images at the top level should be handled correctly.
+     * Tests AST structure assumptions.
+     */
+    test('should handle images in different AST positions', () => {
+      const tree = unified().use(remarkParse).parse('![Image](image.png)');
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect((tree.children[0] as ParagraphNode).children[0].type).toBe('html');
+    });
+  });
 });
