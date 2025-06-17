@@ -1,15 +1,15 @@
 /**
- * Image optimization script
+ * Image optimization script.
  *
  * Automatically converts images to modern formats (WebP, AVIF) with responsive sizes.
  * Runs during the build process to optimize images without requiring manual intervention.
  *
  * Features:
- * - Converts PNG/JPEG to WebP (85% quality) and AVIF (80% quality)
- * - Generates responsive sizes matching Tailwind CSS breakpoints
- * - Outputs to static/optimized-images for both production and development
- * - Only processes new/changed images (incremental optimization)
- * - Intelligent filtering of already optimized images
+ * - Converts PNG/JPEG to WebP (85% quality) and AVIF (80% quality).
+ * - Generates responsive sizes matching Tailwind CSS breakpoints.
+ * - Outputs to static/optimized-images for both production and development.
+ * - Only processes new/changed images (incremental optimization).
+ * - Intelligent filtering of already optimized images.
  */
 
 import type { Stats } from 'node:fs';
@@ -37,9 +37,9 @@ const compressors: Record<string, (i: sharp.Sharp) => sharp.Sharp> = {
 /**
  * Compress an image using the appropriate format.
  *
- * @param sharpInstance - The Sharp instance to compress.
- * @param format - The format to compress to.
- * @returns The compressed Sharp instance.
+ * @param sharpInstance - The Sharp instance to compress
+ * @param format - The format to compress to
+ * @returns The compressed Sharp instance
  */
 export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
   if (!compressors[format]) {
@@ -52,8 +52,8 @@ export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp
 /**
  * Get the relative output directory for an image.
  *
- * @param dir - The directory of the image.
- * @returns The relative output directory.
+ * @param dir - The directory of the image
+ * @returns The relative output directory
  */
 export function getRelativeOutputDir(dir: string): string {
   if (dir.startsWith('static')) {
@@ -74,12 +74,12 @@ export function getRelativeOutputDir(dir: string): string {
 /**
  * Generate an optimized image.
  *
- * @param imagePath - The path to the image to optimize.
- * @param outputPath - The path to the output image.
- * @param format - The format to compress to.
- * @param originalFileStats - The stats of the original file.
- * @param resizeOptions - The options to resize the image.
- * @returns A promise that resolves to an object with the processed flag and the saved bytes.
+ * @param imagePath - The path to the image to optimize
+ * @param outputPath - The path to the output image
+ * @param format - The format to compress to
+ * @param originalFileStats - The stats of the original file
+ * @param resizeOptions - The options to resize the image
+ * @returns A promise that resolves to an object with the processed flag and the saved bytes
  */
 export async function generateOptimizedImage(
   imagePath: string,
@@ -95,7 +95,7 @@ export async function generateOptimizedImage(
       return { processed: false, savedBytes: 0 };
     }
   } catch (e) {
-    // File doesn't exist, proceed with optimization
+    // File doesn't exist, proceed with optimization.
   }
 
   let sharpInstance = sharp(imagePath);
@@ -124,7 +124,7 @@ export async function generateOptimizedImage(
 /**
  * Optimize all images in the static and blog directories.
  *
- * @returns A promise that resolves when the optimization is complete.
+ * @returns A promise that resolves when the optimization is complete
  */
 export async function optimizeImages(): Promise<void> {
   const startTime = Date.now();
@@ -166,9 +166,9 @@ export async function optimizeImages(): Promise<void> {
 /**
  * Optimize an image.
  *
- * @param imagePath - The path to the image to optimize.
- * @param buildDir - The directory to build the optimized image.
- * @returns A promise that resolves to an object with the processed count and the saved bytes.
+ * @param imagePath - The path to the image to optimize
+ * @param buildDir - The directory to build the optimized image
+ * @returns A promise that resolves to an object with the processed count and the saved bytes
  */
 export async function optimizeImage(
   imagePath: string,
@@ -198,12 +198,12 @@ export async function optimizeImage(
 /**
  * Process an image into different formats and sizes.
  *
- * @param imagePath - The path to the image to optimize.
- * @param outputDir - The directory to output the optimized images.
- * @param parsedPath - The parsed path of the original image.
- * @param stats - The stats of the original file.
- * @param metadata - The metadata of the original image.
- * @returns A promise that resolves to an object with the processed count and the saved bytes.
+ * @param imagePath - The path to the image to optimize
+ * @param outputDir - The directory to output the optimized images
+ * @param parsedPath - The parsed path of the original image
+ * @param stats - The stats of the original file
+ * @param metadata - The metadata of the original image
+ * @returns A promise that resolves to an object with the processed count and the saved bytes
  */
 export async function processImageFormats(
   imagePath: string,
