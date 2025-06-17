@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "NODE_ENV=production tsx ./scripts/optimize-images.ts && docusaurus build",
+    "build": "cross-env NODE_ENV=production tsx ./scripts/optimize-images.ts && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -46,6 +46,7 @@
     "@docusaurus/tsconfig": "^3.7.0",
     "@docusaurus/types": "^3.7.0",
     "@tailwindcss/postcss": "^4.1.10",
+    "cross-env": "^7.0.3",
     "glob": "^11.0.3",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
