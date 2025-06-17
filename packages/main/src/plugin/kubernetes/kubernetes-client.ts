@@ -1418,7 +1418,6 @@ export class KubernetesClient {
         onClose();
       });
     } else {
-      let telemetryOptions = {};
       try {
         const ns = this.getCurrentNamespace();
         const connected = await this.checkConnection();
@@ -1459,10 +1458,7 @@ export class KubernetesClient {
         });
         this.#execs.set(`${podName}-${containerName}`, { stdin, stdout, stderr, conn });
       } catch (error) {
-        telemetryOptions = { error: error };
         throw this.wrapK8sClientError(error);
-      } finally {
-        this.telemetry.track('kubernetesExecIntoContainer', telemetryOptions);
       }
     }
 

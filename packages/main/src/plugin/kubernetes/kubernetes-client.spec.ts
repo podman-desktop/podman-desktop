@@ -1272,7 +1272,6 @@ test('Test should exec into container only once', async () => {
   await client.execIntoContainer('test-pod', 'test-container', onStdOutFn, onStdErrFn, onCloseFn);
   await client.execIntoContainer('test-pod', 'test-container', onStdOutFn, onStdErrFn, onCloseFn);
   expect(execMock).toHaveBeenCalledOnce();
-  expect(telemetry.track).toHaveBeenCalledOnce();
 });
 
 test('Test should throw an exception during exec command if resize parameters are wrong', async () => {
