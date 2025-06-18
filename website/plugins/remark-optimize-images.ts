@@ -76,7 +76,7 @@ interface MdxJsxElement extends Node {
  * @param sourceFilePath - The path of the source markdown file
  * @returns The correct path for the optimized image
  */
-function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string): string {
+export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string): string {
   const parsedUrl = path.parse(imageUrl);
   const imageName = parsedUrl.name;
   const imageDir = parsedUrl.dir;
@@ -87,21 +87,32 @@ function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string): strin
   if (sourceFilePath) {
     const sourceDir = path.dirname(sourceFilePath);
 
+    // Convert absolute path to relative path if it contains the website directory.
+    let relativePath: string;
+    const websiteIndex = sourceDir.indexOf(path.sep + 'website' + path.sep);
+    if (websiteIndex !== -1) {
+      // Extract path after '/website/'.
+      relativePath = sourceDir.substring(websiteIndex + '/website/'.length).replace(/\\/g, '/');
+    } else {
+      // Fallback for relative paths.
+      relativePath = sourceDir.replace(/\\/g, '/');
+    }
+
     // For docs images: resolve relative to the docs structure.
-    if (sourceDir.startsWith('docs/')) {
-      // Convert relative path to absolute docs context.
-      const resolvedPath = path.resolve(sourceDir, imageDir);
+    if (relativePath.startsWith('docs/')) {
+      // Convert relative path to docs context using path joining.
+      const resolvedPath = path.posix.join(relativePath, imageDir);
 
       // Extract the path relative to docs directory for optimization structure.
-      if (resolvedPath.startsWith(path.resolve('docs'))) {
-        optimizedDir = path.relative('docs', resolvedPath);
+      if (resolvedPath.startsWith('docs/')) {
+        optimizedDir = resolvedPath.substring('docs/'.length);
       } else {
         // Handle cases where image path goes outside docs (e.g., ../img).
         optimizedDir = imageDir;
       }
     }
     // For blog images: keep existing behavior.
-    else if (sourceDir.startsWith('blog/')) {
+    else if (relativePath.startsWith('blog/')) {
       optimizedDir = imageDir;
     }
     // For other contexts: use original directory structure.
