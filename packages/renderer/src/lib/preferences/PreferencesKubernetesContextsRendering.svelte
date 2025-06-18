@@ -344,6 +344,7 @@ async function connect(contextName: string): Promise<void> {
                             {#each context.errorMessage.split('\n').filter(l => l) as line, index (index)}
                               <p>{line}</p>
                             {/each}
+                          </div>
                         </Tooltip>
                       </div>
                     {:else}
