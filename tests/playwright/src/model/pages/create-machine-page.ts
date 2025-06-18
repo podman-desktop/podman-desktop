@@ -44,22 +44,24 @@ export class CreateMachinePage extends BasePage {
     { isRootful = true, enableUserNet = false, startNow = true, setAsDefault = true },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
-      let expectedConnectionType: PodmanConnectionTypes | undefined;
+      let connectionType: PodmanConnectionTypes | undefined;
       switch (process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase()) {
         case 'wsl':
-          expectedConnectionType = PodmanConnectionTypes.WSL;
+          connectionType = PodmanConnectionTypes.WSL;
           break;
         case 'hyperv':
-          expectedConnectionType = PodmanConnectionTypes.HyperV;
+          connectionType = PodmanConnectionTypes.HyperV;
+          break;
+        default:
+          console.log('CONTAINERS_MACHINE_PROVIDER is NOT defined');
           break;
       }
 
-      const connectionTypeOption = expectedConnectionType ? { connectionType: expectedConnectionType } : {};
       await this.machineCreationForm.setupAndCreateMachine(machineName, {
         isRootful,
         enableUserNet,
         startNow,
-        ...connectionTypeOption,
+        connectionType,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
@@ -86,8 +88,8 @@ export class CreateMachinePage extends BasePage {
       const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
       playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
 
-      if (expectedConnectionType) {
-        playExpect(await machineCard.connectionType.innerText()).toContain(expectedConnectionType);
+      if (connectionType) {
+        playExpect(await machineCard.connectionType.innerText()).toContain(connectionType);
       }
 
       return resourcesPage;
