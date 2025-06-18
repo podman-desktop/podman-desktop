@@ -162,26 +162,29 @@ vi.mock('node:fs', async () => {
  * Provides predictable image processing behavior for testing optimization logic.
  */
 vi.mock('sharp', () => {
-  // Create a comprehensive mock Sharp instance.
-  const mockSharpInstance = {
-    resize: vi.fn().mockImplementation(function () {
-      return this;
-    }),
-    toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
-    png: vi.fn().mockImplementation(function () {
-      return this;
-    }),
-    avif: vi.fn().mockImplementation(function () {
-      return this;
-    }),
-    webp: vi.fn().mockImplementation(function () {
-      return this;
-    }),
-    metadata: vi.fn().mockResolvedValue({ width: 1024 }),
+  // Create a comprehensive mock Sharp instance with proper method chaining.
+  const createMockSharpInstance = (): Record<string, unknown> => {
+    const mockInstance = {
+      resize: vi.fn().mockImplementation(function (this: unknown) {
+        return this;
+      }),
+      toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
+      png: vi.fn().mockImplementation(function (this: unknown) {
+        return this;
+      }),
+      avif: vi.fn().mockImplementation(function (this: unknown) {
+        return this;
+      }),
+      webp: vi.fn().mockImplementation(function (this: unknown) {
+        return this;
+      }),
+      metadata: vi.fn().mockResolvedValue({ width: 1024 }),
+    };
+    return mockInstance;
   };
 
-  // Create the main Sharp constructor function that returns the same instance.
-  const mockSharp = vi.fn().mockImplementation(() => mockSharpInstance);
+  // Create the main Sharp constructor function that returns a new instance each time.
+  const mockSharp = vi.fn().mockImplementation(() => createMockSharpInstance());
 
   return {
     default: mockSharp,
@@ -199,8 +202,12 @@ vi.mock('sharp', () => {
 function createDirent(name: string, type: 'file' | 'directory'): Dirent {
   return {
     name,
-    isFile: () => type === 'file',
-    isDirectory: () => type === 'directory',
+    isFile: function (this: unknown): boolean {
+      return type === 'file';
+    },
+    isDirectory: function (this: unknown): boolean {
+      return type === 'directory';
+    },
   } as unknown as Dirent;
 }
 
@@ -550,6 +557,11 @@ describe('calculateTotalOperations', () => {
     mockSharp.mockImplementation(
       () =>
         ({
+          resize: vi.fn().mockReturnThis(),
+          png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
           metadata: vi.fn().mockImplementation(() => {
             callCount++;
             if (callCount === 1) {
@@ -675,7 +687,7 @@ describe('generateOptimizedImage', () => {
     const progressTracker = new ProgressTracker(10, 2);
     const progressSpy = vi.spyOn(progressTracker, 'updateProgress');
 
-    const { processed, savedBytes } = await generateOptimizedImage(
+    const { processed, savedBytes, status } = await generateOptimizedImage(
       'some/image/path.png',
       'folder/name/',
       'png',
@@ -685,6 +697,7 @@ describe('generateOptimizedImage', () => {
 
     expect(processed).toBeTruthy();
     expect(savedBytes).toBeGreaterThan(0);
+    expect(status).toBe('processed');
     expect(progressSpy).toHaveBeenCalled();
   });
 
@@ -703,7 +716,7 @@ describe('generateOptimizedImage', () => {
     const progressTracker = new ProgressTracker(10, 2);
     const progressSpy = vi.spyOn(progressTracker, 'updateProgress');
 
-    const { processed, savedBytes } = await generateOptimizedImage(
+    const { processed, savedBytes, status } = await generateOptimizedImage(
       'some/image/path.png',
       'folder/name/',
       'png',
@@ -713,6 +726,7 @@ describe('generateOptimizedImage', () => {
 
     expect(processed).toBeFalsy();
     expect(savedBytes).toBe(0);
+    expect(status).toBe('skipped');
     expect(progressSpy).toHaveBeenCalled(); // Progress should still be updated
   });
 
@@ -728,7 +742,7 @@ describe('generateOptimizedImage', () => {
       size: 420,
     } as unknown as Stats;
 
-    const { processed, savedBytes } = await generateOptimizedImage(
+    const { processed, savedBytes, status } = await generateOptimizedImage(
       'some/image/path.png',
       'folder/name/',
       'png',
@@ -739,6 +753,7 @@ describe('generateOptimizedImage', () => {
 
     expect(processed).toBeTruthy();
     expect(savedBytes).toBeGreaterThan(0);
+    expect(status).toBe('processed');
   });
 
   /**
@@ -755,7 +770,10 @@ describe('generateOptimizedImage', () => {
         ({
           resize: vi.fn().mockReturnThis(),
           png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
           toBuffer: vi.fn().mockResolvedValue(Buffer.alloc(0)), // Empty buffer
+          metadata: vi.fn().mockResolvedValue({ width: 1024 }),
         }) as unknown as Sharp,
     );
 
@@ -769,7 +787,7 @@ describe('generateOptimizedImage', () => {
     const progressSpy = vi.spyOn(progressTracker, 'updateProgress');
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { processed, savedBytes } = await generateOptimizedImage(
+    const { processed, savedBytes, status } = await generateOptimizedImage(
       'some/image/path.png',
       'folder/name/output.png',
       'png',
@@ -779,6 +797,7 @@ describe('generateOptimizedImage', () => {
 
     expect(processed).toBeFalsy();
     expect(savedBytes).toBe(0);
+    expect(status).toBe('failed');
     expect(progressSpy).toHaveBeenCalled(); // Progress should still be updated
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Generated empty buffer for output.png'));
 
@@ -857,7 +876,10 @@ describe('generateOptimizedImage', () => {
         ({
           resize: vi.fn().mockReturnThis(),
           png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
           toBuffer: vi.fn().mockRejectedValue(new Error('Sharp processing failed')),
+          metadata: vi.fn().mockResolvedValue({ width: 1024 }),
         }) as unknown as Sharp,
     );
 
@@ -906,7 +928,10 @@ describe('generateOptimizedImage', () => {
         ({
           resize: vi.fn().mockReturnThis(),
           png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
           toBuffer: vi.fn().mockRejectedValue(new Error('Invalid count value: -1')),
+          metadata: vi.fn().mockResolvedValue({ width: 1024 }),
         }) as unknown as Sharp,
     );
 
@@ -1116,17 +1141,22 @@ describe('optimizeImageWithProgress', () => {
   });
 
   /**
-   * Test warning for images with no variants created.
+   * Test warning for images with failed variants.
    * Validates that images that fail to produce any variants trigger
    * appropriate warning messages for debugging.
    */
-  test('should warn when no variants are created', async () => {
+  test('should warn when variants fail to be created', async () => {
     // Mock Sharp to return invalid metadata.
     const sharp = await import('sharp');
     const mockSharp = sharp.default as unknown as MockedFunction<typeof sharp.default>;
     mockSharp.mockImplementationOnce(
       () =>
         ({
+          resize: vi.fn().mockReturnThis(),
+          png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
           metadata: vi.fn().mockResolvedValue({ width: null, height: null }), // Invalid metadata
         }) as unknown as Sharp,
     );
@@ -1135,7 +1165,7 @@ describe('optimizeImageWithProgress', () => {
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { processedCount, savedBytes } = await optimizeImageWithProgress(
+    const { processedCount, savedBytes, failedCount } = await optimizeImageWithProgress(
       'blog/img/invalidImage.png',
       '/build/dir',
       progressTracker,
@@ -1143,12 +1173,42 @@ describe('optimizeImageWithProgress', () => {
 
     expect(processedCount).toBe(0);
     expect(savedBytes).toBe(0);
+    expect(failedCount).toBe(1);
 
     // Should log invalid metadata error.
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('❌ Invalid image metadata'));
 
+    // Should NOT warn about no variants since this is a clear error, not a warning case.
+    expect(consoleWarnSpy).not.toHaveBeenCalledWith(expect.stringContaining('⚠️'));
+
     consoleWarnSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+  });
+
+  /**
+   * Test that skipped/cached images don't trigger warnings.
+   * Validates that images that are skipped because they're already cached
+   * don't generate warning messages, only failed images do.
+   */
+  test('should not warn for skipped/cached images', async () => {
+    // Mock all variants to be skipped (cached).
+    const progressTracker = new ProgressTracker(18, 1);
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { processedCount, savedBytes, skippedCount } = await optimizeImageWithProgress(
+      'blog/img/cachedImage.png',
+      '/build/dir',
+      progressTracker,
+    );
+
+    expect(processedCount).toBe(0);
+    expect(savedBytes).toBe(0);
+    expect(skippedCount).toBeGreaterThan(0);
+
+    // Should NOT warn about skipped images (they're cached, which is good).
+    expect(consoleWarnSpy).not.toHaveBeenCalledWith(expect.stringContaining('⚠️'));
+
+    consoleWarnSpy.mockRestore();
   });
 
   /**
@@ -1163,6 +1223,11 @@ describe('optimizeImageWithProgress', () => {
     mockSharp.mockImplementationOnce(
       () =>
         ({
+          resize: vi.fn().mockReturnThis(),
+          png: vi.fn().mockReturnThis(),
+          avif: vi.fn().mockReturnThis(),
+          webp: vi.fn().mockReturnThis(),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
           metadata: vi.fn().mockRejectedValue(new Error('Cannot read image metadata')),
         }) as unknown as Sharp,
     );
