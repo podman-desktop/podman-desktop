@@ -164,23 +164,23 @@ vi.mock('node:fs', async () => {
 vi.mock('sharp', () => {
   // Create a comprehensive mock Sharp instance with proper method chaining.
   const createMockSharpInstance = (): Record<string, unknown> => {
-    const mockInstance = {
-      resize: vi.fn().mockImplementation(function (this: unknown) {
-        return this;
-      }),
-      toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
-      png: vi.fn().mockImplementation(function (this: unknown) {
-        return this;
-      }),
-      avif: vi.fn().mockImplementation(function (this: unknown) {
-        return this;
-      }),
-      webp: vi.fn().mockImplementation(function (this: unknown) {
-        return this;
-      }),
-      metadata: vi.fn().mockResolvedValue({ width: 1024 }),
-    };
-    return mockInstance;
+    return {
+          resize: vi.fn().mockImplementation(function (this: unknown) {
+            return this;
+          }),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from('optimized_image_data')),
+          png: vi.fn().mockImplementation(function (this: unknown) {
+            return this;
+          }),
+          avif: vi.fn().mockImplementation(function (this: unknown) {
+            return this;
+          }),
+          webp: vi.fn().mockImplementation(function (this: unknown) {
+            return this;
+          }),
+          metadata: vi.fn().mockResolvedValue({ width: 1024 }),
+        };
+
   };
 
   // Create the main Sharp constructor function that returns a new instance each time.
