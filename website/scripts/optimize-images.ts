@@ -246,6 +246,12 @@ export function getRelativeOutputDir(dir: string): string {
   if (dir.startsWith('blog')) {
     return path.relative('blog', dir);
   }
+
+  if (dir.startsWith('docs')) {
+    // Images from `docs/...` should be mapped relative to docs.
+    return path.relative('docs', dir);
+  }
+
   return dir;
 }
 
@@ -423,7 +429,7 @@ export async function processImagesInBatches(
 }
 
 /**
- * Optimize all images in the static and blog directories with progress tracking.
+ * Optimize all images in the static, blog, and docs directories with progress tracking.
  *
  * @returns A promise that resolves when the optimization is complete
  */
@@ -432,7 +438,7 @@ export async function optimizeImages(): Promise<void> {
 
   const { glob } = await import('glob');
 
-  const rootSearchDirs = ['static', 'blog'];
+  const rootSearchDirs = ['static', 'blog', 'docs'];
   const patterns = rootSearchDirs.map(dir => `${dir}/**/*.{${inputFormats.join(',')}}`);
   const allImages = await glob(patterns, { nodir: true });
   const unwantedPatternRegex = /(?:optimized-images)|(?:-\d+w\.(png|jpg|jpeg|webp)$)/i;

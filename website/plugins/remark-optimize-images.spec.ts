@@ -401,6 +401,54 @@ describe('remarkOptimizeImages', () => {
       const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
       expect(avifSrcSet).toContain('/optimized-images/image-640w.avif');
     });
+
+    /**
+     * Test docs image path mapping.
+     * Images in docs should be mapped to the correct optimized location based on source file context.
+     */
+    test('should handle docs images with correct path mapping', () => {
+      const docsMarkdown = '![Download DMG](img/download-dmg.png)';
+      const docsVFile = { path: 'docs/installation/macos-install.md' } as VFile;
+
+      const tree = unified().use(remarkParse).parse(docsMarkdown);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, docsVFile);
+
+      const pictureElement = (tree.children[0] as ParagraphNode).children[0] as MdxJsxElement;
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      const avifSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+
+      // Should map to the docs structure: /optimized-images/installation/img/download-dmg-640w.avif.
+      expect(avifSrcSet).toContain('/optimized-images/installation/img/download-dmg-640w.avif');
+
+      // Check the fallback img element.
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
+      expect(imgSrc).toBe('/optimized-images/installation/img/download-dmg-1536w.png');
+    });
+
+    /**
+     * Test docs images with nested paths.
+     * Ensures complex docs directory structures are handled correctly.
+     */
+    test('should handle nested docs images', () => {
+      const nestedDocsMarkdown = '![Nested Image](../shared/screenshot.png)';
+      const nestedDocsVFile = { path: 'docs/installation/windows/windows-install.md' } as VFile;
+
+      const tree = unified().use(remarkParse).parse(nestedDocsMarkdown);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, nestedDocsVFile);
+
+      const pictureElement = (tree.children[0] as ParagraphNode).children[0] as MdxJsxElement;
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
+
+      // Should resolve relative path correctly: installation/shared/screenshot.
+      expect(imgSrc).toBe('/optimized-images/installation/shared/screenshot-1536w.png');
+    });
   });
 
   describe('multiple image handling', () => {

@@ -69,6 +69,60 @@ interface MdxJsxElement extends Node {
 }
 
 /**
+ * Determines the correct optimized image path based on the source file context.
+ * Maps relative image URLs to their optimized counterparts considering the source file location.
+ *
+ * @param imageUrl - The original image URL from the markdown
+ * @param sourceFilePath - The path of the source markdown file
+ * @returns The correct path for the optimized image
+ */
+function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string): string {
+  const parsedUrl = path.parse(imageUrl);
+  const imageName = parsedUrl.name;
+  const imageDir = parsedUrl.dir;
+
+  // Determine the source context from the file path.
+  let optimizedDir = imageDir;
+
+  if (sourceFilePath) {
+    const sourceDir = path.dirname(sourceFilePath);
+
+    // For docs images: resolve relative to the docs structure.
+    if (sourceDir.startsWith('docs/')) {
+      // Convert relative path to absolute docs context.
+      const resolvedPath = path.resolve(sourceDir, imageDir);
+
+      // Extract the path relative to docs directory for optimization structure.
+      if (resolvedPath.startsWith(path.resolve('docs'))) {
+        optimizedDir = path.relative('docs', resolvedPath);
+      } else {
+        // Handle cases where image path goes outside docs (e.g., ../img).
+        optimizedDir = imageDir;
+      }
+    }
+    // For blog images: keep existing behavior.
+    else if (sourceDir.startsWith('blog/')) {
+      optimizedDir = imageDir;
+    }
+    // For other contexts: use original directory structure.
+    else {
+      optimizedDir = imageDir;
+    }
+  }
+
+  // Normalize the directory path for web URLs (always use forward slashes).
+  const normalizedOptimizedDir = optimizedDir.replace(/\\/g, '/');
+  const normalizedDir =
+    normalizedOptimizedDir === ''
+      ? ''
+      : normalizedOptimizedDir.startsWith('/')
+        ? normalizedOptimizedDir
+        : `/${normalizedOptimizedDir}`;
+
+  return `/optimized-images${normalizedDir}/${imageName}`;
+}
+
+/**
  * Creates a remark plugin that optimizes images in markdown content.
  *
  * This plugin uses the unified/remark AST (Abstract Syntax Tree) visitor pattern
@@ -83,7 +137,7 @@ interface MdxJsxElement extends Node {
  * @returns A remark transformer function
  */
 export function remarkOptimizeImages() {
-  return function transformer(tree: Node, _file: VFile): void {
+  return function transformer(tree: Node, file: VFile): void {
     /**
      * Visit all image nodes in the AST.
      */
@@ -137,15 +191,6 @@ export function remarkOptimizeImages() {
        */
       if (/\.(png|jpg|jpeg)$/i.exec(url)) {
         /**
-         * Parse the image path to extract directory and filename.
-         * This allows us to maintain the original directory structure
-         * in the optimized images directory.
-         */
-        const parsedPath = path.parse(url);
-        const imageName = parsedPath.name;
-        const imageDir = parsedPath.dir;
-
-        /**
          * Responsive breakpoints matching Tailwind CSS.
          * These sizes cover the most common viewport widths:
          * - 640w: Mobile phones
@@ -166,24 +211,14 @@ export function remarkOptimizeImages() {
          */
         const formats = ['avif', 'webp', 'png'];
 
-        /**
-         * Generate the HTML picture element with all optimized sources.
-         * This creates a complete responsive image solution:
-         * - Multiple format sources for browser compatibility.
-         * - Responsive srcsets for different viewport sizes.
-         * - Proper fallback img element.
-         * - Lazy loading for performance.
-         * - Preserved alt text for accessibility.
-         */
-        // Construct the optimized image base path
-        const normalizedImageDir = imageDir === '' ? '' : imageDir.startsWith('/') ? imageDir : `/${imageDir}`;
-        const optimizedBasePath = `/optimized-images${normalizedImageDir}/${imageName}`;
+        // Construct the optimized image base path using context-aware mapping.
+        const optimizedBasePath = getOptimizedImagePath(url, file.path);
 
-        // Use the largest optimized PNG as fallback (better than uncompressed original)
+        // Use the largest optimized PNG as fallback (better than uncompressed original).
         const fallbackImagePath = `${optimizedBasePath}-1536w.png`;
 
         /**
-         * Create source elements for AVIF and WebP formats
+         * Create source elements for AVIF and WebP formats.
          */
         const sourceElements: MdxJsxElement[] = formats.slice(0, -1).map(
           (format): MdxJsxElement => ({
@@ -213,7 +248,7 @@ export function remarkOptimizeImages() {
         );
 
         /**
-         * Create the fallback img element
+         * Create the fallback img element.
          */
         const imgElement: MdxJsxElement = {
           type: 'mdxJsxFlowElement',
@@ -251,7 +286,7 @@ export function remarkOptimizeImages() {
         };
 
         /**
-         * Create the picture element with source and img children
+         * Create the picture element with source and img children.
          */
         const pictureElement: MdxJsxElement = {
           type: 'mdxJsxFlowElement',

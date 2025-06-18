@@ -668,6 +668,18 @@ describe('getRelativeOutputDir', () => {
     const normalizedResult = result.replace(/\\/g, '/');
     expect(normalizedResult).toStrictEqual('foo/bar');
   });
+
+  /**
+   * Test path transformation for docs directory.
+   * Handles docs assets like installation guides and tutorials.
+   * Maintains proper directory structure for documentation images.
+   */
+  test('dir starts with "docs"', () => {
+    const result = getRelativeOutputDir('docs/installation/img');
+    // Normalize path separators for cross-platform compatibility.
+    const normalizedResult = result.replace(/\\/g, '/');
+    expect(normalizedResult).toStrictEqual('installation/img');
+  });
 });
 
 describe('generateOptimizedImage', () => {
