@@ -1,3 +1,21 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
 /**
  * Docusaurus plugin: Optimized images.
  *
@@ -19,26 +37,7 @@
 
 import path from 'node:path';
 
-import type { ConfigureWebpackUtils, LoadContext, Plugin, PluginOptions, Props } from '@docusaurus/types';
-import type { ConfigureWebpackResult } from '@docusaurus/types/src/plugin';
-import type { Configuration } from 'webpack';
-
-/**
- * Custom webpack result interface.
- * Extends the base ConfigureWebpackResult to include dev server configuration.
- * This ensures proper typing for our dev server static file serving setup.
- */
-interface CustomConfigureWebpackResult extends ConfigureWebpackResult {
-  devServer: {
-    static: [
-      {
-        directory: string;
-        publicPath: string;
-        serveIndex: boolean;
-      },
-    ];
-  };
-}
+import type { LoadContext, Plugin, PluginOptions } from '@docusaurus/types';
 
 /**
  * Docusaurus plugin factory function.
@@ -50,7 +49,7 @@ interface CustomConfigureWebpackResult extends ConfigureWebpackResult {
  * @param _options - Plugin options (currently unused but reserved for future configuration)
  * @returns A Docusaurus plugin object with webpack and build hooks
  */
-export default function (context: LoadContext, _options: PluginOptions): Plugin<void> {
+export default function docusaurusPluginOptimizedImages(context: LoadContext, _options: PluginOptions): Plugin {
   return {
     // Plugin identifier for Docusaurus.
     name: 'docusaurus-plugin-optimized-images',
@@ -68,16 +67,12 @@ export default function (context: LoadContext, _options: PluginOptions): Plugin<
      * @param _utils - Webpack configuration utilities (unused)
      * @returns Modified webpack configuration
      */
-    configureWebpack(
-      config: Configuration,
-      _isServer: boolean,
-      _utils: ConfigureWebpackUtils,
-    ): CustomConfigureWebpackResult {
+    configureWebpack(config, _isServer, _utils): object {
       return {
         resolve: {
           alias: {
             // Preserve any existing aliases from the base configuration.
-            ...config.resolve?.alias,
+            ...(config.resolve?.alias ?? {}),
 
             /**
              * Alias for optimized images directory.
@@ -105,18 +100,14 @@ export default function (context: LoadContext, _options: PluginOptions): Plugin<
     },
 
     /**
-     * Post-build hook for production deployment.
+     * Post-build hook for production feedback.
      *
-     * Called after the Docusaurus build completes successfully.
-     * Provides feedback about optimized image availability and any final setup.
+     * Executed after the Docusaurus build completes successfully.
+     * Provides feedback about the optimization system status.
      *
-     * In production, Docusaurus automatically copies static files to the build output,
-     * so optimized images are served directly by the web server.
-     *
-     * @param _props - Build properties and metadata (unused)
+     * @param _props - Build completion properties (unused)
      */
-    async postBuild(_props: Props): Promise<void> {
-      // Optimized images are automatically copied by Docusaurus.
+    async postBuild(_props): Promise<void> {
       console.log('Optimized images ready for production build');
     },
   };

@@ -3,6 +3,8 @@
 import { resolve } from 'node:path';
 import { createNotesFiles } from './release-notes-parser';
 import Storybook from './storybook';
+import optimizedImagesPlugin from './plugins/docusaurus-plugin-optimized-images';
+import remarkOptimizeImages from './plugins/remark-optimize-images';
 
 const lightCodeTheme = require('prism-react-renderer').themes.github;
 const darkCodeTheme = require('prism-react-renderer').themes.dracula;
@@ -363,7 +365,7 @@ const config = {
         storybookStatic: '../storybook/storybook-static',
       },
     ],
-    require.resolve('./plugins/docusaurus-plugin-optimized-images.ts'),
+    optimizedImagesPlugin,
   ],
   presets: [
     [
@@ -374,6 +376,7 @@ const config = {
           sidebarCollapsed: false,
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/podman-desktop/podman-desktop/tree/main/website',
+          beforeDefaultRemarkPlugins: [remarkOptimizeImages],
         },
         blog: {
           blogTitle: 'Podman Desktop blog!',
@@ -385,7 +388,7 @@ const config = {
             type: 'all',
             copyright: `Copyright © ${new Date().getFullYear()} Podman Desktop`,
           },
-          remarkPlugins: [require('./plugins/remark-optimize-images')],
+          beforeDefaultRemarkPlugins: [remarkOptimizeImages],
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

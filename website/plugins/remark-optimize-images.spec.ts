@@ -48,9 +48,18 @@ interface ParagraphNode extends Parent {
   children: Node[];
 }
 
-interface HtmlNode extends Node {
-  type: 'html';
+interface MdxJsxAttribute {
+  type: 'mdxJsxAttribute';
+  name: string;
   value: string;
+}
+
+interface MdxJsxElement extends Node {
+  type: 'mdxJsxFlowElement';
+  name: string;
+  attributes: MdxJsxAttribute[];
+  children: MdxJsxElement[];
+  data: { _mdxExplicitJsx: true };
 }
 
 interface ImageNode extends Node {
@@ -111,23 +120,43 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
 
-      // Verify the image was transformed to HTML.
-      expect(htmlNode.type).toBe('html');
-      expect(htmlNode.value).toContain('<picture>');
+      // Verify the image was transformed to a picture element.
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
 
       // Check for modern formats (AVIF has best compression).
-      expect(htmlNode.value).toContain('type="image/avif"');
-      expect(htmlNode.value).toContain('type="image/webp"');
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      expect(sources).toHaveLength(2); // AVIF and WebP sources
+
+      const avifSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      expect(avifSource).toBeDefined();
+
+      const webpSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/webp'),
+      );
+      expect(webpSource).toBeDefined();
 
       // Verify responsive srcsets are generated.
-      expect(htmlNode.value).toContain('/optimized-images/img/blog/hello_there-640w.avif');
-      expect(htmlNode.value).toContain('/optimized-images/img/blog/hello_there-1536w.png');
+      const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(avifSrcSet).toContain('/optimized-images/img/blog/hello_there-640w.avif');
+
+      // Check the fallback img element
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      expect(imgElement).toBeDefined();
+
+      const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
+      expect(imgSrc).toBe('/optimized-images/img/blog/hello_there-1536w.png');
 
       // Ensure accessibility is preserved.
-      expect(htmlNode.value).toContain('alt="Selfie"');
-      expect(htmlNode.value).toContain('loading="lazy"');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('Selfie');
+
+      const imgLoading = imgElement!.attributes.find(attr => attr.name === 'loading')?.value;
+      expect(imgLoading).toBe('lazy');
     });
 
     /**
@@ -139,11 +168,20 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.type).toBe('html');
-      expect(htmlNode.value).toContain('<picture>');
-      expect(htmlNode.value).toContain('/optimized-images/docs/images/screenshot-640w.avif');
-      expect(htmlNode.value).toContain('alt="Screenshot"');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
+
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      const avifSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(avifSrcSet).toContain('/optimized-images/docs/images/screenshot-640w.avif');
+
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('Screenshot');
     });
 
     /**
@@ -155,11 +193,20 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.type).toBe('html');
-      expect(htmlNode.value).toContain('<picture>');
-      expect(htmlNode.value).toContain('/optimized-images/static/photo-768w.webp');
-      expect(htmlNode.value).toContain('alt="Photo"');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
+
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      const webpSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/webp'),
+      );
+      const webpSrcSet = webpSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(webpSrcSet).toContain('/optimized-images/static/photo-768w.webp');
+
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('Photo');
     });
 
     /**
@@ -171,10 +218,16 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.type).toBe('html');
-      expect(htmlNode.value).toContain('<picture>');
-      expect(htmlNode.value).toContain('/optimized-images/IMG/Blog/Test-1024w.avif');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
+
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      const avifSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(avifSrcSet).toContain('/optimized-images/IMG/Blog/Test-1024w.avif');
     });
   });
 
@@ -293,8 +346,10 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.value).toContain('alt="Selfie"');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('Selfie');
     });
 
     /**
@@ -306,8 +361,10 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.value).toContain('alt=""');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('');
     });
 
     /**
@@ -319,8 +376,10 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.value).toContain('alt=""');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      const imgElement = pictureElement.children.find(child => child.name === 'img');
+      const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
+      expect(imgAlt).toBe('');
     });
   });
 
@@ -334,8 +393,13 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      const htmlNode = (tree.children[1] as ParagraphNode).children[1] as HtmlNode;
-      expect(htmlNode.value).toContain('/optimized-images/image-640w.avif');
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      const sources = pictureElement.children.filter(child => child.name === 'source');
+      const avifSource = sources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(avifSrcSet).toContain('/optimized-images/image-640w.avif');
     });
   });
 
@@ -350,13 +414,27 @@ describe('remarkOptimizeImages', () => {
       imageTransformer(tree, mockVFile);
 
       // Check that supported formats were transformed.
-      const firstImage = (tree.children[1] as ParagraphNode).children[0] as HtmlNode;
-      expect(firstImage.type).toBe('html');
-      expect(firstImage.value).toContain('/optimized-images/img/first-640w.avif');
+      const firstImage = (tree.children[1] as ParagraphNode).children[0] as MdxJsxElement;
+      expect(firstImage.type).toBe('mdxJsxFlowElement');
+      expect(firstImage.name).toBe('picture');
 
-      const secondImage = (tree.children[1] as ParagraphNode).children[2] as HtmlNode;
-      expect(secondImage.type).toBe('html');
-      expect(secondImage.value).toContain('/optimized-images/img/second-640w.avif');
+      const firstSources = firstImage.children.filter(child => child.name === 'source');
+      const firstAvifSource = firstSources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const firstAvifSrcSet = firstAvifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(firstAvifSrcSet).toContain('/optimized-images/img/first-640w.avif');
+
+      const secondImage = (tree.children[1] as ParagraphNode).children[2] as MdxJsxElement;
+      expect(secondImage.type).toBe('mdxJsxFlowElement');
+      expect(secondImage.name).toBe('picture');
+
+      const secondSources = secondImage.children.filter(child => child.name === 'source');
+      const secondAvifSource = secondSources.find(source =>
+        source.attributes.find(attr => attr.name === 'type' && attr.value === 'image/avif'),
+      );
+      const secondAvifSrcSet = secondAvifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
+      expect(secondAvifSrcSet).toContain('/optimized-images/img/second-640w.avif');
 
       // Check that external URLs were skipped.
       const thirdImage = (tree.children[1] as ParagraphNode).children[4] as ImageNode;
@@ -402,7 +480,7 @@ describe('remarkOptimizeImages', () => {
       const imageTransformer = remarkOptimizeImages();
       imageTransformer(tree, mockVFile);
 
-      expect((tree.children[0] as ParagraphNode).children[0].type).toBe('html');
+      expect((tree.children[0] as ParagraphNode).children[0].type).toBe('mdxJsxFlowElement');
     });
   });
 });

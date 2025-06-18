@@ -1,3 +1,21 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
 /**
  * Remark plugin: Optimize images.
  *
@@ -22,7 +40,7 @@ import { visit } from 'unist-util-visit';
 import type { VFile } from 'vfile';
 
 /**
- * Image node interface.
+ * Interface for image nodes in the markdown AST.
  */
 interface ImageNode extends Node {
   type: 'image';
@@ -31,11 +49,23 @@ interface ImageNode extends Node {
 }
 
 /**
- * HTML node interface.
+ * Interface for MDX JSX attributes.
  */
-interface HtmlNode extends Node {
-  type: 'html';
+interface MdxJsxAttribute {
+  type: 'mdxJsxAttribute';
+  name: string;
   value: string;
+}
+
+/**
+ * Interface for MDX JSX elements.
+ */
+interface MdxJsxElement extends Node {
+  type: 'mdxJsxFlowElement';
+  name: string;
+  attributes: MdxJsxAttribute[];
+  children: MdxJsxElement[];
+  data: { _mdxExplicitJsx: true };
 }
 
 /**
@@ -53,7 +83,7 @@ interface HtmlNode extends Node {
  * @returns A remark transformer function
  */
 export function remarkOptimizeImages() {
-  return (tree: Node, _file: VFile): void => {
+  return function transformer(tree: Node, _file: VFile): void {
     /**
      * Visit all image nodes in the AST.
      */
@@ -67,6 +97,13 @@ export function remarkOptimizeImages() {
        * - Prevents unnecessary network requests during build.
        */
       if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
+        return;
+      }
+
+      /**
+       * Skip images that use pathname:// protocol (already bypassing Docusaurus processing).
+       */
+      if (url.startsWith('pathname://')) {
         return;
       }
 
@@ -138,42 +175,101 @@ export function remarkOptimizeImages() {
          * - Lazy loading for performance.
          * - Preserved alt text for accessibility.
          */
-        const pictureHtml = `
-<picture>
-  ${formats
-    .slice(0, -1) // All formats except the last (which goes in the img element)
-    .map(
-      format => `
-  <source
-    type="image/${format}"
-    srcset="${sizes.map(size => `/optimized-images${imageDir}/${imageName}-${size}w.${format} ${size}w`).join(', ')}"
-    sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px"
-  />`,
-    )
-    .join('')}
-  <img
-    src="${url}"
-    srcset="${sizes.map(size => `/optimized-images${imageDir}/${imageName}-${size}w.png ${size}w`).join(', ')}"
-    sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px"
-    alt="${alt ?? ''}"
-    loading="lazy"
-  />
-</picture>`;
+        // Construct the optimized image base path
+        const normalizedImageDir = imageDir === '' ? '' : imageDir.startsWith('/') ? imageDir : `/${imageDir}`;
+        const optimizedBasePath = `/optimized-images${normalizedImageDir}/${imageName}`;
+
+        // Use the largest optimized PNG as fallback (better than uncompressed original)
+        const fallbackImagePath = `${optimizedBasePath}-1536w.png`;
 
         /**
-         * Replace the markdown image node with an HTML node.
-         * This transforms the AST from a simple image to a complex HTML structure.
-         * The HTML will be preserved in the final output.
+         * Create source elements for AVIF and WebP formats
          */
-        const htmlNode: HtmlNode = {
-          type: 'html',
-          value: pictureHtml.trim(),
+        const sourceElements: MdxJsxElement[] = formats.slice(0, -1).map(
+          (format): MdxJsxElement => ({
+            type: 'mdxJsxFlowElement',
+            name: 'source',
+            attributes: [
+              {
+                type: 'mdxJsxAttribute',
+                name: 'type',
+                value: `image/${format}`,
+              },
+              {
+                type: 'mdxJsxAttribute',
+                name: 'srcSet',
+                value: sizes.map(size => `${optimizedBasePath}-${size}w.${format} ${size}w`).join(', '),
+              },
+              {
+                type: 'mdxJsxAttribute',
+                name: 'sizes',
+                value:
+                  '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+              },
+            ],
+            children: [],
+            data: { _mdxExplicitJsx: true },
+          }),
+        );
+
+        /**
+         * Create the fallback img element
+         */
+        const imgElement: MdxJsxElement = {
+          type: 'mdxJsxFlowElement',
+          name: 'img',
+          attributes: [
+            {
+              type: 'mdxJsxAttribute',
+              name: 'src',
+              value: fallbackImagePath,
+            },
+            {
+              type: 'mdxJsxAttribute',
+              name: 'srcSet',
+              value: sizes.map(size => `${optimizedBasePath}-${size}w.png ${size}w`).join(', '),
+            },
+            {
+              type: 'mdxJsxAttribute',
+              name: 'sizes',
+              value:
+                '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+            },
+            {
+              type: 'mdxJsxAttribute',
+              name: 'alt',
+              value: alt ?? '',
+            },
+            {
+              type: 'mdxJsxAttribute',
+              name: 'loading',
+              value: 'lazy',
+            },
+          ],
+          children: [],
+          data: { _mdxExplicitJsx: true },
         };
-        parent.children[index] = htmlNode;
+
+        /**
+         * Create the picture element with source and img children
+         */
+        const pictureElement: MdxJsxElement = {
+          type: 'mdxJsxFlowElement',
+          name: 'picture',
+          attributes: [],
+          children: [...sourceElements, imgElement],
+          data: { _mdxExplicitJsx: true },
+        };
+
+        /**
+         * Replace the markdown image node with the MDX JSX picture element.
+         * This transforms the AST from a simple image to a complex JSX structure.
+         * The JSX will be properly handled by MDX during compilation.
+         */
+        parent.children[index] = pictureElement;
       }
     });
   };
 }
 
-// CommonJS export for compatibility with Docusaurus.
-module.exports = remarkOptimizeImages;
+export default remarkOptimizeImages;
