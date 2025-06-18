@@ -412,15 +412,7 @@ export async function processImagesInBatches(
     const batch = images.slice(i, i + batchSize);
 
     const batchPromises = batch.map(async imagePath => {
-      let liveOptimize: typeof optimizeImageWithProgress;
-      try {
-        const mocked = await import(/* @vite-ignore */ './optimize-images?mock');
-        liveOptimize = mocked.optimizeImageWithProgress;
-      } catch {
-        // Fallback to self import (production code-path).
-        ({ optimizeImageWithProgress: liveOptimize } = await import(/* @vite-ignore */ './optimize-images'));
-      }
-      return liveOptimize(imagePath, buildDir, progressTracker);
+      return optimizeImageWithProgress(imagePath, buildDir, progressTracker);
     });
 
     const batchResults = await Promise.all(batchPromises);
