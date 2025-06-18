@@ -54,7 +54,7 @@ $ GIT_USER=<Your GitHub username> pnpm deploy
 
 If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
 
-### Image Optimization
+### Image optimization
 
 The website includes an automatic image optimization system with real-time progress tracking and comprehensive logging that runs during build:
 
@@ -72,8 +72,10 @@ This converts images to modern formats (WebP, AVIF) with responsive sizes for be
 - Parallel processing with intelligent concurrency limiting
 - Comprehensive progress tracking with detailed status information
 - Quiet operation with clean progress bar display
-- Error and warning reporting showing only issues that need attention
-- Processing statistics with comprehensive summaries at completion
+- Smart caching that skips already-optimized images without warnings
+- Clear distinction between cached/skipped files and failed processing
+- Error and warning reporting showing only actual issues that need attention
+- Processing statistics with comprehensive summaries including cache hit rates
   The system is fully tested and documented. See [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) for details.
 
 ### Adding a Node.js module to the website
