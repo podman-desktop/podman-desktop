@@ -214,6 +214,34 @@ test('container group status should be degraded when the pod status is degraded'
   expect(group.status).toBe('DEGRADED');
 });
 
+test('containers in same named compose project on two different engine should have different group id', async () => {
+  const COMPOSE_CONTAINER: ContainerInfo = {
+    engineId: '',
+    engineName: '',
+    engineType: 'podman',
+    Id: 'container1',
+    Image: 'registry.k8s.io/pause:3.7',
+    Labels: {
+      'com.docker.compose.project': 'compose',
+      'com.docker.compose.service': 'compose_container',
+    },
+    Names: ['/compose-compose_container-1'],
+    State: 'RUNNING',
+  } as unknown as ContainerInfo;
+
+  const foo = containerUtils.getContainerGroup({
+    ...COMPOSE_CONTAINER,
+    engineId: 'foo',
+  });
+
+  const bar = containerUtils.getContainerGroup({
+    ...COMPOSE_CONTAINER,
+    engineId: 'bar',
+  });
+
+  expect(foo.id).not.eq(bar.id);
+});
+
 test('should expect icon to be undefined if no context/view is passed', async () => {
   const containerInfo = {
     Image: 'docker.io/kindest/node:foobar',
