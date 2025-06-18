@@ -23,9 +23,10 @@ import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as extensionObj from '../extension';
+import type { Installer } from '../installer/installer';
 import { releaseNotes } from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
-import type { Installer, PodmanInfo, UpdateCheck } from './podman-install';
+import type { PodmanInfo, UpdateCheck } from './podman-install';
 import { getBundledPodmanVersion, PodmanInstall, WinInstaller } from './podman-install';
 import * as podmanInstallObj from './podman-install';
 import * as utils from './util';
