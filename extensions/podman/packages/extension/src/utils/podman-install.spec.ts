@@ -25,10 +25,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import * as extensionObj from '../extension';
 import type { Installer } from '../installer/installer';
 import { releaseNotes } from '../podman5.json';
+import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
 import type { PodmanInfo, UpdateCheck } from './podman-install';
-import { getBundledPodmanVersion, PodmanInstall, WinInstaller } from './podman-install';
-import * as podmanInstallObj from './podman-install';
+import { PodmanInstall, WinInstaller } from './podman-install';
 import * as utils from './util';
 
 const originalConsoleError = console.error;
@@ -208,14 +208,6 @@ test('expect update on windows to throw error if non zero exit code', async () =
   expect(extensionApi.window.showErrorMessage).toHaveBeenCalled();
 });
 
-describe('getBundledPodmanVersion', () => {
-  test('should return the podman 5 version', async () => {
-    const version = getBundledPodmanVersion();
-    expect(version.startsWith('5')).toBeTruthy();
-    expect(version.startsWith('4')).toBeFalsy();
-  });
-});
-
 class TestPodmanInstall extends PodmanInstall {
   async stopPodmanMachinesIfAnyBeforeUpdating(): Promise<boolean> {
     return super.stopPodmanMachinesIfAnyBeforeUpdating();
@@ -385,7 +377,7 @@ test('checkForUpdate should return installed version and no update if the instal
   expect(result).toStrictEqual({
     installedVersion: '1.1',
     hasUpdate: false,
-    bundledVersion: podmanInstallObj.getBundledPodmanVersion(),
+    bundledVersion: getBundledPodmanVersion(),
   });
 });
 
@@ -403,7 +395,7 @@ test('checkForUpdate should return installed version and update if the installed
   expect(result).toStrictEqual({
     installedVersion: '1.1',
     hasUpdate: true,
-    bundledVersion: podmanInstallObj.getBundledPodmanVersion(),
+    bundledVersion: getBundledPodmanVersion(),
   });
 });
 

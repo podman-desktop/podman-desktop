@@ -51,16 +51,13 @@ import {
 import { BaseInstaller } from '../installer/base-installer';
 import type { Installer } from '../installer/installer';
 import * as podman5JSON from '../podman5.json';
+import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
 import { getAssetsFolder } from './util';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
-
-export function getBundledPodmanVersion(): string {
-  return podman5JSON.version;
-}
 
 export interface PodmanInfo {
   podmanVersion?: string;
