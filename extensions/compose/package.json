@@ -54,7 +54,7 @@
             ],
             [
               {
-                "value": "> ℹ️ **Note:** If you would like to use `docker compose up` or `docker-compose` with Podman, [enable Docker Compatibility](/preferences/default/preferences.podman-desktop.podman).",
+                "value": "> ℹ️ **Note:** If you would like to use `docker compose up` or `docker-compose` with Podman, [enable Docker Compatibility](/preferences/default/preferences.dockerCompatibility).",
                 "highlight": true
               }
             ],
