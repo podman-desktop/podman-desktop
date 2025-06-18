@@ -45,6 +45,7 @@ test('Expect simple column styling', async () => {
     groupInfo: {
       name: '',
       type: ContainerGroupInfoTypeUI.STANDALONE,
+      id: 'sha256:1234567890123',
     },
     selected: false,
     created: 0,
@@ -67,6 +68,7 @@ test('Expect simple column styling - pod', async () => {
     name: '',
     engineType: ContainerGroupInfoTypeUI.PODMAN,
     engineId: '',
+    id: 'pod-id',
   };
   render(ContainerColumnEnvironment, { object: pod });
 
@@ -84,6 +86,7 @@ test('Expect simple column styling - compose', async () => {
     name: '',
     engineType: ContainerGroupInfoTypeUI.PODMAN,
     engineId: '',
+    id: 'podman:foo',
   };
   render(ContainerColumnEnvironment, { object: compose });
 

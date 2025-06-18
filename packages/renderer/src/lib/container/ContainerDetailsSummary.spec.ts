@@ -75,6 +75,7 @@ const fakeStandaloneContainer: ContainerInfoUI = {
   groupInfo: {
     name: 'group2',
     type: ContainerGroupInfoTypeUI.STANDALONE,
+    id: 'fakeId2',
   },
   selected: false,
   created: 1234,

@@ -65,6 +65,7 @@ const containerInfoUIMock: ContainerInfoUI = {
   groupInfo: {
     name: 'foobar',
     type: ContainerGroupInfoTypeUI.COMPOSE,
+    id: 'podman:foobar',
   },
   selected: false,
   created: 0,
