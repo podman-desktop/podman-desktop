@@ -15,22 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { InstallCheck } from '@podman-desktop/api';
-import { compare } from 'compare-versions';
 
-import { getBundledPodmanVersion } from '../utils/podman-install';
-import type { Installer } from './installer';
+import type { ImageFile, ImageFilesystemLayer } from '@podman-desktop/api';
 
-export abstract class BaseInstaller implements Installer {
-  abstract install(): Promise<boolean>;
+import type { FilesystemTree } from './filesystem-tree.js';
 
-  abstract update(): Promise<boolean>;
+export interface ImageFilesystemLayersUI {
+  layers: ImageFilesystemLayerUI[];
+}
 
-  abstract getUpdatePreflightChecks(): InstallCheck[];
-
-  abstract getPreflightChecks(): InstallCheck[];
-
-  requireUpdate(installedVersion: string): boolean {
-    return compare(installedVersion, getBundledPodmanVersion(), '<');
-  }
+export interface ImageFilesystemLayerUI extends ImageFilesystemLayer {
+  // The files of the current layer and previous ones
+  stackTree: FilesystemTree<ImageFile>;
+  // The files of the current layer only
+  layerTree: FilesystemTree<ImageFile>;
+  // The sum of the sizes of all the files in the layer
+  sizeInArchive: number;
+  // The number of added/modified/removed files and the sizes of related changes
+  addedCount: number;
+  modifiedCount: number;
+  removedCount: number;
+  addedSize: number;
+  modifiedSize: number;
+  removedSize: number;
 }

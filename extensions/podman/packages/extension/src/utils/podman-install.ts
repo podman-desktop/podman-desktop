@@ -49,6 +49,7 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
 import { BaseInstaller } from '../installer/base-installer';
+import type { Installer } from '../installer/installer';
 import * as podman5JSON from '../podman5.json';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
@@ -123,13 +124,6 @@ export class PodmanInfoImpl implements PodmanInfo {
   }
 }
 
-export interface Installer {
-  getPreflightChecks(): extensionApi.InstallCheck[] | undefined;
-  getUpdatePreflightChecks(): extensionApi.InstallCheck[] | undefined;
-  install(): Promise<boolean>;
-  requireUpdate(installedVersion: string): boolean;
-  update(): Promise<boolean>;
-}
 export interface UpdateCheck {
   hasUpdate: boolean;
   installedVersion?: string;

@@ -15,8 +15,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import dns from 'node:dns';
-
 import { app, ipcMain, Menu, Tray } from 'electron';
 
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
@@ -128,11 +126,6 @@ app.whenReady().then(
         });
       }
     });
-
-    // prefer ipv4 over ipv6
-    // TODO: Needs to be there until Happy Eyeballs(https://en.wikipedia.org/wiki/Happy_Eyeballs) is implemented
-    // which is the case in Node.js 20+ https://github.com/nodejs/node/issues/41625
-    dns.setDefaultResultOrder('ipv4first');
 
     // Setup the default tray icon + menu items
     const animatedTray = new AnimatedTray();

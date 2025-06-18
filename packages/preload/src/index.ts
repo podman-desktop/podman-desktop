@@ -66,6 +66,7 @@ import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
 import type { ImageFilesInfo } from '/@api/image-files-info';
+import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry';
@@ -1569,6 +1570,10 @@ export function initExposure(): void {
     return ipcInvoke('extension-loader:removeExtension', extensionId);
   });
 
+  contextBridge.exposeInMainWorld('ensureExtensionIsEnabled', async (extensionId: string): Promise<void> => {
+    return ipcInvoke('extension-loader:ensureExtensionIsEnabled', extensionId);
+  });
+
   contextBridge.exposeInMainWorld('openExternal', async (link: string): Promise<void> => {
     return ipcInvoke('shell:openExternal', link);
   });
@@ -2433,7 +2438,7 @@ export function initExposure(): void {
       id: string,
       image: containerDesktopAPI.ImageInfo,
       cancellationToken?: number,
-    ): Promise<containerDesktopAPI.ImageFilesystemLayers | undefined> => {
+    ): Promise<ImageFilesystemLayersUI | undefined> => {
       return ipcInvoke('image-files:getFilesystemLayers', id, image, cancellationToken);
     },
   );

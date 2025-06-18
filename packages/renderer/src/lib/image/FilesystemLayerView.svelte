@@ -3,9 +3,9 @@ const expansionState = new Map<string, boolean>();
 
 import type { ImageFile, ImageFileSymlink } from '@podman-desktop/api';
 
-import type { FilesystemNode } from './filesystem-tree';
+import type { FilesystemNode } from '/@api/filesystem-tree';
+
 import { ImageUtils } from './image-utils';
-import { isExec, modeString } from './imageDetailsFiles';
 
 export let tree: FilesystemNode<ImageFile>;
 export let margin = 0;
@@ -53,6 +53,26 @@ function getLink(file: ImageFile | undefined): string {
     return ' → ' + (file as ImageFileSymlink).linkPath;
   }
   return '';
+}
+
+function isExec(data: ImageFile): boolean {
+  return (data.mode & 0o111) !== 0;
+}
+
+// SUID, SGID, and sticky bit: https://www.redhat.com/sysadmin/suid-sgid-sticky-bit
+function modeString(data: ImageFile): string {
+  return (
+    (data.type === 'directory' ? 'd' : '-') +
+    (data.mode & 0o400 ? 'r' : '-') +
+    (data.mode & 0o200 ? 'w' : '-') +
+    (data.mode & 0o4000 ? (data.mode & 0o100 ? 's' : 'S') : data.mode & 0o100 ? 'x' : '-') +
+    (data.mode & 0o040 ? 'r' : '-') +
+    (data.mode & 0o020 ? 'w' : '-') +
+    (data.mode & 0o2000 ? (data.mode & 0o010 ? 's' : 'S') : data.mode & 0o010 ? 'x' : '-') +
+    (data.mode & 0o004 ? 'r' : '-') +
+    (data.mode & 0o002 ? 'w' : '-') +
+    (data.mode & 0o1000 ? 't' : data.mode & 0o001 ? 'x' : '-')
+  );
 }
 </script>
 

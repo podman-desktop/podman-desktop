@@ -36,6 +36,8 @@ export class ExtensionDevelopmentFolders {
 
   #extensionAnalyzer: ExtensionAnalyzer;
 
+  #externalExtensionIds: string[] = [];
+
   // event that will be fired
   #onDidUpdateDevelopmentFolders: Emitter<ExtensionDevelopmentFolderInfo[]> = new Emitter<
     ExtensionDevelopmentFolderInfo[]
@@ -124,6 +126,13 @@ export class ExtensionDevelopmentFolders {
       throw new Error(analyzedExtension.error);
     }
 
+    // if the extension is already part of the loader, avoid the loading
+    if (this.#externalExtensionIds.includes(analyzedExtension.id)) {
+      throw new Error(
+        `Extension with id ${analyzedExtension.id} is already loaded globally. It cannot be added as a development folder.`,
+      );
+    }
+
     this.#developmentFolders.push(path);
 
     // persist the changes
@@ -146,5 +155,14 @@ export class ExtensionDevelopmentFolders {
 
   getDevelopmentFolders(): ExtensionDevelopmentFolderInfo[] {
     return this.#developmentFolders.map(path => ({ path }));
+  }
+
+  addExternalExtensionId(extensionId: string): void {
+    if (!this.#externalExtensionIds.includes(extensionId)) {
+      this.#externalExtensionIds.push(extensionId);
+    }
+  }
+  removeExternalExtensionId(extensionId: string): void {
+    this.#externalExtensionIds = this.#externalExtensionIds.filter(id => id !== extensionId);
   }
 }

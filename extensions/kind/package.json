@@ -30,7 +30,10 @@
         "kind.cluster.creation.provider": {
           "type": "string",
           "default": "podman",
-          "enum": ["podman", "docker"],
+          "enum": [
+            "podman",
+            "docker"
+          ],
           "scope": "KubernetesProviderConnectionFactory",
           "description": "Provider Type"
         },

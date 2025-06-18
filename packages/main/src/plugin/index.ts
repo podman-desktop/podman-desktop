@@ -88,6 +88,7 @@ import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
 import type { ImageFilesInfo } from '/@api/image-files-info.js';
+import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
@@ -2070,6 +2071,13 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'extension-loader:ensureExtensionIsEnabled',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<void> => {
+        return this.extensionLoader.ensureExtensionIsEnabled(extensionId);
+      },
+    );
+
+    this.ipcHandle(
       'shell:openExternal',
       async (_listener: Electron.IpcMainInvokeEvent, link: string): Promise<void> => {
         if (securityRestrictionCurrentHandler.handler) {
@@ -2905,7 +2913,7 @@ export class PluginSystem {
         id: string,
         image: ImageInfo,
         tokenId?: number,
-      ): Promise<containerDesktopAPI.ImageFilesystemLayers | undefined> => {
+      ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
         if (tokenId) {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);

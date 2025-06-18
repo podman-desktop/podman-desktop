@@ -1,14 +1,14 @@
 <script lang="ts">
-import type { ImageFilesystemLayers, ImageInfo } from '@podman-desktop/api';
+import type { ImageInfo } from '@podman-desktop/api';
 import { Button, Checkbox } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import { imageFilesProviders } from '/@/stores/image-files-providers';
 import type { ImageFilesInfo } from '/@api/image-files-info';
+import type { ImageFilesystemLayersUI, ImageFilesystemLayerUI } from '/@api/image-filesystem-layers';
 
 import FilesystemLayerView from './FilesystemLayerView.svelte';
-import { type ImageFilesystemLayerUI, toImageFilesystemLayerUIs } from './imageDetailsFiles';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 let { imageInfo }: Props = $props();
 
-let imageLayers = $state<ImageFilesystemLayers>();
+let imageLayers = $state<ImageFilesystemLayersUI>();
 let selectedLayer = $state<ImageFilesystemLayerUI>();
 let loading = $state<boolean>(false);
 let error = $state<string>('');
@@ -98,7 +98,7 @@ onDestroy(async () => {
     </div>
     <div class="h-full flex flex-row space-x-8">
       <div role="list" aria-label="layers" class="h-full overflow-y-auto w-3/4">
-        <ImageDetailsFilesLayers on:selected={onSelectedLayer} layers={toImageFilesystemLayerUIs(imageLayers.layers)} />
+        <ImageDetailsFilesLayers on:selected={onSelectedLayer} layers={imageLayers.layers} />
       </div>
       <div aria-label="tree" class="h-full w-full pr-4 overflow-y-auto pb-16">
         {#if selectedLayer}

@@ -57,11 +57,7 @@ beforeEach(() => {
 
 describe.each<{
   experimental: boolean;
-  setState: (options: {
-    reachable: boolean;
-    offline?: boolean;
-    error?: string;
-  }) => void;
+  setState: (options: { reachable: boolean; offline?: boolean; error?: string }) => void;
 }>([
   {
     experimental: false,
