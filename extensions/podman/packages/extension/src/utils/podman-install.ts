@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import * as fs from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { promisify } from 'node:util';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
@@ -46,9 +46,6 @@ import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
 
 export interface PodmanInfo {
   podmanVersion?: string;
@@ -424,7 +421,7 @@ export class PodmanInstall {
   async getLastRunInfo(): Promise<PodmanInfo | undefined> {
     const podmanInfoPath = path.resolve(this.storagePath, 'podman-ext.json');
     if (!fs.existsSync(this.storagePath)) {
-      await promisify(fs.mkdir)(this.storagePath);
+      await mkdir(this.storagePath);
     }
 
     if (!fs.existsSync(podmanInfoPath)) {
