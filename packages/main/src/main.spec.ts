@@ -18,6 +18,8 @@
 import type { App as ElectronApp } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
+import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 
@@ -27,6 +29,9 @@ import { Main } from './main.js';
 vi.mock('electron');
 vi.mock('/@/util.js');
 vi.mock('/@/security-restrictions.js');
+
+// App Plugin
+vi.mock(import('/@/plugin/app-ready/default-protocol-client.js'));
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   name: 'dummy-electron-mock',
@@ -176,10 +181,11 @@ describe('ElectronApp#on window-all-closed', () => {
   });
 });
 
-describe('ElectronApp#whenReady', () => {
+describe('AppPlugin', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugins: Array<new (...args: any[]) => AppPlugin> = [DefaultProtocolClient];
+
   let promiseWithResolvers: PromiseWithResolvers<void>;
-  let originalExecPath: string;
-  let originalProcessArgv: string[];
 
   beforeEach(() => {
     promiseWithResolvers = Promise.withResolvers<void>();
@@ -193,48 +199,40 @@ describe('ElectronApp#whenReady', () => {
     // start main
     const code = new Main(ELECTRON_APP_MOCK);
     code.main([]);
-
-    originalExecPath = process.execPath;
-    originalProcessArgv = process.argv;
-    process.execPath = '/foo/bar';
-    process.argv = ['foo', 'bar'];
   });
 
-  afterEach(() => {
-    process.execPath = originalExecPath;
-    process.argv = originalProcessArgv;
-  });
-
-  describe('DefaultProtocolClient', () => {
-    beforeEach(() => {
-      // mock import.meta.env.PROD env
-      vi.stubEnv('PROD', true);
+  test('expect AppPlugin#onReady to be called when ElectronApp#whenReady resolved', async () => {
+    // expect each plugin to have been instantiated
+    plugins.forEach(plugin => {
+      expect(plugin).toHaveBeenCalledOnce();
+      expect(plugin.prototype.onReady).not.toHaveBeenCalled();
     });
 
-    test('ElectronApp#setAsDefaultProtocolClient should not have been called before application is ready', async () => {
-      expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).not.toHaveBeenCalled();
-    });
+    // simulate on ready
+    promiseWithResolvers.resolve();
 
-    test('ElectronApp#setAsDefaultProtocolClient should be called when application is ready', async () => {
-      promiseWithResolvers.resolve();
-
-      await vi.waitFor(() => {
-        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
-        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop');
+    await vi.waitFor(() => {
+      // expect each plugin to have been instantiated
+      plugins.forEach(plugin => {
+        expect(plugin.prototype.onReady).toHaveBeenCalled();
       });
     });
+  });
 
-    test('on windows ElectronApp#setAsDefaultProtocolClient should be called with process args', async () => {
-      vi.mocked(isWindows).mockReturnValue(true);
+  test('expect AppPlugin#dispose to be called when ElectronApp#on("before-quit") is emitted ', async () => {
+    // expect each plugin to have been instantiated
+    plugins.forEach(plugin => {
+      expect(plugin).toHaveBeenCalledOnce();
+      expect(plugin.prototype.dispose).not.toHaveBeenCalled();
+    });
 
-      promiseWithResolvers.resolve();
+    const listener = getElectronAppListener('before-quit');
+    listener();
 
-      await vi.waitFor(() => {
-        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
-        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop', '/foo/bar', [
-          'foo',
-          'bar',
-        ]);
+    await vi.waitFor(() => {
+      // expect each plugin to be disposed
+      plugins.forEach(plugin => {
+        expect(plugin.prototype.dispose).toHaveBeenCalled();
       });
     });
   });
