@@ -39,8 +39,7 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-font-family-base: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu,
-    Cantarell, 'Helvetica Neue', sans-serif;
+  --ifm-font-family-base: 'Manrope', sans-serif;
   --ifm-color-primary: #6d28d9;
   --ifm-color-primary-dark: #7c3aed;
   --ifm-color-primary-darker: #5c21ba;
