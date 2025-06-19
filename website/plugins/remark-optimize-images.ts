@@ -306,7 +306,7 @@ export function remarkOptimizeImages() {
           children: [
             ...sourceElements,
             // If the original image node has a title, add it to the img element
-            (() => {
+            ((): MdxJsxElement => {
               if (node.title) {
                 // Clone the imgElement and add the title attribute
                 return {
