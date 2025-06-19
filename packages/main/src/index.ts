@@ -87,14 +87,6 @@ app.on('will-finish-launching', () => {
 
 app.whenReady().then(
   async () => {
-    if (import.meta.env.PROD) {
-      if (isWindows()) {
-        app.setAsDefaultProtocolClient('podman-desktop', process.execPath, process.argv);
-      } else {
-        app.setAsDefaultProtocolClient('podman-desktop');
-      }
-    }
-
     // We must create the window first before initialization so that we can load the
     // configuration as well as plugins
     // The window is hiddenly created and shown when ready

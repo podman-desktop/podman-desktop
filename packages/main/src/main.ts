@@ -101,6 +101,37 @@ export class Main {
      * Setup {@link ElectronApp.on} listeners
      */
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
+
+    /**
+     * Register {@link Main#whenReady} for ready event
+     */
+    this.app.whenReady().then(this.whenReady.bind(this)).catch(console.error);
+  }
+
+  /**
+   * Executes the necessary setup or configuration once the application is ready..
+   * @return {Promise<void>} A promise that resolves when the configuration is complete.
+   */
+  protected async whenReady(): Promise<void> {
+    this.configureDefaultProtocolClient();
+  }
+
+  /**
+   * Configures the application as the default protocol client for handling 'podman-desktop' protocol links.
+   *
+   * Throws an error if the application is not ready before configuration.
+   * @return {void} Does not return a value.
+   */
+  protected configureDefaultProtocolClient(): void {
+    if (!this.app.isReady()) throw new Error('app is not ready');
+
+    if (!import.meta.env.PROD) return;
+
+    if (isWindows()) {
+      this.app.setAsDefaultProtocolClient('podman-desktop', process.execPath, process.argv);
+    } else {
+      this.app.setAsDefaultProtocolClient('podman-desktop');
+    }
   }
 
   /**

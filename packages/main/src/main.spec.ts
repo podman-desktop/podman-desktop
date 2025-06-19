@@ -35,6 +35,9 @@ const ELECTRON_APP_MOCK: ElectronApp = {
   setAppUserModelId: vi.fn(),
   quit: vi.fn(),
   on: vi.fn(),
+  whenReady: vi.fn(),
+  setAsDefaultProtocolClient: vi.fn(),
+  isReady: vi.fn(),
   commandLine: {
     appendSwitch: vi.fn(),
   },
@@ -170,5 +173,69 @@ describe('ElectronApp#on window-all-closed', () => {
     listener();
 
     expect(ELECTRON_APP_MOCK.quit).toHaveBeenCalledOnce();
+  });
+});
+
+describe('ElectronApp#whenReady', () => {
+  let promiseWithResolvers: PromiseWithResolvers<void>;
+  let originalExecPath: string;
+  let originalProcessArgv: string[];
+
+  beforeEach(() => {
+    promiseWithResolvers = Promise.withResolvers<void>();
+
+    // mock application as ready
+    vi.mocked(ELECTRON_APP_MOCK.isReady).mockReturnValue(true);
+
+    // mock the whenReady promise
+    vi.mocked(ELECTRON_APP_MOCK.whenReady).mockReturnValue(promiseWithResolvers.promise);
+
+    // start main
+    const code = new Main(ELECTRON_APP_MOCK);
+    code.main([]);
+
+    originalExecPath = process.execPath;
+    originalProcessArgv = process.argv;
+    process.execPath = '/foo/bar';
+    process.argv = ['foo', 'bar'];
+  });
+
+  afterEach(() => {
+    process.execPath = originalExecPath;
+    process.argv = originalProcessArgv;
+  });
+
+  describe('DefaultProtocolClient', () => {
+    beforeEach(() => {
+      // mock import.meta.env.PROD env
+      vi.stubEnv('PROD', true);
+    });
+
+    test('ElectronApp#setAsDefaultProtocolClient should not have been called before application is ready', async () => {
+      expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).not.toHaveBeenCalled();
+    });
+
+    test('ElectronApp#setAsDefaultProtocolClient should be called when application is ready', async () => {
+      promiseWithResolvers.resolve();
+
+      await vi.waitFor(() => {
+        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
+        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop');
+      });
+    });
+
+    test('on windows ElectronApp#setAsDefaultProtocolClient should be called with process args', async () => {
+      vi.mocked(isWindows).mockReturnValue(true);
+
+      promiseWithResolvers.resolve();
+
+      await vi.waitFor(() => {
+        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
+        expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop', '/foo/bar', [
+          'foo',
+          'bar',
+        ]);
+      });
+    });
   });
 });
