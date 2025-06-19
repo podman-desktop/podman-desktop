@@ -188,7 +188,6 @@ export class ContainerUtils {
     const composeProject = containerInfo.Labels?.['com.docker.compose.project'];
     if (composeProject) {
       return {
-        id: composeProject,
         name: composeProject,
         id: `${containerInfo.engineId}:${composeProject}`, // the ID must be unique per engineId, so let's concatenate the engineId and the compose project
         type: ContainerGroupInfoTypeUI.COMPOSE,
@@ -212,8 +211,6 @@ export class ContainerUtils {
 
     // else, standalone
     return {
-      id: containerInfo.Id,
-      engineId: containerInfo.engineId,
       name: this.getName(containerInfo),
       type: ContainerGroupInfoTypeUI.STANDALONE,
       status: (containerInfo.Status ?? '').toUpperCase(),
@@ -223,8 +220,6 @@ export class ContainerUtils {
   }
 
   getContainerGroups(containerInfos: ContainerInfoUI[]): ContainerGroupInfoUI[] {
-    console.log('getContainerGroups', containerInfos);
-
     // create a map from containers having the same group field
     const groups = new Map<string, ContainerGroupInfoUI>();
     containerInfos.forEach(containerInfo => {
