@@ -24,7 +24,6 @@ import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 
 import { getDetectionChecks } from '../checks/detection-checks';
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import type { MachineJSON } from '../extension';
@@ -40,14 +39,13 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
-import { BaseInstaller } from '../installer/base-installer';
 import type { Installer } from '../installer/installer';
+import { MacOSInstaller } from '../installer/mac-os-installer';
 import { WinInstaller } from '../installer/win-installer';
 import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import { getAssetsFolder } from './util';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -441,68 +439,5 @@ export class PodmanInstall {
     }
 
     return undefined;
-  }
-}
-
-class MacOSInstaller extends BaseInstaller {
-  install(): Promise<boolean> {
-    return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
-      progress.report({ increment: 5 });
-      const pkgArch = process.arch === 'arm64' ? 'aarch64' : 'amd64';
-
-      const pkgPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-${pkgArch}-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsPkg = fs.existsSync(pkgPath);
-
-      const pkgUniversalPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-universal-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsUniversalPkg = fs.existsSync(pkgUniversalPath);
-
-      let pkgToInstall;
-      if (existsPkg) {
-        pkgToInstall = pkgPath;
-      } else if (existsUniversalPkg) {
-        pkgToInstall = pkgUniversalPath;
-      } else {
-        throw new Error(`Can't find Podman package! Path: ${pkgPath} or ${pkgUniversalPath} doesn't exists.`);
-      }
-
-      try {
-        try {
-          await extensionApi.process.exec('open', [pkgToInstall, '-W']);
-        } catch (err) {
-          throw new Error((err as extensionApi.RunError).stderr);
-        }
-        progress.report({ increment: 80 });
-        // we cannot rely on exit code, as installer could be closed and it return '0' exit code
-        // so just check that podman bin file exist.
-        if (fs.existsSync('/opt/podman/bin/podman')) {
-          extensionApi.window.showNotification({ body: 'Podman is successfully installed.' });
-          return true;
-        } else {
-          return false;
-        }
-      } catch (err) {
-        console.error('Error during install!');
-        console.error(err);
-        await extensionApi.window.showErrorMessage('Unexpected error, during Podman installation: ' + err, 'OK');
-        return false;
-      }
-    });
-  }
-  update(): Promise<boolean> {
-    return this.install();
-  }
-
-  getPreflightChecks(): extensionApi.InstallCheck[] {
-    return [new MacCPUCheck(), new MacMemoryCheck(), new MacVersionCheck()];
-  }
-
-  getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
-    return [new MacPodmanInstallCheck()];
   }
 }
