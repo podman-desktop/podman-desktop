@@ -29,6 +29,8 @@ let connections = $derived.by(() => {
     return entry.containerConnections;
   } else if (entry.kubernetesConnections.length > 0) {
     return entry.kubernetesConnections;
+  } else if (entry.vmConnections.length > 0) {
+    return entry.vmConnections;
   } else {
     return [entry];
   }
