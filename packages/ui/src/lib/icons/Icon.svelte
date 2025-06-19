@@ -18,10 +18,16 @@ const IconComponent = icon;
 </script>
 
 
-{#if isFontAwesomeIcon(icon) && (typeof size === 'undefined' || isFontAwesomeSize(size))}
-    <Fa {icon} {size} class={className}/>
-{:else if typeof icon === 'string' && (icon.startsWith('fas fa-') || icon.startsWith('far fa-'))}
-    <i class={`${icon} ${size} ${className}`} {role}></i>
-{:else if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
-    <span {role}><IconComponent class={className} {size}/></span>
+{#if isFontAwesomeIcon(icon)}
+    {#if typeof size === 'undefined' || isFontAwesomeSize(size)}
+        <Fa {icon} {size} class={className}/>
+    {/if}
+{:else if typeof icon === 'string'}
+    {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-')}
+        <i class={`${icon} ${size} ${className}`} {role}></i>
+    {/if}
+{:else}
+    {#if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
+        <span {role}><IconComponent class={className} {size}/></span>
+    {/if}
 {/if}
