@@ -46,6 +46,7 @@ const providerMock = {
   id: 'provider1-id',
   containerConnections: [],
   kubernetesConnections: [],
+  vmConnections: [],
   status: 'ready' as ProviderStatus,
   images: {},
 } as unknown as ProviderInfo;
