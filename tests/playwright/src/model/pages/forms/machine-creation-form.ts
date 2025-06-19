@@ -21,7 +21,7 @@ import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
 
-import type { PodmanConnectionTypes } from '../../core/types';
+import { PodmanConnectionTypes } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -35,6 +35,8 @@ export class MachineCreationForm extends BasePage {
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
   readonly providerTypeDropdown: Locator;
+  readonly providerTypeWslOption: Locator;
+  readonly providerTypeHypervOption: Locator;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -62,6 +64,9 @@ export class MachineCreationForm extends BasePage {
     this.providerTypeDropdown = this.podmanMachineConfiguration.getByRole('button', {
       name: 'Provider Type',
     });
+    this.providerTypeWslOption = this.providerTypeDropdown.getByRole('button', { name: 'wsl' });
+    this.providerTypeHypervOption = this.providerTypeDropdown.getByRole('button', { name: 'hyperv' });
+
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
   }
@@ -88,9 +93,14 @@ export class MachineCreationForm extends BasePage {
       await this.podmanMachineName.fill(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
+
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
-        // if admin mode => choose providerTypeDropdown
+        if (connectionType === PodmanConnectionTypes.HyperV) {
+          await this.providerTypeDropdown.click();
+          await this.providerTypeHypervOption.click();
+          await playExpect(this.providerTypeDropdown).toHaveText('hyperv');
+        }
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
