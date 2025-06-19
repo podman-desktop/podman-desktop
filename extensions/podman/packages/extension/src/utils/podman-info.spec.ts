@@ -87,7 +87,7 @@ describe('lastUpdateCheck', () => {
 
   test('should not write to file when setting same lastUpdateCheck', () => {
     podmanInfo.lastUpdateCheck = 123456789;
-    vi.clearAllMocks();
+    vi.mocked(writeFile).mockClear();
 
     podmanInfo.lastUpdateCheck = 123456789;
     expect(writeFile).not.toHaveBeenCalled();
@@ -106,7 +106,7 @@ describe('ignoreVersionUpdate', () => {
 
   test('should not write to file when setting same ignoreVersionUpdate', () => {
     podmanInfo.ignoreVersionUpdate = '4.1.0';
-    vi.clearAllMocks();
+    vi.mocked(writeFile).mockClear();
 
     podmanInfo.ignoreVersionUpdate = '4.1.0';
     expect(writeFile).not.toHaveBeenCalled();
