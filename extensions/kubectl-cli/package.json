@@ -39,7 +39,9 @@
           "label": "Check kubectl",
           "title": "Checking for kubectl installation",
           "command": "kubectl.onboarding.checkDownloadedCommand",
-          "completionEvents": ["onCommand:kubectl.onboarding.checkDownloadedCommand"]
+          "completionEvents": [
+            "onCommand:kubectl.onboarding.checkDownloadedCommand"
+          ]
         },
         {
           "id": "welcomeDownloadView",
@@ -66,7 +68,9 @@
           "description": "Downloading the binary.\n\nOnce downloaded, the next step will install kubectl system-wide.",
           "when": "!kubectl.isKubectlInstalledSystemWide && onboardingContext:kubectlIsNotDownloaded",
           "command": "kubectl.onboarding.downloadCommand",
-          "completionEvents": ["onCommand:kubectl.onboarding.downloadCommand"]
+          "completionEvents": [
+            "onCommand:kubectl.onboarding.downloadCommand"
+          ]
         },
         {
           "id": "downloadFailure",
@@ -92,7 +96,9 @@
           "description": "Installing the binary system-wide.\n\n You may be prompted for elevated system privileges.",
           "when": "!kubectl.isKubectlInstalledSystemWide && !kubectl.isKubectlInstalledSystemWide",
           "command": "kubectl.onboarding.installSystemWideCommand",
-          "completionEvents": ["onCommand:kubectl.onboarding.installSystemWideCommand"]
+          "completionEvents": [
+            "onCommand:kubectl.onboarding.installSystemWideCommand"
+          ]
         },
         {
           "id": "installSystemWideFailure",
@@ -122,7 +128,10 @@
         "kubectl.binary.installKubectlSystemWide": {
           "type": "boolean",
           "default": false,
-          "scope": ["DEFAULT", "Onboarding"],
+          "scope": [
+            "DEFAULT",
+            "Onboarding"
+          ],
           "hidden": true,
           "description": "Install system-wide instead of just your user directory, so kubectl can be accessed on the command line. Note: You may be prompted for elevated system privileges when enabling this."
         }

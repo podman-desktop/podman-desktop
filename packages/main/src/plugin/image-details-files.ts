@@ -18,23 +18,9 @@
 
 import type { ImageFile, ImageFilesystemLayer } from '@podman-desktop/api';
 
-import { FilesystemTree } from './filesystem-tree';
+import type { ImageFilesystemLayerUI } from '/@api/image-filesystem-layers.js';
 
-export interface ImageFilesystemLayerUI extends ImageFilesystemLayer {
-  // The files of the current layer and previous ones
-  stackTree: FilesystemTree<ImageFile>;
-  // The files of the current layer only
-  layerTree: FilesystemTree<ImageFile>;
-  // The sum of the sizes of all the files in the layer
-  sizeInArchive: number;
-  // The number of added/modified/removed files and the sizes of related changes
-  addedCount: number;
-  modifiedCount: number;
-  removedCount: number;
-  addedSize: number;
-  modifiedSize: number;
-  removedSize: number;
-}
+import { FilesystemTree } from '../../../api/src/filesystem-tree.js';
 
 export function toImageFilesystemLayerUIs(layers: ImageFilesystemLayer[]): ImageFilesystemLayerUI[] {
   const result: ImageFilesystemLayerUI[] = [];
@@ -81,24 +67,4 @@ export function toImageFilesystemLayerUIs(layers: ImageFilesystemLayer[]): Image
     removedSizePreviousLayer = stackTree.removedSize;
   }
   return result;
-}
-
-export function isExec(data: ImageFile): boolean {
-  return (data.mode & 0o111) !== 0;
-}
-
-// SUID, SGID, and sticky bit: https://www.redhat.com/sysadmin/suid-sgid-sticky-bit
-export function modeString(data: ImageFile): string {
-  return (
-    (data.type === 'directory' ? 'd' : '-') +
-    (data.mode & 0o400 ? 'r' : '-') +
-    (data.mode & 0o200 ? 'w' : '-') +
-    (data.mode & 0o4000 ? (data.mode & 0o100 ? 's' : 'S') : data.mode & 0o100 ? 'x' : '-') +
-    (data.mode & 0o040 ? 'r' : '-') +
-    (data.mode & 0o020 ? 'w' : '-') +
-    (data.mode & 0o2000 ? (data.mode & 0o010 ? 's' : 'S') : data.mode & 0o010 ? 'x' : '-') +
-    (data.mode & 0o004 ? 'r' : '-') +
-    (data.mode & 0o002 ? 'w' : '-') +
-    (data.mode & 0o1000 ? 't' : data.mode & 0o001 ? 'x' : '-')
-  );
 }

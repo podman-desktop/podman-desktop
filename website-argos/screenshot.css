@@ -5,8 +5,7 @@ iframe,
 /* Gifs load lazily and are animated */
   img[src$='.gif'],
 /* Algolia keyboard shortcuts appear with a little delay */
-  .DocSearch-Button-Keys
-  > kbd,
+.DocSearch-Button-Keys > kbd,
 /* The live playground preview can often display dates/counters */
   [class*='playgroundPreview'] {
   visibility: hidden;

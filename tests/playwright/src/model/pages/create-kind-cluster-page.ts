@@ -53,34 +53,30 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
     this.warning = this.page.getByRole('alert', { name: 'warning' });
   }
 
-  public async createClusterDefault(clusterName: string = 'kind-cluster', timeout?: number): Promise<void> {
-    return test.step('Create default cluster', async () => {
-      await fillTextbox(this.clusterNameField, clusterName);
+  private async validateKindClusterDefaultSettings(): Promise<void> {
+    return test.step('Validate kind cluster default settings', async () => {
+      await playExpect(this.configFileInput).toBeEmpty();
+      await playExpect(this.clusterNameField).toHaveValue('kind-cluster');
       await playExpect(this.providerType).toHaveText('podman');
       await playExpect(this.httpPort).toHaveValue('9090');
       await playExpect(this.httpsPort).toHaveValue('9443');
       await playExpect(this.controllerCheckbox).toBeChecked();
       await playExpect(this.containerImage).toBeEmpty();
-      await this.createCluster(timeout);
     });
   }
 
-  public async createClusterParametrized(
+  public async createKindCluster(
     clusterName: string = 'kind-cluster',
-    {
-      configFilePath,
-      providerType,
-      httpPort,
-      httpsPort,
-      useIngressController,
-      containerImage,
-    }: KindClusterOptions = {},
+    { configFilePath, providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {
+      useIngressController: true,
+    },
     timeout?: number,
   ): Promise<void> {
-    return test.step('Create parametrized cluster', async () => {
+    return test.step('Create kind cluster', async () => {
+      await this.validateKindClusterDefaultSettings();
+
       // Use the default cluster name if a custom config file is used; the default cluster name should be ignored in this case.
       if (configFilePath) {
-        await playExpect(this.configFileInput).toBeVisible();
         await this.configFileInput.evaluate(node => node.removeAttribute('readonly'));
         await this.configFileInput.fill(configFilePath);
         await playExpect(this.warning).toBeVisible();
@@ -91,22 +87,15 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
         await fillTextbox(this.clusterNameField, clusterName);
       }
 
-      if (providerType) {
-        try {
-          await playExpect(this.providerType).toBeVisible();
-          if (providerType !== 'podman') {
-            await this.providerType.click();
-            const providerTypeButton = this.clusterPropertiesInformation.getByRole('button', {
-              name: providerType,
-              exact: true,
-            });
-            await playExpect(providerTypeButton).toBeEnabled();
-            await providerTypeButton.click();
-          }
-          await playExpect(this.providerType).toHaveText(providerType);
-        } catch {
-          throw new Error(`Provider type '${providerType}' doesn't exist`);
-        }
+      if (providerType && providerType !== 'podman') {
+        await this.providerType.click();
+        const providerTypeButton = this.clusterPropertiesInformation.getByRole('button', {
+          name: providerType,
+          exact: true,
+        });
+        await playExpect(providerTypeButton).toBeEnabled();
+        await providerTypeButton.click();
+        await playExpect(this.providerType).toHaveText(providerType);
       }
 
       if (httpPort) {

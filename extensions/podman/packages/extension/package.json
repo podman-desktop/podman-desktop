@@ -176,7 +176,10 @@
         "podman.factory.machine.provider": {
           "type": "string",
           "default": "default (Apple HyperVisor)",
-          "enum": ["default (Apple HyperVisor)", "GPU enabled (LibKrun)"],
+          "enum": [
+            "default (Apple HyperVisor)",
+            "GPU enabled (LibKrun)"
+          ],
           "scope": "ContainerProviderConnectionFactory",
           "description": "Provider Type",
           "when": "podman.isLibkrunSupported"
@@ -184,7 +187,10 @@
         "podman.factory.machine.win.provider": {
           "type": "string",
           "default": "wsl",
-          "enum": ["wsl", "hyperv"],
+          "enum": [
+            "wsl",
+            "hyperv"
+          ],
           "scope": "ContainerProviderConnectionFactory",
           "description": "Provider Type",
           "when": "podman.wslHypervEnabled"
@@ -237,7 +243,9 @@
           "id": "checkInstalledCommand",
           "title": "Checking for Podman installation",
           "command": "podman.onboarding.checkInstalledCommand",
-          "completionEvents": ["onCommand:podman.onboarding.checkInstalledCommand"]
+          "completionEvents": [
+            "onCommand:podman.onboarding.checkInstalledCommand"
+          ]
         },
         {
           "id": "welcomeInstallationView",
@@ -249,13 +257,17 @@
           "title": "Checking for system requirements to install Podman",
           "when": "onboardingContext:podmanIsNotInstalled",
           "command": "podman.onboarding.checkRequirementsCommand",
-          "completionEvents": ["onCommand:podman.onboarding.checkRequirementsCommand"]
+          "completionEvents": [
+            "onCommand:podman.onboarding.checkRequirementsCommand"
+          ]
         },
         {
           "id": "missingRequirementsView",
           "title": "Some system requirements are missing",
           "when": "onboardingContext:requirementsStatus == failed && onboardingContext:podmanIsNotInstalled",
-          "completionEvents": ["onboardingContext:requirementsStatus == ok"],
+          "completionEvents": [
+            "onboardingContext:requirementsStatus == ok"
+          ],
           "content": [
             [
               {
@@ -278,7 +290,9 @@
           "id": "installOnLinuxInstructionsView",
           "title": "Installing Podman",
           "when": "onboardingContext:podmanIsNotInstalled && isLinux",
-          "completionEvents": ["!onboardingContext:podmanIsNotInstalled"],
+          "completionEvents": [
+            "!onboardingContext:podmanIsNotInstalled"
+          ],
           "content": [
             [
               {
@@ -293,7 +307,9 @@
           "description": "Once installed, we will enable and configure the extension",
           "when": "onboardingContext:podmanIsNotInstalled && !isLinux",
           "command": "podman.onboarding.installPodman",
-          "completionEvents": ["onCommand:podman.onboarding.installPodman"]
+          "completionEvents": [
+            "onCommand:podman.onboarding.installPodman"
+          ]
         },
         {
           "id": "installationFailure",
@@ -318,13 +334,17 @@
           "title": "Checking if an old unsupported Podman machine exists",
           "when": "!isLinux",
           "command": "podman.onboarding.checkUnsupportedPodmanMachine",
-          "completionEvents": ["onCommand:podman.onboarding.checkUnsupportedPodmanMachine"]
+          "completionEvents": [
+            "onCommand:podman.onboarding.checkUnsupportedPodmanMachine"
+          ]
         },
         {
           "id": "welcomeFixUnsupportedPodmanMachineView",
           "title": "Unsupported Podman machine detected",
           "description": "Podman Desktop will remove the unsupported machines",
-          "completionEvents": ["onboardingContext:unsupportedMachineRemoved == ok"],
+          "completionEvents": [
+            "onboardingContext:unsupportedMachineRemoved == ok"
+          ],
           "content": [
             [
               {
@@ -349,7 +369,9 @@
           "title": "Checking if a Podman machine exists",
           "when": "!isLinux",
           "command": "podman.onboarding.checkPodmanMachineExistsCommand",
-          "completionEvents": ["onCommand:podman.onboarding.checkPodmanMachineExistsCommand"]
+          "completionEvents": [
+            "onCommand:podman.onboarding.checkPodmanMachineExistsCommand"
+          ]
         },
         {
           "id": "welcomeCreatePodmanMachineView",
@@ -360,7 +382,9 @@
           "id": "createPodmanMachineCommand",
           "title": "Create a Podman machine",
           "when": "!onboardingContext:podmanMachineExists && !isLinux",
-          "completionEvents": ["onboardingContext:podmanMachineExists"],
+          "completionEvents": [
+            "onboardingContext:podmanMachineExists"
+          ],
           "component": "createContainerProviderConnection"
         },
         {
@@ -417,7 +441,7 @@
     "msw": "^2.10.2",
     "octokit": "^5.0.3",
     "sshpk": "^1.18.0",
-    "tsx": "^4.20.2",
+    "tsx": "^4.20.3",
     "vite": "^6.3.5",
     "vitest": "^3.1.4"
   }

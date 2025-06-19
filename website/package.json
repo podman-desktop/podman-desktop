@@ -48,7 +48,7 @@
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.7",
-    "postcss": "^8.5.5",
+    "postcss": "^8.5.6",
     "tailwindcss": "^4.1.10",
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.2",
@@ -56,7 +56,15 @@
     "vitest": "^3.1.4"
   },
   "browserslist": {
-    "production": [">0.5%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

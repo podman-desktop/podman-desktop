@@ -27,6 +27,7 @@ import type {
   Cluster,
   Context as KubernetesContext,
   KubernetesObject,
+  User,
   V1ConfigMap,
   V1CronJob,
   V1Deployment,
@@ -88,6 +89,7 @@ import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
 import type { ImageFilesInfo } from '/@api/image-files-info.js';
+import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
@@ -2070,6 +2072,13 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'extension-loader:ensureExtensionIsEnabled',
+      async (_listener: Electron.IpcMainInvokeEvent, extensionId: string): Promise<void> => {
+        return this.extensionLoader.ensureExtensionIsEnabled(extensionId);
+      },
+    );
+
+    this.ipcHandle(
       'shell:openExternal',
       async (_listener: Electron.IpcMainInvokeEvent, link: string): Promise<void> => {
         if (securityRestrictionCurrentHandler.handler) {
@@ -2597,6 +2606,10 @@ export class PluginSystem {
       return kubernetesClient.getClusters();
     });
 
+    this.ipcHandle('kubernetes-client:getUsers', async (): Promise<User[]> => {
+      return kubernetesClient.getUsers();
+    });
+
     this.ipcHandle('kubernetes-client:getCurrentNamespace', async (): Promise<string | undefined> => {
       return kubernetesClient.getCurrentNamespace();
     });
@@ -2617,8 +2630,21 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'kubernetes-client:updateContext',
-      async (_listener, contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
-        return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
+      async (
+        _listener,
+        contextName: string,
+        newContextName: string,
+        newContextNamespace: string,
+        newContextCluster: string,
+        newContextUser: string,
+      ): Promise<void> => {
+        return kubernetesClient.updateContext(
+          contextName,
+          newContextName,
+          newContextNamespace,
+          newContextCluster,
+          newContextUser,
+        );
       },
     );
 
@@ -2905,7 +2931,7 @@ export class PluginSystem {
         id: string,
         image: ImageInfo,
         tokenId?: number,
-      ): Promise<containerDesktopAPI.ImageFilesystemLayers | undefined> => {
+      ): Promise<ImageFilesystemLayersUI | undefined> => {
         let token;
         if (tokenId) {
           const tokenSource = cancellationTokenRegistry.getCancellationTokenSource(tokenId);

@@ -29,6 +29,7 @@ import type {
   KubernetesObject,
   RequestContext,
   ResponseContext,
+  User,
   V1APIGroup,
   V1APIResource,
   V1ConfigMap,
@@ -146,6 +147,15 @@ export type ScalableControllerType = (typeof SCALABLE_CONTROLLER_TYPES)[number];
 export type ControllerType = ScalableControllerType | 'Job' | 'DaemonSet' | 'CronJob' | undefined;
 function isScalableControllerType(string: unknown): string is ScalableControllerType {
   return typeof string === 'string' && SCALABLE_CONTROLLER_TYPES.includes(string);
+}
+
+function sanitizeMetadata(spec: KubernetesObjectWithKindAndName): void {
+  delete spec.metadata?.resourceVersion;
+  delete spec.metadata?.uid;
+  delete spec.metadata?.selfLink;
+  delete spec.metadata?.creationTimestamp;
+  delete spec.metadata?.managedFields;
+  delete spec.status; // status is usually updated by the system, ignore it
 }
 
 export interface PodCreationSource {
@@ -341,6 +351,10 @@ export class KubernetesClient {
     return this.kubeConfig.clusters;
   }
 
+  getUsers(): User[] {
+    return this.kubeConfig.users;
+  }
+
   getCurrentNamespace(): string | undefined {
     return this.currentNamespace;
   }
@@ -413,7 +427,13 @@ export class KubernetesClient {
     this.apiSender.send('kubernetes-context-update');
   }
 
-  async updateContext(contextName: string, newContextName: string, newContextNamespace: string): Promise<void> {
+  async updateContext(
+    contextName: string,
+    newContextName: string,
+    newContextNamespace: string,
+    newContextCluster: string,
+    newContextUser: string,
+  ): Promise<void> {
     const newConfig = new KubeConfig();
 
     const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
@@ -425,6 +445,8 @@ export class KubernetesClient {
     const editedContext = {
       ...originalContext,
       name: newContextName,
+      cluster: newContextCluster,
+      user: newContextUser,
       ...namespaceField,
     };
 
@@ -1313,6 +1335,15 @@ export class KubernetesClient {
         spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec);
 
         spec.metadata.namespace ??= namespace ?? DEFAULT_NAMESPACE;
+
+        // When patching a resource or creating a new one, we do not need certain metadata fields to be present such as resourceVersion, uid, selfLink, and creationTimestamp
+        // these cause conflicts when patching a resource since client.patch will serialize these fields and the server will reject the request
+        // this change is due to changes on how client.patch / client.create works with the latest serialization changes in:
+        // https://github.com/kubernetes-client/javascript/pull/1695 with regards to date
+        // we also remove resourceVersion so we may apply multiple edits to the same resource without having to entirely retrieve and reload the YAML
+        // from the server before applying.
+        sanitizeMetadata(spec);
+
         try {
           // try to get the resource, if it does not exist an error will be thrown and we will
           // end up in the catch block
@@ -1324,18 +1355,6 @@ export class KubernetesClient {
           //
           // See: https://github.com/kubernetes/kubernetes/issues/97423
           if (action === 'apply') {
-            // When patching a resource, we do not need certain metadata fields to be present such as resourceVersion, uid, selfLink, and creationTimestamp
-            // these cause conflicts when patching a resource since client.patch will serialize these fields and the server will reject the request
-            // this change is due to changes on how client.patch / client.create works with the latest serialization changes in:
-            // https://github.com/kubernetes-client/javascript/pull/1695 with regards to date.
-            // we also remove resourceVersion so we may apply multiple edits to the same resource without having to entirely retrieve and reload the YAML
-            // from the server before applying.
-            delete spec.metadata?.resourceVersion;
-            delete spec.metadata?.uid;
-            delete spec.metadata?.selfLink;
-            delete spec.metadata?.creationTimestamp;
-            delete spec.status; // status is usually updated by the system, ignore it
-
             const response = await client.patch(
               spec,
               undefined /* pretty */,
@@ -1418,7 +1437,6 @@ export class KubernetesClient {
         onClose();
       });
     } else {
-      let telemetryOptions = {};
       try {
         const ns = this.getCurrentNamespace();
         const connected = await this.checkConnection();
@@ -1459,10 +1477,7 @@ export class KubernetesClient {
         });
         this.#execs.set(`${podName}-${containerName}`, { stdin, stdout, stderr, conn });
       } catch (error) {
-        telemetryOptions = { error: error };
         throw this.wrapK8sClientError(error);
-      } finally {
-        this.telemetry.track('kubernetesExecIntoContainer', telemetryOptions);
       }
     }
 

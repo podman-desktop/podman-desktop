@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { ImageFilesystemLayerUI } from './imageDetailsFiles';
+import type { ImageFilesystemLayerUI } from '/@api/image-filesystem-layers';
+
 import { signedHumanSize } from './ImageDetailsFilesLayers';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 

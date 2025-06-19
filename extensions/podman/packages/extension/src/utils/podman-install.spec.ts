@@ -23,11 +23,12 @@ import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as extensionObj from '../extension';
+import type { Installer } from '../installer/installer';
 import { releaseNotes } from '../podman5.json';
+import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
-import type { Installer, PodmanInfo, UpdateCheck } from './podman-install';
-import { getBundledPodmanVersion, PodmanInstall, WinInstaller } from './podman-install';
-import * as podmanInstallObj from './podman-install';
+import type { PodmanInfo, UpdateCheck } from './podman-install';
+import { PodmanInstall } from './podman-install';
 import * as utils from './util';
 
 const originalConsoleError = console.error;
@@ -66,6 +67,9 @@ const provider: extensionApi.Provider = {
   updateWarnings: vi.fn(),
   onDidUpdateDetectionChecks: vi.fn(),
 };
+
+// mock filesystem
+vi.mock('node:fs');
 
 // mock ps-list
 vi.mock('ps-list', async () => {
@@ -130,11 +134,6 @@ vi.mock(import('./util'), async () => {
   };
 });
 
-const progress = {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  report: (): void => {},
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   // reset array of subscriptions
@@ -149,70 +148,6 @@ beforeEach(() => {
 
 afterEach(() => {
   console.error = originalConsoleError;
-});
-
-test('expect update on windows to show notification in case of 0 exit code', async () => {
-  vi.spyOn(extensionApi.window, 'withProgress').mockImplementation((options, task) => {
-    return task(progress, {} as unknown as extensionApi.CancellationToken);
-  });
-
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
-
-  vi.mock('node:fs');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-  vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-  const installer = new WinInstaller(extensionContext);
-  const result = await installer.update();
-  expect(result).toBeTruthy();
-  expect(extensionApi.window.showNotification).toHaveBeenCalled();
-});
-
-test('expect update on windows not to show notification in case of 1602 exit code', async () => {
-  vi.spyOn(extensionApi.window, 'withProgress').mockImplementation((options, task) => {
-    return task(progress, {} as unknown as extensionApi.CancellationToken);
-  });
-  const customError = { exitCode: 1602 } as extensionApi.RunError;
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
-    throw customError;
-  });
-
-  vi.mock('node:fs');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-  vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-  const installer = new WinInstaller(extensionContext);
-  const result = await installer.update();
-  expect(result).toBeTruthy();
-  expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
-});
-
-test('expect update on windows to throw error if non zero exit code', async () => {
-  vi.spyOn(extensionApi.window, 'withProgress').mockImplementation((options, task) => {
-    return task(progress, {} as unknown as extensionApi.CancellationToken);
-  });
-  const customError = { exitCode: -1, stderr: 'CustomError' } as extensionApi.RunError;
-
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
-    throw customError;
-  });
-
-  vi.mock('node:fs');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-  vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-  const installer = new WinInstaller(extensionContext);
-  const result = await installer.update();
-  expect(result).toBeFalsy();
-  expect(extensionApi.window.showErrorMessage).toHaveBeenCalled();
-});
-
-describe('getBundledPodmanVersion', () => {
-  test('should return the podman 5 version', async () => {
-    const version = getBundledPodmanVersion();
-    expect(version.startsWith('5')).toBeTruthy();
-    expect(version.startsWith('4')).toBeFalsy();
-  });
 });
 
 class TestPodmanInstall extends PodmanInstall {
@@ -384,7 +319,7 @@ test('checkForUpdate should return installed version and no update if the instal
   expect(result).toStrictEqual({
     installedVersion: '1.1',
     hasUpdate: false,
-    bundledVersion: podmanInstallObj.getBundledPodmanVersion(),
+    bundledVersion: getBundledPodmanVersion(),
   });
 });
 
@@ -402,7 +337,7 @@ test('checkForUpdate should return installed version and update if the installed
   expect(result).toStrictEqual({
     installedVersion: '1.1',
     hasUpdate: true,
-    bundledVersion: podmanInstallObj.getBundledPodmanVersion(),
+    bundledVersion: getBundledPodmanVersion(),
   });
 });
 
@@ -524,6 +459,17 @@ describe('performUpdate', () => {
 });
 
 describe('MacOSInstaller', () => {
+  // call the parameter
+  const progress = {
+    report: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.mocked(extensionApi.window.withProgress).mockImplementation((options, task) => {
+      return task(progress, {} as unknown as extensionApi.CancellationToken);
+    });
+  });
+
   test('call installer if universal installer is found', async () => {
     // say we're using macOS
     vi.spyOn(os, 'platform').mockReturnValue('darwin');
@@ -552,11 +498,6 @@ describe('MacOSInstaller', () => {
     const methodArgs = withProgressMock.mock.calls[0];
     const promiseArg = methodArgs[1];
     expect(promiseArg).toBeDefined();
-
-    // call the parameter
-    const progress = {
-      report: vi.fn(),
-    };
 
     const token = {
       isCancellationRequested: false,

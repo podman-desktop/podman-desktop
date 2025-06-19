@@ -41,10 +41,7 @@ export class ResourceFactoryBase {
     this.#resource = options.resource;
   }
 
-  setPermissions(options: {
-    permissionsRequests: V1ResourceAttributes[];
-    isNamespaced: boolean;
-  }): ResourceFactoryBase {
+  setPermissions(options: { permissionsRequests: V1ResourceAttributes[]; isNamespaced: boolean }): ResourceFactoryBase {
     this.#permissions = {
       permissionsRequests: options.permissionsRequests,
       isNamespaced: options.isNamespaced,

@@ -16,7 +16,12 @@
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
     "publish:next": "pnpm publish  --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
   },
-  "files": ["dist", "!dist/**/*.spec.*", "tsconfig.json", "MIGRATION.md"],
+  "files": [
+    "dist",
+    "!dist/**/*.spec.*",
+    "tsconfig.json",
+    "MIGRATION.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -161,10 +166,10 @@
     "@testing-library/svelte": "^5.2.8",
     "@testing-library/user-event": "^14.6.1",
     "@tsconfig/svelte": "^5.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
     "eslint-plugin-svelte": "^3.9.2",
     "jsdom": "^27.0.0-beta.2",
-    "svelte": "5.34.1",
+    "svelte": "5.34.5",
     "svelte-check": "^4.2.1",
     "svelte-eslint-parser": "^1.2.0",
     "tailwindcss": "^4.1.10",

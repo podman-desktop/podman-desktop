@@ -21,7 +21,7 @@ import type { ImageFile } from '@podman-desktop/api';
 import { render } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import { FilesystemNode } from '/@/lib/image/filesystem-tree';
+import { FilesystemNode } from '/@api/filesystem-tree';
 
 import FilesystemLayerView from './FilesystemLayerView.svelte';
 

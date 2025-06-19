@@ -277,6 +277,8 @@ const extensionWatcher = {
 const extensionDevelopmentFolder = {
   getDevelopmentFolders: vi.fn(),
   onNeedToLoadExension: vi.fn(),
+  addExternalExtensionId: vi.fn(),
+  removeExternalExtensionId: vi.fn(),
 } as unknown as ExtensionDevelopmentFolders;
 
 const extensionAnalyzer = {
@@ -310,6 +312,8 @@ vi.mock('../../util.js', async () => {
     getBase64Image: vi.fn(),
   };
 });
+
+vi.mock('node:fs/promises');
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
@@ -574,7 +578,7 @@ test('Verify extension load', async () => {
     path: 'dummy',
     api: {} as typeof containerDesktopAPI,
     mainPath: '',
-    removable: false,
+    removable: true,
     manifest: {
       version: '1.1',
     },
@@ -587,6 +591,12 @@ test('Verify extension load', async () => {
     'loadExtension.error',
     expect.objectContaining({ extensionId: id, extensionVersion: '1.1' }),
   );
+
+  expect(extensionDevelopmentFolder.addExternalExtensionId).toBeCalledWith(id);
+
+  // remove extension
+  await extensionLoader.removeExtension(id);
+  expect(extensionDevelopmentFolder.removeExternalExtensionId).toBeCalledWith(id);
 });
 
 test('Verify extension do not add configuration to subscriptions', async () => {

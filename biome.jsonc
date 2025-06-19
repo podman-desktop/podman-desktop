@@ -6,21 +6,22 @@
   },
   "files": {
     "maxSize": 1600000,
-    "ignore": [
-      "**/builtin/*.cdix/**",
-      "**/coverage/**",
-      "**/dist/**",
-      "**/output/**",
-      "**/packages/ui/.svelte-kit/**",
-      "**/exposedIn*.d.ts",
-      "website/.docusaurus/**",
-      "website/api/**",
-      "website/build/**",
-      "website/src/pages/storybook/sidebar.cjs",
-      "website/static/release-notes/**",
-      "website-argos/screenshots/**",
-      "storybook/.storybook/themes.css",
-      "storybook/storybook-static/**"
+    "includes": [
+      "**",
+      "!**/builtin/**/*.cdix/**",
+      "!**/coverage/**",
+      "!**/dist/**",
+      "!**/output/**",
+      "!**/packages/ui/.svelte-kit/**",
+      "!**/exposedIn*.d.ts",
+      "!**/website/.docusaurus/**",
+      "!**/website/api/**",
+      "!**/website/build/**",
+      "!**/website/src/pages/storybook/sidebar.cjs",
+      "!**/website/static/release-notes/**",
+      "!**/website-argos/screenshots/**",
+      "!**/storybook/.storybook/themes.css",
+      "!**/storybook/storybook-static/**"
     ]
   },
   "javascript": {
@@ -42,9 +43,21 @@
     }
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
+      }
+    }
   },
-  "organizeImports": {
-    "enabled": false
-  }
+  "assist": { "actions": { "source": { "organizeImports": "off" } } }
 }

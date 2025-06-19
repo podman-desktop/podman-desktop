@@ -69,14 +69,10 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
     await ensureCliInstalled(page, 'Kind');
   }
 
-  if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-    await createKindCluster(page, CLUSTER_NAME, false, CLUSTER_CREATION_TIMEOUT, {
-      providerType: providerTypeGHA,
-      useIngressController: false,
-    });
-  } else {
-    await createKindCluster(page, CLUSTER_NAME, true, CLUSTER_CREATION_TIMEOUT);
-  }
+  await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
+    providerType: providerTypeGHA,
+    useIngressController: false,
+  });
 });
 
 test.afterAll(async ({ runner, page }) => {
