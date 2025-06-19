@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import * as fs from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -46,68 +46,8 @@ import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-
-export interface PodmanInfo {
-  podmanVersion?: string;
-  lastUpdateCheck: number;
-  ignoreVersionUpdate?: string;
-}
-
-export class PodmanInfoImpl implements PodmanInfo {
-  private podmanInfo: PodmanInfo;
-  constructor(
-    podmanInfoValue: PodmanInfo | undefined,
-    private readonly storagePath: string,
-  ) {
-    if (!podmanInfoValue) {
-      this.podmanInfo = { lastUpdateCheck: 0 } as PodmanInfo;
-    } else {
-      this.podmanInfo = podmanInfoValue;
-    }
-  }
-
-  set podmanVersion(version: string) {
-    if (this.podmanInfo.podmanVersion !== version) {
-      this.podmanInfo.podmanVersion = version;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  get podmanVersion(): string | undefined {
-    return this.podmanInfo.podmanVersion;
-  }
-
-  set lastUpdateCheck(lastCheck: number) {
-    if (this.podmanInfo.lastUpdateCheck !== lastCheck) {
-      this.podmanInfo.lastUpdateCheck = lastCheck;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  get lastUpdateCheck(): number {
-    return this.podmanInfo.lastUpdateCheck;
-  }
-
-  get ignoreVersionUpdate(): string | undefined {
-    return this.podmanInfo.ignoreVersionUpdate;
-  }
-
-  set ignoreVersionUpdate(version: string) {
-    if (this.podmanInfo.ignoreVersionUpdate !== version) {
-      this.podmanInfo.ignoreVersionUpdate = version;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  private async writeInfo(): Promise<void> {
-    try {
-      const podmanInfoPath = path.resolve(this.storagePath, 'podman-ext.json');
-      await writeFile(podmanInfoPath, JSON.stringify(this.podmanInfo));
-    } catch (err) {
-      console.error(err);
-    }
-  }
-}
+import type { PodmanInfo } from './podman-info';
+import { PodmanInfoImpl } from './podman-info';
 
 export interface UpdateCheck {
   hasUpdate: boolean;

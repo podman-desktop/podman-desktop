@@ -26,7 +26,8 @@ import type { Installer } from '../installer/installer';
 import { releaseNotes } from '../podman5.json';
 import { getBundledPodmanVersion } from './podman-bundled';
 import type { InstalledPodman } from './podman-cli';
-import type { PodmanInfo, UpdateCheck } from './podman-install';
+import type { PodmanInfo } from './podman-info';
+import type { UpdateCheck } from './podman-install';
 import { PodmanInstall } from './podman-install';
 import * as utils from './util';
 
