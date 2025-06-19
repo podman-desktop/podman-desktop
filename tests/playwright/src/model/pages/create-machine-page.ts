@@ -19,7 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { PodmanConnectionTypes } from '../core/types';
+import type { PodmanConnectionTypes } from '../core/types';
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { ResourceConnectionCardPage } from './resource-connection-card-page';
@@ -41,22 +41,21 @@ export class CreateMachinePage extends BasePage {
 
   async createMachine(
     machineName: string,
-    { isRootful = true, enableUserNet = false, startNow = true, setAsDefault = true },
+    {
+      isRootful = true,
+      enableUserNet = false,
+      startNow = true,
+      setAsDefault = true,
+      connectionType,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      setAsDefault?: boolean;
+      connectionType?: PodmanConnectionTypes;
+    },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
-      let connectionType: PodmanConnectionTypes | undefined;
-      switch (process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase()) {
-        case 'wsl':
-          connectionType = PodmanConnectionTypes.WSL;
-          break;
-        case 'hyperv':
-          connectionType = PodmanConnectionTypes.HyperV;
-          break;
-        default:
-          console.log('CONTAINERS_MACHINE_PROVIDER is NOT defined');
-          break;
-      }
-
       await this.machineCreationForm.setupAndCreateMachine(machineName, {
         isRootful,
         enableUserNet,
