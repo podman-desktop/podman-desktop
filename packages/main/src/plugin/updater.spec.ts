@@ -16,11 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs/promises';
 import type { IncomingMessage } from 'node:http';
+import path from 'node:path';
 
 import type { Configuration } from '@podman-desktop/api';
 import { app, shell } from 'electron';
 import { type AppUpdater, autoUpdater, type UpdateCheckResult, type UpdateDownloadedEvent } from 'electron-updater';
+import * as appAdapter from 'electron-updater/out/AppAdapter.js';
 import type { AppUpdaterEvents } from 'electron-updater/out/AppUpdater.js';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -41,6 +44,7 @@ import type { TaskManager } from './tasks/task-manager.js';
 vi.mock('electron', () => ({
   app: {
     getVersion: vi.fn(),
+    getPath: vi.fn(),
   },
   shell: {
     openExternal: vi.fn(),
@@ -63,6 +67,8 @@ vi.mock('/@/util.js', () => ({
   isWindows: vi.fn(),
   isMac: vi.fn(),
 }));
+
+vi.mock('node:fs/promises');
 
 const getStatusCodeMock = { statusCode: 200 } as IncomingMessage;
 
@@ -953,4 +959,72 @@ test('versions are not numbered versions', async () => {
   await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toBeCalled());
 
   expect(updater.updateAvailable()).toBeTruthy();
+});
+
+describe('expect electron-updater cache folder is removed on update-not-available event', () => {
+  function mockPlatform(name: 'win32' | 'linux' | 'darwin'): void {
+    vi.mocked(util.isLinux).mockReturnValue(name === 'linux');
+    vi.mocked(util.isMac).mockReturnValue(name === 'darwin');
+    vi.mocked(util.isWindows).mockReturnValue(name === 'win32');
+  }
+
+  function callUpdateNotAvailableListener(): (() => void) | undefined {
+    let mListener: (() => void) | undefined;
+    vi.spyOn(autoUpdater, 'on').mockImplementation((channel: keyof AppUpdaterEvents, listener: unknown): AppUpdater => {
+      if (channel === 'update-not-available') mListener = listener as () => void;
+      return {} as unknown as AppUpdater;
+    });
+
+    new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    ).init();
+
+    return mListener;
+  }
+
+  test('on windows', () => {
+    const windowsCacheFolderPath = path.join('Users', 'user1', 'AppData', 'Local', 'podman-desktop-updater');
+    vi.spyOn(appAdapter, 'getAppCacheDir').mockReturnValue(windowsCacheFolderPath);
+    mockPlatform('win32');
+    const rmMock = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
+    const listener = callUpdateNotAvailableListener();
+
+    expect(listener).toBeDefined();
+
+    listener?.();
+
+    expect(rmMock).toBeCalledWith(windowsCacheFolderPath, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('on macOS', () => {
+    const macosCacheFolderPath = path.join('Users', 'user1', 'Library', 'Caches', 'podman-desktop-updater');
+    vi.spyOn(appAdapter, 'getAppCacheDir').mockReturnValue(macosCacheFolderPath);
+    mockPlatform('darwin');
+    const rmMock = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
+    const listener = callUpdateNotAvailableListener();
+
+    expect(listener).toBeDefined();
+
+    listener?.();
+
+    expect(rmMock).toBeCalledWith(macosCacheFolderPath, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  test('on linux', () => {
+    mockPlatform('linux');
+    const listener = callUpdateNotAvailableListener();
+
+    expect(listener).not.toBeDefined();
+  });
 });
