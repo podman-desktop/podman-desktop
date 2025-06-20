@@ -93,6 +93,12 @@ const testMarkdowns = {
 
   // Already optimized images that should be skipped.
   optimized: '### Podman Desktop\nPicture of General Kenobi ![Optimized](/img/blog/hello-640w.png)',
+  optimizedWebp: '### Podman Desktop\nPicture of General Kenobi ![Optimized WebP](/img/blog/hello-1280w.webp)',
+  optimizedJpeg: '### Podman Desktop\nPicture of General Kenobi ![Optimized JPEG](/img/blog/hello-768w.jpeg)',
+
+  // Images that should NOT be skipped (false positives for the old regex)
+  nameContainsNumbers: '### Podman Desktop\nPicture of General Kenobi ![My 100w Image](/img/blog/my-100w-image.png)',
+  nameWithW: '### Podman Desktop\nPicture of General Kenobi ![Workshop](/img/blog/workshop.png)',
 
   // Alt text variations for accessibility testing.
   noAlt: '### Podman Desktop\nPicture of General Kenobi ![](/img/blog/no-alt.png)',
@@ -333,6 +339,64 @@ describe('remarkOptimizeImages', () => {
       imageTransformer(tree, mockVFile);
 
       expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * WebP images with responsive width suffixes should be skipped.
+     * Tests the improved regex pattern with different formats.
+     */
+    test('should skip optimized WebP images', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.optimizedWebp);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.optimizedWebp);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * JPEG images with responsive width suffixes should be skipped.
+     * Tests the improved regex pattern with jpeg extension.
+     */
+    test('should skip optimized JPEG images', () => {
+      const originalTree = unified().use(remarkParse).parse(testMarkdowns.optimizedJpeg);
+      const tree = unified().use(remarkParse).parse(testMarkdowns.optimizedJpeg);
+
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      expect(tree).toStrictEqual(originalTree);
+    });
+
+    /**
+     * Images with numbers in the name should NOT be skipped if they don't match the suffix pattern.
+     * This tests that the improved regex avoids false positives.
+     */
+    test('should not skip images with numbers in filename that are not width suffixes', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.nameContainsNumbers);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      // Should be transformed to picture element
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
+    });
+
+    /**
+     * Images with 'w' in the name should NOT be skipped if they don't match the suffix pattern.
+     * This tests that the improved regex avoids false positives.
+     */
+    test('should not skip images with w in filename that are not width suffixes', () => {
+      const tree = unified().use(remarkParse).parse(testMarkdowns.nameWithW);
+      const imageTransformer = remarkOptimizeImages();
+      imageTransformer(tree, mockVFile);
+
+      // Should be transformed to picture element
+      const pictureElement = (tree.children[1] as ParagraphNode).children[1] as MdxJsxElement;
+      expect(pictureElement.type).toBe('mdxJsxFlowElement');
+      expect(pictureElement.name).toBe('picture');
     });
   });
 

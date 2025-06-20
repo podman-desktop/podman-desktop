@@ -46,6 +46,7 @@ interface ImageNode extends Node {
   type: 'image';
   url: string;
   alt?: string;
+  title?: string;
 }
 
 /**
@@ -90,12 +91,12 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     // Convert absolute path to relative path if it contains the website directory.
     let relativePath: string;
     const websiteIndex = sourceDir.indexOf(path.sep + 'website' + path.sep);
-    if (websiteIndex !== -1) {
-      // Extract path after '/website/'.
-      relativePath = sourceDir.substring(websiteIndex + '/website/'.length).replace(/\\/g, '/');
-    } else {
+    if (websiteIndex === -1) {
       // Fallback for relative paths.
       relativePath = sourceDir.replace(/\\/g, '/');
+    } else {
+      // Extract path after '/website/'.
+      relativePath = sourceDir.substring(websiteIndex + '/website/'.length).replace(/\\/g, '/');
     }
 
     // For docs images: resolve relative to the docs structure.
@@ -111,11 +112,7 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
         optimizedDir = imageDir;
       }
     }
-    // For blog images: keep existing behavior.
-    else if (relativePath.startsWith('blog/')) {
-      optimizedDir = imageDir;
-    }
-    // For other contexts: use original directory structure.
+    // For blog (and fallback) images: keep existing behavior.
     else {
       optimizedDir = imageDir;
     }
@@ -134,6 +131,149 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
 }
 
 /**
+ * Checks if an image URL should be skipped from optimization.
+ *
+ * @param url - The image URL to check
+ * @returns True if the image should be skipped, false otherwise
+ */
+function shouldSkipImage(url: string): boolean {
+  // Skip external URLs, pathname:// protocol, or already optimized images.
+  return (
+    // External URLs for security and performance reasons.
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('//') ||
+    // Images that use pathname:// protocol (already bypassing Docusaurus processing).
+    url.startsWith('pathname://') ||
+    // Already optimized images to prevent double-processing.
+    // Pattern specifically matches responsive width suffixes at the end of filenames.
+    /-\d{2,4}w\.(?:png|jpe?g|webp)$/i.test(url)
+  );
+}
+
+/**
+ * Checks if an image format is supported for optimization.
+ *
+ * @param url - The image URL to check
+ * @returns True if the format is supported, false otherwise
+ */
+function isSupportedImageFormat(url: string): boolean {
+  return /\.(?:png|jpe?g)$/i.test(url);
+}
+
+/**
+ * Creates responsive image source elements for different formats.
+ *
+ * @param optimizedBasePath - Base path for optimized images
+ * @param sizes - Array of responsive breakpoint sizes
+ * @param formats - Array of image formats (excluding the fallback format)
+ * @returns Array of MDX JSX source elements
+ */
+function createSourceElements(optimizedBasePath: string, sizes: number[], formats: string[]): MdxJsxElement[] {
+  return formats.map(
+    (format): MdxJsxElement => ({
+      type: 'mdxJsxFlowElement',
+      name: 'source',
+      attributes: [
+        {
+          type: 'mdxJsxAttribute',
+          name: 'type',
+          value: `image/${format}`,
+        },
+        {
+          type: 'mdxJsxAttribute',
+          name: 'srcSet',
+          value: sizes.map(size => `${optimizedBasePath}-${size}w.${format} ${size}w`).join(', '),
+        },
+        {
+          type: 'mdxJsxAttribute',
+          name: 'sizes',
+          value:
+            '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+        },
+      ],
+      children: [],
+      data: { _mdxExplicitJsx: true },
+    }),
+  );
+}
+
+/**
+ * Creates the fallback img element with responsive attributes.
+ *
+ * @param optimizedBasePath - Base path for optimized images
+ * @param sizes - Array of responsive breakpoint sizes
+ * @param alt - Alt text for the image
+ * @param title - Optional title attribute
+ * @returns MDX JSX img element
+ */
+function createImgElement(optimizedBasePath: string, sizes: number[], alt?: string, title?: string): MdxJsxElement {
+  const fallbackImagePath = `${optimizedBasePath}-1536w.png`;
+
+  const attributes: MdxJsxAttribute[] = [
+    {
+      type: 'mdxJsxAttribute',
+      name: 'src',
+      value: fallbackImagePath,
+    },
+    {
+      type: 'mdxJsxAttribute',
+      name: 'srcSet',
+      value: sizes.map(size => `${optimizedBasePath}-${size}w.png ${size}w`).join(', '),
+    },
+    {
+      type: 'mdxJsxAttribute',
+      name: 'sizes',
+      value:
+        '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+    },
+    {
+      type: 'mdxJsxAttribute',
+      name: 'alt',
+      value: alt ?? '',
+    },
+    {
+      type: 'mdxJsxAttribute',
+      name: 'loading',
+      value: 'lazy',
+    },
+  ];
+
+  if (title) {
+    attributes.push({
+      type: 'mdxJsxAttribute',
+      name: 'title',
+      value: title,
+    });
+  }
+
+  return {
+    type: 'mdxJsxFlowElement',
+    name: 'img',
+    attributes,
+    children: [],
+    data: { _mdxExplicitJsx: true },
+  };
+}
+
+/**
+ * Creates a picture element with source and img children.
+ *
+ * @param sourceElements - Array of source elements for different formats
+ * @param imgElement - Fallback img element
+ * @returns MDX JSX picture element
+ */
+function createPictureElement(sourceElements: MdxJsxElement[], imgElement: MdxJsxElement): MdxJsxElement {
+  return {
+    type: 'mdxJsxFlowElement',
+    name: 'picture',
+    attributes: [],
+    children: [...sourceElements, imgElement],
+    data: { _mdxExplicitJsx: true },
+  };
+}
+
+/**
  * Creates a remark plugin that optimizes images in markdown content.
  *
  * This plugin uses the unified/remark AST (Abstract Syntax Tree) visitor pattern
@@ -149,190 +289,41 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
  */
 export function remarkOptimizeImages() {
   return function transformer(tree: Node, file: VFile): void {
-    /**
-     * Visit all image nodes in the AST.
-     */
+    // Visit all image nodes in the AST.
     visit(tree, 'image', (node: ImageNode, index: number | undefined, parent: Parent | undefined) => {
-      const { url, alt } = node;
+      const { url, alt, title } = node;
 
-      /**
-       * Skip external URLs for security and performance reasons.
-       * - Can't optimize external images we don't control.
-       * - Avoids potential CORS and caching issues.
-       * - Prevents unnecessary network requests during build.
-       */
-      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
-        return;
-      }
-
-      /**
-       * Skip images that use pathname:// protocol (already bypassing Docusaurus processing).
-       */
-      if (url.startsWith('pathname://')) {
-        return;
-      }
-
-      /**
-       * Ensure we have a valid index and parent for AST manipulation.
-       * The index is needed to replace the node in the parent's children array.
-       */
-      if (typeof index !== 'number' || !parent) {
-        return;
-      }
-
-      /**
-       * Skip already optimized images to prevent double-processing.
-       * Pattern matches responsive width suffixes like "-640w.png".
-       * This allows manual optimization overrides and prevents infinite loops.
-       */
-      if (/-\d+w\./.test(url)) {
-        return;
-      }
-
-      /**
-       * Process only supported raster image formats.
-       * These formats benefit most from optimization and responsive sizing.
-       * - PNG: Common for screenshots, diagrams, images with transparency.
-       * - JPG/JPEG: Common for photos and complex images.
-       *
-       * Excluded formats:
-       * - SVG: Vector graphics don't need raster optimization.
-       * - WebP: Already optimized format.
-       * - GIF: Would break animations.
-       */
-      if (/\.(png|jpg|jpeg)$/i.exec(url)) {
-        /**
-         * Responsive breakpoints matching Tailwind CSS.
-         * These sizes cover the most common viewport widths:
-         * - 640w: Mobile phones
-         * - 768w: Small tablets
-         * - 1024w: Large tablets
-         * - 1280w: Small laptops
-         * - 1536w: Large screens
-         */
+      // Only process images that meet all optimization criteria.
+      if (!shouldSkipImage(url) && typeof index === 'number' && parent && isSupportedImageFormat(url)) {
+        // Responsive breakpoints matching Tailwind CSS.
+        // These sizes cover the most common viewport widths:
+        // - 640w: Mobile phones
+        // - 768w: Small tablets
+        // - 1024w: Large tablets
+        // - 1280w: Small laptops
+        // - 1536w: Large screens
         const sizes = [640, 768, 1024, 1280, 1536];
 
-        /**
-         * Image formats in order of preference:
-         * 1. AVIF: Best compression, newest format.
-         * 2. WebP: Good compression, wide browser support.
-         * 3. PNG: Universal fallback.
-         *
-         * Browsers will use the first supported format.
-         */
-        const formats = ['avif', 'webp', 'png'];
+        // Image formats in order of preference:
+        // 1. AVIF: Best compression, newest format.
+        // 2. WebP: Good compression, wide browser support.
+        // 3. PNG: Universal fallback.
+        // Browsers will use the first supported format.
+        const formats = ['avif', 'webp'];
 
         // Construct the optimized image base path using context-aware mapping.
         const optimizedBasePath = getOptimizedImagePath(url, file.path);
 
-        // Use the largest optimized PNG as fallback (better than uncompressed original).
-        const fallbackImagePath = `${optimizedBasePath}-1536w.png`;
+        // Create source elements for modern formats (AVIF and WebP).
+        const sourceElements = createSourceElements(optimizedBasePath, sizes, formats);
 
-        /**
-         * Create source elements for AVIF and WebP formats.
-         */
-        const sourceElements: MdxJsxElement[] = formats.slice(0, -1).map(
-          (format): MdxJsxElement => ({
-            type: 'mdxJsxFlowElement',
-            name: 'source',
-            attributes: [
-              {
-                type: 'mdxJsxAttribute',
-                name: 'type',
-                value: `image/${format}`,
-              },
-              {
-                type: 'mdxJsxAttribute',
-                name: 'srcSet',
-                value: sizes.map(size => `${optimizedBasePath}-${size}w.${format} ${size}w`).join(', '),
-              },
-              {
-                type: 'mdxJsxAttribute',
-                name: 'sizes',
-                value:
-                  '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
-              },
-            ],
-            children: [],
-            data: { _mdxExplicitJsx: true },
-          }),
-        );
+        // Create the fallback img element with optional title.
+        const imgElement = createImgElement(optimizedBasePath, sizes, alt, title);
 
-        /**
-         * Create the fallback img element.
-         */
-        const imgElement: MdxJsxElement = {
-          type: 'mdxJsxFlowElement',
-          name: 'img',
-          attributes: [
-            {
-              type: 'mdxJsxAttribute',
-              name: 'src',
-              value: fallbackImagePath,
-            },
-            {
-              type: 'mdxJsxAttribute',
-              name: 'srcSet',
-              value: sizes.map(size => `${optimizedBasePath}-${size}w.png ${size}w`).join(', '),
-            },
-            {
-              type: 'mdxJsxAttribute',
-              name: 'sizes',
-              value:
-                '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
-            },
-            {
-              type: 'mdxJsxAttribute',
-              name: 'alt',
-              value: alt ?? '',
-            },
-            {
-              type: 'mdxJsxAttribute',
-              name: 'loading',
-              value: 'lazy',
-            },
-          ],
-          children: [],
-          data: { _mdxExplicitJsx: true },
-        };
-
-        /**
-         * Create the picture element with source and img children.
-         */
-        const pictureElement: MdxJsxElement = {
-          type: 'mdxJsxFlowElement',
-          name: 'picture',
-          attributes: [],
-          children: [
-            ...sourceElements,
-            // If the original image node has a title, add it to the img element
-            ((): MdxJsxElement => {
-              if (node.title) {
-                // Clone the imgElement and add the title attribute
-                return {
-                  ...imgElement,
-                  attributes: [
-                    ...(imgElement.attributes || []),
-                    {
-                      type: 'mdxJsxAttribute',
-                      name: 'title',
-                      value: node.title,
-                    },
-                  ],
-                };
-              }
-              return imgElement;
-            })(),
-          ],
-          data: { _mdxExplicitJsx: true },
-        };
-
-        /**
-         * Replace the markdown image node with the MDX JSX picture element.
-         * This transforms the AST from a simple image to a complex JSX structure.
-         * The JSX will be properly handled by MDX during compilation.
-         */
-        parent.children[index] = pictureElement;
+        // Replace the markdown image node with the MDX JSX picture element.
+        // This transforms the AST from a simple image to a complex JSX structure.
+        // The JSX will be properly handled by MDX during compilation.
+        parent.children[index] = createPictureElement(sourceElements, imgElement);
       }
     });
   };
