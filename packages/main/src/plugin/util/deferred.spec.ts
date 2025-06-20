@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,20 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { expect, test } from 'vitest';
 
-export class Deferred<T> {
-  resolve: (value: T | Promise<T>) => void = () => {
-    return;
-  };
-  reject: (err?: unknown) => void = () => {
-    return;
-  };
-  promise: Promise<T>;
+import { isAsyncFunction } from '/@/plugin/util/deferred.js';
 
-  constructor() {
-    this.promise = new Promise<T>((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-}
+test('normal function not detected as async', () => {
+  const func = (): boolean => true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const result = isAsyncFunction(func);
+  expect(result).toBe(false);
+});
 
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-
-export function isAsyncFunction(fn: unknown): boolean {
-  return fn?.constructor === AsyncFunction;
-}
+test('async function detected as async', () => {
+  const func = async (): Promise<boolean> => Promise.resolve(true);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const result = isAsyncFunction(func);
+  expect(result).toBe(true);
+});
