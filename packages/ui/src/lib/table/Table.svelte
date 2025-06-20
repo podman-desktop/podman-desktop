@@ -202,7 +202,10 @@ onMount(() => {
 </script>
 <div
   style="--table-grid-table-columns: {gridTemplateColumns}"
-  class="w-full mx-5" class:hidden={data.length === 0} role="table" aria-label={kind}>
+  class="w-full mx-5"
+  class:hidden={data.length === 0}
+  role="table"
+  aria-label={kind}>
   <!-- Table header -->
   <div role="rowgroup">
     <div

@@ -28,6 +28,7 @@ const row = new Row<Person, Person>({
   kind="persons"
   data={people}
   columns={[nameColumn]}
+  key={(person: Person): string => person.name}
   {row}
   defaultSortColumn="Name">
 </Table>
