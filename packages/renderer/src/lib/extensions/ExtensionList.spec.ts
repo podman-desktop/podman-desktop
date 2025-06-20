@@ -212,3 +212,18 @@ test('Search catalog page searches also description', async () => {
   const extensionIdB = screen.queryByRole('group', { name: 'B Extension' });
   expect(extensionIdB).not.toBeInTheDocument();
 });
+
+test('Expect to see local extensions tab content', async () => {
+  catalogExtensionInfos.set([]);
+  extensionInfos.set([]);
+
+  render(ExtensionList);
+
+  // select the local extensions tab
+  const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
+  await fireEvent.click(localModeTab);
+
+  // expect to see empty screen
+  const emptyText = screen.getByText('Enable Preferences > Extensions > Development Mode to test local extensions');
+  expect(emptyText).toBeInTheDocument();
+});
