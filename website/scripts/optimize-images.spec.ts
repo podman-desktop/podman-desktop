@@ -1417,14 +1417,14 @@ describe('processImageFormats', () => {
     const progressTracker = new ProgressTracker(18, 1);
     const progressSpy = vi.spyOn(progressTracker, 'updateProgress');
 
-    const { processedCount, savedBytes } = await processImageFormats(
-      'blog/img/imagePath.png',
-      '/build/dir',
-      path.parse('blog/img/imagePath.png'), // Parsed path components
-      statsMock,
-      metadataMock,
+    const { processedCount, savedBytes } = await processImageFormats({
+      imagePath: 'blog/img/imagePath.png',
+      outputDir: '/build/dir',
+      parsedPath: path.parse('blog/img/imagePath.png'), // Parsed path components
+      stats: statsMock,
+      metadata: metadataMock,
       progressTracker,
-    );
+    });
 
     // Verify that multiple images were processed (responsive sizes + formats).
     expect(processedCount).toBeGreaterThan(0);
@@ -1450,14 +1450,14 @@ describe('processImageFormats', () => {
       width: 1024,
     } as unknown as Metadata;
 
-    const { processedCount, savedBytes } = await processImageFormats(
-      'blog/img/imagePath.png',
-      '/build/dir',
-      path.parse('blog/img/imagePath.png'),
-      statsMock,
-      metadataMock,
+    const { processedCount, savedBytes } = await processImageFormats({
+      imagePath: 'blog/img/imagePath.png',
+      outputDir: '/build/dir',
+      parsedPath: path.parse('blog/img/imagePath.png'),
+      stats: statsMock,
+      metadata: metadataMock,
       // No progress tracker provided.
-    );
+    });
 
     expect(processedCount).toBeGreaterThan(0);
     expect(savedBytes).toBeGreaterThan(0);
