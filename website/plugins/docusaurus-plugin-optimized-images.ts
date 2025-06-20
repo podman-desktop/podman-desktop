@@ -35,9 +35,46 @@
  * - Cross-platform path handling for Windows/Unix compatibility.
  */
 
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import type { LoadContext, Plugin, PluginOptions } from '@docusaurus/types';
+
+/**
+ * Gets the optimized images directory path.
+ *
+ * @param siteDir - The Docusaurus site directory
+ * @returns The absolute path to the optimized images directory
+ */
+function getOptimizedImagesPath(siteDir: string): string {
+  return path.join(siteDir, 'static/optimized-images');
+}
+
+/**
+ * Verifies the optimized images directory and logs status.
+ *
+ * @param optimizedImagesDir - Path to the optimized images directory
+ */
+function verifyOptimizedImages(optimizedImagesDir: string): void {
+  try {
+    const dirExists = fs.existsSync(optimizedImagesDir);
+
+    if (dirExists) {
+      const files = fs.readdirSync(optimizedImagesDir);
+      const imageFiles = files.filter(file => /\.(?:jpg|jpeg|png|webp|avif|gif|svg)$/i.test(file));
+
+      if (imageFiles.length === 0) {
+        console.log('Optimized images directory exists but contains no image files');
+      } else {
+        console.log(`Optimized images ready for production build (${imageFiles.length} files processed)`);
+      }
+    } else {
+      console.log('No optimized images directory found - images may not have been processed');
+    }
+  } catch (error) {
+    console.warn('Unable to verify optimized images status:', error);
+  }
+}
 
 /**
  * Docusaurus plugin factory function.
@@ -74,23 +111,20 @@ export default function docusaurusPluginOptimizedImages(context: LoadContext, _o
             // Preserve any existing aliases from the base configuration.
             ...(config.resolve?.alias ?? {}),
 
-            /**
-             * Alias for optimized images directory.
-             * Maps /optimized-images requests to the static/optimized-images directory.
-             * This enables import/require statements to resolve optimized images correctly.
-             */
-            '/optimized-images': path.join(context.siteDir, 'static/optimized-images'),
+            // Alias for optimized images directory.
+            // Maps /optimized-images requests to the static/optimized-images directory.
+            // This enables import/require statements to resolve optimized images correctly.
+            '/optimized-images': getOptimizedImagesPath(context.siteDir),
           },
         },
         devServer: {
           static: [
             {
-              /**
-               * Static file serving configuration for development.
-               * Serves optimized images from the static directory during `docusaurus start`.
-               * This ensures the same URL structure works in both development and production.
-               */
-              directory: path.join(context.siteDir, 'static/optimized-images'),
+              // Static file serving configuration for development.
+              // Serves optimized images from the static directory during `docusaurus start`.
+              // This ensures the same URL structure works in both development and production.
+              directory: getOptimizedImagesPath(context.siteDir),
+
               publicPath: '/optimized-images',
               serveIndex: false, // Disable directory indexing for security
             },
@@ -103,12 +137,14 @@ export default function docusaurusPluginOptimizedImages(context: LoadContext, _o
      * Post-build hook for production feedback.
      *
      * Executed after the Docusaurus build completes successfully.
-     * Provides feedback about the optimization system status.
+     * Verifies the optimized images directory exists and contains files,
+     * then provides feedback about the optimization system status.
      *
      * @param _props - Build completion properties (unused)
      */
     async postBuild(_props): Promise<void> {
-      console.log('Optimized images ready for production build');
+      const optimizedImagesDir = getOptimizedImagesPath(context.siteDir);
+      verifyOptimizedImages(optimizedImagesDir);
     },
   };
 }

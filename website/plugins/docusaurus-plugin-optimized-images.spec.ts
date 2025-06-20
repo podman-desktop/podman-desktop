@@ -37,7 +37,8 @@
  * - Ensure proper integration with build hooks.
  */
 
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import type { ConfigureWebpackUtils, LoadContext, PluginOptions } from '@docusaurus/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -46,20 +47,34 @@ import type { Configuration } from 'webpack';
 import optimizedImagesPlugin from './docusaurus-plugin-optimized-images';
 
 /**
- * Mock console.log to capture and validate build messages.
+ * Mock console.log and console.warn to capture and validate build messages.
  * The plugin should provide feedback during the build process.
  */
 const consoleLogMock = vi.fn();
+const consoleWarnMock = vi.fn();
 const originalConsoleLog = console.log;
+const originalConsoleWarn = console.warn;
+
+/**
+ * Mock fs module for testing file system operations.
+ */
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
+}));
+
+const fsMock = vi.mocked(fs);
 
 beforeEach(() => {
   vi.clearAllMocks();
   console.log = consoleLogMock;
+  console.warn = consoleWarnMock;
 });
 
 afterEach(() => {
   // Restore original console to prevent test pollution.
   console.log = originalConsoleLog;
+  console.warn = originalConsoleWarn;
 });
 
 describe('docusaurus-plugin-optimized-images', () => {
@@ -251,33 +266,130 @@ describe('docusaurus-plugin-optimized-images', () => {
      * Should complete without errors for successful builds.
      */
     test('should execute postBuild without errors', async () => {
+      fsMock.existsSync.mockReturnValue(true);
+      fsMock.readdirSync.mockReturnValue(['image1.jpg', 'image2.png']);
+
       const plugin = optimizedImagesPlugin(mockContext, mockOptions);
 
       const mockProps = {
         siteConfig: {},
         siteDir: mockContext.siteDir,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
 
       await expect(plugin.postBuild!(mockProps)).resolves.not.toThrow();
     });
 
     /**
-     * Test postBuild logging.
-     * Should provide feedback about optimization completion.
+     * Test postBuild logging when directory exists with images.
+     * Should log success message with file count.
      */
-    test('should log success message during postBuild', async () => {
+    test('should log success message with file count when images exist', async () => {
+      fsMock.existsSync.mockReturnValue(true);
+      fsMock.readdirSync.mockReturnValue(['image1.jpg', 'image2.png', 'doc.txt']);
+
       const plugin = optimizedImagesPlugin(mockContext, mockOptions);
 
       const mockProps = {
         siteConfig: {},
         siteDir: mockContext.siteDir,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
 
       await plugin.postBuild!(mockProps);
 
-      expect(consoleLogMock).toHaveBeenCalledWith('Optimized images ready for production build');
+      expect(consoleLogMock).toHaveBeenCalledWith('Optimized images ready for production build (2 files processed)');
+    });
+
+    /**
+     * Test postBuild logging when directory doesn't exist.
+     * Should log informational message about missing directory.
+     */
+    test('should log informational message when directory does not exist', async () => {
+      fsMock.existsSync.mockReturnValue(false);
+
+      const plugin = optimizedImagesPlugin(mockContext, mockOptions);
+
+      const mockProps = {
+        siteConfig: {},
+        siteDir: mockContext.siteDir,
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
+
+      await plugin.postBuild!(mockProps);
+
+      expect(consoleLogMock).toHaveBeenCalledWith(
+        'No optimized images directory found - images may not have been processed',
+      );
+    });
+
+    /**
+     * Test postBuild logging when directory exists but has no images.
+     * Should log informational message about empty directory.
+     */
+    test('should log message when directory exists but contains no images', async () => {
+      fsMock.existsSync.mockReturnValue(true);
+      fsMock.readdirSync.mockReturnValue(['config.json', 'readme.txt']);
+
+      const plugin = optimizedImagesPlugin(mockContext, mockOptions);
+
+      const mockProps = {
+        siteConfig: {},
+        siteDir: mockContext.siteDir,
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
+
+      await plugin.postBuild!(mockProps);
+
+      expect(consoleLogMock).toHaveBeenCalledWith('Optimized images directory exists but contains no image files');
+    });
+
+    /**
+     * Test postBuild error handling.
+     * Should handle file system errors gracefully.
+     */
+    test('should handle file system errors gracefully', async () => {
+      fsMock.existsSync.mockImplementation(() => {
+        throw new Error('Permission denied');
+      });
+
+      const plugin = optimizedImagesPlugin(mockContext, mockOptions);
+
+      const mockProps = {
+        siteConfig: {},
+        siteDir: mockContext.siteDir,
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
+
+      await plugin.postBuild!(mockProps);
+
+      expect(consoleWarnMock).toHaveBeenCalledWith('Unable to verify optimized images status:', expect.any(Error));
+    });
+
+    /**
+     * Test image file filtering.
+     * Should correctly identify image files by extension.
+     */
+    test('should correctly filter image files by extension', async () => {
+      fsMock.existsSync.mockReturnValue(true);
+      fsMock.readdirSync.mockReturnValue([
+        'image1.jpg',
+        'image2.jpeg',
+        'image3.png',
+        'image4.webp',
+        'image5.avif',
+        'image6.gif',
+        'image7.svg',
+        'document.pdf',
+        'config.json',
+        'style.css',
+      ]);
+
+      const plugin = optimizedImagesPlugin(mockContext, mockOptions);
+
+      const mockProps = {
+        siteConfig: {},
+        siteDir: mockContext.siteDir,
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
+
+      await plugin.postBuild!(mockProps);
+
+      expect(consoleLogMock).toHaveBeenCalledWith('Optimized images ready for production build (7 files processed)');
     });
   });
 
@@ -298,6 +410,26 @@ describe('docusaurus-plugin-optimized-images', () => {
     });
 
     /**
+     * Test postBuild with empty directory.
+     * Should handle empty directory gracefully.
+     */
+    test('should handle empty optimized images directory', async () => {
+      fsMock.existsSync.mockReturnValue(true);
+      fsMock.readdirSync.mockReturnValue([]);
+
+      const plugin = optimizedImagesPlugin(mockContext, mockOptions);
+
+      const mockProps = {
+        siteConfig: {},
+        siteDir: mockContext.siteDir,
+      } as { siteConfig: Record<string, unknown>; siteDir: string };
+
+      await plugin.postBuild!(mockProps);
+
+      expect(consoleLogMock).toHaveBeenCalledWith('Optimized images directory exists but contains no image files');
+    });
+
+    /**
      * Test handling of malformed webpack configuration.
      * Should provide meaningful error messages for debugging.
      */
@@ -305,11 +437,10 @@ describe('docusaurus-plugin-optimized-images', () => {
       const plugin = optimizedImagesPlugin(mockContext, mockOptions);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const malformedConfig = null as any;
+      const malformedConfig = null as unknown as Configuration;
 
       expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        plugin.configureWebpack!(malformedConfig, false, {} as any);
+        plugin.configureWebpack!(malformedConfig, false, {} as ConfigureWebpackUtils);
       }).toThrow('Cannot read properties of null');
     });
   });
@@ -326,8 +457,7 @@ describe('docusaurus-plugin-optimized-images', () => {
       };
 
       const plugin = optimizedImagesPlugin(windowsContext, mockOptions);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = plugin.configureWebpack!({}, false, {} as any);
+      const result = plugin.configureWebpack!({}, false, {} as ConfigureWebpackUtils);
 
       const expectedPath = path.join(windowsContext.siteDir, 'static/optimized-images');
       expect(result.resolve?.alias?.['/optimized-images']).toBe(expectedPath);
@@ -344,8 +474,7 @@ describe('docusaurus-plugin-optimized-images', () => {
       };
 
       const plugin = optimizedImagesPlugin(unixContext, mockOptions);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = plugin.configureWebpack!({}, false, {} as any);
+      const result = plugin.configureWebpack!({}, false, {} as ConfigureWebpackUtils);
 
       const expectedPath = path.join(unixContext.siteDir, 'static/optimized-images');
       expect(result.resolve?.alias?.['/optimized-images']).toBe(expectedPath);
