@@ -145,9 +145,7 @@ describe('run', () => {
 
     await run();
 
-    expect(consoleLogMock).toHaveBeenCalledWith(
-      'No token or username found. Use either GITHUB_TOKEN, GITHUB_USERNAME or pass it as an argument',
-    );
+    expect(consoleLogMock).toHaveBeenCalledWith('No token found. Use either GITHUB_TOKEN or pass it as an argument');
     expect(ReleaseNotesPreparator).not.toHaveBeenCalled();
     expect(generateMock).not.toHaveBeenCalled();
   });

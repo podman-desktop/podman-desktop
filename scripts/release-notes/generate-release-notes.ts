@@ -25,9 +25,7 @@ export function showHelp(): void {
   console.log('--token - GitHub token or export GITHUB_TOKEN env variable');
   console.log('--org - GitHub organization (default is "podman-desktop")');
   console.log('--repo - GitHub repository (default is "podman-desktop")');
-  console.log(
-    '--username - GitHub username which will be used in release notes (GITHUB_USERNAME env variable can be used)',
-  );
+  console.log('--username - GitHub username or export GITHUB_USERNAME env variable');
   console.log('--milestone - GitHub milestone for which we want to generate release notes e.g. 1.18.0');
   console.log('--ollama - script will try to use ollama when model is provided');
   console.log(
@@ -41,7 +39,6 @@ export function showHelp(): void {
 
 export async function run(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
-  token ??= process.env.GH_TOKEN;
   const args = process.argv.slice(2);
   let organization = 'podman-desktop';
   let repo = 'podman-desktop';
@@ -107,7 +104,11 @@ export async function run(): Promise<void> {
     endpoint ??= '/v1/chat/completions';
   }
 
-  if (token && username) {
+  if (!token) {
+    console.log('No token found. Use either GITHUB_TOKEN or pass it as an argument');
+  } else if (!username) {
+    console.log('No username found. Use either GITHUB_USERNAME or pass it as an argument');
+  } else {
     const releaseNotesPreparator = new ReleaseNotesPreparator(
       token,
       organization,
@@ -120,8 +121,6 @@ export async function run(): Promise<void> {
       useOllama,
     );
     await releaseNotesPreparator.generate();
-  } else {
-    console.log('No token or username found. Use either GITHUB_TOKEN, GITHUB_USERNAME or pass it as an argument');
   }
 }
 
