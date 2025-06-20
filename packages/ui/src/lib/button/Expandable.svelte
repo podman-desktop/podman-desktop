@@ -2,7 +2,8 @@
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
 import { fade, slide } from 'svelte/transition';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 interface Props {
   expanded?: boolean;
@@ -29,9 +30,9 @@ function toggle(): void {
   <button onclick={(): void => toggle()} aria-expanded="{expanded}">
     <div class="flex flex-row space-x-1 items-center">
       {#if expanded}
-        <Fa class="w-4" icon={faChevronDown} />
+        <Icon icon={faChevronDown} class='w-4'/>
       {:else}
-        <Fa class="w-4" icon={faChevronRight} />
+        <Icon icon={faChevronRight} class='w-4'/>
       {/if}
       {@render title?.()}
     </div>
