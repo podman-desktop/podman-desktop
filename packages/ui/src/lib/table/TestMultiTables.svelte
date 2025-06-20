@@ -3,9 +3,6 @@ import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-let personTable: Table;
-let bookTable: Table;
-
 type Person = {
   name: string;
 };
@@ -21,7 +18,7 @@ const books: Book[] = [
   { title: 'Twenty Thousand Leagues Under the Seas' },
   { title: 'From the Earth to the Moon' },
   { title: 'Around the World in Eighty Days' },
-  { title: 'From the Earth to the Moon' },
+  { title: 'From the Earth to the Sky' },
 ];
 
 export const nameColPerson: Column<Person, string> = new Column('Name', {
@@ -47,7 +44,7 @@ const rowBook = new Row<Book>({});
 
 <Table
   kind="person"
-  bind:this={personTable}
+  key={(person: Person): string => person.name}
   data={persons}
   columns={columnsPerson}
   row={rowPerson}
@@ -56,7 +53,7 @@ const rowBook = new Row<Book>({});
 
 <Table
   kind="book"
-  bind:this={bookTable}
+  key={(book: Book): string => book.title}
   data={books}
   columns={columnsBook}
   row={rowBook}
