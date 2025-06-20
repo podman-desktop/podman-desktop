@@ -115,7 +115,6 @@ async function openKubePods(): Promise<void> {
 }
 
 let selectedItemsNumber: number = $state(0);
-let table: Table;
 
 let statusColumn = new TableColumn<PodInfoUI>('Status', {
   align: 'center',
@@ -227,13 +226,13 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
   <div class="flex min-w-full h-full">
     <Table
       kind="pod"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={pods}
+      key={(pod: PodInfoUI): string => pod.id}
+      label={(pod: PodInfoUI): string => pod.name}
       columns={columns}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): PodInfoUI[] => (pods = pods)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if $filtered.length === 0 && providerConnections.length === 0}

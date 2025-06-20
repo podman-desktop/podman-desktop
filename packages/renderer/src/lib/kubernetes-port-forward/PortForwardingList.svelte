@@ -50,6 +50,8 @@ const row = new TableRow<ForwardConfig>({});
       <Table
         kind="port"
         data={$kubernetesCurrentContextPortForwards}
+        key={(config: ForwardConfig): string => config.id}
+        label={(config: ForwardConfig): string => config.name}
         columns={columns}
         row={row}
         defaultSortColumn="Name">

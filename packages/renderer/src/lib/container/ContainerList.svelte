@@ -4,10 +4,10 @@ import {
   Button,
   FilteredEmptyScreen,
   NavPage,
+  Table,
   TableColumn,
   TableDurationColumn,
   TableRow,
-  TableV5,
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
@@ -448,6 +448,11 @@ $: containersAndGroups = containerGroups.map(group =>
   group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group,
 );
 
+/**
+ * Utility method for the Table component
+ * Given an object return a unique key
+ * @param object
+ */
 function key(object: ContainerInfoUI | ContainerGroupInfoUI): string {
   return object.id;
 }
@@ -524,7 +529,7 @@ function key(object: ContainerInfoUI | ContainerGroupInfoUI): string {
             stoppedOnly={containerUtils.filterIsStopped(searchTerm)} />
         {/if}
       {:else}
-        <TableV5
+        <Table
           kind="container"
           data={containersAndGroups}
           columns={columns}
@@ -533,7 +538,7 @@ function key(object: ContainerInfoUI | ContainerGroupInfoUI): string {
           key={key}
           bind:selectedItemsNumber={selectedItemsNumber}
           defaultSortColumn="Name">
-        </TableV5>
+        </Table>
       {/if}
     </div>
   {/snippet}

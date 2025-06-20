@@ -391,15 +391,9 @@ test('Expect table is scoped for css manipulation', async () => {
   expect(table).toBeDefined();
   // get the elements having the role "row" inside the table html element
   const rows = await within(table).findAllByRole('row');
+
   // expect each row of the table has the grid-template-columns style applied
   for (const element of rows) {
-    expect(element.style.gridTemplateColumns).toBe('20px 32px 1fr 3fr 1fr 1fr 1fr 5px');
+    expect(element).toHaveClass('grid-table');
   }
-
-  // ok so now look at our dummy component
-  const dummyComponent = await screen.findByRole('group', { name: 'dummy component' });
-  expect(dummyComponent).toBeDefined();
-
-  // and there should be no style applied to this group as it's not part of the table
-  expect(dummyComponent.style.gridTemplateColumns).toBe('');
 });

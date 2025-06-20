@@ -12,6 +12,7 @@ import {
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
@@ -44,6 +45,9 @@ export let searchTerm = '';
 export let imageEngineId = '';
 $: searchPattern.set(searchTerm);
 
+// object selected
+let selected: Set<string> = new SvelteSet();
+
 let images: ImageInfoUI[] = [];
 let enginesList: EngineInfoUI[];
 
@@ -70,7 +74,11 @@ function updateImages(globalContext: ContextUI): void {
       currentImage => currentImage.id === image.id && currentImage.engineId === image.engineId,
     );
     if (matchingImage) {
-      image.selected = matchingImage.selected;
+      if (selected.has(key(matchingImage))) {
+        selected.add(key(image));
+      } else {
+        selected.delete(key(image));
+      }
     }
   });
   computedImages.sort((first, second) => second.createdAt - first.createdAt);
@@ -183,7 +191,7 @@ function loadImages(): void {
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
 async function deleteSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = images.filter(image => selected.has(key(image)));
   if (selectedImages.length === 0) {
     return;
   }
@@ -203,8 +211,9 @@ async function deleteSelectedImages(): Promise<void> {
 
 // save the items selected in the list
 async function saveSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = images.filter(image => selected.has(key(image)));
   if (selectedImages.length === 0) {
+    console.warn('no image selected');
     return;
   }
 
@@ -213,7 +222,6 @@ async function saveSelectedImages(): Promise<void> {
 }
 
 let selectedItemsNumber: number;
-let table: Table;
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
@@ -268,6 +276,10 @@ const row = new TableRow<ImageInfoUI>({
     return image.children ?? [];
   },
 });
+
+function key(image: ImageInfoUI): string {
+  return image.base64RepoTag;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="images">
@@ -317,13 +329,14 @@ const row = new TableRow<ImageInfoUI>({
   <div class="flex min-w-full h-full">
     <Table
       kind="image"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={images}
+      key={key}
+      bind:selected={selected}
+      label={(image: ImageInfoUI): string => image.name}
       columns={columns}
       row={row}
-      defaultSortColumn="Age"
-      on:update={(): ImageInfoUI[] => (images = images)}>
+      defaultSortColumn="Age">
     </Table>
 
     {#if providerConnections.length === 0}

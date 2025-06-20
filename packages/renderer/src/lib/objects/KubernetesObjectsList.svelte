@@ -4,6 +4,7 @@ import type { KubernetesObject } from '@kubernetes/client-node';
 import type { TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { Button, FilteredEmptyScreen, NavPage, Table } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount, type Snippet } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
 import { listenResources } from '/@/lib/kube/resources-listen';
@@ -44,11 +45,14 @@ let started = $state<boolean>(false);
 
 let { kinds, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
 
+// object selected
+let selected: Set<string> = new SvelteSet();
+
 let resources = $state<{ [key: string]: KubernetesObject[] | undefined }>({});
 let resourceListeners: (IDisposable | undefined)[] = [];
 let legacyUnsubscribers: Unsubscriber[] = [];
 
-const objects = $derived(
+const objects: Array<KubernetesObjectUI> = $derived(
   kinds.flatMap(kind => resources[kind.resource]?.map(object => kind.transformer(object)) ?? []),
 );
 
@@ -96,7 +100,7 @@ onDestroy(() => {
 let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedObjects(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selectedObjects = objects.filter((object: any) => object?.selected);
+  const selectedObjects = objects.filter((object: KubernetesObjectUI) => selected.has(key(object)));
   if (selectedObjects.length === 0) {
     return;
   }
@@ -121,7 +125,9 @@ async function deleteSelectedObjects(): Promise<void> {
 
 let selectedItemsNumber = $state<number>(0);
 
-let table: Table;
+function key(object: KubernetesObjectUI): string {
+  return object.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
@@ -154,9 +160,10 @@ let table: Table;
   <div class="flex min-w-full h-full">
     <Table
       kind={singular}
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={objects}
+      bind:selected={selected}
+      key={key}
       columns={columns}
       row={row}
       defaultSortColumn="Name">
