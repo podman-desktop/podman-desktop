@@ -63,7 +63,6 @@ export interface ContainerInfoUI {
   hasPublicPort: boolean;
   openingUrl?: string;
   groupInfo: ContainerGroupPartInfoUI;
-  selected: boolean;
   created: number;
   actionInProgress?: boolean;
   actionError?: string;
@@ -74,11 +73,6 @@ export interface ContainerInfoUI {
 }
 
 export interface ContainerGroupInfoUI extends ContainerGroupPartInfoUI {
-  // menu being expanded or collapsed
-  expanded: boolean;
-
-  selected: boolean;
-
   // can be different from containers.length when a filter is applied on containers
   allContainersCount: number;
 
