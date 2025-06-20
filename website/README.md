@@ -20,7 +20,7 @@ This command starts a local development server and opens up a browser window. Mo
 $ pnpm build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service. The build process includes automatic image optimization with real-time progress tracking for better web performance.
+This command generates static content into the `build` directory and can be served using any static content hosting service. The build process includes automatic image optimization with real-time progress tracking for better web performance.
 
 **Note**: The build process is cross-platform compatible, using `cross-env` for Windows support.
 
