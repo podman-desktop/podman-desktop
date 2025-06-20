@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 
 import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import { filtered, podsInfos, searchPattern } from '../../stores/pods';
@@ -34,6 +35,9 @@ interface Props {
 }
 
 let { searchTerm = $bindable('') }: Props = $props();
+
+// object selected
+let selected: Set<string> = new SvelteSet();
 
 $effect(() => {
   searchPattern.set(searchTerm);
@@ -78,7 +82,11 @@ onMount(() => {
     computedPods.forEach(pod => {
       const matchingPod = pods.find(currentPod => currentPod.id === pod.id && currentPod.engineId === pod.engineId);
       if (matchingPod) {
-        pod.selected = matchingPod.selected;
+        if (selected.has(key(matchingPod))) {
+          selected.add(key(pod));
+        } else {
+          selected.delete(key(pod));
+        }
       }
     });
     pods = computedPods;
@@ -88,7 +96,7 @@ onMount(() => {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
 async function deleteSelectedPods(): Promise<void> {
-  const selectedPods = pods.filter(pod => pod.selected);
+  const selectedPods = pods.filter(pod => selected.has(key(pod)));
   if (selectedPods.length === 0) {
     return;
   }
@@ -153,6 +161,10 @@ const columns = [
 ];
 
 const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
+
+function key(pod: PodInfoUI): string {
+  return pod.id;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="pods">
@@ -227,8 +239,9 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
     <Table
       kind="pod"
       bind:selectedItemsNumber={selectedItemsNumber}
+      bind:selected={selected}
       data={pods}
-      key={(pod: PodInfoUI): string => pod.id}
+      key={key}
       label={(pod: PodInfoUI): string => pod.name}
       columns={columns}
       row={row}
