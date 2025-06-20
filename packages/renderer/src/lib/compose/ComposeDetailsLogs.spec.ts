@@ -67,7 +67,6 @@ const containerInfoUIMock: ContainerInfoUI = {
     type: ContainerGroupInfoTypeUI.COMPOSE,
     id: 'podman:foobar',
   },
-  selected: false,
   created: 0,
   labels: {},
   imageBase64RepoTag: '',

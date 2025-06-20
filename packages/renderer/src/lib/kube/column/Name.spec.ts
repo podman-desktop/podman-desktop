@@ -35,7 +35,6 @@ const deployment: KubernetesNamespacedObjectUI = {
   name: 'my-deployment',
   status: '',
   namespace: 'default',
-  selected: false,
 };
 
 test('Expect simple column styling', async () => {

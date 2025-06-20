@@ -76,7 +76,6 @@ const fakedImage: ImageInfoUI = {
   size: 0,
   humanSize: 'humanSize',
   base64RepoTag: 'base64RepoTag',
-  selected: false,
   status: 'UNUSED',
   icon: {},
   badges: [],

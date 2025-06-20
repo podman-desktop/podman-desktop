@@ -54,7 +54,6 @@ export class PodUtils {
       status: this.getStatus(pod.metadata?.deletionTimestamp ? 'DELETING' : (pod.status?.phase ?? '')),
       created: pod.metadata?.creationTimestamp,
       containers: containers,
-      selected: false,
       node: pod.spec?.nodeName,
       namespace: pod.metadata?.namespace ?? '',
     };

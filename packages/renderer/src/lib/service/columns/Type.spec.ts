@@ -29,7 +29,6 @@ const service: ServiceUI = {
   name: 'my-service',
   status: '',
   namespace: '',
-  selected: false,
   type: 'unknown',
   clusterIP: '',
   ports: '',

@@ -28,7 +28,6 @@ test('Expect type display for ConfigMap', async () => {
   const configMap: ConfigMapSecretUI = {
     name: 'my-configmap',
     namespace: '',
-    selected: false,
     type: 'ConfigMap',
     status: '',
     keys: [],
@@ -47,7 +46,6 @@ test('Expect type display for Secret', async () => {
   const secret: ConfigMapSecretUI = {
     name: 'my-secret',
     namespace: '',
-    selected: false,
     type: 'Secret',
     status: '',
     keys: [],

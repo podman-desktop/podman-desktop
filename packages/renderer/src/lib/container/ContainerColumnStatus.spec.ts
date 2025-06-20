@@ -43,7 +43,6 @@ test('Expect simple column styling - container', async () => {
     displayPort: '',
     hasPublicPort: false,
     groupInfo: {} as ContainerGroupInfoUI,
-    selected: false,
     created: 0,
     labels: {},
     imageBase64RepoTag: '',
@@ -58,9 +57,7 @@ test('Expect simple column styling - container', async () => {
 test('Expect simple column styling - pod', async () => {
   const pod: ContainerGroupInfoUI = {
     type: ContainerGroupInfoTypeUI.POD,
-    expanded: false,
     status: 'RUNNING',
-    selected: false,
     allContainersCount: 0,
     containers: [],
     name: '',
@@ -76,9 +73,7 @@ test('Expect simple column styling - pod', async () => {
 test('Expect simple column styling - compose', async () => {
   const compose: ContainerGroupInfoUI = {
     type: ContainerGroupInfoTypeUI.COMPOSE,
-    expanded: false,
     status: 'RUNNING',
-    selected: false,
     allContainersCount: 0,
     containers: [],
     name: '',

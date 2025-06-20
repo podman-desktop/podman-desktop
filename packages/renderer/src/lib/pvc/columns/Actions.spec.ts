@@ -31,7 +31,6 @@ test('Expect action buttons', async () => {
     status: 'RUNNING',
     storageClass: 'standard',
     accessModes: ['ReadWriteOnce'],
-    selected: false,
     size: '1Gi',
   };
 

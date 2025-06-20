@@ -47,7 +47,6 @@ test('Expect simple column styling', async () => {
       type: ContainerGroupInfoTypeUI.STANDALONE,
       id: 'sha256:1234567890123',
     },
-    selected: false,
     created: 0,
     labels: {},
     imageBase64RepoTag: '',
@@ -61,8 +60,6 @@ test('Expect simple column styling', async () => {
 test('Expect simple column styling - pod', async () => {
   const pod: ContainerGroupInfoUI = {
     type: ContainerGroupInfoTypeUI.POD,
-    expanded: false,
-    selected: false,
     allContainersCount: 0,
     containers: [],
     name: '',
@@ -79,8 +76,6 @@ test('Expect simple column styling - pod', async () => {
 test('Expect simple column styling - compose', async () => {
   const compose: ContainerGroupInfoUI = {
     type: ContainerGroupInfoTypeUI.COMPOSE,
-    expanded: false,
-    selected: false,
     allContainersCount: 0,
     containers: [],
     name: '',

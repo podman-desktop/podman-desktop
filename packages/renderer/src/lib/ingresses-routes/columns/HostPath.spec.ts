@@ -52,7 +52,6 @@ test('Expect simple column styling with single host/path ingress', async () => {
         },
       },
     ],
-    selected: false,
   };
   render(HostPath, { object: ingressUI });
 
@@ -100,7 +99,6 @@ test('Expect simple column styling with multiple paths ingress', async () => {
         },
       },
     ],
-    selected: false,
   };
   render(HostPath, { object: ingressUI });
 
@@ -124,7 +122,6 @@ test('Expect simple column styling with route', async () => {
       kind: 'Service',
       name: 'service',
     },
-    selected: false,
     tlsEnabled: false,
   };
   render(HostPath, { object: routeUI });

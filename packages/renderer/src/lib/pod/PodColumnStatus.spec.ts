@@ -33,7 +33,6 @@ const pod: PodInfoUI = {
   status: 'RUNNING',
   age: '',
   created: '',
-  selected: false,
   containers: [],
 };
 

@@ -30,7 +30,6 @@ test('Expect cronjob buttons', async () => {
     name: 'my-cronjob',
     status: 'RUNNING',
     namespace: '',
-    selected: false,
     schedule: '',
     suspended: false,
     lastScheduleTime: new Date(),

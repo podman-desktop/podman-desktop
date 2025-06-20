@@ -16,7 +16,6 @@ export let object: ContainerGroupInfoUI;
       engineName: object.engineName,
       age: object.humanCreationDate,
       created: object.created,
-      selected: false,
       containers: object.containers.map(container => ({
         Id: container.id,
         Names: container.name,

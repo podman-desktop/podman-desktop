@@ -48,7 +48,6 @@ const myContainer: ContainerInfoUI = {
     type: ContainerGroupInfoTypeUI.STANDALONE,
     id: 'foobar',
   },
-  selected: false,
   created: 0,
   labels: {},
   imageBase64RepoTag: '',

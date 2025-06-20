@@ -1,5 +1,6 @@
 <script lang="ts">
 import { CloseButton, NavPage } from '@podman-desktop/ui-svelte';
+import { SvelteSet } from 'svelte/reactivity';
 
 import { filtered, searchPattern } from '/@/stores/tasks';
 
@@ -16,6 +17,8 @@ interface Props {
 }
 
 let { searchTerm = $bindable('') }: Props = $props();
+
+let selected = new SvelteSet<string>();
 
 // display or not the tasks manager (defaut is false)
 let showTaskManager = $state(false);
@@ -58,6 +61,7 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
       {#snippet bottomAdditionalActions()}
         {#if selectedItemsNumber > 0}
           <TaskManagerBulkDeleteButton
+            selected={selected}
             title="Delete {selectedItemsNumber} selected {taskWordPlural}"
             bulkOperationTitle="delete {selectedItemsNumber} {taskWordPlural}" />
           <span>On {selectedItemsNumber} selected {taskWordPlural}.</span>
@@ -66,7 +70,7 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
 
       {#snippet content()}
       <div class="flex min-w-full h-full">
-        <TaskManagerTable bind:selectedItemsNumber={selectedItemsNumber} tasks={$filtered} />
+        <TaskManagerTable bind:selected={selected} bind:selectedItemsNumber={selectedItemsNumber} tasks={$filtered} />
         {#if $filtered.length === 0}
           <TaskManagerNoFilteredTasks bind:searchTerm={searchTerm} />
         {/if}

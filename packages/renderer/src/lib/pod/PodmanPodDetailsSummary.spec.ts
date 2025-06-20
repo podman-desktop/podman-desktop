@@ -33,7 +33,6 @@ const fakePod: PodInfoUI = {
   status: 'RUNNING',
   age: '3 days',
   created: '2021-01-01T00:00:00Z',
-  selected: false,
   containers: [
     {
       Id: 'fakeCId1',

@@ -51,7 +51,7 @@ const task3: TaskInfoUI = {
 
 test('Expect tasks being displayed', async () => {
   const tasks: TaskInfoUI[] = [task1, task2, task3];
-  render(TaskManagerTable, { tasks, selectedItemsNumber: 0 });
+  render(TaskManagerTable, { tasks, selectedItemsNumber: 0, selected: new Set<string>() });
 
   // get all rows
   const rows = screen.getAllByRole('row');
@@ -66,7 +66,7 @@ test('Expect tasks being displayed', async () => {
 
 test('Expect tasks being displayed by age order', async () => {
   const tasks: TaskInfoUI[] = [task1, task2, task3];
-  render(TaskManagerTable, { tasks, selectedItemsNumber: 0 });
+  render(TaskManagerTable, { tasks, selectedItemsNumber: 0, selected: new Set<string>() });
 
   // get all rows
   const rows = screen.getAllByRole('row');

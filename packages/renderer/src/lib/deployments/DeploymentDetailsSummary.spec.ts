@@ -33,7 +33,6 @@ const deploymentUI: DeploymentUI = {
   namespace: 'default',
   replicas: 0,
   ready: 0,
-  selected: false,
   conditions: [],
 };
 

@@ -30,7 +30,6 @@ test('Expect action buttons with ingress object', async () => {
     name: 'my-ingress',
     namespace: 'test-namespace',
     status: 'RUNNING',
-    selected: false,
   };
 
   render(Actions, { object: ingressUI });
@@ -50,7 +49,6 @@ test('Expect action buttons with route object', async () => {
       kind: 'Service',
       name: 'service',
     },
-    selected: false,
     tlsEnabled: false,
   };
 

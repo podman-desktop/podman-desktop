@@ -74,7 +74,6 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     id: '',
     status: 'UNUSED',
     name: '',
-    selected: false,
     shortId: '',
     tag: '',
     icon: ImageIcon,

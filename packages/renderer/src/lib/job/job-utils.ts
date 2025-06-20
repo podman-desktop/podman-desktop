@@ -68,7 +68,6 @@ export class JobUtils {
       created: job.metadata?.creationTimestamp,
       succeeded: job.status?.succeeded ?? 0,
       completions: job.spec?.completions ?? 0,
-      selected: false,
     };
   }
 }

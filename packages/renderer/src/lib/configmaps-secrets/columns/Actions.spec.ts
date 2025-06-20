@@ -28,7 +28,6 @@ test('Expect action buttons', async () => {
   const configMap: ConfigMapSecretUI = {
     name: 'my-configmap',
     namespace: '',
-    selected: false,
     type: 'ConfigMap',
     status: '',
     keys: [],

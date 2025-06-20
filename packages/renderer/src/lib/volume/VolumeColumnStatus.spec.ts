@@ -37,7 +37,6 @@ test('Expect simple column styling', async () => {
     humanSize: '',
     engineId: '',
     engineName: '',
-    selected: false,
     status: 'USED',
     containersUsage: [],
   };

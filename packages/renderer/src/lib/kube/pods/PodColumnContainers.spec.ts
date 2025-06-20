@@ -27,7 +27,6 @@ import type { PodUI } from './PodUI';
 const pod: PodUI = {
   name: '',
   status: '',
-  selected: false,
   containers: [
     {
       Id: 'container1',

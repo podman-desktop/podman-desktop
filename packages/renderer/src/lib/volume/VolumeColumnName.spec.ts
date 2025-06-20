@@ -38,7 +38,6 @@ const volume: VolumeInfoUI = {
   humanSize: '',
   engineId: 'engine-id',
   engineName: '',
-  selected: false,
   status: 'UNUSED',
   containersUsage: [],
 };

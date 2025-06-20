@@ -46,7 +46,6 @@ fakePVC.namespace = 'default';
 fakePVC.status = 'RUNNING';
 fakePVC.storageClass = 'standard';
 fakePVC.accessModes = ['ReadWriteOnce'];
-fakePVC.selected = false;
 fakePVC.size = '1Gi';
 
 beforeEach(() => {

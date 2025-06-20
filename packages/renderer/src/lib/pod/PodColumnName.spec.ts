@@ -35,7 +35,6 @@ const pod: PodInfoUI = {
   status: '',
   age: '',
   created: '',
-  selected: false,
   containers: [],
   node: 'node1',
   namespace: 'default',

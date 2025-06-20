@@ -199,7 +199,6 @@ export class ImageUtils {
           engineName: this.getEngineName(imageInfo),
           tag: '',
           base64RepoTag: this.getBase64EncodedName('<none>'),
-          selected: false,
           status: this.getInUse(imageInfo, undefined, containersInfo) ? 'USED' : 'UNUSED',
           badges,
           icon,

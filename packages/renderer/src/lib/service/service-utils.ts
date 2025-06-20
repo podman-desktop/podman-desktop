@@ -29,7 +29,6 @@ export class ServiceUtils {
       status: 'RUNNING',
       namespace: service.metadata?.namespace ?? '',
       created: service.metadata?.creationTimestamp,
-      selected: false,
       type: service.spec?.type ?? '',
       clusterIP: service.spec?.clusterIP ?? '',
       loadBalancerIPs: service.status?.loadBalancer?.ingress?.map(ingress => ingress.ip).join(', '),

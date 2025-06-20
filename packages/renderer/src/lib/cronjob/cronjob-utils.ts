@@ -29,7 +29,6 @@ export class CronJobUtils {
       status: 'RUNNING',
       namespace: cronjob.metadata?.namespace ?? '',
       created: cronjob.metadata?.creationTimestamp,
-      selected: false,
       schedule: cronjob.spec?.schedule ?? '',
       suspended: cronjob.spec?.suspend ?? false,
       lastScheduleTime: cronjob.status?.lastScheduleTime,

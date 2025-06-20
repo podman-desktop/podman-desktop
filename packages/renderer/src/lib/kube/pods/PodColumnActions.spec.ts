@@ -28,7 +28,6 @@ test('Expect action buttons', async () => {
   const pod: PodUI = {
     name: '',
     status: '',
-    selected: false,
     containers: [],
     namespace: '',
   };

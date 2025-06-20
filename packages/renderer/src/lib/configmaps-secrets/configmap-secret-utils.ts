@@ -48,7 +48,6 @@ export class ConfigMapSecretUtils {
       namespace: storage.metadata?.namespace ?? '',
       status: 'RUNNING',
       keys,
-      selected: false,
       type,
       created,
     };

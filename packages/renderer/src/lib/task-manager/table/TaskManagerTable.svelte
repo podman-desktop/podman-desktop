@@ -10,9 +10,10 @@ import TaskManagerTableProgressColumn from './TaskManagerTableProgressColumn.sve
 interface Props {
   tasks: TaskInfoUI[];
   selectedItemsNumber?: number;
+  selected: Set<string>;
 }
 
-let { tasks, selectedItemsNumber = $bindable() }: Props = $props();
+let { tasks, selectedItemsNumber = $bindable(), selected = $bindable() }: Props = $props();
 
 const nameColumn = new TableColumn<TaskInfoUI, string>('Name', {
   width: '3fr',
@@ -46,17 +47,14 @@ const row = new TableRow<TaskInfoUI>({
   selectable: (task): boolean => task.state === 'completed',
   disabledText: 'Task is still running',
 });
-
-function key(task: TaskInfoUI): string {
-  return task.id;
-}
 </script>
 
 <Table
   bind:selectedItemsNumber={selectedItemsNumber}
+  bind:selected={selected}
   kind="tasks"
   data={tasks}
-  key={key}
+  key={(task: TaskInfoUI): string => task.id}
   label={(task: TaskInfoUI): string => task.name}
   columns={columns}
   row={row}

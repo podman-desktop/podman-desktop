@@ -47,7 +47,6 @@ const container: ContainerInfoUI = {
     type: ContainerGroupInfoTypeUI.STANDALONE,
     id: 'sha256:1234567890123',
   },
-  selected: false,
   created: 0,
   labels: {},
   imageBase64RepoTag: '',
@@ -55,8 +54,6 @@ const container: ContainerInfoUI = {
 
 const pod: ContainerGroupInfoUI = {
   type: ContainerGroupInfoTypeUI.POD,
-  expanded: false,
-  selected: false,
   allContainersCount: 0,
   containers: [],
   name: 'my-pod',
@@ -67,8 +64,6 @@ const pod: ContainerGroupInfoUI = {
 
 const compose: ContainerGroupInfoUI = {
   type: ContainerGroupInfoTypeUI.COMPOSE,
-  expanded: false,
-  selected: false,
   allContainersCount: 0,
   containers: [],
   name: 'my-compose',

@@ -32,7 +32,6 @@ const cronjob: CronJobUI = {
   name: 'my-cronjob',
   status: 'RUNNING',
   namespace: '',
-  selected: false,
   schedule: '',
   suspended: false,
   lastScheduleTime: new Date(),
