@@ -1,3 +1,7 @@
+<!--
+    @component
+    @deprecated
+-->
 <style>
 .grid-table {
   display: grid;
