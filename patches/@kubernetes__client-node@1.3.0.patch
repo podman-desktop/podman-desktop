@@ -1,0 +1,44 @@
+diff --git a/dist/object.js b/dist/object.js
+index f6ff4b5d2d21579b32b895ec13ce3c64b04a2014..69a0dbbf95769810703a0c774e69a74ac0cc4ebd 100644
+--- a/dist/object.js
++++ b/dist/object.js
+@@ -58,11 +58,11 @@ export class KubernetesObjectApi {
+         if (fieldManager !== undefined) {
+             requestContext.setQueryParam('fieldManager', ObjectSerializer.serialize(fieldManager, 'string'));
+         }
+-        const type = await this.getSerializationType(spec.apiVersion, spec.kind);
++
+         // Body Params
+         const contentType = ObjectSerializer.getPreferredMediaType([]);
+         requestContext.setHeaderParam('Content-Type', contentType);
+-        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, type), contentType);
++        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, 'any'), contentType);
+         requestContext.setBody(serializedBody);
+         return this.requestPromise(requestContext);
+     }
+@@ -166,9 +166,9 @@ export class KubernetesObjectApi {
+         if (force !== undefined) {
+             requestContext.setQueryParam('force', ObjectSerializer.serialize(force, 'boolean'));
+         }
+-        const type = await this.getSerializationType(spec.apiVersion, spec.kind);
++
+         // Body Params
+-        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, type), 
++        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, 'any'), 
+         // TODO: use the patch content type once ObjectSerializer supports it.
+         'application/json');
+         requestContext.setBody(serializedBody);
+@@ -300,11 +300,11 @@ export class KubernetesObjectApi {
+         if (fieldManager !== undefined) {
+             requestContext.setQueryParam('fieldManager', ObjectSerializer.serialize(fieldManager, 'string'));
+         }
+-        const type = await this.getSerializationType(spec.apiVersion, spec.kind);
++
+         // Body Params
+         const contentType = ObjectSerializer.getPreferredMediaType([]);
+         requestContext.setHeaderParam('Content-Type', contentType);
+-        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, type), contentType);
++        const serializedBody = ObjectSerializer.stringify(ObjectSerializer.serialize(spec, 'any'), contentType);
+         requestContext.setBody(serializedBody);
+         return this.requestPromise(requestContext);
+     }
