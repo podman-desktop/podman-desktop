@@ -2,8 +2,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
-import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
+
+import OptimizedImage from '../../components/OptimizedImage';
 
 function FeatureManageContainers(): JSX.Element {
   return (
@@ -20,7 +21,7 @@ function FeatureManageContainers(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <ThemedImage
+            <OptimizedImage
               className="py-4"
               alt="Manage containers"
               sources={{
@@ -40,7 +41,7 @@ function FeatureManageImages(): JSX.Element {
     <section className="text-charcoal-300 bg-zinc-100 dark:text-gray-700 dark:bg-charcoal-800 body-font">
       <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
         <div className="w-5/6 mb-10 md:mb-0">
-          <ThemedImage
+          <OptimizedImage
             className="py-4"
             alt="Pull image and manage registries"
             sources={{
@@ -88,7 +89,7 @@ function FeatureManagementFromTrayIcon(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <ThemedImage
+            <OptimizedImage
               className="rounded-lg shadow-lg md:mx-16 lg:mx-20"
               alt="Manage Podman Machine"
               sources={{
@@ -109,7 +110,7 @@ function FeatureManageResources(): JSX.Element {
       <section className="text-charcoal-300 bg-zinc-100 dark:bg-charcoal-800 dark:text-gray-700 body-font">
         <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <ThemedImage
+            <OptimizedImage
               className="py-4"
               alt="Manage Podman Machine"
               sources={{
@@ -157,7 +158,7 @@ function FeatureManagePods(): JSX.Element {
             </p>
           </div>
           <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-            <ThemedImage
+            <OptimizedImage
               className="py-4"
               alt="Manage Pods"
               sources={{
@@ -177,7 +178,7 @@ function FeatureDDExtensions(): JSX.Element {
     <section className="text-charcoal-300 bg-zinc-100 dark:bg-charcoal-800 dark:text-gray-700 body-font">
       <div className="container mx-auto flex px-5 py-24 md:flex-row flex-col items-center">
         <div className="lg:w-5/6 md:w-4/5 w-5/6 flex flex:col gap-10">
-          <ThemedImage
+          <OptimizedImage
             className="py-4"
             alt="Pull image and manage registries"
             sources={{
