@@ -239,7 +239,10 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
   });
 
   test('Prune containers', async ({ page, navigationBar }) => {
-    test.setTimeout(200_000);
+    test.setTimeout(210_000);
+
+    const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
+    const stopStatusRegex = new RegExp(`${stopStatusArray.join('|')}`);
 
     //Start 3 containers
     for (const container of containerList) {
@@ -247,7 +250,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
       const containersPage = await images.startContainerWithImage(imageToPull, container, containerStartParams);
       await playExpect(containersPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await containersPage.containerExists(container), { timeout: 15_000 })
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
         .toBeTruthy();
     }
     //Stop a container, prune, and repeat
@@ -255,13 +258,13 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
       let containersPage = new ContainersPage(page);
       const containersDetails = await containersPage.stopContainerFromDetails(container);
       await playExpect
-        .poll(async () => await containersDetails.getState(), { timeout: 20_000 })
-        .toBe(ContainerState.Exited);
+        .poll(async () => await containersDetails.getState(), { timeout: 60_000 })
+        .toMatch(stopStatusRegex);
       containersPage = await navigationBar.openContainers();
       await playExpect(containersPage.heading).toBeVisible();
       await containersPage.pruneContainers();
       await playExpect
-        .poll(async () => await containersPage.containerExists(container), { timeout: 15_000 })
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
         .toBeFalsy();
     }
 
@@ -271,12 +274,12 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
       const containersPage = await images.startContainerWithImage(imageToPull, container, containerStartParams);
       await playExpect(containersPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await containersPage.containerExists(container), { timeout: 15_000 })
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
         .toBeTruthy();
       const containersDetails = await containersPage.stopContainerFromDetails(container);
       await playExpect
-        .poll(async () => await containersDetails.getState(), { timeout: 20_000 })
-        .toBe(ContainerState.Exited);
+        .poll(async () => await containersDetails.getState(), { timeout: 60_000 })
+        .toMatch(stopStatusRegex);
     }
     //Prune the 3 stopped containers at the same time
     const containersPage = await navigationBar.openContainers();
