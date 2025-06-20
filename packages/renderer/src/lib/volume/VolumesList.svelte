@@ -12,6 +12,7 @@ import {
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
@@ -35,6 +36,8 @@ $: searchPattern.set(searchTerm);
 
 let volumes: VolumeInfoUI[] = [];
 let enginesList: EngineInfoUI[];
+
+let selected = new SvelteSet<string>();
 
 $: providerConnections = $providerInfos
   .map(provider => provider.containerConnections)
@@ -72,7 +75,11 @@ onMount(async () => {
         currentVolume => currentVolume.name === volume.name && currentVolume.engineId === volume.engineId,
       );
       if (matchingVolume) {
-        volume.selected = matchingVolume.selected;
+        if (selected.has(key(matchingVolume))) {
+          selected.add(key(volume));
+        } else {
+          selected.delete(key(volume));
+        }
       }
     });
     volumes = computedVolumes;
@@ -89,7 +96,7 @@ onDestroy(() => {
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
 async function deleteSelectedVolumes(): Promise<void> {
-  const selectedVolumes = volumes.filter(volume => volume.selected);
+  const selectedVolumes = volumes.filter(volume => selected.has(key(volume)));
 
   if (selectedVolumes.length === 0) {
     return;
@@ -127,7 +134,6 @@ function gotoCreateVolume(): void {
 }
 
 let selectedItemsNumber: number;
-let table: Table;
 
 let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',
@@ -174,6 +180,10 @@ const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
 });
+
+function key(volume: VolumeInfoUI): string {
+  return `${volume.engineId}:${volume.name}`;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
@@ -213,13 +223,14 @@ const row = new TableRow<VolumeInfoUI>({
   <div class="flex min-w-full h-full">
     <Table
       kind="volume"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={volumes}
       columns={columns}
+      bind:selected={selected}
+      key={key}
+      label={(volume: VolumeInfoUI): string => volume.name}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if providerConnections.length === 0}

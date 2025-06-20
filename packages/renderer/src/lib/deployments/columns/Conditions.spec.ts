@@ -32,7 +32,6 @@ function createDeploymentUI(conditions: DeploymentCondition[]): DeploymentUI {
     namespace: '',
     replicas: 0,
     ready: 0,
-    selected: false,
     conditions: conditions,
   };
 }

@@ -41,7 +41,6 @@ const PODMAN_POD: PodInfoUI = {
   status: 'Running',
   age: '1h',
   created: '2021-01-01T00:00:00Z',
-  selected: false,
   containers: [
     {
       Id: 'fakecontainer',

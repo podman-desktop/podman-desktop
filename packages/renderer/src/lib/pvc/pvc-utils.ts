@@ -53,7 +53,6 @@ export class PVCUtils {
       created,
       storageClass: pvc.spec?.storageClassName ?? '',
       accessModes: pvc.spec?.accessModes ?? [],
-      selected: false,
       size,
     };
   }

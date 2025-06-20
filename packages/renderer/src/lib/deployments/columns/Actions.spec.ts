@@ -32,7 +32,6 @@ test('Expect action buttons', async () => {
     namespace: '',
     replicas: 0,
     ready: 0,
-    selected: false,
     conditions: [],
   };
 

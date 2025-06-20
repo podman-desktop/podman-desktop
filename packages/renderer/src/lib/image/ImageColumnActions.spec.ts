@@ -36,7 +36,6 @@ const image: ImageInfoUI = {
   size: 0,
   humanSize: '',
   base64RepoTag: 'repoTag',
-  selected: false,
   status: 'UNUSED',
   icon: undefined,
   badges: [],

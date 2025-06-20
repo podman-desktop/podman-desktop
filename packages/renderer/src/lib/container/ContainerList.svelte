@@ -12,6 +12,7 @@ import {
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import { get, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
@@ -51,6 +52,9 @@ const containerUtils = new ContainerUtils();
 let openChoiceModal = false;
 let enginesList: EngineInfoUI[];
 
+// object selected
+let selected: Set<string> = new SvelteSet();
+
 // groups of containers that will be displayed
 let containerGroups: ContainerGroupInfoUI[] = [];
 let viewContributions: ViewInfoUI[] = [];
@@ -71,7 +75,9 @@ $: providerConnections = $providerInfos
 
 // filter containers by group type pod
 function filterContainersByGroupTypePod(): ContainerGroupInfoUI[] {
-  return containerGroups.filter(group => group.type === ContainerGroupInfoTypeUI.POD).filter(pod => pod.selected);
+  return containerGroups
+    .filter(group => group.type === ContainerGroupInfoTypeUI.POD)
+    .filter(pod => selected.has(key(pod)));
 }
 
 // filter containers by group type different than pod
@@ -79,7 +85,7 @@ function filterContainersByGroupTypeNotPod(): ContainerInfoUI[] {
   return containerGroups
     .filter(group => group.type !== ContainerGroupInfoTypeUI.POD)
     .flatMap(group => group.containers)
-    .filter(container => container.selected);
+    .filter(container => selected.has(key(container)));
 }
 
 // delete the items selected in the list
@@ -201,7 +207,7 @@ function createPodFromContainers(): void {
   const selectedContainers = containerGroups
     .map(group => group.containers)
     .flat()
-    .filter(container => container.selected);
+    .filter(container => selected.has(key(container)));
 
   const podUtils = new PodUtils();
 
@@ -308,15 +314,12 @@ function updateContainers(
   computedContainerGroups.forEach(group => {
     const matchingGroup = containerGroups.find(currentGroup => currentGroup.name === group.name);
     if (matchingGroup) {
-      group.selected = matchingGroup.selected;
-      group.expanded = matchingGroup.expanded;
       group.containers.forEach(container => {
         const matchingContainer = matchingGroup.containers.find(
           currentContainer => currentContainer.id === container.id,
         );
         if (matchingContainer) {
           container.actionError = matchingContainer.actionError;
-          container.selected = matchingContainer.selected;
         }
       });
     }
@@ -444,6 +447,15 @@ let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[];
 $: containersAndGroups = containerGroups.map(group =>
   group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group,
 );
+
+/**
+ * Utility method for the Table component
+ * Given an object return a unique key
+ * @param object
+ */
+function key(object: ContainerInfoUI | ContainerGroupInfoUI): string {
+  return object.id;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
@@ -519,12 +531,13 @@ $: containersAndGroups = containerGroups.map(group =>
       {:else}
         <Table
           kind="container"
-          bind:selectedItemsNumber={selectedItemsNumber}
           data={containersAndGroups}
           columns={columns}
+          bind:selected={selected}
           row={row}
-          defaultSortColumn="Name"
-          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+          key={key}
+          bind:selectedItemsNumber={selectedItemsNumber}
+          defaultSortColumn="Name">
         </Table>
       {/if}
     </div>

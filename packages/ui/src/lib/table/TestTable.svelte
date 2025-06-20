@@ -7,7 +7,6 @@ import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-let table: Table;
 let selectedItemsNumber: number;
 
 const dispatch = createEventDispatcher<{ update: string }>();
@@ -75,13 +74,13 @@ const row = new Row<Person>({
 
 <Table
   kind="people"
-  bind:this={table}
   bind:selectedItemsNumber={selectedItemsNumber}
+  key={(person: Person): string => String(person.id)}
+  label={(person: Person): string => person.name}
   data={people}
   columns={columns}
   row={row}
-  defaultSortColumn="Id"
-  on:update>
+  defaultSortColumn="Id">
 </Table>
 
 <!-- Dummy component to check if the table component is not updating this object as it contains grid-table css property -->

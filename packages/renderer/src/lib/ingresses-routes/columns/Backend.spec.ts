@@ -52,7 +52,6 @@ test('Expect simple column styling with single path ingress', async () => {
         },
       },
     ],
-    selected: false,
   };
   render(Backend, { object: ingressUI });
 
@@ -96,7 +95,6 @@ test('Expect simple column styling with multiple paths ingress', async () => {
         },
       },
     ],
-    selected: false,
   };
   render(Backend, { object: ingressUI });
 
@@ -121,7 +119,6 @@ test('Expect simple column styling with route', async () => {
       kind: 'Service',
       name: 'service',
     },
-    selected: false,
     tlsEnabled: false,
   };
   render(Backend, { object: routeUI });
