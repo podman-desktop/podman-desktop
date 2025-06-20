@@ -30,7 +30,6 @@ test('Expect action buttons', async () => {
     name: 'my-service',
     status: 'RUNNING',
     namespace: '',
-    selected: false,
     type: '',
     clusterIP: '',
     ports: '',

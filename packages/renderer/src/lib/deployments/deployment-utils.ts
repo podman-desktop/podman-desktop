@@ -51,7 +51,6 @@ export class DeploymentUtils {
       replicas: deployment.status?.replicas ?? 0,
       // ready pods
       ready: deployment.status?.readyReplicas ?? 0,
-      selected: false,
       conditions: conditions,
     };
   }

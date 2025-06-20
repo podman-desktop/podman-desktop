@@ -33,7 +33,6 @@ function createJobUI(condition: JobCondition): JobUI {
     condition,
     succeeded: 0,
     completions: 0,
-    selected: false,
   };
 }
 

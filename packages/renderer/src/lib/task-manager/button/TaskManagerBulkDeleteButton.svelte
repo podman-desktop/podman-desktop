@@ -8,13 +8,14 @@ import { filtered } from '/@/stores/tasks';
 interface Props {
   title: string;
   bulkOperationTitle: string;
+  selected: Set<string>;
 }
-const { title, bulkOperationTitle }: Props = $props();
+const { title, bulkOperationTitle, selected }: Props = $props();
 
 let bulkDeleteInProgress: boolean = $state(false);
 
 async function deleteSelectedTasks(): Promise<void> {
-  const selectedTasks = $filtered.filter(task => task.selected);
+  const selectedTasks = $filtered.filter(task => selected.has(task.id));
   if (selectedTasks.length === 0) {
     return;
   }

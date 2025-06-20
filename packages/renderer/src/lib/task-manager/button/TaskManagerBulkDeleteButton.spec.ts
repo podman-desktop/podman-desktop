@@ -42,21 +42,18 @@ const selectedTask1: TaskInfoUI = {
   name: 'Completed Task 1',
   state: 'completed',
   status: 'success',
-  selected: true,
 } as unknown as TaskInfoUI;
 const selectedTask2: TaskInfoUI = {
   id: '2',
   name: 'Completed Task 2',
   state: 'completed',
   status: 'success',
-  selected: true,
 } as unknown as TaskInfoUI;
 const unselectedTask: TaskInfoUI = {
   id: '3',
   name: 'Completed Task 3',
   state: 'completed',
   status: 'success',
-  selected: false,
 } as unknown as TaskInfoUI;
 
 const title = 'bulk delete main title';
@@ -72,7 +69,11 @@ test('Expect bulk button is bringing confirmation but not deleting anything', as
   // return No for the confirmation
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
-  render(TaskManagerBulkDeleteButton, { title, bulkOperationTitle });
+  render(TaskManagerBulkDeleteButton, {
+    title,
+    bulkOperationTitle,
+    selected: new Set<string>([selectedTask1.id, selectedTask2.id]),
+  });
   // expect the button is there
   const bulkButton = screen.getByRole('button', { name: title });
   expect(bulkButton).toBeInTheDocument();
@@ -93,7 +94,11 @@ test('Expect delete is called after confirming', async () => {
   // return Yes for the confirmation
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
-  render(TaskManagerBulkDeleteButton, { title, bulkOperationTitle });
+  render(TaskManagerBulkDeleteButton, {
+    title,
+    bulkOperationTitle,
+    selected: new Set<string>([selectedTask1.id, selectedTask2.id]),
+  });
   // expect the button is there
   const bulkButton = screen.getByRole('button', { name: title });
   expect(bulkButton).toBeInTheDocument();

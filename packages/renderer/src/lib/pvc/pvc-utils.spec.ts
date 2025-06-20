@@ -60,7 +60,6 @@ describe('PVC UI conversion', () => {
     expect(pvcUI.created).toEqual('2021-06-07T18:00:00Z');
     expect(pvcUI.storageClass).toEqual('standard');
     expect(pvcUI.accessModes).toEqual(['ReadWriteOnce']);
-    expect(pvcUI.selected).toEqual(false);
     expect(pvcUI.size).toEqual('1Gi');
   });
 

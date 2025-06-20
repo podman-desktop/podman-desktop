@@ -55,7 +55,6 @@ const ingressUI: IngressUI = {
       },
     },
   ],
-  selected: false,
 };
 
 const ingressUIWith2Paths: IngressUI = {
@@ -94,7 +93,6 @@ const ingressUIWith2Paths: IngressUI = {
       },
     },
   ],
-  selected: false,
 };
 
 const routeUI: RouteUI = {
@@ -109,7 +107,6 @@ const routeUI: RouteUI = {
     name: 'service',
   },
   tlsEnabled: true,
-  selected: false,
 };
 
 test('expect basic UI conversion for ingress', async () => {
@@ -236,7 +233,6 @@ test('expect to return one hostPathObject with ingress that has one host/path', 
         },
       },
     ],
-    selected: false,
   };
   const result = ingressRouteUtils.getIngressHostPaths(ingressUI);
   expect(result.length).toBe(1);

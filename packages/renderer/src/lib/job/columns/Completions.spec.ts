@@ -30,7 +30,6 @@ test('Expect simple column styling', async () => {
     name: 'my-job',
     status: 'RUNNING',
     namespace: '',
-    selected: false,
     succeeded: 0,
     completions: 1,
     condition: 'running',

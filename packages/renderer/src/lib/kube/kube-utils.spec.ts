@@ -32,7 +32,6 @@ const deployment: KubernetesNamespacedObjectUI = {
   name: 'my-deployment',
   status: '',
   namespace: 'default',
-  selected: false,
 };
 
 test('isNamespaced is false for nodes', async () => {

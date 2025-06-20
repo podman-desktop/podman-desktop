@@ -32,7 +32,6 @@ test('Expect simple column styling', async () => {
     namespace: '',
     replicas: 0,
     ready: 0,
-    selected: false,
     conditions: [],
   };
   render(Pods, { object: deployment });

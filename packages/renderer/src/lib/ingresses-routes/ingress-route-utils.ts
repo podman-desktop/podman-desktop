@@ -36,7 +36,6 @@ export class IngressRouteUtils {
       namespace: ingress.metadata?.namespace ?? '',
       status: 'RUNNING',
       rules: ingress.spec?.rules,
-      selected: false,
       created: ingress.metadata?.creationTimestamp ? new Date(ingress.metadata.creationTimestamp) : undefined,
     };
   }
@@ -53,7 +52,6 @@ export class IngressRouteUtils {
         kind: route.spec.to.kind,
         name: route.spec.to.name,
       },
-      selected: false,
       // true if tls part is defined
       tlsEnabled: !!route.spec.tls,
       created: route.metadata?.creationTimestamp ? new Date(route.metadata.creationTimestamp) : undefined,
