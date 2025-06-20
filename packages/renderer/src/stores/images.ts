@@ -29,6 +29,7 @@ const windowEvents = [
   'extension-started',
   'extension-stopped',
   'provider-change',
+  'provider-container-connection-update-status',
   'image-pull-event',
   'image-remove-event',
   'image-build-event',
