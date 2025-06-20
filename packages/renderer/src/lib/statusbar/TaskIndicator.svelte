@@ -42,7 +42,7 @@ async function cancelTask(): Promise<void> {
 </script>
 
 {#if runningTasks.length > 0}
-  <div class="flex items-center">
+  <button class="flex items-center">
     <Tooltip top tip={title}>
       <button aria-label="Toggle Task Manager" onclick={toggleTaskManager}>
         <div class="flex items-center gap-x-2">
@@ -60,6 +60,6 @@ async function cancelTask(): Promise<void> {
         </Tooltip>
       </div>
     {/if}
-  </div>
+  </button>
 {/if}
 
