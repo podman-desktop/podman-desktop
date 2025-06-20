@@ -16,8 +16,12 @@
 import type { Stats } from 'node:fs';
 import * as fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import sharp from 'sharp';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const inputFormats = ['png', 'jpg', 'jpeg', 'webp'];
 const outputFormats = ['webp', 'avif', 'png'];
@@ -313,7 +317,10 @@ export async function generateOptimizedImage(
     const outputSize = outputBuffer.length;
     const savedBytes = originalFileStats.size - outputSize;
 
-    // Validate the file was actually written with content.
+    // Defensive check: Validate the file was actually written with expected content.
+    // While we know the buffer length, this stat check guards against rare file system
+    // write failures where writeFile() succeeds but the actual file on disk is corrupted
+    // or incomplete (e.g., disk full, file system errors, permission changes mid-write).
     try {
       const writtenStats = await fs.promises.stat(outputPath);
       if (writtenStats.size === 0) {
@@ -441,7 +448,7 @@ export async function optimizeImages(): Promise<void> {
   const rootSearchDirs = ['static', 'blog', 'docs'];
   const patterns = rootSearchDirs.map(dir => `${dir}/**/*.{${inputFormats.join(',')}}`);
   const allImages = await glob(patterns, { nodir: true });
-  const unwantedPatternRegex = /(?:optimized-images)|(?:-\d+w\.(png|jpg|jpeg|webp)$)/i;
+  const unwantedPatternRegex = /(?:optimized-images|-\d+w\.(?:png|jpg|jpeg|webp))$/i;
 
   const images = allImages.filter(imagePath => {
     return !unwantedPatternRegex.exec(imagePath);
@@ -652,8 +659,6 @@ export async function processImageFormats(
   );
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   optimizeImages().catch(console.error);
 }
-
-module.exports = optimizeImages;
