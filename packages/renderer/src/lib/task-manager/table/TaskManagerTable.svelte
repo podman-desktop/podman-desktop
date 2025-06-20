@@ -46,12 +46,18 @@ const row = new TableRow<TaskInfoUI>({
   selectable: (task): boolean => task.state === 'completed',
   disabledText: 'Task is still running',
 });
+
+function key(task: TaskInfoUI): string {
+  return task.id;
+}
 </script>
 
 <Table
   bind:selectedItemsNumber={selectedItemsNumber}
   kind="tasks"
   data={tasks}
+  key={key}
+  label={(task: TaskInfoUI): string => task.name}
   columns={columns}
   row={row}
   defaultSortColumn="Age" />

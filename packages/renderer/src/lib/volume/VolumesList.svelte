@@ -127,7 +127,6 @@ function gotoCreateVolume(): void {
 }
 
 let selectedItemsNumber: number;
-let table: Table;
 
 let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',
@@ -213,13 +212,13 @@ const row = new TableRow<VolumeInfoUI>({
   <div class="flex min-w-full h-full">
     <Table
       kind="volume"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={volumes}
       columns={columns}
+      key={(volume: VolumeInfoUI): string => volume.name /* might be an issue with mutliple engine*/ }
+      label={(volume: VolumeInfoUI): string => volume.name}
       row={row}
-      defaultSortColumn="Name"
-      on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
+      defaultSortColumn="Name">
     </Table>
 
     {#if providerConnections.length === 0}

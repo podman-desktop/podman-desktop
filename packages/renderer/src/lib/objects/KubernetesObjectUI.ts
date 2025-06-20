@@ -24,5 +24,4 @@ export interface KubernetesObjectUI {
 
 export interface KubernetesNamespacedObjectUI extends KubernetesObjectUI {
   namespace: string;
-  selected: boolean;
 }

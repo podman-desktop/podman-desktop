@@ -44,7 +44,6 @@ import TableDurationColumn from './table/DurationColumn.svelte';
 import TableSimpleColumn from './table/SimpleColumn.svelte';
 import { Column as TableColumn, Row as TableRow } from './table/table';
 import Table from './table/Table.svelte';
-import TableV5 from './table/TableV5.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
@@ -79,7 +78,6 @@ export {
   TableDurationColumn,
   TableRow,
   TableSimpleColumn,
-  TableV5,
   Tooltip,
 };
 export { isFontAwesomeIcon };

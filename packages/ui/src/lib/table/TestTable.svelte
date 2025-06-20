@@ -77,11 +77,12 @@ const row = new Row<Person>({
   kind="people"
   bind:this={table}
   bind:selectedItemsNumber={selectedItemsNumber}
+  key={(person: Person): string => String(person.id)}
+  label={(person: Person): string => person.name}
   data={people}
   columns={columns}
   row={row}
-  defaultSortColumn="Id"
-  on:update>
+  defaultSortColumn="Id">
 </Table>
 
 <!-- Dummy component to check if the table component is not updating this object as it contains grid-table css property -->
