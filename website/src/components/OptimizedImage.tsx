@@ -25,6 +25,7 @@
  */
 
 import { useColorMode } from '@docusaurus/theme-common';
+// @ts-expect-error TS-2307
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import React, { useCallback, useMemo } from 'react';
 
@@ -86,6 +87,20 @@ const DEFAULT_SIZES =
   '(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 70vw, (max-width: 1280px) 60vw, 50vw';
 
 /**
+ * Flag to track if we've already warned about conflicting props.
+ * Prevents excessive console output by ensuring the warning only shows once per session.
+ */
+let hasWarnedAboutConflictingProps = false;
+
+/**
+ * Reset the warning flag - used for testing purposes.
+ * Allows test isolation by resetting warning state between tests.
+ */
+export function resetWarningFlag(): void {
+  hasWarnedAboutConflictingProps = false;
+}
+
+/**
  * Checks if an image should be optimized based on its format and URL.
  *
  * Optimization criteria:
@@ -97,27 +112,25 @@ const DEFAULT_SIZES =
  * @returns Whether the image should be optimized
  */
 function shouldOptimizeImage(imageSrc: string): boolean {
-  if (!imageSrc || typeof imageSrc !== 'string') {
-    return false;
-  }
+  // Combined optimization criteria check.
+  // Returns true only if ALL conditions are met:
+  // - Image source exists and is non-empty
+  // - Not an external URL (http/https)
+  // - Not a data URL (already embedded)
+  // - Not a protocol-relative URL (//)
+  // - Has a supported format extension (PNG, JPG, JPEG, WebP)
 
-  /**
-   * Skip external URLs, data URLs, and protocol-relative URLs.
-   * - External: Can't optimize images we don't control.
-   * - Data URLs: Already embedded, no optimization benefit.
-   * - Protocol-relative: External URLs that inherit current protocol.
-   */
-  if (imageSrc.startsWith('http') || imageSrc.startsWith('data:') || imageSrc.startsWith('//')) {
-    return false;
-  }
+  // Strip query strings and URL fragments before checking format.
+  const cleanPath = imageSrc.split('?')[0].split('#')[0];
+  const supportedFormats: RegExp = /\.(?:png|jpg|jpeg|webp)$/i;
 
-  /**
-   * Only optimize supported formats.
-   * These raster formats benefit most from modern format conversion
-   * and responsive sizing.
-   */
-  const supportedFormats: RegExp = /\.(png|jpg|jpeg|webp)$/i;
-  return supportedFormats.test(imageSrc);
+  return Boolean(
+    imageSrc &&
+      !imageSrc.startsWith('http') &&
+      !imageSrc.startsWith('data:') &&
+      !imageSrc.startsWith('//') &&
+      supportedFormats.test(cleanPath),
+  );
 }
 
 /**
@@ -125,6 +138,7 @@ function shouldOptimizeImage(imageSrc: string): boolean {
  *
  * Transforms the original image path to point to the optimized images directory
  * while preserving the directory structure and removing the file extension.
+ * Properly handles query strings and URL fragments by stripping them before processing.
  *
  * @param imageSrc - The original image source
  * @returns The base path for optimized images
@@ -133,8 +147,72 @@ function getOptimizedImageBase(imageSrc: string): string {
   // Remove leading slash if present for consistent path handling.
   const imagePath = imageSrc.startsWith('/') ? imageSrc.slice(1) : imageSrc;
 
+  // Strip query strings and URL fragments to get clean path.
+  // Example: "image.png?v=123#section" becomes "image.png"
+  const cleanPath = imagePath.split('?')[0].split('#')[0];
+
   // Remove file extension as we'll add format-specific extensions.
-  return `optimized-images/${imagePath}`.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+  return `optimized-images/${cleanPath}`.replace(/\.(?:png|jpg|jpeg|webp)$/i, '');
+}
+
+/**
+ * Helper function to check if alt text is valid.
+ * @param alt - The alt text to validate (may be any type at runtime)
+ * @returns True if alt text is valid
+ */
+function isValidAltText(alt: unknown): alt is string {
+  return Boolean(alt && typeof alt === 'string' && alt.trim().length > 0);
+}
+
+/**
+ * Helper function to check if any image source is provided.
+ * @param src - The src prop
+ * @param darkSrc - The darkSrc prop
+ * @param sources - The sources prop
+ * @returns True if at least one image source is provided
+ */
+function hasImageSource(src?: string, darkSrc?: string, sources?: ImageSources): boolean {
+  return Boolean(src ?? darkSrc ?? sources);
+}
+
+/**
+ * Helper function to check if sources object is complete.
+ * @param sources - The sources object to validate
+ * @returns True if sources has valid light and dark properties
+ */
+function isValidSourcesObject(sources: ImageSources): boolean {
+  return Boolean(sources.light && sources.dark && sources.light.trim().length > 0 && sources.dark.trim().length > 0);
+}
+
+/**
+ * Helper function to check if props are conflicting.
+ * @param sources - The sources prop
+ * @param src - The src prop
+ * @param darkSrc - The darkSrc prop
+ * @returns True if there are conflicting props
+ */
+function hasConflictingProps(sources?: ImageSources, src?: string, darkSrc?: string): boolean {
+  return Boolean(sources && (src ?? darkSrc));
+}
+
+/**
+ * Helper function to merge className props.
+ * @param baseClassName - Base className to apply
+ * @param userClassName - User-provided className
+ * @returns Merged className string
+ */
+function mergeClassNames(baseClassName: string, userClassName?: string): string {
+  return userClassName ? `${baseClassName} ${userClassName}` : baseClassName;
+}
+
+/**
+ * Helper function to merge style props.
+ * @param baseStyle - Base style object to apply
+ * @param userStyle - User-provided style object
+ * @returns Merged style object
+ */
+function mergeStyles(baseStyle: React.CSSProperties, userStyle?: React.CSSProperties): React.CSSProperties {
+  return userStyle ? { ...baseStyle, ...userStyle } : baseStyle;
 }
 
 /**
@@ -148,37 +226,24 @@ function getOptimizedImageBase(imageSrc: string): string {
 function validateProps(props: Pick<OptimizedImageProps, 'src' | 'darkSrc' | 'sources' | 'alt'>): void {
   const { src, darkSrc, sources, alt } = props;
 
-  /**
-   * Alt text is mandatory for accessibility compliance.
-   * - Required by WCAG guidelines.
-   * - Essential for screen readers.
-   * - Important for SEO.
-   */
-  if (!alt || typeof alt !== 'string' || alt.trim() === '') {
+  // Alt text validation - mandatory for accessibility compliance.
+  if (isValidAltText(alt) === false) {
     throw new Error('OptimizedImage: alt prop is required and must be a non-empty string for accessibility');
   }
 
-  /**
-   * At least one image source must be provided.
-   * Prevents rendering empty images.
-   */
-  if (!src && !darkSrc && !sources) {
+  // Image source validation - at least one source must be provided.
+  if (!hasImageSource(src, darkSrc, sources)) {
     throw new Error('OptimizedImage: requires either src, darkSrc, or sources prop');
   }
 
-  /**
-   * Warn about conflicting props.
-   * Sources prop takes precedence over src/darkSrc.
-   */
-  if (sources && (src || darkSrc)) {
+  // Conflicting props warning - sources prop takes precedence over src/darkSrc.
+  if (hasConflictingProps(sources, src, darkSrc) && !hasWarnedAboutConflictingProps) {
     console.warn('OptimizedImage: when sources prop is provided, src and darkSrc props are ignored');
+    hasWarnedAboutConflictingProps = true;
   }
 
-  /**
-   * Validate sources object completeness.
-   * Theme switching requires both light and dark variants.
-   */
-  if (sources && (!sources.light || !sources.dark || sources.light.trim() === '' || sources.dark.trim() === '')) {
+  // Sources object validation - theme switching requires both light and dark variants.
+  if (sources && !isValidSourcesObject(sources)) {
     throw new Error('OptimizedImage: sources prop must contain both light and dark properties with valid image paths');
   }
 }
@@ -200,19 +265,16 @@ function resolveImageSource(
   props: Pick<OptimizedImageProps, 'src' | 'darkSrc' | 'sources'>,
 ): string {
   const { src, darkSrc, sources } = props;
+  const isDarkMode = colorMode === 'dark';
 
-  // Sources prop takes highest priority (explicit theme mapping).
-  if (sources) {
-    return sources[colorMode === 'dark' ? 'dark' : 'light'];
-  }
-
-  // darkSrc prop for simple theme switching.
-  if (colorMode === 'dark' && darkSrc) {
-    return darkSrc;
-  }
-
-  // Fallback to src prop.
-  return src ?? '';
+  // Determine the image source based on priority order.
+  return sources
+    ? sources[isDarkMode ? 'dark' : 'light']
+    : // Highest priority: sources prop
+      isDarkMode && darkSrc
+      ? darkSrc
+      : // Second priority: darkSrc in dark mode
+        (src ?? ''); // Fallback: src prop or empty string
 }
 
 /**
@@ -244,10 +306,8 @@ export default function OptimizedImage({
   // Validate props early to provide clear error messages.
   validateProps({ src, darkSrc, sources, alt });
 
-  /**
-   * Resolve the image source based on theme.
-   * Memoized to prevent unnecessary recalculations when other props change.
-   */
+  // Resolve the image source based on theme.
+  // Memoized to prevent unnecessary recalculations when other props change.
   const imageSrc = useMemo(
     () => resolveImageSource(colorMode, { src, darkSrc, sources }),
     [colorMode, src, darkSrc, sources],
@@ -256,92 +316,66 @@ export default function OptimizedImage({
   // Get the final URL using Docusaurus' base URL resolution.
   const originalUrl = useBaseUrl(imageSrc);
 
-  /**
-   * Error handler with retry logic.
-   * Provides graceful fallback when optimized images fail to load.
-   * Memoized to prevent re-creating the function on every render.
-   */
+  // Error handler with retry logic and infinite loop prevention.
+  // Provides graceful fallback when optimized images fail to load.
+  // Includes guard to prevent repeated error handling if original image also fails.
+  // Memoized to prevent re-creating the function on every render.
   const handleImageError = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>): void => {
       const img = e.target as HTMLImageElement;
 
-      // If we're already showing the original, log the error.
-      if (img.src !== originalUrl) {
-        console.warn(`OptimizedImage: Failed to load optimized image ${img.src}, falling back to original`);
-        img.src = originalUrl; // Fallback to original image
+      // Check if we're already showing the original image.
+      if (img.src === originalUrl) {
+        // Original image failed - prevent infinite loop by removing error handler.
+        console.error(`OptimizedImage: Failed to load original image ${originalUrl}. No further fallbacks available.`);
+        img.onerror = null; // Remove error handler to prevent infinite loop
+
+        // Optional: Set a transparent 1x1 pixel data URL as ultimate fallback.
+        img.src =
+          'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+';
       } else {
-        console.error(`OptimizedImage: Failed to load image ${originalUrl}`);
+        // Optimized image failed - fallback to original.
+        console.warn(`OptimizedImage: Failed to load optimized image ${img.src}, falling back to original`);
+        img.src = originalUrl;
       }
     },
     [originalUrl],
   );
 
-  /**
-   * Skip optimization for unsuitable images.
-   * Renders a simple img element for:
-   * - External URLs.
-   * - Data URLs.
-   * - Unsupported formats.
-   * - SVG/GIF images.
-   */
-  if (!shouldOptimizeImage(imageSrc)) {
-    return (
-      <img
-        src={originalUrl}
-        alt={alt}
-        title={title}
-        loading={loading}
-        className={className}
-        style={style}
-        onError={handleImageError}
-      />
-    );
-  }
+  // Determine if image should be optimized.
+  const shouldOptimize = shouldOptimizeImage(imageSrc);
 
-  /**
-   * Generate optimized image paths.
-   * Memoized to avoid recalculating expensive path operations.
-   */
-  const optimizedBase = useMemo(() => getOptimizedImageBase(imageSrc), [imageSrc]);
-  const optimizedBaseUrl = useBaseUrl(optimizedBase);
+  // Generate optimized image data only if needed.
+  // Memoized to avoid expensive calculations for non-optimizable images.
+  const optimizedImageData = useMemo(() => {
+    // Generate optimization data based on shouldOptimize flag.
+    const optimizedBase = shouldOptimize ? getOptimizedImageBase(imageSrc) : '';
+    const optimizedBaseUrl = shouldOptimize ? useBaseUrl(optimizedBase) : '';
 
-  /**
-   * Generate srcsets for different formats.
-   * Creates responsive srcsets for AVIF, WebP, and PNG formats.
-   * Memoized as this is an expensive string generation operation.
-   */
-  const srcSets = useMemo(() => {
     const generateSrcSet = (format: string): string =>
-      RESPONSIVE_WIDTHS.map(w => `${optimizedBaseUrl}-${w}w.${format} ${w}w`).join(', ');
+      shouldOptimize ? RESPONSIVE_WIDTHS.map(w => `${optimizedBaseUrl}-${w}w.${format} ${w}w`).join(', ') : '';
 
-    return {
-      avif: generateSrcSet('avif'), // Best compression
-      webp: generateSrcSet('webp'), // Good compression, wide support
-      png: generateSrcSet('png'), // Universal fallback
-    };
-  }, [optimizedBaseUrl]);
+    return shouldOptimize
+      ? {
+          baseUrl: optimizedBaseUrl,
+          srcSets: {
+            avif: generateSrcSet('avif'), // Best compression
+            webp: generateSrcSet('webp'), // Good compression, wide support
+            png: generateSrcSet('png'), // Universal fallback
+          },
+        }
+      : null;
+  }, [shouldOptimize, imageSrc]);
 
   /**
-   * Render the optimized picture element.
-   *
-   * Structure:
-   * 1. AVIF sources (best compression).
-   * 2. WebP sources (good compression, wide support).
-   * 3. PNG sources (universal fallback).
-   * 4. img element (final fallback with original image).
+   * Render appropriate image element based on optimization suitability.
+   * Single return point that handles both optimized and non-optimized cases.
    */
-  return (
+  return shouldOptimize && optimizedImageData ? (
     <picture className={className} style={style}>
-      {/* AVIF sources - next-generation format with excellent compression. */}
-      <source type="image/avif" srcSet={srcSets.avif} sizes={sizes} />
-
-      {/* WebP sources - modern format with good browser support. */}
-      <source type="image/webp" srcSet={srcSets.webp} sizes={sizes} />
-
-      {/* PNG sources - traditional format for wide compatibility. */}
-      <source type="image/png" srcSet={srcSets.png} sizes={sizes} />
-
-      {/* Fallback img element - works in all browsers. */}
+      <source type="image/avif" srcSet={optimizedImageData.srcSets.avif} sizes={sizes} />
+      <source type="image/webp" srcSet={optimizedImageData.srcSets.webp} sizes={sizes} />
+      <source type="image/png" srcSet={optimizedImageData.srcSets.png} sizes={sizes} />
       <img
         src={originalUrl}
         alt={alt}
@@ -349,9 +383,19 @@ export default function OptimizedImage({
         loading={loading}
         sizes={sizes}
         onError={handleImageError}
-        className="inline-block"
-        style={{ maxWidth: '100%', height: 'auto' }}
+        className={mergeClassNames('inline-block', className)}
+        style={mergeStyles({ maxWidth: '100%', height: 'auto' }, style)}
       />
     </picture>
+  ) : (
+    <img
+      src={originalUrl}
+      alt={alt}
+      title={title}
+      loading={loading}
+      className={className}
+      style={style}
+      onError={handleImageError}
+    />
   );
 }
