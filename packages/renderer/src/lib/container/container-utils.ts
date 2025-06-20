@@ -234,8 +234,8 @@ export class ContainerUtils {
           allContainersCount: 1,
         });
       } else {
-        if (!groups.has(group.name)) {
-          groups.set(group.name, {
+        if (!groups.has(group.id)) {
+          groups.set(group.id, {
             selected: false,
             expanded: true,
             name: group.name,
@@ -248,7 +248,7 @@ export class ContainerUtils {
             containers: [],
           });
         }
-        groups.get(group.name)?.containers.push(containerInfo);
+        groups.get(group.id)?.containers.push(containerInfo);
       }
     });
     groups.forEach(group => (group.allContainersCount = group.containers.length));

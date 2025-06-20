@@ -112,10 +112,42 @@ test('container group status should be running when all compose containers are r
     containerUtils.getContainerInfoUI(containerInfo),
     containerUtils.getContainerInfoUI(containerInfo2),
   ]);
+  expect(groups).toHaveLength(1);
   const group = groups[0];
   expect(group.name).toBe(groupName);
   expect(group.type).toBe(ContainerGroupInfoTypeUI.COMPOSE);
   expect(group.status).toBe('RUNNING');
+});
+
+test('same group name but different engine is should results in two groups', async () => {
+  const groupName = 'compose-group';
+  const containerInfo = {
+    Id: 'container1',
+    Image: 'docker.io/kindest/node:foobar',
+    Labels: { 'com.docker.compose.project': groupName },
+    Names: ['container1'],
+    State: 'RUNNING',
+    ImageID: 'sha256:dummy-sha256',
+    engineId: 'docker',
+  } as unknown as ContainerInfo;
+
+  const groups = containerUtils.getContainerGroups([
+    containerUtils.getContainerInfoUI({
+      ...containerInfo,
+      engineId: 'podman-1',
+    }),
+    containerUtils.getContainerInfoUI({
+      ...containerInfo,
+      engineId: 'podman-2',
+    }),
+  ]);
+  expect(groups).toHaveLength(2);
+  const [groupA, groupB] = groups;
+
+  expect(groupA.name).toBe(groupName);
+  expect(groupB.name).toBe(groupName);
+
+  expect(groupA.id).not.eq(groupB.id);
 });
 
 test('container group status should be stopped when any compose container is stopped', async () => {
