@@ -4,7 +4,7 @@
 }
 </style>
 
-<script lang="ts">
+<script lang="ts" generics="T extends { selected?: boolean; name?: string }">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
@@ -17,10 +17,9 @@ import type { Column, Row } from './table';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let columns: Column<any>[];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let row: Row<any>;
-export let data: { selected?: boolean; name?: string }[];
+export let columns: Column<T, any>[];
+export let row: Row<T>;
+export let data: T[];
 export let defaultSortColumn: string | undefined = undefined;
 export let collapsed: string[] = [];
 
@@ -51,7 +50,7 @@ $: selectedAllCheckboxes = row.info.selectable
           }
           return accumulator;
         },
-        [] as Array<{ selected?: boolean }>,
+        [] as Array<T>,
       )
       .filter(child => row.info.selectable?.(child))
       .every(child => child.selected) &&
@@ -75,14 +74,14 @@ function toggleAll(e: CustomEvent<boolean>): void {
   data = [...data];
 }
 
-let sortCol: Column<unknown>;
+let sortCol: Column<T>;
 let sortAscending: boolean;
 
 $: if (data && sortCol) {
   sortImpl();
 }
 
-function sort(column: Column<unknown>): void {
+function sort(column: Column<T>): void {
   if (!column) {
     return;
   }
@@ -125,7 +124,7 @@ function sortImpl(): void {
 }
 
 onMount(async () => {
-  const column: Column<unknown> | undefined = columns.find(column => column.title === defaultSortColumn);
+  const column: Column<T> | undefined = columns.find(column => column.title === defaultSortColumn);
   if (column?.info.comparator) {
     sortCol = column;
     sortAscending = column.info.initialOrder ? column.info.initialOrder !== 'descending' : true;
@@ -163,7 +162,7 @@ function setGridColumns(): void {
   }
 }
 
-function objectChecked(object: { selected?: boolean }): void {
+function objectChecked(object: T): void {
   // check for children and set them to the same state
   if (row.info.children) {
     const children = row.info.children(object);
