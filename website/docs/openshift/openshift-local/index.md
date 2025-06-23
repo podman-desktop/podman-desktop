@@ -49,10 +49,9 @@ With Podman Desktop and the OpenShift Local extension, you can manage your OpenS
    1. Copy the `crc` binary to a directory in your`$PATH`, such as `/usr/local/bin`.
    1. To configure your system, run the command:
 
-      ```shell-session
-      $ crc setup
-      ```
-
+   ```shell-session
+   $ crc setup
+   ```
    1. Exit and restart Podman Desktop.
 
    </TabItem>

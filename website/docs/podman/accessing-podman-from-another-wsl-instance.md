@@ -79,25 +79,24 @@ In foldable details, you can find alternative steps for least common contexts:
    <div>
    1. Identify the sockets available in your WSL distribution.
 
-      The Podman machine shares sockets in a `/mnt/wsl/podman-sockets/` subdirectory named after the Podman machine name.
+   The Podman machine shares sockets in a `/mnt/wsl/podman-sockets/` subdirectory named after the Podman machine name.
 
-      In your WSL session, list the available sockets:
+   In your WSL session, list the available sockets:
 
-      ```shell-session
-      $ find /mnt/wsl/podman-sockets/ -name '*.sock'
-      ```
+   ```shell-session
+   $ find /mnt/wsl/podman-sockets/ -name '*.sock'
+   ```
 
-      Each Podman Machine has a socket for:
-      - Rootful Podman: `podman-root.sock`
-      - Rootless Podman: `podman-user.sock`
+   Each Podman Machine has a socket for:
+   - Rootful Podman: `podman-root.sock`
+   - Rootless Podman: `podman-user.sock`
 
-      Sample output:
+   Sample output:
 
-      ```shell-session
-      /mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
-      /mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
-      ```
-
+   ```shell-session
+   /mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
+   /mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
+   ```
    1. Identify the socket that Podman Desktop uses.
 
       Podman Desktop defaults to rootful Podman.

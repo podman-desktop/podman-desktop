@@ -82,7 +82,7 @@ However, it does not contain additional utilities, such as Compose or Kind.
    <div>
    - When you are using a VPN, you might have problems to access, from your host, resources that the Podman Machine exposes.
 
-     To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
+   To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
 
    </div>
    </details>
@@ -166,7 +166,6 @@ Requirements:
    </summary>
    <div>
    1. Store your proxy Certificate Authorities (CA), in Privacy-Enhanced Mail (PEM) format, in the `proxy_ca.pem` file.
-
    2. Copy the certificate to the Podman machine:
 
       ```shell-session
@@ -198,10 +197,9 @@ Requirements:
    <div>
    1. Open a shell prompt on the Podman machine:
 
-      ```shell-session
-      $ podman machine ssh
-      ```
-
+   ```shell-session
+   $ podman machine ssh
+   ```
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
@@ -241,7 +239,6 @@ Requirements:
    </summary>
    <div>
    1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
-
    2. Copy the certificate to the Podman machine:
 
       ```shell-session
@@ -273,10 +270,9 @@ Requirements:
    <div>
    1. Open a shell prompt on the Podman machine:
 
-      ```shell-session
-      $ podman machine ssh
-      ```
-
+   ```shell-session
+   $ podman machine ssh
+   ```
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
