@@ -34,12 +34,12 @@ import {
   setWSLEnabled,
 } from './extension';
 import * as extension from './extension';
+import type { UpdateCheck } from './installer/podman-install';
+import { PodmanInstall } from './installer/podman-install';
 import * as compatibilityModeLib from './utils/compatibility-mode';
 import type { InstalledPodman } from './utils/podman-cli';
 import * as podmanCli from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
-import type { UpdateCheck } from './utils/podman-install';
-import { PodmanInstall } from './utils/podman-install';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
 import * as util from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';

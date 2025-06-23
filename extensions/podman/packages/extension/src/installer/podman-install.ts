@@ -39,15 +39,15 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
-import type { Installer } from '../installer/installer';
-import { MacOSInstaller } from '../installer/mac-os-installer';
-import { WinInstaller } from '../installer/win-installer';
 import * as podman5JSON from '../podman5.json';
-import { getBundledPodmanVersion } from './podman-bundled';
-import type { InstalledPodman } from './podman-cli';
-import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import type { PodmanInfo } from './podman-info';
-import { PodmanInfoImpl } from './podman-info';
+import { getBundledPodmanVersion } from '../utils/podman-bundled';
+import type { InstalledPodman } from '../utils/podman-cli';
+import { getPodmanCli, getPodmanInstallation } from '../utils/podman-cli';
+import type { PodmanInfo } from '../utils/podman-info';
+import { PodmanInfoImpl } from '../utils/podman-info';
+import type { Installer } from './installer';
+import { MacOSInstaller } from './mac-os-installer';
+import { WinInstaller } from './win-installer';
 
 export interface UpdateCheck {
   hasUpdate: boolean;

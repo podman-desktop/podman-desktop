@@ -40,12 +40,12 @@ import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-hel
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
+import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import { getSocketCompatibility } from './utils/compatibility-mode';
 import type { InstalledPodman } from './utils/podman-cli';
 import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
-import { PodmanInstall } from './utils/podman-install';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
 import {
