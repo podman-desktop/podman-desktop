@@ -51,6 +51,14 @@ class PowerShell5Client implements PowerShellClient {
     } catch (err) {
       // ignore error, this means that VirtualMachinePlatform not enabled
       telemetry['error'] = err;
+      const execError = err as extensionApi.RunError;
+      telemetry['message'] = execError.message;
+      telemetry['exitCode'] = execError.exitCode;
+      telemetry['command'] = execError.command;
+      telemetry['stdout'] = execError.stdout;
+      telemetry['stderr'] = execError.stderr;
+      telemetry['cancelled'] = execError.cancelled;
+      telemetry['killed'] = execError.killed;
     }
     const telemetryLogger = extensionApi.env.createTelemetryLogger();
     telemetryLogger.logError('check.isVirtualMachineAvailable', telemetry);
