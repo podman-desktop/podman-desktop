@@ -24,7 +24,6 @@ Consider creating a custom Lima instance to:
 #### Procedure
 
 1. In a terminal, create the Lima instance.
-
    - To create a single-node Kubernetes cluster running [k3s](https://k3s.io/):
 
      ```shell-session
@@ -44,17 +43,13 @@ Consider creating a custom Lima instance to:
      ```
 
 2. Wait for the instance to start, and restart the Lima extension.
-
    - Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Preferences > Extension: Lima** to change the instance name and type.
-
      - k3s
-
        - Type: kubernetes
        - Name: k3s
          ![Lima preferences k3s](img/lima-preferences-k3s.png)
 
      - k8s
-
        - Type: kubernetes
        - Name: k8s
          ![Lima preferences k8s](img/lima-preferences-k8s.png)
@@ -64,7 +59,6 @@ Consider creating a custom Lima instance to:
 #### Verification
 
 1. When the installation is done, the location of the KUBECONFIG file is printed. See [Configuring access to a Kubernetes cluster](/docs/kubernetes/existing-kubernetes).
-
    - Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Preferences > Kubernetes** to set the path of the file.
 
 1. Use the `kubectl.lima` wrapper script to connect to the cluster:

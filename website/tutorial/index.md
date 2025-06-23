@@ -18,7 +18,6 @@ Before going through each tutorial, familiarize yourself with the key UI compone
 
 2. **Accounts**: Provides easy access to the **Authentication** settings. You can add an authentication provider using the **Red Hat Authentication** extension.
 3. **Settings**: Helps you to:
-
    - Create resources for your development environment
    - Configure proxy URLs
    - Configure a registry for secure storage and distribution of containers and cloud-native artifacts
@@ -29,7 +28,6 @@ Before going through each tutorial, familiarize yourself with the key UI compone
    - Configure a Docker-compatible environment
 
 4. **Status bar**: Provides the following capabilities:
-
    - Set your Kubernetes context
    - Share your feedback
    - Troubleshoot your container connections and view logs

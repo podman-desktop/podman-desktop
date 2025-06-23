@@ -223,7 +223,6 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
    ```sh
    $ getenforce
    ```
-
    - If `getenforce` is not found or its output is `Permissive` or `Disabled`, no action is needed.
    - If the output is `Enforcing`, configure SELinux to enable device access for containers:
 

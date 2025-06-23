@@ -13,7 +13,6 @@ Podman Desktop and Podman have many features allowing easy migration from contai
 #### Procedure
 
 - Setup at least one Kubernetes context:
-
   - [Red Hat Developer Sandbox](/docs/openshift/developer-sandbox)
   - [Existing Kubernetes](/docs/kubernetes/existing-kubernetes)
   - [Kind](/docs/kind)

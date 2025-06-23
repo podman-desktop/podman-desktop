@@ -42,7 +42,6 @@ The Windows _Installer for restricted environments_ has all artifacts required t
 However, it does not contain additional utilities, such as Compose or Kind.
 
 1. Check that your environment has:
-
    - 6 GB RAM for the Podman Machine.
    - Windows Subsystem for Linux version 2 (WSL 2) prerequisites. See [Enabling WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install), [WSL basic commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands), and [Troubleshooting WSL 2](https://learn.microsoft.com/en-us/windows/wsl/troubleshooting#error-0x80370102-the-virtual-machine-could-not-be-started-because-a-required-feature-is-not-installed):
      - The Windows user has administrator privileges.
@@ -81,7 +80,6 @@ However, it does not contain additional utilities, such as Compose or Kind.
 
    </summary>
    <div>
-
    - When you are using a VPN, you might have problems to access, from your host, resources that the Podman Machine exposes.
 
      To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
@@ -167,7 +165,6 @@ Requirements:
 
    </summary>
    <div>
-
    1. Store your proxy Certificate Authorities (CA), in Privacy-Enhanced Mail (PEM) format, in the `proxy_ca.pem` file.
 
    2. Copy the certificate to the Podman machine:
@@ -199,7 +196,6 @@ Requirements:
 
    </summary>
    <div>
-
    1. Open a shell prompt on the Podman machine:
 
       ```shell-session
@@ -209,7 +205,6 @@ Requirements:
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
-
       - `rootless`: `$HOME/.config/containers/containers.conf`
 
       - `rootful`: `/etc/containers/containers.conf`
@@ -245,7 +240,6 @@ Requirements:
 
    </summary>
    <div>
-
    1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
 
    2. Copy the certificate to the Podman machine:
@@ -277,7 +271,6 @@ Requirements:
 
    </summary>
    <div>
-
    1. Open a shell prompt on the Podman machine:
 
       ```shell-session
@@ -287,7 +280,6 @@ Requirements:
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
-
       - `rootless`: `$HOME/.config/containers/containers.conf`
 
       - `rootful`: `/etc/containers/containers.conf`
@@ -315,7 +307,6 @@ Configure Podman:
 1. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
    The file location depends on your connection mode:
-
    - `rootless`: `$HOME/.config/containers/containers.conf`
 
    - `rootful`: `/etc/containers/containers.conf`
@@ -346,7 +337,6 @@ Configure Podman:
 #### Verification
 
 1. Podman can pull images.
-
    1. Go to **Images**.
    1. Click **Pull an image**.
    1. **Image to Pull**: Enter an image name, such as `quay.io/podman/hello`.
@@ -354,6 +344,5 @@ Configure Podman:
    1. Click **Done**.
 
 1. You can install extensions such as:
-
    - [Installing Compose](/docs/compose/setting-up-compose)
    - [Installing Kind](/docs/kind/installing).
