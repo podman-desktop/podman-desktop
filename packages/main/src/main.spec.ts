@@ -182,8 +182,7 @@ describe('ElectronApp#on window-all-closed', () => {
 });
 
 describe('AppPlugin', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const plugins: Array<new (...args: any[]) => AppPlugin> = [DefaultProtocolClient];
+  const plugins: Array<AppPlugin> = [DefaultProtocolClient.prototype];
 
   let promiseWithResolvers: PromiseWithResolvers<void>;
 
@@ -204,8 +203,7 @@ describe('AppPlugin', () => {
   test('expect AppPlugin#onReady to be called when ElectronApp#whenReady resolved', async () => {
     // expect each plugin to have been instantiated
     plugins.forEach(plugin => {
-      expect(plugin).toHaveBeenCalledOnce();
-      expect(plugin.prototype.onReady).not.toHaveBeenCalled();
+      expect(plugin.onReady).not.toHaveBeenCalled();
     });
 
     // simulate on ready
@@ -214,7 +212,7 @@ describe('AppPlugin', () => {
     await vi.waitFor(() => {
       // expect each plugin to have been instantiated
       plugins.forEach(plugin => {
-        expect(plugin.prototype.onReady).toHaveBeenCalled();
+        expect(plugin.onReady).toHaveBeenCalled();
       });
     });
   });
@@ -222,8 +220,7 @@ describe('AppPlugin', () => {
   test('expect AppPlugin#dispose to be called when ElectronApp#on("before-quit") is emitted ', async () => {
     // expect each plugin to have been instantiated
     plugins.forEach(plugin => {
-      expect(plugin).toHaveBeenCalledOnce();
-      expect(plugin.prototype.dispose).not.toHaveBeenCalled();
+      expect(plugin.dispose).not.toHaveBeenCalled();
     });
 
     const listener = getElectronAppListener('before-quit');
@@ -232,7 +229,7 @@ describe('AppPlugin', () => {
     await vi.waitFor(() => {
       // expect each plugin to be disposed
       plugins.forEach(plugin => {
-        expect(plugin.prototype.dispose).toHaveBeenCalled();
+        expect(plugin.dispose).toHaveBeenCalled();
       });
     });
   });
