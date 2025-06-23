@@ -3,9 +3,6 @@ import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-let personTable: Table;
-let bookTable: Table;
-
 type Person = {
   name: string;
 };
@@ -47,7 +44,6 @@ const rowBook = new Row<Book>({});
 
 <Table
   kind="person"
-  bind:this={personTable}
   data={persons}
   columns={columnsPerson}
   row={rowPerson}
@@ -56,7 +52,6 @@ const rowBook = new Row<Book>({});
 
 <Table
   kind="book"
-  bind:this={bookTable}
   data={books}
   columns={columnsBook}
   row={rowBook}

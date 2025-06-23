@@ -7,7 +7,6 @@ import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-let table: Table;
 let selectedItemsNumber: number;
 
 const dispatch = createEventDispatcher<{ update: string }>();
@@ -75,7 +74,6 @@ const row = new Row<Person>({
 
 <Table
   kind="people"
-  bind:this={table}
   bind:selectedItemsNumber={selectedItemsNumber}
   data={people}
   columns={columns}
