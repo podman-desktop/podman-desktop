@@ -56,6 +56,10 @@ class TestColorRegistry extends ColorRegistry {
     super.initTitlebar();
   }
 
+  override initBadge(): void {
+    super.initBadge();
+  }
+
   override initCardContent(): void {
     super.initCardContent();
   }
@@ -635,5 +639,31 @@ describe('initLabel', () => {
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
     expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(colorPalette.amber[900]);
     expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(colorPalette.amber[400]);
+  });
+});
+
+describe('badge', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    // mock the registerColor
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initBadge();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('devMode badge', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the call
+    expect(spyOnRegisterColor).toBeCalledWith('badge-devmode-extension-bg', {
+      dark: colorPalette.dustypurple[600],
+      light: colorPalette.dustypurple[600],
+    });
   });
 });
