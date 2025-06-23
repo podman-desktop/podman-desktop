@@ -485,6 +485,7 @@ test('Verify extension error leads to failed state', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -515,6 +516,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -549,6 +551,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -579,6 +582,7 @@ test('Verify extension load', async () => {
     api: {} as typeof containerDesktopAPI,
     mainPath: '',
     removable: true,
+    devMode: false,
     manifest: {
       version: '1.1',
     },
@@ -616,6 +620,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
     api: {} as typeof containerDesktopAPI,
     mainPath: '',
     removable: false,
+    devMode: false,
     manifest: {
       version: '1.1',
       contributes: {
@@ -1134,6 +1139,7 @@ test('Verify extension uri', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -1167,6 +1173,7 @@ test('Verify exports and packageJSON', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {
         foo: 'bar',
       },

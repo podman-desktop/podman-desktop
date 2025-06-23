@@ -203,6 +203,7 @@ export class ExtensionLoader {
       id: extension.id,
       path: extension.path,
       removable: extension.removable,
+      devMode: extension.devMode,
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
@@ -406,7 +407,7 @@ export class ExtensionLoader {
     analyzedExtensions.push(...analyzedFoldersExtension);
 
     const analyzedExternalExtensions = (
-      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false)))
+      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false, true)))
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedExternalExtensions);
 
@@ -442,7 +443,7 @@ export class ExtensionLoader {
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
     for (const folder of this.extensionDevelopmentFolder.getDevelopmentFolders()) {
       if (fs.existsSync(folder.path)) {
-        const analyzedExtension = await this.analyzeExtension(folder.path, false);
+        const analyzedExtension = await this.analyzeExtension(folder.path, false, true);
         if (!analyzedExtension.error) {
           analyzedExtensions.push(analyzedExtension);
         } else {
@@ -707,7 +708,9 @@ export class ExtensionLoader {
     extension.api ??= this.createApi(extension);
     const extensionWithApi = extension as AnalyzedExtensionWithApi;
     this.analyzedExtensions.set(extension.id, extensionWithApi);
-    this.extensionDevelopmentFolder.addExternalExtensionId(extension.id);
+    if (!extension.devMode) {
+      this.extensionDevelopmentFolder.addExternalExtensionId(extension.id);
+    }
     this.extensionState.delete(extension.id);
     this.extensionStateErrors.delete(extension.id);
 
@@ -751,8 +754,12 @@ export class ExtensionLoader {
     }
   }
 
-  async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtensionWithApi> {
-    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable);
+  async analyzeExtension(
+    extensionPath: string,
+    removable: boolean,
+    devMode: boolean = false,
+  ): Promise<AnalyzedExtensionWithApi> {
+    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable, devMode);
 
     const api = this.createApi(analyzedExtension);
 
@@ -1732,7 +1739,7 @@ export class ExtensionLoader {
 
     const extension = this.analyzedExtensions.get(extensionId);
     if (extension) {
-      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable);
+      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable, extension.devMode);
 
       if (!analyzedExtension.error) {
         await this.loadExtension(analyzedExtension, true);
