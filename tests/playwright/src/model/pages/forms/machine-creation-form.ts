@@ -34,7 +34,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
-  readonly providerTypeDropdown: Locator;
+  readonly providerTypeDiv: Locator;
   readonly providerTypeWslOption: Locator;
   readonly providerTypeHypervOption: Locator;
   readonly startNowCheckbox: Locator;
@@ -61,11 +61,9 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
-    this.providerTypeDropdown = this.podmanMachineConfiguration.getByRole('button', {
-      name: 'Provider Type',
-    });
-    this.providerTypeWslOption = this.providerTypeDropdown.getByRole('button', { name: 'wsl' });
-    this.providerTypeHypervOption = this.providerTypeDropdown.getByRole('button', { name: 'hyperv' });
+    this.providerTypeDiv = this.podmanMachineConfiguration.getByLabel('Provider Type');
+    this.providerTypeWslOption = this.providerTypeDiv.getByRole('button', { name: 'wsl' });
+    this.providerTypeHypervOption = this.providerTypeDiv.getByRole('button', { name: 'hyperv' });
 
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
@@ -97,9 +95,15 @@ export class MachineCreationForm extends BasePage {
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
         if (connectionType === PodmanConnectionTypes.HyperV) {
-          await this.providerTypeDropdown.click();
+          await playExpect(this.providerTypeWslOption).toBeVisible({ timeout: 10_000 });
+          await this.providerTypeWslOption.scrollIntoViewIfNeeded();
+          await this.providerTypeWslOption.click();
+
+          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
           await this.providerTypeHypervOption.click();
-          // check text? await playExpect(this.providerTypeDropdown).toHaveText('hyperv');
+
+          await playExpect(this.providerTypeWslOption).not.toBeVisible({ timeout: 10_000 });
+          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
         }
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
