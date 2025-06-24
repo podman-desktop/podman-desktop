@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
@@ -124,6 +127,23 @@ export class ExtensionDevelopmentFolders {
     // if there is an error, abort
     if (analyzedExtension.error) {
       throw new Error(analyzedExtension.error);
+    }
+
+    // check if "podman-desktop" is listed as engine
+    if (analyzedExtension.manifest?.engines?.['podman-desktop'] === undefined) {
+      throw new Error(
+        `Extension with id ${analyzedExtension.id} is not compatible with Podman Desktop. It requires 'podman-desktop' engine.`,
+      );
+    }
+
+    // if there is a file, check if the file is present
+    if (
+      analyzedExtension.manifest.main &&
+      existsSync(resolve(analyzedExtension.path, analyzedExtension.manifest.main)) === false
+    ) {
+      throw new Error(
+        `Extension with id ${analyzedExtension.id} is not ready. The main file ${analyzedExtension.manifest.main} referenced by the package.json file does not exist. Maybe Extension is not built / in watch mode ?`,
+      );
     }
 
     // if the extension is already part of the loader, avoid the loading

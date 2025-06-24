@@ -238,8 +238,28 @@ describe('addDevelopmentFolder', () => {
     await expect(extensionDevelopmentFolders.addDevelopmentFolder('foo')).rejects.toThrow('foo analyze extension');
   });
 
+  test('check missing main file when analyzing the extension', async () => {
+    vi.mocked(extensionAnalyzer.analyzeExtension).mockResolvedValue({
+      manifest: { main: 'unknown/file.js', engines: { 'podman-desktop': '>=1.18.0' } },
+      error: 'foo analyze extension',
+    } as AnalyzedExtension);
+
+    await expect(extensionDevelopmentFolders.addDevelopmentFolder('foo')).rejects.toThrow('foo analyze extension');
+  });
+
+  test('check missing engine when analyzing the extension', async () => {
+    vi.mocked(extensionAnalyzer.analyzeExtension).mockResolvedValue({} as AnalyzedExtension);
+
+    await expect(extensionDevelopmentFolders.addDevelopmentFolder('foo')).rejects.toThrow(
+      `is not compatible with Podman Desktop. It requires 'podman-desktop' engine.`,
+    );
+  });
+
   test('check working extension', async () => {
-    const analyzedExtension = { path: 'foo' } as AnalyzedExtension;
+    const analyzedExtension = {
+      path: 'foo',
+      manifest: { engines: { 'podman-desktop': '>=1.18.0' } },
+    } as AnalyzedExtension;
     vi.mocked(extensionAnalyzer.analyzeExtension).mockResolvedValue(analyzedExtension);
 
     // mock saveToConfiguration method
