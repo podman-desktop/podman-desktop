@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,15 @@ import { beforeEach, expect, test } from 'vitest';
 
 import ExtensionBadge from './ExtensionBadge.svelte';
 
+type ExtensionType = { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
+
 beforeEach(() => {});
 
 test('Expect to have badge for dd Extension', async () => {
-  const extension: { type: 'dd' | 'pd'; removable: boolean } = {
+  const extension: ExtensionType = {
     type: 'dd',
     removable: true,
+    devMode: false,
   };
   render(ExtensionBadge, { extension });
   // expect 'Docker Desktop extension' badge
@@ -41,9 +44,10 @@ test('Expect to have badge for dd Extension', async () => {
 });
 
 test('Expect to have badge for pd  built-in Extension', async () => {
-  const extension: { type: 'dd' | 'pd'; removable: boolean } = {
+  const extension: ExtensionType = {
     type: 'pd',
     removable: false,
+    devMode: false,
   };
   render(ExtensionBadge, { extension });
   // expect 'built-in' badge
@@ -53,4 +57,19 @@ test('Expect to have badge for pd  built-in Extension', async () => {
   expect(labels).toHaveLength(2);
   expect(labels[0]).toBeInTheDocument();
   expect(labels[1]).toBeInTheDocument();
+});
+
+test('Expect to have badge for devMode Extension', async () => {
+  const extension: ExtensionType = {
+    type: 'pd',
+    removable: false,
+    devMode: true,
+  };
+  render(ExtensionBadge, { extension });
+  // expect 'devMode' badge
+  const labels = screen.getAllByText('In Development Mode Extension');
+
+  // 2 items
+  expect(labels).toHaveLength(1);
+  expect(labels[0]).toBeInTheDocument();
 });
