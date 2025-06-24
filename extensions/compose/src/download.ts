@@ -21,6 +21,7 @@ import { arch, platform } from 'node:os';
 import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
+import { Memoize } from 'typescript-memoize';
 
 import type { ComposeGithubReleaseArtifactMetadata, ComposeGitHubReleases } from './compose-github-releases';
 import type { OS } from './os';
@@ -42,6 +43,7 @@ export class ComposeDownload {
 
   // Get the latest versions of Compose from GitHub Releases
   // and return the artifacts metadata
+  @Memoize({ expiring: 1000 * 60 * 60 })
   async getLatestReleases(): Promise<ComposeGithubReleaseArtifactMetadata[]> {
     return this.composeGitHubReleases.grabLatestsReleasesMetadata();
   }
@@ -49,7 +51,7 @@ export class ComposeDownload {
   // Create a "quickpick" prompt to ask the user which version of Compose they want to download
   async promptUserForVersion(currentComposeTag?: string): Promise<ComposeGithubReleaseArtifactMetadata> {
     // Get the latest releases
-    let lastReleasesMetadata = await this.composeGitHubReleases.grabLatestsReleasesMetadata();
+    let lastReleasesMetadata = await this.getLatestReleases();
     // if the user already has an installed version, we remove it from the list
     if (currentComposeTag) {
       lastReleasesMetadata = lastReleasesMetadata.filter(release => release.tag.slice(1) !== currentComposeTag);

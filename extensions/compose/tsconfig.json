@@ -10,7 +10,8 @@
     "rootDir": "src",
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "experimentalDecorators": true
   },
 
   "include": ["src", "types/*.d.ts", "../../types/**/*.d.ts"]
