@@ -98,6 +98,10 @@ class TestExtensionLoader extends ExtensionLoader {
     return this.activatedExtensions;
   }
 
+  getAnalyzedExtensions(): Map<string, AnalyzedExtension> {
+    return this.analyzedExtensions;
+  }
+
   getExtensionStateErrors(): Map<string, unknown> {
     return this.extensionStateErrors;
   }
@@ -1099,6 +1103,40 @@ describe('Removing extension by user', async () => {
     await extensionLoader.removeExtensionPerUserRequest(ExtID).catch(() => undefined);
     expect(extensionLoader.removeExtension).toBeCalledWith(ExtID);
     expect(telemetry.track).toBeCalledWith('removeExtension', { extensionId: ExtID, error: RemoveError });
+  });
+
+  test('no error in dev mode', async () => {
+    const deactivateExtensionSpy = vi.spyOn(extensionLoader, 'deactivateExtension');
+    const fakeAnalyzedExtension = {
+      id: ExtID,
+      devMode: true,
+      manifest: {
+        name: 'name',
+        publisher: 'publisher',
+        version: '1.0.0',
+      },
+    };
+    extensionLoader.getAnalyzedExtensions().set(ExtID, fakeAnalyzedExtension as AnalyzedExtension);
+    await extensionLoader.removeExtension(ExtID);
+    expect(extensionDevelopmentFolder.removeExternalExtensionId).toBeCalledWith(ExtID);
+    expect(deactivateExtensionSpy).toBeCalledWith(ExtID);
+    expect(extensionLoader.getAnalyzedExtensions().size).toBe(0);
+  });
+
+  test('error if not in dev mode', async () => {
+    const deactivateExtensionSpy = vi.spyOn(extensionLoader, 'deactivateExtension');
+    const fakeAnalyzedExtension = {
+      id: ExtID,
+      devMode: false,
+      manifest: {
+        name: 'name',
+        publisher: 'publisher',
+        version: '1.0.0',
+      },
+    };
+    extensionLoader.getAnalyzedExtensions().set(ExtID, fakeAnalyzedExtension as AnalyzedExtension);
+    await expect(extensionLoader.removeExtension(ExtID)).rejects.toThrow('is not removable');
+    expect(deactivateExtensionSpy).toBeCalledWith(ExtID);
   });
 });
 

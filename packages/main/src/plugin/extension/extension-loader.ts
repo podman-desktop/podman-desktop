@@ -1773,7 +1773,7 @@ export class ExtensionLoader {
       // delete the path
       if (extension.removable) {
         await fs.promises.rm(extension.path, { recursive: true, force: true });
-      } else {
+      } else if (!extension.devMode) {
         throw new Error(`Extension ${extensionId} is not removable`);
       }
       this.analyzedExtensions.delete(extensionId);
