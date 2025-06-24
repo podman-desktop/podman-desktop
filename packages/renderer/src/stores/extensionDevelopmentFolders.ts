@@ -49,7 +49,7 @@ const listExtensionDevelopmentFolders = async (): Promise<ExtensionDevelopmentFo
 };
 
 export const extensionDevelopmentFoldersEventStore = new EventStore<ExtensionDevelopmentFolderInfo[]>(
-  'extensionDevelopmentFoldes',
+  'extensionDevelopmentFolders',
   extensionDevelopmentFolders,
   checkForUpdate,
   windowEvents,
