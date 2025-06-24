@@ -68,7 +68,6 @@ export class PodUtils {
       engineId: this.getEngineId(podinfo),
       engineName: this.getEngineName(podinfo),
       containers: podinfo.Containers,
-      selected: false,
       node: podinfo.node,
       namespace: podinfo.Namespace,
     };

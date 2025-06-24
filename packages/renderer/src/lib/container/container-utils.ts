@@ -174,7 +174,6 @@ export class ContainerUtils {
       hasPublicPort: this.hasPublicPort(containerInfo),
       openingUrl: this.getOpeningUrl(containerInfo),
       groupInfo: this.getContainerGroup(containerInfo),
-      selected: false,
       created: containerInfo.Created,
       labels: containerInfo.Labels,
       icon: this.iconClass(containerInfo, context, viewContributions) ?? ContainerIcon,
@@ -229,15 +228,11 @@ export class ContainerUtils {
         groups.set(containerInfo.id, {
           ...group,
           containers: [containerInfo],
-          expanded: true,
-          selected: false,
           allContainersCount: 1,
         });
       } else {
         if (!groups.has(group.name)) {
           groups.set(group.name, {
-            selected: false,
-            expanded: true,
             name: group.name,
             type: group.type,
             id: group.id,

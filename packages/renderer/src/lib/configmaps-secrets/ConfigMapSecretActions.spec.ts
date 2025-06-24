@@ -30,7 +30,6 @@ const showMessageBoxMock = vi.fn();
 const fakeConfigMap: ConfigMapSecretUI = {
   name: 'my-configmap',
   namespace: '',
-  selected: false,
   type: 'ConfigMap',
   status: '',
   keys: [],
@@ -39,7 +38,6 @@ const fakeConfigMap: ConfigMapSecretUI = {
 const fakeSecret: ConfigMapSecretUI = {
   name: 'my-secret',
   namespace: '',
-  selected: false,
   type: 'Secret',
   status: '',
   keys: [],

@@ -59,7 +59,6 @@ test('Expect no error and status deleting ingress', async () => {
   const ingressUI: IngressUI = new StatusHolder('RUNNING') as unknown as IngressUI;
   ingressUI.name = 'my-ingress';
   ingressUI.namespace = 'test-namespace';
-  ingressUI.selected = false;
 
   render(IngressRouteActions, { ingressRoute: ingressUI });
 
@@ -88,7 +87,6 @@ test('Expect no error and status deleting route', async () => {
     kind: 'Service',
     name: 'service',
   };
-  routeUI.selected = false;
   routeUI.tlsEnabled = false;
 
   render(IngressRouteActions, { ingressRoute: routeUI });

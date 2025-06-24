@@ -10,9 +10,10 @@ import TaskManagerTableProgressColumn from './TaskManagerTableProgressColumn.sve
 interface Props {
   tasks: TaskInfoUI[];
   selectedItemsNumber?: number;
+  selected: Set<string>;
 }
 
-let { tasks, selectedItemsNumber = $bindable() }: Props = $props();
+let { tasks, selectedItemsNumber = $bindable(), selected = $bindable() }: Props = $props();
 
 const nameColumn = new TableColumn<TaskInfoUI, string>('Name', {
   width: '3fr',
@@ -50,8 +51,11 @@ const row = new TableRow<TaskInfoUI>({
 
 <Table
   bind:selectedItemsNumber={selectedItemsNumber}
+  bind:selected={selected}
   kind="tasks"
   data={tasks}
+  key={(task: TaskInfoUI): string => task.id}
+  label={(task: TaskInfoUI): string => task.name}
   columns={columns}
   row={row}
   defaultSortColumn="Age" />

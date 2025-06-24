@@ -56,7 +56,6 @@ test('Expect action buttons', async () => {
     status: '',
     age: '2 days',
     created: '',
-    selected: false,
     containers: [],
   };
 
@@ -76,7 +75,6 @@ test('Expect error message', async () => {
     status: '',
     age: '2 days',
     created: '',
-    selected: false,
     containers: [],
     actionError: 'Pod failed',
   };

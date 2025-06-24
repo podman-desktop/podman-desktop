@@ -35,7 +35,6 @@ const imageInfo: ImageInfoUI = {
   engineName: 'Podman',
   humanSize: '128kb',
   age: '2 hours',
-  selected: false,
   status: 'UNUSED',
   createdAt: 0,
   badges: [],
