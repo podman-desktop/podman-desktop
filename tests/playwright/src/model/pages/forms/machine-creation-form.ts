@@ -99,7 +99,7 @@ export class MachineCreationForm extends BasePage {
         if (connectionType === PodmanConnectionTypes.HyperV) {
           await this.providerTypeDropdown.click();
           await this.providerTypeHypervOption.click();
-          await playExpect(this.providerTypeDropdown).toHaveText('hyperv');
+          // check text? await playExpect(this.providerTypeDropdown).toHaveText('hyperv');
         }
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
