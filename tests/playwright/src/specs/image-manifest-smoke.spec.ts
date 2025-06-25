@@ -133,10 +133,8 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           if (isWindows && provider === 'Wsl') {
             console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
             test.fail();
-            throw error;
-          } else {
-            throw error;
           }
+          throw error;
         }
 
         await playExpect
