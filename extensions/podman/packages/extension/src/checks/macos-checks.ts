@@ -126,7 +126,7 @@ export class MacKrunkitPodmanMachineCreationCheck extends BaseCheck {
 
     return this.createFailureResult({
       description:
-        'You have krunkit installed with "brew", run "brew update && brew upgrade krunkit" to install new version',
+        'You have krunkit installed with "brew". Run "brew update && brew upgrade krunkit" to install new version',
       docLinks: {
         url: 'https://docs.brew.sh/Manpage#upgrade-options-outdated_formulaoutdated_cask-',
         title: 'Brew Documentation',

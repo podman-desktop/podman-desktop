@@ -2178,7 +2178,12 @@ export async function createMachine(
 
   let provider: string | undefined;
   if (params['podman.factory.machine.provider'] && typeof params['podman.factory.machine.provider'] === 'string') {
-    provider = getProviderByLabel(params['podman.factory.machine.provider']);
+    if (os.arch() === 'amd64') {
+      // Intel machine
+      provider = VMTYPE.APPLEHV;
+    } else {
+      provider = getProviderByLabel(params['podman.factory.machine.provider']);
+    }
     telemetryRecords.provider = provider;
   } else if (
     params['podman.factory.machine.win.provider'] &&
