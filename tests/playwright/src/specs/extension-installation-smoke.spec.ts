@@ -106,7 +106,7 @@ for (const {
 
       const extensionsPage = new ExtensionsPage(page);
 
-      await extensionsPage.installExtensionFromOCIImage(ociImageUrl);
+      await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
       if (extensionName !== openshiftDockerExtension.extensionName) {
         await extensionsPage.openCatalogTab();
         const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
