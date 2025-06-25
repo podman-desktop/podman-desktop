@@ -43,9 +43,16 @@ let selectedAllCheckboxes = false;
 $: selectedAllCheckboxes = row.info.selectable
   ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
     data
-      .filter(object => row.info.children?.(object))
-      .map(object => row.info.children?.(object))
-      .flat()
+      .reduce(
+        (accumulator, current) => {
+          const children = row.info.children?.(current);
+          if (children) {
+            accumulator.push(...children);
+          }
+          return accumulator;
+        },
+        [] as Array<{ selected?: boolean }>,
+      )
       .filter(child => row.info.selectable?.(child))
       .every(child => child.selected) &&
     data.filter(object => row.info.selectable?.(object)).length > 0
