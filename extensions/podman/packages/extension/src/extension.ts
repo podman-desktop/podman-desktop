@@ -2184,6 +2184,7 @@ export async function createMachine(
     } else {
       provider = getProviderByLabel(params['podman.factory.machine.provider']);
     }
+    await podmanConfiguration.updateMachineProviderSettings(provider as VMTYPE);
     telemetryRecords.provider = provider;
   } else if (
     params['podman.factory.machine.win.provider'] &&
