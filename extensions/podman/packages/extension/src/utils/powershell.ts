@@ -17,6 +17,8 @@
  ***********************************************************************/
 import * as extensionApi from '@podman-desktop/api';
 
+import { getTelemetryLogger } from '../extension';
+
 export async function getPowerShellClient(): Promise<PowerShellClient> {
   return new PowerShell5Client();
 }
@@ -60,8 +62,8 @@ class PowerShell5Client implements PowerShellClient {
       telemetry['cancelled'] = execError.cancelled;
       telemetry['killed'] = execError.killed;
     }
-    const telemetryLogger = extensionApi.env.createTelemetryLogger();
-    telemetryLogger.logError('check.isVirtualMachineAvailable', telemetry);
+    const telemetryLogger = getTelemetryLogger();
+    telemetryLogger?.logError('check.isVirtualMachineAvailable', telemetry);
     return false;
   }
 
