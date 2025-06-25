@@ -9,6 +9,7 @@ import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ExpandableFAQ } from '../components/ExpandableFAQ';
+import OptimizedImage from '../components/OptimizedImage';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
@@ -37,11 +38,11 @@ function Hero(): JSX.Element {
             </div>
           </div>
         </div>
-        <div className="sm:pl-8 md:pl-12 lg:pl-36 text-center w-full">
-          <img
+        <div className="text-center w-full">
+          <OptimizedImage
             className="sm:w-full md:w-full lg:w-10/12"
             alt="Podman Desktop home page"
-            src="img/features/homepage.webp"
+            src={useBaseUrl('img/features/homepage.webp')}
           />
         </div>
         <CNCFCommunityBanner />
@@ -186,7 +187,7 @@ function MainFeatures(): JSX.Element {
               </p>
               <ReadTheDocsButton to="/docs/containers" />
             </div>
-            <ThemedImage
+            <OptimizedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
               alt="Essential Features for Containers"
               sources={{
@@ -330,7 +331,7 @@ function Pods(): JSX.Element {
       <div className="container px-5 mx-auto flex flex-wrap">
         <div className="flex flex-col text-right w-full mb-5">
           <div className="flex md:flex-row flex-col-reverse items-center space-x-10 xl:space-x-44">
-            <ThemedImage
+            <OptimizedImage
               className="py-4 w-full md:w-1/2 mb-10 md:mb-0"
               alt="Streamline Kubernetes workflows"
               sources={{

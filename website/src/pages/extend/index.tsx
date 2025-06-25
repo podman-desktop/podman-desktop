@@ -4,8 +4,9 @@ import { faBook, faCertificate, faCloudArrowDown, faGears, faRocket } from '@for
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
-import ThemedImage from '@theme/ThemedImage';
 import React from 'react';
+
+import OptimizedImage from '../../components/OptimizedImage';
 
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
@@ -97,7 +98,7 @@ export default function Home(): JSX.Element {
             <h1 className="mt-24 title-font sm:text-4xl text-3xl lg:text-6xl mb-4 font-medium text-charcoal-300 dark:text-white">
               Visualizing Extension Capabilities
             </h1>
-            <ThemedImage
+            <OptimizedImage
               className="py-4"
               alt="Extensibility diagram"
               sources={{
@@ -114,7 +115,7 @@ export default function Home(): JSX.Element {
               API calls, making integration seamless. Use Docker Desktop extensions to further enhance Podman Desktop’s
               capabilities.
             </p>
-            <ThemedImage
+            <OptimizedImage
               className="py-4"
               alt="Extend with Docker Desktop extensions"
               sources={{
