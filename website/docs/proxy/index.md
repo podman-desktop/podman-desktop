@@ -150,7 +150,6 @@ Requirements:
 
 1. Go to **Settings > Proxy** from the left navigation pane.
 1. Select a proxy configuration: **System**, **Manual**, or **Disabled**.
-
    - If you select **Manual**, configure your proxy URLs and bypass proxy settings details.
      ![Proxy settings](img/proxy-settings.png)
 
