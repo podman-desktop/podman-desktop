@@ -140,7 +140,7 @@ export async function applyYamlFileToCluster(
     await playExpect(podsPage.heading).toBeVisible();
     const playYamlPage = await podsPage.openPlayKubeYaml();
     await playExpect(playYamlPage.heading).toBeVisible();
-    return await playYamlPage.playYaml(resourceYamlPath, kubernetesRuntime);
+    return await playYamlPage.playYaml(resourceYamlPath, 180_000, kubernetesRuntime);
   });
 }
 
