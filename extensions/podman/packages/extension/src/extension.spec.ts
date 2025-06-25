@@ -115,6 +115,7 @@ const podmanConfiguration = {
   registryConfiguration: {
     getPlaybookScriptPath: vi.fn(),
   },
+  updateMachineProviderSettings: vi.fn(),
 } as unknown as PodmanConfiguration;
 
 const machineDefaultName = 'podman-machine-default';

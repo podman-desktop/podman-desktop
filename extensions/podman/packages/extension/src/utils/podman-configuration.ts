@@ -27,6 +27,7 @@ import * as toml from 'smol-toml';
 
 import type { RegistryConfiguration } from '../configuration/registry-configuration';
 import { RegistryConfigurationImpl } from '../configuration/registry-configuration';
+import { VMTYPE } from './util';
 
 const configurationRosetta = 'setting.rosetta';
 
@@ -208,6 +209,81 @@ export class PodmanConfiguration {
         containersConfContent['machine'] = {
           ...containersConfContent['machine'], // MAKE SURE we copy over the previous configuration
           rosetta: false as boolean,
+        };
+      }
+
+      // Write the file
+      const content = toml.stringify(containersConfContent);
+      await fs.promises.writeFile(this.getContainersFileLocation(), content);
+    }
+  }
+
+  async updateMachineProviderSettings(provider: VMTYPE): Promise<void> {
+    // Initalize an empty configuration file for us to use
+    const containersConfContent = {
+      containers: {},
+      engine: {
+        env: [] as string[],
+      },
+      machine: {},
+      network: {},
+      secrets: {},
+      configmaps: {},
+    };
+
+    // If the file does NOT exist we will have to create the file and the provider is not Applehv (default one)
+    if (provider !== VMTYPE.APPLEHV && !fs.existsSync(this.getContainersFileLocation())) {
+      containersConfContent['machine'] = {
+        provider: provider,
+      };
+      const content = toml.stringify(containersConfContent);
+      await fs.promises.writeFile(this.getContainersFileLocation(), content);
+    } else if (fs.existsSync(this.getContainersFileLocation())) {
+      // Read the file
+      const containersConfigFile = await this.readContainersConfigFile();
+      const tomlConfigFile = toml.parse(containersConfigFile);
+
+      // Copy over the previous configuration
+      if (tomlConfigFile.containers && typeof tomlConfigFile.containers === 'object') {
+        containersConfContent['containers'] = tomlConfigFile.containers;
+      }
+      if (tomlConfigFile.machine && typeof tomlConfigFile.machine === 'object') {
+        containersConfContent['machine'] = tomlConfigFile.machine;
+      }
+      if (tomlConfigFile.network && typeof tomlConfigFile.network === 'object') {
+        containersConfContent['network'] = tomlConfigFile.network;
+      }
+      if (tomlConfigFile.secrets && typeof tomlConfigFile.secrets === 'object') {
+        containersConfContent['secrets'] = tomlConfigFile.secrets;
+      }
+      if (tomlConfigFile.configmaps && typeof tomlConfigFile.configmaps === 'object') {
+        containersConfContent['configmaps'] = tomlConfigFile.configmaps;
+      }
+
+      if (
+        containersConfContent['machine'] &&
+        'provider' in containersConfContent['machine'] &&
+        provider !== VMTYPE.APPLEHV
+      ) {
+        containersConfContent['machine'] = {
+          ...containersConfContent['machine'], // MAKE SURE we copy over the previous configuration
+          provider: provider,
+        };
+      }
+
+      // If provider is applehv, edit containersConfContent['machine'] and remove the provider key if found.
+      // this is because provider is applehv by default and we don't need to set it in the file
+      if (
+        provider === VMTYPE.APPLEHV &&
+        containersConfContent['machine'] &&
+        'provider' in containersConfContent['machine']
+      ) {
+        delete containersConfContent['machine']['provider'];
+      } else if (provider !== VMTYPE.APPLEHV && containersConfContent['machine']) {
+        // If provider key does not exist, we need to add it
+        containersConfContent['machine'] = {
+          ...containersConfContent['machine'], // MAKE SURE we copy over the previous configuration
+          provider: provider,
         };
       }
 
