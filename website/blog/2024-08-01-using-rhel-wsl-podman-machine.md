@@ -69,7 +69,6 @@ On the **File system configuration** page, select **Recommended: Use automatic p
 On the **Content** page, complete the following steps to add additional packages to your image:
 
 - On the Repository snapshot step:
-
   - Select Use latest content.
   - Click **Next**.
 
@@ -106,7 +105,6 @@ Close the tab and switch back to the previous one
 Click **Next**
 
 - On the Additional packages step:
-
   - On the **Available packages** search field, enter podman and click the **→** button.
   - Select the podman and podman-docker packages.
   - On the **Available packages** search field, enter procps-ng and click the **→** button.

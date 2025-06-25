@@ -35,7 +35,6 @@ Set Testcontainers runtime to Podman by using one of the following options:
 - Enable the [Docker Compatibility](https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility) feature.
 
 - Create a `.testcontainers.properties` file in your home directory for global configuration of your Testcontainers and add the following line to the configuration file:
-
   - MacOS
 
     ```title=".testcontainers.properties"

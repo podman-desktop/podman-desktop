@@ -40,7 +40,6 @@ spec:
 #### Procedure: Start port forwarding
 
 1. Create a Kubernetes pod:
-
    1. Go to the **Pods** component page.
    1. Click **Play Kubernetes YAML**.
       ![play kubernetes yaml](img/play-kubernetes-yaml.png)

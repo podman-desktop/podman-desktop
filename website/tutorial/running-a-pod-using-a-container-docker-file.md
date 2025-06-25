@@ -17,20 +17,17 @@ This tutorial covers the following end-to-end tasks required to run a pod from a
 When creating a container, you can set the following configurations:
 
 - With **Basic** configuration, you have the option to:
-
   - Define volumes to configure a persistent storage location. For this, you must set up a host directory and then mount this directory to a container. You can keep your application data intact in your host directory even after your container is stopped or failed.
   - Define port mapping to create an externally accessible container. For this, you must map a host port with the container port. After this mapping, any requests to port on the host are forwarded to port in the container.
 
   - Select a file containing environment variables for your container. This file contains data in the `key=value` format.
 
 - With **Advanced** configuration, you have the option of:
-
   - Automatic removal of container
   - Specifying ID of the user who can run a container
   - Selecting a restart policy that defines whether a container should restart on exit
 
 - With **Networking** configuration, you have the option of defining:
-
   - A container host name
   - A custom DNS server
   - Additional hosts
@@ -78,7 +75,6 @@ CMD ["node", "app.js"]
 2. Click **Create**.
    ![Create a new container](img/create-a-new-container.png)
 3. On the **Build image from Containerfile** page, provide the following details:
-
    - Containerfile path: Select the path where the container or docker file is placed.
    - Build context directory: The field automatically picks up the context directory based on the file path.
    - Image name: Enter the image name, if required.

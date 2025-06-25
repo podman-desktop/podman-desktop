@@ -105,11 +105,9 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
    </summary>
 
    #### Installer
-
    - Uninstall Podman Desktop from the Start menu, Settings, or Control Panel. For more details, see the [resource](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98).
 
    #### Chocolatey
-
    - Run the following command:
 
      ```shell-session
@@ -117,7 +115,6 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
      ```
 
    #### Scoop package manager for Windows
-
    - Run the following command:
 
      ```shell-session
@@ -125,7 +122,6 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
      ```
 
    #### Winget
-
    - Run the following command:
 
      ```shell-session
@@ -148,7 +144,6 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
 <TabItem value="macOS" label="macOS" className="markdown">
 
 1. Perform one of the following steps based on your installation:
-
    - If you have installed Podman Desktop using `brew`, run the following command:
      ```sh
      $ brew uninstall podman-desktop
