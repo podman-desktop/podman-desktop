@@ -171,8 +171,6 @@ test('Should not find configuration after dispose', async () => {
 });
 
 test('should work with an invalid configuration file', async () => {
-  vi.resetAllMocks();
-
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);

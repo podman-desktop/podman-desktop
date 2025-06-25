@@ -289,7 +289,7 @@ describe('install', () => {
     vi.mocked(os.arch).mockReturnValue('x64');
     vi.mock('node:fs');
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    const chmodMock = vi.spyOn(fs.promises, 'chmod');
+    const chmodMock = vi.spyOn(fs.promises, 'chmod').mockResolvedValue();
     const downloadReleaseAssetMock = vi
       .spyOn(installer, 'downloadReleaseAsset')
       .mockImplementation(() => Promise.resolve());

@@ -24,7 +24,7 @@ import * as path from 'node:path';
 import * as extensionApi from '@podman-desktop/api';
 import * as shellPath from 'shell-path';
 import type { Mock, MockInstance } from 'vitest';
-import { afterEach, beforeEach, describe, expect, test, vi, vitest } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Detect } from './detect';
 import type { OS } from './os';
@@ -43,7 +43,7 @@ vi.mock('shell-path', () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
+vi.mock('@podman-desktop/api', () => {
   return {
     process: {
       exec: vi.fn(),
@@ -72,7 +72,7 @@ afterEach(() => {
 describe('Check for Docker Compose', async () => {
   test('not installed', async () => {
     const customError = { exitCode: -1 } as extensionApi.RunError;
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() => {
       throw customError;
     });
     const result = await detect.checkForDockerCompose();
@@ -80,7 +80,7 @@ describe('Check for Docker Compose', async () => {
   });
 
   test('installed', async () => {
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+    vi.mocked(extensionApi.process.exec).mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
     const result = await detect.checkForDockerCompose();
     expect(result).toBeTruthy();
   });
@@ -89,19 +89,19 @@ describe('Check for Docker Compose', async () => {
 describe('Check for path', async () => {
   const customError = { exitCode: -1 } as extensionApi.RunError;
   test('not included', async () => {
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() => {
       throw customError;
     });
-    vitest.spyOn(shellPath, 'shellPath').mockResolvedValue('/different-path');
+    vi.mocked(shellPath.shellPath).mockResolvedValue('/different-path');
     const result = await detect.checkStoragePath();
     expect(result).toBeFalsy();
   });
 
   test('included', async () => {
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() => {
       throw customError;
     });
-    vitest.spyOn(shellPath, 'shellPath').mockResolvedValue(path.resolve('/', 'storage-path', 'bin'));
+    vi.mocked(shellPath.shellPath).mockResolvedValue(path.resolve('/', 'storage-path', 'bin'));
     const result = await detect.checkStoragePath();
     expect(result).toBeTruthy();
   });
@@ -116,7 +116,7 @@ describe('Check storage path', async () => {
 
   test('found', async () => {
     vi.mock('node:fs');
-    const existSyncSpy = vi.spyOn(fs, 'existsSync');
+    const existSyncSpy = vi.mocked(fs.existsSync);
     existSyncSpy.mockImplementation(() => true);
 
     const result = await detect.getStoragePath();
@@ -220,7 +220,7 @@ type HttpGet = (
 
 describe('Check docker socket', async () => {
   test('is alive', async () => {
-    const socketPathMock = vitest.spyOn(detect, 'getSocketPath');
+    const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
 
     // mock http request
@@ -253,7 +253,7 @@ describe('Check docker socket', async () => {
   });
 
   test('test ping invalid status', async () => {
-    const socketPathMock = vitest.spyOn(detect, 'getSocketPath');
+    const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
 
     // mock http request
@@ -283,7 +283,7 @@ describe('Check docker socket', async () => {
   });
 
   test('test error', async () => {
-    const socketPathMock = vitest.spyOn(detect, 'getSocketPath');
+    const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
 
     // mock http request

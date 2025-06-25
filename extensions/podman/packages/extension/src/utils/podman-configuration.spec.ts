@@ -177,7 +177,7 @@ test('doUpdateProxySettings should be called one at the time', async () => {
   };
 
   // Mock updateProxySettings
-  const doUpdateProxySettingsMock = vi.spyOn(podmanConfiguration, 'doUpdateProxySettings');
+  const doUpdateProxySettingsMock = vi.spyOn(podmanConfiguration, 'doUpdateProxySettings').mockResolvedValue();
 
   // Simultaneously call the function twice
   const call1 = podmanConfiguration.updateProxySettings(undefined);
