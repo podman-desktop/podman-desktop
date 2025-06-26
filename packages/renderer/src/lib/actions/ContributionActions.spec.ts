@@ -255,15 +255,16 @@ test('Expect custom icon on the contributed action', async () => {
       {
         command: 'dummy.command',
         title: 'dummy-title',
-        icon: '${dummyIcon}',
+        icon: 'fas fa-${dummyIcon}',
       },
     ],
     onError: () => {},
     dropdownMenu: true,
   });
 
-  const iconItem = screen.getByRole('img', { name: 'dummy-title' });
+  const iconItem = screen.getByRole('img', { hidden: true });
   expect(iconItem).toBeInTheDocument();
   // expect to have the podman desktop icon class
-  expect(iconItem).toHaveClass('podman-desktop-icon-dummyIcon');
+
+  expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');
 });

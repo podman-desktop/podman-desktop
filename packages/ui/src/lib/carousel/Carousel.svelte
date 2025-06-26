@@ -57,7 +57,7 @@ function rotateRight(): void {
     aria-label="Rotate left"
     class="h-8 w-8 mr-3 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full disabled:bg-[var(--pd-content-card-carousel-disabled-nav)]"
     disabled={visibleCards.length === cards.length}>
-    <Icon class="w-8 h-8" icon={faChevronLeft} color="black"/>
+    <Icon class="w-8 h-8" icon={faChevronLeft} />
   </button>
 
   <div id="carousel-cards-{containerId}" class="flex grow gap-3 overflow-hidden">
@@ -72,7 +72,6 @@ function rotateRight(): void {
     aria-label="Rotate right"
     class="h-8 w-8 ml-3 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full disabled:bg-[var(--pd-content-card-carousel-disabled-nav)]"
     disabled={visibleCards.length === cards.length}>
-    <Icon class="h-8 w-8" icon={faChevronRight} color="black"/>
-    <!-- <Fa class="h-8 w-8" icon={faChevronRight} color="black" /> -->
+    <Icon class="h-8 w-8" icon={faChevronRight} />
   </button>
 </div>

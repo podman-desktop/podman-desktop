@@ -68,9 +68,9 @@ function click(): void {
     {#if section}
       <div class="px-2 relative w-4 h-4 text-[color:var(--pd-secondary-nav-expander)]">
         {#if expanded}
-          <Icon icon='fas fa-angle-down' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 -rotate-90" aria-hidden="true"/>
+          <Icon icon='fas fa-angle-down' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 -rotate-90" />
         {:else}
-          <Icon icon='fas fa-angle-right' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 rotate-90" aria-hidden="true"/>
+          <Icon icon='fas fa-angle-right' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 rotate-90" />
         {/if}
       </div>
     {/if}

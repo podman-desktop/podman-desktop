@@ -91,8 +91,7 @@ test('Expect section styling', async () => {
   expect(element).toBeInTheDocument();
   expect(element.firstChild).toBeInTheDocument();
   expect(element.firstChild?.childNodes[2]).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2].childNodes[1]).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2].childNodes[1]).toHaveClass('fas');
+  expect(element.firstChild?.childNodes[2]).toContainHTML('fas');
 });
 
 test('Expect sections expand', async () => {

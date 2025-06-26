@@ -23,7 +23,9 @@ const IconComponent = icon;
         <Fa {icon} {size} class={className}/>
     {/if}
 {:else if typeof icon === 'string'}
-    {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-')}
+    <!-- fas fa- and far fa- for Font awesome icons -->
+    <!-- -icon for extension icons e.g. 'kind-icon' -->
+    {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-') || icon.endsWith('-icon')}
         <i class={`${icon} ${size} ${className}`} {role}></i>
     {/if}
 {:else}

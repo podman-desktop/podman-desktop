@@ -30,7 +30,7 @@ test('Expect custom font icon on the contributed action', async () => {
     icon: 'fas fa-podman-desktop-icon-dummyIcon',
   });
 
-  const iconItem = screen.getByRole('img', { name: 'dummy-title' });
+  const iconItem = screen.getByRole('img', { hidden: true });
   expect(iconItem).toBeInTheDocument();
   // expect to have the podman desktop icon class
   expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');

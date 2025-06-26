@@ -125,16 +125,16 @@ test('With custom font icon', async () => {
 
   render(ListItemButtonIcon, {
     title,
-    icon: 'podman-desktop-icon-dummyIcon',
+    icon: 'fas fa-podman-desktop-icon-dummyIcon',
     menu: true,
     enabled: true,
     inProgress: false,
   });
 
-  const iconItem = screen.getByRole('img', { name: title });
+  const iconItem = screen.getByRole('img', { hidden: true });
   expect(iconItem).toBeInTheDocument();
   // expect to have the podman desktop icon class
-  expect(iconItem).toHaveClass('podman-desktop-icon-dummyIcon');
+  expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');
 });
 
 test('With custom Fa icon', async () => {

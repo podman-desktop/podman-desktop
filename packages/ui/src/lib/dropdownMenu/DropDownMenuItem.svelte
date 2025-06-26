@@ -27,9 +27,9 @@ const disabledClasses = 'text-[var(--pd-dropdown-disabled-item-text)] bg-[var(--
       class="group flex items-center no-underline whitespace-nowrap"
       tabindex="-1">
       {#if typeof icon === 'string'}
-        <Icon icon={icon} class="h-4 w-4" role='img' aria-label={title}/>
+        <Icon icon={icon} class="h-4 w-4" />
       {:else}
-        <Icon class="h-4 w-4 text-md" role='img' icon={icon}/>
+        <Icon class="h-4 w-4 text-md" icon={icon}/>
       {/if}
       {#if title}<span class="ml-2">{title}</span>{/if}
     </span>
