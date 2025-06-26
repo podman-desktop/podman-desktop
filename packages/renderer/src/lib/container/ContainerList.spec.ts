@@ -34,16 +34,26 @@ import { providerInfos } from '../../stores/providers';
 import ContainerList from './ContainerList.svelte';
 
 beforeEach(() => {
+  vi.resetAllMocks();
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.listContainers).mockResolvedValue([]);
-  vi.spyOn(window, 'startPod').mockImplementation(vi.fn());
-  vi.spyOn(window, 'startContainer').mockImplementation(vi.fn());
-  vi.spyOn(window, 'removePod').mockImplementation(vi.fn());
-  vi.spyOn(window, 'deleteContainer').mockImplementation(vi.fn());
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
   // fake the window.events object
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
