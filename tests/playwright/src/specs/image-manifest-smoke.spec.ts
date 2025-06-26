@@ -170,7 +170,9 @@ async function deleteImageManifest(page: Page, manifestName: string): Promise<vo
   await navigationBar.openImages();
 
   await imagesPage.deleteImageManifest(manifestName);
-  await playExpect.poll(async () => await imagesPage.waitForImageDelete(manifestName, 30_000)).toBeTruthy();
+  await playExpect
+    .poll(async () => await imagesPage.waitForImageDelete(manifestName, 30_000), { timeout: 0 })
+    .toBeTruthy();
   await imagesPage.deleteAllUnusedImages();
   await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 30_000 }).toBe(0);
 }
