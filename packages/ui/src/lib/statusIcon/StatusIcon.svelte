@@ -33,9 +33,9 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     {#if status === 'DELETING'}
       <Spinner size="1.4em" />
     {:else if typeof icon === 'string'}
-       <Icon icon={icon} aria-hidden="true"/>
+       <Icon icon={icon} />
     {:else}
-       <Icon icon={icon} size={size} solid={solid}/>
+       <Icon icon={icon} size={size} />
     {/if}
   </div>
   {#if status === 'CREATED'}
