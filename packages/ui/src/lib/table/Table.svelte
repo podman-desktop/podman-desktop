@@ -252,8 +252,12 @@ function toggleChildren(name: string | undefined): void {
           role="row"
           aria-label={object.name}>
           <div class="whitespace-nowrap place-self-center" role="cell">
-            {#if children.length > 0}
-              <button on:click={toggleChildren.bind(undefined, object.name)}>
+            {#if object.name && children.length > 0}
+              <button
+                title={collapsed.includes(object.name) ? 'Expand' : 'Collapse'}
+                aria-expanded={!collapsed.includes(object.name)}
+                on:click={toggleChildren.bind(undefined, object.name)}
+              >
                 <Fa
                   size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"

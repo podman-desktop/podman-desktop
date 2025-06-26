@@ -20,7 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+
+import { Table } from '/@/lib';
+import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
+import { Column, Row } from '/@/lib/table/table';
 
 import TestTable from './TestTable.svelte';
 
@@ -402,4 +406,50 @@ test('Expect table is scoped for css manipulation', async () => {
 
   // and there should be no style applied to this group as it's not part of the table
   expect(dummyComponent.style.gridTemplateColumns).toBe('');
+});
+
+describe('Table#collapsed', () => {
+  type Item = {
+    name: string;
+  };
+
+  const ROW = new Row<Item>({
+    selectable: (): boolean => true,
+    children: (person): Array<Item> => [
+      {
+        name: `${person.name} child`,
+      },
+    ],
+  });
+
+  const SIMPLE_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name,
+    renderer: SimpleColumn,
+  });
+
+  test('Table#collapsed prop should be used for collapsed', async () => {
+    const { getByRole } = render(Table<Item>, {
+      kind: 'demo',
+      data: [
+        {
+          name: 'foo',
+        },
+        {
+          name: 'bar',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['foo'],
+    });
+
+    const fooRow = getByRole('row', { name: 'foo' });
+    const fooExpandBtn = within(fooRow).getByRole('button', { name: 'Expand' });
+    expect(fooExpandBtn).toHaveAttribute('aria-expanded', 'false');
+
+    const barRow = getByRole('row', { name: 'bar' });
+    const barCollapseBtn = within(barRow).getByRole('button', { name: 'Collapse' });
+    expect(barCollapseBtn).toHaveAttribute('aria-expanded', 'true');
+  });
 });
