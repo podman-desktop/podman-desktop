@@ -161,6 +161,7 @@ test('terminal active/ restarts connection after stopping and starting a provide
   } as unknown as ProviderContainerConnectionInfo;
 
   let onDataCallback: (data: string) => void = () => {};
+  let onEndCallback: () => void = () => {};
 
   const sendCallbackId = 12345;
   shellInProviderConnectionMock.mockImplementation(
@@ -172,9 +173,7 @@ test('terminal active/ restarts connection after stopping and starting a provide
       onEnd: () => void,
     ) => {
       onDataCallback = onData;
-      setTimeout(() => {
-        onEnd();
-      }, 500);
+      onEndCallback = onEnd;
       // return a callback id
       return Promise.resolve(sendCallbackId);
     },
@@ -208,6 +207,8 @@ test('terminal active/ restarts connection after stopping and starting a provide
   await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
 
   connectionInfo.status = 'stopped';
+
+  onEndCallback();
 
   await waitFor(() => {
     expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2);
