@@ -29,7 +29,7 @@
     "@storybook/svelte": "^8.6.14",
     "@storybook/svelte-vite": "^8.6.14",
     "@storybook/test": "^8.6.14",
-    "@sveltejs/package": "^2.3.11",
+    "@sveltejs/package": "^2.3.12",
     "@sveltejs/vite-plugin-svelte": "5.1.0",
     "@tailwindcss/vite": "^4.1.10",
     "@tsconfig/svelte": "^5.0.2",
