@@ -180,6 +180,9 @@ test('terminal active/ restarts connection after stopping and starting a provide
     },
   );
 
+  shellInProviderConnectionCloseMock.mockResolvedValue(undefined);
+  shellInProviderConnectionResizeMock.mockResolvedValue(undefined);
+
   // render the component with a terminal
   const renderObject = render(PreferencesConnectionDetailsTerminal, {
     provider,
@@ -188,7 +191,10 @@ test('terminal active/ restarts connection after stopping and starting a provide
   });
 
   // wait shellInProviderMock is called
-  await waitFor(() => expect(shellInProviderConnectionMock).toHaveBeenCalled());
+  await waitFor(() => {
+    expect(shellInProviderConnectionMock).toHaveBeenCalled();
+    expect(shellInProviderConnectionResizeMock).toHaveBeenCalled();
+  });
 
   // write some data on the terminal
   onDataCallback('hello\nworld');
@@ -201,9 +207,14 @@ test('terminal active/ restarts connection after stopping and starting a provide
   // check the content
   await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
 
-  await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
-
   connectionInfo.status = 'stopped';
+
+  await waitFor(() => {
+    expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2);
+    expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(1);
+  });
+
+  await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
 
   await waitFor(() => expect(screen.queryByText('Provider engine is not running')).toBeInTheDocument());
 
@@ -215,5 +226,12 @@ test('terminal active/ restarts connection after stopping and starting a provide
 
   await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
 
-  await waitFor(() => expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2), { timeout: 2000 });
+  await waitFor(
+    () => {
+      expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(3);
+      expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(2);
+      expect(shellInProviderConnectionResizeMock).toHaveBeenCalledTimes(2);
+    },
+    { timeout: 2000 },
+  );
 });
