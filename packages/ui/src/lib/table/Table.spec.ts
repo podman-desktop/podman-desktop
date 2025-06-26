@@ -409,9 +409,9 @@ test('Expect table is scoped for css manipulation', async () => {
 });
 
 describe('Table#collapsed', () => {
-  type Item = {
-    name: string;
-  };
+  interface Item {
+    name?: string;
+  }
 
   const ROW = new Row<Item>({
     selectable: (): boolean => true,
@@ -424,12 +424,12 @@ describe('Table#collapsed', () => {
 
   const SIMPLE_COLUMN = new Column<Item, string>('Name', {
     width: '3fr',
-    renderMapping: (obj): string => obj.name,
+    renderMapping: (obj): string => obj.name ?? 'unknown',
     renderer: SimpleColumn,
   });
 
   test('Table#collapsed prop should be used for collapsed', async () => {
-    const { getByRole } = render(Table<Item>, {
+    const { getByRole } = render(Table, {
       kind: 'demo',
       data: [
         {
