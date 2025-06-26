@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ContainerInfo } from '/@api/container-info';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -33,26 +33,23 @@ import { containersInfos } from '../../stores/containers';
 import { providerInfos } from '../../stores/providers';
 import ContainerList from './ContainerList.svelte';
 
-// fake the window.events object
-beforeAll(() => {
+beforeEach(() => {
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
+  vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.spyOn(window, 'startPod').mockImplementation(vi.fn());
+  vi.spyOn(window, 'startContainer').mockImplementation(vi.fn());
+  vi.spyOn(window, 'removePod').mockImplementation(vi.fn());
+  vi.spyOn(window, 'deleteContainer').mockImplementation(vi.fn());
+  // fake the window.events object
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-});
-
-beforeEach(() => {
-  vi.mocked(window.startPod).mockClear();
-  vi.mocked(window.startContainer).mockClear();
-  vi.mocked(window.removePod).mockClear();
-  vi.mocked(window.deleteContainer).mockClear();
-  vi.mocked(window.listContainers).mockResolvedValue([]);
 });
 
 async function waitRender(customProperties: object): Promise<RenderResult<Component<ComponentProps<ContainerList>>>> {
