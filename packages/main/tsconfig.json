@@ -11,7 +11,8 @@
     "strict": true,
     "isolatedModules": true,
     "exactOptionalPropertyTypes": false,
-
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["node"],
 
     "baseUrl": ".",
