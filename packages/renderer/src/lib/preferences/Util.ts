@@ -20,6 +20,7 @@ import type { ConfigurationScope } from '@podman-desktop/api';
 import type { Terminal } from '@xterm/xterm';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type {
   ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
@@ -27,7 +28,6 @@ import type {
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
 

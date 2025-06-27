@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
-import type { ConfigurationRegistry, IConfigurationNode } from './configuration-registry.js';
 import type { ProviderRegistry } from './provider-registry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -26,7 +26,7 @@ export class AutostartEngine {
   private providerExtension = new Map<string, string>();
 
   constructor(
-    private configurationRegistry: ConfigurationRegistry,
+    private configurationRegistry: IConfigurationRegistry,
     private providerRegistry: ProviderRegistry,
   ) {}
 

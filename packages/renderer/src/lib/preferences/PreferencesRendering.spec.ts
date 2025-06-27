@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import { context } from '/@/stores/context';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import { ContextUI } from '../context/context';
 import PreferencesRendering from './PreferencesRendering.svelte';
 

@@ -23,7 +23,8 @@ import { tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';
 

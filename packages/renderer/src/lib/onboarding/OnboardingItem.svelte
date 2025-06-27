@@ -5,9 +5,9 @@ import type { Unsubscriber } from 'svelte/store';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { OnboardingStepItem } from '/@api/onboarding';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import type { ContextUI } from '../context/context';
 import Markdown from '../markdown/Markdown.svelte';
 import PreferencesRenderingItem from '../preferences/PreferencesRenderingItem.svelte';

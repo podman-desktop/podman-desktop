@@ -7,9 +7,9 @@ import { router } from 'tinro';
 
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import { providerInfos } from '/@/stores/providers';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
 import FormPage from '../ui/FormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';

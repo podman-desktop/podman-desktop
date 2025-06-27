@@ -4,8 +4,8 @@ import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
 import { context } from '/@/stores/context';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
 import type { ContextUI } from '../context/context';
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';

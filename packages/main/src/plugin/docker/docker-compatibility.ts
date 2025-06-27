@@ -21,10 +21,10 @@ import { promises } from 'node:fs';
 import Dockerode from 'dockerode';
 
 import { isMac, isWindows } from '/@/util.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
 import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info.js';
 
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import type { LibPod } from '../dockerode/libpod-dockerode.js';
 import type { ProviderRegistry } from '../provider-registry.js';
 
@@ -35,11 +35,11 @@ export class DockerCompatibility {
   static readonly ENABLED_FULL_KEY =
     `${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`;
 
-  #configurationRegistry: ConfigurationRegistry;
+  #configurationRegistry: IConfigurationRegistry;
 
   #providerRegistry: ProviderRegistry;
 
-  constructor(configurationRegistry: ConfigurationRegistry, providerRegistry: ProviderRegistry) {
+  constructor(configurationRegistry: IConfigurationRegistry, providerRegistry: ProviderRegistry) {
     this.#configurationRegistry = configurationRegistry;
     this.#providerRegistry = providerRegistry;
   }

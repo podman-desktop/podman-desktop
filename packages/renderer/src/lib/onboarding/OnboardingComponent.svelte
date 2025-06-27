@@ -5,10 +5,10 @@ import Fa from 'svelte-fa';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { OnboardingEmbeddedComponentType } from '/@api/onboarding';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import PreferencesConnectionCreationOrEditRendering from '../preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 
 export let component: OnboardingEmbeddedComponentType;

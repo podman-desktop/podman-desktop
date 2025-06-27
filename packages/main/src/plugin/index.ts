@@ -67,6 +67,7 @@ import { Updater } from '/@/plugin/updater.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -138,7 +139,6 @@ import { CloseBehavior } from './close-behavior.js';
 import { ColorRegistry } from './color-registry.js';
 import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
-import type { IConfigurationPropertyRecordedSchema } from './configuration-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
 import { ContainerProviderRegistry } from './container-registry.js';

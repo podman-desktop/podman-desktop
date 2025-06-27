@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@
 
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { IConfigurationChangeEvent } from '../../../main/src/plugin/configuration-registry';
+import type { IConfigurationChangeEvent } from '/@api/configuration/models';
+
 import { onDidChangeConfiguration, setupConfigurationChange } from './configurationProperties';
 
 // first, patch window object

@@ -22,8 +22,7 @@ import { fireEvent, render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
-
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
   id: 'hello.world.fooBar',

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ConfigurationRegistry, IConfigurationNode } from './configuration-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 export class OpenDevToolsInit {
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(private configurationRegistry: IConfigurationRegistry) {}
 
   init(): void {
     // add configuration

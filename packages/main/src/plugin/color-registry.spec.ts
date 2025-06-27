@@ -21,16 +21,17 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
-import type { ConfigurationRegistry, IConfigurationChangeEvent } from '/@/plugin/configuration-registry.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import type { ColorDefinition } from '/@api/color-info.js';
+import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
 import { ColorRegistry } from './color-registry.js';
+import type { ConfigurationRegistry } from './configuration-registry.js';
 
 class TestColorRegistry extends ColorRegistry {
   override notifyUpdate(): void {

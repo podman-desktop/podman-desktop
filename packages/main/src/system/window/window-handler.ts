@@ -18,7 +18,7 @@
 
 import { type BrowserWindow, type Rectangle, screen } from 'electron';
 
-import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { WindowSettings } from './window-settings.js';
 
@@ -27,11 +27,11 @@ import { WindowSettings } from './window-settings.js';
  */
 export class WindowHandler {
   readonly #browserWindow: BrowserWindow;
-  readonly #configurationRegistry: ConfigurationRegistry;
+  readonly #configurationRegistry: IConfigurationRegistry;
 
   #debounceSaveTimeout: NodeJS.Timeout | undefined;
 
-  constructor(configurationRegistry: ConfigurationRegistry, browserWindow: BrowserWindow) {
+  constructor(configurationRegistry: IConfigurationRegistry, browserWindow: BrowserWindow) {
     this.#browserWindow = browserWindow;
     this.#configurationRegistry = configurationRegistry;
   }

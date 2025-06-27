@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Dropdown } from '@podman-desktop/ui-svelte';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string | undefined;

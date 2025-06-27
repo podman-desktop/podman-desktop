@@ -22,7 +22,14 @@ import * as path from 'node:path';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import type { IExperimentalConfiguration } from '/@api/configuration/models.js';
+import type {
+  ConfigurationScope,
+  IConfigurationChangeEvent,
+  IConfigurationNode,
+  IConfigurationPropertyRecordedSchema,
+  IConfigurationRegistry,
+} from '/@api/configuration/models.js';
+import type { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
@@ -31,83 +38,6 @@ import { ConfigurationImpl } from './configuration-impl.js';
 import type { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
-
-export type IConfigurationPropertySchemaType =
-  | 'markdown'
-  | 'string'
-  | 'number'
-  | 'integer'
-  | 'boolean'
-  | 'null'
-  | 'array'
-  | 'object';
-
-export interface IConfigurationChangeEvent {
-  key: string;
-  value: unknown;
-  scope: containerDesktopAPI.ConfigurationScope;
-}
-
-export interface IConfigurationPropertyRecordedSchema extends IConfigurationPropertySchema {
-  title: string;
-  parentId: string;
-  extension?: IConfigurationExtensionInfo;
-}
-
-export interface IConfigurationPropertySchema {
-  id?: string;
-  type?: IConfigurationPropertySchemaType | IConfigurationPropertySchemaType[];
-  default?: unknown;
-  group?: string;
-  description?: string;
-  placeholder?: string;
-  markdownDescription?: string;
-  minimum?: number;
-  maximum?: number | string;
-  format?: string;
-  step?: number;
-  scope?: ConfigurationScope | ConfigurationScope[];
-  readonly?: boolean;
-  // if hidden is true, the property is not shown in the preferences page. It may still appear in other locations if it uses other scope (like onboarding)
-  hidden?: boolean;
-  enum?: string[];
-  when?: string;
-  experimental?: IExperimentalConfiguration;
-}
-
-export type ConfigurationScope =
-  | 'DEFAULT'
-  | 'ContainerConnection'
-  | 'KubernetesConnection'
-  | 'VmConnection'
-  | 'ContainerProviderConnectionFactory'
-  | 'KubernetesProviderConnectionFactory'
-  | 'VmProviderConnectionFactory'
-  | 'DockerCompatibility'
-  | 'Onboarding';
-
-export interface IConfigurationExtensionInfo {
-  id: string;
-}
-
-export interface IConfigurationNode {
-  id: string;
-  type?: string | string[];
-  title: string;
-  description?: string;
-  properties?: Record<string, IConfigurationPropertySchema>;
-  scope?: ConfigurationScope;
-  extension?: IConfigurationExtensionInfo;
-}
-
-export interface IConfigurationRegistry {
-  registerConfigurations(configurations: IConfigurationNode[]): void;
-  deregisterConfigurations(configurations: IConfigurationNode[]): void;
-  updateConfigurations(configurations: { add: IConfigurationNode[]; remove: IConfigurationNode[] }): void;
-  readonly onDidUpdateConfiguration: Event<{ properties: string[] }>;
-  readonly onDidChangeConfiguration: Event<IConfigurationChangeEvent>;
-  getConfigurationProperties(): Record<string, IConfigurationPropertyRecordedSchema>;
-}
 
 export class ConfigurationRegistry implements IConfigurationRegistry {
   private readonly configurationContributors: IConfigurationNode[];
@@ -184,7 +114,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
    * @param configurations
    * @return the {@link Disposable} object provided **delete** definitely the value from the settings.
    */
-  public registerConfigurations(configurations: IConfigurationNode[]): Disposable {
+  public registerConfigurations(configurations: IConfigurationNode[]): IDisposable {
     this.doRegisterConfigurations(configurations, true);
     return Disposable.create(() => {
       this.deregisterConfigurations(configurations);

@@ -25,9 +25,9 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { OnboardingInfo } from '/@api/onboarding';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import InstalledExtensionCardLeftOnboardingAndProperties from './InstalledExtensionCardLeftOnboardingAndProperties.svelte';
 
 // mock the router

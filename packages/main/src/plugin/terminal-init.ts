@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
 import { TerminalSettings } from './terminal-settings.js';
 
 export class TerminalInit {

@@ -21,7 +21,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import type { ConfigurationRegistry } from '../plugin/configuration-registry.js';
+import type { IConfigurationRegistry } from '/@api/configuration/models.js';
 
 /**
  * On Windows, launching program automatically on startup is done via %APPDATA%\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder
@@ -34,9 +34,9 @@ export class WindowsStartup {
   private startupFile;
   private windowsStartupFoler;
   private exeDirectory;
-  private configurationRegistry: ConfigurationRegistry;
+  private configurationRegistry: IConfigurationRegistry;
 
-  constructor(configurationRegistry: ConfigurationRegistry) {
+  constructor(configurationRegistry: IConfigurationRegistry) {
     // configuration settings
     this.configurationRegistry = configurationRegistry;
 

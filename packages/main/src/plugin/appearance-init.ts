@@ -18,8 +18,9 @@
 
 import { nativeTheme } from 'electron';
 
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
 import { AppearanceSettings } from './appearance-settings.js';
-import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
 

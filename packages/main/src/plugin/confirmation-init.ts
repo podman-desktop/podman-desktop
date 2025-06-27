@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 export class ConfirmationInit {
   constructor(private configurationRegistry: IConfigurationRegistry) {}

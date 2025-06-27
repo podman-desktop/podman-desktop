@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+
 import SlideToggle from '../../ui/SlideToggle.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;

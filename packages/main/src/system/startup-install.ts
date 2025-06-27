@@ -18,14 +18,15 @@
 
 import * as os from 'node:os';
 
-import type { ConfigurationRegistry, IConfigurationNode } from '../plugin/configuration-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
 import { MacosStartup } from './macos-startup.js';
 import { WindowsStartup } from './windows-startup.js';
 
 export class StartupInstall {
   private osStartup: MacosStartup | WindowsStartup | undefined;
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {
+  constructor(private configurationRegistry: IConfigurationRegistry) {
     // macos ?
     if (os.platform() === 'darwin') {
       this.osStartup = new MacosStartup(configurationRegistry);

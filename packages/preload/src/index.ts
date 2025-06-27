@@ -46,6 +46,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { CliToolInfo } from '/@api/cli-tool-info';
 import type { ColorInfo } from '/@api/color-info';
 import type { CommandInfo } from '/@api/command-info';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -105,7 +106,6 @@ import type { ContextInfo } from '../../main/src/plugin/api/context-info';
 import type { KubernetesGeneratorInfo } from '../../main/src/plugin/api/KubernetesGeneratorInfo';
 import type { PodCreateOptions, PodInfo, PodInspectInfo } from '../../main/src/plugin/api/pod-info';
 import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
-import type { IConfigurationPropertyRecordedSchema } from '../../main/src/plugin/configuration-registry';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,

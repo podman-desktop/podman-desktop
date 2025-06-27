@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vi
 
 import { eventCollect } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
 type LoggerEventName = 'log' | 'warn' | 'error' | 'finish';

@@ -13,9 +13,9 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import { type Menu, MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { configurationProperties } from '../../stores/configurationProperties';
 import { providerInfos } from '../../stores/providers';
@@ -458,7 +458,7 @@ function handleError(errorMessage: string): void {
                         ? (provider.containerProviderConnectionCreationDisplayName ?? undefined)
                         : provider.kubernetesProviderConnectionCreation
                           ? provider.kubernetesProviderConnectionCreationDisplayName
-                          : provider.vmProviderConnectionCreation 
+                          : provider.vmProviderConnectionCreation
                             ? provider.vmProviderConnectionCreationDisplayName
                             : undefined) ?? provider.name}
                     {@const buttonTitle =

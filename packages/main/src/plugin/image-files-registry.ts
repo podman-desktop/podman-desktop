@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ import type {
   ImageInfo,
 } from '@podman-desktop/api';
 
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
 import type { ApiSenderType } from './api.js';
-import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
 import type { Context } from './context/context.js';
 import { toImageFilesystemLayerUIs } from './image-details-files.js';
 import { ImageFilesImpl } from './image-files-impl.js';

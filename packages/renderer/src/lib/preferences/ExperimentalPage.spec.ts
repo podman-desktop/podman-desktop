@@ -23,8 +23,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
-
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 beforeEach(() => {
   vi.resetAllMocks();

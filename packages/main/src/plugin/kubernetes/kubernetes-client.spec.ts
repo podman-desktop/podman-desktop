@@ -48,11 +48,11 @@ import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vi
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { type ForwardConfig, type ForwardOptions, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
 import type { ApiSenderType } from '../api.js';
-import type { ConfigurationRegistry, IConfigurationChangeEvent } from '../configuration-registry.js';
 import { Emitter } from '../events/emitter.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
@@ -64,13 +64,13 @@ import { ResizableTerminalWriter } from './kubernetes-exec-transmitter.js';
 vi.mock(import('node:fs'));
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
-const configurationRegistry: ConfigurationRegistry = {
+const configurationRegistry: IConfigurationRegistry = {
   onDidChangeConfiguration: _onDidChangeConfiguration.event,
   registerConfigurations: vi.fn(),
   getConfiguration: vi.fn().mockReturnValue({
     get: vi.fn().mockReturnValue(''),
   }),
-} as unknown as ConfigurationRegistry;
+} as unknown as IConfigurationRegistry;
 
 const fileSystemMonitoring: FilesystemMonitoring = new FilesystemMonitoring();
 const telemetry: Telemetry = {

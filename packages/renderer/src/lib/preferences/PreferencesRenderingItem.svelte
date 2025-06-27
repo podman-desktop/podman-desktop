@@ -6,8 +6,8 @@ import Fa from 'svelte-fa';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import Label from '/@/lib/ui/Label.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Markdown from '../markdown/Markdown.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
 import type {
   CatalogExtension,
   CatalogFetchableExtension,
 } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import type { Proxy } from '/@/plugin/proxy.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
 
@@ -44,7 +44,7 @@ export class ExtensionsCatalog {
   constructor(
     private certificates: Certificates,
     private proxy: Proxy,
-    private configurationRegistry: ConfigurationRegistry,
+    private configurationRegistry: IConfigurationRegistry,
     private apiSender: ApiSenderType,
   ) {}
 

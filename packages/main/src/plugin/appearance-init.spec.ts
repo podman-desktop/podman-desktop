@@ -19,10 +19,11 @@
 import { nativeTheme } from 'electron';
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
+
 import type { ApiSenderType } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AppearanceSettings } from './appearance-settings.js';
-import type { IConfigurationChangeEvent } from './configuration-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
 

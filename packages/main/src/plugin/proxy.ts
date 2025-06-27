@@ -20,9 +20,9 @@ import type { Event, ProxySettings } from '@podman-desktop/api';
 import { ProxyAgent } from 'undici';
 
 import type { Certificates } from '/@/plugin/certificates.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { ProxyState } from '/@api/proxy.js';
 
-import type { ConfigurationRegistry, IConfigurationNode } from './configuration-registry.js';
 import { Emitter } from './events/emitter.js';
 import { getProxyUrl } from './proxy-resolver.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
@@ -65,7 +65,7 @@ export class Proxy {
   public readonly onDidStateChange: Event<boolean> = this._onDidStateChange.event;
 
   constructor(
-    private configurationRegistry: ConfigurationRegistry,
+    private configurationRegistry: IConfigurationRegistry,
     private certificates: Certificates,
   ) {}
 

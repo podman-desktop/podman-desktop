@@ -31,6 +31,7 @@ import type {
 import type { MenuRegistry } from '/@/plugin/menu-registry.js';
 import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
@@ -45,7 +46,6 @@ import { CancellationTokenSource } from '../cancellation-token.js';
 import type { Certificates } from '../certificates.js';
 import type { CliToolRegistry } from '../cli-tool-registry.js';
 import type { CommandRegistry } from '../command-registry.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { Context } from '../context/context.js';
 import type { CustomPickRegistry } from '../custompick/custompick-registry.js';
@@ -136,7 +136,7 @@ export class ExtensionLoader {
     private commandRegistry: CommandRegistry,
     private menuRegistry: MenuRegistry,
     private providerRegistry: ProviderRegistry,
-    private configurationRegistry: ConfigurationRegistry,
+    private configurationRegistry: IConfigurationRegistry,
     private imageRegistry: ImageRegistry,
     private apiSender: ApiSenderType,
     private trayMenuRegistry: TrayMenuRegistry,
@@ -1783,7 +1783,7 @@ export class ExtensionLoader {
     }
   }
 
-  getConfigurationRegistry(): ConfigurationRegistry {
+  getConfigurationRegistry(): IConfigurationRegistry {
     return this.configurationRegistry;
   }
 

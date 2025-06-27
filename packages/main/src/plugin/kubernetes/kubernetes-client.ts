@@ -73,6 +73,7 @@ import { parseAllDocuments } from 'yaml';
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
@@ -84,7 +85,6 @@ import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-trou
 import type { V1Route } from '/@api/openshift-types.js';
 
 import type { ApiSenderType } from '../api.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
 import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
@@ -205,7 +205,7 @@ export class KubernetesClient {
 
   constructor(
     private readonly apiSender: ApiSenderType,
-    private readonly configurationRegistry: ConfigurationRegistry,
+    private readonly configurationRegistry: IConfigurationRegistry,
     private readonly fileSystemMonitoring: FilesystemMonitoring,
     private readonly telemetry: Telemetry,
   ) {

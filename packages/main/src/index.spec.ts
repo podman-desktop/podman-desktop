@@ -21,8 +21,9 @@ import { app, BrowserWindow, Menu, Tray } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
+import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
+
 import { mainWindowDeferred } from './index.js';
-import type { ConfigurationRegistry, IConfigurationChangeEvent } from './plugin/configuration-registry.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
 import { Deferred } from './plugin/util/deferred.js';
@@ -64,7 +65,7 @@ const configurationRegistryMock = {
   getConfiguration: vi.fn().mockReturnValue({
     get: vi.fn(),
   }),
-} as unknown as ConfigurationRegistry;
+} as unknown as IConfigurationRegistry;
 
 const fakeWindow = {
   isDestroyed: vi.fn(),
@@ -242,7 +243,7 @@ test('app-ready event with activate event', async () => {
   expect(_onDidConfigurationRegistry).toBeDefined();
 
   // cast as Emitter
-  const onDidConfigurationRegistry = _onDidConfigurationRegistry as Emitter<ConfigurationRegistry>;
+  const onDidConfigurationRegistry = _onDidConfigurationRegistry as Emitter<IConfigurationRegistry>;
 
   // create a Menu
   vi.mocked(Menu.getApplicationMenu).mockReturnValue({
