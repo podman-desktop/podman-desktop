@@ -1,10 +1,10 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
-import { resolve } from 'node:path';
-import { createNotesFiles } from './release-notes-parser';
-import Storybook from './storybook';
-import optimizedImagesPlugin from './plugins/docusaurus-plugin-optimized-images';
-import remarkOptimizeImages from './plugins/remark-optimize-images';
+const { resolve } = require('node:path');
+const { createNotesFiles } = require('./release-notes-parser');
+const { default: Storybook } = require('./storybook');
+const { default: optimizedImagesPlugin } = require('./plugins/docusaurus-plugin-optimized-images');
+const { default: remarkOptimizeImages } = require('./plugins/remark-optimize-images.ts');
 
 const lightCodeTheme = require('prism-react-renderer').themes.github;
 const darkCodeTheme = require('prism-react-renderer').themes.dracula;
