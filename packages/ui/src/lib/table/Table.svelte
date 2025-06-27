@@ -22,6 +22,12 @@ export let row: Row<T>;
 export let data: T[];
 export let defaultSortColumn: string | undefined = undefined;
 export let collapsed: string[] = [];
+/**
+ * To better distinct individual row, you can provide a dedicated key method
+ *
+ * By default, it will use the object name property
+ */
+export let key: (object: T) => string = item => item.name ?? String(item);
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
@@ -240,28 +246,27 @@ function toggleChildren(name: string | undefined): void {
   <div role="rowgroup">
     {#each data as object (object)}
       {@const children = row.info.children?.(object) ?? []}
+      {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
-          class:rounded-t-lg={object.name &&
-            !collapsed.includes(object.name) &&
+          class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
-          class:rounded-lg={!object.name ||
-            collapsed.includes(object.name) ||
+          class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
           role="row"
           aria-label={object.name}>
           <div class="whitespace-nowrap place-self-center" role="cell">
-            {#if object.name && children.length > 0}
+            {#if children.length > 0}
               <button
-                title={collapsed.includes(object.name) ? 'Expand Row' : 'Collapse Row'}
-                aria-expanded={!collapsed.includes(object.name)}
-                on:click={toggleChildren.bind(undefined, object.name)}
+                title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
+                aria-expanded={!collapsed.includes(itemKey)}
+                on:click={toggleChildren.bind(undefined, itemKey)}
               >
                 <Fa
                   size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight} />
+                  icon={!collapsed.includes(itemKey) ? faChevronDown : faChevronRight} />
               </button>
             {/if}
           </div>
@@ -295,7 +300,7 @@ function toggleChildren(name: string | undefined): void {
         </div>
 
         <!-- Child objects -->
-        {#if object.name && !collapsed.includes(object.name) && children.length > 0}
+        {#if !collapsed.includes(itemKey) && children.length > 0}
           {#each children as child, i (child)}
             <div
               class="grid grid-table gap-x-0.5 hover:bg-[var(--pd-content-card-hover-bg)]"

@@ -410,6 +410,7 @@ test('Expect table is scoped for css manipulation', async () => {
 
 describe('Table#collapsed', () => {
   interface Item {
+    id: string;
     name?: string;
   }
 
@@ -417,6 +418,7 @@ describe('Table#collapsed', () => {
     selectable: (): boolean => true,
     children: (person): Array<Item> => [
       {
+        id: `${person.id}-child`,
         name: `${person.name} child`,
       },
     ],
@@ -429,13 +431,15 @@ describe('Table#collapsed', () => {
   });
 
   test('Table#collapsed prop should be used for collapsed', async () => {
-    const { getByRole } = render(Table, {
+    const { getByRole } = render<Table<Item>>(Table, {
       kind: 'demo',
       data: [
         {
+          id: 'foo',
           name: 'foo',
         },
         {
+          id: 'bar',
           name: 'bar',
         },
       ],
@@ -451,5 +455,33 @@ describe('Table#collapsed', () => {
     const barRow = getByRole('row', { name: 'bar' });
     const barCollapseBtn = within(barRow).getByRole('button', { name: 'Collapse Row' });
     expect(barCollapseBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('item with same name can be distinct using Table#key prop', async () => {
+    const { getAllByRole } = render<Table<Item>>(Table, {
+      kind: 'demo',
+      data: [
+        {
+          id: '1',
+          name: 'foo',
+        },
+        {
+          id: '2',
+          name: 'foo',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['1'],
+      key: ({ id }: Item): string => id,
+    });
+
+    const [foo1, foo2] = getAllByRole('row', { name: 'foo' });
+
+    const foo1ExpandBtn = within(foo1).getByRole('button', { name: 'Expand Row' });
+    expect(foo1ExpandBtn).toHaveAttribute('aria-expanded', 'false');
+
+    const foo2ExpandBtn = within(foo2).getByRole('button', { name: 'Collapse Row' });
+    expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
   });
 });
