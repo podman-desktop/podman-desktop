@@ -104,7 +104,6 @@ Perform this task only if you want to experiment with the model before using it 
    ![newly created playground](img/newly-created-playground.png)
 
 7. Click the name of the playground to edit the model settings for experiment:
-
    1. Edit the value of the model parameters.
       ![editing model parameters](img/editing-model-parameters.png)
 

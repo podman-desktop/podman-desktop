@@ -178,7 +178,6 @@ For M1 and M2 processors:
 For M3 processors:
 
 1. To get a clean environment, remove all Podman and qemu artifacts:
-
    1. Remove eventual installation from podman/podman desktop installer:
 
       ```shell-session

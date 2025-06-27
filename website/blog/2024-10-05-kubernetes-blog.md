@@ -31,7 +31,6 @@ To do so, you can pull the relevant images from the `quay.io` registry.
 2.  Click **Pull**.
     ![pull from registry](img/building-a-kubernetes-application/pulling-from-registry.png)
 3.  Start the first container:
-
     1. Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-backend`.
        ![enter image name](img/building-a-kubernetes-application/enter-image-name.png)
     2. Click **Pull image**. A download complete notification opens.
@@ -45,7 +44,6 @@ To do so, you can pull the relevant images from the `quay.io` registry.
        ![view Logs tab](img/building-a-kubernetes-application/redis-running-in-logs.png)
 
 4.  Start the second container:
-
     1.  Enter the image name to pull from a registry. For example, `quay.io/podman-desktop-demo/podify-demo-frontend`.
     2.  Click **Pull image** and then **Done**.
     3.  Click the `Run Image` icon corresponding to the new image added.
@@ -152,7 +150,6 @@ You can deploy the application pod to a Kubernetes cluster that has an active co
 
 1. Go the **Kubernetes** component page.
 2. Perform the following steps:
-
    1. Click the **Services** option to view the newly created service, `my-pod-5000`.
       ![service created](img/building-a-kubernetes-application/service-created.png)
    2. Click the **Ingresses and Routes** option to view the newly created ingress, `my-pod`.

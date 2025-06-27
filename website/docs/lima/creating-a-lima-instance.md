@@ -24,7 +24,6 @@ Consider creating a custom Lima instance to:
 #### Procedure
 
 1. In a terminal, create the Lima instance.
-
    - To create a Lima instance with rootless Podman, use the `podman` template:
 
      ```shell-session
@@ -56,25 +55,19 @@ Consider creating a custom Lima instance to:
      ```
 
 2. Wait for the instance to start, and restart the Lima extension.
-
    - Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Preferences > Extension: Lima** to change the instance name and type.
-
      - Podman (default)
-
        - Type: podman
        - Name: podman
          ![Lima preferences Podman](img/lima-preferences-podman.png)
 
      - Docker
-
        - Type: docker
        - Name: docker
          ![Lima preferences Docker](img/lima-preferences-docker.png)
 
    - Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Preferences > Extension: Lima** to configure a custom socket name.
-
      - The default socket name is:
-
        - `podman.sock` for Podman
 
        - `docker.sock` for Docker
