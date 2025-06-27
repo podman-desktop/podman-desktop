@@ -444,6 +444,10 @@ let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[];
 $: containersAndGroups = containerGroups.map(group =>
   group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group,
 );
+
+function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
+  return item.id;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
@@ -524,6 +528,7 @@ $: containersAndGroups = containerGroups.map(group =>
           columns={columns}
           row={row}
           defaultSortColumn="Name"
+          key={key}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
       {/if}

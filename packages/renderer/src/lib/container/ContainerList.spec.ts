@@ -999,3 +999,50 @@ test('Ensuring the table and empty screen are not visible at the same time', asy
   const table = queryByRole('table');
   expect(table).toBeNull();
 });
+
+test('pods with same name on different engines should have separate group', async () => {
+  const CONTAINERS_MOCK: Array<ContainerInfo> = Array.from({ length: 3 }).map((_, index) => ({
+    Id: `sha256:${index}`,
+    Image: 'sha256:234',
+    Names: ['foo-bar-pod'], // have the same name for all
+    RepoTags: ['veryold:image'],
+    Status: 'Running',
+    pod: {
+      name: 'my-pod',
+      id: `podman-engine-${index}`, // unique pod id (only pod-id is unique accross all engines)
+      status: 'Running',
+      engineId: `podman-${index}`,
+    },
+    engineId: `podman-${index}`,
+    engineName: 'podman',
+    ImageID: 'dummy-image-id',
+    engineType: 'podman',
+    StartedAt: '0',
+    ImageBase64RepoTag: '',
+    Created: 0,
+    Ports: [],
+    Labels: {},
+    State: '',
+  }));
+
+  vi.mocked(window.listContainers).mockResolvedValue(CONTAINERS_MOCK);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  // wait until the store is populated
+  await vi.waitUntil(
+    async () => {
+      return get(containersInfos).length > 0;
+    },
+    { interval: 250, timeout: 5000 },
+  );
+
+  const { getAllByRole } = await waitRender({});
+
+  await vi.waitFor(() => {
+    const expandButtons = getAllByRole('button', { name: 'Collapse Row' });
+    expect(expandButtons).toHaveLength(CONTAINERS_MOCK.length);
+  });
+});
