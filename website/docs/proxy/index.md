@@ -167,9 +167,9 @@ Requirements:
    1. Store your proxy Certificate Authorities (CA), in Privacy-Enhanced Mail (PEM) format, in the `proxy_ca.pem` file.
    2. Copy the certificate to the Podman machine:
 
-      ```shell-session
-      $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
-      ```
+   ```shell-session
+   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   ```
 
    3. Open a shell prompt on the Podman machine:
 
@@ -241,9 +241,9 @@ Requirements:
    1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
    2. Copy the certificate to the Podman machine:
 
-      ```shell-session
-      $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
-      ```
+   ```shell-session
+   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   ```
 
    3. Open a shell prompt on the Podman machine:
 
