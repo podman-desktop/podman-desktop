@@ -643,8 +643,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
       eslint-plugin-svelte:
-        specifier: ^3.9.3
-        version: 3.9.3(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
+        specifier: ^3.10.1
+        version: 3.10.1(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
@@ -755,8 +755,8 @@ importers:
         specifier: ^8.35.0
         version: 8.35.0(@typescript-eslint/parser@8.35.0(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)
       eslint-plugin-svelte:
-        specifier: ^3.9.3
-        version: 3.9.3(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
+        specifier: ^3.10.1
+        version: 3.10.1(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
       jsdom:
         specifier: ^27.0.0-beta.2
         version: 27.0.0-beta.2
@@ -857,8 +857,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       eslint-plugin-svelte:
-        specifier: ^3.9.3
-        version: 3.9.3(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
+        specifier: ^3.10.1
+        version: 3.10.1(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8)
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -6804,8 +6804,8 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-svelte@3.9.3:
-    resolution: {integrity: sha512-PlcyK80sqAZ43IITeZkgl3zPFWJytx/Joup9iKGqIOsXM2m3pWfPbWuXPr5PN3loXFEypqTY/JyZwNqlSpSvRw==}
+  eslint-plugin-svelte@3.10.1:
+    resolution: {integrity: sha512-csCh2x0ge/DugXC7dCANh46Igi7bjMZEy6rHZCdS13AoGVJSu7a90Kru3I8oMYLGEemPRE1hQXadxvRPVMAAXQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
@@ -19608,7 +19608,7 @@ snapshots:
       semver: 7.7.2
       typescript: 5.8.3
 
-  eslint-plugin-svelte@3.9.3(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8):
+  eslint-plugin-svelte@3.10.1(eslint@9.29.0(jiti@2.4.2))(svelte@5.34.8):
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@9.29.0(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.0
