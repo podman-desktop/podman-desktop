@@ -431,7 +431,7 @@ describe('Table#collapsed', () => {
   });
 
   test('Table#collapsed prop should be used for collapsed', async () => {
-    const { getByRole } = render<Table<Item>>(Table, {
+    const { getByRole } = render(Table, {
       kind: 'demo',
       data: [
         {
@@ -458,7 +458,7 @@ describe('Table#collapsed', () => {
   });
 
   test('item with same name can be distinct using Table#key prop', async () => {
-    const { getAllByRole } = render<Table<Item>>(Table, {
+    const { getAllByRole } = render(Table, {
       kind: 'demo',
       data: [
         {
