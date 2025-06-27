@@ -22,7 +22,7 @@ import type { DisposableGroup } from './disposable-group.js';
 /**
  * Represents a typed event.
  *
- * @param listener The listener function will be call when the event happens.
+ * @param listener The listener function will be called when the event happens.
  * @param thisArgs The 'this' which will be used when calling the event listener.
  * @param disposables An array to which a {{IDisposable}} will be added.
  * @return a disposable to remove the listener again.
