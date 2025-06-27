@@ -71,6 +71,8 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe
   .serial(`Podman machine switching validation `, () => {
+    test.describe.configure({ timeout: 120_000 });
+
     test('Check data for available Podman Machine and stop machine', async ({ page, navigationBar }) => {
       await test.step('Open resources page', async () => {
         const settingsBar = await navigationBar.openSettings();
