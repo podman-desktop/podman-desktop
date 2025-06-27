@@ -159,7 +159,7 @@ export default function Home(): JSX.Element {
                 <GradientIcon icon={faCamera} size={24} />
               </div>
               <div className="flex gap-4 flex-col sm:flex-row">
-                <GradientButton href="https://github.com/podman-desktop/community/blob/main/meetings/README.md#upcoming-community-meeting">
+                <GradientButton href="https://www.youtube.com/playlist?list=PLwQSOOPzuslql836gEAqF66FAYLm5sno-">
                   Watch recording
                 </GradientButton>
               </div>
