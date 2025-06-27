@@ -181,5 +181,5 @@ website/
 - External URLs and SVGs automatically skipped.
 - Small images (banners/icons) get format conversion only, no responsive sizes.
 - Cross-platform compatible (Windows/Unix) with normalized path handling.
-- **Enhanced path normalization using `path.posix.normalize` for consistent cross-platform behavior.**
-- **Concurrency for batch processing can be configured by setting the `OPTIMIZE_IMAGES_CONCURRENCY` environment variable (default: 10).**
+- Enhanced path normalization using `path.posix.normalize` for consistent cross-platform behavior.
+- Concurrency for batch processing can be configured by setting the `OPTIMIZE_IMAGES_CONCURRENCY` environment variable (default: 10).
