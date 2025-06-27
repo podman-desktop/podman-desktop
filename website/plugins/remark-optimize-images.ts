@@ -90,19 +90,23 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
 
     // Convert absolute path to relative path if it contains the website directory.
     let relativePath: string;
-    const websiteIndex = sourceDir.indexOf(path.sep + 'website' + path.sep);
+
+    // Use path.posix.normalize to handle path separators consistently.
+    const normalizedSourceDir = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
+    const websiteIndex = normalizedSourceDir.indexOf('/website/');
+
     if (websiteIndex === -1) {
-      // Fallback for relative paths.
-      relativePath = sourceDir.replace(/\\/g, '/');
+      // Fallback for relative paths - normalize using posix paths.
+      relativePath = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
     } else {
-      // Extract path after '/website/'.
-      relativePath = sourceDir.substring(websiteIndex + '/website/'.length).replace(/\\/g, '/');
+      // Extract path after '/website/' and normalize.
+      relativePath = path.posix.normalize(normalizedSourceDir.substring(websiteIndex + '/website/'.length));
     }
 
     // For docs images: resolve relative to the docs structure.
     if (relativePath.startsWith('docs/')) {
       // Convert relative path to docs context using path joining.
-      const resolvedPath = path.posix.join(relativePath, imageDir);
+      const resolvedPath = path.posix.join(relativePath, imageDir.replace(/\\/g, '/'));
 
       // Extract the path relative to docs directory for optimization structure.
       if (resolvedPath.startsWith('docs/')) {
@@ -118,14 +122,15 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     }
   }
 
-  // Normalize the directory path for web URLs (always use forward slashes).
-  const normalizedOptimizedDir = optimizedDir.replace(/\\/g, '/');
-  const normalizedDir =
-    normalizedOptimizedDir === ''
-      ? ''
-      : normalizedOptimizedDir.startsWith('/')
-        ? normalizedOptimizedDir
-        : `/${normalizedOptimizedDir}`;
+  // Normalize the directory path for web URLs using path.posix.normalize.
+  const normalizedOptimizedDir = path.posix.normalize(optimizedDir.replace(/\\/g, '/'));
+  let normalizedDir: string;
+
+  if (normalizedOptimizedDir === '' || normalizedOptimizedDir === '.') {
+    normalizedDir = '';
+  } else {
+    normalizedDir = normalizedOptimizedDir.startsWith('/') ? normalizedOptimizedDir : `/${normalizedOptimizedDir}`;
+  }
 
   return `/optimized-images${normalizedDir}/${imageName}`;
 }
@@ -147,7 +152,7 @@ function shouldSkipImage(url: string): boolean {
     url.startsWith('pathname://') ||
     // Already optimized images to prevent double-processing.
     // Pattern specifically matches responsive width suffixes at the end of filenames.
-    /-\d{2,4}w\.(?:png|jpe?g|webp)$/i.test(url)
+    /-\d{3,4}w\.(?:png|jpe?g|webp|avif)$/i.test(url)
   );
 }
 

@@ -16,7 +16,7 @@
 import type { Stats } from 'node:fs';
 import * as fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import sharp from 'sharp';
 
@@ -267,11 +267,21 @@ const DIRECTORY_MAPPINGS = [
  * @returns The relative output directory
  */
 export function getRelativeOutputDir(dir: string): string {
+  // Normalize directory path to use forward slashes for consistent prefix matching.
+  // Use path.posix.normalize to ensure consistent forward slash behavior across platforms.
+  const normalizedDir = path.posix.normalize(dir.replace(/\\/g, '/'));
+
   // Find the first matching mapping based on directory prefix.
-  const mapping = DIRECTORY_MAPPINGS.find(({ prefix }) => dir.startsWith(prefix));
+  // Normalize both the input directory and the prefix for consistent comparison.
+  const mapping = DIRECTORY_MAPPINGS.find(({ prefix }) => {
+    const normalizedPrefix = path.posix.normalize(prefix.replace(/\\/g, '/'));
+    return normalizedDir.startsWith(normalizedPrefix);
+  });
 
   // Apply the mapping handler or use the directory as-is if no mapping found.
-  return mapping ? mapping.handler(dir) : dir;
+  // Ensure the result is also normalized for consistent path separators.
+  const result = mapping ? mapping.handler(dir) : dir;
+  return path.posix.normalize(result.replace(/\\/g, '/'));
 }
 
 /**
@@ -885,6 +895,6 @@ export async function processImageFormats(
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   optimizeImages().catch(console.error);
 }
