@@ -1,6 +1,5 @@
 <script lang="ts">
 import { CloseButton, NavPage } from '@podman-desktop/ui-svelte';
-
 import { filtered, searchPattern } from '/@/stores/tasks';
 
 import TaskManagerBulkDeleteButton from './button/TaskManagerBulkDeleteButton.svelte';
