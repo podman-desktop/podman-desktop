@@ -33,7 +33,7 @@ let terminalOnDataListener: IDisposable | undefined = undefined;
 
 $effect(() => {
   const connectionStatus = connectionInfo.status;
-  if (lastState === 'starting' && connectionStatus === 'started') {
+  if (connectionStatus === 'started' && connectionStatus !== lastState) {
     restartTerminal().catch((err: unknown) =>
       console.error(`Error restarting terminal for provider ${connectionInfo.name}`, err),
     );
