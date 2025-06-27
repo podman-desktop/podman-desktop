@@ -91,16 +91,20 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     // Convert absolute path to relative path if it contains the website directory.
     let relativePath: string;
 
-    // Normalize source directory path across platforms to handle path separators consistently.
+    // Normalize source directory path across platforms using path.posix for consistent forward slash behavior.
     const normalizedSourceDir = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
-    const websiteIndex = normalizedSourceDir.indexOf('/website/');
+
+    // Use path.posix.sep to ensure consistent separator matching across platforms.
+    const websiteSegment = `${path.posix.sep}website${path.posix.sep}`;
+    const websiteIndex = normalizedSourceDir.indexOf(websiteSegment);
 
     if (websiteIndex === -1) {
-      // Fallback for relative paths - normalize using posix paths.
+      // Fallback for relative paths - normalize using path.posix for consistent behavior.
       relativePath = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
     } else {
-      // Extract path after '/website/' and normalize.
-      relativePath = path.posix.normalize(normalizedSourceDir.substring(websiteIndex + '/website/'.length));
+      // Extract path after '/website/' using proper path operations.
+      const afterWebsite = normalizedSourceDir.substring(websiteIndex + websiteSegment.length);
+      relativePath = path.posix.normalize(afterWebsite);
     }
 
     // For docs images: resolve relative to the docs structure.

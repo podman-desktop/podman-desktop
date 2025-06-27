@@ -486,6 +486,7 @@ describe('remarkOptimizeImages', () => {
       const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
 
       // Should map to the docs structure: /optimized-images/installation/img/download-dmg-640w.avif.
+      // Use cross-platform path expectation.
       expect(avifSrcSet).toContain('/optimized-images/installation/img/download-dmg-640w.avif');
 
       // Check the fallback img element.

@@ -144,9 +144,11 @@ describe('docusaurus-plugin-optimized-images', () => {
 
       const result = plugin.configureWebpack!(mockWebpackConfig, false, {} as ConfigureWebpackUtils);
 
+      // Normalize expected path for cross-platform compatibility.
+      const expectedPath = path.join(mockContext.siteDir, 'static', 'optimized-images');
       expect(result.resolve?.alias).toEqual({
         '@existing': '/some/path',
-        '/optimized-images': path.join(mockContext.siteDir, 'static/optimized-images'),
+        '/optimized-images': expectedPath,
       });
     });
 

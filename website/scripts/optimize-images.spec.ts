@@ -640,7 +640,7 @@ describe('getRelativeOutputDir', () => {
   test('dir starts with "static"', () => {
     const result = getRelativeOutputDir('static/foo/bar');
     // Normalize path separators for cross-platform compatibility.
-    const normalizedResult = result.replace(/\\/g, '/');
+    const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
     expect(normalizedResult).toStrictEqual('foo/bar');
   });
 
@@ -652,7 +652,7 @@ describe('getRelativeOutputDir', () => {
   test('dir starts with "blog/img"', () => {
     const result = getRelativeOutputDir('blog/img/foo/bar');
     // Normalize path separators for cross-platform compatibility.
-    const normalizedResult = result.replace(/\\/g, '/');
+    const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
     expect(normalizedResult).toStrictEqual('img/blog/foo/bar');
   });
 
@@ -664,7 +664,7 @@ describe('getRelativeOutputDir', () => {
   test('dir starts with "blog"', () => {
     const result = getRelativeOutputDir('blog/foo/bar');
     // Normalize path separators for cross-platform compatibility.
-    const normalizedResult = result.replace(/\\/g, '/');
+    const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
     expect(normalizedResult).toStrictEqual('foo/bar');
   });
 
@@ -676,7 +676,7 @@ describe('getRelativeOutputDir', () => {
   test('dir starts with "docs"', () => {
     const result = getRelativeOutputDir('docs/installation/img');
     // Normalize path separators for cross-platform compatibility.
-    const normalizedResult = result.replace(/\\/g, '/');
+    const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
     expect(normalizedResult).toStrictEqual('installation/img');
   });
 });
