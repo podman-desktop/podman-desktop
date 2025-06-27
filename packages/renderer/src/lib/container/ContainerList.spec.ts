@@ -1001,6 +1001,18 @@ test('Ensuring the table and empty screen are not visible at the same time', asy
 });
 
 test('pods with same name on different engines should have separate group', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  // wait until the store is populated
+  await vi.waitUntil(
+    async () => {
+      return get(containersInfos).length === 0;
+    },
+    { interval: 250, timeout: 5000 },
+  );
+
   const CONTAINERS_MOCK: Array<ContainerInfo> = Array.from({ length: 3 }).map((_, index) => ({
     Id: `sha256:${index}`,
     Image: 'sha256:234',
