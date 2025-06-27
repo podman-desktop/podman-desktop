@@ -23,8 +23,8 @@ import path from 'node:path';
 import { safeStorage } from 'electron';
 
 import { type Directories } from '/@/plugin/directories.js';
-import type { Event } from '/@/plugin/events/emitter.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
+import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
 /**

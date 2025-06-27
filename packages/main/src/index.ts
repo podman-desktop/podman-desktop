@@ -19,11 +19,11 @@ import { app, ipcMain, Menu, Tray } from 'electron';
 
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { Event } from '/@api/event.js';
 
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import { type AdditionalData, Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
-import type { Event } from './plugin/events/emitter.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
 import { ZoomLevelHandler } from './plugin/zoom-level-handler.js';

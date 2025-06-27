@@ -27,10 +27,10 @@ import type {
 } from '@podman-desktop/api';
 
 import type { CliToolExtensionInfo, CliToolInfo } from '/@api/cli-tool-info.js';
+import type { Event } from '/@api/event.js';
 
 import type { ApiSenderType } from './api.js';
 import { CliToolImpl } from './cli-tool-impl.js';
-import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
 

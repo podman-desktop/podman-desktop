@@ -51,6 +51,7 @@ import type {
 } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
+import type { Event } from '/@api/event.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
@@ -76,7 +77,6 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import { EnvfileParser } from './env-file-parser.js';
-import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import type { ImageRegistry } from './image-registry.js';
 import { LibpodApiSettings } from './libpod-api-enable/libpod-api-settings.js';

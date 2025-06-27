@@ -19,7 +19,8 @@
 import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
 
-import type { Event } from '../events/emitter.js';
+import type { Event } from '/@api/event.js';
+
 import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { IDisposable } from '../types/disposable.js';

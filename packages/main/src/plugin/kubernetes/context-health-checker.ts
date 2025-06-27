@@ -19,7 +19,8 @@
 import { Health } from '@kubernetes/client-node';
 import type { Disposable } from '@podman-desktop/api';
 
-import type { Event } from '../events/emitter.js';
+import type { Event } from '/@api/event.js';
+
 import { Emitter } from '../events/emitter.js';
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 

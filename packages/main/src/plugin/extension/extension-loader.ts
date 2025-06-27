@@ -31,6 +31,7 @@ import type {
 import type { MenuRegistry } from '/@/plugin/menu-registry.js';
 import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
@@ -50,7 +51,6 @@ import type { Context } from '../context/context.js';
 import type { CustomPickRegistry } from '../custompick/custompick-registry.js';
 import type { DialogRegistry } from '../dialog-registry.js';
 import type { Directories } from '../directories.js';
-import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { IconRegistry } from '../icon-registry.js';

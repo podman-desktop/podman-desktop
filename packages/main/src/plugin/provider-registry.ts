@@ -54,6 +54,7 @@ import type {
   VmProviderConnection,
 } from '@podman-desktop/api';
 
+import type { Event } from '/@api/event.js';
 import type {
   LifecycleMethod,
   PreflightChecksCallback,
@@ -68,7 +69,6 @@ import type {
 import type { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
-import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { LifecycleContextImpl, LoggerImpl } from './lifecycle-context.js';
 import { ProviderImpl } from './provider-impl.js';

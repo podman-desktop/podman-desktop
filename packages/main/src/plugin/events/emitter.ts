@@ -19,20 +19,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 import type { DisposableGroup } from '/@api/disposable-group.js';
+import type { Event } from '/@api/event.js';
 
 import type { IDisposable } from '../types/disposable.js';
-
-/**
- * Represents a typed event.
- */
-/**
- *
- * @param listener The listener function will be call when the event happens.
- * @param thisArgs The 'this' which will be used when calling the event listener.
- * @param disposables An array to which a {{IDisposable}} will be added.
- * @return a disposable to remove the listener again.
- */
-export type Event<T> = (listener: (e: T) => unknown, thisArgs?: unknown, disposables?: DisposableGroup) => IDisposable;
 
 type Callback = (...args: unknown[]) => unknown;
 class CallbackList implements Iterable<Callback> {

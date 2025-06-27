@@ -32,12 +32,12 @@ import type { LinuxOs } from 'getos';
 import getos from 'getos';
 import * as osLocale from 'os-locale';
 
+import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { stoppedExtensions } from '../../util.js';
 import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
-import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
 import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '../types/telemetry.js';
 import { Identity } from './identity.js';
