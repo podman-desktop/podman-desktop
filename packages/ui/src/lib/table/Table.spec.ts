@@ -445,11 +445,11 @@ describe('Table#collapsed', () => {
     });
 
     const fooRow = getByRole('row', { name: 'foo' });
-    const fooExpandBtn = within(fooRow).getByRole('button', { name: 'Expand' });
+    const fooExpandBtn = within(fooRow).getByRole('button', { name: 'Expand Row' });
     expect(fooExpandBtn).toHaveAttribute('aria-expanded', 'false');
 
     const barRow = getByRole('row', { name: 'bar' });
-    const barCollapseBtn = within(barRow).getByRole('button', { name: 'Collapse' });
+    const barCollapseBtn = within(barRow).getByRole('button', { name: 'Collapse Row' });
     expect(barCollapseBtn).toHaveAttribute('aria-expanded', 'true');
   });
 });

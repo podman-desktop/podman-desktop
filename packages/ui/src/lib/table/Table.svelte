@@ -254,7 +254,7 @@ function toggleChildren(name: string | undefined): void {
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if object.name && children.length > 0}
               <button
-                title={collapsed.includes(object.name) ? 'Expand' : 'Collapse'}
+                title={collapsed.includes(object.name) ? 'Expand Row' : 'Collapse Row'}
                 aria-expanded={!collapsed.includes(object.name)}
                 on:click={toggleChildren.bind(undefined, object.name)}
               >
