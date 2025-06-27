@@ -1,4 +1,5 @@
 <script lang="ts">
+import Icon from '../icons/Icon.svelte';
 import StarIcon from '../icons/StarIcon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 
@@ -32,10 +33,9 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     {#if status === 'DELETING'}
       <Spinner size="1.4em" />
     {:else if typeof icon === 'string'}
-      <span class={icon} aria-hidden="true"></span>
+       <Icon icon={icon} />
     {:else}
-      {@const IconComponent = icon}
-      <IconComponent size={size} solid={solid} />
+       <Icon icon={icon} size={size} />
     {/if}
   </div>
   {#if status === 'CREATED'}

@@ -9,9 +9,9 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { afterUpdate, onMount, tick } from 'svelte';
-import Fa from 'svelte-fa';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
+import Icon from '../icons/Icon.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 
@@ -254,10 +254,9 @@ function toggleChildren(name: string | undefined): void {
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if children.length > 0}
               <button on:click={toggleChildren.bind(undefined, object.name)}>
-                <Fa
-                  size="0.8x"
+                <Icon size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight} />
+                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight}/>
               </button>
             {/if}
           </div>

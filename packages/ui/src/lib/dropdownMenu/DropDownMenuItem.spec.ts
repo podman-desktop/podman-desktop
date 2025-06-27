@@ -27,13 +27,13 @@ import DropDownMenuItem from './DropDownMenuItem.svelte';
 test('Expect custom font icon on the contributed action', async () => {
   render(DropDownMenuItem, {
     title: 'dummy-title',
-    icon: 'podman-desktop-icon-dummyIcon',
+    icon: 'fas fa-podman-desktop-icon-dummyIcon',
   });
 
-  const iconItem = screen.getByRole('img', { name: 'dummy-title' });
+  const iconItem = screen.getByRole('img', { hidden: true });
   expect(iconItem).toBeInTheDocument();
   // expect to have the podman desktop icon class
-  expect(iconItem).toHaveClass('podman-desktop-icon-dummyIcon');
+  expect(iconItem).toHaveClass('fas fa-podman-desktop-icon-dummyIcon');
 });
 
 test('Expect Font Awesome icon on the contributed action', async () => {

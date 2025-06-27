@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 interface Props {
   title: string;
@@ -26,9 +27,9 @@ const disabledClasses = 'text-[var(--pd-dropdown-disabled-item-text)] bg-[var(--
       class="group flex items-center no-underline whitespace-nowrap"
       tabindex="-1">
       {#if typeof icon === 'string'}
-        <span role="img" aria-label={title} class="{icon} h-4 w-4"></span>
+        <Icon icon={icon} class="h-4 w-4" />
       {:else}
-        <Fa class="h-4 w-4 text-md" icon={icon} />
+        <Icon class="h-4 w-4 text-md" icon={icon}/>
       {/if}
       {#if title}<span class="ml-2">{title}</span>{/if}
     </span>
