@@ -91,7 +91,7 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     // Convert absolute path to relative path if it contains the website directory.
     let relativePath: string;
 
-    // Use path.posix.normalize to handle path separators consistently.
+    // Normalize source directory path across platforms to handle path separators consistently.
     const normalizedSourceDir = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
     const websiteIndex = normalizedSourceDir.indexOf('/website/');
 

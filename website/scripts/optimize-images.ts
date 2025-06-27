@@ -268,11 +268,11 @@ const DIRECTORY_MAPPINGS = [
  */
 export function getRelativeOutputDir(dir: string): string {
   // Normalize directory path to use forward slashes for consistent prefix matching.
-  // Use path.posix.normalize to ensure consistent forward slash behavior across platforms.
+  // Employ path.posix.normalize for normalization, ensuring cross-platform consistency in handling path separators.
   const normalizedDir = path.posix.normalize(dir.replace(/\\/g, '/'));
 
-  // Find the first matching mapping based on directory prefix.
-  // Normalize both the input directory and the prefix for consistent comparison.
+  // Identify and apply the first matching mapping based on directory prefix.
+  // Both input directory and prefix are normalized to maintain consistency in comparisons.
   const mapping = DIRECTORY_MAPPINGS.find(({ prefix }) => {
     const normalizedPrefix = path.posix.normalize(prefix.replace(/\\/g, '/'));
     return normalizedDir.startsWith(normalizedPrefix);

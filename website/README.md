@@ -76,6 +76,7 @@ This converts images to modern formats (WebP, AVIF) with responsive sizes for be
 - Clear distinction between cached/skipped files and failed processing
 - Error and warning reporting showing only actual issues that need attention
 - Processing statistics with comprehensive summaries including cache hit rates
+- Cross-platform path normalization for consistent behavior on Windows/Unix systems
   The system is fully tested and documented. See [Image Optimization Implementation](IMAGE_OPTIMIZATION_IMPLEMENTATION.md) for details.
 
 ### Adding a Node.js module to the website
