@@ -60,6 +60,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
+import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
@@ -120,7 +121,6 @@ import type {
   KubernetesGeneratorSelector,
 } from '../../main/src/plugin/kubernetes/kube-generator-registry';
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
-import type { MessageBoxOptions, MessageBoxReturnValue } from '../../main/src/plugin/message-box';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 import type { IDisposable } from '../../main/src/plugin/types/disposable';
 import { Deferred } from './util/deferred';

@@ -2,8 +2,8 @@
 import { CloseButton } from '@podman-desktop/ui-svelte';
 
 import FeaturedExtension from '/@/lib/featured/FeaturedExtension.svelte';
+import type { MessageBoxReturnValue } from '/@api/dialog';
 
-import type { MessageBoxReturnValue } from '../../../../main/src/plugin/message-box';
 import { type ExtensionBanner } from '../../../../main/src/plugin/recommendations/recommendations-api';
 
 // Pass in the theme appearance colour of PD to the banner, we do it here so we don't have to do multiple isDark checks when rendering multiple banners.
