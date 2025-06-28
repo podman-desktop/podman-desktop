@@ -118,6 +118,7 @@ import type {
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
@@ -187,7 +188,6 @@ import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
 import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
-import type { StatusBarEntryDescriptor } from './statusbar/statusbar-registry.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';

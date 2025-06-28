@@ -18,8 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { StatusBarEntryDescriptor } from '../../../main/src/plugin/statusbar/statusbar-registry';
-import { STATUS_BAR_UPDATED_EVENT_NAME } from '../../../main/src/plugin/statusbar/statusbar-registry';
+import { STATUS_BAR_UPDATED_EVENT_NAME, type StatusBarEntryDescriptor } from '/@api/status-bar';
+
 import { EventStore } from './event-store';
 
 const windowEvents = [STATUS_BAR_UPDATED_EVENT_NAME];

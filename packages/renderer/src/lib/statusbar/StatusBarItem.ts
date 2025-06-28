@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statusbar-registry';
+import type { StatusBarEntry } from '/@api/status-bar';
 
 export function iconClass(entry: StatusBarEntry): string | undefined {
   let iconClass = undefined;

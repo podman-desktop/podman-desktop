@@ -97,6 +97,7 @@ import type {
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
+import type { StatusBarEntryDescriptor } from '/@api/status-bar';
 import type { PinOption } from '/@api/status-bar/pin-option';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
@@ -121,7 +122,6 @@ import type {
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '../../main/src/plugin/message-box';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
-import type { StatusBarEntryDescriptor } from '../../main/src/plugin/statusbar/statusbar-registry';
 import type { IDisposable } from '../../main/src/plugin/types/disposable';
 import { Deferred } from './util/deferred';
 

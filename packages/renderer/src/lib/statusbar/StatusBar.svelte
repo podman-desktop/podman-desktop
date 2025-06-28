@@ -4,9 +4,9 @@ import { onDestroy, onMount } from 'svelte';
 import TaskIndicator from '/@/lib/statusbar/TaskIndicator.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { statusBarEntries } from '/@/stores/statusbar';
+import type { StatusBarEntry } from '/@api/status-bar';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
 
-import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statusbar-registry';
 import Providers from './Providers.svelte';
 import StatusBarItem from './StatusBarItem.svelte';
 
