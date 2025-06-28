@@ -27,10 +27,10 @@ import { assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vites
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import type { Menu } from '/@api/menu.js';
 import type { OnboardingInfo } from '/@api/onboarding';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
 import { providerInfos } from '../../stores/providers';
 import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelte';
 

@@ -19,10 +19,10 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
+import type { Menu } from '/@api/menu.js';
+import { MenuContext } from '/@api/menu-context.js';
 import { NavigationPage } from '/@api/navigation-page';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
-import { MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { ContextUI } from '../context/context';
 import FlatMenu from '../ui/FlatMenu.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';

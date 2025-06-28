@@ -8,9 +8,9 @@ import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import { context } from '/@/stores/context';
 import { saveImagesInfo } from '/@/stores/save-images-store';
+import type { Menu } from '/@api/menu.js';
+import { MenuContext } from '/@api/menu-context.js';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
-import { MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { runImageInfo } from '../../stores/run-image-store';
 import { ContextUI } from '../context/context';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';

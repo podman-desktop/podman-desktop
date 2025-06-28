@@ -14,9 +14,10 @@ import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+import type { Menu } from '/@api/menu.js';
+import { MenuContext } from '/@api/menu-context.js';
 import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { type Menu, MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { configurationProperties } from '../../stores/configurationProperties';
 import { providerInfos } from '../../stores/providers';
 import ContributionActions from '../actions/ContributionActions.svelte';

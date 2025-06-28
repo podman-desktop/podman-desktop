@@ -6,9 +6,9 @@ import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import type { Menu } from '/@api/menu.js';
+import { MenuContext } from '/@api/menu-context.js';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
-import { MenuContext } from '../../../../main/src/plugin/menu-registry';
 import FlatMenu from '../ui/FlatMenu.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';

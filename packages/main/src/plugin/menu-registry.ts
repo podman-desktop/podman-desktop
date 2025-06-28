@@ -15,24 +15,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { Menu } from '/@api/menu.js';
+
 import type { CommandRegistry } from './command-registry.js';
 import { Disposable } from './types/disposable.js';
-
-export interface Menu {
-  command: string;
-  title: string;
-  when?: string;
-  disabled?: string;
-  icon?: string;
-}
-
-export enum MenuContext {
-  DASHBOARD_IMAGE = 'dashboard/image',
-  DASHBOARD_CONTAINER = 'dashboard/container',
-  DASHBOARD_POD = 'dashboard/pod',
-  DASHBOARD_COMPOSE = 'dashboard/compose',
-  DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
-}
 
 export class MenuRegistry {
   private menus = new Map<string, Map<string, Menu>>();
