@@ -346,27 +346,28 @@ export default function OptimizedImage({
   // Determine if image should be optimized.
   const shouldOptimize = shouldOptimizeImage(imageSrc);
 
+  // Get optimized base path and URL if needed.
+  // Must call useBaseUrl unconditionally to satisfy React's rules of hooks.
+  const optimizedBase = shouldOptimize ? getOptimizedImageBase(imageSrc) : '';
+  const optimizedBaseUrl = useBaseUrl(optimizedBase);
+
   // Generate optimized image data only if needed.
   // Memoized to avoid expensive calculations for non-optimizable images.
   const optimizedImageData = useMemo(() => {
-    // Generate optimization data based on shouldOptimize flag.
-    const optimizedBase = shouldOptimize ? getOptimizedImageBase(imageSrc) : '';
-    const optimizedBaseUrl = shouldOptimize ? useBaseUrl(optimizedBase) : '';
+    if (!shouldOptimize) return null;
 
     const generateSrcSet = (format: string): string =>
-      shouldOptimize ? RESPONSIVE_WIDTHS.map(w => `${optimizedBaseUrl}-${w}w.${format} ${w}w`).join(', ') : '';
+      RESPONSIVE_WIDTHS.map(w => `${optimizedBaseUrl}-${w}w.${format} ${w}w`).join(', ');
 
-    return shouldOptimize
-      ? {
-          baseUrl: optimizedBaseUrl,
-          srcSets: {
-            avif: generateSrcSet('avif'), // Best compression
-            webp: generateSrcSet('webp'), // Good compression, wide support
-            png: generateSrcSet('png'), // Universal fallback
-          },
-        }
-      : null;
-  }, [shouldOptimize, imageSrc]);
+    return {
+      baseUrl: optimizedBaseUrl,
+      srcSets: {
+        avif: generateSrcSet('avif'), // Best compression
+        webp: generateSrcSet('webp'), // Good compression, wide support
+        png: generateSrcSet('png'), // Universal fallback
+      },
+    };
+  }, [shouldOptimize, optimizedBaseUrl]);
 
   /**
    * Render appropriate image element based on optimization suitability.
