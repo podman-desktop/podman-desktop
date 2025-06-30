@@ -1142,10 +1142,6 @@ export function initTelemetryLogger(): void {
   telemetryLogger = extensionApi.env.createTelemetryLogger();
 }
 
-export function getTelemetryLogger(): extensionApi.TelemetryLogger | undefined {
-  return telemetryLogger;
-}
-
 export function initExtensionContext(extensionContext: extensionApi.ExtensionContext): void {
   storedExtensionContext = extensionContext;
 }
