@@ -857,8 +857,9 @@ export async function registerProviderFor(
   machineInfo: MachineInfo,
   socketPath: string,
 ): Promise<void> {
-  const isEditMemorySupported = extensionApi.env.isMac || (extensionApi.env.isWindows && (await isHyperVEnabled()));
-  const isEditCPUSupported = extensionApi.env.isMac || (extensionApi.env.isWindows && (await isHyperVEnabled()));
+  const hyperVEnabled = await isHyperVEnabled();
+  const isEditMemorySupported = extensionApi.env.isMac || hyperVEnabled;
+  const isEditCPUSupported = extensionApi.env.isMac || hyperVEnabled;
   const isEditDiskSizeSupported = extensionApi.env.isMac;
 
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
@@ -879,7 +880,7 @@ export async function registerProviderFor(
     },
   };
   //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac || (extensionApi.env.isWindows && (await isHyperVEnabled()))) {
+  if (extensionApi.env.isMac || hyperVEnabled) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
