@@ -26,8 +26,8 @@ import { expect as playExpect, test } from '../utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
-  deletePodmanMachineFromCLI,
   handleConfirmationDialog,
+  resetPodmanMachinesFromCLI,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -55,7 +55,7 @@ test.afterAll(async ({ runner, page }) => {
   test.setTimeout(120_000);
 
   if (test.info().status === 'failed') {
-    await deletePodmanMachineFromCLI(ROOTLESS_PODMAN_MACHINE_VISIBLE);
+    await resetPodmanMachinesFromCLI();
     await createPodmanMachineFromCLI();
   }
 
