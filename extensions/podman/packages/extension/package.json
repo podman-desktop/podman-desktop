@@ -68,15 +68,14 @@
           "maximum": "HOST_TOTAL_CPU",
           "scope": "ContainerConnection",
           "description": "CPU(s)",
-          "when": "isMac"
+          "when": "podman.podmanMachineEditCPUSupported"
         },
         "podman.machine.cpusUsage": {
           "type": "number",
           "format": "cpuUsage",
           "scope": "ContainerConnection",
           "description": "CPU(s) usage",
-          "readonly": true,
-          "when": "isMac"
+          "readonly": true
         },
         "podman.machine.memory": {
           "type": "number",
@@ -87,15 +86,14 @@
           "scope": "ContainerConnection",
           "step": 500000000,
           "description": "Memory",
-          "when": "isMac"
+          "when": "podman.podmanMachineEditMemorySupported"
         },
         "podman.machine.memoryUsage": {
           "type": "number",
           "format": "memoryUsage",
           "scope": "ContainerConnection",
           "description": "Memory usage",
-          "readonly": true,
-          "when": "isMac"
+          "readonly": true
         },
         "podman.machine.diskSize": {
           "type": "number",
@@ -105,15 +103,14 @@
           "scope": "ContainerConnection",
           "step": 500000000,
           "description": "Disk size",
-          "when": "isMac"
+          "when": "podman.podmanMachineEditDiskSizeSupported"
         },
         "podman.machine.diskSizeUsage": {
           "type": "number",
           "format": "diskSizeUsage",
           "scope": "ContainerConnection",
           "description": "Disk size usage",
-          "readonly": true,
-          "when": "isMac"
+          "readonly": true
         },
         "podman.factory.machine.name": {
           "type": "string",
