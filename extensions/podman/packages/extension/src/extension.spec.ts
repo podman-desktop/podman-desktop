@@ -1532,7 +1532,7 @@ test('provider is registered without edit capabilities on (non-HyperV) Windows',
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
-test('provider is registered without limited capabilities on (HyperV) Windows', async () => {
+test('provider is registered with limited capabilities on (HyperV) Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
