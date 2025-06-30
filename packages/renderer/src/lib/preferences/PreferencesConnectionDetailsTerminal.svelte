@@ -6,8 +6,8 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
 import { Terminal } from '@xterm/xterm';
+import type { IDisposable } from 'monaco-editor';
 import { onDestroy, onMount } from 'svelte';
-import { router } from 'tinro';
 
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
 import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
@@ -25,15 +25,15 @@ interface ProviderDetailsTerminalProps {
 let { provider, connectionInfo, screenReaderMode = false }: ProviderDetailsTerminalProps = $props();
 let terminalXtermDiv: HTMLDivElement;
 let shellTerminal: Terminal;
-let currentRouterPath: string;
 let sendCallbackId: number | undefined;
 let terminalContent: string = '';
 let serializeAddon: SerializeAddon;
 let lastState = $state<ProviderConnectionStatus>('started');
+let terminalOnDataListener: IDisposable | undefined = undefined;
 
 $effect(() => {
   const connectionStatus = connectionInfo.status;
-  if (lastState === 'stopped' && connectionStatus === 'started') {
+  if (connectionStatus === 'started' && connectionStatus !== lastState) {
     restartTerminal().catch((err: unknown) =>
       console.error(`Error restarting terminal for provider ${connectionInfo.name}`, err),
     );
@@ -46,11 +46,6 @@ async function restartTerminal(): Promise<void> {
   window.dispatchEvent(new Event('resize'));
 }
 
-// update current route scheme
-router.subscribe(route => {
-  currentRouterPath = route.path;
-});
-
 // update terminal when receiving data
 function receiveDataCallback(data: string): void {
   shellTerminal.write(data);
@@ -60,16 +55,30 @@ function receiveEndCallback(): void {
   // need to reopen a new terminal
   if (sendCallbackId) {
     window
-      .shellInProviderConnection(provider.internalId, connectionInfo, receiveDataCallback, () => {}, receiveEndCallback)
-      .then(id => {
-        sendCallbackId = id;
-        shellTerminal?.onData((data: string) => {
-          window
-            .shellInProviderConnectionSend(id, data)
-            .catch((err: unknown) => console.error(`Error sending data to provider ${connectionInfo.name}`, err));
-        });
+      .shellInProviderConnectionClose(sendCallbackId)
+      .then(() => {
+        window
+          .shellInProviderConnection(
+            provider.internalId,
+            connectionInfo,
+            receiveDataCallback,
+            () => {},
+            receiveEndCallback,
+          )
+          .then(id => {
+            sendCallbackId = id;
+            terminalOnDataListener?.dispose();
+            terminalOnDataListener = shellTerminal?.onData((data: string) => {
+              window
+                .shellInProviderConnectionSend(id, data)
+                .catch((err: unknown) => console.error(`Error sending data to provider ${connectionInfo.name}`, err));
+            });
+          })
+          .catch((err: unknown) => console.log(`Error opening terminal for provider ${connectionInfo.name}`, err));
       })
-      .catch((err: unknown) => console.log(`Error opening terminal for provider ${connectionInfo.name}`, err));
+      .catch((err: unknown) =>
+        console.log(`Error closing old shell connection for provider ${connectionInfo.name}`, err),
+      );
   }
 }
 
@@ -79,6 +88,10 @@ async function executeShellIntoProviderConnection(): Promise<void> {
     return;
   }
 
+  // closes the old sendCallbackId connection
+  if (sendCallbackId) {
+    await window.shellInProviderConnectionClose(sendCallbackId);
+  }
   // grab logs of the provider
   const callbackId = await window.shellInProviderConnection(
     provider.internalId,
@@ -94,8 +107,10 @@ async function executeShellIntoProviderConnection(): Promise<void> {
   };
 
   await window.shellInProviderConnectionResize(callbackId, dimensions);
+  // disposes of the old callbackId onData listener
+  terminalOnDataListener?.dispose();
   // pass data from xterm to provider
-  shellTerminal?.onData(async (data: string) => {
+  terminalOnDataListener = shellTerminal?.onData(async (data: string) => {
     await window.shellInProviderConnectionSend(callbackId, data);
   });
   // store it
@@ -143,17 +158,15 @@ async function refreshTerminal(): Promise<void> {
 
   // call fit addon each time we resize the window
   window.addEventListener('resize', () => {
-    if (currentRouterPath === `/providers/${provider.id}/terminal`) {
-      fitAddon.fit();
-      if (sendCallbackId) {
-        const dimensions: ProviderConnectionShellDimensions = {
-          rows: shellTerminal?.rows,
-          cols: shellTerminal?.cols,
-        };
-        window
-          .shellInProviderConnectionResize(sendCallbackId, dimensions)
-          .catch((err: unknown) => console.error(`Error resizing terminal for provider ${connectionInfo.name}`, err));
-      }
+    fitAddon.fit();
+    if (sendCallbackId) {
+      const dimensions: ProviderConnectionShellDimensions = {
+        rows: shellTerminal?.rows,
+        cols: shellTerminal?.cols,
+      };
+      window
+        .shellInProviderConnectionResize(sendCallbackId, dimensions)
+        .catch((err: unknown) => console.error(`Error resizing terminal for provider ${connectionInfo.name}`, err));
     }
   });
   fitAddon.fit();
