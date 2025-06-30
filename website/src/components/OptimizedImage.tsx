@@ -300,11 +300,12 @@ export default function OptimizedImage({
   title,
   style,
 }: Readonly<OptimizedImageProps>): JSX.Element {
+  // Validate props early to provide clear error messages.
+  // IMPORTANT: This must be called before any hooks to prevent "fewer hooks than expected" error.
+  validateProps({ src, darkSrc, sources, alt });
+
   // Get current theme mode for theme-aware image selection.
   const { colorMode } = useColorMode();
-
-  // Validate props early to provide clear error messages.
-  validateProps({ src, darkSrc, sources, alt });
 
   // Resolve the image source based on theme.
   // Memoized to prevent unnecessary recalculations when other props change.
