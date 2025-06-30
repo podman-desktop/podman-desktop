@@ -146,8 +146,8 @@ export enum VMTYPE {
   LIBKRUN = 'libkrun',
 }
 
-export const APPLEHV_LABEL = 'default (Apple HyperVisor)';
-export const LIBKRUN_LABEL = 'GPU enabled (LibKrun)';
+export const APPLEHV_LABEL = 'Apple HyperVisor';
+export const LIBKRUN_LABEL = 'default GPU enabled (LibKrun)';
 
 export function getProviderLabel(provider: string): string {
   switch (provider) {
