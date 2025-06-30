@@ -23,6 +23,7 @@ import { providerInfos } from '../../stores/providers';
 import ContributionActions from '../actions/ContributionActions.svelte';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
+import ProviderUpdateButton from '../dashboard/ProviderUpdateButton.svelte';
 import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
 import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '../ui/ConnectionStatus.svelte';
@@ -452,7 +453,7 @@ function handleError(errorMessage: string): void {
                   Setup ...
                 </Button>
               {:else}
-                <div class="flex flex-row justify-around">
+                <div class="flex flex-row justify-around flex-wrap gap-2">
                   {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
                     {@const providerDisplayName =
                       (provider.containerProviderConnectionCreation
@@ -493,6 +494,9 @@ function handleError(errorMessage: string): void {
                       }}>
                       <Fa size="0.9x" icon={faGear} />
                     </Button>
+                  {/if}
+                  {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
+                    <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
                   {/if}
                 </div>
               {/if}
