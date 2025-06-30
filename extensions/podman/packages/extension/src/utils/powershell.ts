@@ -17,6 +17,8 @@
  ***********************************************************************/
 import * as extensionApi from '@podman-desktop/api';
 
+import { getTelemetryLogger } from '../extension';
+
 export async function getPowerShellClient(): Promise<PowerShellClient> {
   return new PowerShell5Client();
 }
@@ -32,21 +34,36 @@ export interface PowerShellClient {
 const PowerShell5Exe = 'powershell.exe';
 class PowerShell5Client implements PowerShellClient {
   async isVirtualMachineAvailable(): Promise<boolean> {
+    const telemetry: Record<string, unknown> = {};
     try {
       // set CurrentUICulture to force output in english
-      const { stdout: res } = await extensionApi.process.exec(
+      const res = await extensionApi.process.exec(
         PowerShell5Exe,
         [
           '[System.Console]::OutputEncoding = [System.Text.Encoding]::Unicode; (Get-WmiObject -Query "Select * from Win32_OptionalFeature where InstallState = \'1\'").Name | select-string VirtualMachinePlatform',
         ],
         { encoding: 'utf16le' },
       );
-      if (res.indexOf('VirtualMachinePlatform') >= 0) {
+      telemetry['command'] = res.command;
+      telemetry['stdout'] = res.stdout;
+      telemetry['stderr'] = res.stderr;
+      if (res.stdout.indexOf('VirtualMachinePlatform') >= 0) {
         return true;
       }
     } catch (err) {
       // ignore error, this means that VirtualMachinePlatform not enabled
+      telemetry['error'] = err;
+      const execError = err as extensionApi.RunError;
+      telemetry['message'] = execError.message;
+      telemetry['exitCode'] = execError.exitCode;
+      telemetry['command'] = execError.command;
+      telemetry['stdout'] = execError.stdout;
+      telemetry['stderr'] = execError.stderr;
+      telemetry['cancelled'] = execError.cancelled;
+      telemetry['killed'] = execError.killed;
     }
+    const telemetryLogger = getTelemetryLogger();
+    telemetryLogger?.logUsage('check.isVirtualMachineAvailable', telemetry);
     return false;
   }
 
