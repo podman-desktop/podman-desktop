@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import type containerDesktopAPI from '@podman-desktop/api';
 import { shell } from 'electron';
 
@@ -150,7 +149,7 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   /**
-   * Goes through each enabled experimenatl feature and shows dialog if current timestamp is greater than stored value 
+   * Goes through each enabled experimenatl feature and shows dialog if current timestamp is greater than stored value
    */
   protected async showFeedbackDialog(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
@@ -178,7 +177,7 @@ export class ExperimentalFeatureFeedbackForm {
             },
             {
               label: 'Share Feedback on GitHub',
-              icon: faArrowUpRightFromSquare,
+              icon: 'fas fa-arrow-up-right-from-square',
             },
           ],
           defaultId: 1,
@@ -201,9 +200,9 @@ export class ExperimentalFeatureFeedbackForm {
                 remindInDays = 1;
                 break;
               case 'Remind me in 2 days':
-                remindInDays = 2; 
+                remindInDays = 2;
                 break;
-              case 'Don\'t show again':
+              case "Don't show again":
               default:
                 remindInDays = MAX_NUMBER;
             }
