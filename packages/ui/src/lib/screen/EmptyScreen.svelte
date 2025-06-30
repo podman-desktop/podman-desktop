@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faPaste } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, onMount, type Snippet } from 'svelte';
-import Fa from 'svelte-fa';
 
 import Button from '../button/Button.svelte';
+import Icon from '../icons/Icon.svelte';
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
@@ -70,10 +70,9 @@ let copyTextDivElement = $state<HTMLDivElement>();
     <div class="flex justify-center text-[var(--pd-details-empty-icon)] py-2">
       {#if processed}
         {#if fontAwesomeIcon}
-          <Fa icon={icon} size="4x" />
+          <Icon icon={icon} size='4x'/>
         {:else}
-          {@const IconComponent = icon}
-          <IconComponent size=55 />
+          <Icon icon={icon} size=55/>
         {/if}
       {/if}
     </div>
@@ -92,8 +91,9 @@ let copyTextDivElement = $state<HTMLDivElement>();
           data-testid="copyTextDivElement">
           {commandline}
         </div>
-        <Button title="Copy To Clipboard" class="ml-5" on:click={handleClick} type="link"
-          ><Fa class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste} /></Button>
+        <Button title="Copy To Clipboard" class="ml-5" on:click={handleClick} type="link">
+          <Icon class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste}/>
+        </Button>
       </div>
     {/if}
     {#if children}

@@ -9,9 +9,9 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { afterUpdate, onMount, tick } from 'svelte';
-import Fa from 'svelte-fa';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
+import Icon from '../icons/Icon.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 
@@ -263,10 +263,9 @@ function toggleChildren(name: string | undefined): void {
                 aria-expanded={!collapsed.includes(itemKey)}
                 on:click={toggleChildren.bind(undefined, itemKey)}
               >
-                <Fa
-                  size="0.8x"
+                <Icon size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={!collapsed.includes(itemKey) ? faChevronDown : faChevronRight} />
+                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight}/>
               </button>
             {/if}
           </div>

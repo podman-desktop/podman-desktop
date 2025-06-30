@@ -1,7 +1,8 @@
 <script lang="ts">
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher } from 'svelte';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 interface Props {
   onclick?: () => void;
@@ -24,5 +25,5 @@ const dispatch = createEventDispatcher<{ click: undefined }>();
   onclick={onclick}
   title="Close"
   aria-label="Close">
-  <Fa icon={faTimes} />
+  <Icon icon={faTimes} />
 </button>

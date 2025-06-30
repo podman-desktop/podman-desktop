@@ -3,7 +3,8 @@ import { faCircleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { createEventDispatcher, type Snippet } from 'svelte';
 import type { Booleanish, FormEventHandler, KeyboardEventHandler } from 'svelte/elements';
 import { createBubbler } from 'svelte/legacy';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 const dispatch = createEventDispatcher();
 const bubble = createBubbler();
@@ -106,7 +107,7 @@ async function onClear(): Promise<void> {
       bind:value />
     {#if error && showError}
       <span class="px-0.5 text-[color:var(--pd-input-field-error-text)]" aria-label="error">
-        <Fa icon={faCircleExclamation} />
+        <Icon icon={faCircleExclamation}/>
       </span>
     {/if}
     {#if clearable}
@@ -116,7 +117,7 @@ async function onClear(): Promise<void> {
         aria-label="clear"
         onclick={onClear}
         type="button">
-        <Fa icon={faXmark} />
+        <Icon icon={faXmark} />
       </button>
     {/if}
     {@render right?.()}

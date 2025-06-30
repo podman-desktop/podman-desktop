@@ -1,7 +1,8 @@
 <script lang="ts">
 import { faCaretDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { onMount, type Snippet } from 'svelte';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 interface Option {
   value: string;
@@ -204,7 +205,7 @@ function onWindowClick(e: Event): void {
       class:text-[var(--pd-input-field-stroke)]={!disabled}
       class:text-[var(--pd-input-field-disabled-text)]={!disabled}
       class:group-hover:text-[var(--pd-input-field-hover-stroke)]={!disabled}>
-      <Fa icon={faCaretDown} />
+      <Icon icon={faCaretDown}/>
     </div>
   </button>
 
@@ -221,7 +222,7 @@ function onWindowClick(e: Event): void {
           class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
           class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
           <div class="min-w-4 max-w-4">
-            {#if option.value === value}<Fa icon={faCheck} />{/if}
+            {#if option.value === value}<Icon icon={faCheck} />{/if}
           </div>
           <div class="grow">{option.label}</div>
         </button>

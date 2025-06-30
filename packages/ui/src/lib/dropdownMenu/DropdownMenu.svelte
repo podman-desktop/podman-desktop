@@ -2,8 +2,8 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
-import Fa from 'svelte-fa';
 
+import Icon from '../icons/Icon.svelte';
 import DropDownMenuItems from './DropDownMenuItems.svelte';
 
 interface Props {
@@ -75,8 +75,8 @@ function onButtonClick(e: MouseEvent): void {
       class="text-[var(--pd-action-button-text)] {shownAsMenuActionItem
         ? 'bg-[var(--pd-action-button-details-bg)] px-3'
         : 'hover:bg-[var(--pd-action-button-details-bg)]'} hover:text-[var(--pd-action-button-hover-text)] font-medium rounded-md inline-flex items-center px-2 py-2 text-center">
-      <Fa class="h-4 w-4" icon={icon} />
-    </button>
+        <Icon class="h-4 w-4" icon={icon}/>
+      </button>
 
     <!-- Dropdown menu for all other actions -->
     {#if showMenu}
