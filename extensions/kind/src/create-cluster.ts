@@ -24,8 +24,7 @@ import type { AuditRecord, AuditRequestItems, AuditResult, CancellationToken } f
 import * as extensionApi from '@podman-desktop/api';
 // @ts-expect-error ignore type error https://github.com/janl/mustache.js/issues/797
 import mustache from 'mustache';
-import type { Tags } from 'yaml';
-import { parseAllDocuments } from 'yaml';
+import { parseAllDocuments, stringify } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
 
@@ -46,24 +45,16 @@ export function getKindClusterConfig(
   });
 }
 
-function getTags(tags: Tags): Tags {
-  for (const tag of tags) {
-    if (typeof tag === 'object' && 'tag' in tag) {
-      if (tag.tag === 'tag:yaml.org,2002:int') {
-        const newTag = { ...tag };
-        newTag.test = /^(0[0-7][0-7][0-7])$/;
-        newTag.resolve = (str: string): number => parseInt(str, 8);
-        tags.unshift(newTag);
-        break;
-      }
-    }
-  }
-  return tags;
-}
-
 export async function setupIngressController(clusterName: string): Promise<void> {
-  const manifests = loadAllYaml(ingressManifests, { customTags: getTags });
-  await extensionApi.kubernetes.createResources('kind-' + clusterName, manifests);
+  const manifest = `
+%YAML 1.1 
+---
+${ingressManifests}
+`;
+
+  const parsedManifest = parseAllDocuments(manifest);
+  const yml = loadAllYaml(stringify(parsedManifest));
+  await extensionApi.kubernetes.createResources('kind-' + clusterName, yml);
 }
 
 export async function connectionAuditor(provider: string, items: AuditRequestItems): Promise<AuditResult> {
