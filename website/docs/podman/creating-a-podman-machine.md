@@ -43,11 +43,14 @@ Consider creating a custom Podman machine to:
       Enable to use the rootful connection by default.
       Required to use Kind on Windows.
    1. Additional settings based on your operating system:
+
       - (On Windows)
         - **User mode networking (traffic relayed by a user process)**: Enable to route the traffic through the network connection from your Windows session. This setting is required to access resources behind your VPN connection.
         - **Provider Type**: The setting is visible only to administrators, and its default value is `wsl`.
       - (On macOS)
-        - **Provider Type**: The default value is `Apple HyperVisor`. Before switching to `GPU enabled (LibKrun)`, ensure that you have [configured the machine provider](/docs/installation/macos-install#using-libkrun-as-machine-provider) manually.
+
+        - **Provider Type**: The default value is `GPU enabled (LibKrun)`. However, you must [configure the `libkrun` machine provider manually](/docs/installation/macos-install#using-libkrun-as-default-machine-provider) before creating a machine. On a macOS amd64 platform, you can only use the `Apple HyperVisor` provider.
+
    1. Click **Create**.
 
    ![Create a Podman machine](img/create-a-podman-machine.png)

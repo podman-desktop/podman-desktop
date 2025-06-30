@@ -1,5 +1,9 @@
 ---
 sidebar_position: 3
+title: macOS
+description: How to install Podman Desktop and Podman on macOS.
+tags: [podman-desktop, installing, macOS]
+keywords: [podman desktop, containers, podman, installing, installation, macOS]
 ---
 
 # MacOS
@@ -65,16 +69,11 @@ Podman Desktop requires [Podman Engine](https://docs.podman.io/en/latest/index.h
 
    Brew will also install the Podman Engine along with the Podman Desktop application, in case you don't have it installed yet.
 
-   After the command is executed, you can find the Podman Desktop Application within the `Applications` directory of the MacOS.
+   After the command is executed, you can find the Podman Desktop application within the `Applications` directory of the macOS.
 
-## Using `libkrun` as machine provider
+## Using `libkrun` as default machine provider
 
-By default, Podman uses the `Apple HyperVisor` provider type. If you are already running an `Apple HyperVisor` Podman machine and want to create a `GPU enabled (LibKrun)` machine, reset the Podman machine to avoid any port conflicts:
-
-- Using the UI: Click the **Troubleshooting** icon in the status bar and then **Cleanup / Purge data**.
-- Using the CLI: Run the `podman machine reset` command.
-
-To use `podman machine` CLI commands with the `libkrun` provider type, configure the machine provider manually using one of the following ways:
+To use `libkrun` as the default machine provider, configure it manually using one of the following ways:
 
 **_Configuring an environment variable_**
 
