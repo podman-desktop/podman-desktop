@@ -2,7 +2,7 @@
 
 <script lang="ts">
 import { Tooltip } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import { NavigationPage } from '/@api/navigation-page';
@@ -41,11 +41,26 @@ onMount(async () => {
   const commandRegistry = new CommandRegistry();
   commandRegistry.init();
   iconWithTitle = (await window.getConfigurationValue(NAV_BAR_LAYOUT)) === AppearanceSettings.IconAndTitle;
+  await tick();
+  handleScroll();
 });
 
 onDestroy(() => {
   onDidChangeConfiguration.removeEventListener(NAV_BAR_LAYOUT, onDidChangeConfigurationCallback);
 });
+
+let scrollEl: HTMLDivElement;
+let showTopShadow = $state(false);
+let showBottomShadow = $state(false);
+
+function handleScroll(): void {
+  const scrollTop = scrollEl.scrollTop;
+  const scrollHeight = scrollEl.scrollHeight;
+  const clientHeight = scrollEl.clientHeight;
+
+  showTopShadow = scrollTop > 5;
+  showBottomShadow = scrollTop + clientHeight < scrollHeight - 5;
+}
 
 function handleClick(): void {
   if (meta.url.startsWith('/preferences')) {
@@ -65,9 +80,9 @@ function onDidChangeConfigurationCallback(e: Event): void {
 }
 </script>
 
-<svelte:window />
+<svelte:window on:resize={handleScroll} />
 <nav
-  class="group w-leftnavbar {minNavbarWidth} flex flex-col hover:overflow-y-none bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
+  class="group w-leftnavbar {minNavbarWidth} flex flex-col bg-[var(--pd-global-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px] relative"
   aria-label="AppNavigation">
   <NavItem href="/" tooltip="Dashboard" bind:meta={meta}>
     <div class="relative w-full">
@@ -84,30 +99,44 @@ function onDidChangeConfigurationCallback(e: Event): void {
       </div>
     </div>
   </NavItem>
-  {#each $navigationRegistry as navigationRegistryItem, index (index)}
-    {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-      <!-- This is a group, list all items from the entry -->
-      {#each navigationRegistryItem.items as item, index (index)}
-        <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
-      {/each}
-    {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-      <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
-    {/if}
-  {/each}
 
-  <div class="grow"></div>
+    {#each $navigationRegistry as navigationRegistryItem, index (index)}
+      {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
+        <!-- This is a group, list all items from the entry -->
+        <div class="relative min-h-0 flex-1">
+          <div
+            bind:this={scrollEl}
+            class="overflow-y-scroll overflow-x-visible h-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            on:scroll={handleScroll}>
+            {#each navigationRegistryItem.items as item, index (index)}
+              <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
+            {/each}
+            <div class="grow"></div>
+          </div>
 
-  <div bind:this={outsideWindow}>
-    <NavItem href="/accounts" tooltip="" bind:meta={meta} onClick={(event): void => authActions?.onButtonClick(event)}>
-      <Tooltip bottomRight tip="Accounts">
-        <div class="flex flex-col items-center w-full h-full">
-          <AccountIcon size={iconSize} />
-          {#if iconWithTitle}
-            <div class="text-xs text-center ml-[2px]" aria-label="Accounts title">
-              Accounts
-            </div>
+          {#if showTopShadow}
+            <div class="absolute top-0 left-0 right-0 h-5 bg-gradient-to-b from-black/20 to-transparent z-50 pointer-events-none" />
+          {/if}
+          {#if showBottomShadow}
+            <div class="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-t from-black/20 to-transparent z-50 pointer-events-none" />
           {/if}
         </div>
+      {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
+        <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
+      {/if}
+    {/each}
+
+  <div bind:this={outsideWindow}>
+    <NavItem href="/accounts" tooltip="" bind:meta={meta} onClick={authActions?.onButtonClick}>
+      <Tooltip bottomRight tip="Accounts">
+      <div class="flex flex-col items-center w-full h-full">
+        <AccountIcon size={iconSize} />
+        {#if iconWithTitle}
+          <div class="text-xs text-center ml-[2px]" aria-label="Accounts title">
+            Accounts
+          </div>
+        {/if}
+      </div>
       </Tooltip>
       <AuthActions bind:this={authActions} outsideWindow={outsideWindow} />
     </NavItem>
