@@ -63,7 +63,7 @@ class PowerShell5Client implements PowerShellClient {
       telemetry['killed'] = execError.killed;
     }
     const telemetryLogger = getTelemetryLogger();
-    telemetryLogger?.logUsage('check.isVirtualMachineAvailable', telemetry);
+    telemetryLogger?.logError('check.isVirtualMachineAvailable', telemetry);
     return false;
   }
 
