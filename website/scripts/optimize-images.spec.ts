@@ -646,38 +646,38 @@ describe('getRelativeOutputDir', () => {
 
   /**
    * Test path transformation for blog images.
-   * Special handling for blog image paths to maintain logical organization.
-   * Ensures blog images are properly categorized in the output structure.
+   * Preserve original directory structure for consistency.
+   * Ensures blog images maintain their original path structure in optimized output.
    */
   test('dir starts with "blog/img"', () => {
     const result = getRelativeOutputDir('blog/img/foo/bar');
     // Normalize path separators for cross-platform compatibility.
     const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
-    expect(normalizedResult).toStrictEqual('img/blog/foo/bar');
+    expect(normalizedResult).toStrictEqual('blog/img/foo/bar');
   });
 
   /**
    * Test path transformation for general blog content.
-   * Handles blog assets that aren't specifically in the img subdirectory.
-   * Maintains clean directory structure for blog-related files.
+   * Preserve original directory structure for consistency.
+   * Maintains original directory structure for blog-related files.
    */
   test('dir starts with "blog"', () => {
     const result = getRelativeOutputDir('blog/foo/bar');
     // Normalize path separators for cross-platform compatibility.
     const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
-    expect(normalizedResult).toStrictEqual('foo/bar');
+    expect(normalizedResult).toStrictEqual('blog/foo/bar');
   });
 
   /**
    * Test path transformation for docs directory.
-   * Handles docs assets like installation guides and tutorials.
-   * Maintains proper directory structure for documentation images.
+   * Preserve original directory structure for consistency.
+   * Maintains original directory structure for documentation images.
    */
   test('dir starts with "docs"', () => {
     const result = getRelativeOutputDir('docs/installation/img');
     // Normalize path separators for cross-platform compatibility.
     const normalizedResult = path.posix.normalize(result.replace(/\\/g, '/'));
-    expect(normalizedResult).toStrictEqual('installation/img');
+    expect(normalizedResult).toStrictEqual('docs/installation/img');
   });
 });
 

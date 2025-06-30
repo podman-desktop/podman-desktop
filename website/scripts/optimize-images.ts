@@ -237,25 +237,28 @@ export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp
 /**
  * Directory mapping configuration for different source directories.
  * Defines how source directories map to optimized output structure.
+ *
+ * Preserve the original directory structure to ensure
+ * consistency between the optimization script and the loading components.
+ * This fixes the path mismatch issue where OptimizedImage component expects
+ * images at `optimized-images/{original-path}` but the script was putting
+ * them at different locations due to complex mappings.
  */
 const DIRECTORY_MAPPINGS = [
   {
     prefix: 'static',
+    // Keep static images in their original structure: static/img/logo.png → img/logo.png
     handler: (dir: string): string => path.relative('static', dir),
   },
   {
-    prefix: 'blog/img',
-    // Images from `blog/img/...` should be mapped to `img/blog/...` to match `static/img/blog/...`
-    handler: (dir: string): string => path.join('img/blog', path.relative('blog/img', dir)),
-  },
-  {
     prefix: 'blog',
-    handler: (dir: string): string => path.relative('blog', dir),
+    // Keep blog images in their original structure: blog/img/screenshot.png → blog/img/screenshot.png
+    handler: (dir: string): string => dir,
   },
   {
     prefix: 'docs',
-    // Images from `docs/...` should be mapped relative to docs.
-    handler: (dir: string): string => path.relative('docs', dir),
+    // Keep docs images in their original structure: docs/ai-lab/img/demo.png → docs/ai-lab/img/demo.png
+    handler: (dir: string): string => dir,
   },
 ] as const;
 
