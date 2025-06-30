@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionContext, RunResult } from '@podman-desktop/api';
+import type { ExtensionContext, RunResult, TelemetryLogger } from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -56,6 +56,8 @@ const extensionContext = {
   subscriptions: [],
 } as unknown as ExtensionContext;
 
+const mockTelemetryLogger = {} as TelemetryLogger;
+
 beforeEach(() => {
   vi.resetAllMocks();
   // reset array of subscriptions
@@ -81,7 +83,7 @@ test('expect winWSL2 preflight check return successful result if the machine has
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
 });
@@ -116,7 +118,7 @@ test('expect winWSL2 preflight check return failure result if the machine has WS
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal(
     'WSL2 seems to be installed but the system needs to be restarted so the changes can take effect.',
@@ -157,7 +159,7 @@ test('expect winWSL2 preflight check return successful result if the machine has
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
 });
@@ -179,7 +181,7 @@ test('expect winWSL2 preflight check return failure result if user do not have w
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL2 is not installed.');
   expect(result.docLinksDescription).equal(`Call 'wsl --install --no-distribution' in a terminal.`);
@@ -204,7 +206,7 @@ test('expect winWSL2 preflight check return failure result if user do not have w
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL2 is not installed or you do not have permissions to run WSL2.');
   expect(result.docLinksDescription).equal('Contact your Administrator to setup WSL2.');
@@ -225,7 +227,7 @@ test('expect winWSL2 preflight check return failure result if it fails when chec
     }
   });
 
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('Could not detect WSL2');
   expect(result.docLinks?.[0].url).equal('https://learn.microsoft.com/en-us/windows/wsl/install');
@@ -234,7 +236,7 @@ test('expect winWSL2 preflight check return failure result if it fails when chec
 
 test('expect winWSL2 init to register WSLInstall command', async () => {
   const registerCommandMock = vi.mocked(commands.registerCommand);
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   await winWSLCheck.init?.();
   expect(registerCommandMock).toBeCalledWith('podman.onboarding.installWSL', expect.any(Function));
 });
@@ -245,7 +247,7 @@ test('expect winWSL2 command to be registered as disposable', async () => {
     dispose: vi.fn(),
   };
   registerCommandMock.mockReturnValue(disposableMock);
-  const winWSLCheck = new WSL2Check(extensionContext);
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   await winWSLCheck.init?.();
   expect(registerCommandMock).toBeCalledWith('podman.onboarding.installWSL', expect.any(Function));
 

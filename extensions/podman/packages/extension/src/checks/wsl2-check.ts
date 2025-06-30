@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { CheckResult, ExtensionContext, RunError } from '@podman-desktop/api';
+import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 
 import { getPowerShellClient } from '../utils/powershell';
@@ -27,7 +28,10 @@ export class WSL2Check extends BaseCheck {
   title = 'WSL2 Installed';
   installWSLCommandId = 'podman.onboarding.installWSL';
 
-  constructor(private extensionContext?: ExtensionContext) {
+  constructor(
+    private telemetryLogger: extensionApi.TelemetryLogger,
+    private extensionContext?: ExtensionContext,
+  ) {
     super();
   }
 
@@ -45,7 +49,7 @@ export class WSL2Check extends BaseCheck {
   }
 
   async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isUserAdmin();
   }
 

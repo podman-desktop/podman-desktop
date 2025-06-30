@@ -65,6 +65,8 @@ vi.mock(import('../utils/util'), async () => {
   };
 });
 
+const mockTelemetryLogger = {} as extensionApi.TelemetryLogger;
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
@@ -87,7 +89,7 @@ test('expect HyperV preflight check return failure result if podman is older tha
     throw new Error();
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('Hyper-V is only supported with podman version >= 5.2.0.');
@@ -98,7 +100,7 @@ test('expect HyperV preflight skips podman version check if installationPrefligh
     throw new Error();
   });
 
-  const hyperVCheck = new HyperVCheck(true);
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger, true);
   const result = await hyperVCheck.execute();
   // exec should only be called once inside the isUserAdmin function, if so the podman check has been skipped as expected
   expect(execSpy).toBeCalledTimes(1);
@@ -122,7 +124,7 @@ test('expect HyperV preflight check return failure result if it fails when check
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('You must have administrative rights to run Hyper-V Podman machines');
@@ -150,7 +152,7 @@ test('expect HyperV preflight check return failure result if non admin user', as
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('You must have administrative rights to run Hyper-V Podman machines');
@@ -174,7 +176,7 @@ test('expect HyperV preflight check return failure result if Podman Desktop is n
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal(
@@ -197,7 +199,7 @@ test('expect HyperV preflight check return failure result if HyperV not installe
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('Hyper-V is not installed on your system.');
@@ -221,7 +223,7 @@ test('expect HyperV preflight check return failure result if HyperV not running'
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('Hyper-V is not running on your system.');
@@ -245,7 +247,7 @@ test('expect HyperV preflight check return OK', async () => {
     }
   });
 
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(mockTelemetryLogger);
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeTruthy();
   expect(result.description).toBeUndefined();
