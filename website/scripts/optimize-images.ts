@@ -260,6 +260,11 @@ const DIRECTORY_MAPPINGS = [
     // Keep docs images in their original structure: docs/ai-lab/img/demo.png → docs/ai-lab/img/demo.png
     handler: (dir: string): string => dir,
   },
+  {
+    prefix: 'tutorial',
+    // Keep tutorial images in their original structure: tutorial/img/demo.png → tutorial/img/demo.png
+    handler: (dir: string): string => dir,
+  },
 ] as const;
 
 /**
@@ -542,7 +547,7 @@ export async function processImagesInBatches(
 export async function discoverImages(): Promise<string[]> {
   const { glob } = await import('glob');
 
-  const rootSearchDirs = ['static', 'blog', 'docs'];
+  const rootSearchDirs = ['static', 'blog', 'docs', 'tutorial'];
   const patterns = rootSearchDirs.map(dir => `${dir}/**/*.{${inputFormats.join(',')}}`);
   const allImages = await glob(patterns, { nodir: true });
   const unwantedPatternRegex = /(?:optimized-images|-\d+w\.(?:png|jpg|jpeg|webp))$/i;
