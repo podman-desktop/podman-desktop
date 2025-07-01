@@ -162,7 +162,7 @@ export class ExperimentalFeatureFeedbackForm {
       if (timestamp > date.getTime()) return;
 
       const featureName = this.formatName(key);
-      const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openWebsite args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openWebsite args='["${featureGitHubLink}"]'}`;
+      const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
       const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
 
       this.messageBox
@@ -181,7 +181,7 @@ export class ExperimentalFeatureFeedbackForm {
             },
           ],
           defaultId: 1,
-          detail: footerMarkdownDescription,
+          footerMarkdownDescription: footerMarkdownDescription,
         })
         .then(response => {
           // Share Feedback on GitHub was selected
@@ -202,7 +202,7 @@ export class ExperimentalFeatureFeedbackForm {
               case 'Remind me in 2 days':
                 remindInDays = 2;
                 break;
-              case "Don't show again":
+              case `Don't show again`:
               default:
                 remindInDays = MAX_NUMBER;
             }
