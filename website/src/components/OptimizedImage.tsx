@@ -25,7 +25,6 @@
  */
 
 import { useColorMode } from '@docusaurus/theme-common';
-// @ts-expect-error TS-2307
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import React, { useCallback, useMemo } from 'react';
 
@@ -193,26 +192,6 @@ function isValidSourcesObject(sources: ImageSources): boolean {
  */
 function hasConflictingProps(sources?: ImageSources, src?: string, darkSrc?: string): boolean {
   return Boolean(sources && (src ?? darkSrc));
-}
-
-/**
- * Helper function to merge className props.
- * @param baseClassName - Base className to apply
- * @param userClassName - User-provided className
- * @returns Merged className string
- */
-function mergeClassNames(baseClassName: string, userClassName?: string): string {
-  return userClassName ? `${baseClassName} ${userClassName}` : baseClassName;
-}
-
-/**
- * Helper function to merge style props.
- * @param baseStyle - Base style object to apply
- * @param userStyle - User-provided style object
- * @returns Merged style object
- */
-function mergeStyles(baseStyle: React.CSSProperties, userStyle?: React.CSSProperties): React.CSSProperties {
-  return userStyle ? { ...baseStyle, ...userStyle } : baseStyle;
 }
 
 /**
@@ -385,19 +364,10 @@ export default function OptimizedImage({
         loading={loading}
         sizes={sizes}
         onError={handleImageError}
-        className={mergeClassNames('inline-block', className)}
-        style={mergeStyles({ maxWidth: '100%', height: 'auto' }, style)}
+        className="inline-block max-w-full h-auto"
       />
     </picture>
   ) : (
-    <img
-      src={originalUrl}
-      alt={alt}
-      title={title}
-      loading={loading}
-      className={className}
-      style={style}
-      onError={handleImageError}
-    />
+    <img src={originalUrl} alt={alt} title={title} loading={loading} onError={handleImageError} />
   );
 }

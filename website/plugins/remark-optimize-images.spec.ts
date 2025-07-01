@@ -155,7 +155,7 @@ describe('remarkOptimizeImages', () => {
       expect(imgElement).toBeDefined();
 
       const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
-      expect(imgSrc).toBe('/optimized-images/img/blog/hello_there-1536w.png');
+      expect(imgSrc).toBe('/img/blog/hello_there.png');
 
       // Ensure accessibility is preserved.
       const imgAlt = imgElement!.attributes.find(attr => attr.name === 'alt')?.value;
@@ -485,14 +485,14 @@ describe('remarkOptimizeImages', () => {
       );
       const avifSrcSet = avifSource!.attributes.find(attr => attr.name === 'srcSet')?.value;
 
-      // Should map to the docs structure: /optimized-images/installation/img/download-dmg-640w.avif.
+      // Should map to the docs structure: /optimized-images/docs/installation/img/download-dmg-640w.avif.
       // Use cross-platform path expectation.
-      expect(avifSrcSet).toContain('/optimized-images/installation/img/download-dmg-640w.avif');
+      expect(avifSrcSet).toContain('/optimized-images/docs/installation/img/download-dmg-640w.avif');
 
       // Check the fallback img element.
       const imgElement = pictureElement.children.find(child => child.name === 'img');
       const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
-      expect(imgSrc).toBe('/optimized-images/installation/img/download-dmg-1536w.png');
+      expect(imgSrc).toBe('/docs/installation/img/download-dmg.png');
     });
 
     /**
@@ -511,8 +511,8 @@ describe('remarkOptimizeImages', () => {
       const imgElement = pictureElement.children.find(child => child.name === 'img');
       const imgSrc = imgElement!.attributes.find(attr => attr.name === 'src')?.value;
 
-      // Should resolve relative path correctly: installation/shared/screenshot.
-      expect(imgSrc).toBe('/optimized-images/installation/shared/screenshot-1536w.png');
+      // Should resolve relative path correctly: docs/installation/shared/screenshot.
+      expect(imgSrc).toBe('/docs/installation/shared/screenshot.png');
     });
   });
 

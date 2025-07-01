@@ -22,6 +22,7 @@ import { fab } from '@fortawesome/free-brands-svg-icons'; // Import all brands i
 import { fas } from '@fortawesome/free-solid-svg-icons'; // Import all solid icons.
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Import the FontAwesomeIcon component.
 import MDXComponents from '@theme-original/MDXComponents';
+import OptimizedImage from '../components/OptimizedImage';
 
 library.add(fab, fas); // Add all icons to the library so you can use them without importing them individually.
 
@@ -29,4 +30,5 @@ export default {
   // Re-use the default mapping
   ...MDXComponents,
   Icon: FontAwesomeIcon, // Make the FontAwesomeIcon component available in MDX as <icon />.
+  OptimizedImage, // Make the OptimizedImage component available in MDX
 };

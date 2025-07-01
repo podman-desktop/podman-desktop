@@ -341,6 +341,7 @@ const config = {
         id: 'tutorial',
         path: 'tutorial',
         routeBasePath: 'tutorial',
+        beforeDefaultRemarkPlugins: [remarkOptimizeImages],
       },
     ],
     [

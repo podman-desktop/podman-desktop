@@ -107,20 +107,13 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
       relativePath = path.posix.normalize(afterWebsite);
     }
 
-    // For docs images: resolve relative to the docs structure.
-    if (relativePath.startsWith('docs/')) {
-      // Convert relative path to docs context using path joining.
-      const resolvedPath = path.posix.join(relativePath, imageDir.replace(/\\/g, '/'));
-
-      // Extract the path relative to docs directory for optimization structure.
-      if (resolvedPath.startsWith('docs/')) {
-        optimizedDir = resolvedPath.substring('docs/'.length);
-      } else {
-        // Handle cases where image path goes outside docs (e.g., ../img).
-        optimizedDir = imageDir;
-      }
+    // For docs, tutorial, and blog images: resolve relative to their respective structures.
+    if (relativePath.startsWith('docs') || relativePath.startsWith('tutorial') || relativePath.startsWith('blog')) {
+      // Convert relative path to docs/tutorial/blog context using path joining.
+      // Keep the full path structure for all content directories.
+      optimizedDir = path.posix.join(relativePath, imageDir.replace(/\\/g, '/'));
     }
-    // For blog (and fallback) images: keep existing behavior.
+    // For other images: keep existing behavior.
     else {
       optimizedDir = imageDir;
     }
@@ -211,19 +204,24 @@ function createSourceElements(optimizedBasePath: string, sizes: number[], format
  * Creates the fallback img element with responsive attributes.
  *
  * @param optimizedBasePath - Base path for optimized images
+ * @param originalUrl - Original image URL for fallback
  * @param sizes - Array of responsive breakpoint sizes
  * @param alt - Alt text for the image
  * @param title - Optional title attribute
  * @returns MDX JSX img element
  */
-function createImgElement(optimizedBasePath: string, sizes: number[], alt?: string, title?: string): MdxJsxElement {
-  const fallbackImagePath = `${optimizedBasePath}-1536w.png`;
-
+function createImgElement(
+  optimizedBasePath: string,
+  originalUrl: string,
+  sizes: number[],
+  alt?: string,
+  title?: string,
+): MdxJsxElement {
   const attributes: MdxJsxAttribute[] = [
     {
       type: 'mdxJsxAttribute',
       name: 'src',
-      value: fallbackImagePath,
+      value: originalUrl,
     },
     {
       type: 'mdxJsxAttribute',
@@ -286,13 +284,13 @@ function createPictureElement(sourceElements: MdxJsxElement[], imgElement: MdxJs
  * Creates a remark plugin that optimizes images in markdown content.
  *
  * This plugin uses the unified/remark AST (Abstract Syntax Tree) visitor pattern
- * to find image nodes and replace them with optimized HTML picture elements.
+ * to find image nodes and replace them with OptimizedImage components.
  *
  * The optimization strategy:
  * 1. Find all image nodes in the markdown AST.
  * 2. Filter out external URLs and already optimized images.
- * 3. Generate HTML picture elements with multiple format sources.
- * 4. Replace the original image node with the HTML node.
+ * 3. Generate OptimizedImage component JSX.
+ * 4. Replace the original image node with the component node.
  *
  * @returns A remark transformer function
  */
@@ -327,7 +325,15 @@ export function remarkOptimizeImages() {
         const sourceElements = createSourceElements(optimizedBasePath, sizes, formats);
 
         // Create the fallback img element with optional title.
-        const imgElement = createImgElement(optimizedBasePath, sizes, alt, title);
+        // Construct absolute path for the original image.
+        let absoluteOriginalUrl = url;
+        if (file.path) {
+          const dirPath = path.dirname(file.path);
+          const websiteIndex = dirPath.lastIndexOf('/website/');
+          const relativePath = websiteIndex >= 0 ? dirPath.substring(websiteIndex + 9) : dirPath;
+          absoluteOriginalUrl = `/${path.posix.normalize(path.posix.join(relativePath, url)).replace(/\\/g, '/')}`;
+        }
+        const imgElement = createImgElement(optimizedBasePath, absoluteOriginalUrl, sizes, alt, title);
 
         // Replace the markdown image node with the MDX JSX picture element.
         // This transforms the AST from a simple image to a complex JSX structure.
