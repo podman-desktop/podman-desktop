@@ -106,6 +106,7 @@ export async function startChromium(port: string, tracesPath: string, args: stri
   return browserLaunch;
 }
 
+// to be deprecated, use getEntryFromConsoleLogs instead
 export async function getEntryFromLogs(
   page: Page,
   filter: RegExp,
