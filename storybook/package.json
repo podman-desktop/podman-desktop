@@ -42,7 +42,6 @@
     "react": "18.2.0",
     "react-dom": "18.3.1",
     "storybook": "^8.6.4",
-    "storybook-dark-mode": "^4.0.2",
     "svelte": "5.34.9",
     "svelte-check": "^4.2.2",
     "tailwindcss": "^4.1.11",
