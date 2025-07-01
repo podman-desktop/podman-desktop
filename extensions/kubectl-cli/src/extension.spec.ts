@@ -501,7 +501,7 @@ describe('postActivate', () => {
     expect(cliToolMock.registerUpdate).not.toHaveBeenCalled();
   });
 
-  test('doInstall should download and install binary', async () => {
+  test('doInstall should download and install latest binary', async () => {
     vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-path');
     vi.mocked(extensionApi.process.exec).mockImplementation(
       (_command: string, _args?: string[], _options?: extensionApi.RunOptions) =>
@@ -521,11 +521,7 @@ describe('postActivate', () => {
           });
         }),
     );
-    vi.mocked(extensionApi.window.showQuickPick).mockResolvedValue({
-      label: 'Kubernetes v1.1.0',
-      tag: 'v1.1.0',
-      id: -1,
-    } as KubectlGithubReleaseArtifactMetadata);
+    const getReleaseAssetURLMock = vi.fn().mockResolvedValue('dummy download url');
     // mock return value below current
     vi.mocked(KubectlGitHubReleases).mockReturnValue({
       grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
@@ -534,8 +530,13 @@ describe('postActivate', () => {
           tag: 'v1.1.0',
           id: -1,
         },
+        {
+          label: 'Kubernetes v1.1.0',
+          tag: 'v1.2.0',
+          id: -2,
+        },
       ]),
-      getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
+      getReleaseAssetURL: getReleaseAssetURLMock,
       downloadReleaseAsset: downloadReleaseAssetMock,
     } as unknown as KubectlGitHubReleases);
     const deferredCliUpdate: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
@@ -558,10 +559,11 @@ describe('postActivate', () => {
     await KubectlExtension.activate(extensionContext);
 
     const cliUpdate = await deferredCliUpdate;
-    await cliUpdate.selectVersion();
+    await cliUpdate.selectVersion(true);
     await cliUpdate.doInstall({} as unknown as Logger);
 
     expect(downloadReleaseAssetMock).toHaveBeenCalledWith('dummy download url', expect.anything());
+    expect(getReleaseAssetURLMock).toHaveBeenCalledWith('v1.2.0', expect.anything(), expect.anything());
     expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith(expect.anything(), 'kubectl');
     expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
       path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),

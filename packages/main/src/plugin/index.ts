@@ -1593,8 +1593,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'cli-tool-registry:selectCliToolVersionToInstall',
-      async (_listener, id: string): Promise<string> => {
-        return cliToolRegistry.selectCliToolVersionToInstall(id);
+      async (_listener, id: string, latest = true): Promise<string> => {
+        return cliToolRegistry.selectCliToolVersionToInstall(id, latest);
       },
     );
 
@@ -1607,7 +1607,7 @@ export class PluginSystem {
 
         // create task
         const task = taskManager.createTask({
-          title: `Installing ${tool.name} to v${versionToInstall}`,
+          title: `Installing ${tool.name} ${versionToInstall ? 'v' + versionToInstall : 'latest'}`,
           action: {
             name: 'goto task >',
             execute: (): void => {

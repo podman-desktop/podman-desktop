@@ -107,12 +107,12 @@ export class CliToolRegistry {
     return cliToolUpdater.selectVersion();
   }
 
-  async selectCliToolVersionToInstall(id: string): Promise<string> {
+  async selectCliToolVersionToInstall(id: string, latest = true): Promise<string> {
     const cliToolInstaller = this.cliToolsInstaller.get(id);
     if (!cliToolInstaller) {
       throw new Error(`No installer registered for ${id}`);
     }
-    return cliToolInstaller.selectVersion();
+    return cliToolInstaller.selectVersion(latest);
   }
 
   isUpdaterToPredefinedVersion(update: CliToolUpdate | CliToolSelectUpdate): update is CliToolUpdate {
