@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
 import { Tab } from '@podman-desktop/ui-svelte';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `Tab` component.
@@ -8,6 +8,7 @@ import { type Args, defineMeta, setTemplate, type StoryContext } from '@storyboo
  */
 const { Story } = defineMeta({
   component: Tab,
+  render: template,
   title: 'Tab',
   tags: ['autodocs'],
   argTypes: {
@@ -28,10 +29,6 @@ const { Story } = defineMeta({
     },
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}
