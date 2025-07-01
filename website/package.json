@@ -45,7 +45,7 @@
     "@docusaurus/module-type-aliases": "^3.7.0",
     "@docusaurus/tsconfig": "^3.7.0",
     "@docusaurus/types": "^3.7.0",
-    "@tailwindcss/postcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.11",
     "cross-env": "^7.0.3",
     "glob": "^11.0.3",
     "markdownlint": "^0.38.0",
@@ -54,13 +54,13 @@
     "postcss": "^8.5.6",
     "remark-parse": "^11.0.0",
     "sharp": "^0.34.2",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.11",
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.2",
     "typescript": "^5.8.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "vitest": "^3.1.4"
+    "vitest": "^3.2.4"
   },
   "browserslist": {
     "production": [
