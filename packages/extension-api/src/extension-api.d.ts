@@ -4752,7 +4752,7 @@ declare module '@podman-desktop/api' {
   }
 
   export interface CliToolInstaller {
-    selectVersion: () => Promise<string>;
+    selectVersion: (latest?: boolean) => Promise<string>;
     doInstall: (logger: Logger) => Promise<void>;
     doUninstall: (logger: Logger) => Promise<void>;
   }
