@@ -21,8 +21,6 @@ import { join } from 'node:path';
 import type { Browser, Locator, Page } from '@playwright/test';
 import { chromium, expect as playExpect } from '@playwright/test';
 
-import { TroubleshootingPage } from '../model/pages/troubleshooting-page';
-import { StatusBar } from '../model/workbench/status-bar';
 import { waitUntil } from './wait';
 
 export type ConfirmInputValue = {
@@ -114,36 +112,29 @@ export async function getEntryFromLogs(
   regex: RegExp,
   lineContains = '',
 ): Promise<string | undefined> {
-  await new StatusBar(page).troubleshootingButton.click();
-  const troublePage = new TroubleshootingPage(page);
-  await playExpect(troublePage.heading).toBeVisible();
-  // open logs
-  await troublePage.openLogs();
-  const logList = troublePage.tabContent.getByRole('list');
-  await playExpect(logList).toBeVisible();
-  const logLine = logList.getByRole('listitem').filter({ hasText: filter });
-  await waitUntil(
-    async () => {
-      try {
-        await playExpect(logLine).toBeVisible({ timeout: 3000 });
-        return true;
-      } catch (error: unknown) {
-        console.log(`Log line is not visible yet: ${error}`);
-        await troublePage.openGatherLogs();
-        await troublePage.openLogs();
-        return false;
-      }
+  return await getEntryFromConsoleLogs(page, filter, regex, lineContains, 10_000);
+}
+
+// get a page's console log entry filtered by a regexp filter argument and matched by a regex
+export async function getEntryFromConsoleLogs(
+  page: Page,
+  filter: RegExp,
+  regex: RegExp,
+  checkString: string,
+  timeout = 10_000,
+): Promise<string | undefined> {
+  const consoleLogPromise = page.waitForEvent('console', {
+    predicate: msg => {
+      return msg.type() === 'log' && filter.test(msg.text());
     },
-    { timeout: 15_000, message: 'Waiting for log line to be visible', sendError: false },
-  );
-  await playExpect(logLine).toBeVisible({ timeout: 3_000 });
-  await logLine.scrollIntoViewIfNeeded();
-  if (lineContains) {
-    await playExpect(logLine).toContainText(lineContains);
+    timeout: timeout,
+  });
+  const consoleMsg = await consoleLogPromise;
+  const logLine = consoleMsg.text();
+  if (checkString) {
+    playExpect(logLine).toContain(checkString);
   }
-  const logText = await logLine.innerText();
-  // parse the line using regex:
-  const parsedString = regex.exec(logText);
+  const parsedString = regex.exec(logLine);
   const urlMatch = parsedString ? parsedString[1] : undefined;
   console.log(`Matched string: ${urlMatch}`);
   return urlMatch;
@@ -171,7 +162,7 @@ export async function handleCookies(
 // function is dedicated to verify if some locator exists, depending on external circumstances
 export async function checkLocatorExistence(locator: Locator, timeout = 5000): Promise<boolean> {
   try {
-    await locator.waitFor({ state: 'visible', timeout });
+    await playExpect(locator).toBeVisible({ timeout: timeout });
   } catch (error: unknown) {
     console.log(`Locator not found: ${error}`);
     return false;
