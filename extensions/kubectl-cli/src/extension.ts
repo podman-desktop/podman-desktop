@@ -388,8 +388,13 @@ async function postActivate(
   };
 
   kubectlCliToolUpdaterDisposable = kubectlCliTool.registerInstaller({
-    selectVersion: async () => {
-      const selected = await kubectlDownload.promptUserForVersion();
+    selectVersion: async (latest?: boolean) => {
+      let selected: KubectlGithubReleaseArtifactMetadata;
+      if (latest) {
+        selected = latestAsset ?? (await kubectlDownload.getLatestVersionAsset());
+      } else {
+        selected = await kubectlDownload.promptUserForVersion();
+      }
       releaseToInstall = selected;
       releaseVersionToInstall = selected.tag.slice(1);
       return releaseVersionToInstall;
@@ -409,6 +414,11 @@ async function postActivate(
         installationSource: 'extension',
       });
       vpState.version = releaseVersionToInstall;
+      if (releaseToInstall === latestAsset) {
+        delete update.version;
+      } else {
+        update.version = latestAsset?.tag.slice(1);
+      }
       releaseVersionToInstall = undefined;
       releaseToInstall = undefined;
     },
