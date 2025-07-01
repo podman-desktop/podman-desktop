@@ -226,7 +226,6 @@
       "@kubernetes/client-node>jsonpath-plus": "^10.3.0",
       "vitest>vite": "^6.1.0",
       "esbuild-register>esbuild": "^0.25.0",
-      "@storybook/core>esbuild": "^0.25.0",
       "tsx>esbuild": "^0.25.0",
       "vite>esbuild": "^0.25.0"
     }
