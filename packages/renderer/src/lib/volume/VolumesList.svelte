@@ -210,15 +210,6 @@ const row = new TableRow<VolumeInfoUI>({
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
-    <Table
-      kind="volume"
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={volumes}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Name"
-      on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
-    </Table>
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
@@ -228,6 +219,16 @@ const row = new TableRow<VolumeInfoUI>({
       {:else}
         <VolumeEmptyScreen />
       {/if}
+    {:else}
+      <Table
+        kind="volume"
+        bind:selectedItemsNumber={selectedItemsNumber}
+        data={volumes}
+        columns={columns}
+        row={row}
+        defaultSortColumn="Name"
+        on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
+      </Table>
     {/if}
   </div>
   {/snippet}

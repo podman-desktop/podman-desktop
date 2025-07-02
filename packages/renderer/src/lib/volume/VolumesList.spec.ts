@@ -396,3 +396,52 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removeVolume).toHaveBeenCalled());
 });
+
+test('Expect to see empty page and no table when no container engine is running', async () => {
+  getProviderInfosMock.mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'stopped',
+        },
+      ],
+    },
+  ]);
+
+  listVolumesMock.mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
+          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman',
+          engineId: 'podman.Podman Machine',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+        },
+      ],
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  // wait imageInfo store is populated
+  await vi.waitFor(() => get(volumeListInfos).length > 0);
+
+  await waitRender({});
+
+  const table = screen.queryByRole('table');
+  expect(table).toBeNull();
+
+  const noContainerEngine = screen.getByText('No Container Engine');
+  expect(noContainerEngine).toBeInTheDocument();
+});

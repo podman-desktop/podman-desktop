@@ -314,15 +314,6 @@ const row = new TableRow<ImageInfoUI>({
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
-    <Table
-      kind="image"
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={images}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Age"
-      on:update={(): ImageInfoUI[] => (images = images)}>
-    </Table>
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
@@ -332,6 +323,16 @@ const row = new TableRow<ImageInfoUI>({
       {:else}
         <ImageEmptyScreen />
       {/if}
+    {:else}
+      <Table
+        kind="image"
+        bind:selectedItemsNumber={selectedItemsNumber}
+        data={images}
+        columns={columns}
+        row={row}
+        defaultSortColumn="Age"
+        on:update={(): ImageInfoUI[] => (images = images)}>
+      </Table>
     {/if}
   </div>
   {/snippet}
