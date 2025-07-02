@@ -565,6 +565,7 @@ describe('OptimizedImage Component', () => {
     test('should use default loading="lazy"', () => {
       const result = OptimizedImage({ alt: 'test', src: '/test.png' });
       expect(result).toBeDefined();
+      expect(result.type).toBe('picture');
     });
 
     /**
@@ -574,6 +575,7 @@ describe('OptimizedImage Component', () => {
     test('should accept custom loading="eager"', () => {
       const result = OptimizedImage({ alt: 'test', src: '/test.png', loading: 'eager' });
       expect(result).toBeDefined();
+      expect(result.type).toBe('picture');
     });
 
     /**
@@ -587,6 +589,7 @@ describe('OptimizedImage Component', () => {
         title: 'Additional context',
       });
       expect(result).toBeDefined();
+      expect(result.type).toBe('picture');
     });
 
     /**
@@ -600,6 +603,7 @@ describe('OptimizedImage Component', () => {
         className: 'custom-class',
       });
       expect(result).toBeDefined();
+      expect(result.props.className).toContain('custom-class');
     });
 
     /**
@@ -613,6 +617,7 @@ describe('OptimizedImage Component', () => {
         style: { border: '1px solid red' },
       });
       expect(result).toBeDefined();
+      expect(result.props.style).toEqual(expect.objectContaining({ border: '1px solid red' }));
     });
 
     /**
@@ -626,6 +631,7 @@ describe('OptimizedImage Component', () => {
         sizes: '(max-width: 500px) 100vw, 50vw',
       });
       expect(result).toBeDefined();
+      expect(result.type).toBe('picture');
     });
 
     /**
