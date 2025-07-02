@@ -197,7 +197,7 @@ describe('setTimestamp', () => {
     const setSpy = vi.spyOn(timestampsMap, 'set');
 
     const days = 42;
-    const expectedTimestamp = new Date(MOCK_NOW.getTime() + days * 60 * 1000).getTime();
+    const expectedTimestamp = new Date(MOCK_NOW.getTime() + days * 24 * 60 * 60 * 1000).getTime();
 
     feedbackForm.setTimestamp('feature1', days);
 

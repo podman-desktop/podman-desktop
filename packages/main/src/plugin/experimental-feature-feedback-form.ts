@@ -72,7 +72,7 @@ export class ExperimentalFeatureFeedbackForm {
           scope: 'DEFAULT',
           properties: {
             ['timestamp']: {
-              description: 'Notification fimestamp for each experimental feature',
+              description: 'Notification timestamp for each experimental feature',
               type: 'object',
               hidden: true,
             },
@@ -104,7 +104,6 @@ export class ExperimentalFeatureFeedbackForm {
     }
   }
 
-  // TODO set to days
   /**
    * Updates timestamp for given experimental feature
    * @param feature in format feature.name
@@ -113,7 +112,7 @@ export class ExperimentalFeatureFeedbackForm {
   protected setTimestamp(feature: string, days: number | undefined): void {
     let date: undefined | number = undefined;
     if (days) {
-      date = new Date(new Date().getTime() + days * 60 * 1000).getTime();
+      date = new Date(new Date().getTime() + days * 24 * 60 * 60 * 1000).getTime();
     }
     // update configuration
     this.#timestamps.set(feature, date);
@@ -180,10 +179,12 @@ export class ExperimentalFeatureFeedbackForm {
             {
               heading: 'Remind me later',
               buttons: options,
+              type: 'dropdownButton',
             },
             {
               label: 'Share Feedback on GitHub',
               icon: 'fas fa-arrow-up-right-from-square',
+              type: 'iconButton',
             },
           ],
           defaultId: 1,
