@@ -40,7 +40,12 @@ import { visit } from 'unist-util-visit';
 import type { VFile } from 'vfile';
 
 const BREAKPOINT_SIZES = [640, 768, 1024, 1280, 1536] as const;
-const SIZES_ATTR =
+
+/**
+ * Default responsive sizes attribute for srcset.
+ * Ensures images fill the viewport on smaller screens and have appropriate max widths on larger screens.
+ */
+const DEFAULT_RESPONSIVE_SIZES =
   '(max-width: 640px) 100vw, (max-width: 768px) 100vw, ' +
   '(max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px';
 
@@ -182,7 +187,7 @@ function createSourceElements(base: string): MdxJsxElement[] {
     attributes: [
       { type: 'mdxJsxAttribute', name: 'type', value: `image/${fmt}` },
       { type: 'mdxJsxAttribute', name: 'srcSet', value: makeSrcSet(base, fmt) },
-      { type: 'mdxJsxAttribute', name: 'sizes', value: SIZES_ATTR },
+      { type: 'mdxJsxAttribute', name: 'sizes', value: DEFAULT_RESPONSIVE_SIZES },
     ],
     children: [],
     data: { _mdxExplicitJsx: true },
@@ -197,7 +202,7 @@ function createImgElement(base: string, originalUrl: string, alt?: string, title
       name: 'srcSet',
       value: makeSrcSet(base, FALLBACK_FORMAT),
     },
-    { type: 'mdxJsxAttribute', name: 'sizes', value: SIZES_ATTR },
+    { type: 'mdxJsxAttribute', name: 'sizes', value: DEFAULT_RESPONSIVE_SIZES },
     { type: 'mdxJsxAttribute', name: 'alt', value: alt ?? '' },
     { type: 'mdxJsxAttribute', name: 'loading', value: 'lazy' },
   ];
