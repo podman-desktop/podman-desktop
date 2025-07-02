@@ -624,7 +624,7 @@ describe('compressImage', () => {
    * and doesn't attempt processing with unsupported format methods.
    */
   test('compressImage should throw error for invalid image format', () => {
-    expect(() => compressImage(mockSharpInstance, 'pdf')).toThrow('Unsupported image format: pdf');
+    expect(() => compressImage(mockSharpInstance, 'pdf')).toThrow('Unsupported compression format: pdf');
     expect(mockSharpInstance.png).not.toBeCalled();
     expect(mockSharpInstance.avif).not.toBeCalled();
     expect(mockSharpInstance.webp).not.toBeCalled();

@@ -228,7 +228,7 @@ export class ProgressTracker {
  */
 export function compressImage(sharpInstance: sharp.Sharp, format: string): sharp.Sharp {
   if (!compressors[format]) {
-    throw new Error(`Unsupported image format: ${format}`);
+    throw new Error(`Unsupported compression format: ${format}`);
   }
 
   return compressors[format](sharpInstance);
