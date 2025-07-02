@@ -129,16 +129,16 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     // Normalize source directory path across platforms using path.posix for consistent forward slash behavior.
     const normalizedSourceDir = toPosix(sourceDir);
 
-    // Use path.posix.sep to ensure consistent separator matching across platforms.
-    const websiteSegment = `${path.posix.sep}website${path.posix.sep}`;
-    const websiteIndex = normalizedSourceDir.indexOf(websiteSegment);
+    // Use regex to handle both forward and backward slashes for cross-platform compatibility.
+    const websiteIndex = normalizedSourceDir.search(/[/\\]website[/\\]/);
 
     if (websiteIndex === -1) {
       // Fallback for relative paths - normalize using path.posix for consistent behavior.
       relativePath = toPosix(sourceDir);
     } else {
       // Extract path after '/website/' using proper path operations.
-      const afterWebsite = normalizedSourceDir.substring(websiteIndex + websiteSegment.length);
+      // Since we found the website segment, skip 9 characters ('/website/') to get the part after it.
+      const afterWebsite = normalizedSourceDir.substring(websiteIndex + 9);
       relativePath = toPosix(afterWebsite);
     }
 
