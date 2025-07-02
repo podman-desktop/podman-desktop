@@ -16,14 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface IconButtonType {
-  label: string;
-  icon: string;
+interface BaseButtonType {
+  type: 'iconButton' | 'dropdownButton';
 }
 
-export interface DropdownType {
+export interface IconButtonType extends BaseButtonType {
+  label: string;
+  icon: string;
+  type: 'iconButton';
+}
+
+export interface DropdownType extends BaseButtonType {
   heading: string;
   buttons: string[];
+  type: 'dropdownButton';
 }
 
 export type ButtonsType = string | DropdownType | IconButtonType;

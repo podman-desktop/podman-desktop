@@ -152,7 +152,7 @@ function getButtonType(b: boolean): ButtonType {
         {#if i === cancelId}
           <Button type="link" aria-label="Cancel" on:click={async (): Promise<void> => await clickButton(i)}>Cancel</Button>
         {:else if typeof buttons[i] === 'object'}
-          {#if 'heading' in buttons[i]}
+          {#if buttons[i].type === 'dropdownButton'}
             {@const dropdownButtons = buttons[i] as DropdownType}
             <Dropdown
               name={dropdownButtons.heading}
@@ -165,7 +165,7 @@ function getButtonType(b: boolean): ButtonType {
                 await clickButton(i, optionIndex);
               }}
               options={dropdownButtons.buttons.map(button => ({label: button, value: button}))}/>
-          {:else}
+          {:else if buttons[i].type === 'iconButton'}
             {@const button = buttons[i] as IconButtonType}
             <Button type="primary" icon={button.icon} on:click={async (): Promise<void> => await clickButton(i)}>{button.label}</Button>
           {/if}

@@ -51,6 +51,7 @@ test('Should return option one if dropdown clicked is the first', async () => {
   const dropdown: DropdownType = {
     heading: 'dropdown',
     buttons: ['Monday', 'Tuesday', 'Wednesday'],
+    type: 'dropdownButton',
   };
 
   const result = await messageBox.showDialog('info', 'title', 'message', [dropdown, 'ok']);
@@ -67,6 +68,7 @@ test('Should return option one if dropdown clicked is the second', async () => {
   const dropdown: DropdownType = {
     heading: 'dropdown',
     buttons: ['Monday', 'Tuesday', 'Wednesday'],
+    type: 'dropdownButton',
   };
 
   const result = await messageBox.showDialog('info', 'title', 'message', ['ok', dropdown]);
