@@ -47,12 +47,9 @@ export function getKindClusterConfig(
 }
 
 function convertYamlFrom11to12(manifest: string): string {
-  const manifest1 = `
-%YAML 1.1 
-${manifest}
-`;
-  const parsedManifest = parseAllDocuments(manifest1, { customTags: getTags });
-  return stringify(parsedManifest);
+  const parsedManifests = parseAllDocuments(manifest, { customTags: getTags });
+  const manifests = parsedManifests.map(parsedManifest => stringify(parsedManifest)).join('\n');
+  return manifests;
 }
 
 function getTags(tags: Tags): Tags {
