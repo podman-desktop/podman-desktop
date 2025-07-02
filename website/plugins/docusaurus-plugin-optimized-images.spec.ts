@@ -40,11 +40,16 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { ConfigureWebpackUtils, LoadContext, PluginOptions } from '@docusaurus/types';
+import type { ConfigureWebpackUtils, LoadContext } from '@docusaurus/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Configuration } from 'webpack';
 
 import optimizedImagesPlugin from './docusaurus-plugin-optimized-images';
+
+// Define the plugin options interface for testing
+interface OptimizedImagesPluginOptions {
+  optimizedImagesAlias?: string;
+}
 
 /**
  * Mock console.log and console.warn to capture and validate build messages.
@@ -86,7 +91,7 @@ describe('docusaurus-plugin-optimized-images', () => {
     siteDir: '/mock/site/directory',
   } as LoadContext;
 
-  const mockOptions: PluginOptions = {};
+  const mockOptions: OptimizedImagesPluginOptions = {};
 
   describe('plugin initialization', () => {
     /**
@@ -392,6 +397,120 @@ describe('docusaurus-plugin-optimized-images', () => {
       await plugin.postBuild!(mockProps);
 
       expect(consoleLogMock).toHaveBeenCalledWith('Optimized images ready for production build (7 files processed)');
+    });
+  });
+
+  describe('configurable alias', () => {
+    /**
+     * Test default alias behavior.
+     * Should use '/optimized-images' when no custom alias is provided.
+     */
+    test('should use default alias when none provided', () => {
+      const plugin = optimizedImagesPlugin(mockContext, {});
+
+      const mockWebpackConfig: Configuration = {};
+      const result = plugin.configureWebpack!(mockWebpackConfig, false, {} as ConfigureWebpackUtils);
+
+      expect(result.resolve?.alias).toEqual({
+        '/optimized-images': path.join(mockContext.siteDir, 'static/optimized-images'),
+      });
+
+      expect((result as Configuration & { devServer?: unknown }).devServer).toEqual({
+        static: [
+          {
+            directory: path.join(mockContext.siteDir, 'static/optimized-images'),
+            publicPath: '/optimized-images',
+            serveIndex: false,
+          },
+        ],
+      });
+    });
+
+    /**
+     * Test custom alias configuration.
+     * Should use the provided custom alias instead of the default.
+     */
+    test('should use custom alias when provided', () => {
+      const customAlias = '/custom-images';
+      const plugin = optimizedImagesPlugin(mockContext, { optimizedImagesAlias: customAlias });
+
+      const mockWebpackConfig: Configuration = {};
+      const result = plugin.configureWebpack!(mockWebpackConfig, false, {} as ConfigureWebpackUtils);
+
+      expect(result.resolve?.alias).toEqual({
+        [customAlias]: path.join(mockContext.siteDir, 'static/optimized-images'),
+      });
+
+      expect((result as Configuration & { devServer?: unknown }).devServer).toEqual({
+        static: [
+          {
+            directory: path.join(mockContext.siteDir, 'static/optimized-images'),
+            publicPath: customAlias,
+            serveIndex: false,
+          },
+        ],
+      });
+    });
+
+    /**
+     * Test alias validation - should reject aliases that don't start with '/'.
+     */
+    test('should throw error for alias not starting with slash', () => {
+      expect(() => {
+        optimizedImagesPlugin(mockContext, { optimizedImagesAlias: 'invalid-alias' });
+      }).toThrow('The alias "invalid-alias" for optimized images must start with \'/\'');
+    });
+
+    /**
+     * Test alias validation - should reject conflicting paths.
+     */
+    test('should throw error for conflicting paths', () => {
+      const conflictingAliases = ['/img', '/assets', '/static', '/img/subfolder', '/assets/images'];
+
+      for (const alias of conflictingAliases) {
+        expect(() => {
+          optimizedImagesPlugin(mockContext, { optimizedImagesAlias: alias });
+        }).toThrow(`The alias "${alias}" for optimized images conflicts with a common static path`);
+      }
+    });
+
+    /**
+     * Test custom alias with existing webpack aliases.
+     * Should preserve existing aliases while adding the custom one.
+     */
+    test('should preserve existing aliases with custom alias', () => {
+      const customAlias = '/my-optimized-images';
+      const plugin = optimizedImagesPlugin(mockContext, { optimizedImagesAlias: customAlias });
+
+      const mockWebpackConfig: Configuration = {
+        resolve: {
+          alias: {
+            '@existing': '/some/path',
+            '@components': '/src/components',
+          },
+        },
+      };
+
+      const result = plugin.configureWebpack!(mockWebpackConfig, false, {} as ConfigureWebpackUtils);
+
+      expect(result.resolve?.alias).toEqual({
+        '@existing': '/some/path',
+        '@components': '/src/components',
+        [customAlias]: path.join(mockContext.siteDir, 'static/optimized-images'),
+      });
+    });
+
+    /**
+     * Test valid custom aliases that should not cause conflicts.
+     */
+    test('should accept valid custom aliases', () => {
+      const validAliases = ['/opt-images', '/custom-assets', '/processed-imgs', '/build-images'];
+
+      for (const alias of validAliases) {
+        expect(() => {
+          optimizedImagesPlugin(mockContext, { optimizedImagesAlias: alias });
+        }).not.toThrow();
+      }
     });
   });
 

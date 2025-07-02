@@ -41,6 +41,18 @@ import * as path from 'node:path';
 import type { LoadContext, Plugin, PluginOptions } from '@docusaurus/types';
 
 /**
+ * Plugin options for the optimized images plugin.
+ */
+interface OptimizedImagesPluginOptions extends PluginOptions {
+  /**
+   * The alias path for optimized images.
+   * Defaults to '/optimized-images'.
+   * This path should not conflict with existing static paths.
+   */
+  optimizedImagesAlias?: string;
+}
+
+/**
  * Gets the optimized images directory path.
  *
  * @param siteDir - The Docusaurus site directory
@@ -48,6 +60,30 @@ import type { LoadContext, Plugin, PluginOptions } from '@docusaurus/types';
  */
 function getOptimizedImagesPath(siteDir: string): string {
   return path.join(siteDir, 'static/optimized-images');
+}
+
+/**
+ * Validates the optimized images alias to prevent conflicts.
+ *
+ * @param alias - The alias to validate
+ * @throws Error if the alias is invalid or may cause conflicts
+ */
+function validateOptimizedImagesAlias(alias: string): void {
+  if (!alias.startsWith('/')) {
+    throw new Error(
+      `The alias "${alias}" for optimized images must start with '/'. ` +
+        'Please choose a different alias by setting the "optimizedImagesAlias" option.',
+    );
+  }
+
+  // Check for common conflicting paths
+  const conflictingPaths = ['/img', '/assets', '/static'];
+  if (conflictingPaths.some(path => alias === path || alias.startsWith(`${path}/`))) {
+    throw new Error(
+      `The alias "${alias}" for optimized images conflicts with a common static path. ` +
+        'Please choose a different alias by setting the "optimizedImagesAlias" option.',
+    );
+  }
 }
 
 /**
@@ -83,10 +119,18 @@ function verifyOptimizedImages(optimizedImagesDir: string): void {
  * The plugin configures both build-time and development-time serving of optimized images.
  *
  * @param context - Docusaurus load context containing site configuration
- * @param _options - Plugin options (currently unused but reserved for future configuration)
+ * @param options - Plugin options including configurable alias
  * @returns A Docusaurus plugin object with webpack and build hooks
  */
-export default function docusaurusPluginOptimizedImages(context: LoadContext, _options: PluginOptions): Plugin {
+export default function docusaurusPluginOptimizedImages(
+  context: LoadContext,
+  options: OptimizedImagesPluginOptions = {},
+): Plugin {
+  const optimizedImagesAlias = options.optimizedImagesAlias ?? '/optimized-images';
+
+  // Validate the alias to prevent conflicts
+  validateOptimizedImagesAlias(optimizedImagesAlias);
+
   return {
     // Plugin identifier for Docusaurus.
     name: 'docusaurus-plugin-optimized-images',
@@ -111,10 +155,10 @@ export default function docusaurusPluginOptimizedImages(context: LoadContext, _o
             // Preserve any existing aliases from the base configuration.
             ...(config.resolve?.alias ?? {}),
 
-            // Alias for optimized images directory.
-            // Maps /optimized-images requests to the static/optimized-images directory.
+            // Configurable alias for optimized images directory.
+            // Maps requests to the static/optimized-images directory.
             // This enables import/require statements to resolve optimized images correctly.
-            '/optimized-images': getOptimizedImagesPath(context.siteDir),
+            [optimizedImagesAlias]: getOptimizedImagesPath(context.siteDir),
           },
         },
         devServer: {
@@ -125,7 +169,7 @@ export default function docusaurusPluginOptimizedImages(context: LoadContext, _o
               // This ensures the same URL structure works in both development and production.
               directory: getOptimizedImagesPath(context.siteDir),
 
-              publicPath: '/optimized-images',
+              publicPath: optimizedImagesAlias,
               serveIndex: false, // Disable directory indexing for security
             },
           ],
