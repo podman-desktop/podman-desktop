@@ -545,16 +545,70 @@ export async function processImagesInBatches(
  * @returns Promise resolving to array of image file paths to process
  */
 export async function discoverImages(): Promise<string[]> {
-  const { glob } = await import('glob');
-
   const rootSearchDirs = ['static', 'blog', 'docs', 'tutorial'];
-  const patterns = rootSearchDirs.map(dir => `${dir}/**/*.{${inputFormats.join(',')}}`);
-  const allImages = await glob(patterns, { nodir: true });
+
+  console.log('Searching directories:', rootSearchDirs);
+  console.log('Input formats:', inputFormats);
+
+  const allImages: string[] = [];
+
+  for (const dir of rootSearchDirs) {
+    console.log(`Searching directory: ${dir}`);
+
+    try {
+      const files = await findImageFiles(dir);
+      console.log(`Directory ${dir} found ${files.length} images`);
+      allImages.push(...files);
+    } catch (error) {
+      console.log(`Directory ${dir} failed:`, error);
+    }
+  }
+
+  console.log('All images found:', allImages);
+
   const unwantedPatternRegex = /(?:optimized-images|-\d+w\.(?:png|jpg|jpeg|webp))$/i;
 
-  return allImages.filter(imagePath => {
+  const filteredImages = allImages.filter((imagePath: string) => {
     return !unwantedPatternRegex.exec(imagePath);
   });
+
+  console.log('Filtered images:', filteredImages);
+
+  return filteredImages;
+}
+
+/**
+ * Recursively searches a directory and its subdirectories for image files with specified extensions.
+ *
+ * @param {string} dir - The directory path to search for image files.
+ * @return {Promise<string[]>} A promise that resolves to an array of file paths for the found image files.
+ */
+async function findImageFiles(dir: string): Promise<string[]> {
+  const results: string[] = [];
+
+  try {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        const subFiles = await findImageFiles(fullPath);
+
+        results.push(...subFiles);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase().slice(1);
+
+        if (inputFormats.includes(ext)) {
+          results.push(fullPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`Cannot read directory ${dir}:`, error);
+  }
+
+  return results;
 }
 
 /**
