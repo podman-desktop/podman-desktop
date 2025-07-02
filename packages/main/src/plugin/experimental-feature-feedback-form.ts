@@ -28,7 +28,7 @@ import type { MessageBox } from './message-box.js';
 // Aprox Wednesday, June 6, 2255
 const MAX_NUMBER: number = Number.MAX_SAFE_INTEGER;
 
-type Timestamp = number | undefined | null;
+export type Timestamp = number | undefined | null;
 
 type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
 
@@ -45,7 +45,7 @@ export class ExperimentalFeatureFeedbackForm {
     this.#configurationRegistry = this.configurationRegistry;
   }
 
-  private async save(): Promise<void> {
+  protected async save(): Promise<void> {
     if (!this.#configuration) throw new Error('missing configuration object: cannot save');
 
     await this.#configuration.update('timestamp', Object.fromEntries(this.#timestamps));
@@ -110,7 +110,7 @@ export class ExperimentalFeatureFeedbackForm {
    * @param feature in format feature.name
    * @param days timeout in days
    */
-  setTimestamp(feature: string, days: number | undefined): void {
+  protected setTimestamp(feature: string, days: number | undefined): void {
     let date: undefined | number = undefined;
     if (days) {
       date = new Date(new Date().getTime() + days * 60 * 1000).getTime();
@@ -124,15 +124,14 @@ export class ExperimentalFeatureFeedbackForm {
    * Decides which value should be used for setting timestamp of given feature
    * @param configurationName in format feature.name
    */
-  setReminder(configurationName: string): void {
+  protected setReminder(configurationName: string): void {
     const splittedName = configurationName.split('.');
     if (splittedName.length >= 2 && splittedName[1]) {
       const configurationValue = this.#configurationRegistry
         .getConfiguration(splittedName[0])
         .get<boolean>(splittedName[1]);
-      const feature = `${splittedName[0]}.${splittedName[1]}`;
-      if (configurationValue) this.setTimestamp(feature, 2);
-      else this.setTimestamp(feature, undefined);
+      if (configurationValue) this.setTimestamp(configurationName, 2);
+      else this.setTimestamp(configurationName, undefined);
     }
   }
 
@@ -149,6 +148,14 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   /**
+   * Getter method for timestamps
+   * @returns timestamps
+   */
+  protected getTimestampsMap(): Map<string, Timestamp> {
+    return this.#timestamps;
+  }
+
+  /**
    * Goes through each enabled experimenatl feature and shows dialog if current timestamp is greater than stored value
    */
   protected async showFeedbackDialog(): Promise<void> {
@@ -160,7 +167,6 @@ export class ExperimentalFeatureFeedbackForm {
       // Compare timestamp of each experimental feature
       const date = new Date();
       if (timestamp > date.getTime()) return;
-
       const featureName = this.formatName(key);
       const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
       const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
@@ -193,7 +199,7 @@ export class ExperimentalFeatureFeedbackForm {
             this.setTimestamp(key, undefined);
           }
           // Option from Dropdown was selected
-          else if (response.response === 0 && response.dropdownIndex) {
+          else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
             let remindInDays;
             switch (options[response.dropdownIndex]) {
               case 'Remind me tomorrow':
