@@ -55,6 +55,20 @@ function toPosix(p: string): string {
   return path.posix.normalize(p.replace(/\\/g, '/'));
 }
 
+// Builds the "-640w.avif 640w, -768w.avif 768w" string.
+function makeSrcSet(base: string, fmt: string): string {
+  return BREAKPOINT_SIZES.map(w => `${base}-${w}w.${fmt} ${w}w`).join(', ');
+}
+
+function computeAbsoluteOriginalUrl(filePath: string | undefined, url: string): string {
+  if (!filePath) return url;
+
+  const dirPath = path.dirname(filePath);
+  const websiteIndex = dirPath.lastIndexOf('/website/');
+  const relativePath = websiteIndex >= 0 ? dirPath.substring(websiteIndex + 9) : dirPath;
+  return `/${toPosix(path.posix.join(relativePath, url))}`;
+}
+
 /**
  * Interface for image nodes in the markdown AST.
  */
@@ -156,123 +170,46 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
  * @returns True if the image should be skipped, false otherwise
  */
 function shouldSkipImage(url: string): boolean {
-  // Skip external URLs, pathname:// protocol, or already optimized images.
-  return (
-    // External URLs for security and performance reasons.
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('//') ||
-    // Images that use pathname:// protocol (already bypassing Docusaurus processing).
-    url.startsWith('pathname://') ||
-    // Already optimized images to prevent double-processing.
-    // Pattern matches responsive width suffixes (2-5 digits) at the end of filenames.
-    SKIP_IMAGE_RX.test(url)
-  );
+  return /^(?:https?:)?\/\//.test(url) || url.startsWith('pathname://') || SKIP_IMAGE_RX.test(url);
 }
 
-/**
- * Checks if an image format is supported for optimization.
- *
- * @param url - The image URL to check
- * @returns True if the format is supported, false otherwise
- */
-function isSupportedImageFormat(url: string): boolean {
-  return SUPPORTED_IMAGE_RX.test(url);
+const isSupportedImageFormat = (url: string): boolean => SUPPORTED_IMAGE_RX.test(url);
+
+function createSourceElements(base: string): MdxJsxElement[] {
+  return MODERN_FORMATS.map(fmt => ({
+    type: 'mdxJsxFlowElement',
+    name: 'source',
+    attributes: [
+      { type: 'mdxJsxAttribute', name: 'type', value: `image/${fmt}` },
+      { type: 'mdxJsxAttribute', name: 'srcSet', value: makeSrcSet(base, fmt) },
+      { type: 'mdxJsxAttribute', name: 'sizes', value: SIZES_ATTR },
+    ],
+    children: [],
+    data: { _mdxExplicitJsx: true },
+  }));
 }
 
-/**
- * Creates responsive image source elements for different formats.
- *
- * @param optimizedBasePath - Base path for optimized images
- * @param sizes - Array of responsive breakpoint sizes
- * @param formats - Array of image formats (excluding the fallback format)
- * @returns Array of MDX JSX source elements
- */
-function createSourceElements(optimizedBasePath: string, sizes: number[], formats: string[]): MdxJsxElement[] {
-  return formats.map(
-    (format): MdxJsxElement => ({
-      type: 'mdxJsxFlowElement',
-      name: 'source',
-      attributes: [
-        {
-          type: 'mdxJsxAttribute',
-          name: 'type',
-          value: `image/${format}`,
-        },
-        {
-          type: 'mdxJsxAttribute',
-          name: 'srcSet',
-          value: sizes.map(size => `${optimizedBasePath}-${size}w.${format} ${size}w`).join(', '),
-        },
-        {
-          type: 'mdxJsxAttribute',
-          name: 'sizes',
-          value: SIZES_ATTR,
-        },
-      ],
-      children: [],
-      data: { _mdxExplicitJsx: true },
-    }),
-  );
-}
-
-/**
- * Creates the fallback img element with responsive attributes.
- *
- * @param optimizedBasePath - Base path for optimized images
- * @param originalUrl - Original image URL for fallback
- * @param sizes - Array of responsive breakpoint sizes
- * @param alt - Alt text for the image
- * @param title - Optional title attribute
- * @returns MDX JSX img element
- */
-function createImgElement(
-  optimizedBasePath: string,
-  originalUrl: string,
-  sizes: number[],
-  alt?: string,
-  title?: string,
-): MdxJsxElement {
-  const attributes: MdxJsxAttribute[] = [
-    {
-      type: 'mdxJsxAttribute',
-      name: 'src',
-      value: originalUrl,
-    },
+function createImgElement(base: string, originalUrl: string, alt?: string, title?: string): MdxJsxElement {
+  const attrs: MdxJsxAttribute[] = [
+    { type: 'mdxJsxAttribute', name: 'src', value: originalUrl },
     {
       type: 'mdxJsxAttribute',
       name: 'srcSet',
-      value: sizes.map(size => `${optimizedBasePath}-${size}w.${FALLBACK_FORMAT} ${size}w`).join(', '),
+      value: makeSrcSet(base, FALLBACK_FORMAT),
     },
-    {
-      type: 'mdxJsxAttribute',
-      name: 'sizes',
-      value: SIZES_ATTR,
-    },
-    {
-      type: 'mdxJsxAttribute',
-      name: 'alt',
-      value: alt ?? '',
-    },
-    {
-      type: 'mdxJsxAttribute',
-      name: 'loading',
-      value: 'lazy',
-    },
+    { type: 'mdxJsxAttribute', name: 'sizes', value: SIZES_ATTR },
+    { type: 'mdxJsxAttribute', name: 'alt', value: alt ?? '' },
+    { type: 'mdxJsxAttribute', name: 'loading', value: 'lazy' },
   ];
 
   if (title) {
-    attributes.push({
-      type: 'mdxJsxAttribute',
-      name: 'title',
-      value: title,
-    });
+    attrs.push({ type: 'mdxJsxAttribute', name: 'title', value: title });
   }
 
   return {
     type: 'mdxJsxFlowElement',
     name: 'img',
-    attributes,
+    attributes: attrs,
     children: [],
     data: { _mdxExplicitJsx: true },
   };
@@ -317,43 +254,10 @@ export function remarkOptimizeImages() {
 
       // Only process images that meet all optimization criteria.
       if (!shouldSkipImage(url) && typeof index === 'number' && parent && isSupportedImageFormat(url)) {
-        // Responsive breakpoints matching Tailwind CSS.
-        // These sizes cover the most common viewport widths:
-        // - 640w: Mobile phones
-        // - 768w: Small tablets
-        // - 1024w: Large tablets
-        // - 1280w: Small laptops
-        // - 1536w: Large screens
-        const sizes = [...BREAKPOINT_SIZES];
-
-        // Image formats in order of preference:
-        // 1. AVIF: Best compression, newest format.
-        // 2. WebP: Good compression, wide browser support.
-        // 3. PNG: Universal fallback.
-        // Browsers will use the first supported format.
-        const formats = [...MODERN_FORMATS];
-
-        // Construct the optimized image base path using context-aware mapping.
-        const optimizedBasePath = getOptimizedImagePath(url, file.path);
-
-        // Create source elements for modern formats (AVIF and WebP).
-        const sourceElements = createSourceElements(optimizedBasePath, sizes, formats);
-
-        // Create the fallback img element with optional title.
-        // Construct absolute path for the original image.
-        let absoluteOriginalUrl = url;
-        if (file.path) {
-          const dirPath = path.dirname(file.path);
-          const websiteIndex = dirPath.lastIndexOf('/website/');
-          const relativePath = websiteIndex >= 0 ? dirPath.substring(websiteIndex + 9) : dirPath;
-          absoluteOriginalUrl = `/${toPosix(path.posix.join(relativePath, url))}`;
-        }
-        const imgElement = createImgElement(optimizedBasePath, absoluteOriginalUrl, sizes, alt, title);
-
-        // Replace the markdown image node with the MDX JSX picture element.
-        // This transforms the AST from a simple image to a complex JSX structure.
-        // The JSX will be properly handled by MDX during compilation.
-        parent.children[index] = createPictureElement(sourceElements, imgElement);
+        const base = getOptimizedImagePath(url, file.path);
+        const sources = createSourceElements(base);
+        const img = createImgElement(base, computeAbsoluteOriginalUrl(file.path, url), alt, title);
+        parent.children[index] = createPictureElement(sources, img);
       }
     });
   };
