@@ -16,12 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+export interface IconButtonType {
+  label: string;
+  icon: string;
+}
+
 export interface DropdownType {
   heading: string;
   buttons: string[];
 }
 
-export type ButtonsType = string | DropdownType;
+export type ButtonsType = string | DropdownType | IconButtonType;
 
 /**
  * Options to configure the behavior of the message box UI.
