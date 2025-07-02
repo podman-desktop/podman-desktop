@@ -2182,7 +2182,7 @@ export async function createMachine(
 
   let provider: string | undefined;
   if (params['podman.factory.machine.provider'] && typeof params['podman.factory.machine.provider'] === 'string') {
-    if (os.arch() === 'amd64') {
+    if (os.arch() === 'x64') {
       // Intel machine
       provider = VMTYPE.APPLEHV;
     } else {
