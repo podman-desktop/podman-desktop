@@ -171,7 +171,7 @@ function isValidAltText(alt: unknown): alt is string {
  * @returns True if at least one image source is provided
  */
 function hasImageSource(src?: string, darkSrc?: string, sources?: ImageSources): boolean {
-  return Boolean(src ?? darkSrc ?? sources);
+  return Boolean(src ?? darkSrc ?? (sources && isValidSourcesObject(sources)));
 }
 
 /**
@@ -211,6 +211,16 @@ function validateProps(props: Pick<OptimizedImageProps, 'src' | 'darkSrc' | 'sou
   }
 
   // Image source validation - at least one source must be provided.
+  if (!src && !darkSrc && !sources) {
+    throw new Error('OptimizedImage: requires either src, darkSrc, or sources prop');
+  }
+
+  // Sources object validation - theme switching requires both light and dark variants.
+  if (sources && !isValidSourcesObject(sources)) {
+    throw new Error('OptimizedImage: sources prop must contain both light and dark properties with valid image paths');
+  }
+
+  // Final validation - ensure we have at least one valid image source.
   if (!hasImageSource(src, darkSrc, sources)) {
     throw new Error('OptimizedImage: requires either src, darkSrc, or sources prop');
   }
@@ -219,11 +229,6 @@ function validateProps(props: Pick<OptimizedImageProps, 'src' | 'darkSrc' | 'sou
   if (hasConflictingProps(sources, src, darkSrc) && !hasWarnedAboutConflictingProps) {
     console.warn('OptimizedImage: when sources prop is provided, src and darkSrc props are ignored');
     hasWarnedAboutConflictingProps = true;
-  }
-
-  // Sources object validation - theme switching requires both light and dark variants.
-  if (sources && !isValidSourcesObject(sources)) {
-    throw new Error('OptimizedImage: sources prop must contain both light and dark properties with valid image paths');
   }
 }
 
