@@ -39,6 +39,22 @@ import type { Node, Parent } from 'unist';
 import { visit } from 'unist-util-visit';
 import type { VFile } from 'vfile';
 
+const BREAKPOINT_SIZES = [640, 768, 1024, 1280, 1536] as const;
+const SIZES_ATTR =
+  '(max-width: 640px) 100vw, (max-width: 768px) 100vw, ' +
+  '(max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px';
+
+const MODERN_FORMATS = ['avif', 'webp'] as const;
+const FALLBACK_FORMAT = 'png';
+
+const SKIP_IMAGE_RX = /-\d{2,5}w\.(?:png|jpe?g|webp|avif)$/i;
+const SUPPORTED_IMAGE_RX = /\.(?:png|jpe?g)$/i;
+
+// Replace every .replace(/\\/g, '/') + normalize chain.
+function toPosix(p: string): string {
+  return path.posix.normalize(p.replace(/\\/g, '/'));
+}
+
 /**
  * Interface for image nodes in the markdown AST.
  */
@@ -92,7 +108,7 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
     let relativePath: string;
 
     // Normalize source directory path across platforms using path.posix for consistent forward slash behavior.
-    const normalizedSourceDir = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
+    const normalizedSourceDir = toPosix(sourceDir);
 
     // Use path.posix.sep to ensure consistent separator matching across platforms.
     const websiteSegment = `${path.posix.sep}website${path.posix.sep}`;
@@ -100,19 +116,20 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
 
     if (websiteIndex === -1) {
       // Fallback for relative paths - normalize using path.posix for consistent behavior.
-      relativePath = path.posix.normalize(sourceDir.replace(/\\/g, '/'));
+      relativePath = toPosix(sourceDir);
     } else {
       // Extract path after '/website/' using proper path operations.
       const afterWebsite = normalizedSourceDir.substring(websiteIndex + websiteSegment.length);
-      relativePath = path.posix.normalize(afterWebsite);
+      relativePath = toPosix(afterWebsite);
     }
 
     // For docs, tutorial, and blog images: resolve relative to their respective structures.
     if (relativePath.startsWith('docs') || relativePath.startsWith('tutorial') || relativePath.startsWith('blog')) {
       // Convert relative path to docs/tutorial/blog context using path joining.
       // Keep the full path structure for all content directories.
-      optimizedDir = path.posix.join(relativePath, imageDir.replace(/\\/g, '/'));
+      optimizedDir = path.posix.join(relativePath, toPosix(imageDir));
     }
+
     // For other images: keep existing behavior.
     else {
       optimizedDir = imageDir;
@@ -120,7 +137,7 @@ export function getOptimizedImagePath(imageUrl: string, sourceFilePath?: string)
   }
 
   // Normalize the directory path for web URLs using path.posix.normalize.
-  const normalizedOptimizedDir = path.posix.normalize(optimizedDir.replace(/\\/g, '/'));
+  const normalizedOptimizedDir = toPosix(optimizedDir);
   let normalizedDir: string;
 
   if (normalizedOptimizedDir === '' || normalizedOptimizedDir === '.') {
@@ -149,7 +166,7 @@ function shouldSkipImage(url: string): boolean {
     url.startsWith('pathname://') ||
     // Already optimized images to prevent double-processing.
     // Pattern matches responsive width suffixes (2-5 digits) at the end of filenames.
-    /-\d{2,5}w\.(?:png|jpe?g|webp|avif)$/i.test(url)
+    SKIP_IMAGE_RX.test(url)
   );
 }
 
@@ -160,7 +177,7 @@ function shouldSkipImage(url: string): boolean {
  * @returns True if the format is supported, false otherwise
  */
 function isSupportedImageFormat(url: string): boolean {
-  return /\.(?:png|jpe?g)$/i.test(url);
+  return SUPPORTED_IMAGE_RX.test(url);
 }
 
 /**
@@ -190,8 +207,7 @@ function createSourceElements(optimizedBasePath: string, sizes: number[], format
         {
           type: 'mdxJsxAttribute',
           name: 'sizes',
-          value:
-            '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+          value: SIZES_ATTR,
         },
       ],
       children: [],
@@ -226,13 +242,12 @@ function createImgElement(
     {
       type: 'mdxJsxAttribute',
       name: 'srcSet',
-      value: sizes.map(size => `${optimizedBasePath}-${size}w.png ${size}w`).join(', '),
+      value: sizes.map(size => `${optimizedBasePath}-${size}w.${FALLBACK_FORMAT} ${size}w`).join(', '),
     },
     {
       type: 'mdxJsxAttribute',
       name: 'sizes',
-      value:
-        '(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, 1536px',
+      value: SIZES_ATTR,
     },
     {
       type: 'mdxJsxAttribute',
@@ -309,14 +324,14 @@ export function remarkOptimizeImages() {
         // - 1024w: Large tablets
         // - 1280w: Small laptops
         // - 1536w: Large screens
-        const sizes = [640, 768, 1024, 1280, 1536];
+        const sizes = [...BREAKPOINT_SIZES];
 
         // Image formats in order of preference:
         // 1. AVIF: Best compression, newest format.
         // 2. WebP: Good compression, wide browser support.
         // 3. PNG: Universal fallback.
         // Browsers will use the first supported format.
-        const formats = ['avif', 'webp'];
+        const formats = [...MODERN_FORMATS];
 
         // Construct the optimized image base path using context-aware mapping.
         const optimizedBasePath = getOptimizedImagePath(url, file.path);
@@ -331,7 +346,7 @@ export function remarkOptimizeImages() {
           const dirPath = path.dirname(file.path);
           const websiteIndex = dirPath.lastIndexOf('/website/');
           const relativePath = websiteIndex >= 0 ? dirPath.substring(websiteIndex + 9) : dirPath;
-          absoluteOriginalUrl = `/${path.posix.normalize(path.posix.join(relativePath, url)).replace(/\\/g, '/')}`;
+          absoluteOriginalUrl = `/${toPosix(path.posix.join(relativePath, url))}`;
         }
         const imgElement = createImgElement(optimizedBasePath, absoluteOriginalUrl, sizes, alt, title);
 
