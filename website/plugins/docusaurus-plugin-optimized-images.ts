@@ -59,7 +59,7 @@ interface OptimizedImagesPluginOptions extends PluginOptions {
  * @returns The absolute path to the optimized images directory
  */
 function getOptimizedImagesPath(siteDir: string): string {
-  return path.join(siteDir, 'static/optimized-images');
+  return path.join(siteDir, 'static', 'optimized-images');
 }
 
 /**
