@@ -353,6 +353,9 @@ export default function OptimizedImage({
     };
   }, [shouldOptimize, optimizedBaseUrl]);
 
+  // Build combined className for img element
+  const imgClassName = ['inline-block', 'max-w-full', 'h-auto', className].filter(Boolean).join(' ');
+
   /**
    * Render appropriate image element based on optimization suitability.
    * Single return point that handles both optimized and non-optimized cases.
@@ -369,10 +372,19 @@ export default function OptimizedImage({
         loading={loading}
         sizes={sizes}
         onError={handleImageError}
-        className="inline-block max-w-full h-auto"
+        className={imgClassName}
+        style={style}
       />
     </picture>
   ) : (
-    <img src={originalUrl} alt={alt} title={title} loading={loading} onError={handleImageError} />
+    <img
+      src={originalUrl}
+      alt={alt}
+      title={title}
+      loading={loading}
+      onError={handleImageError}
+      className={className}
+      style={style}
+    />
   );
 }
