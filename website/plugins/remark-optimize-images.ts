@@ -148,8 +148,8 @@ function shouldSkipImage(url: string): boolean {
     // Images that use pathname:// protocol (already bypassing Docusaurus processing).
     url.startsWith('pathname://') ||
     // Already optimized images to prevent double-processing.
-    // Pattern specifically matches responsive width suffixes at the end of filenames.
-    /-\d{3,4}w\.(?:png|jpe?g|webp|avif)$/i.test(url)
+    // Pattern matches responsive width suffixes (2-5 digits) at the end of filenames.
+    /-\d{2,5}w\.(?:png|jpe?g|webp|avif)$/i.test(url)
   );
 }
 
