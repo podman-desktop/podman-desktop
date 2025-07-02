@@ -42,6 +42,7 @@ vi.mock('electron', async () => {
     },
     nativeTheme: {
       on: vi.fn(),
+      shouldUseDarkColors: false,
     },
   };
 });
@@ -52,12 +53,19 @@ beforeEach(() => {
 });
 
 test('valid path for icons', () => {
-  // ensure we are not in prod mode
   const appPathValue = path.resolve(__dirname, 'appPath-value');
 
   const spyElectronGetAppPath = vi.spyOn(app, 'getAppPath').mockReturnValue(appPathValue);
 
-  const assetFolder = testAnimatedTray.getAssetsFolder();
+  // Test production mode.
+  vi.spyOn(testAnimatedTray, 'isProd').mockReturnValue(true);
+  let assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(appPathValue, AnimatedTray.MAIN_ASSETS_FOLDER));
   expect(spyElectronGetAppPath).toHaveBeenCalled();
+
+  // Test development mode.
+  vi.spyOn(testAnimatedTray, 'isProd').mockReturnValue(false);
+  const cwd = process.cwd();
+  assetFolder = testAnimatedTray.getAssetsFolder();
+  expect(assetFolder).toBe(path.resolve(cwd, AnimatedTray.MAIN_ASSETS_FOLDER));
 });

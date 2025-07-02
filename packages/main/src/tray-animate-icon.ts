@@ -47,8 +47,16 @@ export class AnimatedTray {
     return import.meta.env.PROD;
   }
 
+  /**
+   * Retrieves the path to the assets folder based on the current environment.
+   * In production, the assets folder is located within the app bundle, while in development, it is located in the project root directory.
+   *
+   * @return {string} The absolute path to the assets folder.
+   */
   protected getAssetsFolder(): string {
-    return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    return this.isProd()
+      ? path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER)
+      : path.resolve(process.cwd(), AnimatedTray.MAIN_ASSETS_FOLDER);
   }
 
   protected animateTrayIcon(): void {
