@@ -562,7 +562,7 @@ describe('docusaurus-plugin-optimized-images', () => {
 
       expect(() => {
         plugin.configureWebpack!(malformedConfig, false, {} as ConfigureWebpackUtils);
-      }).toThrow('Cannot read properties of null');
+      }).toThrow(TypeError);
     });
   });
 
