@@ -2207,6 +2207,7 @@ export async function createMachine(
       } else {
         provider = VMTYPE.LIBKRUN;
       }
+      await podmanConfiguration.updateMachineProviderSettings(provider as VMTYPE);
       telemetryRecords.provider = provider;
     }
   }
