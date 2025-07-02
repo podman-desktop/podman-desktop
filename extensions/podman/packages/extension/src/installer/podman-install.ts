@@ -16,23 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import * as fs from 'node:fs';
+import { mkdir, readFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { promisify } from 'node:util';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 
-import { OrCheck, SequenceCheck } from '../checks/base-check';
 import { getDetectionChecks } from '../checks/detection-checks';
-import { HyperVCheck } from '../checks/hyperv-check';
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
-import { VirtualMachinePlatformCheck } from '../checks/virtual-machine-platform-check';
-import { WinBitCheck } from '../checks/win-bit-check';
-import { WinMemoryCheck } from '../checks/win-memory-check';
-import { WinVersionCheck } from '../checks/win-version-check';
-import { WSLVersionCheck } from '../checks/wsl-version-check';
-import { WSL2Check } from '../checks/wsl2-check';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import type { MachineJSON } from '../extension';
@@ -48,81 +39,15 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
-import { BaseInstaller } from '../installer/base-installer';
-import type { Installer } from '../installer/installer';
 import * as podman5JSON from '../podman5.json';
-import type { InstalledPodman } from './podman-cli';
-import { getPodmanCli, getPodmanInstallation } from './podman-cli';
-import { getAssetsFolder } from './util';
-
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
-
-export function getBundledPodmanVersion(): string {
-  return podman5JSON.version;
-}
-
-export interface PodmanInfo {
-  podmanVersion?: string;
-  lastUpdateCheck: number;
-  ignoreVersionUpdate?: string;
-}
-
-export class PodmanInfoImpl implements PodmanInfo {
-  private podmanInfo: PodmanInfo;
-  constructor(
-    podmanInfoValue: PodmanInfo | undefined,
-    private readonly storagePath: string,
-  ) {
-    if (!podmanInfoValue) {
-      this.podmanInfo = { lastUpdateCheck: 0 } as PodmanInfo;
-    } else {
-      this.podmanInfo = podmanInfoValue;
-    }
-  }
-
-  set podmanVersion(version: string) {
-    if (this.podmanInfo.podmanVersion !== version) {
-      this.podmanInfo.podmanVersion = version;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  get podmanVersion(): string | undefined {
-    return this.podmanInfo.podmanVersion;
-  }
-
-  set lastUpdateCheck(lastCheck: number) {
-    if (this.podmanInfo.lastUpdateCheck !== lastCheck) {
-      this.podmanInfo.lastUpdateCheck = lastCheck;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  get lastUpdateCheck(): number {
-    return this.podmanInfo.lastUpdateCheck;
-  }
-
-  get ignoreVersionUpdate(): string | undefined {
-    return this.podmanInfo.ignoreVersionUpdate;
-  }
-
-  set ignoreVersionUpdate(version: string) {
-    if (this.podmanInfo.ignoreVersionUpdate !== version) {
-      this.podmanInfo.ignoreVersionUpdate = version;
-      this.writeInfo().catch((err: unknown) => console.error('Unable to write Podman Version', err));
-    }
-  }
-
-  private async writeInfo(): Promise<void> {
-    try {
-      const podmanInfoPath = path.resolve(this.storagePath, 'podman-ext.json');
-      await writeFile(podmanInfoPath, JSON.stringify(this.podmanInfo));
-    } catch (err) {
-      console.error(err);
-    }
-  }
-}
+import { getBundledPodmanVersion } from '../utils/podman-bundled';
+import type { InstalledPodman } from '../utils/podman-cli';
+import { getPodmanCli, getPodmanInstallation } from '../utils/podman-cli';
+import type { PodmanInfo } from '../utils/podman-info';
+import { PodmanInfoImpl } from '../utils/podman-info';
+import type { Installer } from './installer';
+import { MacOSInstaller } from './mac-os-installer';
+import { WinInstaller } from './win-installer';
 
 export interface UpdateCheck {
   hasUpdate: boolean;
@@ -436,7 +361,7 @@ export class PodmanInstall {
   async getLastRunInfo(): Promise<PodmanInfo | undefined> {
     const podmanInfoPath = path.resolve(this.storagePath, 'podman-ext.json');
     if (!fs.existsSync(this.storagePath)) {
-      await promisify(fs.mkdir)(this.storagePath);
+      await mkdir(this.storagePath);
     }
 
     if (!fs.existsSync(podmanInfoPath)) {
@@ -451,131 +376,5 @@ export class PodmanInstall {
     }
 
     return undefined;
-  }
-}
-
-export class WinInstaller extends BaseInstaller {
-  constructor(private extensionContext: extensionApi.ExtensionContext) {
-    super();
-  }
-
-  getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
-    return [];
-  }
-
-  getPreflightChecks(): extensionApi.InstallCheck[] {
-    return [
-      new WinBitCheck(),
-      new WinVersionCheck(),
-      new WinMemoryCheck(),
-      new OrCheck(
-        'Windows virtualization',
-        new SequenceCheck('WSL platform', [
-          new VirtualMachinePlatformCheck(),
-          new WSLVersionCheck(),
-          new WSL2Check(this.extensionContext),
-        ]),
-        new HyperVCheck(true),
-      ),
-    ];
-  }
-
-  update(): Promise<boolean> {
-    return this.install();
-  }
-
-  install(): Promise<boolean> {
-    return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
-      progress.report({ increment: 5 });
-      const setupPath = path.resolve(getAssetsFolder(), `podman-${getBundledPodmanVersion()}-setup.exe`);
-      try {
-        if (fs.existsSync(setupPath)) {
-          try {
-            await extensionApi.process.exec(setupPath, ['/install', '/norestart']);
-            progress.report({ increment: 80 });
-            extensionApi.window.showNotification({ body: 'Podman is successfully installed.' });
-          } catch (err) {
-            //check if user cancelled installation see https://learn.microsoft.com/en-us/previous-versions//aa368542(v=vs.85)
-            const runError = err as extensionApi.RunError;
-            if (runError && runError.exitCode !== 1602 && runError.exitCode !== 0) {
-              throw new Error(runError.message);
-            }
-          }
-          return true;
-        } else {
-          throw new Error(`Can't find Podman setup package! Path: ${setupPath} doesn't exists.`);
-        }
-      } catch (err) {
-        console.error('Error during install!');
-        console.error(err);
-        await extensionApi.window.showErrorMessage('Unexpected error, during Podman installation: ' + err, 'OK');
-        return false;
-      } finally {
-        progress.report({ increment: -1 });
-      }
-    });
-  }
-}
-
-class MacOSInstaller extends BaseInstaller {
-  install(): Promise<boolean> {
-    return extensionApi.window.withProgress({ location: extensionApi.ProgressLocation.APP_ICON }, async progress => {
-      progress.report({ increment: 5 });
-      const pkgArch = process.arch === 'arm64' ? 'aarch64' : 'amd64';
-
-      const pkgPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-${pkgArch}-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsPkg = fs.existsSync(pkgPath);
-
-      const pkgUniversalPath = path.resolve(
-        getAssetsFolder(),
-        `podman-installer-macos-universal-v${getBundledPodmanVersion()}.pkg`,
-      );
-      const existsUniversalPkg = fs.existsSync(pkgUniversalPath);
-
-      let pkgToInstall;
-      if (existsPkg) {
-        pkgToInstall = pkgPath;
-      } else if (existsUniversalPkg) {
-        pkgToInstall = pkgUniversalPath;
-      } else {
-        throw new Error(`Can't find Podman package! Path: ${pkgPath} or ${pkgUniversalPath} doesn't exists.`);
-      }
-
-      try {
-        try {
-          await extensionApi.process.exec('open', [pkgToInstall, '-W']);
-        } catch (err) {
-          throw new Error((err as extensionApi.RunError).stderr);
-        }
-        progress.report({ increment: 80 });
-        // we cannot rely on exit code, as installer could be closed and it return '0' exit code
-        // so just check that podman bin file exist.
-        if (fs.existsSync('/opt/podman/bin/podman')) {
-          extensionApi.window.showNotification({ body: 'Podman is successfully installed.' });
-          return true;
-        } else {
-          return false;
-        }
-      } catch (err) {
-        console.error('Error during install!');
-        console.error(err);
-        await extensionApi.window.showErrorMessage('Unexpected error, during Podman installation: ' + err, 'OK');
-        return false;
-      }
-    });
-  }
-  update(): Promise<boolean> {
-    return this.install();
-  }
-
-  getPreflightChecks(): extensionApi.InstallCheck[] {
-    return [new MacCPUCheck(), new MacMemoryCheck(), new MacVersionCheck()];
-  }
-
-  getUpdatePreflightChecks(): extensionApi.InstallCheck[] {
-    return [new MacPodmanInstallCheck()];
   }
 }

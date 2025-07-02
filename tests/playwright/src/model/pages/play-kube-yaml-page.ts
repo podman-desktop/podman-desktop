@@ -32,6 +32,7 @@ export class PlayKubeYamlPage extends BasePage {
   readonly kubernetesRuntimeButton: Locator;
   readonly kubernetesContext: Locator;
   readonly kubernetesNamespaces: Locator;
+  readonly alertMessage: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -50,10 +51,12 @@ export class PlayKubeYamlPage extends BasePage {
     this.kubernetesNamespaces = this.kubernetesRuntimeButton.getByLabel('Kubernetes Namespace', { exact: true });
     this.playButton = page.getByRole('button', { name: 'Play' });
     this.doneButton = page.getByRole('button', { name: 'Done' });
+    this.alertMessage = this.page.getByLabel('Error Message Content');
   }
 
   async playYaml(
     pathToYaml: string,
+    timeout: number = 120_000,
     { runtime, kubernetesContext, kubernetesNamespace }: PlayKubernetesOptions = {
       kubernetesContext: 'kind-kind-cluster',
     },
@@ -97,7 +100,14 @@ export class PlayKubeYamlPage extends BasePage {
 
       await this.yamlPathInput.fill(pathToYaml);
       await this.playButton.click();
-      await playExpect(this.doneButton).toBeEnabled({ timeout: 120000 });
+      await playExpect(this.doneButton.or(this.alertMessage).first()).toBeVisible({ timeout: timeout });
+
+      if (await this.alertMessage.isVisible()) {
+        const errorMessage = await this.alertMessage.textContent();
+        throw Error(`Error while playing Kubernetes YAML: ${errorMessage}`);
+      }
+
+      await playExpect(this.doneButton).toBeEnabled();
       await this.doneButton.click();
       return new PodsPage(this.page);
     });

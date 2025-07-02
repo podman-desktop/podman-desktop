@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,21 @@
 
 import { join } from 'node:path';
 
+import { inject, injectable } from 'inversify';
+
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { FontDefinition } from '/@api/font-info.js';
 import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
 
 import { isWindows } from '../util.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 
+@injectable()
 export class IconRegistry {
   private icons: Map<string, IconDefinition>;
   private fonts: Map<string, FontDefinition>;
 
-  constructor(private apiSender: ApiSenderType) {
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {
     this.icons = new Map();
     this.fonts = new Map();
   }

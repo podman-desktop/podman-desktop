@@ -19,9 +19,9 @@
 import type * as containerDesktopAPI from '@podman-desktop/api';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
 import type { ApiSenderType } from './api.js';
-import type { IConfigurationChangeEvent } from './configuration-registry.js';
 
 /**
  * Local view of the configuration values for a given scope

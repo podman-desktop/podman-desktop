@@ -4,8 +4,7 @@ import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingIte
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
-
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 interface Props {
   properties: IConfigurationPropertyRecordedSchema[];

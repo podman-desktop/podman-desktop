@@ -1,9 +1,8 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
-import { createEventDispatcher, onMount, type Snippet } from 'svelte';
-import Fa from 'svelte-fa';
+import { createEventDispatcher, type Snippet } from 'svelte';
 
-import { isFontAwesomeIcon } from '../utils/icon-utils';
+import Icon from '../icons/Icon.svelte';
 
 const dispatch = createEventDispatcher<{ click: undefined }>();
 
@@ -24,16 +23,6 @@ let {
     dispatch('click');
   },
 }: Props = $props();
-
-let iconType: string | undefined = $state(undefined);
-
-onMount(() => {
-  if (isFontAwesomeIcon(icon)) {
-    iconType = 'fa';
-  } else {
-    iconType = 'unknown';
-  }
-});
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -46,9 +35,7 @@ onMount(() => {
   aria-label={ariaLabel ?? ''}>
   {#if icon}
     <span class="flex flex-row space-x-2">
-      {#if iconType === 'fa'}
-        <Fa icon={icon} />
-      {/if}
+      <Icon icon={icon}/>
       <span>{@render children?.()}</span>
     </span>
   {:else}

@@ -8,9 +8,9 @@ import { get, type Unsubscriber, type Writable } from 'svelte/store';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { extensionInfos } from '/@/stores/extensions';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { ExtensionInfo } from '/@api/extension-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
 import IconImage from '../../appearance/IconImage.svelte';
 import type { ContextUI } from '../../context/context';
 import Markdown from '../../markdown/Markdown.svelte';

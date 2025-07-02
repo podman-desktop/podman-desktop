@@ -98,7 +98,7 @@ export class Detect {
         const { stdout: fullPath } = await extensionApi.process.exec('which', [executable]);
         return fullPath;
       } catch (err) {
-        console.warn('Error getting kubectl full path', err);
+        console.warn(`Error getting ${executable} full path`, err);
       }
     } else if (extensionApi.env.isWindows) {
       // grab full path for Windows
@@ -107,7 +107,7 @@ export class Detect {
         // remove all line break/carriage return characters from full path
         return fullPath.replace(/(\r\n|\n|\r)/gm, '');
       } catch (err) {
-        console.warn('Error getting kubectl full path', err);
+        console.warn(`Error getting ${executable} full path`, err);
       }
     }
 

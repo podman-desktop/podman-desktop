@@ -58,7 +58,6 @@ let previousPath: string | undefined;
 beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
-  previousPath = process.env.PATH;
   process.env.PATH = localBinDir;
 });
 
@@ -72,7 +71,7 @@ test('error: expect installBinaryToSystem to fail with a non existing binary', a
     value: 'linux',
   });
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
+  vi.mocked(extensionApi.process.exec).mockImplementation(
     () =>
       new Promise<extensionApi.RunResult>((_, reject) => {
         const error: extensionApi.RunError = {
@@ -101,13 +100,12 @@ test('success: installBinaryToSystem on mac with /usr/local/bin already created'
   });
 
   // Mock existsSync to be true since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
+  vi.mocked(fs.existsSync).mockImplementation(() => {
     return true;
   });
 
   // Run installBinaryToSystem which will trigger the spyOn mock
   await installBinaryToSystem('test', 'tmpBinary');
-
   // check called with admin being true
   expect(extensionApi.process.exec).toBeCalledWith(
     'exec',
@@ -123,7 +121,7 @@ test('success: installBinaryToSystem on linux with /usr/local/bin NOT created ye
   });
 
   // Mock existsSync to be false since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
+  vi.mocked(fs.existsSync).mockImplementation(() => {
     return false;
   });
 
@@ -150,7 +148,7 @@ test('success: installBinaryToSystem to show warning if binary path not in PATH'
   process.env.PATH = '';
 
   // Mock existsSync to be false since within the function it's doing: !fs.existsSync(localBinDir)
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
+  vi.mocked(fs.existsSync).mockImplementation(() => {
     return false;
   });
 

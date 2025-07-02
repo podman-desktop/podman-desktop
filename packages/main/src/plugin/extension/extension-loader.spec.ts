@@ -98,6 +98,10 @@ class TestExtensionLoader extends ExtensionLoader {
     return this.activatedExtensions;
   }
 
+  getAnalyzedExtensions(): Map<string, AnalyzedExtension> {
+    return this.analyzedExtensions;
+  }
+
   getExtensionStateErrors(): Map<string, unknown> {
     return this.extensionStateErrors;
   }
@@ -485,6 +489,7 @@ test('Verify extension error leads to failed state', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -515,6 +520,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -549,6 +555,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -579,6 +586,7 @@ test('Verify extension load', async () => {
     api: {} as typeof containerDesktopAPI,
     mainPath: '',
     removable: true,
+    devMode: false,
     manifest: {
       version: '1.1',
     },
@@ -616,6 +624,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
     api: {} as typeof containerDesktopAPI,
     mainPath: '',
     removable: false,
+    devMode: false,
     manifest: {
       version: '1.1',
       contributes: {
@@ -1095,6 +1104,40 @@ describe('Removing extension by user', async () => {
     expect(extensionLoader.removeExtension).toBeCalledWith(ExtID);
     expect(telemetry.track).toBeCalledWith('removeExtension', { extensionId: ExtID, error: RemoveError });
   });
+
+  test('no error in dev mode', async () => {
+    const deactivateExtensionSpy = vi.spyOn(extensionLoader, 'deactivateExtension');
+    const fakeAnalyzedExtension = {
+      id: ExtID,
+      devMode: true,
+      manifest: {
+        name: 'name',
+        publisher: 'publisher',
+        version: '1.0.0',
+      },
+    };
+    extensionLoader.getAnalyzedExtensions().set(ExtID, fakeAnalyzedExtension as AnalyzedExtension);
+    await extensionLoader.removeExtension(ExtID);
+    expect(extensionDevelopmentFolder.removeExternalExtensionId).toBeCalledWith(ExtID);
+    expect(deactivateExtensionSpy).toBeCalledWith(ExtID);
+    expect(extensionLoader.getAnalyzedExtensions().size).toBe(0);
+  });
+
+  test('error if not in dev mode', async () => {
+    const deactivateExtensionSpy = vi.spyOn(extensionLoader, 'deactivateExtension');
+    const fakeAnalyzedExtension = {
+      id: ExtID,
+      devMode: false,
+      manifest: {
+        name: 'name',
+        publisher: 'publisher',
+        version: '1.0.0',
+      },
+    };
+    extensionLoader.getAnalyzedExtensions().set(ExtID, fakeAnalyzedExtension as AnalyzedExtension);
+    await expect(extensionLoader.removeExtension(ExtID)).rejects.toThrow('is not removable');
+    expect(deactivateExtensionSpy).toBeCalledWith(ExtID);
+  });
 });
 
 test('check dispose when deactivating', async () => {
@@ -1134,6 +1177,7 @@ test('Verify extension uri', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {},
       subscriptions: [],
       readme: '',
@@ -1167,6 +1211,7 @@ test('Verify exports and packageJSON', async () => {
       api: {} as typeof containerDesktopAPI,
       mainPath: '',
       removable: false,
+      devMode: false,
       manifest: {
         foo: 'bar',
       },

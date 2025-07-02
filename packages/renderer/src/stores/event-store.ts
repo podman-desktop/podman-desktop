@@ -27,6 +27,8 @@ import { addStore, updateStore } from './event-store-manager';
 const SECOND = 1000;
 const DEFAULT_DEBOUNCE_TIMEOUT = 1.5 * SECOND;
 const DEFAULT_THROTTLE_TIMEOUT = 5 * SECOND;
+const EVENT_SEPARATOR = '>';
+const KEYS_SEPARATOR = ',';
 
 interface EventStoreInfoEvent {
   name: string;
@@ -51,6 +53,9 @@ function isKeyEvent(value: unknown): value is KeyEvent {
   return !!value && typeof value === 'object' && 'key' in value && typeof value.key === 'string';
 }
 
+export function fineGrainedEvents(eventName: string, keys: string[]): string {
+  return [eventName, keys.join(KEYS_SEPARATOR)].join(EVENT_SEPARATOR);
+}
 export interface EventStoreInfo {
   name: string;
 
@@ -268,12 +273,12 @@ export class EventStore<T> {
     };
 
     this.windowEvents.forEach(eventNameWithOptionalKeys => {
-      const [eventName, commaSeparatedKeys] = eventNameWithOptionalKeys.split(':');
+      const [eventName, keysList] = eventNameWithOptionalKeys.split(EVENT_SEPARATOR);
       window.events?.receive(eventName, (...args: unknown[]) => {
-        if (commaSeparatedKeys) {
+        if (keysList) {
           // if the window event specifies one or several keys, wre call `update`
           // only if the received event is related to one of these keys
-          const keys = commaSeparatedKeys.split(',');
+          const keys = keysList.split(KEYS_SEPARATOR);
           if (args.length === 1 && isKeyEvent(args[0]) && keys.includes(args[0].key)) {
             update(eventNameWithOptionalKeys, args).catch((error: unknown) => {
               console.error(`Failed to update ${this.name}`, error);

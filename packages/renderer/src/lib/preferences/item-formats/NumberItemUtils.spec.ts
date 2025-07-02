@@ -20,7 +20,8 @@ import '@testing-library/jest-dom/vitest';
 
 import { expect, test } from 'vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+
 import { checkNumericValueValid } from './NumberItemUtils';
 
 test('Expect an error message if value input is NaN', async () => {

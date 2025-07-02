@@ -16,17 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { inject, injectable } from 'inversify';
+
 import { Emitter } from '/@/plugin/events/emitter.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
+import { ApiSenderType } from '../api.js';
+import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 
 // Handle the registration / track of all development folders used when developing extensions
+@injectable()
 export class ExtensionDevelopmentFolders {
-  #configurationRegistry: ConfigurationRegistry;
+  #configurationRegistry: IConfigurationRegistry;
 
   #apiSender: ApiSenderType;
 
@@ -49,8 +55,11 @@ export class ExtensionDevelopmentFolders {
   onNeedToLoadExension = this.#onRequestLoadExension.event;
 
   constructor(
-    configurationRegistry: ConfigurationRegistry,
+    @inject(IConfigurationRegistry)
+    configurationRegistry: IConfigurationRegistry,
+    @inject(ExtensionAnalyzer)
     extensionAnalyzer: ExtensionAnalyzer,
+    @inject(ApiSenderType)
     apiSender: ApiSenderType,
   ) {
     this.#configurationRegistry = configurationRegistry;
@@ -120,10 +129,27 @@ export class ExtensionDevelopmentFolders {
     }
 
     // before adding the path, check it's a valid extension path
-    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension(path, false);
+    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension(path, false, true);
     // if there is an error, abort
     if (analyzedExtension.error) {
       throw new Error(analyzedExtension.error);
+    }
+
+    // check if "podman-desktop" is listed as engine
+    if (analyzedExtension.manifest?.engines?.['podman-desktop'] === undefined) {
+      throw new Error(
+        `Extension with id ${analyzedExtension.id} is not compatible with Podman Desktop. It requires 'podman-desktop' engine.`,
+      );
+    }
+
+    // if there is a file, check if the file is present
+    if (
+      analyzedExtension.manifest.main &&
+      existsSync(resolve(analyzedExtension.path, analyzedExtension.manifest.main)) === false
+    ) {
+      throw new Error(
+        `Extension with id ${analyzedExtension.id} is not ready. The main file ${analyzedExtension.manifest.main} referenced by the package.json file does not exist. Maybe Extension is not built / in watch mode ?`,
+      );
     }
 
     // if the extension is already part of the loader, avoid the loading

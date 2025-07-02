@@ -2,7 +2,8 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+
 import { uncertainStringToNumber } from '../Util';
 import { checkNumericValueValid } from './NumberItemUtils';
 

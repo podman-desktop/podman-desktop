@@ -13,13 +13,13 @@ import type { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 /* eslint-enable import/no-duplicates */
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Markdown from '../markdown/Markdown.svelte';
 import AuditMessageBox from '../ui/AuditMessageBox.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';

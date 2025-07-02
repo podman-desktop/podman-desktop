@@ -161,3 +161,10 @@ describe('Test SSH Stream', () => {
     expect(providerConnectionShellAccess.onEndEmit.fire).toHaveBeenCalled();
   });
 });
+
+test('Returned functions should run without errors', () => {
+  const shellAccess = providerConnectionShellAccess.open();
+  expect(() => shellAccess.close()).not.toThrow();
+  expect(() => shellAccess.write('test')).not.toThrow();
+  expect(() => shellAccess.resize({ rows: 1, cols: 2 })).not.toThrow();
+});

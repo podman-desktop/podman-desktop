@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,23 @@
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
-import type { Certificates } from '/@/plugin/certificates.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
+import { ApiSenderType } from '/@/plugin/api.js';
+import { Certificates } from '/@/plugin/certificates.js';
 import type {
   CatalogExtension,
   CatalogFetchableExtension,
 } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
-import type { Proxy } from '/@/plugin/proxy.js';
+import { Proxy } from '/@/plugin/proxy.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
 
 /**
  * Allow to grab content from the online extensions catalog.
  */
+@injectable()
 export class ExtensionsCatalog {
   public static readonly DEFAULT_EXTENSIONS_URL = 'https://registry.podman-desktop.io/api/extensions.json';
 
@@ -42,9 +44,13 @@ export class ExtensionsCatalog {
   static readonly CACHE_TIMEOUT = 1000 * 60 * 60 * 4; // 4 hours
 
   constructor(
+    @inject(Certificates)
     private certificates: Certificates,
+    @inject(Proxy)
     private proxy: Proxy,
-    private configurationRegistry: ConfigurationRegistry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {}
 

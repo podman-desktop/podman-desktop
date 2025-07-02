@@ -45,7 +45,7 @@ export class ExtensionsPage {
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
   }
 
-  public async installExtensionFromOCIImage(extension: string): Promise<ExtensionsPage> {
+  public async installExtensionFromOCIImage(extension: string, timeout = 100_000): Promise<ExtensionsPage> {
     return test.step(`Install extension from OCI image: ${extension}`, async () => {
       // open button to install extension from OCI image
       await playExpect(this.installExtensionFromOCIImageButton).toBeEnabled();
@@ -76,7 +76,7 @@ export class ExtensionsPage {
         name: 'Done',
         exact: true,
       });
-      await playExpect(doneButton).toBeEnabled({ timeout: 100_000 });
+      await playExpect(doneButton).toBeEnabled({ timeout: timeout });
       await doneButton.click();
 
       return this;

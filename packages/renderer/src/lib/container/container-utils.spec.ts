@@ -112,10 +112,42 @@ test('container group status should be running when all compose containers are r
     containerUtils.getContainerInfoUI(containerInfo),
     containerUtils.getContainerInfoUI(containerInfo2),
   ]);
+  expect(groups).toHaveLength(1);
   const group = groups[0];
   expect(group.name).toBe(groupName);
   expect(group.type).toBe(ContainerGroupInfoTypeUI.COMPOSE);
   expect(group.status).toBe('RUNNING');
+});
+
+test('same group name but different engine is should results in two groups', async () => {
+  const groupName = 'compose-group';
+  const containerInfo = {
+    Id: 'container1',
+    Image: 'docker.io/kindest/node:foobar',
+    Labels: { 'com.docker.compose.project': groupName },
+    Names: ['container1'],
+    State: 'RUNNING',
+    ImageID: 'sha256:dummy-sha256',
+    engineId: 'docker',
+  } as unknown as ContainerInfo;
+
+  const groups = containerUtils.getContainerGroups([
+    containerUtils.getContainerInfoUI({
+      ...containerInfo,
+      engineId: 'podman-1',
+    }),
+    containerUtils.getContainerInfoUI({
+      ...containerInfo,
+      engineId: 'podman-2',
+    }),
+  ]);
+  expect(groups).toHaveLength(2);
+  const [groupA, groupB] = groups;
+
+  expect(groupA.name).toBe(groupName);
+  expect(groupB.name).toBe(groupName);
+
+  expect(groupA.id).not.eq(groupB.id);
 });
 
 test('container group status should be stopped when any compose container is stopped', async () => {
@@ -212,6 +244,34 @@ test('container group status should be degraded when the pod status is degraded'
   expect(group.name).toBe(groupName);
   expect(group.type).toBe(ContainerGroupInfoTypeUI.POD);
   expect(group.status).toBe('DEGRADED');
+});
+
+test('containers in same named compose project on two different engine should have different group id', async () => {
+  const COMPOSE_CONTAINER: ContainerInfo = {
+    engineId: '',
+    engineName: '',
+    engineType: 'podman',
+    Id: 'container1',
+    Image: 'registry.k8s.io/pause:3.7',
+    Labels: {
+      'com.docker.compose.project': 'compose',
+      'com.docker.compose.service': 'compose_container',
+    },
+    Names: ['/compose-compose_container-1'],
+    State: 'RUNNING',
+  } as unknown as ContainerInfo;
+
+  const foo = containerUtils.getContainerGroup({
+    ...COMPOSE_CONTAINER,
+    engineId: 'foo',
+  });
+
+  const bar = containerUtils.getContainerGroup({
+    ...COMPOSE_CONTAINER,
+    engineId: 'bar',
+  });
+
+  expect(foo.id).not.eq(bar.id);
 });
 
 test('should expect icon to be undefined if no context/view is passed', async () => {

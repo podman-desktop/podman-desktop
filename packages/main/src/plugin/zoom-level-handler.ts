@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,20 @@
 
 import type { BrowserWindow } from 'electron';
 
+import type { IConfigurationRegistry } from '/@api/configuration/models.js';
+
 import { AppearanceSettings } from './appearance-settings.js';
-import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { IDisposable } from './types/disposable.js';
 
 export class ZoomLevelHandler {
   #browserWindow: BrowserWindow;
-  #configurationRegistry: ConfigurationRegistry;
+  #configurationRegistry: IConfigurationRegistry;
   #disposable: IDisposable | undefined;
   #stepValue = 0.5;
   #maximumZoomLevel = 3;
   #minimumZoomLevel = -3;
 
-  constructor(browserWindow: BrowserWindow, configurationRegistry: ConfigurationRegistry) {
+  constructor(browserWindow: BrowserWindow, configurationRegistry: IConfigurationRegistry) {
     this.#browserWindow = browserWindow;
     this.#configurationRegistry = configurationRegistry;
   }

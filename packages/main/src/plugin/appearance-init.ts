@@ -17,14 +17,17 @@
  ***********************************************************************/
 
 import { nativeTheme } from 'electron';
+import { inject, injectable } from 'inversify';
+
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { AppearanceSettings } from './appearance-settings.js';
-import type { IConfigurationNode, IConfigurationRegistry } from './configuration-registry.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
 
+@injectable()
 export class AppearanceInit {
-  constructor(private configurationRegistry: IConfigurationRegistry) {}
+  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
   init(): void {
     const appearanceConfiguration: IConfigurationNode = {

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { injectable } from 'inversify';
+
 import type { KubernetesGeneratorInfo } from '../api/KubernetesGeneratorInfo.js';
 import { Disposable } from '../types/disposable.js';
 
@@ -39,6 +41,7 @@ export interface KubernetesGeneratorProvider {
   generate(kubernetesGeneratorArguments: KubernetesGeneratorArgument[]): Promise<GenerateKubeResult>;
 }
 
+@injectable()
 export class KubeGeneratorRegistry {
   private defaultProvider?: string;
   private kubeGenerators = new Map<string, KubernetesGeneratorProvider>();

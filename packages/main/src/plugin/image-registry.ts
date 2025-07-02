@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,17 +29,18 @@ import * as fzstd from 'fzstd';
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got, { HTTPError, RequestError } from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
+import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 
 import { isMac, isWindows } from '../util.js';
-import type { ApiSenderType } from './api.js';
-import type { Certificates } from './certificates.js';
+import { ApiSenderType } from './api.js';
+import { Certificates } from './certificates.js';
 import { Emitter } from './events/emitter.js';
-import type { Proxy } from './proxy.js';
-import type { Telemetry } from './telemetry/telemetry.js';
+import { Proxy } from './proxy.js';
+import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
 export interface RegistryAuthInfo {
@@ -49,6 +50,7 @@ export interface RegistryAuthInfo {
   scheme: string;
 }
 
+@injectable()
 export class ImageRegistry {
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
@@ -69,9 +71,13 @@ export class ImageRegistry {
   private proxyEnabled: boolean;
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(Telemetry)
     private telemetryService: Telemetry,
+    @inject(Certificates)
     private certificates: Certificates,
+    @inject(Proxy)
     private proxy: Proxy,
   ) {
     this.proxy.onDidUpdateProxy(settings => {

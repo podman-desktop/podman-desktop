@@ -42,7 +42,7 @@ export class ContainerUtils {
     // Safely determine if this is a compose project or not by checking the project label.
     const composeProject = containerInfo.Labels?.['com.docker.compose.project'];
 
-    /* 
+    /*
       When deploying with compose, the container name will be <project>-<service-name>-<container-number> under Names[0].
       This is added to the container name to make it unique.
       HOWEVER, if you specify container_name in the compose file, the container name will be whatever is is set to and
@@ -189,6 +189,7 @@ export class ContainerUtils {
     if (composeProject) {
       return {
         name: composeProject,
+        id: `${containerInfo.engineId}:${composeProject}`, // the ID must be unique per engineId, so let's concatenate the engineId and the compose project
         type: ContainerGroupInfoTypeUI.COMPOSE,
         engineId: containerInfo.engineId,
         engineType: containerInfo.engineType,
@@ -214,6 +215,7 @@ export class ContainerUtils {
       type: ContainerGroupInfoTypeUI.STANDALONE,
       status: (containerInfo.Status ?? '').toUpperCase(),
       engineType: containerInfo.engineType,
+      id: containerInfo.Id, // since the container is standalone, let's use its ID as groupInfo#id
     };
   }
 
@@ -232,8 +234,8 @@ export class ContainerUtils {
           allContainersCount: 1,
         });
       } else {
-        if (!groups.has(group.name)) {
-          groups.set(group.name, {
+        if (!groups.has(group.id)) {
+          groups.set(group.id, {
             selected: false,
             expanded: true,
             name: group.name,
@@ -246,7 +248,7 @@ export class ContainerUtils {
             containers: [],
           });
         }
-        groups.get(group.name)?.containers.push(containerInfo);
+        groups.get(group.id)?.containers.push(containerInfo);
       }
     });
     groups.forEach(group => (group.allContainersCount = group.containers.length));

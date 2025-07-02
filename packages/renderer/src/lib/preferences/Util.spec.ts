@@ -19,7 +19,8 @@
 import type { Terminal } from '@xterm/xterm';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+
 import { ContextUI } from '../context/context';
 import {
   calcHalfCpuCores,

@@ -9,8 +9,8 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { transformObjectToContext } from '/@/lib/context/ContextUtils';
 import { context as storeContext } from '/@/stores/context';
+import type { Menu } from '/@api/menu.js';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 
 interface Props {

@@ -115,7 +115,6 @@ async function openKubePods(): Promise<void> {
 }
 
 let selectedItemsNumber: number = $state(0);
-let table: Table;
 
 let statusColumn = new TableColumn<PodInfoUI>('Status', {
   align: 'center',
@@ -227,7 +226,6 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
   <div class="flex min-w-full h-full">
     <Table
       kind="pod"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={pods}
       columns={columns}

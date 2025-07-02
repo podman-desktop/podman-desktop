@@ -16,11 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { isUnixLike } from '../util.js';
-import type { ConfigurationRegistry, IConfigurationNode } from './configuration-registry.js';
+import { inject, injectable } from 'inversify';
 
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
+import { isUnixLike } from '../util.js';
+
+@injectable()
 export class CloseBehavior {
-  constructor(private configurationRegistry: ConfigurationRegistry) {}
+  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
   async init(): Promise<void> {
     // add configuration

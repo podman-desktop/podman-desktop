@@ -6,12 +6,35 @@
 @import 'tailwindcss';
 @config '../../tailwind.config.js';
 
-/* manrope variable font */
+/* Manrope latin subset font */
+/* This font is a subset of Manrope from Google Fonts, optimized for Latin characters */
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: normal;
-  src: url('../../static/fonts/manrope.ttf') format('truetype');
+  font-display: swap;
+  src: url('../../static/fonts/manrope-subset-latin.woff2') format('woff2');
+  /* The unicode-range property tells the browser which characters this font should be used for.
+     Instead of loading the entire font with all possible characters, we only load the ones we need:
+     
+     U+0000-00FF: Basic Latin (a-z, A-Z, numbers, basic punctuation)
+     U+0131: Turkish dotless i
+     U+0152-0153: Latin ligatures (Œ, œ)
+     U+02BB-02BC: Modifier letters
+     U+02C6, U+02DA, U+02DC: Diacritical marks
+     U+0304, U+0308, U+0329: Combining diacritical marks
+     U+2000-206F: General punctuation
+     U+20AC: Euro symbol (€)
+     U+2122: Trademark symbol (™)
+     U+2191, U+2193: Arrows (↑, ↓)
+     U+2212, U+2215: Mathematical operators (−, ∕)
+     U+FEFF: Zero-width no-break space
+     U+FFFD: Replacement character
+     
+     This optimization reduces the font file size by ~70% while maintaining all characters needed for the website. */
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /* You can override the default Infima variables here. */

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ApiSenderType } from '../api.js';
+import { inject, injectable } from 'inversify';
+
+import { STATUS_BAR_UPDATED_EVENT_NAME, type StatusBarEntry, type StatusBarEntryDescriptor } from '/@api/status-bar.js';
+
+import { ApiSenderType } from '../api.js';
 import type { IDisposable } from '../types/disposable.js';
 
-export const STATUS_BAR_UPDATED_EVENT_NAME = 'status-bar-updated';
-
-export interface StatusBarEntry {
-  text?: string;
-  tooltip?: string;
-  activeIconClass?: string;
-  inactiveIconClass?: string;
-  enabled: boolean;
-  command?: string;
-  commandArgs?: unknown[];
-  highlight?: boolean;
-}
-
-export interface StatusBarEntryDescriptor {
-  priority: number;
-  alignLeft: boolean;
-  entry: StatusBarEntry;
-}
-
+@injectable()
 export class StatusBarRegistry implements IDisposable {
   private readonly entries: Map<string, StatusBarEntryDescriptor> = new Map();
 
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   removeEntry(id: string): void {
     const entry = this.entries.get(id);

@@ -16,17 +16,14 @@ With Podman Desktop, you can configure a Docker-compatible environment using the
 As a developer, you can:
 
 - Check the system socket mapping status to know whether the socket is reachable. The default socket path is:
-
   - _/var/run/docker.sock_ on macOS and Linux
   - _npipe:////./pipe/docker_engine_ on Windows
 
 - Use all Docker tools, including CLI, with the Podman engine without any reconfiguration. These tools connect to the default Podman socket, thereby enabling you to use all Docker commands with Podman. For example, you can run the `docker run` command on the Podman engine to start a container.
-
   - On macOS, the **Third-Party Docker Tool Compatibility** setting is enabled by default.
   - On Windows and Linux, the **Third-Party Docker Tool Compatibility** setting is not available. You can [use the `DOCKER_HOST` environment variable](/docs/migrating-from-docker/using-the-docker_host-environment-variable) to let your tools communicate directly with the Podman socket.
 
 - Use the Podman CLI to run Compose applications by installing and setting up the [Compose extension](/docs/compose). For example, you can run the `docker compose up` command on the Podman engine to start your Compose v2 application. Also, ensure to place your Docker Compose file in a working directory, such as your home directory.
-
   - If the Compose CLI is not installed, you get the install option in the settings.
 
 - Select and use a Docker-compatible socket context. You can also view the socket details, such as name and socket path.

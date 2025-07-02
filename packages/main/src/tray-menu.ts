@@ -61,41 +61,56 @@ export class TrayMenu {
   ) {
     ipcMain.on(
       'tray:add-provider-menu-item',
-      (_, param: { providerId: string; menuItem: MenuItemConstructorOptions }) => {
+      (_, param: { providerId: string; providerInfo: ProviderInfo; menuItem: MenuItemConstructorOptions }) => {
         param.menuItem.click = (): void => {
           ipcMain.emit('tray:menu-item-click', '', param.menuItem.id);
         };
-        // grab matching provider
+
+        // Try to find an existing provider, this is for compatibility with extensions that
+        // have used the "registerLifecycle" method before adding tray items.
+        // otherwise, 99% of the time (as of June 2025) the provider will not exist and we
+        // will have to create a new one.
+        //
+        // Although after we add the provider, we will now be able to "search" for it
+        // using the `providerId` that was passed in the parameter.
         const provider = Array.from(this.menuProviderItems.values()).find(item => item.id === param.providerId);
         if (provider) {
           provider.childItems.push(param.menuItem);
-          this.updateMenu();
-        } else {
-          this.menuProviderItems.set(param.providerId, {
-            id: param.providerId,
-            internalId: '',
+        } else if (param.providerInfo) {
+          // Now, we create a provider instead.
+          // Historically, tray items for providers were added via `createProviderMenuItem`
+          // and required an internal call to `addProviderLifecycleListener`.
+          //
+          // This lifecycle registration is no longer necessary. The tray API is still available
+          // but not required. See: https://github.com/podman-desktop/podman-desktop/pull/69
+          //
+          // To maintain compatibility with extensions that still use the lifecycle patterns
+          // while supporting newer ones that don’t, we create the provider tray item directly if
+          // the provider does not already exist.
+          //
+          // This ensures backward compatibility without requiring extensions to call
+          // `registerLifecycle`, despite the fact that (as of June 2025) there are zero extensions on
+          // GitHub that use the registerLifecycle method (since it was removed from any internal extensions in 2023 in PR #69)
+
+          // Use the provider that was passed in the parameter.
+          // when "addProviderItems" is called, the "provider" is automatically added to the list of providers (this.menuProviderItems)
+          // so this means that the next time that addProviderMenuItem is called, the provider will be found in the list.
+          this.addProviderItems({
+            ...param.providerInfo,
             childItems: [param.menuItem],
-            name: 'temp',
-            status: 'unknown',
-            containerConnections: [],
-            kubernetesConnections: [],
-            vmConnections: [],
-            lifecycleMethods: [],
-            detectionChecks: [],
-            version: '',
-            links: [],
-            images: {},
-            warnings: [],
-            installationSupport: false,
-            containerProviderConnectionCreation: false,
-            kubernetesProviderConnectionCreation: false,
-            vmProviderConnectionCreation: false,
-            containerProviderConnectionInitialization: false,
-            kubernetesProviderConnectionInitialization: false,
-            vmProviderConnectionInitialization: false,
-            cleanupSupport: false,
-            extensionId: '',
-          });
+          } as ProviderMenuItem);
+          // Skip updateMenu() since it's done in the addProviderItems method.
+          return;
+        }
+
+        // In the odd case that we have zero provider as well as no providerInfo, which should never happen,
+        // as extensions should be registering a provider if they wish to use the "addProviderMenuItem" method.
+        // in this case where no provider is registered, we error out to console.
+        if (!provider && !param.providerInfo) {
+          console.error(
+            `No provider registered for providerId "${param.providerId}", please register a provider before adding a menu item to the tray.`,
+          );
+          return;
         }
         this.updateMenu();
       },
@@ -153,7 +168,6 @@ export class TrayMenu {
     if (providerInfo.lifecycleMethods) {
       return;
     }
-
     if (action === 'add') {
       this.addProviderContainerConnectionItems(providerInfo, providerContainerConnectionInfo);
     } else if (action === 'update') {
@@ -202,16 +216,15 @@ export class TrayMenu {
     this.updateMenu();
   }
 
-  public addProviderItems(provider: ProviderInfo): void {
+  public addProviderItems(provider: ProviderInfo & { childItems?: MenuItemConstructorOptions[] }): void {
+    const existing = this.menuProviderItems.get(provider.internalId);
+    const mergedChildItems = [...(provider.childItems ?? []), ...(existing?.childItems ?? [])];
+
     const providerMenuItem: ProviderMenuItem = {
       ...provider,
-      childItems: [],
+      childItems: mergedChildItems,
     };
 
-    const oldProvider = this.menuProviderItems.get(providerMenuItem.internalId);
-    if (oldProvider) {
-      providerMenuItem.childItems.push(...oldProvider.childItems);
-    }
     this.menuProviderItems.set(provider.internalId, providerMenuItem);
     this.updateMenu();
   }

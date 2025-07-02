@@ -213,7 +213,6 @@ async function saveSelectedImages(): Promise<void> {
 }
 
 let selectedItemsNumber: number;
-let table: Table;
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
@@ -317,7 +316,6 @@ const row = new TableRow<ImageInfoUI>({
   <div class="flex min-w-full h-full">
     <Table
       kind="image"
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={images}
       columns={columns}

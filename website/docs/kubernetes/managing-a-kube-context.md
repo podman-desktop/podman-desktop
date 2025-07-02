@@ -11,7 +11,7 @@ tags: [editing-a-kubernetes-context, managing-a-context, duplicate-a-context]
 Within Kubernetes, a context is useful to:
 
 - Manage multiple development, testing, and production environments.
-- Simplify your interaction when working with multiple clusters and namespaces.
+- Simplify your interaction when working with multiple clusters, users, and namespaces.
 
 You can edit or duplicate a context using the UI. This helps in defining contexts with different configurations within your Kubernetes configuration file. Having contexts with different configurations enables easy switching between environments during development.
 
@@ -25,9 +25,12 @@ You can edit or duplicate a context using the UI. This helps in defining context
 1. Go to the **Settings > Kubernetes** page.
 1. Click the **Edit Context** icon. The Edit Context popup window opens.
    ![edit context icon](img/edit-context-icon.png)
-1. Optional: Edit the name of the context.
-1. Enter a namespace, such as testing or production, for the context.
-   ![edit context window](img/edit-context-window.png)
+1. Edit any of the following context details:
+   - Name
+   - Cluster
+   - User
+   - Namespace
+     ![edit context window](img/edit-context-window.png)
 1. Click **Save**.
 
 #### Procedure: Duplicate a context

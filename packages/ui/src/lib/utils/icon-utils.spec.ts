@@ -20,7 +20,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { expect, test } from 'vitest';
 
-import { isFontAwesomeIcon } from './icon-utils';
+import { isFontAwesomeIcon, isFontAwesomeSize } from './icon-utils';
 
 test('ensure fas prefix is recognized', () => {
   expect(isFontAwesomeIcon(faTrash)).toBeTruthy();
@@ -28,4 +28,10 @@ test('ensure fas prefix is recognized', () => {
 
 test('ensure fab prefix is recognized', () => {
   expect(isFontAwesomeIcon(faGithub)).toBeTruthy();
+});
+
+test('ensure fontawesome size is recognized', () => {
+  expect(isFontAwesomeSize('xs')).toBeTruthy();
+  expect(isFontAwesomeSize('1x')).toBeTruthy();
+  expect(isFontAwesomeSize('4.2x')).toBeTruthy();
 });

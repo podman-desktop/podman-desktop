@@ -140,7 +140,6 @@ Create a `package.json` file to initialize your extension.
    ```
 
 1. Use one of the following ways to expose the `activate` function:
-
    - Synchronous (sequential execution of tasks)
 
      ```typescript
@@ -160,7 +159,6 @@ Create a `package.json` file to initialize your extension.
    ```
 
 1. Add the features of the extension to the file. This sample extension:
-
    - Registers the command referenced in the `package.json` file.
    - Displays an option for the user to select values from the dropdown list.
    - Displays a pop-up message with the values selected by the user.
@@ -194,7 +192,6 @@ Create a `package.json` file to initialize your extension.
    ```
 
 1. Optional: Use one of the following ways to expose the `deactivate` function:
-
    - Synchronous
 
      ```typescript
@@ -329,7 +326,6 @@ export default config;
    :::note
 
    If you have created a webview extension, you can access the console of the extension:
-
    1. Right-click the extension icon in the left navigation pane.
    1. Select **Open Devtools of the webview**.
 

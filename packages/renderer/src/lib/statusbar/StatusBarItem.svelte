@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { StatusBarEntry } from '../../../../main/src/plugin/statusbar/statusbar-registry';
+import type { StatusBarEntry } from '/@api/status-bar';
+
 import { iconClass } from './StatusBarItem';
 
 export let entry: StatusBarEntry;

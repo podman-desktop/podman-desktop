@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,18 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { CommandRegistry } from './command-registry.js';
+import { inject, injectable } from 'inversify';
+
+import type { Menu } from '/@api/menu.js';
+
+import { CommandRegistry } from './command-registry.js';
 import { Disposable } from './types/disposable.js';
 
-export interface Menu {
-  command: string;
-  title: string;
-  when?: string;
-  disabled?: string;
-  icon?: string;
-}
-
-export enum MenuContext {
-  DASHBOARD_IMAGE = 'dashboard/image',
-  DASHBOARD_CONTAINER = 'dashboard/container',
-  DASHBOARD_POD = 'dashboard/pod',
-  DASHBOARD_COMPOSE = 'dashboard/compose',
-  DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
-}
-
+@injectable()
 export class MenuRegistry {
   private menus = new Map<string, Map<string, Menu>>();
 
-  constructor(private commandRegisty: CommandRegistry) {}
+  constructor(@inject(CommandRegistry) private commandRegisty: CommandRegistry) {}
 
   registerMenus(menus: { [key: string]: Menu[] }): Disposable {
     for (const name in menus) {

@@ -26,7 +26,6 @@ Podman Desktop does not automatically set up container engine resources that you
    Podman supports rootless container and pods, in addition to rootful containers and Compose.
 
 2. Select an execution environment supporting your container engine and your operating system.
-
    - Select a Podman execution environment:
 
      | Host operating system | Native containers | Podman Machine  |  Lima instance  |
@@ -44,13 +43,10 @@ Podman Desktop does not automatically set up container engine resources that you
      | Linux                 |      ✅ yes       |     ✅ yes     |     ✅ yes      |
 
 3. Setup your container engine.
-
    - Podman Desktop assists you to set up Podman and Podman machines on Windows and macOS.
-
      - [Installing Podman](/docs/installation).
      - [Creating a Podman machine with Podman Desktop](/docs/podman/creating-a-podman-machine).
 
    - Podman Desktop consumes your native containers, Lima instance or Docker setup.
-
      - [Creating a Lima instance](/docs/lima/creating-a-lima-instance).
      - [Installing Podman on Linux](https://podman.io/docs/installation#installing-on-linux).

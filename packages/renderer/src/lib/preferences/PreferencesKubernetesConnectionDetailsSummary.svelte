@@ -1,9 +1,9 @@
 <script lang="ts">
 import type { KubernetesProviderConnection } from '@podman-desktop/api';
 
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];

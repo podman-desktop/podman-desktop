@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { join } from 'node:path';
+
 import type { Browser, Locator, Page } from '@playwright/test';
 import { chromium, expect as playExpect } from '@playwright/test';
 
-import { TroubleshootingPage } from '../model/pages/troubleshooting-page';
-import { StatusBar } from '../model/workbench/status-bar';
 import { waitUntil } from './wait';
 
 export type ConfirmInputValue = {
@@ -51,8 +51,15 @@ export async function performBrowserLogin(
   usernameAction: ConfirmInputValue,
   passwordAction: ConfirmInputValue,
   postLoginAction: (myPage: Page) => Promise<void>,
+  options: {
+    screenshotsPath: string | undefined;
+  } = { screenshotsPath: '' },
 ): Promise<void> {
   console.log(`Performing browser login...`);
+  const path = options.screenshotsPath;
+  if (path) {
+    await page.screenshot({ path: join(path, 'screenshots', 'initial_page.png'), type: 'png', fullPage: true });
+  }
   // title
   await playExpect(page).toHaveTitle(title);
   // username
@@ -60,20 +67,26 @@ export async function performBrowserLogin(
   await usernameAction.inputLocator.fill(usernameAction.inputValue);
   await playExpect(usernameAction.confirmLocator).toBeEnabled();
   await usernameAction.confirmLocator.click();
+  if (path) {
+    await page.screenshot({ path: join(path, 'screenshots', 'after_username_page.png'), type: 'png', fullPage: true });
+  }
   // password
   await playExpect(passwordAction.inputLocator).toBeVisible();
   await passwordAction.inputLocator.fill(passwordAction.inputValue);
   await playExpect(passwordAction.confirmLocator).toBeEnabled();
   await passwordAction.confirmLocator.click();
+  if (path) {
+    await page.screenshot({ path: join(path, 'screenshots', 'after_password_page.png'), type: 'png', fullPage: true });
+  }
   // custom doing...
   await postLoginAction(page);
 }
 
-export async function startChromium(port: string, tracesPath: string): Promise<Browser> {
+export async function startChromium(port: string, tracesPath: string, args: string[] = []): Promise<Browser> {
   console.log('Starting a web server on port 9222');
   const browserLaunch = await chromium.launch({
     headless: false,
-    args: [`--remote-debugging-port=${port}`],
+    args: [`--remote-debugging-port=${port}`, ...args],
     tracesDir: tracesPath,
     slowMo: 200,
   });
@@ -89,33 +102,71 @@ export async function startChromium(port: string, tracesPath: string): Promise<B
   if (!browserLaunch) {
     throw new Error('Browser object was not initialized properly');
   }
+  console.log(`Browser is launched. Executable path: ${browserLaunch.browserType().executablePath()}`);
   return browserLaunch;
 }
 
+// to be deprecated, use getEntryFromConsoleLogs instead
 export async function getEntryFromLogs(
   page: Page,
   filter: RegExp,
   regex: RegExp,
   lineContains = '',
 ): Promise<string | undefined> {
-  await new StatusBar(page).troubleshootingButton.click();
-  const troublePage = new TroubleshootingPage(page);
-  await playExpect(troublePage.heading).toBeVisible();
-  // open logs
-  await troublePage.openLogs();
-  const logList = troublePage.tabContent.getByRole('list');
-  await playExpect(logList).toBeVisible();
-  const logLine = logList.getByRole('listitem').filter({ hasText: filter });
-  await playExpect(logLine).toBeVisible();
-  await logLine.scrollIntoViewIfNeeded();
-  if (lineContains) {
-    await playExpect(logLine).toContainText(lineContains);
+  return await getEntryFromConsoleLogs(page, filter, regex, lineContains, 10_000);
+}
+
+// get a page's console log entry filtered by a regexp filter argument and matched by a regex
+export async function getEntryFromConsoleLogs(
+  page: Page,
+  filter: RegExp,
+  regex: RegExp,
+  checkString: string,
+  timeout = 10_000,
+): Promise<string | undefined> {
+  const consoleLogPromise = page.waitForEvent('console', {
+    predicate: msg => {
+      return msg.type() === 'log' && filter.test(msg.text());
+    },
+    timeout: timeout,
+  });
+  const consoleMsg = await consoleLogPromise;
+  const logLine = consoleMsg.text();
+  if (checkString) {
+    playExpect(logLine).toContain(checkString);
   }
-  const logText = await logLine.innerText();
-  console.log(`The whole log line: ${logText}`);
-  // parse the line using regex:
-  const parsedString = regex.exec(logText);
+  const parsedString = regex.exec(logLine);
   const urlMatch = parsedString ? parsedString[1] : undefined;
   console.log(`Matched string: ${urlMatch}`);
   return urlMatch;
+}
+
+// Accept/Refuse the cooking in the iframe element
+export async function handleCookies(
+  page: Page,
+  iframTitle: string,
+  buttonName: string,
+  timeout: number,
+): Promise<void> {
+  const iframe = page.frameLocator(`iframe[title="${iframTitle}"]`);
+  const button = iframe.getByRole('button', { name: buttonName });
+  const buttonVisible = await checkLocatorExistence(button, timeout);
+  if (buttonVisible) {
+    await playExpect(button).toBeVisible();
+    await button.click();
+    console.log(`Clicked on the button: ${buttonName}`);
+  } else {
+    console.log(`${buttonName} button is not visible, skipping confirmation...`);
+  }
+}
+
+// function is dedicated to verify if some locator exists, depending on external circumstances
+export async function checkLocatorExistence(locator: Locator, timeout = 5000): Promise<boolean> {
+  try {
+    await playExpect(locator).toBeVisible({ timeout: timeout });
+  } catch (error: unknown) {
+    console.log(`Locator not found: ${error}`);
+    return false;
+  }
+  return true;
 }

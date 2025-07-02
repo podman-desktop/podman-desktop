@@ -12,7 +12,7 @@ interface Props {
 let { object }: Props = $props();
 
 let duration: string = $state('');
-let refreshTimeouts: number[] = $state([]);
+let refreshTimeouts: ReturnType<typeof setTimeout>[] = $state([]);
 
 export function computeInterval(uptimeInMs: number): number {
   const SECOND = 1000;
@@ -52,9 +52,9 @@ function refreshDuration(): void {
 
   // compute next refresh
   const interval = computeInterval(uptimeInMs);
-  refreshTimeouts.forEach(timeout => window.clearTimeout(timeout));
+  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
   refreshTimeouts.length = 0;
-  refreshTimeouts.push(window.setTimeout(refreshDuration, interval));
+  refreshTimeouts.push(setTimeout(refreshDuration, interval));
 }
 
 onMount(async () => {
@@ -63,7 +63,7 @@ onMount(async () => {
 
 onDestroy(() => {
   // kill timers
-  refreshTimeouts.forEach(timeout => window.clearTimeout(timeout));
+  refreshTimeouts.forEach(timeout => clearTimeout(timeout));
   refreshTimeouts.length = 0;
 });
 </script>

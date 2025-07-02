@@ -45,6 +45,7 @@ export class ExtensionsUtils {
     let type: 'dd' | 'pd';
 
     let removable: boolean;
+    let devMode: boolean;
     let state: string;
     let icon: undefined | string | { light: string; dark: string };
     let iconRef: undefined | string;
@@ -66,6 +67,7 @@ export class ExtensionsUtils {
       description = matchingInstalledExtension.description;
       type = matchingInstalledExtension.type;
       removable = matchingInstalledExtension.removable;
+      devMode = matchingInstalledExtension.devMode;
       state = matchingInstalledExtension.state;
       icon = matchingInstalledExtension.icon;
       name = matchingInstalledExtension.name;
@@ -76,6 +78,7 @@ export class ExtensionsUtils {
       // catalog only includes Podman Desktop extensions
       type = 'pd';
       removable = true;
+      devMode = false; // catalog extensions are not in dev mode
       state = 'downloadable';
       name = matchingCatalogExtension.extensionName;
 
@@ -91,6 +94,7 @@ export class ExtensionsUtils {
       description = '';
       type = 'pd';
       removable = false;
+      devMode = false;
       state = 'unknown';
       name = 'unknown';
     }
@@ -126,6 +130,7 @@ export class ExtensionsUtils {
       description,
       type,
       removable,
+      devMode,
       state,
       icon,
       iconRef,

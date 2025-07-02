@@ -271,9 +271,6 @@ export class DockerExtensionPreload {
       viewVolume: async (volume: string): Promise<void> => {
         console.error('navigationIntents.viewVolume not implemented', volume);
       },
-      viewDevEnvironments: async (): Promise<void> => {
-        console.error('navigationIntents.viewDevEnvironments not implemented');
-      },
       viewContainerTerminal: async (id: string): Promise<void> => {
         console.error('navigationIntents.viewContainerTerminal not implemented', id);
       },

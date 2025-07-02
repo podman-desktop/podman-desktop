@@ -9,8 +9,8 @@ import NumberItem from '/@/lib/preferences/item-formats/NumberItem.svelte';
 import SliderItem from '/@/lib/preferences/item-formats/SliderItem.svelte';
 import StringItem from '/@/lib/preferences/item-formats/StringItem.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Markdown from '../markdown/Markdown.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
 

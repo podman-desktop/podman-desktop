@@ -163,3 +163,98 @@ test('Tray click trigger is only added on Windows devices', () => {
   trayMenu = new TrayMenu(tray, animatedTray);
   expect(onSpy).not.toHaveBeenCalledWith('click', expect.any(Function));
 });
+
+test('with a provider already found, should push the addProviderMenuItem fine', async () => {
+  const onSpy = vi.spyOn(ipcMain, 'on');
+  const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+
+  // Add a "provider" so that the menu already finds the provider
+  trayMenu.addProviderItems({
+    id: 'testId',
+    name: 'TestProviderAlreadyHere',
+    internalId: 'internalId',
+  } as ProviderInfo);
+
+  // Do a mock call which should add the menu item (testId matches the provider added above)
+  onSpy.mock.calls[0]?.[1](undefined as unknown as Electron.IpcMainEvent, {
+    providerId: 'testId',
+    menuItem: { id: 'itemId', label: 'Foobar' },
+  });
+
+  // Expect that tray menu was called with TestProviderAlreadyHere
+  // as well as the actual add-provider-menu-item event happened.
+  expect(onSpy).toHaveBeenCalledWith('tray:add-provider-menu-item', expect.any(Function));
+  expect(menuBuild).toHaveBeenCalled();
+  expect(menuBuild.mock.lastCall?.[0]?.[0]?.label).toBe('TestProviderAlreadyHere');
+
+  // Check that the menu item has been successfully added to the provider's menu
+  expect(
+    (menuBuild.mock.lastCall?.[0]?.[0]?.submenu as Array<MenuItemConstructorOptions>)?.filter(
+      it => it.label === 'Foobar',
+    ),
+  ).toHaveLength(1);
+
+  // Expect that we have "TestProv" somewhere in the menu (not submenu)
+  const providerMenu = (menuBuild.mock.lastCall?.[0] as Array<MenuItemConstructorOptions>).find(
+    it => it.label === 'TestProviderAlreadyHere',
+  );
+  expect(providerMenu).toBeDefined();
+});
+
+test('should call addProviderItems when provider not found but providerInfo is present', () => {
+  const onSpy = vi.spyOn(ipcMain, 'on');
+  const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+
+  // The "test" providerInfo is used that "adds" the provider
+  const providerInfo: ProviderInfo = {
+    id: 'testId',
+    name: 'TestProviderWasntHere',
+    internalId: 'internalId',
+  } as ProviderInfo;
+
+  const param = {
+    providerId: 'testId',
+    menuItem: { id: 'itemId', label: 'Foobar' },
+    providerInfo,
+  };
+
+  // Fire off the event
+  onSpy.mock.calls[0]?.[1](undefined as unknown as Electron.IpcMainEvent, param);
+
+  // Expect that menu has been called and the item is added to the corrent provider (TestProv)
+  expect(onSpy).toHaveBeenCalledWith('tray:add-provider-menu-item', expect.any(Function));
+  expect(menuBuild).toHaveBeenCalled();
+  expect(
+    (menuBuild.mock.lastCall?.[0]?.[0]?.submenu as Array<MenuItemConstructorOptions>)?.filter(
+      it => it.label === 'Foobar',
+    ),
+  ).toHaveLength(1);
+
+  // Expect that we have "TestProv" somewhere in the menu (not submenu)
+  const providerMenu = (menuBuild.mock.lastCall?.[0] as Array<MenuItemConstructorOptions>).find(
+    it => it.label === 'TestProviderWasntHere',
+  );
+  expect(providerMenu).toBeDefined();
+});
+
+test('should log error if provider not found and no providerInfo provided', () => {
+  const onSpy = vi.spyOn(ipcMain, 'on');
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+
+  // Fire off the event without providerInfo and nothing in the provider array at all.
+  onSpy.mock.calls[0]?.[1](undefined as unknown as Electron.IpcMainEvent, {
+    providerId: 'testId',
+    menuItem: { id: 'itemId', label: 'Foobar' },
+  });
+
+  // Expect that an error has been logged
+  expect(consoleErrorSpy).toHaveBeenCalledWith(
+    'No provider registered for providerId "testId", please register a provider before adding a menu item to the tray.',
+  );
+});

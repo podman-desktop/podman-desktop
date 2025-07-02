@@ -30,14 +30,14 @@ import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
 export class ColorRegistry {
-  #apiSender: ApiSenderType | undefined;
-  #configurationRegistry: ConfigurationRegistry | undefined;
+  #apiSender: ApiSenderType;
+  #configurationRegistry: ConfigurationRegistry;
   #definitions: Map<string, ColorDefinition>;
   #initDone = false;
   #themes: Map<string, Map<string, string>>;
   #parentThemes: Map<string, string>;
 
-  constructor(apiSender?: ApiSenderType, configurationRegistry?: ConfigurationRegistry) {
+  constructor(apiSender: ApiSenderType, configurationRegistry: ConfigurationRegistry) {
     this.#apiSender = apiSender;
     this.#configurationRegistry = configurationRegistry;
     this.#definitions = new Map();
@@ -1520,6 +1520,10 @@ export class ColorRegistry {
     this.registerColor(`${badge}dd-extension-bg`, {
       dark: colorPalette.sky[600],
       light: colorPalette.sky[600],
+    });
+    this.registerColor(`${badge}devmode-extension-bg`, {
+      dark: colorPalette.dustypurple[600],
+      light: colorPalette.dustypurple[600],
     });
     this.registerColor(`${badge}dd-extension-text`, {
       dark: colorPalette.white,

@@ -40,7 +40,6 @@ Based on your needs, perform any of the following actions after navigating to th
 4. Delete a container or pod using the **Delete** icon.
 
    :::note
-
    - You cannot delete a container if it is being used in any pods. In such cases, you must delete the pod and then delete the container.
 
    :::
@@ -51,7 +50,6 @@ Based on your needs, perform any of the following actions after navigating to th
    - View its kube configuration if the container or pod is a Kubernetes resource.
    - Interact with the container using a terminal
 7. View containers or pods based on their status:
-
    - Select the **Running** tab to view all running containers or pods
    - Select the **Stopped** tab to view all stopped containers or pods
 
@@ -64,7 +62,6 @@ Based on your needs, perform any of the following actions after navigating to th
 1. Use the **Create** button to create a container with a container or docker file or from an existing image.
 2. Create a pod with selected containers using the **Create Pod** button.
 3. Use the overflow menu to:
-
    - Open and view logs.
    - _Kubernetes action_: Generate and view configuration for a Kubernetes container.
    - _Kubernetes action_: Deploy a container to a Kubernetes cluster.
@@ -101,14 +98,12 @@ Perform any of the following actions after navigating to the component page:
 3. Delete an image using the **Delete** icon.
 
    :::note
-
    - You cannot delete an image if it is being used in any containers. In such cases, you must delete the container and then delete the image.
    - By selecting multiple images, you can delete or save them in a single step.
 
    :::
 
 4. Use the overflow menu to:
-
    - Push an image to a configured registry.
    - Edit the image name and tag.
    - View history to check the commands that created each layer of the image.
@@ -132,7 +127,6 @@ Perform any of the following actions after navigating to the component page:
 2. Use the **Delete** icon to delete a volume. You can also select multiple volumes and delete them in one step by using the delete button on the page.
 
    :::note
-
    - You cannot delete a volume if it is being used in any containers. In such cases, you must delete the container and then delete the volume.
    - By selecting multiple volumes, you can delete them in a single step.
 
@@ -140,7 +134,6 @@ Perform any of the following actions after navigating to the component page:
 
 3. Click the name of the volume to view its summary.
 4. Access other useful actions:
-
    - Use the **Prune** button to remove unused volumes from the Podman engine.
    - Click **Gather volume sizes** to determine the size used for volumes.
    - Click the **Create** button to create a volume.

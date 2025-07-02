@@ -19,7 +19,7 @@
 import { get, type Writable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { EventStore, type EventStoreInfo } from './event-store';
+import { EventStore, type EventStoreInfo, fineGrainedEvents } from './event-store';
 
 // first, path window object
 const callbacks = new Map<string, (arg?: unknown) => Promise<void>>();
@@ -87,7 +87,7 @@ test.each<{
   },
   {
     name: 'window event with key matches',
-    listenedWindowEvent: 'my-event:my-key',
+    listenedWindowEvent: fineGrainedEvents('my-event', ['my-key']),
     sentEvent: 'my-event',
     sentArg: { key: 'my-key', foo: 'bar' },
     eventShouldBeRegistered: true,
@@ -96,7 +96,7 @@ test.each<{
   },
   {
     name: 'matching window event and non-matching key',
-    listenedWindowEvent: 'my-event:my-key',
+    listenedWindowEvent: fineGrainedEvents('my-event', ['my-key']),
     sentEvent: 'my-event',
     sentArg: { key: 'other-key', foo: 'bar' },
     eventShouldBeRegistered: true,
@@ -104,7 +104,7 @@ test.each<{
   },
   {
     name: 'matching window event and no key should not call updater',
-    listenedWindowEvent: 'my-event:my-key',
+    listenedWindowEvent: fineGrainedEvents('my-event', ['my-key']),
     sentEvent: 'my-event',
     sentArg: undefined,
     eventShouldBeRegistered: true,
@@ -121,7 +121,7 @@ test.each<{
   },
   {
     name: 'matching window event and one key matching out of several',
-    listenedWindowEvent: 'my-event:key1,key2,key3',
+    listenedWindowEvent: fineGrainedEvents('my-event', ['key1', 'key2', 'key3']),
     sentEvent: 'my-event',
     sentArg: { key: 'key2', foo: 'bar' },
     eventShouldBeRegistered: true,

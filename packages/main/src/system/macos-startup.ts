@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import type { ConfigurationRegistry } from '../plugin/configuration-registry.js';
+import type { IConfigurationRegistry } from '/@api/configuration/models.js';
 
 /**
  * On macOS, startup on login is done via a plist file
@@ -32,9 +32,9 @@ import type { ConfigurationRegistry } from '../plugin/configuration-registry.js'
 export class MacosStartup {
   private podmanDesktopBinaryPath;
   private plistFile;
-  private configurationRegistry: ConfigurationRegistry;
+  private configurationRegistry: IConfigurationRegistry;
 
-  constructor(configurationRegistry: ConfigurationRegistry) {
+  constructor(configurationRegistry: IConfigurationRegistry) {
     this.configurationRegistry = configurationRegistry;
 
     // grab current path of the binary

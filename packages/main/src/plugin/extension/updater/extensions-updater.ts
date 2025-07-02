@@ -20,12 +20,12 @@ import { compareVersions } from 'compare-versions';
 import { app } from 'electron';
 import { coerce, satisfies } from 'semver';
 
-import type { ConfigurationRegistry, IConfigurationNode } from '/@/plugin/configuration-registry.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionUpdateInfo } from '/@api/extension-info.js';
 
 export class ExtensionsUpdater {
@@ -36,7 +36,7 @@ export class ExtensionsUpdater {
   constructor(
     private extensionCatalog: ExtensionsCatalog,
     private extensionLoader: ExtensionLoader,
-    private configurationRegistry: ConfigurationRegistry,
+    private configurationRegistry: IConfigurationRegistry,
     private extensionInstaller: ExtensionInstaller,
     private telemetry: Telemetry,
   ) {}

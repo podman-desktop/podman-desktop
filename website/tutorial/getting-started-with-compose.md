@@ -74,7 +74,6 @@ Within Podman Desktop, you can now see that all three containers are up and oper
    ![Open browser](img/openbrowser.png)
 
 1. Within the Guestbook web application, you can:
-
    - "Sign" the guestbook, which will write to the Redis leader and synchronize to the replicas.
    - "Read" from the guestbook, which will read from the pool of Redis replicas. This allows for readability even if the Redis leader is unavailable.
    - `/env`: View the container's environment variables.
@@ -91,7 +90,6 @@ Using Podman Desktop, you can also access the container's terminal directly from
    ![Open terminal](img/openterminal.png)
 
 1. Modify the database as if you are doing database administration:
-
    1. Run `redis-cli` within the container to access the Redis database.
    2. Type `LPUSH guestbook "Hello World!"` and you will see your web application update in real-time.
    3. Type `DEL guestbook` and you will see that your database drops the `guestbook` key and clears the database.

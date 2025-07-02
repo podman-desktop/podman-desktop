@@ -34,6 +34,7 @@ test('Expect to have error message being displayed', async () => {
     description: 'my description',
     type: 'pd',
     removable: false,
+    devMode: false,
     state: 'started',
     name: 'foo',
     icon: 'fooIcon',

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,71 +22,74 @@ import * as path from 'node:path';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
+import { inject, injectable } from 'inversify';
 
-import type { ColorRegistry } from '/@/plugin/color-registry.js';
-import type {
+import { ColorRegistry } from '/@/plugin/color-registry.js';
+import {
   KubeGeneratorRegistry,
-  KubernetesGeneratorProvider,
+  type KubernetesGeneratorProvider,
 } from '/@/plugin/kubernetes/kube-generator-registry.js';
-import type { MenuRegistry } from '/@/plugin/menu-registry.js';
-import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { MenuRegistry } from '/@/plugin/menu-registry.js';
+import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
-import type { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '../api.js';
 import type { PodInfo } from '../api/pod-info.js';
-import type { AuthenticationImpl } from '../authentication.js';
+import { AuthenticationImpl } from '../authentication.js';
 import { CancellationTokenSource } from '../cancellation-token.js';
-import type { Certificates } from '../certificates.js';
-import type { CliToolRegistry } from '../cli-tool-registry.js';
-import type { CommandRegistry } from '../command-registry.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { Context } from '../context/context.js';
-import type { CustomPickRegistry } from '../custompick/custompick-registry.js';
-import type { DialogRegistry } from '../dialog-registry.js';
-import type { Directories } from '../directories.js';
-import type { Event } from '../events/emitter.js';
+import { Certificates } from '../certificates.js';
+import { CliToolRegistry } from '../cli-tool-registry.js';
+import { CommandRegistry } from '../command-registry.js';
+import { ContainerProviderRegistry } from '../container-registry.js';
+import { Context } from '../context/context.js';
+import { CustomPickRegistry } from '../custompick/custompick-registry.js';
+import { DialogRegistry } from '../dialog-registry.js';
+import { Directories } from '../directories.js';
 import { Emitter } from '../events/emitter.js';
-import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { IconRegistry } from '../icon-registry.js';
-import type { ImageCheckerImpl } from '../image-checker.js';
-import type { ImageFilesRegistry } from '../image-files-registry.js';
-import type { ImageRegistry } from '../image-registry.js';
-import type { InputQuickPickRegistry } from '../input-quickpick/input-quickpick-registry.js';
-import { InputBoxValidationSeverity, QuickPickItemKind } from '../input-quickpick/input-quickpick-registry.js';
-import type { KubernetesClient } from '../kubernetes/kubernetes-client.js';
-import type { MessageBox } from '../message-box.js';
+import { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import { IconRegistry } from '../icon-registry.js';
+import { ImageCheckerImpl } from '../image-checker.js';
+import { ImageFilesRegistry } from '../image-files-registry.js';
+import { ImageRegistry } from '../image-registry.js';
+import {
+  InputBoxValidationSeverity,
+  InputQuickPickRegistry,
+  QuickPickItemKind,
+} from '../input-quickpick/input-quickpick-registry.js';
+import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
+import { MessageBox } from '../message-box.js';
 import { ModuleLoader } from '../module-loader.js';
-import type { OnboardingRegistry } from '../onboarding-registry.js';
-import type { ProviderRegistry } from '../provider-registry.js';
-import type { Proxy } from '../proxy.js';
+import { OnboardingRegistry } from '../onboarding-registry.js';
+import { ProviderRegistry } from '../provider-registry.js';
+import { Proxy } from '../proxy.js';
 import { createHttpPatchedModules } from '../proxy-resolver.js';
-import { type SafeStorageRegistry } from '../safe-storage/safe-storage-registry.js';
+import { SafeStorageRegistry } from '../safe-storage/safe-storage-registry.js';
 import {
   StatusBarAlignLeft,
   StatusBarAlignRight,
   StatusBarItemDefaultPriority,
   StatusBarItemImpl,
 } from '../statusbar/statusbar-item.js';
-import type { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
-import type { NotificationRegistry } from '../tasks/notification-registry.js';
-import type { ProgressImpl } from '../tasks/progress-impl.js';
-import { ProgressLocation } from '../tasks/progress-impl.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
-import type { TrayMenuRegistry } from '../tray-menu-registry.js';
+import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
+import { NotificationRegistry } from '../tasks/notification-registry.js';
+import { ProgressImpl, ProgressLocation } from '../tasks/progress-impl.js';
+import { Telemetry } from '../telemetry/telemetry.js';
+import { TrayMenuRegistry } from '../tray-menu-registry.js';
 import { Disposable } from '../types/disposable.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
-import type { Exec } from '../util/exec.js';
-import type { ViewRegistry } from '../view-registry.js';
-import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
-import type { ExtensionDevelopmentFolders } from './extension-development-folders.js';
-import type { ExtensionWatcher } from './extension-watcher.js';
+import { Exec } from '../util/exec.js';
+import { ViewRegistry } from '../view-registry.js';
+import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
+import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
+import { ExtensionWatcher } from './extension-watcher.js';
 
 export interface ActivatedExtension {
   id: string;
@@ -111,6 +114,7 @@ export interface AnalyzedExtensionWithApi extends AnalyzedExtension {
 /**
  * Handle the loading of an extension
  */
+@injectable()
 export class ExtensionLoader {
   private moduleLoader: ModuleLoader;
 
@@ -133,43 +137,81 @@ export class ExtensionLoader {
   private extensionsStorageDirectory;
 
   constructor(
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
+    @inject(MenuRegistry)
     private menuRegistry: MenuRegistry,
+    @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
-    private configurationRegistry: ConfigurationRegistry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
+    @inject(ImageRegistry)
     private imageRegistry: ImageRegistry,
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(TrayMenuRegistry)
     private trayMenuRegistry: TrayMenuRegistry,
+    @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(ProgressImpl)
     private progress: ProgressImpl,
+    @inject(StatusBarRegistry)
     private statusBarRegistry: StatusBarRegistry,
+    @inject(KubernetesClient)
     private kubernetesClient: KubernetesClient,
+    @inject(FilesystemMonitoring)
     private fileSystemMonitoring: FilesystemMonitoring,
+    @inject(Proxy)
     private proxy: Proxy,
+    @inject(ContainerProviderRegistry)
     private containerProviderRegistry: ContainerProviderRegistry,
+    @inject(InputQuickPickRegistry)
     private inputQuickPickRegistry: InputQuickPickRegistry,
+    @inject(CustomPickRegistry)
     private customPickRegistry: CustomPickRegistry,
+    @inject(AuthenticationImpl)
     private authenticationProviderRegistry: AuthenticationImpl,
+    @inject(IconRegistry)
     private iconRegistry: IconRegistry,
+    @inject(OnboardingRegistry)
     private onboardingRegistry: OnboardingRegistry,
+    @inject(Telemetry)
     private telemetry: Telemetry,
+    @inject(ViewRegistry)
     private viewRegistry: ViewRegistry,
+    @inject(Context)
     private context: Context,
+    @inject(Directories)
     directories: Directories,
+    @inject(Exec)
     private exec: Exec,
+    @inject(KubeGeneratorRegistry)
     private kubeGeneratorRegistry: KubeGeneratorRegistry,
+    @inject(CliToolRegistry)
     private cliToolRegistry: CliToolRegistry,
+    @inject(NotificationRegistry)
     private notificationRegistry: NotificationRegistry,
+    @inject(ImageCheckerImpl)
     private imageCheckerProvider: ImageCheckerImpl,
+    @inject(ImageFilesRegistry)
     private imageFilesRegistry: ImageFilesRegistry,
+    @inject(NavigationManager)
     private navigationManager: NavigationManager,
+    @inject(WebviewRegistry)
     private webviewRegistry: WebviewRegistry,
+    @inject(ColorRegistry)
     private colorRegistry: ColorRegistry,
+    @inject(DialogRegistry)
     private dialogRegistry: DialogRegistry,
+    @inject(SafeStorageRegistry)
     private safeStorageRegistry: SafeStorageRegistry,
+    @inject(Certificates)
     private certificates: Certificates,
+    @inject(ExtensionWatcher)
     private extensionWatcher: ExtensionWatcher,
+    @inject(ExtensionDevelopmentFolders)
     private extensionDevelopmentFolder: ExtensionDevelopmentFolders,
+    @inject(ExtensionAnalyzer)
     private extensionAnalyzer: ExtensionAnalyzer,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
@@ -203,6 +245,7 @@ export class ExtensionLoader {
       id: extension.id,
       path: extension.path,
       removable: extension.removable,
+      devMode: extension.devMode,
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
@@ -406,7 +449,7 @@ export class ExtensionLoader {
     analyzedExtensions.push(...analyzedFoldersExtension);
 
     const analyzedExternalExtensions = (
-      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false)))
+      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false, true)))
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedExternalExtensions);
 
@@ -442,7 +485,7 @@ export class ExtensionLoader {
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
     for (const folder of this.extensionDevelopmentFolder.getDevelopmentFolders()) {
       if (fs.existsSync(folder.path)) {
-        const analyzedExtension = await this.analyzeExtension(folder.path, false);
+        const analyzedExtension = await this.analyzeExtension(folder.path, false, true);
         if (!analyzedExtension.error) {
           analyzedExtensions.push(analyzedExtension);
         } else {
@@ -707,7 +750,9 @@ export class ExtensionLoader {
     extension.api ??= this.createApi(extension);
     const extensionWithApi = extension as AnalyzedExtensionWithApi;
     this.analyzedExtensions.set(extension.id, extensionWithApi);
-    this.extensionDevelopmentFolder.addExternalExtensionId(extension.id);
+    if (!extension.devMode) {
+      this.extensionDevelopmentFolder.addExternalExtensionId(extension.id);
+    }
     this.extensionState.delete(extension.id);
     this.extensionStateErrors.delete(extension.id);
 
@@ -751,8 +796,12 @@ export class ExtensionLoader {
     }
   }
 
-  async analyzeExtension(extensionPath: string, removable: boolean): Promise<AnalyzedExtensionWithApi> {
-    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable);
+  async analyzeExtension(
+    extensionPath: string,
+    removable: boolean,
+    devMode: boolean = false,
+  ): Promise<AnalyzedExtensionWithApi> {
+    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable, devMode);
 
     const api = this.createApi(analyzedExtension);
 
@@ -1732,7 +1781,7 @@ export class ExtensionLoader {
 
     const extension = this.analyzedExtensions.get(extensionId);
     if (extension) {
-      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable);
+      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable, extension.devMode);
 
       if (!analyzedExtension.error) {
         await this.loadExtension(analyzedExtension, true);
@@ -1766,7 +1815,7 @@ export class ExtensionLoader {
       // delete the path
       if (extension.removable) {
         await fs.promises.rm(extension.path, { recursive: true, force: true });
-      } else {
+      } else if (!extension.devMode) {
         throw new Error(`Extension ${extensionId} is not removable`);
       }
       this.analyzedExtensions.delete(extensionId);
@@ -1776,7 +1825,7 @@ export class ExtensionLoader {
     }
   }
 
-  getConfigurationRegistry(): ConfigurationRegistry {
+  getConfigurationRegistry(): IConfigurationRegistry {
     return this.configurationRegistry;
   }
 

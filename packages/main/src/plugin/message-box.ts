@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,67 +15,22 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ApiSenderType } from './api.js';
+import { inject, injectable } from 'inversify';
+
+import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
+
+import { ApiSenderType } from './api.js';
 import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
-export interface DropdownType {
-  heading: string;
-  buttons: string[];
-}
-
-export type ButtonsType = string | DropdownType;
-
-/**
- * Options to configure the behavior of the message box UI.
- */
-export interface MessageBoxOptions {
-  /**
-   * The title of the message box.
-   */
-  title: string;
-  /**
-   * The primary message.
-   */
-  message: string;
-  /**
-   * An additional (optional) detailed message.
-   */
-  detail?: string;
-  /**
-   * Text for buttons.
-   */
-  buttons?: ButtonsType[];
-  /**
-   * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning'.
-   */
-  type?: string;
-  /**
-   * The (optional) index of the default button.
-   */
-  defaultId?: number;
-  /**
-   * The (optional) index of the button to be used to cancel the dialog.
-   */
-  cancelId?: number;
-  /**
-   * An additional (optional) markdown detailed message aligned to center
-   */
-  footerMarkdownDescription?: string;
-}
-
-export interface MessageBoxReturnValue {
-  response: number | undefined;
-  dropdownIndex?: number;
-}
-
+@injectable()
 export class MessageBox {
   private callbackId = 0;
 
   private callbacksMessageBox = new Map<number, Deferred<MessageBoxReturnValue>>();
 
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   async showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
     // keep track of this request

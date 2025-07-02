@@ -19,13 +19,12 @@
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
-
-import type { IConfigurationPropertyRecordedSchema } from '../../../main/src/plugin/configuration-registry';
 
 interface OperationConnectionInfo {
   operationKey: symbol;

@@ -17,8 +17,11 @@
  ***********************************************************************/
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
+import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
+import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import { Deferred } from './plugin/util/deferred.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -30,7 +33,7 @@ export type AdditionalData = {
 /**
  * The main Podman Desktop entry point
  */
-export class Main {
+export class Main implements IDisposable {
   // TODO: should be renamed to #app
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
@@ -38,10 +41,22 @@ export class Main {
   // TODO: should be renamed to #protocolLauncher
   public protocolLauncher: ProtocolLauncher;
 
+  /**
+   * Represents a collection of application plugins.
+   *
+   * Each plugin exposes a {@link AppPlugin#onReady} method called when {@link ElectronApp#whenReady} resolved.
+   *
+   * Plugins are {@link IDisposable} and are disposed when {@link ElectronApp#on('before-quit')} is emitted
+   *
+   * @type {Array<AppPlugin>}
+   */
+  readonly #plugins: Array<AppPlugin>;
+
   constructor(app: ElectronApp) {
     this.app = app;
     this.mainWindowDeferred = new Deferred<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
+    this.#plugins = [new DefaultProtocolClient(this.app)];
   }
 
   main(args: string[]): void {
@@ -101,6 +116,23 @@ export class Main {
      * Setup {@link ElectronApp.on} listeners
      */
     this.app.on('window-all-closed', this.onWindowAllClosed.bind(this));
+    this.app.on('before-quit', this.onBeforeQuit.bind(this));
+
+    /**
+     * Register {@link Main#whenReady} for ready event
+     */
+    this.app.whenReady().then(this.whenReady.bind(this)).catch(console.error);
+  }
+
+  /**
+   * Waits for all plugins to complete their initialization and become ready.
+   *
+   * This method calls for each plugin their corresponding {@link AppPlugin#onReady} method.
+   *
+   * @return {Promise<Array<void>>}
+   */
+  protected async whenReady(): Promise<Array<void>> {
+    return Promise.all(this.#plugins.map(plugin => plugin.onReady()));
   }
 
   /**
@@ -111,5 +143,16 @@ export class Main {
     if (!isMac()) {
       this.app.quit();
     }
+  }
+
+  /**
+   * Listener for {@link ElectronApp.on('before-quit')} event
+   */
+  protected onBeforeQuit(): void {
+    this.dispose();
+  }
+
+  dispose(): void {
+    this.#plugins.forEach(plugin => plugin.dispose());
   }
 }

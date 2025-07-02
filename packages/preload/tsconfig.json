@@ -9,7 +9,8 @@
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["node"],
 
     "baseUrl": ".",

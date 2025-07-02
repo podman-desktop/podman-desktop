@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,17 +25,19 @@ import type {
   CliToolUpdate,
   Logger,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import type { CliToolExtensionInfo, CliToolInfo } from '/@api/cli-tool-info.js';
+import type { Event } from '/@api/event.js';
 
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import { CliToolImpl } from './cli-tool-impl.js';
-import type { Event } from './events/emitter.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
 
+@injectable()
 export class CliToolRegistry {
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   private cliTools = new Map<string, CliToolImpl>();
   private cliToolsUpdater = new Map<string, CliToolUpdate | CliToolSelectUpdate>();

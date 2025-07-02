@@ -2551,8 +2551,13 @@ declare module '@podman-desktop/api' {
   }
 
   interface IPAM {
-    Driver: string;
-    Config?: Array<{ [key: string]: string }>;
+    Driver?: string;
+    Config?: Array<{
+      Subnet?: string;
+      IPRange?: string;
+      Gateway?: string;
+      AuxiliaryAddresses?: Partial<{ [host: string]: string }>;
+    }>;
     Options?: { [key: string]: string };
   }
 

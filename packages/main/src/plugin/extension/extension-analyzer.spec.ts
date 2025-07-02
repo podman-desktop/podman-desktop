@@ -58,7 +58,7 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'fake', 'path'), false);
+    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'fake', 'path'), false, false);
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
@@ -91,7 +91,7 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'linked', 'path'), false);
+    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'linked', 'path'), false, false);
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
@@ -120,12 +120,38 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension('/fake/path', false);
+    const extension = await extensionAnalyzer.analyzeExtension('/fake/path', false, false);
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
     // not set
     expect(extension?.mainPath).toBeUndefined();
     expect(extension?.id).toBe('fooPublisher.fooName');
+  });
+
+  test('check for extension with devMode', async () => {
+    vi.mock('node:fs');
+
+    // mock fs.existsSync
+    const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
+    fsExistsSyncMock.mockReturnValue(true);
+
+    vi.mocked(realpath).mockResolvedValue('/fake/path');
+    vi.mocked(readFile).mockResolvedValue('empty');
+
+    const fakeManifest = {
+      publisher: 'fooPublisher',
+      name: 'fooName',
+      // no main entry
+    };
+
+    // mock loadManifest
+    const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
+    loadManifestMock.mockResolvedValue(fakeManifest);
+
+    const extension = await extensionAnalyzer.analyzeExtension('/fake/path', false, true);
+
+    expect(extension?.id).toBe('fooPublisher.fooName');
+    expect(extension?.devMode).toBeTruthy();
   });
 });

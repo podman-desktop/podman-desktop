@@ -24,7 +24,13 @@ import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deletePodmanMachine, deletePodmanMachineFromCLI, handleConfirmationDialog } from '../utility/operations';
+import {
+  createPodmanMachineFromCLI,
+  deletePodmanMachine,
+  deletePodmanMachineFromCLI,
+  handleConfirmationDialog,
+  resetPodmanMachinesFromCLI,
+} from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
@@ -83,6 +89,11 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(120_000);
 
   try {
+    if (test.info().status === 'failed') {
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+    }
+
     const settingsBar = await navigationBar.openSettings();
     await settingsBar.resourcesTab.click();
 

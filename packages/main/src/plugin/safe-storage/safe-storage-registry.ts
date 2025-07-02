@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,24 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { safeStorage } from 'electron';
+import { inject, injectable } from 'inversify';
 
-import { type Directories } from '/@/plugin/directories.js';
-import type { Event } from '/@/plugin/events/emitter.js';
+import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
+import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
 /**
  * Manage the storage of string being encrypted on disk
  * It's only converted to readable content when getting the value
  */
+@injectable()
 export class SafeStorageRegistry {
   readonly #directories: Directories;
 
   #extensionStorage: SafeStorage | undefined;
 
-  constructor(directories: Directories) {
+  constructor(@inject(Directories) directories: Directories) {
     this.#directories = directories;
   }
 

@@ -21,16 +21,17 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
-import type { ConfigurationRegistry, IConfigurationChangeEvent } from '/@/plugin/configuration-registry.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import type { ColorDefinition } from '/@api/color-info.js';
+import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
 import { ColorRegistry } from './color-registry.js';
+import type { ConfigurationRegistry } from './configuration-registry.js';
 
 class TestColorRegistry extends ColorRegistry {
   override notifyUpdate(): void {
@@ -54,6 +55,10 @@ class TestColorRegistry extends ColorRegistry {
 
   override initTitlebar(): void {
     super.initTitlebar();
+  }
+
+  override initBadge(): void {
+    super.initBadge();
   }
 
   override initCardContent(): void {
@@ -635,5 +640,31 @@ describe('initLabel', () => {
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
     expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(colorPalette.amber[900]);
     expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(colorPalette.amber[400]);
+  });
+});
+
+describe('badge', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    // mock the registerColor
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initBadge();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('devMode badge', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // check the call
+    expect(spyOnRegisterColor).toBeCalledWith('badge-devmode-extension-bg', {
+      dark: colorPalette.dustypurple[600],
+      light: colorPalette.dustypurple[600],
+    });
   });
 });

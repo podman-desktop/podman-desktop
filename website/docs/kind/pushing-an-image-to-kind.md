@@ -35,7 +35,6 @@ Therefore, create a pod that uses the loaded image.
 
 1. Create a `verify_my_image.yaml` Kubernetes YAML file on your workstation.
    Replace the placeholders:
-
    - Pod `name` and container `name` values must consist of lowercase alphanumeric characters, '-', or '.', and must start and end with an alphanumeric character.
    - Container `image` value is the image you pushed. You can click the name of the image to check its name and tag.
 

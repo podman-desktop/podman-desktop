@@ -120,8 +120,6 @@ async function deleteSelectedObjects(): Promise<void> {
 }
 
 let selectedItemsNumber = $state<number>(0);
-
-let table: Table;
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
@@ -154,7 +152,6 @@ let table: Table;
   <div class="flex min-w-full h-full">
     <Table
       kind={singular}
-      bind:this={table}
       bind:selectedItemsNumber={selectedItemsNumber}
       data={objects}
       columns={columns}

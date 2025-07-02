@@ -19,11 +19,11 @@ import { app, ipcMain, Menu, Tray } from 'electron';
 
 import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { Event } from '/@api/event.js';
 
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import { type AdditionalData, Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
-import type { Event } from './plugin/events/emitter.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
 import { ZoomLevelHandler } from './plugin/zoom-level-handler.js';
@@ -87,14 +87,6 @@ app.on('will-finish-launching', () => {
 
 app.whenReady().then(
   async () => {
-    if (import.meta.env.PROD) {
-      if (isWindows()) {
-        app.setAsDefaultProtocolClient('podman-desktop', process.execPath, process.argv);
-      } else {
-        app.setAsDefaultProtocolClient('podman-desktop');
-      }
-    }
-
     // We must create the window first before initialization so that we can load the
     // configuration as well as plugins
     // The window is hiddenly created and shown when ready

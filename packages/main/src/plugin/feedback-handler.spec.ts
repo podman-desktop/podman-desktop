@@ -41,6 +41,7 @@ vi.mock('/@/util.js', () => ({
 }));
 
 vi.mock('node:os', () => ({
+  homedir: vi.fn(() => '/home/user'),
   release: vi.fn(),
 }));
 

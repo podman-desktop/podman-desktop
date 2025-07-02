@@ -358,6 +358,12 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
   });
 }
 
+export async function resetPodmanMachinesFromCLI(): Promise<void> {
+  return test.step('Reset Podman machine from CLI', () => {
+    execSync(`podman machine reset -f`);
+  });
+}
+
 export async function fillTextbox(textbox: Locator, text: string): Promise<void> {
   return test.step(`Fill textbox with ${text}`, async () => {
     await playExpect(textbox).toBeVisible({ timeout: 15_000 });

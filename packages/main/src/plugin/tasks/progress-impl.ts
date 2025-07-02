@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type * as extensionApi from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import { findWindow } from '/@/electron-util.js';
-import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { TaskAction } from '/@/plugin/tasks/tasks.js';
 
 import { CancellationTokenImpl } from '../cancellation-token.js';
-import type { CancellationTokenRegistry } from '../cancellation-token-registry.js';
-import type { TaskManager } from './task-manager.js';
+import { CancellationTokenRegistry } from '../cancellation-token-registry.js';
+import { TaskManager } from './task-manager.js';
 
 export enum ProgressLocation {
   /**
@@ -37,10 +38,14 @@ export enum ProgressLocation {
   TASK_WIDGET = 2,
 }
 
+@injectable()
 export class ProgressImpl {
   constructor(
+    @inject(TaskManager)
     private taskManager: TaskManager,
+    @inject(NavigationManager)
     private navigationManager: NavigationManager,
+    @inject(CancellationTokenRegistry)
     private cancellationTokenRegistry: CancellationTokenRegistry,
   ) {}
 

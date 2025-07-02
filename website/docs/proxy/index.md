@@ -38,8 +38,10 @@ This tutorial is guiding you through the required steps to work in a restricted 
 <Tabs groupId="operating-systems">
 <TabItem value="win" label="Windows">
 
-1. Check that your environment has:
+The Windows _Installer for restricted environments_ has all artifacts required to install Podman Desktop and Podman. It does not require Internet access to download resources during installation.
+However, it does not contain additional utilities, such as Compose or Kind.
 
+1. Check that your environment has:
    - 6 GB RAM for the Podman Machine.
    - Windows Subsystem for Linux version 2 (WSL 2) prerequisites. See [Enabling WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install), [WSL basic commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands), and [Troubleshooting WSL 2](https://learn.microsoft.com/en-us/windows/wsl/troubleshooting#error-0x80370102-the-virtual-machine-could-not-be-started-because-a-required-feature-is-not-installed):
      - The Windows user has administrator privileges.
@@ -61,18 +63,15 @@ This tutorial is guiding you through the required steps to work in a restricted 
 
 1. Download the _Installer for restricted environments_ from to the [Windows downloads page](/downloads/windows).
 
-   It has all artifacts required to install Podman Desktop and Podman, and does not require Internet access to download resources during installation.
-   However, it does not contain additional utilities, such as Compose or Kind.
-
 1. Copy the downloaded file to the Windows host in a restricted environment, and run it.
 
-1. The **Dashboard** screen displays: _<Icon icon="fa-solid fa-info" size="lg" /> Podman needs to be set up_.
+1. Go to **Dashboard** from the left navigation pane. The screen displays: _<Icon icon="fa-solid fa-info" size="lg" /> Podman needs to be set up_.
 
    ![Podman needs set up screen](img/dashboard-podman-needs-set-up.png)
 
-   Click the **Set up** button.
+1. Click the **Set up** button.
 
-   Review and validate all confirmation screens to set up the Podman Machine.
+1. Review and validate all confirmation screens to set up the Podman Machine.
 
    <details>
    <summary>
@@ -81,10 +80,9 @@ This tutorial is guiding you through the required steps to work in a restricted 
 
    </summary>
    <div>
-
    - When you are using a VPN, you might have problems to access, from your host, resources that the Podman Machine exposes.
 
-     To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
+   To enable access from your host to resources on your Podman Machine, in the **Create Podman machine** screen, enable the **User mode networking (traffic relayed by a user process)** option.
 
    </div>
    </details>
@@ -92,22 +90,22 @@ This tutorial is guiding you through the required steps to work in a restricted 
 </TabItem>
 <TabItem value="mac" label="macOS">
 
-1. Download the _Disk Image for restricted environments_ from the [macOS downloads page](/downloads/macos).
+The macOS _Disk Image for restricted environments_ has all artifacts required to install Podman Desktop and Podman. It does not require Internet access to download resources during installation.
+However, it does not contain additional utilities, such as Compose or Kind.
 
-   It has all artifacts required to install Podman Desktop and Podman, and does not require Internet access to download resources during installation.
-   However, it does not contain additional utilities, such as Compose or Kind.
+1. Download the _Disk Image for restricted environments_ from the [macOS downloads page](/downloads/macos).
 
 1. Copy the downloaded file to the macOS host in a restricted environment, and double-click it.
 
 1. Drag the Podman Desktop icon to the Applications folder.
 
-1. The **Dashboard** screen displays: _<Icon icon="fa-solid fa-info" size="lg" /> Podman needs to be set up_.
+1. Go to **Dashboard** from the left navigation pane.The screen displays: _<Icon icon="fa-solid fa-info" size="lg" /> Podman needs to be set up_.
 
    ![Podman needs set up screen](img/dashboard-podman-needs-set-up.png)
 
-   Click the **Set up** button.
+1. Click the **Set up** button.
 
-   Review and validate all confirmation screens to set up the Podman Machine.
+1. Review and validate all confirmation screens to set up the Podman Machine.
 
    :::tip
 
@@ -118,14 +116,14 @@ This tutorial is guiding you through the required steps to work in a restricted 
 </TabItem>
 <TabItem value="linux" label="Linux">
 
+The Linux _AMD64 binary (tar.gz)_ has all artifacts required to install Podman Desktop. It does not require Internet access to download resources during installation.
+However, it does not contain additional utilities, such as Podman CLI, Compose, or Kind.
+
 1. The Podman Destkop archive for restricted environments does not contain Podman CLI.
 
    To install Podman, go to [the Podman website](https://podman.io/), and follow the installation instructions.
 
 1. Download the _AMD64 binary (tar.gz)_ archive from [the Linux Downloads page](https://podman-desktop.io/downloads/linux).
-
-   It has all artifacts required to install Podman Desktop, and does not require Internet access to download resources during installation.
-   However, it does not contain additional utilities, such as Podman CLI, Compose or Kind.
 
 1. Copy the downloaded file to the Linux host in a restricted environment, and extract the archive content.
 
@@ -145,14 +143,19 @@ This tutorial is guiding you through the required steps to work in a restricted 
 Requirements:
 
 - `<your.proxy.tld:port>`: Your proxy URL.
-- Optionally: your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format.
+- Optional: your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format.
 
 <Tabs groupId="operating-systems">
 <TabItem value="win" label="Windows">
 
-1. To enable proxy settings, go to **Settings > Proxy**, toggle on **Proxy configuration enabled**, set your proxy URL, and validate.
+1. Go to **Settings > Proxy** from the left navigation pane.
+1. Select a proxy configuration: **System**, **Manual**, or **Disabled**.
+   - If you select **Manual**, configure your proxy URLs and bypass proxy settings details.
+     ![Proxy settings](img/proxy-settings.png)
 
-   ![Proxy settings](img/proxy-settings.png)
+1. Click **Update**. A notification opens.
+1. Click **OK**.
+   ![Proxy update notification](img/proxy-update-notification.png)
 
    <details>
    <summary>
@@ -161,14 +164,12 @@ Requirements:
 
    </summary>
    <div>
-
    1. Store your proxy Certificate Authorities (CA), in Privacy-Enhanced Mail (PEM) format, in the `proxy_ca.pem` file.
-
    2. Copy the certificate to the Podman machine:
 
-      ```shell-session
-      $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
-      ```
+   ```shell-session
+   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   ```
 
    3. Open a shell prompt on the Podman machine:
 
@@ -193,17 +194,15 @@ Requirements:
 
    </summary>
    <div>
-
    1. Open a shell prompt on the Podman machine:
 
-      ```shell-session
-      $ podman machine ssh
-      ```
+   ```shell-session
+   $ podman machine ssh
+   ```
 
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
-
       - `rootless`: `$HOME/.config/containers/containers.conf`
 
       - `rootful`: `/etc/containers/containers.conf`
@@ -219,14 +218,18 @@ Requirements:
    </div>
    </details>
 
-2. Go to **Settings > Resources** and restart the Podman machine.
+1. Go to **Settings > Resources** and restart the Podman machine.
 
 </TabItem>
 <TabItem value="mac" label="macOS">
 
-1. To enable proxy settings, go to **Settings > Proxy**, toggle on **Proxy configuration enabled**, set your proxy URL, and validate.
-
-   ![Proxy settings](img/proxy-settings.png)
+1. Go to **Settings > Proxy** from the left navigation pane.
+1. Select a proxy configuration: **System**, **Manual**, or **Disabled**.
+   - If you select **Manual**, configure your proxy URLs and bypass proxy settings details.
+     ![Proxy settings](img/proxy-settings.png)
+1. Click **Update**. A notification opens.
+1. Click **OK**.
+   ![Proxy update notification](img/proxy-update-notification.png)
 
    <details>
    <summary>
@@ -235,14 +238,12 @@ Requirements:
 
    </summary>
    <div>
-
    1. Store your proxy Certificate Authorities (CA) in Privacy-Enhanced Mail (PEM) format, in your home directory, in the `proxy_ca.pem` file.
-
    2. Copy the certificate to the Podman machine:
 
-      ```shell-session
-      $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
-      ```
+   ```shell-session
+   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   ```
 
    3. Open a shell prompt on the Podman machine:
 
@@ -267,17 +268,15 @@ Requirements:
 
    </summary>
    <div>
-
    1. Open a shell prompt on the Podman machine:
 
-      ```shell-session
-      $ podman machine ssh
-      ```
+   ```shell-session
+   $ podman machine ssh
+   ```
 
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
       The file location depends on your connection mode:
-
       - `rootless`: `$HOME/.config/containers/containers.conf`
 
       - `rootful`: `/etc/containers/containers.conf`
@@ -293,19 +292,18 @@ Requirements:
    </div>
    </details>
 
-2. Go to **Settings > Resources** and restart the Podman machine.
+1. Go to **Settings > Resources** and restart the Podman machine.
 
 </TabItem>
 <TabItem value="linux" label="Linux">
 
 On Linux, Podman Desktop **Proxy** settings have no effect on Podman.
 
-Configure Podman.
+Configure Podman:
 
 1. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
 
    The file location depends on your connection mode:
-
    - `rootless`: `$HOME/.config/containers/containers.conf`
 
    - `rootful`: `/etc/containers/containers.conf`
@@ -336,14 +334,12 @@ Configure Podman.
 #### Verification
 
 1. Podman can pull images.
-
    1. Go to **Images**.
    1. Click **Pull an image**.
    1. **Image to Pull**: Enter an image name, such as `quay.io/podman/hello`.
-   1. Click **Pull image**.
-   1. Podman Desktop reports `Download complete`.
+   1. Click **Pull image**. Podman Desktop reports `Download complete` after a while.
+   1. Click **Done**.
 
 1. You can install extensions such as:
-
    - [Installing Compose](/docs/compose/setting-up-compose)
    - [Installing Kind](/docs/kind/installing).

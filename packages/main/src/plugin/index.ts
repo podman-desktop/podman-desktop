@@ -27,6 +27,7 @@ import type {
   Cluster,
   Context as KubernetesContext,
   KubernetesObject,
+  User,
   V1ConfigMap,
   V1CronJob,
   V1Deployment,
@@ -46,6 +47,7 @@ import type Dockerode from 'dockerode';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
+import { Container } from 'inversify';
 
 import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -56,7 +58,6 @@ import type {
   KubernetesGeneratorSelector,
 } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
-import type { Menu } from '/@/plugin/menu-registry.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendations/recommendations-api.js';
@@ -66,6 +67,7 @@ import { Updater } from '/@/plugin/updater.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -80,6 +82,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
+import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
@@ -101,6 +104,7 @@ import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
+import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
@@ -116,6 +120,7 @@ import type {
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
@@ -124,7 +129,7 @@ import type { WebviewInfo } from '/@api/webview-info.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
 import { isMac } from '../util.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import type { PodInfo, PodInspectInfo } from './api/pod-info.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
@@ -137,7 +142,6 @@ import { CloseBehavior } from './close-behavior.js';
 import { ColorRegistry } from './color-registry.js';
 import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
-import type { IConfigurationPropertyRecordedSchema } from './configuration-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
 import { ContainerProviderRegistry } from './container-registry.js';
@@ -174,7 +178,6 @@ import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
-import type { MessageBoxOptions, MessageBoxReturnValue } from './message-box.js';
 import { MessageBox } from './message-box.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
@@ -186,7 +189,6 @@ import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
 import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js';
-import type { StatusBarEntryDescriptor } from './statusbar/statusbar-registry.js';
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
@@ -454,6 +456,8 @@ export class PluginSystem {
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
 
     const iconRegistry = new IconRegistry(apiSender);
     const directories = new Directories();
@@ -2605,6 +2609,10 @@ export class PluginSystem {
       return kubernetesClient.getClusters();
     });
 
+    this.ipcHandle('kubernetes-client:getUsers', async (): Promise<User[]> => {
+      return kubernetesClient.getUsers();
+    });
+
     this.ipcHandle('kubernetes-client:getCurrentNamespace', async (): Promise<string | undefined> => {
       return kubernetesClient.getCurrentNamespace();
     });
@@ -2625,8 +2633,21 @@ export class PluginSystem {
     });
     this.ipcHandle(
       'kubernetes-client:updateContext',
-      async (_listener, contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
-        return kubernetesClient.updateContext(contextName, newContextName, newContextNamespace);
+      async (
+        _listener,
+        contextName: string,
+        newContextName: string,
+        newContextNamespace: string,
+        newContextCluster: string,
+        newContextUser: string,
+      ): Promise<void> => {
+        return kubernetesClient.updateContext(
+          contextName,
+          newContextName,
+          newContextNamespace,
+          newContextCluster,
+          newContextUser,
+        );
       },
     );
 

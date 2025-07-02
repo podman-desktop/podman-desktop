@@ -3,7 +3,8 @@ import { faCheck, faPencil, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../../main/src/plugin/configuration-registry';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+
 import FloatNumberItem from './FloatNumberItem.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;

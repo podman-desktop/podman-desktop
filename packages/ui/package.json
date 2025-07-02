@@ -158,24 +158,24 @@
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
-    "@sveltejs/package": "^2.3.11",
+    "@sveltejs/package": "^2.3.12",
     "@sveltejs/vite-plugin-svelte": "5.1.0",
-    "@tailwindcss/vite": "^4.1.10",
+    "@tailwindcss/vite": "^4.1.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.8",
     "@testing-library/user-event": "^14.6.1",
     "@tsconfig/svelte": "^5.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.34.1",
-    "eslint-plugin-svelte": "^3.9.2",
+    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "eslint-plugin-svelte": "^3.10.1",
     "jsdom": "^27.0.0-beta.2",
-    "svelte": "5.34.5",
-    "svelte-check": "^4.2.1",
+    "svelte": "5.34.9",
+    "svelte-check": "^4.2.2",
     "svelte-eslint-parser": "^1.2.0",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.11",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.1.4"
+    "vitest": "^3.2.4"
   }
 }

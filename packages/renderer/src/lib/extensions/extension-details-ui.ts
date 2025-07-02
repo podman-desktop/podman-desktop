@@ -24,6 +24,7 @@ export interface ExtensionDetailsUI {
   description: string;
   type: 'dd' | 'pd';
   removable: boolean;
+  devMode: boolean;
   state: string;
   name: string;
   icon: undefined | string | { light: string; dark: string };

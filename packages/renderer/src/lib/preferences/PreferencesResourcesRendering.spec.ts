@@ -27,10 +27,10 @@ import { assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vites
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import type { Menu } from '/@api/menu.js';
 import type { OnboardingInfo } from '/@api/onboarding';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import type { Menu } from '../../../../main/src/plugin/menu-registry';
 import { providerInfos } from '../../stores/providers';
 import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelte';
 
@@ -807,4 +807,22 @@ test('Expect to see the no resource message when there is no providers', async (
   render(PreferencesResourcesRendering, {});
   const panel = screen.getByLabelText('no-resource-panel');
   expect(panel).toBeInTheDocument();
+});
+
+test('Expect update button to show up when an update is available to a new version', async () => {
+  vi.mocked(window.runUpdatePreflightChecks).mockResolvedValue(true);
+  vi.mocked(window.updateProvider).mockResolvedValue([{ name: 'podman', status: true }]);
+  providerInfos.set([providerInfo]);
+  const component = render(PreferencesResourcesRendering, {});
+  let updateButton = screen.queryByText('Update to');
+  expect(updateButton).not.toBeInTheDocument();
+
+  providerInfos.set([{ ...providerInfo, version: '0.0.1', updateInfo: { version: '0.0.2' } }]);
+  await component.rerender({});
+  updateButton = screen.getByText('Update to 0.0.2');
+  expect(updateButton).toBeInTheDocument();
+
+  await userEvent.click(updateButton);
+  expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
+  expect(window.updateProvider).toHaveBeenCalled();
 });

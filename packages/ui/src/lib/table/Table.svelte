@@ -4,25 +4,30 @@
 }
 </style>
 
-<script lang="ts">
+<script lang="ts" generics="T extends { selected?: boolean; name?: string }">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { afterUpdate, onMount, tick } from 'svelte';
-import Fa from 'svelte-fa';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
+import Icon from '../icons/Icon.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let columns: Column<any>[];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let row: Row<any>;
-export let data: { selected?: boolean; name?: string }[];
+export let columns: Column<T, any>[];
+export let row: Row<T>;
+export let data: T[];
 export let defaultSortColumn: string | undefined = undefined;
 export let collapsed: string[] = [];
+/**
+ * To better distinct individual row, you can provide a dedicated key method
+ *
+ * By default, it will use the object name property
+ */
+export let key: (object: T) => string = item => item.name ?? String(item);
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
@@ -43,9 +48,16 @@ let selectedAllCheckboxes = false;
 $: selectedAllCheckboxes = row.info.selectable
   ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
     data
-      .filter(object => row.info.children?.(object))
-      .map(object => row.info.children?.(object))
-      .flat()
+      .reduce(
+        (accumulator, current) => {
+          const children = row.info.children?.(current);
+          if (children) {
+            accumulator.push(...children);
+          }
+          return accumulator;
+        },
+        [] as Array<T>,
+      )
       .filter(child => row.info.selectable?.(child))
       .every(child => child.selected) &&
     data.filter(object => row.info.selectable?.(object)).length > 0
@@ -68,14 +80,14 @@ function toggleAll(e: CustomEvent<boolean>): void {
   data = [...data];
 }
 
-let sortCol: Column<unknown>;
+let sortCol: Column<T>;
 let sortAscending: boolean;
 
 $: if (data && sortCol) {
   sortImpl();
 }
 
-function sort(column: Column<unknown>): void {
+function sort(column: Column<T>): void {
   if (!column) {
     return;
   }
@@ -118,7 +130,7 @@ function sortImpl(): void {
 }
 
 onMount(async () => {
-  const column: Column<unknown> | undefined = columns.find(column => column.title === defaultSortColumn);
+  const column: Column<T> | undefined = columns.find(column => column.title === defaultSortColumn);
   if (column?.info.comparator) {
     sortCol = column;
     sortAscending = column.info.initialOrder ? column.info.initialOrder !== 'descending' : true;
@@ -156,7 +168,7 @@ function setGridColumns(): void {
   }
 }
 
-function objectChecked(object: { selected?: boolean }): void {
+function objectChecked(object: T): void {
   // check for children and set them to the same state
   if (row.info.children) {
     const children = row.info.children(object);
@@ -234,24 +246,26 @@ function toggleChildren(name: string | undefined): void {
   <div role="rowgroup">
     {#each data as object (object)}
       {@const children = row.info.children?.(object) ?? []}
+      {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
         <div
           class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
-          class:rounded-t-lg={object.name &&
-            !collapsed.includes(object.name) &&
+          class:rounded-t-lg={!collapsed.includes(itemKey) &&
             children.length > 0}
-          class:rounded-lg={!object.name ||
-            collapsed.includes(object.name) ||
+          class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
           role="row"
           aria-label={object.name}>
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if children.length > 0}
-              <button on:click={toggleChildren.bind(undefined, object.name)}>
-                <Fa
-                  size="0.8x"
+              <button
+                title={collapsed.includes(itemKey) ? 'Expand Row' : 'Collapse Row'}
+                aria-expanded={!collapsed.includes(itemKey)}
+                on:click={toggleChildren.bind(undefined, itemKey)}
+              >
+                <Icon size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight} />
+                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight}/>
               </button>
             {/if}
           </div>
@@ -285,7 +299,7 @@ function toggleChildren(name: string | undefined): void {
         </div>
 
         <!-- Child objects -->
-        {#if object.name && !collapsed.includes(object.name) && children.length > 0}
+        {#if !collapsed.includes(itemKey) && children.length > 0}
           {#each children as child, i (child)}
             <div
               class="grid grid-table gap-x-0.5 hover:bg-[var(--pd-content-card-hover-bg)]"

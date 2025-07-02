@@ -17,7 +17,6 @@ Installing an extension is a great way to expand the capabilities of Podman Desk
    ![Extension Screenshot](../img/extensions-icon.png)
 
 2. Perform one of the following steps:
-
    - Browse the **Catalog** and install the required extension. <!-- markdownlint-disable-line MD029 -->
 
      ![Catalog Screenshot](../img/browse-catalog.png)

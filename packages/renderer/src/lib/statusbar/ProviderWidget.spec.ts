@@ -27,6 +27,7 @@ import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
+  ProviderVmConnectionInfo,
 } from '/@api/provider-info';
 
 import ProviderWidget from './ProviderWidget.svelte';
@@ -45,6 +46,7 @@ const providerMock = {
   id: 'provider1-id',
   containerConnections: [],
   kubernetesConnections: [],
+  vmConnections: [],
   status: 'ready' as ProviderStatus,
   images: {},
 } as unknown as ProviderInfo;
@@ -111,6 +113,22 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
     { name: 'connection 1', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
     { name: 'connection 3', status: 'stopped' } as unknown as ProviderKubernetesConnectionInfo,
+  ];
+  render(ProviderWidget, { entry: providerMock });
+
+  expect(screen.getAllByText('Running').length).toBe(2);
+  expect(screen.getAllByText('Off').length).toBe(1);
+
+  expect(screen.getByText(': connection 1')).toBeInTheDocument();
+  expect(screen.getByText(': connection 2')).toBeInTheDocument();
+  expect(screen.getByText(': connection 3')).toBeInTheDocument();
+});
+
+test('Expect tooltip to include VM provider connections', () => {
+  providerMock.vmConnections = [
+    { name: 'connection 1', status: 'ready' } as unknown as ProviderVmConnectionInfo,
+    { name: 'connection 2', status: 'ready' } as unknown as ProviderVmConnectionInfo,
+    { name: 'connection 3', status: 'stopped' } as unknown as ProviderVmConnectionInfo,
   ];
   render(ProviderWidget, { entry: providerMock });
 

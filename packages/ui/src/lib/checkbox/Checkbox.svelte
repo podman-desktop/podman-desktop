@@ -2,7 +2,8 @@
 import { faSquare as faOutlineSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCheckSquare, faMinusSquare, faSquare } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, type Snippet } from 'svelte';
-import Fa from 'svelte-fa';
+
+import Icon from '../icons/Icon.svelte';
 
 const dispatch = createEventDispatcher<{ click: boolean }>();
 
@@ -54,22 +55,19 @@ function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLInpu
       class:cursor-pointer={!disabled}
       class:cursor-not-allowed={disabled}>
       {#if disabled}
-        <Fa size={faSize} icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]" />
+        <Icon size={faSize} icon={faSquare} class="text-[var(--pd-input-checkbox-disabled)]"/>
       {:else if indeterminate}
-        <Fa
-          size={faSize}
+        <Icon size={faSize}
           icon={faMinusSquare}
-          class="text-[var(--pd-input-checkbox-indeterminate)] hover:text-[var(--pd-input-checkbox-focused-indeterminate)]" />
+          class="text-[var(--pd-input-checkbox-indeterminate)] hover:text-[var(--pd-input-checkbox-focused-indeterminate)]"/>
       {:else if checked}
-        <Fa
-          size={faSize}
+        <Icon size={faSize}
           icon={faCheckSquare}
-          class="text-[var(--pd-input-checkbox-checked)] hover:text-[var(--pd-input-checkbox-focused-checked)]" />
-      {:else}
-        <Fa
-          size={faSize}
+          class="text-[var(--pd-input-checkbox-checked)] hover:text-[var(--pd-input-checkbox-focused-checked)]"/>
+     {:else}
+        <Icon size={faSize}
           icon={faOutlineSquare}
-          class="text-[var(--pd-input-checkbox-unchecked)] hover:text-[var(--pd-input-checkbox-focused-unchecked)]" />
+          class="text-[var(--pd-input-checkbox-unchecked)] hover:text-[var(--pd-input-checkbox-focused-unchecked)]"/>
       {/if}
     </div>
     <input

@@ -18,6 +18,7 @@
 
 import type { IDisposable } from './types/disposable.js';
 
+export const ApiSenderType = Symbol.for('ApiSenderType');
 export type ApiSenderType = {
   send: (channel: string, data?: unknown) => void;
   receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;

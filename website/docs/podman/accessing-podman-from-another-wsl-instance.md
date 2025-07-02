@@ -70,7 +70,6 @@ In foldable details, you can find alternative steps for least common contexts:
    On a custom Podman Machine, the remote Podman Machine destination might be different.
 
    Two parameters can change:
-
    - The machine name might differ from `podman-machine-default`.
    - The socket name is different when the Podman machine has root privileges disabled (rootless mode).
 
@@ -78,28 +77,26 @@ In foldable details, you can find alternative steps for least common contexts:
 
    </summary>
    <div>
-
    1. Identify the sockets available in your WSL distribution.
 
-      The Podman machine shares sockets in a `/mnt/wsl/podman-sockets/` subdirectory named after the Podman machine name.
+   The Podman machine shares sockets in a `/mnt/wsl/podman-sockets/` subdirectory named after the Podman machine name.
 
-      In your WSL session, list the available sockets:
+   In your WSL session, list the available sockets:
 
-      ```shell-session
-      $ find /mnt/wsl/podman-sockets/ -name '*.sock'
-      ```
+   ```shell-session
+   $ find /mnt/wsl/podman-sockets/ -name '*.sock'
+   ```
 
-      Each Podman Machine has a socket for:
+   Each Podman Machine has a socket for:
+   - Rootful Podman: `podman-root.sock`
+   - Rootless Podman: `podman-user.sock`
 
-      - Rootful Podman: `podman-root.sock`
-      - Rootless Podman: `podman-user.sock`
+   Sample output:
 
-      Sample output:
-
-      ```shell-session
-      /mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
-      /mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
-      ```
+   ```shell-session
+   /mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
+   /mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
+   ```
 
    1. Identify the socket that Podman Desktop uses.
 
@@ -117,7 +114,6 @@ In foldable details, you can find alternative steps for least common contexts:
       The default connection line ends with `true`.
 
       Identify your Podman Machine socket by its URI in Windows:
-
       - Rootful Podman: `ssh://root@127.0.0.1:59292/run/podman/podman.sock`
       - Rootless Podman: `ssh://user@127.0.0.1:59292/run/user/1000/podman/podman.sock`
 
@@ -133,7 +129,6 @@ In foldable details, you can find alternative steps for least common contexts:
    1. To define the Podman machine remote destination, prepend with `unix://` the socket path that is available in your WSL, and corresponds to the Podman Desktop active socket:
 
       For the default Podman machine:
-
       - Rootful Podman: `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock`
       - Rootless Podman: `unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock`
 
@@ -181,17 +176,14 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
    However, the group name might be different on a custom WSL distribution.
 
    On the Podman Machine, which runs on a Fedora distribution:
-
    - Rootful Podman: GID `10` name is `wheel`.
    - Rootless Podman: GID `1000` name is `user`.
 
    On the Ubuntu distribution:
-
    - Rootful Podman: GID `10` name is `uucp`.
    - Rootless Podman: GID `1000` name is the same as the user name you chose when creating the WSL machine.
 
    On a custom WSL distribution, find the group name for:
-
    - Rootful Podman:
 
      ```shell-session
@@ -261,7 +253,6 @@ Podman Desktop only has visibility to either rootless or rootful containers but 
 To change the active connection:
 
 1. In your Windows terminal, change the connection:
-
    - To set the connection to rootless:
 
      ```shell-session
@@ -275,7 +266,6 @@ To change the active connection:
      ```
 
 1. In your WSL session, Change the Podman system connection configuration:
-
    - To set the connection to rootless:
 
      ```shell-session

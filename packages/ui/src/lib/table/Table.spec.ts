@@ -20,7 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+
+import { Table } from '/@/lib';
+import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
+import { Column, Row } from '/@/lib/table/table';
 
 import TestTable from './TestTable.svelte';
 
@@ -402,4 +406,82 @@ test('Expect table is scoped for css manipulation', async () => {
 
   // and there should be no style applied to this group as it's not part of the table
   expect(dummyComponent.style.gridTemplateColumns).toBe('');
+});
+
+describe('Table#collapsed', () => {
+  interface Item {
+    id: string;
+    name?: string;
+  }
+
+  const ROW = new Row<Item>({
+    selectable: (): boolean => true,
+    children: (person): Array<Item> => [
+      {
+        id: `${person.id}-child`,
+        name: `${person.name} child`,
+      },
+    ],
+  });
+
+  const SIMPLE_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name ?? 'unknown',
+    renderer: SimpleColumn,
+  });
+
+  test('Table#collapsed prop should be used for collapsed', async () => {
+    const { getByRole } = render(Table, {
+      kind: 'demo',
+      data: [
+        {
+          id: 'foo',
+          name: 'foo',
+        },
+        {
+          id: 'bar',
+          name: 'bar',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['foo'],
+    });
+
+    const fooRow = getByRole('row', { name: 'foo' });
+    const fooExpandBtn = within(fooRow).getByRole('button', { name: 'Expand Row' });
+    expect(fooExpandBtn).toHaveAttribute('aria-expanded', 'false');
+
+    const barRow = getByRole('row', { name: 'bar' });
+    const barCollapseBtn = within(barRow).getByRole('button', { name: 'Collapse Row' });
+    expect(barCollapseBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('item with same name can be distinct using Table#key prop', async () => {
+    const { getAllByRole } = render(Table, {
+      kind: 'demo',
+      data: [
+        {
+          id: '1',
+          name: 'foo',
+        },
+        {
+          id: '2',
+          name: 'foo',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['1'],
+      key: ({ id }: Item): string => id,
+    });
+
+    const [foo1, foo2] = getAllByRole('row', { name: 'foo' });
+
+    const foo1ExpandBtn = within(foo1).getByRole('button', { name: 'Expand Row' });
+    expect(foo1ExpandBtn).toHaveAttribute('aria-expanded', 'false');
+
+    const foo2ExpandBtn = within(foo2).getByRole('button', { name: 'Collapse Row' });
+    expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
+  });
 });

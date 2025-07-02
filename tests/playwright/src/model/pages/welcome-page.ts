@@ -29,6 +29,7 @@ export class WelcomePage extends BasePage {
   readonly telemetryConsent: Locator;
   readonly skipOnBoarding: Locator;
   readonly checkLoader: Locator;
+  readonly startOnboarding: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -41,10 +42,20 @@ export class WelcomePage extends BasePage {
     this.checkLoader = this.page.getByRole('heading', {
       name: 'Initializing...',
     });
+    this.startOnboarding = page.getByRole('button', {
+      name: 'Start onboarding',
+      exact: true,
+    });
   }
 
   async turnOffTelemetry(): Promise<void> {
     return test.step('Turn off Telemetry', async () => {
+      const isUpdateTest = test.info().tags.includes('@update-install');
+
+      if (!isUpdateTest) {
+        await playExpect(this.startOnboarding).toBeEnabled({ timeout: 20_000 });
+      }
+
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
         await this.telemetryConsent.uncheck({ force: true });
@@ -59,7 +70,7 @@ export class WelcomePage extends BasePage {
       await playExpect(this.skipOnBoarding).toBeEnabled();
       await this.skipOnBoarding.click({ force: true });
       try {
-        await waitWhile(async () => await this.skipOnBoarding.isVisible(), { timeout: 2_000, diff: 100 });
+        await waitWhile(async () => await this.skipOnBoarding.isVisible(), { timeout: 5_000, diff: 250 });
       } catch (err) {
         console.log('Skip Onboarding button is still visible, retrying to press the button');
         await this.skipOnBoarding.click({ force: true });
@@ -88,6 +99,7 @@ export class WelcomePage extends BasePage {
           return;
         }
       }
+
       await this.turnOffTelemetry();
       await this.closeWelcomePage();
       await playExpect(this.welcomeMessage).toHaveCount(0);

@@ -13,15 +13,17 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+import type { Menu } from '/@api/menu.js';
+import { MenuContext } from '/@api/menu-context.js';
 import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
-import { type Menu, MenuContext } from '../../../../main/src/plugin/menu-registry';
 import { configurationProperties } from '../../stores/configurationProperties';
 import { providerInfos } from '../../stores/providers';
 import ContributionActions from '../actions/ContributionActions.svelte';
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
+import ProviderUpdateButton from '../dashboard/ProviderUpdateButton.svelte';
 import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
 import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '../ui/ConnectionStatus.svelte';
@@ -451,14 +453,14 @@ function handleError(errorMessage: string): void {
                   Setup ...
                 </Button>
               {:else}
-                <div class="flex flex-row justify-around">
+                <div class="flex flex-row justify-around flex-wrap gap-2">
                   {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
                     {@const providerDisplayName =
                       (provider.containerProviderConnectionCreation
                         ? (provider.containerProviderConnectionCreationDisplayName ?? undefined)
                         : provider.kubernetesProviderConnectionCreation
                           ? provider.kubernetesProviderConnectionCreationDisplayName
-                          : provider.vmProviderConnectionCreation 
+                          : provider.vmProviderConnectionCreation
                             ? provider.vmProviderConnectionCreationDisplayName
                             : undefined) ?? provider.name}
                     {@const buttonTitle =
@@ -492,6 +494,9 @@ function handleError(errorMessage: string): void {
                       }}>
                       <Fa size="0.9x" icon={faGear} />
                     </Button>
+                  {/if}
+                  {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
+                    <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
                   {/if}
                 </div>
               {/if}

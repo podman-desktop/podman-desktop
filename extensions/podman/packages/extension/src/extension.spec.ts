@@ -24,6 +24,7 @@ import { arch } from 'node:os';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable, provider as apiProvider } from '@podman-desktop/api';
+import type { ReadFileOptions } from 'ssh2';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -34,12 +35,12 @@ import {
   setWSLEnabled,
 } from './extension';
 import * as extension from './extension';
+import type { UpdateCheck } from './installer/podman-install';
+import { PodmanInstall } from './installer/podman-install';
 import * as compatibilityModeLib from './utils/compatibility-mode';
 import type { InstalledPodman } from './utils/podman-cli';
 import * as podmanCli from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
-import type { UpdateCheck } from './utils/podman-install';
-import { PodmanInstall } from './utils/podman-install';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
 import * as util from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
@@ -196,7 +197,22 @@ beforeEach(() => {
   vi.resetAllMocks();
   extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
-
+  vi.mocked(fs).readFile.mockImplementation(
+    (
+      _path: fs.PathOrFileDescriptor,
+      _optionsOrCallback?:
+        | ReadFileOptions
+        | ((err: NodeJS.ErrnoException | null, data: Buffer) => void)
+        | BufferEncoding,
+      callback?: (err: NodeJS.ErrnoException | null, data: string) => void,
+    ) => {
+      // Handle callback-based overloads
+      if (typeof callback === 'function') {
+        // readFile(path, options, callback)
+        callback(null, '');
+      }
+    },
+  );
   extension.initTelemetryLogger();
 });
 
@@ -345,7 +361,6 @@ vi.mock(import('./utils/util'), async importOriginal => {
 });
 
 beforeEach(() => {
-  vi.resetAllMocks();
   console.error = consoleErrorMock;
 
   vi.mocked(extensionApi.env).isMac = false;
@@ -1099,22 +1114,22 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
 });
 
 test('test checkDefaultMachine - if user wants to change machine, check that it only changes to rootless as machine inspect is not returning Rootful field (old versions of podman)', async () => {
-  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-    stdout: JSON.stringify(fakeMachineInfoJSON),
-  } as extensionApi.RunResult);
-
   const fakeInspectJSON = [
     {
       Name: 'podman-machine-default',
     },
   ];
 
-  // return as inspect result a rootless machine
-  const inspectCall = vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-    stdout: JSON.stringify(fakeInspectJSON),
-  } as extensionApi.RunResult);
+  const inspectCall = vi
+    .mocked(extensionApi.process.exec)
+    .mockResolvedValueOnce({
+      stdout: JSON.stringify(fakeMachineInfoJSON),
+    } as extensionApi.RunResult)
+    .mockResolvedValueOnce({
+      stdout: JSON.stringify(fakeInspectJSON),
+    } as extensionApi.RunResult);
 
-  const spyPrompt = vi.spyOn(extensionApi.window, 'showInformationMessage');
+  const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
 
   vi.mock('node:fs');
@@ -1125,7 +1140,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
 
   await extension.checkDefaultMachine(fakeMachineJSON);
 
-  expect(spyExecPromise).toHaveBeenCalledWith(
+  expect(inspectCall).toHaveBeenCalledWith(
     podmanCli.getPodmanCli(),
     ['system', 'connection', 'default', machineDefaultName],
     {
@@ -3209,8 +3224,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   let contextMock: extensionApi.ExtensionContext;
 
   beforeEach(() => {
-    vi.resetAllMocks();
-
     contextMock = {
       subscriptions: [],
       secrets: {

@@ -59,7 +59,7 @@ test('error: expect installBinaryToSystem to fail with a non existing binary', a
     value: 'linux',
   });
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
+  vi.mocked(extensionApi.process.exec).mockImplementation(
     () =>
       new Promise<extensionApi.RunResult>((_, reject) => {
         const error: extensionApi.RunError = {

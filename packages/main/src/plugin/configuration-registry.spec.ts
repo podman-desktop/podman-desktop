@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import * as fs from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
+import type { IConfigurationNode } from '/@api/configuration/models.js';
+import type { IDisposable } from '/@api/disposable.js';
 
-import type { IConfigurationNode } from './configuration-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
-import type { Disposable } from './types/disposable.js';
 
 let configurationRegistry: ConfigurationRegistry;
 
@@ -46,7 +46,7 @@ const notificationRegistry = {
   addNotification: vi.fn(),
 } as unknown as NotificationRegistry;
 
-let registerConfigurationsDisposable: Disposable;
+let registerConfigurationsDisposable: IDisposable;
 
 beforeAll(() => {
   // mock the fs module
@@ -171,8 +171,6 @@ test('Should not find configuration after dispose', async () => {
 });
 
 test('should work with an invalid configuration file', async () => {
-  vi.resetAllMocks();
-
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);

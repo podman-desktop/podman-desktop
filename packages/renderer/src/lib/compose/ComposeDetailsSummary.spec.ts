@@ -44,6 +44,7 @@ const fakeContainer1: ContainerInfoUI = {
   groupInfo: {
     name: 'group1',
     type: ContainerGroupInfoTypeUI.STANDALONE,
+    id: 'fakeContainerID1',
   },
   selected: false,
   created: 1234,
@@ -70,6 +71,7 @@ const fakeContainer2: ContainerInfoUI = {
   groupInfo: {
     name: 'group2',
     type: ContainerGroupInfoTypeUI.STANDALONE,
+    id: 'fakeContainerID2',
   },
   selected: false,
   created: 1234,

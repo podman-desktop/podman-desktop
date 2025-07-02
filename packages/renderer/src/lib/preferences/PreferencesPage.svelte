@@ -3,8 +3,8 @@ import { onMount } from 'svelte';
 
 import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
 import PreferencesContainerConnectionEdit from '/@/lib/preferences/PreferencesContainerConnectionEdit.svelte';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import type { IConfigurationPropertyRecordedSchema } from '../../../../main/src/plugin/configuration-registry';
 import Route from '../../Route.svelte';
 import { configurationProperties } from '../../stores/configurationProperties';
 import Onboarding from '../onboarding/Onboarding.svelte';

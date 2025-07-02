@@ -26,7 +26,6 @@ You can create multiple local Kind-powered Kubernetes clusters.
 1. Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**
 1. In the Kind tile, click the **Create new ...** button.
 1. Perform one of the following steps:
-
    - Create a Kind cluster with a _customized_ configuration by providing a path to the configuration file. The Kind cluster is created based on the values specified in the configuration file.
      ![creating a Kind cluster with custom configuration](img/kind-cluster-with-custom-configuration.png)
 

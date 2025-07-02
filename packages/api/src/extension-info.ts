@@ -34,6 +34,7 @@ export interface ExtensionInfo {
   displayName: string;
   publisher: string;
   removable: boolean;
+  devMode: boolean;
   version: string;
   state: string;
   error?: ExtensionError;

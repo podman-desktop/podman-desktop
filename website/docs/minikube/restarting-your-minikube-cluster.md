@@ -15,7 +15,6 @@ With Podman Desktop, you can restart your local Minikube-powered Kubernetes clus
 Perform one of the following steps:
 
 - Restart using the **Settings** page
-
   1. Open **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources**.
   1. Find the Minikube cluster to restart.
   1. Click the **Restart** icon.

@@ -65,6 +65,8 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
   test.describe
     .serial('Image Manifest Validation - Simple Containerfile', () => {
       test('Build the image using cross-arch build (simple )', async () => {
+        test.setTimeout(120_000);
+
         await playExpect(imagesPage.heading).toBeVisible();
 
         const buildImagePage = await imagesPage.openBuildImage();
@@ -76,12 +78,13 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
         imagesPage = await buildImagePage.buildImage(imageNameSimple, dockerfilePath, contextDirectory, architectures);
         await playExpect
-          .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 30_000), { timeout: 0 })
+          .poll(async () => imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
           .toBeTruthy();
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
         await imagesPage.toggleImageManifest(manifestLabelSimple);
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
+
       test('Check Manifest details', async () => {
         const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
 
@@ -100,6 +103,8 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
   test.describe
     .serial('Image Manifest Validation - Complex Containerfile', () => {
       test('Build the image using cross-arch build (complex)', async ({ page }) => {
+        test.setTimeout(120_000);
+
         await playExpect(imagesPage.heading).toBeVisible();
 
         const buildImagePage = await imagesPage.openBuildImage();
@@ -128,18 +133,18 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           if (isWindows && provider === 'Wsl') {
             console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
             test.fail();
-          } else {
-            throw error;
           }
+          throw error;
         }
 
         await playExpect
-          .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 30_000), { timeout: 0 })
+          .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 60_000), { timeout: 0 })
           .toBeTruthy();
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
         await imagesPage.toggleImageManifest(manifestLabelComplex);
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
+
       test('Check Manifest details', async () => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
 
@@ -152,9 +157,9 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await playExpect(imageDetailsPage.backLink).toBeVisible();
         await imageDetailsPage.backLink.click();
       });
+
       test('Delete Manifest', async ({ page }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
-
         await deleteImageManifest(page, manifestLabelComplex);
       });
     });
@@ -165,7 +170,9 @@ async function deleteImageManifest(page: Page, manifestName: string): Promise<vo
   await navigationBar.openImages();
 
   await imagesPage.deleteImageManifest(manifestName);
-  await playExpect.poll(async () => await imagesPage.waitForImageDelete(manifestName)).toBeTruthy();
+  await playExpect
+    .poll(async () => await imagesPage.waitForImageDelete(manifestName, 30_000), { timeout: 0 })
+    .toBeTruthy();
   await imagesPage.deleteAllUnusedImages();
-  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 10_000 }).toBe(0);
+  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 30_000 }).toBe(0);
 }

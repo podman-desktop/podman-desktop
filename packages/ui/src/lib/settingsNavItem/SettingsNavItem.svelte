@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import type { Component } from 'svelte';
-import Fa from 'svelte-fa';
 
+import Icon from '../icons/Icon.svelte';
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
@@ -28,24 +28,6 @@ let {
   iconPosition = 'left',
   onClick = (): void => {},
 }: Props = $props();
-
-function rotate(
-  node: unknown,
-  { clockwise = true },
-): {
-  duration: number;
-  css: (t: unknown, u: number) => string;
-} {
-  return {
-    duration: 200,
-    css: (t: unknown, u: number): string => {
-      if (!clockwise) u = -u;
-      return `
-        transform: rotate(${u * 90}deg);
-        transform-origin: center center;`;
-    },
-  };
-}
 
 function click(): void {
   expanded = !expanded;
@@ -76,10 +58,9 @@ function click(): void {
       class:capitalize={!child}>
       {#if icon}
         {#if isFontAwesomeIcon(icon)}
-          <Fa {icon} />
+          <Icon icon={icon}/>
         {:else}
-          {@const Icon = icon}
-          <Icon size="14" />
+          <Icon icon={icon} size=14/>
         {/if}
       {/if}
       <span>{title}</span>
@@ -87,14 +68,9 @@ function click(): void {
     {#if section}
       <div class="px-2 relative w-4 h-4 text-[color:var(--pd-secondary-nav-expander)]">
         {#if expanded}
-          <i
-            class="fas fa-angle-down text-md absolute left-0 top-0.5"
-            aria-hidden="true"
-            in:rotate={{ clockwise: false }}
-            out:rotate={{ clockwise: false }}></i>
+          <Icon icon='fas fa-angle-down' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 -rotate-90" />
         {:else}
-          <i class="fas fa-angle-right text-md absolute left-0 top-0.5" aria-hidden="true" in:rotate={{}} out:rotate={{}}
-          ></i>
+          <Icon icon='fas fa-angle-right' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 rotate-90" />
         {/if}
       </div>
     {/if}

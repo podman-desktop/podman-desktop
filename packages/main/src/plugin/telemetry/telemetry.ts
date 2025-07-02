@@ -30,14 +30,15 @@ import { Analytics, type UserTraits } from '@segment/analytics-node';
 import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
+import { inject, injectable } from 'inversify';
 import * as osLocale from 'os-locale';
 
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { stoppedExtensions } from '../../util.js';
-import type { ConfigurationRegistry, IConfigurationNode } from '../configuration-registry.js';
-import type { Event } from '../events/emitter.js';
 import { Emitter } from '../events/emitter.js';
 import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '../types/telemetry.js';
 import { Identity } from './identity.js';
@@ -61,6 +62,7 @@ export type EventType =
 /**
  * Handle the telemetry reporting.
  */
+@injectable()
 export class Telemetry {
   private static readonly SEGMENT_KEY = 'Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy';
 
@@ -86,7 +88,10 @@ export class Telemetry {
   private readonly _onDidChangeTelemetryEnabled = new Emitter<boolean>();
   readonly onDidChangeTelemetryEnabled: Event<boolean> = this._onDidChangeTelemetryEnabled.event;
 
-  constructor(private configurationRegistry: ConfigurationRegistry) {
+  constructor(
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
+  ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
   }

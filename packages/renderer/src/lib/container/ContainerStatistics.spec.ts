@@ -46,6 +46,7 @@ const myContainer: ContainerInfoUI = {
   groupInfo: {
     name: 'foobar',
     type: ContainerGroupInfoTypeUI.STANDALONE,
+    id: 'foobar',
   },
   selected: false,
   created: 0,

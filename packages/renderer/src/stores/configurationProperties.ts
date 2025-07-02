@@ -18,10 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type {
-  IConfigurationChangeEvent,
-  IConfigurationPropertyRecordedSchema,
-} from '../../../main/src/plugin/configuration-registry';
+import type { IConfigurationChangeEvent, IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+
 import { EventStore } from './event-store';
 
 const windowEvents = ['extensions-started', 'extension-started', 'extension-stopped', 'configuration-changed'];

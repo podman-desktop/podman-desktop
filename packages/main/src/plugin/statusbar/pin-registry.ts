@@ -16,12 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type containerDesktopAPI from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
-import type { CommandRegistry } from '/@/plugin/command-registry.js';
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
-import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { ApiSenderType } from '/@/plugin/api.js';
+import { CommandRegistry } from '/@/plugin/command-registry.js';
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
@@ -35,6 +36,7 @@ export enum PIN_REGISTRY_TELEMETRY_EVENTS {
 /**
  * The {@link PinRegistry} hold the pinned options on the providers part of the status bar.
  */
+@injectable()
 export class PinRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
   // default to podman
@@ -42,10 +44,15 @@ export class PinRegistry implements IDisposable {
   #configuration: containerDesktopAPI.Configuration | undefined;
 
   constructor(
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(ProviderRegistry)
     private providers: ProviderRegistry,
+    @inject(Telemetry)
     private telemetry: Telemetry,
   ) {}
 

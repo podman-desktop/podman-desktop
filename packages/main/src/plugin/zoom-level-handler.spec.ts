@@ -20,12 +20,13 @@ import type { Configuration } from '@podman-desktop/api';
 import type { BrowserWindow } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from './appearance-settings.js';
 import type {
-  ConfigurationRegistry,
   IConfigurationChangeEvent,
   IConfigurationPropertyRecordedSchema,
-} from './configuration-registry.js';
+  IConfigurationRegistry,
+} from '/@api/configuration/models.js';
+
+import { AppearanceSettings } from './appearance-settings.js';
 import { Emitter } from './events/emitter.js';
 import { ZoomLevelHandler } from './zoom-level-handler.js';
 
@@ -51,7 +52,7 @@ Object.defineProperty(browserWindowMock.webContents, 'zoomLevel', {
   set: setZoomLevelMock,
 });
 
-let configurationRegistryMock: ConfigurationRegistry;
+let configurationRegistryMock: IConfigurationRegistry;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -64,7 +65,7 @@ beforeEach(() => {
     getConfiguration: vi.fn().mockReturnValue({
       get: vi.fn(),
     }),
-  } as unknown as ConfigurationRegistry;
+  } as unknown as IConfigurationRegistry;
   zoomLevelHandler = new TestZoomLevelHandler(browserWindowMock, configurationRegistryMock);
 });
 

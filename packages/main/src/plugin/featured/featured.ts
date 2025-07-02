@@ -16,9 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import { inject, injectable } from 'inversify';
+
+import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { CatalogFetchableExtension } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
-import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
 
 import featuredJSONFile from '../../../../../featured.json' with { type: 'json' };
@@ -26,11 +28,14 @@ import featuredJSONFile from '../../../../../featured.json' with { type: 'json' 
 /**
  * Manages the Featured extensions
  */
+@injectable()
 export class Featured {
   private fetchableExtensions: CatalogFetchableExtension[] = [];
 
   constructor(
+    @inject(ExtensionLoader)
     private extensionLoader: ExtensionLoader,
+    @inject(ExtensionsCatalog)
     private extensionsCatalog: ExtensionsCatalog,
   ) {}
 

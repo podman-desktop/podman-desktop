@@ -75,7 +75,7 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     await playExpect(imagesPage.heading).toBeVisible();
 
     await playExpect
-      .poll(async () => await imagesPage.waitForRowToExists(helloContainer, 15_000), { timeout: 0 })
+      .poll(async () => imagesPage.waitForRowToExists(helloContainer, 30_000), { timeout: 0 })
       .toBeTruthy();
   });
 
@@ -89,7 +89,7 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     await playExpect(imagesPage.heading).toBeVisible();
 
     await playExpect
-      .poll(async () => await imagesPage.waitForRowToExists(fullName, 30_000), {
+      .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
         timeout: 0,
       })
       .toBeTruthy();
@@ -110,7 +110,7 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     await playExpect(imagesPage.heading).toBeVisible();
 
     await playExpect
-      .poll(async () => await imagesPage.waitForRowToExists(fullName, 15_000), {
+      .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
         timeout: 0,
       })
       .toBeTruthy();
@@ -119,7 +119,7 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     await playExpect(imageDetailPage.heading).toBeVisible();
 
     imagesPage = await imageDetailPage.deleteImage();
-    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
 
     await playExpect
       .poll(async () => await imagesPage.waitForRowToBeDelete(fullName, 60_000), { timeout: 0 })
