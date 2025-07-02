@@ -45,9 +45,9 @@
       window.LOGLEVEL = 'info';
       window.FRAMEWORK_OPTIONS = {};
       window.CHANNEL_OPTIONS = {};
-      window.FEATURES = {"argTypeTargetsV7":true,"legacyDecoratorFileOrder":false,"disallowImplicitActionsInRenderV8":true};
+      window.FEATURES = {"argTypeTargetsV7":true,"legacyDecoratorFileOrder":false,"disallowImplicitActionsInRenderV8":true,"viewport":true,"highlight":true,"controls":true,"interactions":true,"actions":true,"backgrounds":true,"outline":true,"measure":true};
       window.STORIES = [{"titlePrefix":"","directory":"./src/stories","files":"**/*.mdx","importPathMatcher":"^\\.[\\\\/](?:src\\/stories(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)\\/|\\/|$)(?!\\.)(?=.)[^/]*?\\.mdx)$"},{"titlePrefix":"","directory":"./src/stories","files":"**/*.stories.@(js|jsx|ts|tsx|svelte)","importPathMatcher":"^\\.[\\\\/](?:src\\/stories(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)\\/|\\/|$)(?!\\.)(?=.)[^/]*?\\.stories\\.(js|jsx|ts|tsx|svelte))$"}];
-      window.DOCS_OPTIONS = {"defaultName":"Docs","autodocs":"tag"};
+      window.DOCS_OPTIONS = {"defaultName":"Docs"};
       window.TAGS_OPTIONS = {"dev-only":{"excludeFromDocsStories":true},"docs-only":{"excludeFromSidebar":true},"test-only":{"excludeFromSidebar":true,"excludeFromDocsStories":true}};
 
       
@@ -60,8 +60,7 @@
     <base target="_parent" />
 
 <style>
-  /* While we aren't showing the main block yet, but still preparing, we want everything the user
-     has rendered, which may or may not be in #storybook-root, to be display none */
+  /* While we aren't showing the main block yet, but still preparing, we want everything the user has rendered, which may or may not be in #storybook-root, to be display none */
   .sb-show-preparing-story:not(.sb-show-main) > :not(.sb-preparing-story) {
     display: none;
   }
@@ -257,7 +256,8 @@
     line-height: 19px;
     border-radius: 4px;
 
-    font-family: 'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',
+    font-family:
+      'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',
       'Lucida Console', Consolas, Monaco, monospace;
     margin: 0;
     overflow: auto;
@@ -492,11 +492,31 @@
     margin-bottom: 4px;
     padding: 2px 5px;
   }
+
+  .sb-sr-only,
+  .sb-hidden-until-focus:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: none;
+  }
+
+  .sb-hidden-until-focus {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+
+  .sb-hidden-until-focus:focus {
+    opacity: 1;
+  }
 </style>
 
 <script>
   /* globals window */
-  /* eslint-disable no-underscore-dangle */
   try {
     if (window.top !== window) {
       window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.top.__REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -509,7 +529,8 @@
   }
 </script>
 
-    <script type="module" crossorigin src="./assets/iframe-C9_jnL6C.js"></script>
+    <script type="module" crossorigin src="./assets/iframe-CjMwcVZv.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/iframe-Bg9v9Bwf.css">
   </head>
 
   <body>
@@ -636,7 +657,6 @@
     <div id="storybook-root"></div>
     <div id="storybook-docs"></div>
     <script>
-      // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
       function __onViteAppLoadingError(event) {
         const hostname = globalThis.location.hostname;
         if (hostname !== 'localhost' && globalThis.CONFIG_TYPE === 'DEVELOPMENT') {
