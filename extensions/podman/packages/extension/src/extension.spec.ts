@@ -386,7 +386,7 @@ afterEach(async () => {
 });
 
 describe.each([
-  { os: 'macos', expectedProvider: VMTYPE.APPLEHV },
+  { os: 'macos', expectedProvider: VMTYPE.LIBKRUN },
   { os: 'windows-wsl', expectedProvider: VMTYPE.WSL },
   { os: 'windows-hyperv', expectedProvider: VMTYPE.HYPERV },
 ])('verify create on %s', ({ os, expectedProvider }) => {
