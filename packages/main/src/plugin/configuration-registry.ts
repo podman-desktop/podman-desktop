@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type {
@@ -33,12 +34,13 @@ import type { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
-import type { Directories } from './directories.js';
+import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
 
+@injectable()
 export class ConfigurationRegistry implements IConfigurationRegistry {
   private readonly configurationContributors: IConfigurationNode[];
   private readonly configurationProperties: Record<string, IConfigurationPropertyRecordedSchema>;
@@ -57,7 +59,9 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   private configurationValues: Map<string, { [key: string]: unknown }>;
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(Directories)
     private directories: Directories,
   ) {
     this.configurationProperties = {};

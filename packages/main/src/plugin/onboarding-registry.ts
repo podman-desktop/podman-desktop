@@ -18,17 +18,20 @@
 
 import * as path from 'node:path';
 
+import { inject, injectable } from 'inversify';
+
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { Onboarding, OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
 
 import { getBase64Image } from '../util.js';
-import type { Context } from './context/context.js';
+import { Context } from './context/context.js';
 import { Disposable } from './types/disposable.js';
 
+@injectable()
 export class OnboardingRegistry {
   private onboardingInfos: Map<string, OnboardingInfo> = new Map<string, OnboardingInfo>();
 
-  constructor(private context: Context) {}
+  constructor(@inject(Context) private context: Context) {}
 
   registerOnboarding(extension: AnalyzedExtension, onboarding: Onboarding): Disposable {
     const onInfo = this.createOnboardingInfo(extension, onboarding);

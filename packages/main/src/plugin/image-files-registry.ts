@@ -23,13 +23,14 @@ import type {
   ImageFilesProviderMetadata,
   ImageInfo,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
-import type { ApiSenderType } from './api.js';
-import type { Context } from './context/context.js';
+import { ApiSenderType } from './api.js';
+import { Context } from './context/context.js';
 import { toImageFilesystemLayerUIs } from './image-details-files.js';
 import { ImageFilesImpl } from './image-files-impl.js';
 
@@ -39,6 +40,7 @@ export interface ImageFilesProviderWithMetadata {
   provider: ImageFilesCallbacks;
 }
 
+@injectable()
 export class ImageFilesRegistry {
   private _imageFilesProviders: Map<string, ImageFilesProviderWithMetadata> = new Map<
     string,
@@ -46,8 +48,11 @@ export class ImageFilesRegistry {
   >();
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(Context)
     private context: Context,
   ) {
     this.context.setValue('imageFiles.hasProvider', false);

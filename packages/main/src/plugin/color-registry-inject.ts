@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IDisposable } from './types/disposable.js';
+import { inject, injectable } from 'inversify';
 
-export const ApiSenderType = Symbol.for('ApiSenderType');
-export type ApiSenderType = {
-  send: (channel: string, data?: unknown) => void;
-  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
-};
+import { ApiSenderType } from './api.js';
+import { ColorRegistry } from './color-registry.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
+
+/**
+ * ColorRegistry is used by storybook to inject colors into the frontend with a script.
+ * but tsx does not support decorators, so provide the injectable stuff in a separated object.
+ */
+@injectable()
+export class InjectableColorRegistry extends ColorRegistry {
+  constructor(
+    @inject(ApiSenderType) apiSender: ApiSenderType,
+    @inject(ConfigurationRegistry) configurationRegistry: ConfigurationRegistry,
+  ) {
+    super(apiSender, configurationRegistry);
+  }
+}

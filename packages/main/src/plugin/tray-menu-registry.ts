@@ -18,14 +18,15 @@
 
 import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
 import { dialog, ipcMain } from 'electron';
+import { inject, injectable } from 'inversify';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 import type { MenuItem } from '/@api/tray-menu-info.js';
 
-import type { TrayMenu } from '../tray-menu.js';
-import type { CommandRegistry } from './command-registry.js';
-import type { ProviderRegistry } from './provider-registry.js';
-import type { Telemetry } from './telemetry/telemetry.js';
+import { TrayMenu } from '../tray-menu.js';
+import { CommandRegistry } from './command-registry.js';
+import { ProviderRegistry } from './provider-registry.js';
+import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
 export interface TrayProviderConnectionInfo {
@@ -38,14 +39,19 @@ export interface TrayProviderInfo {
   status: ProviderStatus;
 }
 
+@injectable()
 export class TrayMenuRegistry {
   private menuItems = new Map<string, MenuItem>();
   private providers = new Map<string, ProviderInfo>();
 
   constructor(
+    @inject(TrayMenu)
     private trayMenu: TrayMenu,
+    @inject(CommandRegistry)
     private readonly commandRegistry: CommandRegistry,
+    @inject(ProviderRegistry)
     readonly providerRegistry: ProviderRegistry,
+    @inject(Telemetry)
     private readonly telemetryService: Telemetry,
   ) {
     // add a listener

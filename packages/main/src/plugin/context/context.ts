@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,16 @@
  *--------------------------------------------------------------------------------------------*/
 // based on https://github.com/microsoft/vscode/blob/3eed9319874b7ca037128962593b6a8630869253/src/vs/platform/contextkey/browser/contextKeyService.ts
 
-import type { ApiSenderType } from '../api.js';
+import { inject, injectable } from 'inversify';
+
+import { ApiSenderType } from '../api.js';
 import type { IContext } from '../api/context-info.js';
 
+@injectable()
 export class Context implements IContext {
   private _value: Record<string, unknown>;
 
-  constructor(private apiSender: ApiSenderType) {
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {
     this._value = {};
   }
 

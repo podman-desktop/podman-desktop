@@ -16,12 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { inject, injectable } from 'inversify';
+
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { LibpodApiSettings } from './libpod-api-settings.js';
 
+@injectable()
 export class LibpodApiInit {
-  constructor(private configurationRegistry: IConfigurationRegistry) {}
+  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
   init(): void {
     const libpodApiPlatformConfiguration: IConfigurationNode = {

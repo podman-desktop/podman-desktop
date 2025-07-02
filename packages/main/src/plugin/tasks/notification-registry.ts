@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,23 @@
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Notification } from 'electron';
+import { inject, injectable } from 'inversify';
 
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 
-import type { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '../api.js';
 import { Disposable } from '../types/disposable.js';
-import type { TaskManager } from './task-manager.js';
+import { TaskManager } from './task-manager.js';
 
+@injectable()
 export class NotificationRegistry {
   private notificationId = 0;
   private notificationQueue: NotificationCard[] = [];
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(TaskManager)
     private taskManager: TaskManager,
   ) {}
 

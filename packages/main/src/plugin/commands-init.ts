@@ -18,26 +18,33 @@
 
 import type { Uri } from '@podman-desktop/api';
 import { shell } from 'electron';
+import { inject, injectable } from 'inversify';
 
 import type { IDisposable } from '/@api/disposable.js';
 import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 import type { PullEvent } from '/@api/pull-event.js';
 
-import type { ApiSenderType } from './api.js';
-import type { CommandRegistry } from './command-registry.js';
-import type { ContainerProviderRegistry } from './container-registry.js';
-import type { NavigationManager } from './navigation/navigation-manager.js';
-import type { TaskManager } from './tasks/task-manager.js';
+import { ApiSenderType } from './api.js';
+import { CommandRegistry } from './command-registry.js';
+import { ContainerProviderRegistry } from './container-registry.js';
+import { NavigationManager } from './navigation/navigation-manager.js';
+import { TaskManager } from './tasks/task-manager.js';
 import type { TaskAction } from './tasks/tasks.js';
 
+@injectable()
 export class CommandsInit implements IDisposable {
   #disposables: IDisposable[] = [];
   constructor(
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(NavigationManager)
     private navigationManager: NavigationManager,
+    @inject(TaskManager)
     private taskManager: TaskManager,
+    @inject(ContainerProviderRegistry)
     private containerProviderRegistry: ContainerProviderRegistry,
   ) {}
 
