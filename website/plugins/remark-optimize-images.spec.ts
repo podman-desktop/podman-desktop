@@ -487,7 +487,7 @@ describe('remarkOptimizeImages', () => {
 
       // Should map to the docs structure: /optimized-images/docs/installation/img/download-dmg-640w.avif.
       // Use cross-platform path expectation.
-      expect(avifSrcSet).toContain('/optimized-images/docs/installation/img/download-dmg-640w.avif');
+      expect(avifSrcSet).toMatch(/[/\\]optimized-images[/\\]docs[/\\]installation[/\\]img[/\\]download-dmg-640w\.avif/);
 
       // Check the fallback img element.
       const imgElement = pictureElement.children.find(child => child.name === 'img');
