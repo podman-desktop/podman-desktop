@@ -23,8 +23,9 @@ import { resolve } from 'node:path';
 import type * as podmanDesktopAPI from '@podman-desktop/api';
 import type { Application } from 'express';
 import express from 'express';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
+import { ApiSenderType } from '/@/plugin/api.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
@@ -76,6 +77,7 @@ export class HttpServer {
   }
 }
 
+@injectable()
 export class WebviewRegistry {
   #count = 0;
   #webviews: Map<string, WebviewPanelImpl>;
@@ -91,7 +93,7 @@ export class WebviewRegistry {
 
   #app: Application;
 
-  constructor(apiSender: ApiSenderType) {
+  constructor(@inject(ApiSenderType) apiSender: ApiSenderType) {
     this.#apiSender = apiSender;
     this.#webviews = new Map();
     this.#uuidAndPaths = new Map();

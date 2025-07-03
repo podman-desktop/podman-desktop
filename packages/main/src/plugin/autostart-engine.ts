@@ -16,17 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { inject, injectable } from 'inversify';
 
-import type { ProviderRegistry } from './provider-registry.js';
+import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
+import { ProviderRegistry } from './provider-registry.js';
 import { Disposable } from './types/disposable.js';
 
+@injectable()
 export class AutostartEngine {
   private providerExtension = new Map<string, string>();
 
   constructor(
+    @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
   ) {}
 

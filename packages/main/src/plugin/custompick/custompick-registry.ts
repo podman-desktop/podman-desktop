@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CustomPick, CustomPickItem } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '../api.js';
 import type { IDisposable } from '../types/disposable.js';
 import { CustomPickImpl } from './custompick-impl.js';
 
+@injectable()
 export class CustomPickRegistry implements IDisposable {
   private callbackId = 0;
   private readonly entries: Map<number, CustomPickImpl<CustomPickItem>> = new Map();
 
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   createCustomPick<T extends CustomPickItem>(): CustomPick<T> {
     this.callbackId++;

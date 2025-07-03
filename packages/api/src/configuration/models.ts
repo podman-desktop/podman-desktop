@@ -98,6 +98,7 @@ export interface IConfigurationNode {
   extension?: IConfigurationExtensionInfo;
 }
 
+export const IConfigurationRegistry = Symbol.for('IConfigurationRegistry');
 export interface IConfigurationRegistry {
   registerConfigurations(configurations: IConfigurationNode[]): IDisposable;
   deregisterConfigurations(configurations: IConfigurationNode[]): void;

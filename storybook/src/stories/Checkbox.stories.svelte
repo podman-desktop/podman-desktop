@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
 import { Checkbox } from '@podman-desktop/ui-svelte';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `Checkbox` component.
@@ -8,6 +8,7 @@ import { type Args, defineMeta, setTemplate, type StoryContext } from '@storyboo
  */
 const { Story } = defineMeta({
   component: Checkbox,
+  render: template,
   title: 'Checkbox',
   tags: ['autodocs'],
   argTypes: {
@@ -58,10 +59,6 @@ const { Story } = defineMeta({
     },
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

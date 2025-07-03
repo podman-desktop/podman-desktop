@@ -19,12 +19,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { loadAllYaml } from '@kubernetes/client-node';
 import type { AuditRecord, AuditRequestItems, AuditResult, CancellationToken } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 // @ts-expect-error ignore type error https://github.com/janl/mustache.js/issues/797
 import mustache from 'mustache';
 import type { Tags } from 'yaml';
-import { parseAllDocuments } from 'yaml';
+import { parseAllDocuments, stringify } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
 
@@ -45,6 +46,12 @@ export function getKindClusterConfig(
   });
 }
 
+function convertYamlFrom11to12(manifest: string): string {
+  const parsedManifests = parseAllDocuments(manifest, { customTags: getTags });
+  const manifests = parsedManifests.map(parsedManifest => stringify(parsedManifest)).join('\n');
+  return manifests;
+}
+
 function getTags(tags: Tags): Tags {
   for (const tag of tags) {
     if (typeof tag === 'object' && 'tag' in tag) {
@@ -61,11 +68,9 @@ function getTags(tags: Tags): Tags {
 }
 
 export async function setupIngressController(clusterName: string): Promise<void> {
-  const manifests = parseAllDocuments(ingressManifests, { customTags: getTags });
-  await extensionApi.kubernetes.createResources(
-    'kind-' + clusterName,
-    manifests.map(manifest => manifest.toJSON()),
-  );
+  const manifest = convertYamlFrom11to12(ingressManifests);
+  const yml = loadAllYaml(manifest);
+  await extensionApi.kubernetes.createResources('kind-' + clusterName, yml);
 }
 
 export async function connectionAuditor(provider: string, items: AuditRequestItems): Promise<AuditResult> {

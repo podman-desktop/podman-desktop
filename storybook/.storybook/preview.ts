@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,55 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Preview } from '@storybook/svelte';
-import { createElement, useState, useEffect } from 'react';
-import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
-import { themes } from '@storybook/theming';
-import { DocsContainer } from '@storybook/addon-docs';
+import type { Preview } from '@storybook/svelte-vite';
+import { createElement } from 'react';
+import { themes } from 'storybook/theming';
+import { DocsContainer } from '@storybook/addon-docs/blocks';
 import './main.css';
 import './themes.css';
+
+let theme: 'dark' | 'light' = 'light';
+
+// Theme logic here (runs in iframe context)
+const applyTheme = () => {
+  try {
+    const isEmbedded = window.parent !== window;
+    let parentTheme: string | undefined;
+    if (isEmbedded) {
+      parentTheme = window.parent.document.documentElement.dataset.theme;
+      if (parentTheme === 'dark' || parentTheme === 'light') {
+        theme = parentTheme;
+      }
+    }
+    if (!parentTheme) {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      theme = isDark ? 'dark' : 'light';
+    }
+    document.body.classList.remove('dark', 'light');
+    document.body.classList.add(theme);
+  } catch (err) {
+    console.warn('Theme detection failed:', err);
+  }
+};
+applyTheme();
+
+// Watch for changes if embedded
+if (window.parent !== window) {
+  try {
+    const observer = new MutationObserver(applyTheme);
+    observer.observe(window.parent.document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    // Disconnect on iframe unload
+    window.parent.addEventListener('unload', () => {
+      observer.disconnect();
+    });
+  } catch (err) {
+    console.warn('Could not observe parent for theme changes:', err);
+  }
+}
 
 const preview: Preview = {
   parameters: {
@@ -32,32 +74,10 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    darkMode: {
-      current: 'light',
-      darkClass: 'dark',
-      lightClass: 'light',
-      dark: {
-        ...themes.dark,
-        appPreviewBg: 'transparent',
-      },
-      light: {
-        ...themes.light,
-        appPreviewBg: 'transparent',
-      },
-      stylePreview: true,
-    },
     docs: {
       container: props => {
-        const [isDark, setDark] = useState(true);
-
-        useEffect(() => {
-          props.context.channel.on(DARK_MODE_EVENT_NAME, setDark);
-
-          return () => props.context.channel.removeListener(DARK_MODE_EVENT_NAME, setDark);
-        }, [props.context.channel]);
-
         const currentProps = { ...props };
-        currentProps.theme = isDark ? themes.dark : themes.light;
+        currentProps.theme = theme === 'light' ? themes.light : themes.dark;
         return createElement(DocsContainer, currentProps);
       },
     },

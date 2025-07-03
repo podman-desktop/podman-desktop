@@ -147,7 +147,7 @@
     "@vitest/eslint-plugin": "^1.3.4",
     "cross-env": "7.0.3",
     "dts-for-context-bridge": "0.7.1",
-    "electron": "37.1.0",
+    "electron": "37.2.0",
     "electron-builder": "^26.0.13",
     "electron-builder-notarize": "^1.5.2",
     "eslint": "^9.30.1",
@@ -226,9 +226,11 @@
       "@kubernetes/client-node>jsonpath-plus": "^10.3.0",
       "vitest>vite": "^6.1.0",
       "esbuild-register>esbuild": "^0.25.0",
-      "@storybook/core>esbuild": "^0.25.0",
       "tsx>esbuild": "^0.25.0",
       "vite>esbuild": "^0.25.0"
+    },
+    "patchedDependencies": {
+      "@kubernetes/client-node": "patches/@kubernetes__client-node.patch"
     }
   },
   "packageManager": "pnpm@10.6.2+sha512.47870716bea1572b53df34ad8647b42962bc790ce2bf4562ba0f643237d7302a3d6a8ecef9e4bdfc01d23af1969aa90485d4cebb0b9638fa5ef1daef656f6c1b"

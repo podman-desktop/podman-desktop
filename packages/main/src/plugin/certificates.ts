@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
+import { injectable } from 'inversify';
 import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '../util.js';
@@ -30,6 +31,7 @@ import { spawnWithPromise } from './util/spawn-promise.js';
  * Provides access to the certificates of the underlying platform.
  * It supports Linux, Windows and MacOS.
  */
+@injectable()
 export class Certificates {
   private allCertificates: string[] = [];
 

@@ -28,6 +28,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
+import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import { coerce, gtr } from 'semver';
 import StreamValues from 'stream-json/streamers/StreamValues.js';
@@ -62,9 +63,9 @@ import type { PullEvent } from '/@api/pull-event.js';
 import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
 import { isWindows } from '../util.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import type { PodCreateOptions, PodInfo, PodInspectInfo } from './api/pod-info.js';
-import type { ConfigurationRegistry } from './configuration-registry.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
 import type {
   ContainerCreateMountOption,
   ContainerCreateNetNSOption,
@@ -78,9 +79,9 @@ import type {
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import { EnvfileParser } from './env-file-parser.js';
 import { Emitter } from './events/emitter.js';
-import type { ImageRegistry } from './image-registry.js';
+import { ImageRegistry } from './image-registry.js';
 import { LibpodApiSettings } from './libpod-api-enable/libpod-api-settings.js';
-import type { Telemetry } from './telemetry/telemetry.js';
+import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 import { guessIsManifest } from './util/manifest.js';
 
@@ -107,6 +108,7 @@ interface JSONEvent {
   Type?: string;
 }
 
+@injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<JSONEvent>();
   readonly onEvent: Event<JSONEvent> = this._onEvent.event;
@@ -120,9 +122,13 @@ export class ContainerProviderRegistry {
   private envfileParser = new EnvfileParser();
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(ImageRegistry)
     private imageRegistry: ImageRegistry,
+    @inject(Telemetry)
     private telemetryService: Telemetry,
   ) {
     const libPodDockerode = new LibpodDockerode();

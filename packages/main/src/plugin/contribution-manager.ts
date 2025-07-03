@@ -20,15 +20,16 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { RunResult } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
 
 import type { ContributionInfo } from '/@api/contribution-info.js';
 
 import { isMac, isUnixLike, isWindows } from '../util.js';
-import type { ApiSenderType } from './api.js';
-import type { ContainerProviderRegistry } from './container-registry.js';
-import type { Directories } from './directories.js';
-import type { Exec } from './util/exec.js';
+import { ApiSenderType } from './api.js';
+import { ContainerProviderRegistry } from './container-registry.js';
+import { Directories } from './directories.js';
+import { Exec } from './util/exec.js';
 import { getFreePort } from './util/port.js';
 
 export interface DockerExtensionMetadata {
@@ -73,6 +74,7 @@ export interface ComposeObject {
 /**
  * Contribution manager to provide the list of external OCI contributions
  */
+@injectable()
 export class ContributionManager {
   protected contributions: ContributionInfo[] = [];
 
@@ -88,9 +90,13 @@ export class ContributionManager {
     'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz4=';
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(Directories)
     private directories: Directories,
+    @inject(ContainerProviderRegistry)
     private containerRegistry: ContainerProviderRegistry,
+    @inject(Exec)
     private exec: Exec,
   ) {}
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,21 @@
 import type { OpenDialogOptions, SaveDialogOptions, Uri as APIUri } from '@podman-desktop/api';
 import type { BrowserWindow } from 'electron';
 import { dialog } from 'electron';
+import { inject, injectable } from 'inversify';
 
 import { Uri } from './types/uri.js';
-import type { Deferred } from './util/deferred.js';
+import { Deferred } from './util/deferred.js';
 
 /**
  * Handle native open and save dialogs
  */
+@injectable()
 export class DialogRegistry {
   #browserWindow: BrowserWindow | undefined;
 
   #mainWindowDeferred: Deferred<BrowserWindow>;
 
-  constructor(readonly mainWindowDeferred: Deferred<BrowserWindow>) {
+  constructor(@inject(Deferred<BrowserWindow>) readonly mainWindowDeferred: Deferred<BrowserWindow>) {
     this.#mainWindowDeferred = mainWindowDeferred;
   }
 

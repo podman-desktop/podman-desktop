@@ -22,10 +22,12 @@ import type {
   InputBoxValidationMessage,
   QuickPickOptions,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '../api.js';
 import { Deferred } from '../util/deferred.js';
 
+@injectable()
 export class InputQuickPickRegistry {
   private callbackId = 0;
 
@@ -45,7 +47,7 @@ export class InputQuickPickRegistry {
     }
   >();
 
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   async showInputBox(options?: InputBoxOptions, token?: CancellationToken): Promise<string | undefined> {
     // keep track of this request

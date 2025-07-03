@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
 import { faHandPaper, faLayerGroup, faRocket } from '@fortawesome/free-solid-svg-icons';
 import EmptyScreen from '@podman-desktop/ui-svelte/EmptyScreen';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `EmptyScreen` component.
@@ -9,6 +9,7 @@ import { type Args, defineMeta, setTemplate, type StoryContext } from '@storyboo
  */
 const { Story } = defineMeta({
   component: EmptyScreen,
+  render: template,
   title: 'Screen/EmptyScreen',
   tags: ['autodocs'],
   argTypes: {
@@ -44,10 +45,6 @@ const { Story } = defineMeta({
     },
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}
