@@ -204,9 +204,10 @@ const config = {
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
+    identity: null,
     artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
-    entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
+    entitlements: './entitlements.mac.inherit.plist', 
     target: {
       target: 'default',
       arch: macosArches,
