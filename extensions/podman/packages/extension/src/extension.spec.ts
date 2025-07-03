@@ -111,11 +111,12 @@ const machineInfo: extension.MachineInfo = {
   identityPath: '/path/to/key',
 };
 
+const updateMachineProviderSettingsMock = vi.fn();
 const podmanConfiguration = {
   registryConfiguration: {
     getPlaybookScriptPath: vi.fn(),
   },
-  updateMachineProviderSettings: vi.fn(),
+  updateMachineProviderSettings: updateMachineProviderSettingsMock,
 } as unknown as PodmanConfiguration;
 
 const machineDefaultName = 'podman-machine-default';
@@ -749,6 +750,95 @@ describe.each([
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
     );
   });
+});
+
+test.each([
+  { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
+  { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
+])('verify create on mac from settings on %s', async ({ architecture, expectedProvider }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+    stdout: `podman version 5.4.0`,
+  } as extensionApi.RunResult);
+
+  await extension.createMachine(
+    {
+      'podman.factory.machine.cpus': '2',
+      'podman.factory.machine.image': 'path',
+      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+      'podman.factory.machine.provider': expectedProvider,
+    },
+    podmanConfiguration,
+  );
+
+  expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+    podmanCli.getPodmanCli(),
+    expect.arrayContaining([`--image`, 'path']),
+    {
+      logger: undefined,
+      token: undefined,
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: expectedProvider,
+      },
+    },
+  );
+
+  expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
+  // wait a call on telemetryLogger.logUsage
+  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  expect(telemetryLogger.logUsage).toBeCalledWith(
+    'podman.machine.init',
+    expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+  );
+});
+
+test.each([
+  { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
+  { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
+])('verify create on mac from dashboard on %s', async ({ architecture, expectedProvider }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+    stdout: `podman version 5.4.0`,
+  } as extensionApi.RunResult);
+
+  await extension.createMachine(
+    {
+      'podman.factory.machine.cpus': '2',
+      'podman.factory.machine.image': 'path',
+      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+    },
+    podmanConfiguration,
+  );
+
+  expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+    podmanCli.getPodmanCli(),
+    expect.arrayContaining([`--image`, 'path']),
+    {
+      logger: undefined,
+      token: undefined,
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: expectedProvider,
+      },
+    },
+  );
+
+  expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
+  // wait a call on telemetryLogger.logUsage
+  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  expect(telemetryLogger.logUsage).toBeCalledWith(
+    'podman.machine.init',
+    expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+  );
 });
 
 test('test checkDefaultMachine, if the machine running is not default, the function will prompt', async () => {
