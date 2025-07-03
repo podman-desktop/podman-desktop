@@ -17,12 +17,14 @@
  ***********************************************************************/
 
 import type { TelemetrySender } from '@podman-desktop/api';
+import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
+import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
 import { TelemetrySettings } from './telemetry-settings.js';
 
@@ -55,6 +57,14 @@ class TelemetryTest extends Telemetry {
     return this.lastTimeEvents;
   }
 
+  public getAggregateTimeoutEvents(): Map<string, { timeout: NodeJS.Timeout; properties: unknown[] }> {
+    return this.aggregateTimeoutEvents;
+  }
+
+  public getPendingItems(): { eventName: string; properties?: unknown }[] {
+    return this.pendingItems;
+  }
+
   public override shouldDropEvent(eventName: string): boolean {
     return super.shouldDropEvent(eventName);
   }
@@ -65,6 +75,18 @@ class TelemetryTest extends Telemetry {
 
   public override createBuiltinTelemetrySender(extensionInfo: ExtensionInfo): TelemetrySender {
     return super.createBuiltinTelemetrySender(extensionInfo);
+  }
+
+  public setTelemetryInitialized(value: boolean): void {
+    this.telemetryInitialized = value;
+  }
+
+  public setTelemetryEnabled(value: boolean): void {
+    this.telemetryEnabled = value;
+  }
+
+  public override async internalTrack(event: EventType, eventProperties?: unknown): Promise<void> {
+    return super.internalTrack(event, eventProperties);
   }
 }
 
@@ -233,5 +255,114 @@ describe('TelemetryLoggerImpl', () => {
     expect(telemetryLogger['commonProperties']).toMatchObject({ 'common.extensionVersion': '1.0.0' });
     telemetryLogger.dispose();
     expect(telemetryLogger['commonProperties']).toStrictEqual({});
+  });
+});
+
+// New tests for aggregateTrack
+describe('aggregateTrack', () => {
+  let internalTrackSpy: MockInstance;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.useFakeTimers();
+    telemetry.setTelemetryInitialized(true);
+    telemetry.setTelemetryEnabled(true);
+    internalTrackSpy = vi.spyOn(telemetry, 'internalTrack').mockResolvedValue();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  test('should skip event if shouldDropEvent returns true', () => {
+    vi.spyOn(telemetry, 'shouldDropEvent').mockReturnValue(true);
+
+    telemetry.aggregateTrack('dropMe', { foo: 'bar' });
+    expect(telemetry.getAggregateTimeoutEvents().size).toBe(0);
+  });
+  test('should store in pendingItems if telemetry not initialized', () => {
+    telemetry.setTelemetryInitialized(false);
+
+    telemetry.aggregateTrack('eventA', { prop: 1 });
+    expect(telemetry.getPendingItems()).toEqual([{ eventName: 'eventA', properties: [{ prop: 1 }] }]);
+  });
+
+  test('should aggregate and send after delay', async () => {
+    telemetry.aggregateTrack('eventX', { count: 1 });
+    telemetry.aggregateTrack('eventX', { count: 2 });
+
+    expect(telemetry.getAggregateTimeoutEvents().get('eventX')?.properties).toEqual([{ count: 1 }, { count: 2 }]);
+
+    vi.runAllTimers();
+    await vi.waitFor(() =>
+      expect(internalTrackSpy).toBeCalledWith('eventX', { aggregated: [{ count: 1 }, { count: 2 }] }),
+    );
+  });
+
+  test('should clear previous timeout and reset it on repeated event', () => {
+    telemetry.aggregateTrack('eventY', { value: 'first' });
+
+    const initialTimeout = telemetry.getAggregateTimeoutEvents().get('eventY')?.timeout;
+    telemetry.aggregateTrack('eventY', { value: 'second' });
+
+    const updatedTimeout = telemetry.getAggregateTimeoutEvents().get('eventY')?.timeout;
+    expect(initialTimeout).not.toBe(updatedTimeout);
+
+    vi.runAllTimers();
+    expect(internalTrackSpy).toBeCalledWith('eventY', { aggregated: [{ value: 'first' }, { value: 'second' }] });
+  });
+
+  test('should use default delay if not provided', async () => {
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+    telemetry.aggregateTrack('eventZ', { key: 'val' });
+    vi.runAllTimers();
+    await vi.waitFor(() => expect(setTimeoutSpy).toBeCalledWith(expect.any(Function), 10_000));
+  });
+
+  test('should respect custom delay', async () => {
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+    telemetry.aggregateTrack('eventZ', { key: 'val' }, 5000);
+    vi.runAllTimers();
+    await vi.waitFor(() => expect(setTimeoutSpy).toBeCalledWith(expect.any(Function), 5_000));
+  });
+
+  test('should overwrite non-array properties in pendingItems if malformed', () => {
+    telemetry.setTelemetryInitialized(false);
+    telemetry.getPendingItems().push({
+      eventName: 'badEvent',
+      properties: { unexpected: 'format' }, // malformed
+    });
+
+    telemetry.aggregateTrack('badEvent', { corrected: true });
+    expect(telemetry.getPendingItems().find(e => e.eventName === 'badEvent')?.properties).toEqual([
+      { corrected: true },
+    ]);
+  });
+
+  test('should skip event if telemetry is disabled', () => {
+    telemetry.setTelemetryEnabled(false);
+
+    telemetry.aggregateTrack('disabledEvent', { foo: 'bar' });
+
+    expect(telemetry.getAggregateTimeoutEvents().size).toBe(0);
+    expect(internalTrackSpy).not.toHaveBeenCalled();
+  });
+
+  test('should append properties to existing pending event when telemetry is not initialized', () => {
+    telemetry.setTelemetryInitialized(false);
+
+    // Push an initial pending item for the same event
+    telemetry.getPendingItems().push({
+      eventName: 'initEvent',
+      properties: [{ foo: 1 }],
+    });
+
+    telemetry.aggregateTrack('initEvent', { bar: 2 });
+
+    const pending = telemetry.getPendingItems().find(item => item.eventName === 'initEvent');
+    expect(pending).toBeDefined();
+    expect(Array.isArray(pending?.properties)).toBe(true);
+    expect(pending?.properties).toEqual([{ foo: 1 }, { bar: 2 }]);
   });
 });
