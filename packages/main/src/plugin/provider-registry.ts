@@ -224,7 +224,7 @@ export class ProviderRegistry {
     if (providerOptions.version) {
       trackOpts.version = providerOptions.version;
     }
-    this.telemetryService.track('createProvider', trackOpts);
+    this.telemetryService.aggregateTrack('createProviders', trackOpts);
     this.apiSender.send('provider-create', id);
     providerImpl.onDidUpdateVersion(() => this.apiSender.send('provider:update-version'));
     return providerImpl;

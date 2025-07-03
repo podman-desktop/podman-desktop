@@ -78,6 +78,7 @@ class TestProviderRegistry extends ProviderRegistry {
 
 const telemetry: Telemetry = {
   track: vi.fn(),
+  aggregateTrack: vi.fn(),
 } as unknown as Telemetry;
 
 beforeEach(() => {
@@ -124,7 +125,7 @@ test('should initialize provider if there is kubernetes connection provider', as
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
 
-    expect(telemetry.track).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
@@ -152,7 +153,7 @@ test('should initialize provider if there is VM connection provider', async () =
 
   await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetry.track).toHaveBeenNthCalledWith(1, 'createProvider', {
+  expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
     name: 'internal',
     status: 'installed',
   });
@@ -190,7 +191,7 @@ test('should send version event if update', async () => {
   if (providerInternalId) {
     await providerRegistry.updateProvider(providerInternalId);
 
-    expect(telemetry.track).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
@@ -228,7 +229,7 @@ test('should initialize provider if there is container connection provider', asy
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
 
-    expect(telemetry.track).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
