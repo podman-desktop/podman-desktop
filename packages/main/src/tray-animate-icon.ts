@@ -16,10 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { Tray } from 'electron';
-import { app, nativeTheme } from 'electron';
+import { app, nativeImage, nativeTheme } from 'electron';
 
 import { isLinux, isMac } from './util.js';
 
@@ -47,17 +48,48 @@ export class AnimatedTray {
     return import.meta.env.PROD;
   }
 
+  /**
+   * Retrieves the path to the assets folder based on the current environment.
+   * In production, the assets folder is located within the app bundle, while in development, it is located in the project root directory.
+   *
+   * @return {string} The absolute path to the assets folder.
+   */
   protected getAssetsFolder(): string {
-    return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    return this.isProd()
+      ? path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER)
+      : path.resolve(process.cwd(), AnimatedTray.MAIN_ASSETS_FOLDER);
   }
 
+  /**
+   * Animates the tray icon by cycling through predefined steps and updating the image displayed in the tray.
+   * If an error occurs during the animation, the animation loop will be stopped to prevent continuous failures.
+   * If the `tray` instance is not set, the method will log a warning and exit without performing any animation.
+   *
+   * @return {void} No return value.
+   */
   protected animateTrayIcon(): void {
+    if (!this.tray) {
+      console.warn('Cannot animate tray icon: tray is not set');
+      return;
+    }
+
     if (this.trayIconLoopId === 4) {
       this.trayIconLoopId = 0;
     }
-    const imagePath = this.getIconPath(`step${this.trayIconLoopId}`);
-    this.trayIconLoopId++;
-    this.tray?.setImage(imagePath);
+
+    try {
+      const image = this.createTrayImage(`step${this.trayIconLoopId}`);
+      this.tray.setImage(image);
+      this.trayIconLoopId++;
+    } catch (error) {
+      console.error(`Failed to animate tray icon at step ${this.trayIconLoopId}:`, error);
+
+      // Stop animation on error to prevent continuous failures.
+      if (this.animatedInterval) {
+        clearInterval(this.animatedInterval);
+        this.animatedInterval = undefined;
+      }
+    }
   }
 
   public setTray(tray: Tray): void {
@@ -72,7 +104,13 @@ export class AnimatedTray {
     this.updateIcon();
   }
 
-  // provide the path to the icon depending on theme and platform
+  /**
+   * Determines the file path for an icon based on its name and user/system preferences.
+   *
+   * @param {string} iconName - The name of the icon to retrieve the path for.
+   *                            Use 'default' to indicate the base icon.
+   * @return {string} The fully resolved file path of the requested icon based on preferences.
+   */
   protected getIconPath(iconName: string): string {
     let name;
     if (iconName === 'default') {
@@ -80,32 +118,103 @@ export class AnimatedTray {
     } else {
       name = `-${iconName}`;
     }
-    let suffix = '';
-    // on Linux, always pickup dark icon
-    if (isLinux()) {
-      suffix = 'Dark';
-    } else if (isMac()) {
-      // on Mac, always pickup template icon
-      suffix = 'Template';
-    } else {
-      // check based from the theme using electron nativeTheme
-      if (nativeTheme.shouldUseDarkColors) {
-        suffix = 'Dark';
-      } else {
-        suffix = 'Template';
-      }
-    }
 
-    // Regardless what is the theme, if the user has set the color to light, we use the light icon, same as dark, etc.
+    // Determine suffix based on user preference first, then platform defaults.
+    let suffix: string;
+
+    // User preference takes precedence.
     if (this.color === 'light') {
       suffix = 'Template';
     } else if (this.color === 'dark') {
       suffix = 'Dark';
+    } else {
+      // No user preference, use platform defaults.
+      if (isLinux()) {
+        suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
+      } else if (isMac()) {
+        suffix = 'Template'; // macOS uses template images that adapt to the menu bar
+      } else {
+        suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // windows: check system theme.
+      }
     }
 
     return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
   }
 
+  /**
+   * Creates a tray image by loading the specified icon in normal and high resolution.
+   * Falls back to a default empty icon if the specified files are not found or an error occurs.
+   *
+   * @param {string} iconName - The name of the icon file (without the path).
+   * @return {Electron.NativeImage} The created tray image, including representations for normal and high resolutions.
+   */
+  protected createTrayImage(iconName: string): Electron.NativeImage {
+    const basePath = this.getIconPath(iconName);
+    const retinaPath = basePath.replace('.png', '@2x.png');
+
+    let image = nativeImage.createEmpty();
+    let hasLoadedImage = false;
+
+    try {
+      // Add normal resolution (1x).
+      if (fs.existsSync(basePath)) {
+        image.addRepresentation({
+          scaleFactor: 1.0,
+          buffer: fs.readFileSync(basePath),
+        });
+
+        hasLoadedImage = true;
+      } else {
+        console.warn(`Tray icon not found at 1x resolution: ${basePath}`);
+      }
+
+      // Add high resolution (2x) for retina displays.
+      if (fs.existsSync(retinaPath)) {
+        image.addRepresentation({
+          scaleFactor: 2.0,
+          buffer: fs.readFileSync(retinaPath),
+        });
+
+        hasLoadedImage = true;
+      } else {
+        console.warn(`Tray icon not found at 2x resolution: ${retinaPath}`);
+      }
+
+      // If no images were loaded, try to create a fallback.
+      if (!hasLoadedImage) {
+        console.error(`No tray icons found for: ${iconName}`);
+
+        // Try to use a default empty icon as fallback.
+        const fallbackPath = this.getIconPath('empty');
+
+        if (fs.existsSync(fallbackPath)) {
+          image = nativeImage.createFromPath(fallbackPath);
+          console.warn(`Using fallback empty icon from: ${fallbackPath}`);
+        } else {
+          // If even the fallback doesn't exist, create a minimal 16x16 transparent image.
+          const buffer = Buffer.alloc(16 * 16 * 4); // 16x16 RGBA
+          image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
+          console.error('Created minimal transparent fallback icon');
+        }
+      }
+    } catch (error) {
+      console.error(`Error loading tray icon: ${error}`);
+
+      // Create a minimal transparent fallback image.
+      const buffer = Buffer.alloc(16 * 16 * 4); // 16x16 RGBA
+      image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
+    }
+
+    return image;
+  }
+
+  /**
+   * Updates the tray icon and tooltip based on the current status of the application.
+   * The method handles different statuses such as 'initialized', 'error', 'ready', and 'updating'.
+   * It also manages any necessary icon animation intervals.
+   *
+   * @return {void} Does not return a value.
+   */
   protected updateIcon(): void {
     // do nothing until we have a tray
     if (!this.tray) {
@@ -115,24 +224,30 @@ export class AnimatedTray {
     // stop any existing interval
     if (this.animatedInterval) {
       clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
     }
-    switch (this.status) {
-      case 'initialized':
-        this.tray.setImage(this.getIconPath('empty'));
-        this.tray.setToolTip('Podman Desktop is initialized');
-        break;
-      case 'error':
-        this.tray.setImage(this.getIconPath('error'));
-        this.tray.setToolTip('Podman Desktop has an error');
-        break;
-      case 'ready':
-        this.tray.setImage(this.getIconPath('default'));
-        this.tray.setToolTip('Podman Desktop is ready');
-        break;
-      case 'updating':
-        this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
-        this.tray.setToolTip('Podman Desktop: resources are being updated');
-        break;
+
+    try {
+      switch (this.status) {
+        case 'initialized':
+          this.tray.setImage(this.createTrayImage('empty'));
+          this.tray.setToolTip('Podman Desktop is initialized');
+          break;
+        case 'error':
+          this.tray.setImage(this.createTrayImage('error'));
+          this.tray.setToolTip('Podman Desktop has an error');
+          break;
+        case 'ready':
+          this.tray.setImage(this.createTrayImage('default'));
+          this.tray.setToolTip('Podman Desktop is ready');
+          break;
+        case 'updating':
+          this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
+          this.tray.setToolTip('Podman Desktop: resources are being updated');
+          break;
+      }
+    } catch (error) {
+      console.error(`Failed to update tray icon for status '${this.status}':`, error);
     }
   }
 
