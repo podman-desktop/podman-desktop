@@ -18,17 +18,19 @@
 
 import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
+import { inject, injectable } from 'inversify';
 
 import type { Event } from '/@api/event.js';
 
 import { Emitter } from '../events/emitter.js';
-import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { IDisposable } from '../types/disposable.js';
 import type { AnalyzedExtension } from './extension-analyzer.js';
 import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';
 
 // In charge of watching the extension and reloading it when it changes
+@injectable()
 export class ExtensionWatcher implements IDisposable {
   #watcherExtensions: Map<string, FileSystemWatcher>;
 
@@ -39,7 +41,7 @@ export class ExtensionWatcher implements IDisposable {
   #onNeedToReloadExtension = new Emitter<AnalyzedExtension>();
   readonly onNeedToReloadExtension: Event<AnalyzedExtension> = this.#onNeedToReloadExtension.event;
 
-  constructor(fileSystemMonitoring: FilesystemMonitoring) {
+  constructor(@inject(FilesystemMonitoring) fileSystemMonitoring: FilesystemMonitoring) {
     this.#fileSystemMonitoring = fileSystemMonitoring;
     this.#watcherExtensions = new Map<string, FileSystemWatcher>();
     this.#reloadExtensionTimeouts = new Map<string, NodeJS.Timeout>();

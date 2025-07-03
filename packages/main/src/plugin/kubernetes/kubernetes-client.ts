@@ -66,6 +66,7 @@ import {
 } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware.js';
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
 import type { WebSocket } from 'ws';
 import type { Tags } from 'yaml';
@@ -73,7 +74,7 @@ import { parseAllDocuments } from 'yaml';
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
@@ -84,10 +85,10 @@ import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
-import type { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
-import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
+import { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import { Telemetry } from '../telemetry/telemetry.js';
 import { Uri } from '../types/uri.js';
 import { ContextsManager } from './contexts-manager.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
@@ -166,6 +167,7 @@ export interface PodCreationSource {
 /**
  * Handle calls to kubernetes API
  */
+@injectable()
 export class KubernetesClient {
   protected kubeConfig;
 
@@ -204,9 +206,13 @@ export class KubernetesClient {
   > = new Map();
 
   constructor(
+    @inject(ApiSenderType)
     private readonly apiSender: ApiSenderType,
+    @inject(IConfigurationRegistry)
     private readonly configurationRegistry: IConfigurationRegistry,
+    @inject(FilesystemMonitoring)
     private readonly fileSystemMonitoring: FilesystemMonitoring,
+    @inject(Telemetry)
     private readonly telemetry: Telemetry,
   ) {
     this.kubeConfig = new KubeConfig();

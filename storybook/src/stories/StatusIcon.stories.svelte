@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
 import { StatusIcon } from '@podman-desktop/ui-svelte';
 import ContainerIcon from '@podman-desktop/ui-svelte/icons/ContainerIcon';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `StatusIcon` component.
@@ -9,14 +9,11 @@ import { type Args, defineMeta, setTemplate, type StoryContext } from '@storyboo
  */
 const { Story } = defineMeta({
   component: StatusIcon,
+  render: template,
   title: 'StatusIcon',
   tags: ['autodocs'],
   args: {},
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

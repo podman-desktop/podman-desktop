@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
  ***********************************************************************/
 
 import type { Event, ProxySettings } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 import { ProxyAgent } from 'undici';
 
-import type { Certificates } from '/@/plugin/certificates.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { Certificates } from '/@/plugin/certificates.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import { Emitter } from './events/emitter.js';
@@ -54,6 +55,7 @@ function asURL(url: unknown): URL {
 /**
  * Handle proxy settings for Podman Desktop
  */
+@injectable()
 export class Proxy {
   private proxySettings: ProxySettings | undefined;
   private proxyState: ProxyState = ProxyState.PROXY_SYSTEM;
@@ -65,7 +67,9 @@ export class Proxy {
   public readonly onDidStateChange: Event<boolean> = this._onDidStateChange.event;
 
   constructor(
+    @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(Certificates)
     private certificates: Certificates,
   ) {}
 

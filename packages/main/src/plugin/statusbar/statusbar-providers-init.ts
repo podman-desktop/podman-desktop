@@ -16,10 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { inject, injectable } from 'inversify';
 
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+
+@injectable()
 export class StatusbarProvidersInit {
-  constructor(private configurationRegistry: IConfigurationRegistry) {}
+  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
   init(): void {
     const statusbarProvidersConfiguration: IConfigurationNode = {

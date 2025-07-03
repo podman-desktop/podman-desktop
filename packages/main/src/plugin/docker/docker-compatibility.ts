@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,20 @@
 import { promises } from 'node:fs';
 
 import Dockerode from 'dockerode';
+import { inject, injectable } from 'inversify';
 
 import { isMac, isWindows } from '/@/util.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
-import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import {
+  DockerCompatibilitySettings,
+  type DockerSocketMappingStatusInfo,
+  type DockerSocketServerInfoType,
+} from '/@api/docker-compatibility-info.js';
 
 import type { LibPod } from '../dockerode/libpod-dockerode.js';
-import type { ProviderRegistry } from '../provider-registry.js';
+import { ProviderRegistry } from '../provider-registry.js';
 
+@injectable()
 export class DockerCompatibility {
   static readonly WINDOWS_NPIPE = '//./pipe/docker_engine';
   static readonly UNIX_SOCKET_PATH = '/var/run/docker.sock';
@@ -39,7 +44,10 @@ export class DockerCompatibility {
 
   #providerRegistry: ProviderRegistry;
 
-  constructor(configurationRegistry: IConfigurationRegistry, providerRegistry: ProviderRegistry) {
+  constructor(
+    @inject(IConfigurationRegistry) configurationRegistry: IConfigurationRegistry,
+    @inject(ProviderRegistry) providerRegistry: ProviderRegistry,
+  ) {
     this.#configurationRegistry = configurationRegistry;
     this.#providerRegistry = providerRegistry;
   }

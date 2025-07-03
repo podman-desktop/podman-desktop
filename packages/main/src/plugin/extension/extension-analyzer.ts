@@ -21,6 +21,7 @@ import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 export interface AnalyzedExtension {
   id: string;
@@ -55,6 +56,7 @@ export interface AnalyzedExtension {
   dispose(): void;
 }
 
+@injectable()
 export class ExtensionAnalyzer {
   async analyzeExtension(extensionPath: string, removable: boolean, devMode: boolean): Promise<AnalyzedExtension> {
     const resolvedExtensionPath = await realpath(extensionPath);

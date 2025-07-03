@@ -27,10 +27,11 @@ import type {
   Event,
   ProviderImages,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import { Emitter } from './events/emitter.js';
-import type { MessageBox } from './message-box.js';
+import { MessageBox } from './message-box.js';
 
 /**
  * Structure to save authentication provider information
@@ -95,6 +96,7 @@ export interface AuthenticationSessionMenuInfo {
   sessionId: string;
 }
 
+@injectable()
 export class AuthenticationImpl {
   async getAccountsMenuInfo(): Promise<MenuInfo[]> {
     const requestsMenuInfo: MenuInfo[] = this.getSessionRequests().reduce((prev: MenuInfo[], current) => {
@@ -132,7 +134,9 @@ export class AuthenticationImpl {
   private _accountUsageData: AccountUsageRecord[] = [];
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(MessageBox)
     private messageBox: MessageBox,
   ) {}
 

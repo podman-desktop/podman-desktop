@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,11 @@ import type {
   ImageChecks,
   ImageInfo,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '/@api/image-checker-info.js';
 
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 
 export interface ImageCheckerProviderWithMetadata {
   id: string;
@@ -35,13 +36,14 @@ export interface ImageCheckerProviderWithMetadata {
   provider: ImageCheckerProvider;
 }
 
+@injectable()
 export class ImageCheckerImpl {
   private _imageCheckerProviders: Map<string, ImageCheckerProviderWithMetadata> = new Map<
     string,
     ImageCheckerProviderWithMetadata
   >();
 
-  constructor(private apiSender: ApiSenderType) {}
+  constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   registerImageCheckerProvider(
     extensionInfo: ImageCheckerExtensionInfo,

@@ -47,6 +47,7 @@ import type Dockerode from 'dockerode';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
+import { Container } from 'inversify';
 
 import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -128,7 +129,7 @@ import type { WebviewInfo } from '/@api/webview-info.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
 import { isMac } from '../util.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import type { PodInfo, PodInspectInfo } from './api/pod-info.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
@@ -455,6 +456,8 @@ export class PluginSystem {
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
+    const container = new Container();
+    container.bind(ApiSenderType).toConstantValue(apiSender);
 
     const iconRegistry = new IconRegistry(apiSender);
     const directories = new Directories();

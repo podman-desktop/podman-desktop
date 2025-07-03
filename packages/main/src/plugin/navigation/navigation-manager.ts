@@ -17,34 +17,43 @@
  ***********************************************************************/
 
 import type { ProviderContainerConnection } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
-import type { CommandRegistry } from '/@/plugin/command-registry.js';
-import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
-import type { ContributionManager } from '/@/plugin/contribution-manager.js';
-import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { ApiSenderType } from '/@/plugin/api.js';
+import { CommandRegistry } from '/@/plugin/command-registry.js';
+import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import { ContributionManager } from '/@/plugin/contribution-manager.js';
+import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
 
-import type { ProviderRegistry } from '../provider-registry.js';
+import { ProviderRegistry } from '../provider-registry.js';
 import { Disposable } from '../types/disposable.js';
-import type { WebviewRegistry } from '../webview/webview-registry.js';
+import { WebviewRegistry } from '../webview/webview-registry.js';
 
 export interface NavigationRoute {
   routeId: string;
   commandId: string;
 }
 
+@injectable()
 export class NavigationManager {
   #registry: Map<string, NavigationRoute>;
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ContainerProviderRegistry)
     private containerRegistry: ContainerProviderRegistry,
+    @inject(ContributionManager)
     private contributionManager: ContributionManager,
+    @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
+    @inject(WebviewRegistry)
     private webviewRegistry: WebviewRegistry,
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
+    @inject(OnboardingRegistry)
     private onboardingRegistry: OnboardingRegistry,
   ) {
     this.#registry = new Map();

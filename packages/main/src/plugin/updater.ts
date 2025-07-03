@@ -28,25 +28,27 @@ import {
   type UpdateInfo,
 } from 'electron-updater';
 import { getAppCacheDir } from 'electron-updater/out/AppAdapter.js';
+import { inject, injectable } from 'inversify';
 import { compare, valid } from 'semver';
 
-import type { CommandRegistry } from '/@/plugin/command-registry.js';
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { CommandRegistry } from '/@/plugin/command-registry.js';
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { UPDATER_UPDATE_AVAILABLE_ICON } from '/@/plugin/index.js';
-import type { MessageBox } from '/@/plugin/message-box.js';
-import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
+import { MessageBox } from '/@/plugin/message-box.js';
+import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
 import rootPackage from '../../../../package.json' with { type: 'json' };
-import type { ApiSenderType } from './api.js';
-import type { TaskManager } from './tasks/task-manager.js';
+import { ApiSenderType } from './api.js';
+import { TaskManager } from './tasks/task-manager.js';
 
 /**
  * Represents an updater utility for Podman Desktop.
  */
+@injectable()
 export class Updater {
   #currentVersion: string;
   #nextVersion: string | undefined;
@@ -58,11 +60,17 @@ export class Updater {
   #downloadTask: Task | undefined;
 
   constructor(
+    @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(StatusBarRegistry)
     private statusBarRegistry: StatusBarRegistry,
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
+    @inject(TaskManager)
     private taskManager: TaskManager,
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {
     this.#currentVersion = `v${app.getVersion()}`;

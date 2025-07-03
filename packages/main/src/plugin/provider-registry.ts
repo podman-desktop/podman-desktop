@@ -53,6 +53,7 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
 import type { Event } from '/@api/event.js';
 import type {
@@ -66,13 +67,13 @@ import type {
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
-import type { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerProviderRegistry } from './container-registry.js';
 import { Emitter } from './events/emitter.js';
 import { LifecycleContextImpl, LoggerImpl } from './lifecycle-context.js';
 import { ProviderImpl } from './provider-impl.js';
-import type { Telemetry } from './telemetry/telemetry.js';
+import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
 export type ProviderEventListener = (name: string, providerInfo: ProviderInfo) => void;
@@ -91,6 +92,7 @@ export type ContainerConnectionProviderLifecycleListener = (
  * Manage creation of providers and their lifecycle.
  * subscribe to events to get notified about provider creation and lifecycle changes.
  */
+@injectable()
 export class ProviderRegistry {
   private count = 0;
   private providers: Map<string, ProviderImpl>;
@@ -156,8 +158,11 @@ export class ProviderRegistry {
     this._onDidRegisterContainerConnection.event;
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ContainerProviderRegistry)
     private containerRegistry: ContainerProviderRegistry,
+    @inject(Telemetry)
     private telemetryService: Telemetry,
   ) {
     this.providers = new Map();
