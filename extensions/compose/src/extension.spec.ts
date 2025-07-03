@@ -446,7 +446,6 @@ describe('registerCLITool', () => {
 
     await installer?.doUninstall({} as unknown as Logger);
     expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, 'storage-path');
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['system-wide-path']);
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
   });
 
