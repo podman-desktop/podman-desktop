@@ -224,17 +224,8 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
-    <Table
-      kind="pod"
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={pods}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Name"
-      on:update={(): PodInfoUI[] => (pods = pods)}>
-    </Table>
 
-    {#if $filtered.length === 0 && providerConnections.length === 0}
+    {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
     {:else if $filtered.length === 0}
       {#if searchTerm}
@@ -249,6 +240,16 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
       {:else}
         <PodEmptyScreen />
       {/if}
+    {:else}
+      <Table
+        kind="pod"
+        bind:selectedItemsNumber={selectedItemsNumber}
+        data={pods}
+        columns={columns}
+        row={row}
+        defaultSortColumn="Name"
+        on:update={(): PodInfoUI[] => (pods = pods)}>
+      </Table>
     {/if}
   </div>
   {/snippet}

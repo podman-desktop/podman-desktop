@@ -23,6 +23,7 @@ import { tmpdir } from 'node:os';
 import type { PullEvent } from '@podman-desktop/api';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
+import { Container } from 'inversify';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -32,11 +33,11 @@ import type { ProviderInfo } from '/@api/provider-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
-import type { ConfigurationRegistry } from './configuration-registry.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
-import type { Directories } from './directories.js';
+import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -54,12 +55,14 @@ let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {
   override initConfigurationRegistry(
-    apiSender: ApiSenderType,
-    directories: Directories,
+    container: Container,
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
   ): ConfigurationRegistry {
-    return super.initConfigurationRegistry(apiSender, directories, notifications, configurationRegistryEmitter);
+    if (!container.isBound(ConfigurationRegistry)) {
+      container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
+    }
+    return super.initConfigurationRegistry(container, notifications, configurationRegistryEmitter);
   }
 }
 
@@ -313,9 +316,12 @@ test('configurationRegistry propagated', async () => {
   } as unknown as Directories;
   const notifications: NotificationCardOptions[] = [];
 
+  const container = new Container();
+  container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
+  container.bind<Directories>(Directories).toConstantValue(directoriesMock);
+
   const configurationRegistry = pluginSystem.initConfigurationRegistry(
-    apiSenderMock,
-    directoriesMock,
+    container,
     notifications,
     configurationRegistryEmitter,
   );

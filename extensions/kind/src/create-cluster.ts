@@ -223,9 +223,9 @@ export async function createCluster(
       },
     );
 
-    // Wait at most 5s for Podman Desktop to recognize the change to kubeconfig
+    // Wait at most 30s for Podman Desktop to recognize the change to kubeconfig
     let timeout = 0;
-    while (!kubeconfigUpdated && timeout < 50) {
+    while (!kubeconfigUpdated && timeout < 300) {
       await new Promise(f => setTimeout(f, 100));
       timeout++;
     }

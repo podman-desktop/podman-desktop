@@ -161,6 +161,7 @@ test('terminal active/ restarts connection after stopping and starting a provide
   } as unknown as ProviderContainerConnectionInfo;
 
   let onDataCallback: (data: string) => void = () => {};
+  let onEndCallback: () => void = () => {};
 
   const sendCallbackId = 12345;
   shellInProviderConnectionMock.mockImplementation(
@@ -172,13 +173,14 @@ test('terminal active/ restarts connection after stopping and starting a provide
       onEnd: () => void,
     ) => {
       onDataCallback = onData;
-      setTimeout(() => {
-        onEnd();
-      }, 500);
+      onEndCallback = onEnd;
       // return a callback id
       return Promise.resolve(sendCallbackId);
     },
   );
+
+  shellInProviderConnectionCloseMock.mockResolvedValue(undefined);
+  shellInProviderConnectionResizeMock.mockResolvedValue(undefined);
 
   // render the component with a terminal
   const renderObject = render(PreferencesConnectionDetailsTerminal, {
@@ -188,7 +190,10 @@ test('terminal active/ restarts connection after stopping and starting a provide
   });
 
   // wait shellInProviderMock is called
-  await waitFor(() => expect(shellInProviderConnectionMock).toHaveBeenCalled());
+  await waitFor(() => {
+    expect(shellInProviderConnectionMock).toHaveBeenCalled();
+    expect(shellInProviderConnectionResizeMock).toHaveBeenCalled();
+  });
 
   // write some data on the terminal
   onDataCallback('hello\nworld');
@@ -201,9 +206,16 @@ test('terminal active/ restarts connection after stopping and starting a provide
   // check the content
   await waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'));
 
-  await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
-
   connectionInfo.status = 'stopped';
+
+  onEndCallback();
+
+  await waitFor(() => {
+    expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2);
+    expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(1);
+  });
+
+  await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
 
   await waitFor(() => expect(screen.queryByText('Provider engine is not running')).toBeInTheDocument());
 
@@ -215,5 +227,12 @@ test('terminal active/ restarts connection after stopping and starting a provide
 
   await renderObject.rerender({ provider, connectionInfo, screenReaderMode: true });
 
-  await waitFor(() => expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(2), { timeout: 2000 });
+  await waitFor(
+    () => {
+      expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(3);
+      expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(2);
+      expect(shellInProviderConnectionResizeMock).toHaveBeenCalledTimes(2);
+    },
+    { timeout: 2000 },
+  );
 });

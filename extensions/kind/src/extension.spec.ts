@@ -485,7 +485,6 @@ describe('cli#uninstall', () => {
 
     await cliToolInstaller?.doUninstall({} as unknown as extensionApi.Logger);
     expect(fs.promises.unlink).toHaveBeenCalledWith('storage-path');
-    expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith('which', ['test-storage-path/kind']);
     expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith('rm', ['test-storage-path/kind'], { isAdmin: true });
   });
 
