@@ -534,9 +534,6 @@ export class PluginSystem {
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
 
-    const experimentalFeatureFeedbackForm = new ExperimentalFeatureFeedbackForm(configurationRegistry, messageBox);
-    await experimentalFeatureFeedbackForm.init();
-
     // Don't show the tray icon options on Mac
     if (!isMac()) {
       container.bind<TrayIconColor>(TrayIconColor).toSelf().inSingletonScope();
@@ -741,6 +738,12 @@ export class PluginSystem {
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
 
     await this.setupSecurityRestrictionsOnLinks(messageBox);
+
+    container.bind<ExperimentalFeatureFeedbackForm>(ExperimentalFeatureFeedbackForm).toSelf().inSingletonScope();
+    const experimentalFeatureFeedbackForm = container.get<ExperimentalFeatureFeedbackForm>(
+      ExperimentalFeatureFeedbackForm,
+    );
+    await experimentalFeatureFeedbackForm.init();
 
     this.ipcHandle('tasks:clear-all', async (): Promise<void> => {
       return taskManager.clearTasks();
