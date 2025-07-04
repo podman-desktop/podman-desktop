@@ -754,6 +754,7 @@ describe.each([
 
 test.each([
   { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
+  { architecture: 'arm64', expectedProvider: VMTYPE.APPLEHV },
   { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
 ])('verify create on mac from settings on %s', async ({ architecture, expectedProvider }) => {
   vi.mocked(extensionApi.env).isMac = true;
