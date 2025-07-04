@@ -18,36 +18,37 @@
 
 import type containerDesktopAPI from '@podman-desktop/api';
 import { shell } from 'electron';
+import { inject, injectable } from 'inversify';
 
+import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
-import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { MessageBox } from './message-box.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
+import { MessageBox } from './message-box.js';
 
-// Pseudo infinity number for "don't show again" option
-// Aprox Wednesday, June 6, 2255
-const MAX_NUMBER: number = Number.MAX_SAFE_INTEGER;
-
-export type Timestamp = number | undefined | null;
+export type Timestamp = number | undefined | 'disabled';
 
 type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
+const DAYS_TO_MS = 24 * 60 * 60 * 1_000;
 
+@injectable()
 export class ExperimentalFeatureFeedbackForm {
   #disposables: IDisposable[] = [];
   #configuration: containerDesktopAPI.Configuration | undefined;
   #timestamps: Map<string, Timestamp> = new Map();
   #experimentalFeatures: Set<string> = new Set([]);
-  readonly #configurationRegistry: ConfigurationRegistry;
+  readonly #configurationRegistry: IConfigurationRegistry;
   constructor(
+    @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(MessageBox)
     private messageBox: MessageBox,
   ) {
     this.#configurationRegistry = this.configurationRegistry;
   }
 
   protected async save(): Promise<void> {
-    if (!this.#configuration) throw new Error('missing configuration object: cannot save');
-
+    if (!this.#configuration) throw new Error('Error while trying to save the experimental mode settings');
     await this.#configuration.update('timestamp', Object.fromEntries(this.#timestamps));
   }
 
@@ -82,6 +83,12 @@ export class ExperimentalFeatureFeedbackForm {
       this.#configurationRegistry.onDidChangeConfiguration(event => {
         // If configuration changed and if is experimenal feature
         if (this.#experimentalFeatures.has(event.key) && typeof event.value === 'boolean') {
+          // If we detect change, check if the timestamp for a feature does not have disabled value
+          // -> was previously selected "Don't show again"
+          if (this.#timestamps.has(event.key) && this.#timestamps.get(event.key) === 'disabled') {
+            return;
+          }
+
           // If value === true the feature is now enabled we want to schedule notification in 2 days
           // If value === false, the feature is disabled and we want to disable notification
           this.setTimestamp(event.key, event.value ? 2 : undefined);
@@ -107,16 +114,18 @@ export class ExperimentalFeatureFeedbackForm {
   /**
    * Updates timestamp for given experimental feature
    * @param feature in format feature.name
-   * @param days timeout in days
+   * @param days timeout in days, undefined -> disabled, 'disabled' -> "Don't show again" was selected
    */
-  protected setTimestamp(feature: string, days: number | undefined): void {
-    let date: undefined | number = undefined;
-    if (days) {
-      date = new Date(new Date().getTime() + days * 24 * 60 * 60 * 1000).getTime();
+  protected setTimestamp(feature: string, days: Timestamp): void {
+    let date: Timestamp = days;
+    if (typeof days === 'number') {
+      date = new Date(new Date().getTime() + days * DAYS_TO_MS).getTime();
     }
     // update configuration
     this.#timestamps.set(feature, date);
-    this.save().catch(console.error);
+    this.save().catch((e: unknown) =>
+      console.error(`Got error when saving timestamps for experimental features: ${e}`),
+    );
   }
 
   /**
@@ -135,7 +144,7 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   /**
-   * Formats id to better readable one
+   * Replaces dots by spaces and adds uppercase on each sequence
    * @param id in format feature.name
    * @returns nicely formated name e.g. feature Name
    */
@@ -146,16 +155,12 @@ export class ExperimentalFeatureFeedbackForm {
       .join(' ');
   }
 
-  /**
-   * Getter method for timestamps
-   * @returns timestamps
-   */
   protected getTimestampsMap(): Map<string, Timestamp> {
     return this.#timestamps;
   }
 
   /**
-   * Goes through each enabled experimenatl feature and shows dialog if current timestamp is greater than stored value
+   * Goes through each enabled experimental feature and shows dialog if current timestamp is greater than stored value
    */
   protected async showFeedbackDialog(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
@@ -165,7 +170,7 @@ export class ExperimentalFeatureFeedbackForm {
 
       // Compare timestamp of each experimental feature
       const date = new Date();
-      if (timestamp > date.getTime()) return;
+      if (!timestamp || timestamp === 'disabled' || timestamp > date.getTime()) return;
       const featureName = this.formatName(key);
       const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
       const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
@@ -201,19 +206,20 @@ export class ExperimentalFeatureFeedbackForm {
           }
           // Option from Dropdown was selected
           else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
-            let remindInDays;
             switch (options[response.dropdownIndex]) {
               case 'Remind me tomorrow':
-                remindInDays = 1;
+                this.setTimestamp(key, 1);
                 break;
               case 'Remind me in 2 days':
-                remindInDays = 2;
+                this.setTimestamp(key, 2);
                 break;
               case `Don't show again`:
               default:
-                remindInDays = MAX_NUMBER;
+                // Set all of the experimental features to disabled
+                this.#timestamps.forEach((_t, k) => {
+                  this.setTimestamp(k, 'disabled');
+                });
             }
-            this.setTimestamp(key, remindInDays);
           }
         })
         .catch(console.error);
