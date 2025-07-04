@@ -33,7 +33,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-const MAX_NUMBER: number = Number.MAX_SAFE_INTEGER;
 const features: Record<string, IConfigurationPropertyRecordedSchema> = {
   feature1: {
     title: 'feat.feature1',
@@ -68,7 +67,7 @@ const messageBox: MessageBox = {
 } as unknown as MessageBox;
 
 class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackForm {
-  override setTimestamp(feature: string, days: number | undefined): void {
+  override setTimestamp(feature: string, days: Timestamp): void {
     return super.setTimestamp(feature, days);
   }
 
@@ -174,6 +173,13 @@ describe('init', () => {
       capturedCallback({ key: 'regularFeature', value: true, scope: 'default' });
       expect(setTimestampSpy).not.toHaveBeenCalled();
     });
+
+    test('should NOT call setTimestamp for experimental feature with "disabled" value', async () => {
+      configurationGetMock.mockReturnValue({ feature1: 'disabled' });
+      await feedbackForm.init();
+      capturedCallback({ key: 'feature1', value: true, scope: 'default' });
+      expect(setTimestampSpy).not.toHaveBeenCalled();
+    });
   });
 });
 
@@ -213,6 +219,16 @@ describe('setTimestamp', () => {
 
     expect(setTimestampSpy).toHaveBeenCalledTimes(1);
     expect(setTimestampSpy).toHaveBeenCalledWith('feature1', undefined);
+  });
+
+  test('should set timestamp to disabled when "Dont show again" was selected', () => {
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+
+    feedbackForm.setTimestamp('feature1', 'disabled');
+
+    expect(setTimestampSpy).toHaveBeenCalledTimes(1);
+    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 'disabled');
   });
 });
 
@@ -296,6 +312,24 @@ describe('showFeedbackDialog', () => {
     expect(openExternalSpy).not.toHaveBeenCalled();
   });
 
+  test('should set timestamp for 2 days when user selects "Remind me in 2 days"', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { feature1: pastTimestamp };
+    configurationGetMock.mockReturnValue(existingTimestamps);
+
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
+      return Promise.resolve();
+    });
+    // For setting timestamps
+    await feedbackForm.init();
+
+    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 2);
+    expect(openExternalSpy).not.toHaveBeenCalled();
+  });
+
   test('should set a very large timestamp when user selects "Dont show again"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { feature1: pastTimestamp };
@@ -310,7 +344,7 @@ describe('showFeedbackDialog', () => {
     // For setting timestamps
     await feedbackForm.init();
 
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', MAX_NUMBER);
+    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 'disabled');
     expect(openExternalSpy).not.toHaveBeenCalled();
   });
 
