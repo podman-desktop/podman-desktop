@@ -199,7 +199,7 @@ test('should update provider', async () => {
 
   expect(fs.promises.writeFile).toHaveBeenCalledWith(
     podmanConfiguration.getContainersFileLocation(),
-    // should not contain provider
+    // should contain provider
     expect.stringContaining('provider = "libkrun"'),
   );
 });
