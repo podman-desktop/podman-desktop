@@ -592,6 +592,12 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
+async function isRootfulMachineInfo(machineInfo: MachineInfo): Promise<boolean | undefined> {
+  const machinesJSONList = (await getJSONMachineList()).list;
+  const machineJSON = machinesJSONList.find(machine => machine.Name === machineInfo.name);
+  return machineJSON ? isRootfulMachine(machineJSON) : undefined;
+}
+
 async function isRootfulMachine(machineJSON: MachineJSON): Promise<boolean> {
   let isRootful = false;
   try {
@@ -631,6 +637,7 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachineInfo(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -639,6 +646,10 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSize', machineInfo.diskSize);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -870,20 +881,26 @@ export async function registerProviderFor(
       });
     },
   };
-  //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac) {
+  //support edit only on MacOS and limited edit on Windows as Podman WSL is nop and generates errors
+  if (extensionApi.env.isMac || extensionApi.env.isWindows) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
       for (const key of Object.keys(params)) {
-        if (key === 'podman.machine.cpus') {
-          args.push('--cpus', params[key]);
-          effective = true;
-        } else if (key === 'podman.machine.memory') {
-          args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
-          effective = true;
-        } else if (key === 'podman.machine.diskSize') {
-          args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
+        if (extensionApi.env.isMac) {
+          if (key === 'podman.machine.cpus') {
+            args.push('--cpus', params[key]);
+            effective = true;
+          } else if (key === 'podman.machine.memory') {
+            args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
+            effective = true;
+          } else if (key === 'podman.machine.diskSize') {
+            args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
+            effective = true;
+          }
+        }
+        if (key === 'podman.machine.rootful') {
+          args.push(`--rootful=${params[key]}`);
           effective = true;
         }
       }
@@ -931,6 +948,7 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachineInfo(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -939,6 +957,10 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.cpusUsage', machineInfo.cpuUsage);
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);

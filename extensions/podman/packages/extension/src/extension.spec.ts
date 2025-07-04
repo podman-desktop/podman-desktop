@@ -1226,7 +1226,9 @@ test('ensure started machine reports default configuration', async () => {
         if (args?.[0] === 'machine' && args?.[1] === 'list') {
           resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
         } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({} as extensionApi.RunResult);
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
         } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
@@ -1244,6 +1246,7 @@ test('ensure started machine reports default configuration', async () => {
   expect(config.update).toHaveBeenNthCalledWith(4, 'machine.cpusUsage', 0);
   expect(config.update).toHaveBeenNthCalledWith(5, 'machine.memoryUsage', 0);
   expect(config.update).toHaveBeenNthCalledWith(6, 'machine.diskSizeUsage', 0);
+  expect(config.update).toHaveBeenNthCalledWith(7, 'machine.rootful', true);
 });
 
 test('ensure stopped machine reports stopped provider', async () => {
@@ -1346,7 +1349,9 @@ test('ensure started machine reports configuration', async () => {
         if (args?.[0] === 'machine' && args?.[1] === 'list') {
           resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
         } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({ stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name }]) } as unknown as extensionApi.RunResult);
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: false }]),
+          } as unknown as extensionApi.RunResult);
         } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
@@ -1373,6 +1378,7 @@ test('ensure started machine reports configuration', async () => {
   expect(config.update).toBeCalledWith('machine.cpusUsage', 1);
   expect(config.update).toBeCalledWith('machine.memoryUsage', 50);
   expect(config.update).toBeCalledWith('machine.diskSizeUsage', 20);
+  expect(config.update).toBeCalledWith('machine.rootful', false);
 });
 
 test('ensure stopped machine reports configuration', async () => {
@@ -1384,7 +1390,9 @@ test('ensure stopped machine reports configuration', async () => {
         if (args?.[0] === 'machine' && args?.[1] === 'list') {
           resolve({ stdout: JSON.stringify([fakeMachineJSON[1]]) } as extensionApi.RunResult);
         } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
-          resolve({} as extensionApi.RunResult);
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[1].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
         } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
           resolve({
             stdout: JSON.stringify([{ Name: fakeMachineJSON[1].Name, Default: true }]),
@@ -1402,6 +1410,7 @@ test('ensure stopped machine reports configuration', async () => {
   expect(config.update).toBeCalledWith('machine.cpusUsage', 0);
   expect(config.update).toBeCalledWith('machine.memoryUsage', 0);
   expect(config.update).toBeCalledWith('machine.diskSizeUsage', 0);
+  expect(config.update).toBeCalledWith('machine.rootful', true);
 });
 
 test('ensure showNotification is not called during update', async () => {
@@ -1469,9 +1478,20 @@ test('provider is registered with edit capabilities on MacOS', async () => {
   vi.mocked(extensionApi.env).isMac = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+        }
+      }),
+  );
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
@@ -1486,9 +1506,20 @@ test('provider is registered with edit capabilities on MacOS', async () => {
 test('display name is beautified version of the name', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+        }
+      }),
+  );
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
@@ -1508,13 +1539,28 @@ test('display name is beautified version of the name', async () => {
   expect(registeredConnection?.name).toBe(machineDefaultName);
 });
 
-test('provider is registered without edit capabilities on Windows', async () => {
+test('provider is registered with limited edit capabilities on Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+        }
+      }),
+  );
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
@@ -1523,16 +1569,39 @@ test('provider is registered without edit capabilities on Windows', async () => 
   await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
-  expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+
+  await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
+    'podman.machine.cpus': 1,
+    'podman.machine.memory': 2,
+    'podman.machine.diskSize': 3,
+    'podman.machine.rootful': true,
+  });
+  expect(spyExecPromise).toBeCalledWith(
+    'podman.exe',
+    ['machine', 'set', machineInfo.name, '--rootful=true'],
+    expect.any(Object),
+  );
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
   vi.mocked(extensionApi.env).isLinux = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+        }
+      }),
+  );
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
