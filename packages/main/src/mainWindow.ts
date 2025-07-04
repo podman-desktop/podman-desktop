@@ -254,6 +254,5 @@ function isStartedMinimize(): boolean {
   // We convert to string only because sometimes [node] will be the first argument in a packaged
   // environment, so instead of checking each element, simply convert to string and see if --minimize was included.
   const argv = process.argv.toString();
-  console.log(process.argv0);
   return argv.includes('--minimize');
 }
