@@ -203,7 +203,7 @@ const onboardingRegistry: OnboardingRegistry = {
 } as unknown as OnboardingRegistry;
 
 const telemetryTrackMock = vi.fn();
-const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
+const telemetry: Telemetry = { aggregateTrack: vi.fn(), track: telemetryTrackMock } as unknown as Telemetry;
 
 const viewRegistry: ViewRegistry = {} as unknown as ViewRegistry;
 
@@ -2239,7 +2239,7 @@ describe('extensionContext', async () => {
 
     expect(extensionContext).toBeDefined();
     expect(extensionContext?.secrets).toBeDefined();
-    expect(telemetry.track).toBeCalledWith('activateExtension', {
+    expect(telemetry.aggregateTrack).toBeCalledWith('activateExtensions', {
       extensionId: 'fooPublisher.fooName',
       extensionVersion: '1.0',
       duration: expect.any(Number),

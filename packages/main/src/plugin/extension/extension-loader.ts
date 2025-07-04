@@ -1717,7 +1717,7 @@ export class ExtensionLoader {
       // Storing error in the telemetry options
       telemetryOptions['error'] = err;
     } finally {
-      this.telemetry.track('activateExtension', telemetryOptions);
+      this.telemetry.aggregateTrack('activateExtensions', telemetryOptions);
     }
   }
 
