@@ -64,6 +64,8 @@ export type EventType =
  */
 @injectable()
 export class Telemetry {
+  public static readonly DEFAULT_DELAY_AGGREGATE = 10_000; // 10 seconds
+
   private static readonly SEGMENT_KEY = 'Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy';
 
   private cachedTelemetrySettings: TelemetryRule[] | undefined;
@@ -353,7 +355,7 @@ export class Telemetry {
    * @param eventProperties all properties that will be aggregated into an array and be sent after the delay if there is no other event received during this time window
    * @param delay the delay in milliseconds before sending the aggregated event, default is 10 seconds
    */
-  aggregateTrack(event: EventType, eventProperties?: unknown, delay: number = 10_000): void {
+  aggregateTrack(event: EventType, eventProperties?: unknown, delay: number = Telemetry.DEFAULT_DELAY_AGGREGATE): void {
     // skip event ?
     if (this.shouldDropEvent(event)) {
       return;

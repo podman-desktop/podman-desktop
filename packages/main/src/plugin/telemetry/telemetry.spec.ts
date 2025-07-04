@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -317,7 +317,9 @@ describe('aggregateTrack', () => {
     const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
     telemetry.aggregateTrack('eventZ', { key: 'val' });
     vi.runAllTimers();
-    await vi.waitFor(() => expect(setTimeoutSpy).toBeCalledWith(expect.any(Function), 10_000));
+    await vi.waitFor(() =>
+      expect(setTimeoutSpy).toBeCalledWith(expect.any(Function), Telemetry.DEFAULT_DELAY_AGGREGATE),
+    );
   });
 
   test('should respect custom delay', async () => {
