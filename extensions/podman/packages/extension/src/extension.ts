@@ -31,6 +31,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { HyperVCheck } from './checks/hyperv-check';
+import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { WSLVersionCheck } from './checks/wsl-version-check';
 import { WSL2Check } from './checks/wsl2-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
@@ -1858,6 +1859,18 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     });
   }
 
+  const podmanCheck = new MacPodmanInstallCheck().execute();
+  // If is podman check not successful => installed with brew (does not contain krunkit & libkrun)
+  if (!(await podmanCheck).successful) {
+    const krunKitCheck = new MacKrunkitPodmanMachineCreationCheck().execute();
+    if (!(await krunKitCheck).successful) {
+      records.push({
+        type: 'warning',
+        record: `There is an problem finding 'krunkit' binary. Try to install it manualy, or install Podman from installer.`,
+      });
+    }
+  }
+
   const winProvider = items['podman.factory.machine.win.provider'];
   // set createWSLMachineOptionSelected if the user actively selected wsl from the list in the UI, or
   // if the list is not visible (so only one provider is active) and the provider is wsl
@@ -2165,7 +2178,13 @@ export async function createMachine(
 
   let provider: string | undefined;
   if (params['podman.factory.machine.provider'] && typeof params['podman.factory.machine.provider'] === 'string') {
-    provider = getProviderByLabel(params['podman.factory.machine.provider']);
+    if (os.arch() === 'x64') {
+      // Intel machine
+      provider = VMTYPE.APPLEHV;
+    } else {
+      provider = getProviderByLabel(params['podman.factory.machine.provider']);
+    }
+    await podmanConfiguration.updateMachineProviderSettings(provider as VMTYPE);
     telemetryRecords.provider = provider;
   } else if (
     params['podman.factory.machine.win.provider'] &&
@@ -2178,7 +2197,13 @@ export async function createMachine(
       provider = wslEnabled ? 'wsl' : 'hyperv';
       telemetryRecords.provider = provider;
     } else if (extensionApi.env.isMac) {
-      provider = 'applehv';
+      if (os.arch() === 'x64') {
+        // Intel machine
+        provider = VMTYPE.APPLEHV;
+      } else {
+        provider = VMTYPE.LIBKRUN;
+      }
+      await podmanConfiguration.updateMachineProviderSettings(provider as VMTYPE);
       telemetryRecords.provider = provider;
     }
   }
