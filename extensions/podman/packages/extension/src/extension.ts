@@ -88,7 +88,7 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
 
 // Telemetry
-let telemetryLogger: extensionApi.TelemetryLogger | undefined;
+let telemetryLogger: extensionApi.TelemetryLogger;
 
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
@@ -1380,7 +1380,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   initTelemetryLogger();
 
-  const podmanInstall = new PodmanInstall(extensionContext);
+  const podmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
 
   const installedPodman = await getPodmanInstallation();
   const version: string | undefined = installedPodman?.version;
@@ -2047,7 +2047,10 @@ export async function isWSLEnabled(): Promise<boolean> {
   if (!extensionApi.env.isWindows) {
     return false;
   }
-  const wslCheck = new SequenceCheck('WSL platform', [new WSLVersionCheck(), new WSL2Check()]);
+  const wslCheck = new SequenceCheck('WSL platform', [
+    new WSLVersionCheck(),
+    new WSL2Check(telemetryLogger, storedExtensionContext),
+  ]);
   const wslCheckResult = await wslCheck.execute();
   return wslCheckResult.successful;
 }
@@ -2056,7 +2059,7 @@ export async function isHyperVEnabled(): Promise<boolean> {
   if (!extensionApi.env.isWindows) {
     return false;
   }
-  const hyperVCheck = new HyperVCheck();
+  const hyperVCheck = new HyperVCheck(telemetryLogger);
   const hyperVCheckResult = await hyperVCheck.execute();
   return hyperVCheckResult.successful;
 }

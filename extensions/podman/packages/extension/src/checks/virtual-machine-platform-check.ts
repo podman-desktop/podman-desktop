@@ -24,8 +24,12 @@ import { BaseCheck } from './base-check';
 export class VirtualMachinePlatformCheck extends BaseCheck {
   title = 'Virtual Machine Platform Enabled';
 
+  constructor(private telemetryLogger: extensionApi.TelemetryLogger) {
+    super();
+  }
+
   protected async isVirtualMachineAvailable(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isVirtualMachineAvailable();
   }
 

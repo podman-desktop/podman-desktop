@@ -19,7 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { ExtensionContext, InstallCheck, RunError } from '@podman-desktop/api';
+import type { ExtensionContext, InstallCheck, RunError, TelemetryLogger } from '@podman-desktop/api';
 import { process as processAPI, ProgressLocation, window } from '@podman-desktop/api';
 
 import { OrCheck, SequenceCheck } from '../checks/base-check';
@@ -35,7 +35,10 @@ import { getAssetsFolder } from '../utils/util';
 import { BaseInstaller } from './base-installer';
 
 export class WinInstaller extends BaseInstaller {
-  constructor(private extensionContext: ExtensionContext) {
+  constructor(
+    private extensionContext: ExtensionContext,
+    private telemetryLogger: TelemetryLogger,
+  ) {
     super();
   }
 
@@ -51,11 +54,11 @@ export class WinInstaller extends BaseInstaller {
       new OrCheck(
         'Windows virtualization',
         new SequenceCheck('WSL platform', [
-          new VirtualMachinePlatformCheck(),
+          new VirtualMachinePlatformCheck(this.telemetryLogger),
           new WSLVersionCheck(),
-          new WSL2Check(this.extensionContext),
+          new WSL2Check(this.telemetryLogger, this.extensionContext),
         ]),
-        new HyperVCheck(true),
+        new HyperVCheck(this.telemetryLogger, true),
       ),
     ];
   }
