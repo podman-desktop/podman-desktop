@@ -11,6 +11,77 @@ Contributing to the Podman Desktop website is a valuable way to support the proj
 
 The below information outlines details on how to both contribute as well as our documentation "templates" and criteria.
 
+## Getting Started
+
+### Install the project dependencies
+
+```shell-session
+$ pnpm install
+```
+
+### Local Development of the website / documentation
+
+```shell-session
+$ pnpm start
+```
+
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+You may also run:
+
+```sh
+pnpm website:dev
+```
+
+Which will automatically open your browser to `localhost:3000`.
+
+### Build
+
+```shell-session
+$ pnpm build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+You may also build a "production-like" environment by using:
+
+```sh
+pnpm website:prod
+```
+
+### Deployment
+
+Using SSH:
+
+```shell-session
+$ USE_SSH=true pnpm deploy
+```
+
+Not using SSH:
+
+```shell-session
+$ GIT_USER=<Your GitHub username> pnpm deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+### Adding a Node.js module to the website
+
+1. Add the module in the `website` context:
+
+   ```shell-session
+   $ cd website
+   $ pnpm add <module>
+   ```
+
+2. Update the `pnpm-lock.yaml` file in the repository root context:
+
+   ```shell-session
+   $ cd ..
+   $ git checkout HEAD -- pnpm-lock.yaml
+   $ pnpm install
+   ```
+
 ## Folders
 
 Here is a brief description of the folders for the website of Podman Desktop and how they are organized.
@@ -61,7 +132,6 @@ If you want to include gifs and videos in your blog post, you'll need to import 
 
 Then in your blog post content use the following (and replace the URL):
 `<ReactPlayer playing playsinline controls url="path to your video file" width='100%' height='100%' />` 
-
 
 ## Documentation information
 
@@ -224,7 +294,7 @@ A template for describing a new feature being added for `package.json`. For exam
 
 <Brief explanation of the example>
 
-\`\`\`json
+```json
 {
 "<key>": {
 "<property>": "<value>",
@@ -233,7 +303,7 @@ A template for describing a new feature being added for `package.json`. For exam
 }
 }
 }
-\`\`\`
+```
 
 ### Advanced Configuration
 
@@ -243,11 +313,11 @@ A template for describing a new feature being added for `package.json`. For exam
 
 <More granular details or step-by-step breakdown>
 
-\`\`\`json
+```json
 {
 "<key>": "<example configuration>"
 }
-\`\`\`
+```
 
 <Explanation of what the JSON configuration achieves>
 
