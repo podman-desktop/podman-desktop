@@ -160,6 +160,7 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
+import { ExperimentalFeatureFeedbackForm } from './experimental-feature-feedback-form.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -737,6 +738,12 @@ export class PluginSystem {
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
 
     await this.setupSecurityRestrictionsOnLinks(messageBox);
+
+    container.bind<ExperimentalFeatureFeedbackForm>(ExperimentalFeatureFeedbackForm).toSelf().inSingletonScope();
+    const experimentalFeatureFeedbackForm = container.get<ExperimentalFeatureFeedbackForm>(
+      ExperimentalFeatureFeedbackForm,
+    );
+    await experimentalFeatureFeedbackForm.init();
 
     this.ipcHandle('tasks:clear-all', async (): Promise<void> => {
       return taskManager.clearTasks();
