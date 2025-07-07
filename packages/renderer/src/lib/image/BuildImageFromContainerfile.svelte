@@ -5,7 +5,6 @@ import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg
 import { type OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
-import { run } from 'svelte/legacy';
 import { get, type Unsubscriber } from 'svelte/store';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -289,7 +288,7 @@ async function abortBuild(): Promise<void> {
   buildImageInfo.buildRunning = false;
   buildImageInfo.buildFinished = true;
 }
-run(() => {
+$effect(() => {
   if (taskId && taskId !== buildImageInfo.taskId) {
     // switching previous task wich could be finished or still running
     if (buildImageInfo.buildImageKey) {
@@ -316,7 +315,7 @@ run(() => {
 let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
 let containerFilePath = $derived(buildImageInfo.containerFilePath);
 let containerBuildContextDirectory = $derived(buildImageInfo.containerBuildContextDirectory);
-run(() => {
+$effect(() => {
   if (containerFilePath && !containerBuildContextDirectory) {
     // select the parent directory of the file as default
     buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
@@ -330,7 +329,7 @@ let providerConnections = $derived(
     .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
 let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
-run(() => {
+$effect(() => {
   buildImageInfo.selectedProvider = selectedProvider;
 });
 let hasInvalidFields = $derived(
