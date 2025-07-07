@@ -173,7 +173,7 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
     name: build website
     runs-on: ubuntu-24.04
     steps:
