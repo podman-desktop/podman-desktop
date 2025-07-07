@@ -19,7 +19,7 @@ import {
   lastUpdatedTaskId,
 } from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
@@ -323,10 +323,10 @@ $effect(() => {
 });
 let containerImageName = $derived(buildImageInfo.containerImageName);
 let providerConnections = $derived(
-  providers
-    .map(provider => provider.containerConnections)
-    .flat()
-    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+  providers.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
+    return acc.concat(startedConnections);
+  }, []),
 );
 let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
 $effect(() => {
