@@ -288,6 +288,19 @@ async function abortBuild(): Promise<void> {
   buildImageInfo.buildRunning = false;
   buildImageInfo.buildFinished = true;
 }
+
+let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
+let containerFilePath = $derived(buildImageInfo.containerFilePath);
+let containerBuildContextDirectory = $derived(buildImageInfo.containerBuildContextDirectory);
+
+let containerImageName = $derived(buildImageInfo.containerImageName);
+let providerConnections = $derived(
+  providers.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
+    return acc.concat(startedConnections);
+  }, []),
+);
+let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
 $effect(() => {
   if (taskId && taskId !== buildImageInfo.taskId) {
     // switching previous task wich could be finished or still running
@@ -311,25 +324,10 @@ $effect(() => {
       }
     }
   }
-});
-let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
-let containerFilePath = $derived(buildImageInfo.containerFilePath);
-let containerBuildContextDirectory = $derived(buildImageInfo.containerBuildContextDirectory);
-$effect(() => {
   if (containerFilePath && !containerBuildContextDirectory) {
     // select the parent directory of the file as default
     buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
   }
-});
-let containerImageName = $derived(buildImageInfo.containerImageName);
-let providerConnections = $derived(
-  providers.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
-    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
-    return acc.concat(startedConnections);
-  }, []),
-);
-let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
-$effect(() => {
   buildImageInfo.selectedProvider = selectedProvider;
 });
 let hasInvalidFields = $derived(
