@@ -44,7 +44,12 @@ const features: Record<string, IConfigurationPropertyRecordedSchema> = {
     parentId: 'parent2',
     experimental: { githubDiscussionLink: 'https://feature.link.2.com' },
   },
-  feature3: { title: 'feat.feature3', parentId: 'parent3' },
+  feature3: {
+    title: 'feat.feature3',
+    parentId: 'parent3',
+    experimental: { githubDiscussionLink: 'https://feature.link.3.com' },
+  },
+  feature4: { title: 'feat.feature3', parentId: 'parent3' },
 };
 
 const configurationRegistry: ConfigurationRegistry = {
@@ -67,6 +72,10 @@ const messageBox: MessageBox = {
 } as unknown as MessageBox;
 
 class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackForm {
+  override timestamps: Map<string, Timestamp> = new Map<string, Timestamp>();
+  override disabled: string[] = [];
+  override experimentalFeatures: Set<string> = new Set<string>();
+
   override setTimestamp(feature: string, days: Timestamp): void {
     return super.setTimestamp(feature, days);
   }
@@ -87,8 +96,8 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
     return super.save();
   }
 
-  override getTimestampsMap(): Map<string, Timestamp> {
-    return super.getTimestampsMap();
+  override disableFeature(id: string): void {
+    return super.disableFeature(id);
   }
 
   override init(): Promise<void> {
@@ -99,6 +108,7 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
 const setReminderSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'setReminder');
 const showFeedbackDialogSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'showFeedbackDialog');
 const setTimestampSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'setTimestamp');
+const disableFeatureSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'disableFeature');
 
 let feedbackForm: TestExperimentalFeatureFeedbackForm;
 beforeEach(() => {
@@ -116,9 +126,10 @@ describe('init', () => {
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     await feedbackForm.init();
 
-    expect(setReminderSpy).toHaveBeenCalledTimes(2);
+    expect(setReminderSpy).toHaveBeenCalledTimes(3);
     expect(setReminderSpy).toHaveBeenCalledWith('feature1');
     expect(setReminderSpy).toHaveBeenCalledWith('feature2');
+    expect(setReminderSpy).toHaveBeenCalledWith('feature3');
 
     expect(showFeedbackDialogSpy).not.toHaveBeenCalled();
   });
@@ -137,9 +148,8 @@ describe('init', () => {
     expect(showFeedbackDialogSpy).toHaveBeenCalledTimes(1);
     expect(setReminderSpy).not.toHaveBeenCalled();
 
-    const internalMap = feedbackForm.getTimestampsMap();
-    expect(internalMap.get('feature1')).toBe(123456);
-    expect(internalMap.get('feature2')).toBe(789012);
+    expect(feedbackForm.timestamps.get('feature1')).toBe(123456);
+    expect(feedbackForm.timestamps.get('feature2')).toBe(789012);
   });
 
   describe('onDidChangeConfiguration event handler', () => {
@@ -162,10 +172,10 @@ describe('init', () => {
       expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 2);
     });
 
-    test('should call setTimestamp with undefined when an experimental feature is disabled', async () => {
+    test('should NOT call setTimestamp when an experimental feature is disabled', async () => {
       await feedbackForm.init();
       capturedCallback({ key: 'feature1', value: false, scope: 'default' });
-      expect(setTimestampSpy).toHaveBeenCalledWith('feature1', undefined);
+      expect(setTimestampSpy).not.toHaveBeenCalled();
     });
 
     test('should NOT call setTimestamp for a non-experimental feature change', async () => {
@@ -175,7 +185,7 @@ describe('init', () => {
     });
 
     test('should NOT call setTimestamp for experimental feature with "disabled" value', async () => {
-      configurationGetMock.mockReturnValue({ feature1: 'disabled' });
+      feedbackForm.disabled = ['feature1'];
       await feedbackForm.init();
       capturedCallback({ key: 'feature1', value: true, scope: 'default' });
       expect(setTimestampSpy).not.toHaveBeenCalled();
@@ -199,11 +209,10 @@ describe('setTimestamp', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
-    const timestampsMap = feedbackForm.getTimestampsMap();
-    const setSpy = vi.spyOn(timestampsMap, 'set');
+    const setSpy = vi.spyOn(feedbackForm.timestamps, 'set');
 
     const days = 42;
-    const expectedTimestamp = new Date(MOCK_NOW.getTime() + days * 24 * 60 * 60 * 1000).getTime();
+    const expectedTimestamp = new Date(MOCK_NOW.getTime() + days * 24 * 60 * 60 * 1_000).getTime();
 
     feedbackForm.setTimestamp('feature1', days);
 
@@ -219,16 +228,6 @@ describe('setTimestamp', () => {
 
     expect(setTimestampSpy).toHaveBeenCalledTimes(1);
     expect(setTimestampSpy).toHaveBeenCalledWith('feature1', undefined);
-  });
-
-  test('should set timestamp to disabled when "Dont show again" was selected', () => {
-    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-
-    feedbackForm.setTimestamp('feature1', 'disabled');
-
-    expect(setTimestampSpy).toHaveBeenCalledTimes(1);
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 'disabled');
   });
 });
 
@@ -330,7 +329,7 @@ describe('showFeedbackDialog', () => {
     expect(openExternalSpy).not.toHaveBeenCalled();
   });
 
-  test('should set a very large timestamp when user selects "Dont show again"', async () => {
+  test('should call disableFeature when user selects "Dont show again"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { feature1: pastTimestamp };
     configurationGetMock.mockReturnValue(existingTimestamps);
@@ -344,8 +343,10 @@ describe('showFeedbackDialog', () => {
     // For setting timestamps
     await feedbackForm.init();
 
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 'disabled');
+    expect(setTimestampSpy).not.toHaveBeenCalled();
     expect(openExternalSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).toBeCalledTimes(1);
+    expect(disableFeatureSpy).toBeCalledWith('feature1');
   });
 
   test('should NOT show a dialog if the timestamp is in the future', async () => {
@@ -359,5 +360,41 @@ describe('showFeedbackDialog', () => {
     // For setting timestamps
     await feedbackForm.init();
     expect(messageBox.showMessageBox).not.toHaveBeenCalled();
+  });
+
+  test('should NOT show dialog when is a feature disabled', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { feature1: pastTimestamp, feature2: pastTimestamp };
+    configurationGetMock.mockReturnValue(existingTimestamps);
+
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    feedbackForm.disabled = ['feature1', 'feature2'];
+    // For setting timestamps
+    await feedbackForm.init();
+
+    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('disableFeature', () => {
+  test('should add feature to disabled', () => {
+    const pushDisabledSpy = vi.spyOn(feedbackForm.disabled, 'push');
+    feedbackForm.disableFeature('feat.feature1');
+
+    expect(pushDisabledSpy).toBeCalled();
+    expect(pushDisabledSpy).toBeCalledWith('feat.feature1');
+    expect(feedbackForm.disabled).toContain('feat.feature1');
+  });
+
+  test('should NOT add feature to disabled if already there', () => {
+    const pushDisabledSpy = vi.spyOn(feedbackForm.disabled, 'push');
+    feedbackForm.disabled = ['feat.feature1'];
+    feedbackForm.disableFeature('feat.feature1');
+
+    expect(pushDisabledSpy).not.toHaveBeenCalled();
+    expect(feedbackForm.disabled).toContain('feat.feature1');
   });
 });
