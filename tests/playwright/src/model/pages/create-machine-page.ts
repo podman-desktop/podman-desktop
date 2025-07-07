@@ -88,7 +88,10 @@ export class CreateMachinePage extends BasePage {
       playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
 
       if (connectionType) {
-        playExpect(await machineCard.connectionType.innerText()).toContain(connectionType);
+        await machineCard.resourceElement.getByLabel('Connection Type').scrollIntoViewIfNeeded();
+        playExpect(await machineCard.resourceElement.getByLabel('Connection Type').innerText()).toContain(
+          connectionType,
+        );
       }
 
       return resourcesPage;
