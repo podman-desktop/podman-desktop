@@ -22,6 +22,9 @@ import path from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { Deferred } from '/@/plugin/util/deferred.js';
+
+import { isMac } from '../util.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Uri } from './types/uri.js';
 
@@ -79,10 +82,17 @@ const tmpMyPath = path.resolve(tmpdir(), 'my/path');
 
 describe('showOpenDialog', () => {
   beforeEach(() => {
+    vi.resetAllMocks();
     vi.mocked(dialog.showOpenDialog).mockResolvedValue({
       filePaths: [tmpMyPath],
       canceled: false,
     });
+  });
+
+  vi.mock('../util.js', () => {
+    return {
+      isMac: vi.fn().mockReturnValue(false),
+    };
   });
 
   // check opendialog is failing without browserwindow
@@ -149,6 +159,15 @@ describe('showOpenDialog', () => {
 
     // no result sent to browserWindow
     expect(fakeBrowserWindow.webContents.send).not.toHaveBeenCalled();
+  });
+
+  test('use noResolveAliases property on mac', async () => {
+    vi.mocked(isMac).mockReturnValue(true);
+    await dialogRegistry.openDialog();
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith(
+      fakeBrowserWindow,
+      expect.objectContaining({ properties: ['openFile', 'noResolveAliases'] }),
+    );
   });
 });
 

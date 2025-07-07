@@ -21,6 +21,7 @@ import type { BrowserWindow } from 'electron';
 import { dialog } from 'electron';
 import { inject, injectable } from 'inversify';
 
+import { isMac } from '../util.js';
 import { Uri } from './types/uri.js';
 
 /**
@@ -70,7 +71,7 @@ export class DialogRegistry {
     // convert options into electron dialog options
     const electronOpenDialogOptions: Electron.OpenDialogOptions = {
       filters: options?.filters,
-      properties: selectors,
+      properties: isMac() ? [...selectors, 'noResolveAliases'] : selectors,
       defaultPath,
       title: options?.title,
       message: options?.title,
