@@ -20,6 +20,7 @@ const exec = require('child_process').exec;
 const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
+const fs = require('fs-extra');
 
 if (process.env.VITE_APP_VERSION === undefined) {
   const now = new Date();
@@ -81,6 +82,15 @@ const config = {
   beforePack: async context => {
     const DEFAULT_ASSETS = [];
     context.packager.config.extraResources = DEFAULT_ASSETS;
+
+    // Remove win-ca folder from macOS builds to exclude Windows native binaries (crypt32-*.node)
+    if (context.electronPlatformName === 'darwin') {
+      const winCaPath = path.join(context.appOutDir, 'node_modules', 'win-ca');
+      if (await fs.pathExists(winCaPath)) {
+        await fs.remove(winCaPath);
+        console.log('Removed win-ca native modules from macOS build');
+      }
+    }
 
     // universal build, add both pkg files
     // this is hack to avoid issue https://github.com/electron/universal/issues/36
@@ -204,10 +214,9 @@ const config = {
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
-    identity: null,
     artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
-    entitlements: './entitlements.mac.inherit.plist', 
+    entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
     target: {
       target: 'default',
       arch: macosArches,
