@@ -53,6 +53,8 @@ jobs:
   e2e-tests:
     name: Run All E2E tests
     runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
