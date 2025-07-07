@@ -29,7 +29,7 @@ import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 interface Props {
-  taskId: number | undefined;
+  taskId?: number;
 }
 
 let { taskId = $bindable() }: Props = $props();
