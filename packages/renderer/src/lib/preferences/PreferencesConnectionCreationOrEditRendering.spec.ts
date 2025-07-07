@@ -28,7 +28,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
-import { eventCollect } from '/@/lib/preferences/preferences-connection-rendering-task';
+import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
@@ -36,7 +36,6 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
 type LoggerEventName = 'log' | 'warn' | 'error' | 'finish';
-
 const properties: IConfigurationPropertyRecordedSchema[] = [
   {
     title: 'FactoryProperty',
@@ -719,4 +718,78 @@ test('Expect form data saved in store to be repopulated when reopening a task', 
     undefined,
     taskId,
   );
+});
+
+test('Expect reconnectUI to be called only once', async () => {
+  vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
+    const original = await importOriginal();
+    return {
+      ...original,
+      reconnectUI: vi.fn(),
+    };
+  });
+
+  vi.mock('@xterm/xterm', () => {
+    const writeMock = vi.fn();
+    return {
+      writeMock,
+      Terminal: vi
+        .fn()
+        .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: writeMock, clear: vi.fn(), dispose: vi.fn() }),
+    };
+  });
+
+  let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
+  const callback = mockCallback(async keyLogger => {
+    providedKeyLogger = keyLogger;
+  });
+
+  const taskId = 1;
+
+  const operationConnectionsInfoMock = {
+    operationKey: Symbol(),
+    providerInfo,
+    connectionInfo: undefined,
+    properties,
+    propertyScope: 'DEFAULT',
+    operationInProgress: false,
+    operationSuccessful: false,
+    operationStarted: false,
+    errorMessage: 'something went wrong',
+    formData: {},
+  };
+  operationConnectionsInfo.update(map => map.set(taskId, operationConnectionsInfoMock));
+
+  const { rerender } = render(PreferencesConnectionCreationOrEditRendering, {
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId,
+  });
+
+  await vi.waitFor(() => {
+    expect(screen.getByRole('term')).toBeInTheDocument();
+    expect(reconnectUI).toBeCalledTimes(1);
+  });
+
+  operationConnectionsInfo.update(map =>
+    map.set(taskId, { ...operationConnectionsInfoMock, errorMessage: 'error message' }),
+  );
+
+  await rerender({
+    properties,
+    providerInfo,
+    propertyScope,
+    callback,
+    pageIsLoading: false,
+    taskId,
+  });
+
+  // reconnect UI has already been called, shouldn't be called again
+  await vi.waitFor(() => {
+    expect(screen.getByRole('term')).toBeInTheDocument();
+    expect(reconnectUI).toBeCalledTimes(1);
+  });
 });
