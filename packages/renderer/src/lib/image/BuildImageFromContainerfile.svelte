@@ -335,7 +335,7 @@ let hasInvalidFields = $derived(
     !buildImageInfo.containerBuildContextDirectory ||
     (platforms.length > 1 && !buildImageInfo.containerImageName) ||
     platforms.length === 0 ||
-    !errorContainerImageName ||
+    !!errorContainerImageName ||
     !selectedProvider,
 );
 </script>
