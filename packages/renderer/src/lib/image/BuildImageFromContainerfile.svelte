@@ -335,6 +335,8 @@ let hasInvalidFields = $derived(
     !isImageNameLowercase ||
     !selectedProvider,
 );
+
+let errorContainerImageName = $derived(isImageNameLowercase ? undefined : 'Image name should be lowercase');
 </script>
 
 <EngineFormPage
@@ -379,7 +381,7 @@ let hasInvalidFields = $derived(
           name="containerImageName"
           id="containerImageName"
           placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
-          error={isImageNameLowercase ? undefined : 'Image name should be lowercase'}
+          error={errorContainerImageName}
           class="w-full" />
       </div>
 
