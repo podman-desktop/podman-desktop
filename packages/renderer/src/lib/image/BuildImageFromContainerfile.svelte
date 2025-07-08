@@ -19,7 +19,7 @@ import {
   lastUpdatedTaskId,
 } from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
@@ -34,7 +34,6 @@ interface Props {
 
 let { taskId = $bindable() }: Props = $props();
 let buildImageInfo: BuildImageInfo = $state(createDefaultBuildImageInfo());
-let providers: ProviderInfo[] = $state([]);
 
 const containerFileDialogOptions: OpenDialogOptions = {
   title: 'Select Containerfile to build',
@@ -262,10 +261,6 @@ let buildImagesInfoUnsubscriber: Unsubscriber = buildImagesInfo.subscribe(map =>
   $lastUpdatedTaskId = undefined;
 });
 
-let providerInfosUnsubscriber: Unsubscriber = providerInfos.subscribe(infos => {
-  providers = infos;
-});
-
 function onInit(): void {
   if (buildImageInfo.buildImageKey) {
     reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
@@ -277,7 +272,6 @@ onDestroy(() => {
     disconnectUI(buildImageInfo.buildImageKey);
   }
   buildImagesInfoUnsubscriber();
-  providerInfosUnsubscriber();
 });
 
 async function abortBuild(): Promise<void> {
@@ -295,7 +289,7 @@ let containerBuildContextDirectory = $derived(buildImageInfo.containerBuildConte
 
 let containerImageName = $derived(buildImageInfo.containerImageName);
 let providerConnections = $derived(
-  providers.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+  $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
     const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
     return acc.concat(startedConnections);
   }, []),
