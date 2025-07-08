@@ -33,7 +33,7 @@ Minikube can be seamlessly integrated with Podman Desktop, enabling Kubernetes d
 
 The following video provides a complete guide from installation to cluster creation:
 
-<ReactPlayer playing playsinline controls url='https://github.com/containers/podman-desktop-media/raw/refs/heads/minikube/video/guide.mp4' width='100%' height='100%' />
+<ReactPlayer playing playsInline controls src='https://github.com/containers/podman-desktop-media/raw/refs/heads/minikube/video/guide.mp4' width='100%' height='100%' />
 
 ## Backstage
 
