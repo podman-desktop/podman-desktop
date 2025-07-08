@@ -284,10 +284,7 @@ async function abortBuild(): Promise<void> {
 }
 
 let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
-let containerFilePath = $derived(buildImageInfo.containerFilePath);
-let containerBuildContextDirectory = $derived(buildImageInfo.containerBuildContextDirectory);
 
-let containerImageName = $derived(buildImageInfo.containerImageName);
 let providerConnections = $derived(
   $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
     const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
@@ -318,16 +315,18 @@ $effect(() => {
       }
     }
   }
-  if (containerFilePath && !containerBuildContextDirectory) {
+  if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
     // select the parent directory of the file as default
-    buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
+    buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
+      .replace(/\\/g, '/')
+      .replace(/\/[^\/]*$/, '');
   }
   buildImageInfo.selectedProvider = selectedProvider;
 });
 let hasInvalidFields = $derived(
-  !containerFilePath ||
-    !containerBuildContextDirectory ||
-    (platforms.length > 1 && !containerImageName) ||
+  !buildImageInfo.containerFilePath ||
+    !buildImageInfo.containerBuildContextDirectory ||
+    (platforms.length > 1 && !buildImageInfo.containerImageName) ||
     platforms.length === 0 ||
     !selectedProvider,
 );
