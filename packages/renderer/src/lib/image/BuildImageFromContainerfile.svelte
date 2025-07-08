@@ -324,19 +324,20 @@ $effect(() => {
   buildImageInfo.selectedProvider = selectedProvider;
 });
 
-let isImageNameLowercase = $derived(
-  buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase(),
+let errorContainerImageName = $derived(
+  buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase()
+    ? undefined
+    : 'Image name should be lowercase',
 );
+
 let hasInvalidFields = $derived(
   !buildImageInfo.containerFilePath ||
     !buildImageInfo.containerBuildContextDirectory ||
     (platforms.length > 1 && !buildImageInfo.containerImageName) ||
     platforms.length === 0 ||
-    !isImageNameLowercase ||
+    !errorContainerImageName ||
     !selectedProvider,
 );
-
-let errorContainerImageName = $derived(isImageNameLowercase ? undefined : 'Image name should be lowercase');
 </script>
 
 <EngineFormPage
