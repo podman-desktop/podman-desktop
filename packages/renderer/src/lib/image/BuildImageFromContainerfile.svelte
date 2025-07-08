@@ -200,7 +200,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         relativeContainerfilePath,
         undefined, // Omitting the image name for multi-platform builds, as we'll be creating a singular manifest.
         platform,
-        buildImageInfo.selectedProvider,
+        $state.snapshot(buildImageInfo.selectedProvider),
         buildImageInfo.buildImageKey,
         eventCollect,
         buildImageInfo.cancellableTokenId,
