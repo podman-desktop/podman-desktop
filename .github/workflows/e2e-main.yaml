@@ -65,6 +65,8 @@ jobs:
   e2e-tests:
     name: Run All E2E tests
     runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
@@ -175,6 +177,8 @@ jobs:
   win-update-e2e-test:
     name: win update e2e tests - ${{ matrix.installation }}
     runs-on: windows-2022
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     env:
@@ -254,6 +258,8 @@ jobs:
   mac-update-e2e-test:
     name: mac update e2e tests
     runs-on: macos-latest
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60

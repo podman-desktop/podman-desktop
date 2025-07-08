@@ -29,7 +29,7 @@
     "@sveltejs/vite-plugin-svelte": "5.1.0",
     "@tailwindcss/vite": "^4.1.11",
     "@tsconfig/svelte": "^5.0.2",
-    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
     "autoprefixer": "^10.4.21",
     "cross-env": "7.0.3",
     "eslint-plugin-storybook": "9.0.15",
@@ -39,11 +39,11 @@
     "react": "18.2.0",
     "react-dom": "18.3.1",
     "storybook": "^9.0.14",
-    "svelte": "5.35.2",
+    "svelte": "5.35.4",
     "svelte-check": "^4.2.2",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
+    "vite": "^7.0.2",
     "vitest": "^3.2.4"
   }
 }

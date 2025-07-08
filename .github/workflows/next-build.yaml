@@ -35,6 +35,8 @@ jobs:
   tag:
     name: Tagging
     runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     outputs:
       githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
       desktopVersion: ${{ steps.TAG_UTIL.outputs.desktopVersion}}
