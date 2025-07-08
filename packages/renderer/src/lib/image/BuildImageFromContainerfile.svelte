@@ -379,7 +379,7 @@ let hasInvalidFields = $derived(
           name="containerImageName"
           id="containerImageName"
           placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
-          error={isImageNameLowercase ? void 0 : 'Image name should be lowercase'}
+          error={isImageNameLowercase ? undefined : 'Image name should be lowercase'}
           class="w-full" />
       </div>
 
