@@ -3,6 +3,7 @@ import { faQuestionCircle, faSquareUpRight, faTrash } from '@fortawesome/free-so
 import { Button, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import CopyToClipboard from '/@/lib/ui/CopyToClipboard.svelte';
 import type { ForwardConfig, PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import type { KubePortInfo } from './kube-port';
@@ -50,9 +51,11 @@ async function onForwardRequest(port: KubePortInfo): Promise<void> {
   }
 }
 
+let localhostAddress = $derived(mapping ? `http://localhost:${mapping.localPort}` : undefined);
+
 async function openExternal(): Promise<void> {
-  if (!mapping) return;
-  return window.openExternal(`http://localhost:${mapping.localPort}`);
+  if (!localhostAddress) return;
+  return window.openExternal(localhostAddress);
 }
 
 async function removePortForward(): Promise<void> {
@@ -75,6 +78,19 @@ async function removePortForward(): Promise<void> {
 <span aria-label="port {port.value}" class="flex gap-x-2 items-center">
   {port.displayValue}
   {#if mapping}
+
+
+  {#if localhostAddress}
+
+  <CopyToClipboard
+  clipboardData={localhostAddress}
+  title={localhostAddress}
+  />
+  
+  {/if}
+ 
+    
+
     <Button
       title="Open in browser"
       disabled={loading}
