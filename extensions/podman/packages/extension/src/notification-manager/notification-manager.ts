@@ -1,0 +1,167 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import * as extensionApi from '@podman-desktop/api';
+
+import { getSocketCompatibility } from '../utils/compatibility-mode';
+import { isDisguisedPodman } from '../utils/warnings';
+
+// Alert for setting up
+const setupPodmanNotification: extensionApi.NotificationOptions = {
+  title: 'Podman needs to be set up',
+  body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+  type: 'info',
+  markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+  highlight: true,
+  silent: true,
+};
+
+// Notification for if Docker Desktop has overriden the socket other tools are using it.
+const disguisedPodmanNotification: extensionApi.NotificationOptions = {
+  title: 'Docker socket is not disguised correctly',
+  body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
+  markdownActions:
+    ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
+  type: 'error',
+  highlight: true,
+  silent: true,
+};
+
+// Alert for running podman-mac-helper
+// Add notification that podman-mac-helper needs setting up
+const setupMacHelperNotification: extensionApi.NotificationOptions = {
+  title: 'Podman Mac Helper needs to be set up',
+  body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
+  type: 'info',
+  // Execute the "Docker Compatibility" command when the button is clicked
+  markdownActions:
+    ':button[Enable]{command=podman.socketCompatibilityMode} &nbsp; :button[Do not show again]{command=podman.doNotShowMacHelperNotification}',
+  highlight: true,
+  silent: true,
+};
+
+// Configuration buttons
+const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
+
+export class NotificationManager {
+  private notificationDisposable?: extensionApi.Disposable;
+
+  private podmanMacHelperNotificationDisposable?: extensionApi.Disposable;
+  private disguisedPodmanNotificationDisposable?: extensionApi.Disposable;
+
+  private doNotShowMacHelperSetup = false;
+
+  public shouldNotifySetup = true;
+
+  // to avoid having multiple notification of the same nature in the notifications list
+  // we first dispose the old one and then push the same again
+  public notifySetupPodman(): void {
+    if (this.shouldNotifySetup) {
+      // push setup notification
+      this.notificationDisposable ??= extensionApi.window.showNotification(setupPodmanNotification);
+      this.shouldNotifySetup = false;
+    }
+  }
+
+  public disposeNotification(): void {
+    this.shouldNotifySetup = true;
+    this.notificationDisposable?.dispose();
+  }
+
+  private notifyDisguisedPodmanSocket(): void {
+    this.disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification(disguisedPodmanNotification);
+  }
+
+  // Show the banner for running podman-mac-helper
+  private notifySetupPodmanMacHelper(): void {
+    this.podmanMacHelperNotificationDisposable?.dispose();
+    this.podmanMacHelperNotificationDisposable = extensionApi.window.showNotification(setupMacHelperNotification);
+  }
+
+  public async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
+    // Exit immediately if doNotShowMacHelperSetup is true
+    if (this.doNotShowMacHelperSetup) {
+      return;
+    }
+
+    // We do one last check to see if the socket is truly disguised or not by checking isEnabled for socketCompatibilityMode
+    const socketCompatibilityMode = getSocketCompatibility();
+
+    // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
+    const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+    // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
+    // and we are on macOS, as the helper is only required for macOS.
+    // We also only notify if the actual notification is undefined (already disposed / not exists)
+    if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
+      this.notifySetupPodmanMacHelper();
+    } else {
+      // If it's already enabled, just dispose the notification
+      this.podmanMacHelperNotificationDisposable?.dispose();
+    }
+  }
+
+  // Check that the socket is indeed a disguised podman socket, if it is NOT, we should
+  // alert the user that compatibility was not ran.
+  public async checkAndNotifyDisguisedPodman(): Promise<void> {
+    const socketCompatibilityMode = getSocketCompatibility();
+
+    // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
+    if (!socketCompatibilityMode.isEnabled()) {
+      return;
+    }
+
+    const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+    // If the socket is not disguised, we should alert the user that compatibility was not ran.
+    if (!isDisguisedPodmanSocket) {
+      this.notifyDisguisedPodmanSocket();
+    } else {
+      // If it's already disguised, dispose of the notification.
+      this.disguisedPodmanNotificationDisposable?.dispose();
+    }
+  }
+
+  // Shortform for getting the do not show ever again setting for the podman-mac-helper notification
+  private getDoNotShowMacHelperSetting(): boolean {
+    return (
+      extensionApi.configuration
+        .getConfiguration('podman')
+        .get<boolean>(configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
+    );
+  }
+
+  public notificationMacPodman(): extensionApi.Disposable {
+    // Get if we should never show the podman-mac-helper notification ever again
+    this.doNotShowMacHelperSetup = this.getDoNotShowMacHelperSetting();
+
+    return extensionApi.commands.registerCommand('podman.doNotShowMacHelperNotification', async () => {
+      // Set the configuration setting to true, so on reload of Podman Desktop it
+      // is consistent / will not show the notification again
+      await extensionApi.configuration
+        .getConfiguration('podman')
+        .update(configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
+
+      //  Set the global variable to true
+      this.doNotShowMacHelperSetup = true;
+
+      // Dismiss the notification
+      this.podmanMacHelperNotificationDisposable?.dispose();
+    });
+  }
+}
