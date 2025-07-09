@@ -266,7 +266,7 @@ describe('podman-mac-helper tests', () => {
     const spyGetConfiguration = vi.spyOn(config, 'get');
     spyGetConfiguration.mockReturnValue(true);
 
-    notificationManager.notificationMacPodman();
+    notificationManager.setupNotificationMacPodman();
 
     await notificationManager.checkAndNotifyDisguisedPodmanMacHelper();
 

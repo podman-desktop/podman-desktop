@@ -142,7 +142,7 @@ export class NotificationManager {
     );
   }
 
-  public notificationMacPodman(): extensionApi.Disposable {
+  public setupNotificationMacPodman(): extensionApi.Disposable {
     // Get if we should never show the podman-mac-helper notification ever again
     this.doNotShowMacHelperSetup = this.getDoNotShowMacHelperSetting();
 

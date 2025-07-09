@@ -1358,7 +1358,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // only available for macOS
   if (extensionApi.env.isMac) {
     // Register the command for disabling the do not show mac helper setting permanently
-    extensionContext.subscriptions.push(notificationManager.notificationMacPodman());
+    extensionContext.subscriptions.push(notificationManager.setupNotificationMacPodman());
 
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
