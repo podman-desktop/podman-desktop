@@ -22,9 +22,8 @@ import path from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from '/@/plugin/util/deferred.js';
+import { isMac } from '/@/util.js';
 
-import { isMac } from '../util.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Uri } from './types/uri.js';
 
@@ -89,7 +88,7 @@ describe('showOpenDialog', () => {
     });
   });
 
-  vi.mock('../util.js', () => {
+  vi.mock(import('/@/util.js'), () => {
     return {
       isMac: vi.fn().mockReturnValue(false),
     };
