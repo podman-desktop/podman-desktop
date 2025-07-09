@@ -21,40 +21,6 @@ import * as extensionApi from '@podman-desktop/api';
 import { getSocketCompatibility } from '../utils/compatibility-mode';
 import { isDisguisedPodman } from '../utils/warnings';
 
-// Alert for setting up
-const setupPodmanNotification: extensionApi.NotificationOptions = {
-  title: 'Podman needs to be set up',
-  body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
-  type: 'info',
-  markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
-  highlight: true,
-  silent: true,
-};
-
-// Notification for if Docker Desktop has overriden the socket other tools are using it.
-const disguisedPodmanNotification: extensionApi.NotificationOptions = {
-  title: 'Docker socket is not disguised correctly',
-  body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
-  markdownActions:
-    ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
-  type: 'error',
-  highlight: true,
-  silent: true,
-};
-
-// Alert for running podman-mac-helper
-// Add notification that podman-mac-helper needs setting up
-const setupMacHelperNotification: extensionApi.NotificationOptions = {
-  title: 'Podman Mac Helper needs to be set up',
-  body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
-  type: 'info',
-  // Execute the "Docker Compatibility" command when the button is clicked
-  markdownActions:
-    ':button[Enable]{command=podman.socketCompatibilityMode} &nbsp; :button[Do not show again]{command=podman.doNotShowMacHelperNotification}',
-  highlight: true,
-  silent: true,
-};
-
 // Configuration buttons
 const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
 
@@ -77,7 +43,14 @@ export class NotificationManager {
   public notifySetupPodman(): void {
     if (this.shouldNotifySetup) {
       // push setup notification
-      this.notificationDisposable ??= extensionApi.window.showNotification(setupPodmanNotification);
+      this.notificationDisposable ??= extensionApi.window.showNotification({
+        title: 'Podman needs to be set up',
+        body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+        type: 'info',
+        markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+        highlight: true,
+        silent: true,
+      });
       this.shouldNotifySetup = false;
     }
   }
@@ -88,13 +61,32 @@ export class NotificationManager {
   }
 
   private notifyDisguisedPodmanSocket(): void {
-    this.disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification(disguisedPodmanNotification);
+    // Notification for if Docker Desktop has overriden the socket other tools are using it.
+    this.disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification({
+      title: 'Docker socket is not disguised correctly',
+      body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
+      markdownActions:
+        ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
+      type: 'error',
+      highlight: true,
+      silent: true,
+    });
   }
 
   // Show the banner for running podman-mac-helper
   private notifySetupPodmanMacHelper(): void {
     this.podmanMacHelperNotificationDisposable?.dispose();
-    this.podmanMacHelperNotificationDisposable = extensionApi.window.showNotification(setupMacHelperNotification);
+    // Alert for running podman-mac-helper
+    this.podmanMacHelperNotificationDisposable = extensionApi.window.showNotification({
+      title: 'Podman Mac Helper needs to be set up',
+      body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
+      type: 'info',
+      // Execute the "Docker Compatibility" command when the button is clicked
+      markdownActions:
+        ':button[Enable]{command=podman.socketCompatibilityMode} &nbsp; :button[Do not show again]{command=podman.doNotShowMacHelperNotification}',
+      highlight: true,
+      silent: true,
+    });
   }
 
   public async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
