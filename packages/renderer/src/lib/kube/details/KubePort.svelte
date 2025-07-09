@@ -78,19 +78,9 @@ async function removePortForward(): Promise<void> {
 <span aria-label="port {port.value}" class="flex gap-x-2 items-center">
   {port.displayValue}
   {#if mapping}
-
-
-  {#if localhostAddress}
-
-  <CopyToClipboard
-  clipboardData={localhostAddress}
-  title={localhostAddress}
-  />
-  
-  {/if}
- 
-    
-
+    {#if localhostAddress}
+      <CopyToClipboard clipboardData={localhostAddress} title={localhostAddress} />
+    {/if}
     <Button
       title="Open in browser"
       disabled={loading}
