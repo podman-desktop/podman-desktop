@@ -22,12 +22,10 @@ import path from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from '/@/plugin/util/deferred.js';
-
 import { DialogRegistry } from './dialog-registry.js';
 import { Uri } from './types/uri.js';
 
-let mainWindowDeferred: Deferred<BrowserWindow>;
+let mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 
 const fakeBrowserWindow: BrowserWindow = {
   webContents: {
@@ -55,7 +53,7 @@ const mockedConsoleError = vi.fn();
 beforeEach(() => {
   vi.resetAllMocks();
   console.error = mockedConsoleError;
-  mainWindowDeferred = new Deferred<BrowserWindow>();
+  mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
   mainWindowDeferred.resolve(fakeBrowserWindow);
   dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
   dialogRegistry.init();
@@ -67,7 +65,7 @@ afterEach(() => {
 
 // check a failure on init
 test('check failure on init method', async () => {
-  mainWindowDeferred = new Deferred<BrowserWindow>();
+  mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
   dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
   mainWindowDeferred.reject(new Error('test error'));
 
@@ -89,7 +87,7 @@ describe('showOpenDialog', () => {
 
   // check opendialog is failing without browserwindow
   test('check failure on init method', async () => {
-    mainWindowDeferred = new Deferred<BrowserWindow>();
+    mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
     // we don't resolve the promise
 
@@ -164,7 +162,7 @@ describe('showSaveDialog', () => {
 
   // check showSaveDialog is failing without browserwindow
   test('check failure on init method', async () => {
-    mainWindowDeferred = new Deferred<BrowserWindow>();
+    mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
     // we don't resolve the promise
 

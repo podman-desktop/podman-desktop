@@ -199,7 +199,6 @@ import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
 import { Troubleshooting } from './troubleshooting.js';
 import type { IDisposable } from './types/disposable.js';
-import { Deferred } from './util/deferred.js';
 import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
 import { TaskConnectionUtils } from './util/task-connection-utils.js';
@@ -240,7 +239,7 @@ export class PluginSystem {
 
   constructor(
     private trayMenu: TrayMenu,
-    private mainWindowDeferred: Deferred<BrowserWindow>,
+    private mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
   ) {
     app.on('before-quit', () => {
       this.isQuitting = true;
@@ -669,7 +668,9 @@ export class PluginSystem {
     const webviewRegistry = container.get<WebviewRegistry>(WebviewRegistry);
     await webviewRegistry.start();
 
-    container.bind<Deferred<BrowserWindow>>(Deferred<BrowserWindow>).toConstantValue(this.mainWindowDeferred);
+    container
+      .bind<PromiseWithResolvers<BrowserWindow>>(Promise.withResolvers<BrowserWindow>)
+      .toConstantValue(this.mainWindowDeferred);
     container.bind<DialogRegistry>(DialogRegistry).toSelf().inSingletonScope();
 
     const dialogRegistry = container.get<DialogRegistry>(DialogRegistry);

@@ -20,7 +20,6 @@ import { inject, injectable } from 'inversify';
 import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 
 import { ApiSenderType } from './api.js';
-import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
@@ -28,7 +27,7 @@ type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 export class MessageBox {
   private callbackId = 0;
 
-  private callbacksMessageBox = new Map<number, Deferred<MessageBoxReturnValue>>();
+  private callbacksMessageBox = new Map<number, PromiseWithResolvers<MessageBoxReturnValue>>();
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
@@ -37,7 +36,7 @@ export class MessageBox {
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = new Deferred<MessageBoxReturnValue>();
+    const deferred = Promise.withResolvers<MessageBoxReturnValue>();
 
     // store the callback that will resolve the promise
     this.callbacksMessageBox.set(this.callbackId, deferred);

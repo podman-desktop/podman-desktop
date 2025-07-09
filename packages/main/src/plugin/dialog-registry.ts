@@ -22,7 +22,6 @@ import { dialog } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { Uri } from './types/uri.js';
-import { Deferred } from './util/deferred.js';
 
 /**
  * Handle native open and save dialogs
@@ -31,9 +30,11 @@ import { Deferred } from './util/deferred.js';
 export class DialogRegistry {
   #browserWindow: BrowserWindow | undefined;
 
-  #mainWindowDeferred: Deferred<BrowserWindow>;
+  #mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 
-  constructor(@inject(Deferred<BrowserWindow>) readonly mainWindowDeferred: Deferred<BrowserWindow>) {
+  constructor(
+    @inject(Promise.withResolvers<BrowserWindow>) readonly mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
+  ) {
     this.#mainWindowDeferred = mainWindowDeferred;
   }
 

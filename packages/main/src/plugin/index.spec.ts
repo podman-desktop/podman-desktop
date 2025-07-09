@@ -48,7 +48,6 @@ import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
 import type { Task } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
-import { Deferred } from './util/deferred.js';
 import { HttpServer } from './webview/webview-registry.js';
 
 let pluginSystem: TestPluginSystem;
@@ -73,7 +72,7 @@ webContents.isDestroyed = vi.fn();
 // add send method
 webContents.send = vi.fn();
 
-const mainWindowDeferred = new Deferred<BrowserWindow>();
+const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
 
 beforeAll(() => {
   vi.mock('electron', () => {
