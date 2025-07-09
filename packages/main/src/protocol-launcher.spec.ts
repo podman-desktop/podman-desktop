@@ -18,7 +18,6 @@
 import type { BrowserWindow } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from '/@/plugin/util/deferred.js';
 import { isWindows } from '/@/util.js';
 
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -35,7 +34,7 @@ const BROWSER_WINDOW_MOCK: BrowserWindow = {
 
 function getProtocolLauncher(): ProtocolLauncher {
   // create deferred promise
-  const deferred = new Deferred<BrowserWindow>();
+  const deferred = Promise.withResolvers<BrowserWindow>();
   deferred.resolve(BROWSER_WINDOW_MOCK);
 
   // create protocol launcher
