@@ -26,9 +26,7 @@ import { NotificationManager } from './notification-manager';
 import { isDisguisedPodman } from './warnings';
 
 const config: Configuration = {
-  get: () => {
-    // not implemented
-  },
+  get: vi.fn(),
   has: () => true,
   update: vi.fn(),
 };
