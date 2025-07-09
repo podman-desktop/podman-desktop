@@ -21,7 +21,8 @@ import type { BrowserWindow } from 'electron';
 import { dialog } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { isMac } from '../util.js';
+import { isMac } from '/@/util.js';
+
 import { Uri } from './types/uri.js';
 
 /**
