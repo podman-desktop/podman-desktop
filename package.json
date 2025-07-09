@@ -211,7 +211,8 @@
     "undici": "^7.11.0",
     "win-ca": "^3.5.1",
     "winreg": "^1.2.5",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.0",
+    "@codecov/vite-plugin": "^1.9.1"
   },
   "pnpm": {
     "overrides": {
@@ -233,5 +234,5 @@
       "@kubernetes/client-node": "patches/@kubernetes__client-node.patch"
     }
   },
-  "packageManager": "pnpm@10.6.2+sha512.47870716bea1572b53df34ad8647b42962bc790ce2bf4562ba0f643237d7302a3d6a8ecef9e4bdfc01d23af1969aa90485d4cebb0b9638fa5ef1daef656f6c1b"
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
 }

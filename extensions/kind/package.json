@@ -121,7 +121,8 @@
     "tmp-promise": "^3.0.3",
     "tsx": "^4.20.3",
     "vite": "^7.0.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@codecov/vite-plugin": "^1.9.1"
   },
   "patchedDependencies": {
     "@kubernetes/client-node": "../../patches/@kubernetes__client-node.patch"

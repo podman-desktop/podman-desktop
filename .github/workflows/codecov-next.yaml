@@ -48,6 +48,12 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      # Bundle analysis
+      - name: Execute pnpm
+        run: pnpm build
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Run unit tests
         run: pnpm test:unit
 

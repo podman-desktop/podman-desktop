@@ -176,6 +176,7 @@
     "@types/mustache": "^4.2.6",
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
+    "@codecov/vite-plugin": "^1.9.1",
     "vite": "^7.0.3",
     "vitest": "^3.2.4"
   }
