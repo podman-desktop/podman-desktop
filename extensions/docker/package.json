@@ -20,10 +20,10 @@
     "@podman-desktop/api": "workspace:*"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^1.9.1",
     "@podman-desktop/api": "workspace:*",
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
-    "@codecov/vite-plugin": "^1.9.1",
     "vite": "^7.0.3",
     "vitest": "^3.2.4"
   },
