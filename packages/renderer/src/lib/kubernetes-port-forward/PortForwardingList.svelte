@@ -24,6 +24,7 @@ const columns = [
     align: 'left',
     renderer: TableSimpleColumn,
     renderMapping: (config): WorkloadKind => config.kind,
+    comparator: (a, b): number => a.kind.localeCompare(b.kind),
   }),
   new TableColumn<ForwardConfig, string>('Local Port', {
     align: 'left',
