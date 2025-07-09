@@ -3255,82 +3255,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     );
   });
 
-  test('when isDisguisedPodman is true, error message should NOT be shown', async () => {
-    // macOS only
-    vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock "isDisguisedPodman" to return true to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockImplementation(async () => true);
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Check that isDisguisedPodman was called
-    expect(isDisguisedPodman).toBeCalled();
-
-    // Check that the error message is NOT shown
-    expect(extensionApi.window.showNotification).not.toBeCalled();
-  });
-
-  test('when isDisguisedPodman is false, error message should be shown', async () => {
-    // macOS only
-    vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock "isDisguisedPodman" to return false to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockImplementation(async () => false);
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Check that isDisguisedPodman was called
-    expect(isDisguisedPodman).toBeCalled();
-
-    // Check that the error message is shown
-    expect(extensionApi.window.showNotification).toBeCalledWith({
-      title: 'Docker socket is not disguised correctly',
-      body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
-      highlight: true,
-      markdownActions:
-        ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
-      silent: true,
-      type: 'error',
-    });
-  });
-
-  test('do not show error message OR call function if on linux', async () => {
-    // linux
-    vi.mocked(extensionApi.env).isMac = false;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = true;
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Expect that isDisguisedPodman was NOT called
-    expect(isDisguisedPodman).not.toBeCalled();
-
-    expect(extensionApi.window.showNotification).not.toBeCalled();
-  });
-
-  test('do not show error message OR call function if on windows', async () => {
-    // windows
-    vi.mocked(extensionApi.env).isMac = false;
-    vi.mocked(extensionApi.env).isWindows = true;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Expect that isDisguisedPodman was NOT called
-    expect(isDisguisedPodman).not.toBeCalled();
-
-    expect(extensionApi.window.showNotification).not.toBeCalled();
-  });
-
   test('do not show any notifications / messages if the provider is stopped', async () => {
     // macOS only
     vi.mocked(extensionApi.env).isMac = true;
@@ -3389,43 +3313,6 @@ describe('podman-mac-helper tests', () => {
     // this uses the original provider, but just replaces the ready status
     vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
       providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
-  });
-
-  test('show setup podman mac helper notification if on mac and podman-mac-helper needs running', async () => {
-    // Activate
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    await vi.waitFor(() => {
-      // Make sure showNotification contains "body" as: "The Podman Mac Helper is not set up, some features might not function optimally.", ignore everything else.
-      expect(extensionApi.window.showNotification).toBeCalledWith(
-        expect.objectContaining({
-          body: expect.stringContaining(
-            'The Podman Mac Helper is not set up, some features might not function optimally.',
-          ),
-        }),
-      );
-    });
-  });
-
-  test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
-    // Set configuration to always be true
-    // mimicking the 'doNotShow' setting being true
-    const spyGetConfiguration = vi.spyOn(config, 'get');
-    spyGetConfiguration.mockReturnValue(true);
-
-    // Activate
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Make sure showNotification is not shown at all.
-    expect(extensionApi.window.showNotification).not.toBeCalledWith(
-      expect.objectContaining({
-        body: expect.stringContaining(
-          'The Podman Mac Helper is not set up, some features might not function optimally.',
-        ),
-      }),
     );
   });
 
