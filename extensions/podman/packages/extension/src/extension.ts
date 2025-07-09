@@ -1009,10 +1009,10 @@ export async function registerUpdatesIfAny(
       version: updateInfo.bundledVersion,
       update: () => {
         // disable notification before the update to prevent the notification to be shown and re-enabled when update is done
-        notificationManager.shouldNotifySetup = false;
+        notificationManager.setShouldNotifySetup(false);
         return podmanInstall
           .performUpdate(provider, installedPodman)
-          .finally(() => (notificationManager.shouldNotifySetup = true));
+          .finally(() => notificationManager.setShouldNotifySetup(true));
       },
       preflightChecks: () => podmanInstall.getUpdatePreflightChecks() ?? [],
     });
@@ -2215,7 +2215,7 @@ export async function createMachine(
 }
 
 export function resetShouldNotifySetup(): void {
-  notificationManager.shouldNotifySetup = true;
+  notificationManager.setShouldNotifySetup(true);
 }
 
 async function switchCompatibilityMode(enabled: boolean): Promise<void> {

@@ -66,7 +66,11 @@ export class NotificationManager {
 
   private doNotShowMacHelperSetup = false;
 
-  public shouldNotifySetup = true;
+  private shouldNotifySetup = true;
+
+  public setShouldNotifySetup(value: boolean): void {
+    this.shouldNotifySetup = value;
+  }
 
   // to avoid having multiple notification of the same nature in the notifications list
   // we first dispose the old one and then push the same again
