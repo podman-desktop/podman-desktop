@@ -698,6 +698,10 @@ async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
       if (!installedPodman) {
         provider.updateStatus('not-installed');
         extensionApi.context.setValue('podmanIsNotInstalled', true, 'onboarding');
+
+        // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
+        // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
+        // and the notification is handled by checking the machine
         if (extensionApi.env.isLinux) {
           notificationManager.notifySetupPodman();
         }
