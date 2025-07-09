@@ -21,10 +21,10 @@
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
-    "@storybook/addon-docs": "^9.0.14",
-    "@storybook/addon-links": "^9.0.14",
+    "@storybook/addon-docs": "^9.0.16",
+    "@storybook/addon-links": "^9.0.16",
     "@storybook/addon-svelte-csf": "5.0.4",
-    "@storybook/svelte-vite": "^9.0.14",
+    "@storybook/svelte-vite": "^9.0.16",
     "@sveltejs/package": "^2.3.12",
     "@sveltejs/vite-plugin-svelte": "5.1.0",
     "@tailwindcss/vite": "^4.1.11",
