@@ -18,8 +18,8 @@
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { getSocketCompatibility } from '../utils/compatibility-mode';
-import { isDisguisedPodman } from '../utils/warnings';
+import { getSocketCompatibility } from './compatibility-mode';
+import { isDisguisedPodman } from './warnings';
 
 // Configuration buttons
 const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
