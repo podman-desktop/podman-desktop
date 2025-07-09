@@ -23,6 +23,7 @@ import { readable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import PortForwardList from './PortForwardingList.svelte';
 
@@ -30,15 +31,32 @@ vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
 
 beforeEach(() => {
   vi.resetAllMocks();
-
-  vi.mocked(kubeContextStore).kubernetesCurrentContextPortForwards = readable([]);
 });
 
 test('empty kubernetesCurrentContextPortForwards store should display empty screen', async () => {
+  vi.mocked(kubeContextStore).kubernetesCurrentContextPortForwards = readable([]);
   const { getByText } = render(PortForwardList);
 
   const text = getByText(
     'To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)',
   );
+  expect(text).toBeDefined();
+});
+
+test('One port forwarded', async () => {
+  const forwardConfig: ForwardConfig = {
+    forward: {
+      localPort: 5000,
+      remotePort: 80,
+    },
+    id: '1',
+    kind: WorkloadKind.POD,
+    name: 'my pod',
+    namespace: 'ns1',
+  };
+  vi.mocked(kubeContextStore).kubernetesCurrentContextPortForwards = readable([forwardConfig]);
+  const { getByText } = render(PortForwardList);
+
+  const text = getByText('my pod');
   expect(text).toBeDefined();
 });
