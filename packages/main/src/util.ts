@@ -44,21 +44,22 @@ export const stoppedExtensions = { val: false };
 
 export function getBase64Image(imagePath: string): string | undefined {
   try {
-    if (fs.existsSync(imagePath)) {
-      const imageContent = fs.readFileSync(imagePath);
+    const imageContent = fs.readFileSync(imagePath);
 
-      // convert to base64
-      const base64Content = Buffer.from(imageContent).toString('base64');
+    // convert to base64
+    const base64Content = Buffer.from(imageContent).toString('base64');
 
-      // create base64 image content
-      return `data:image/png;base64,${base64Content}`;
-    }
+    // create base64 image content
+    return `data:image/png;base64,${base64Content}`;
   } catch (error) {
-    console.error(`Error while creating base64 image content for ${imagePath}`, error);
+    if (error.code === 'ENOENT') {
+      console.warn(`File not found at ${imagePath}`);
+    } else {
+      console.error(`Error while creating base64 image content for ${imagePath}`, error);
+    }
+    return undefined;
   }
-  return undefined;
 }
-
 export function requireNonUndefined<T>(obj: T | undefined, message?: string): T {
   if (obj === undefined) {
     throw new Error(message ?? 'Found undefined value.');
