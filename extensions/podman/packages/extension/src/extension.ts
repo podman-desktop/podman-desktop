@@ -880,7 +880,7 @@ export async function registerProviderFor(
     },
   };
   //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac || hyperVEnabled) {
+  if (isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
