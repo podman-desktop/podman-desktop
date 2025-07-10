@@ -18,6 +18,7 @@
 
 import * as fs from 'node:fs/promises';
 import * as https from 'node:https';
+import { join } from 'node:path';
 
 import { app, shell } from 'electron';
 import {
@@ -363,7 +364,7 @@ export class Updater {
 
     // Remove the Electron updater cache folder
     if (isWindows() || isMac()) {
-      const cacheDir = getAppCacheDir();
+      const cacheDir = join(getAppCacheDir(), app.name);
       fs.rm(cacheDir, { recursive: true, force: true })
         .then(() => console.info(`Electron updater cache folder deleted: ${cacheDir}`))
         .catch((error: unknown) => console.error(`Error deleting Electron updater cache folder ${cacheDir}: ${error}`));

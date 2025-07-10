@@ -45,6 +45,7 @@ vi.mock('electron', () => ({
   app: {
     getVersion: vi.fn(),
     getPath: vi.fn(),
+    name: 'potatoes',
   },
   shell: {
     openExternal: vi.fn(),
@@ -988,7 +989,7 @@ describe('expect electron-updater cache folder is removed on update-not-availabl
   }
 
   test('on windows', () => {
-    const windowsCacheFolderPath = path.join('Users', 'user1', 'AppData', 'Local', 'podman-desktop-updater');
+    const windowsCacheFolderPath = path.join('Users', 'user1', 'AppData', 'Local');
     vi.spyOn(appAdapter, 'getAppCacheDir').mockReturnValue(windowsCacheFolderPath);
     mockPlatform('win32');
     const rmMock = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
@@ -998,14 +999,14 @@ describe('expect electron-updater cache folder is removed on update-not-availabl
 
     listener?.();
 
-    expect(rmMock).toBeCalledWith(windowsCacheFolderPath, {
+    expect(rmMock).toBeCalledWith(path.join(windowsCacheFolderPath, app.name), {
       recursive: true,
       force: true,
     });
   });
 
   test('on macOS', () => {
-    const macosCacheFolderPath = path.join('Users', 'user1', 'Library', 'Caches', 'podman-desktop-updater');
+    const macosCacheFolderPath = path.join('Users', 'user1', 'Library', 'Caches');
     vi.spyOn(appAdapter, 'getAppCacheDir').mockReturnValue(macosCacheFolderPath);
     mockPlatform('darwin');
     const rmMock = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
@@ -1015,7 +1016,7 @@ describe('expect electron-updater cache folder is removed on update-not-availabl
 
     listener?.();
 
-    expect(rmMock).toBeCalledWith(macosCacheFolderPath, {
+    expect(rmMock).toBeCalledWith(path.join(macosCacheFolderPath, app.name), {
       recursive: true,
       force: true,
     });
