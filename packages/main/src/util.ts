@@ -60,6 +60,7 @@ export function getBase64Image(imagePath: string): string | undefined {
     return undefined;
   }
 }
+
 export function requireNonUndefined<T>(obj: T | undefined, message?: string): T {
   if (obj === undefined) {
     throw new Error(message ?? 'Found undefined value.');
