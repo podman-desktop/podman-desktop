@@ -95,7 +95,7 @@ test('Autostart should be enabled for portable installation', async () => {
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
-    path: portablePath,
+    path: `"${portablePath}"`,
     args: [' --minimized'],
   });
 });
@@ -120,7 +120,7 @@ test('Autostart should be enabled for updated application when present', async (
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
-    path: resolvedUpdatedExecPath,
+    path: `"${resolvedUpdatedExecPath}"`,
     args: [' --minimized'],
   });
 });
@@ -143,7 +143,7 @@ test('Autostart enable call should setup startup at login for normal installatio
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
-    path: appExePath,
+    path: `"${appExePath}"`,
     args: [' --minimized'],
   });
 });
@@ -167,7 +167,7 @@ test('Autostart enable call should setup startup at login for normal installatio
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
-    path: appExePath,
+    path: `"${appExePath}"`,
     args: [''],
   });
 });
