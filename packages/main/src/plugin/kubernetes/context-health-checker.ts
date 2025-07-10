@@ -20,6 +20,7 @@ import { Health } from '@kubernetes/client-node';
 import type { Disposable } from '@podman-desktop/api';
 
 import type { Event } from '/@api/event.js';
+import { isNoEntryException } from '/@api/is-no-entry-exception.js';
 
 import { Emitter } from '../events/emitter.js';
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
@@ -99,7 +100,7 @@ export class ContextHealthChecker implements Disposable {
           checking: false,
           reachable: false,
         };
-        if (this.isNoEntryException(err)) {
+        if (isNoEntryException(err)) {
           let desc = `Command not found: ${err.path}.\nPlease verify this command is installed, and specify its full path in your kubeconfig file.`;
           const config = this.#kubeConfig.getKubeConfig();
           if (config.users[0]?.exec && config.users[0].exec.command === err.path && config.users[0].exec.installHint) {
@@ -124,9 +125,5 @@ export class ContextHealthChecker implements Disposable {
 
   private isAbortError(err: unknown): boolean {
     return err instanceof Error && err.name === 'AbortError';
-  }
-
-  private isNoEntryException(err: unknown): err is NodeJS.ErrnoException {
-    return err instanceof Error && 'code' in err && err.code === 'ENOENT';
   }
 }

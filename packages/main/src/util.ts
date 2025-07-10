@@ -20,6 +20,8 @@ import { Buffer } from 'node:buffer';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 
+import { isNoEntryException } from '/@api/is-no-entry-exception.js';
+
 const windows = os.platform() === 'win32';
 export function isWindows(): boolean {
   return windows;
@@ -52,7 +54,7 @@ export function getBase64Image(imagePath: string): string | undefined {
     // create base64 image content
     return `data:image/png;base64,${base64Content}`;
   } catch (error: unknown) {
-    if (typeof error === 'object' && error && 'code' in error && error.code === 'ENOENT') {
+    if (isNoEntryException(error)) {
       console.warn(`File not found at ${imagePath}`);
     } else {
       console.error(`Error while creating base64 image content for ${imagePath}`, error);
