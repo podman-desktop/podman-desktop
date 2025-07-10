@@ -81,7 +81,7 @@ export class ProtocolLauncher {
           console.error('Error sending open-url event to webcontents', error);
         });
     } else {
-      console.log(`url ${url} does not start with podman-desktop:extension/, skipping.`);
+      console.log(`url ${url} does not start with podman-desktop:extension/ or podman-desktop:experimental, skipping.`);
       return;
     }
   }
