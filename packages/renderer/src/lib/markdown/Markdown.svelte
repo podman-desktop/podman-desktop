@@ -81,6 +81,12 @@ $: markdown
     }))
   : undefined;
 
+function decode(htmlString: string): string {
+  let textArea = document.createElement('textarea');
+  textArea.innerHTML = htmlString;
+  return textArea.value;
+}
+
 onMount(() => {
   if (markdown) {
     text = markdown;
@@ -95,7 +101,7 @@ onMount(() => {
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
   const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
+  const doc = parser.parseFromString(decode(html), 'text/html');
   const links = doc.querySelectorAll('a');
   links.forEach(link => {
     const currentHref = link.getAttribute('href');
@@ -112,6 +118,10 @@ onMount(() => {
 
       // add a class for cursor
       link.classList.add('cursor-pointer');
+    } else if (link.getAttribute('href')?.startsWith('podman-desktop://')) {
+      let internalLink = '';
+      internalLink = link.getAttribute('href')?.replace('podman-desktop://', '/') ?? '';
+      link.setAttribute('href', internalLink);
     }
   });
 
