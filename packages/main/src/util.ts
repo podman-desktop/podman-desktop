@@ -51,8 +51,8 @@ export function getBase64Image(imagePath: string): string | undefined {
 
     // create base64 image content
     return `data:image/png;base64,${base64Content}`;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error && 'code' in error && error.code === 'ENOENT') {
       console.warn(`File not found at ${imagePath}`);
     } else {
       console.error(`Error while creating base64 image content for ${imagePath}`, error);
