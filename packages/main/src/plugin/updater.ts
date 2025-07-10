@@ -365,6 +365,7 @@ export class Updater {
     // Remove the Electron updater cache folder
     if (isWindows() || isMac()) {
       const cacheDir = join(getAppCacheDir(), app.name);
+      console.warn('Deleting electron-updater cache folder: ', cacheDir);
       fs.rm(cacheDir, { recursive: true, force: true })
         .then(() => console.info(`Electron updater cache folder deleted: ${cacheDir}`))
         .catch((error: unknown) => console.error(`Error deleting Electron updater cache folder ${cacheDir}: ${error}`));
