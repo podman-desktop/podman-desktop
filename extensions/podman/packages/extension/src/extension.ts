@@ -885,13 +885,13 @@ export async function registerProviderFor(
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
       for (const key of Object.keys(params)) {
-        if (key === 'podman.machine.cpus') {
+        if (isEditCPUSupported && key === 'podman.machine.cpus') {
           args.push('--cpus', params[key]);
           effective = true;
-        } else if (key === 'podman.machine.memory') {
+        } else if (isEditMemorySupported && key === 'podman.machine.memory') {
           args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
           effective = true;
-        } else if (extensionApi.env.isMac && key === 'podman.machine.diskSize') {
+        } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
           args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
           effective = true;
         }
