@@ -81,7 +81,7 @@ export class WindowsStartup {
 
     app.setLoginItemSettings({
       openAtLogin: true,
-      path: this.podmanDesktopBinaryPath,
+      path: `"${this.podmanDesktopBinaryPath}"`,
       args: [this.minimizedOption],
     });
   }
