@@ -21,6 +21,7 @@ The integrated Playground environments allow for experimenting with available mo
 1. Click the Podman AI Lab icon in the left navigation pane.
 1. In the Podman AI Lab navigation bar, click **Playgrounds**.
 1. Click the **New Playground** button at the top right corner of the page.
+1. Select an inference runtime for the playground.
 1. Select the model for which you want to start an inference server from the **Model** list.
 1. Click the **Create playground** button.
    ![create a playground](img/creating-playground.png)
