@@ -292,7 +292,14 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+        # run the unit tests with coverage on ubuntu
+      - name: Run unit tests with coverage
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        run: pnpm test:unit:coverage
+
+        # do not run coverage on non-ubuntu os
       - name: Run unit tests
+        if: ${{ matrix.os!='ubuntu-24.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
@@ -319,12 +326,12 @@ jobs:
           echo "Add unstable kubic repo into list of available sources and get the repo key"
           sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
           curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "Updating all dependencies..."
+          sudo apt-get update -qq
           echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
           sudo apt-get install --allow-unauthenticated -qq libprotobuf32t64 python3-protobuf libnet1
           echo "install criu manually from static location"
           curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          echo "Updating all dependencies..."
-          sudo apt-get update --allow-insecure-repositories -qq
           echo "installing/update podman package..."
           sudo apt-get -qq -y install --allow-unauthenticated podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
             sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \

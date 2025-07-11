@@ -3449,3 +3449,37 @@ describe('podman-mac-helper tests', () => {
     );
   });
 });
+
+describe('Check notify podman setup', () => {
+  test('show setup podman notification if not on linux with shouldCleanMachine', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    // second call to get the machine list
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).toBeCalledWith({
+      title: 'Podman needs to be set up',
+      body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+      highlight: true,
+      markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+      silent: true,
+      type: 'info',
+    });
+  });
+});
