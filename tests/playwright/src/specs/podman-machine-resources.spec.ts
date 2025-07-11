@@ -20,6 +20,7 @@ import type { Locator } from '@playwright/test';
 
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
+import { PodmanConnectionTypes } from '../model/core/types';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -151,12 +152,18 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         const podmanResources = new ResourceConnectionCardPage(page, RESOURCE_NAME);
         await podmanResources.createButton.click();
 
+        const connectionType = {
+          wsl: PodmanConnectionTypes.WSL,
+          hyperv: PodmanConnectionTypes.HyperV,
+        }[process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase() ?? ''];
+
         const createMachinePage = new CreateMachinePage(page);
         const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
           isRootful: isRoot,
           enableUserNet: userNet,
           setAsDefault: false,
           startNow: false,
+          connectionType,
         });
 
         await playExpect(resourcePage.heading).toBeVisible();
