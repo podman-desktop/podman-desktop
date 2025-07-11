@@ -292,14 +292,7 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-        # run the unit tests with coverage on ubuntu
-      - name: Run unit tests with coverage
-        if: ${{ matrix.os=='ubuntu-24.04' }}
-        run: pnpm test:unit:coverage
-
-        # do not run coverage on non-ubuntu os
       - name: Run unit tests
-        if: ${{ matrix.os!='ubuntu-24.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
