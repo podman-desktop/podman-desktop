@@ -96,7 +96,7 @@ test('Autostart should be enabled for portable installation', async () => {
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${portablePath}"`,
-    args: [' --minimized'],
+    args: ['--minimized'],
   });
 });
 
@@ -121,7 +121,7 @@ test('Autostart should be enabled for updated application when present', async (
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${resolvedUpdatedExecPath}"`,
-    args: [' --minimized'],
+    args: ['--minimized'],
   });
 });
 
@@ -144,7 +144,7 @@ test('Autostart enable call should setup startup at login for normal installatio
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${appExePath}"`,
-    args: [' --minimized'],
+    args: ['--minimized'],
   });
 });
 
@@ -168,7 +168,7 @@ test('Autostart enable call should setup startup at login for normal installatio
   expect(app.setLoginItemSettings).toBeCalledWith({
     openAtLogin: true,
     path: `"${appExePath}"`,
-    args: [''],
+    args: [],
   });
 });
 

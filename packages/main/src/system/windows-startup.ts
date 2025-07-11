@@ -48,21 +48,15 @@ export class WindowsStartup {
     return true;
   }
 
-  get minimizedOption(): string {
-    // Check the preferences for login.minimize has been enabled
-    // as this may change each time it's enabled (changed from true to false, etc.)
-    // it's also to make sure that settings weren't changed while async function was running
-    // so we check the configuration within the function
-    const minimize = this.configurationRegistry.getConfiguration('preferences').get<boolean>('login.minimize');
-
-    // We pass in "--minimize" so electron can read the flag on first startup.
-    return minimize ? ' --minimized' : '';
-  }
-
   async enable(): Promise<void> {
     if (!this.shouldEnable()) {
       return;
     }
+    const preferencesConfig = this.configurationRegistry.getConfiguration('preferences');
+    const minimize = preferencesConfig.get<boolean>('login.minimize');
+
+    // We pass in "--minimize" so electron can read the flag on first startup.
+    const args = minimize ? ['--minimized'] : [];
     // check if we are using the portable mode.
     // in that case we need to register the binary path to the portable file
     // and not where it is being expanded
@@ -82,7 +76,7 @@ export class WindowsStartup {
     app.setLoginItemSettings({
       openAtLogin: true,
       path: `"${this.podmanDesktopBinaryPath}"`,
-      args: [this.minimizedOption],
+      args,
     });
   }
 
