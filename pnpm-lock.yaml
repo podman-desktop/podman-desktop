@@ -960,8 +960,8 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.2.0)
       react-player:
-        specifier: ^3.1.0
-        version: 3.1.0(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
+        specifier: ^3.2.0
+        version: 3.2.0(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@docusaurus/module-type-aliases':
         specifier: ^3.7.0
@@ -8934,8 +8934,8 @@ packages:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
     engines: {node: ^18.17.0 || >=20.5.0}
 
-  mux-embed@5.10.0:
-    resolution: {integrity: sha512-sjG3jCjm4y35YYk11g6qgqWHd8R8+zcgnGi1NkFgjX3Lr+r1+AeBkxhmuwDsaXFP0Q161nihudNbjq1W/t1gnA==}
+  mux-embed@5.11.0:
+    resolution: {integrity: sha512-uczzXVraqMRmyYmpGh2zthTmBKvvc5D5yaVKQRgGhFOnF7E4nkhqNkdkQc4C0WTPzdqdPl5OtCelNWMF4tg5RQ==}
 
   mux-embed@5.9.0:
     resolution: {integrity: sha512-wmunL3uoPhma/tWy8PrDPZkvJpXvSFBwbD3KkC4PG8Ztjfb1X3hRJwGUAQyRz7z99b/ovLm2UTTitrkvStjH4w==}
@@ -10042,8 +10042,8 @@ packages:
       react-loadable: '*'
       webpack: '>=4.41.1 || 5.x'
 
-  react-player@3.1.0:
-    resolution: {integrity: sha512-j3pZ9x3rdlMPYqi0C7h3C7oFIqRcdrul1fjQiacnMU/qEzsJgOLlxd8HMZPX1nQsCblF2iwIIrmgcayf+Eh9yA==}
+  react-player@3.2.0:
+    resolution: {integrity: sha512-ZbrtiNSJPpJyHQxHGDAgJBL+USU0mauHnRrMJqbKO7vTUQYUfiNcBxeAgkIHWTsjQCrhN3PqyK8HYPpbN2tbdA==}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18 || ^19
       react: ^17.0.2 || ^18 || ^19
@@ -10621,8 +10621,8 @@ packages:
     resolution: {integrity: sha512-D3YaD0aRxR3mEcqnidIs7ReYJFVzWdd6fXJYUM8ixcQcJRGTka/b3saV0KflYhyVJXKhb947GndU35SxYNResQ==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  socks@2.8.5:
-    resolution: {integrity: sha512-iF+tNDQla22geJdTyJB1wM/qrX9DMRwWrciEPwWLPRWAUEM8sQiyxgckLxWT1f7+9VabJS0jTGGr4QgBuvi6Ww==}
+  socks@2.8.6:
+    resolution: {integrity: sha512-pe4Y2yzru68lXCb38aAqRf5gvN8YdjP1lok5o0J7BOHljkyCGKVz7H3vpVIXKD27rj2giOJ7DwVyk/GWrPHDWA==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
   sort-css-media-queries@2.2.0:
@@ -10683,6 +10683,9 @@ packages:
 
   split@1.0.1:
     resolution: {integrity: sha512-mTyOoPbrivtXnwnIxZRFYRrPNtEFKlpB2fvjSnCQUiAA6qAZzqwna5envK4uk6OIeP17CsdF3rSBGYVBsU0Tkg==}
+
+  spotify-audio-element@1.0.1:
+    resolution: {integrity: sha512-Uc30QxulPAoWxkMSVeMGcHmEij9KXedzbsliwlhNWnZP2Fgkz1Ifl2laj0poAXiqUDdJTWapfUI9IkGkhwgTEg==}
 
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
@@ -11174,6 +11177,9 @@ packages:
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
+
+  twitch-video-element@0.1.0:
+    resolution: {integrity: sha512-9aV0OD9/QtMqV554RkjOHxg/WzMjDwxtp1l+M0OXIaQiLOrrL16FYqyng6g0dm9NY3Sx35ybdGTmDC/NvC3Xkw==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -15032,7 +15038,7 @@ snapshots:
   '@mux/playback-core@0.30.1':
     dependencies:
       hls.js: 1.6.7
-      mux-embed: 5.10.0
+      mux-embed: 5.11.0
 
   '@napi-rs/wasm-runtime@0.2.11':
     dependencies:
@@ -22037,7 +22043,7 @@ snapshots:
 
   mute-stream@2.0.0: {}
 
-  mux-embed@5.10.0: {}
+  mux-embed@5.11.0: {}
 
   mux-embed@5.9.0: {}
 
@@ -23192,7 +23198,7 @@ snapshots:
       react-loadable: '@docusaurus/react-loadable@6.0.0(react@18.2.0)'
       webpack: 5.96.1
 
-  react-player@3.1.0(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0):
+  react-player@3.2.0(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0):
     dependencies:
       '@mux/mux-player-react': 3.5.1(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@types/react': 18.3.12
@@ -23202,6 +23208,8 @@ snapshots:
       hls-video-element: 1.5.5
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
+      spotify-audio-element: 1.0.1
+      twitch-video-element: 0.1.0
       vimeo-video-element: 1.5.1
       wistia-video-element: 1.3.2
       youtube-video-element: 1.6.0
@@ -23984,7 +23992,7 @@ snapshots:
     dependencies:
       agent-base: 6.0.2
       debug: 4.4.1
-      socks: 2.8.5
+      socks: 2.8.6
     transitivePeerDependencies:
       - supports-color
 
@@ -24001,7 +24009,7 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  socks@2.8.5:
+  socks@2.8.6:
     dependencies:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
@@ -24071,6 +24079,8 @@ snapshots:
   split@1.0.1:
     dependencies:
       through: 2.3.8
+
+  spotify-audio-element@1.0.1: {}
 
   sprintf-js@1.0.3: {}
 
@@ -24601,6 +24611,8 @@ snapshots:
       fsevents: 2.3.3
 
   tweetnacl@0.14.5: {}
+
+  twitch-video-element@0.1.0: {}
 
   type-check@0.4.0:
     dependencies:
