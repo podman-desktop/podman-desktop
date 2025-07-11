@@ -26,27 +26,30 @@ export class HyperVCheck extends BaseCheck {
   title = 'Hyper-V installed';
   static readonly PODMAN_MINIMUM_VERSION_FOR_HYPERV = '5.2.0';
 
-  constructor(private installationPreflightMode: boolean = false) {
+  constructor(
+    private telemetryLogger: extensionApi.TelemetryLogger,
+    private installationPreflightMode: boolean = false,
+  ) {
     super();
   }
 
   async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isUserAdmin();
   }
 
   async isPodmanDesktopElevated(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isRunningElevated();
   }
 
   async isHyperVInstalled(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isHyperVInstalled();
   }
 
   async isHyperVRunning(): Promise<boolean> {
-    const client = await getPowerShellClient();
+    const client = await getPowerShellClient(this.telemetryLogger);
     return client.isHyperVRunning();
   }
 

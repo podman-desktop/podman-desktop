@@ -64,9 +64,12 @@ export class PodmanInstall {
 
   protected providerCleanup: extensionApi.ProviderCleanup | undefined;
 
-  constructor(readonly extensionContext: extensionApi.ExtensionContext) {
+  constructor(
+    readonly extensionContext: extensionApi.ExtensionContext,
+    readonly telemetryLogger: extensionApi.TelemetryLogger,
+  ) {
     this.storagePath = extensionContext.storagePath;
-    this.installers.set('win32', new WinInstaller(extensionContext));
+    this.installers.set('win32', new WinInstaller(extensionContext, telemetryLogger));
     this.installers.set('darwin', new MacOSInstaller());
     if (extensionApi.env.isMac) {
       this.providerCleanup = new PodmanCleanupMacOS();
