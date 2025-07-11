@@ -340,6 +340,15 @@ jobs:
             sudo apt-get --allow-unauthenticated -y install podman; }
           podman version
 
+          # Check if the major version is 5
+          PODMAN_VERSION=$(podman version | grep 'Version:' | awk '{print $2}')
+          if [[ "$PODMAN_VERSION" == 5.* ]]; then
+            echo "Podman major version is 5. Proceeding with the workflow."
+          else
+            echo "Error: Podman major version is not 5. Found: $PODMAN_VERSION"
+            exit 1 # Fail the step if the condition is not met
+          fi
+          
       - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
         run: |
           # allow unprivileged user namespace
