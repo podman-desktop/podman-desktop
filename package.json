@@ -36,7 +36,7 @@
     "compile:pull-request": "cross-env MODE=production pnpm run build && electron-builder build --publish never --config .electron-builder.config.cjs",
     "compile:current": "cross-env MODE=production pnpm run build && electron-builder build --config .electron-builder.config.cjs",
     "test": "pnpm run test:unit && pnpm run test:e2e",
-    "test:unit": "pnpm run build:preload:types && pnpm run build:ui && vitest --run",
+    "test:unit": "pnpm run build:preload:types && pnpm run build:ui && vitest --run --pool=threads",
     "test:unit:coverage": "pnpm run test:unit --coverage",
     "test:e2e": "pnpm run test:e2e:build && pnpm run test:e2e:run",
     "test:e2e:build": "cross-env NODE_ENV=development MODE=development DEBUG=pw:browser pnpm run build",

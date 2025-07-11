@@ -50,19 +50,6 @@ export default defineConfig({
       ],
       exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
     },
-    poolOptions: {
-      forks: {
-        execArgv: [
-          '--cpu-prof',
-          '--cpu-prof-dir=test-runner-profile',
-          '--heap-prof',
-          '--heap-prof-dir=test-runner-profile',
-        ],
-
-        // To generate a single profile
-        singleFork: true,
-      },
-    },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },
 });
