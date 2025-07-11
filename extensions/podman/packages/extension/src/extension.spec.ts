@@ -3450,6 +3450,15 @@ describe('podman-mac-helper tests', () => {
   });
 });
 
+const notifySetupPodmanExpectedContent = {
+  title: 'Podman needs to be set up',
+  body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+  highlight: true,
+  markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+  silent: true,
+  type: 'info',
+};
+
 describe('Check notify podman setup', () => {
   test('show setup podman notification if not on linux with shouldCleanMachine', async () => {
     vi.mocked(extensionApi.env).isMac = true;
@@ -3473,13 +3482,26 @@ describe('Check notify podman setup', () => {
 
     await extension.updateMachines(provider, podmanConfiguration);
 
-    expect(extensionApi.window.showNotification).toBeCalledWith({
-      title: 'Podman needs to be set up',
-      body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
-      highlight: true,
-      markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
-      silent: true,
-      type: 'info',
-    });
+    expect(extensionApi.window.showNotification).toBeCalledWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('show setup podman notification if on linux without Podman installed when monitoring', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+
+    // Call it twice to check the notification is only shown once
+    await extension.doMonitorProvider(provider);
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('do not show setup podman notification if on Mac without Podman installed when monitoring', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    // Call it twice to check the notification is only shown once
+    await extension.doMonitorProvider(provider);
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
   });
 });
