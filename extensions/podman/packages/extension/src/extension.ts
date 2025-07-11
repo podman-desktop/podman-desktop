@@ -805,7 +805,7 @@ async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
   });
 }
 
-async function doMonitorProvider(provider: extensionApi.Provider): Promise<void> {
+export async function doMonitorProvider(provider: extensionApi.Provider): Promise<void> {
   try {
     const installedPodman = await getPodmanInstallation();
     provider.updateDetectionChecks(getDetectionChecks(installedPodman));
