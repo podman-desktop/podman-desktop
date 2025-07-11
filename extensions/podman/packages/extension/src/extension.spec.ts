@@ -3510,3 +3510,100 @@ function getContextMock() {
     },
   } as unknown as extensionApi.ExtensionContext;
 }
+
+describe('Check multiple Podman installations in macOS', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    // Setup macOS environment
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+    // Default mocks - will be overridden in individual tests as needed
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+  });
+
+  test('should return empty warnings when not on macOS', async () => {
+    // Setup non-macOS environment
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(extensionApi.env).isWindows = true;
+
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+    // Verify brew command was not called
+    expect(extensionApi.process.exec).not.toHaveBeenCalled();
+  });
+
+  test('should return empty warnings when Podman is not installed', async () => {
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings(undefined);
+
+    expect(warnings).toEqual([]);
+    // Verify brew command was not called
+    expect(extensionApi.process.exec).not.toHaveBeenCalled();
+  });
+
+  test('should return empty warnings when no multiple installations detected', async () => {
+    // Mock: Only Homebrew installation (no .dmg or MacPorts)
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman info',
+      stderr: '',
+    } as extensionApi.RunResult);
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+  });
+
+  test('should return empty warnings when customPath is set', async () => {
+    // Mock: Homebrew + .dmg exist, but customPath set
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman info',
+      stderr: '',
+    } as extensionApi.RunResult);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    // Mock the configuration directly - this is what getCustomBinaryPath() calls internally
+    const mockGet = vi.fn().mockReturnValue('/custom/path');
+    vi.spyOn(extensionApi.configuration, 'getConfiguration').mockReturnValue({
+      get: mockGet,
+      has: vi.fn(),
+      update: vi.fn(),
+    } as extensionApi.Configuration);
+
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+    expect(mockGet).toHaveBeenCalledWith('binary.path');
+  });
+
+  test('should return warning when Homebrew + .dmg detected', async () => {
+    // Mock: Homebrew exists
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman info',
+      stderr: '',
+    } as extensionApi.RunResult);
+    // Mock: .dmg exists
+    vi.mocked(fs.existsSync).mockImplementation(path => {
+      return path.toString() === '/opt/podman/bin/podman';
+    });
+
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([
+      {
+        name: 'Multiple Podman installations detected',
+        details:
+          'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+      },
+    ]);
+  });
+
+  test('should handle brew command failure and return empty warnings', async () => {
+    // Mock: brew command throws error
+    vi.mocked(extensionApi.process.exec).mockRejectedValueOnce(new Error('brew failed'));
+    const warnings = await extension.getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+    // When brew fails, the function should return empty warnings (no error logging expected)
+    expect(warnings).toEqual([]);
+  });
+});

@@ -46,7 +46,7 @@ import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import { getSocketCompatibility } from './utils/compatibility-mode';
 import { ExtensionNotifications } from './utils/notifications';
 import type { InstalledPodman } from './utils/podman-cli';
-import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
+import { getPodmanCli, getPodmanInstallation, isMultiplePodmanInstalledinMacos } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
@@ -697,10 +697,37 @@ export async function monitorProvider(
   }
 }
 
+export async function getMultiplePodmanInstallationsMacosWarnings(
+  installedPodman: InstalledPodman | undefined,
+): Promise<extensionApi.ProviderInformation[]> {
+  const warnings: extensionApi.ProviderInformation[] = [];
+
+  // Check for multiple Podman installations on macOS
+  if (extensionApi.env.isMac && installedPodman) {
+    try {
+      const hasMultiplePodmanInstallations = await isMultiplePodmanInstalledinMacos();
+      if (hasMultiplePodmanInstallations) {
+        warnings.push({
+          name: 'Multiple Podman installations detected',
+          details:
+            'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+        });
+      }
+    } catch (error) {
+      console.error('Error checking for multiple Podman installations', error);
+    }
+  }
+  return warnings;
+}
+
 export async function doMonitorProvider(provider: extensionApi.Provider): Promise<void> {
   try {
     const installedPodman = await getPodmanInstallation();
     provider.updateDetectionChecks(getDetectionChecks(installedPodman));
+
+    // get warnings for multiple Podman installations in macOS
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings(installedPodman);
+    provider.updateWarnings(warnings);
 
     // update version
     if (!installedPodman) {

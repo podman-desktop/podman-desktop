@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import * as fs from 'node:fs';
+
 import * as extensionApi from '@podman-desktop/api';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
@@ -23,15 +25,14 @@ export function getInstallationPath(): string | undefined {
   const env = process.env;
   if (extensionApi.env.isWindows) {
     return `c:\\Program Files\\RedHat\\Podman;${env.PATH}`;
-  } else if (extensionApi.env.isMac) {
+  }
+  if (extensionApi.env.isMac) {
     if (!env.PATH) {
       return macosExtraPath;
-    } else {
-      return env.PATH.concat(':').concat(macosExtraPath);
     }
-  } else {
-    return env.PATH;
+    return env.PATH.concat(':').concat(macosExtraPath);
   }
+  return env.PATH;
 }
 
 export function getPodmanCli(): string {
@@ -67,4 +68,34 @@ export async function getPodmanInstallation(): Promise<InstalledPodman | undefin
     // no podman binary
     return undefined;
   }
+}
+
+// Checks if there ara more than one version of podman installed in macos
+export async function isMultiplePodmanInstalledinMacos(): Promise<boolean> {
+  let isBrewInstalled = false;
+  let isDmgInstalled = false;
+
+  // Checks if custom binary path is set. If so, we don't need to check for multiple installations.
+  const customPath = getCustomBinaryPath();
+  console.log('customPath', customPath);
+  if (customPath) {
+    return false;
+  }
+
+  // Check if Podman is installed via Homebrew
+  try {
+    await extensionApi.process.exec('brew', ['list', '--verbose', 'podman'], {
+      env: { HOMEBREW_NO_AUTO_UPDATE: '1', HOMEBREW_NO_ANALYTICS: '1' },
+    });
+    isBrewInstalled = true;
+  } catch (err) {
+    // podman is not installed with brew
+    return false;
+  }
+  // Check each non-Homebrew path
+  if (fs.existsSync('/opt/podman/bin/podman') || fs.existsSync('/opt/local/bin/podman')) {
+    isDmgInstalled = true;
+  }
+  // Return true if we found more than one installation
+  return isBrewInstalled && isDmgInstalled;
 }
