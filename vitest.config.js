@@ -34,8 +34,8 @@ export default defineConfig({
       '!**/builtin/**',
     ],
     // use GitHub action reporters when running in CI
-    // reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
-    // outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
+    reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
+    outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
       all: true,
       clean: true,
@@ -49,6 +49,19 @@ export default defineConfig({
         '{website,scripts}/*',
       ],
       exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
+    },
+    poolOptions: {
+      forks: {
+        execArgv: [
+          '--cpu-prof',
+          '--cpu-prof-dir=test-runner-profile',
+          '--heap-prof',
+          '--heap-prof-dir=test-runner-profile',
+        ],
+
+        // To generate a single profile
+        singleFork: true,
+      },
     },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },

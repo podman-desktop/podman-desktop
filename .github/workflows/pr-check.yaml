@@ -302,6 +302,12 @@ jobs:
         if: ${{ matrix.os!='ubuntu-24.04' }}
         run: pnpm test:unit
 
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: runner-profile-${{ matrix.os }}
+          path: ./test-runner-profile/*
+
         # publish codecov report if linux
       - name: publish codecov report
         if: ${{ matrix.os=='ubuntu-24.04' }}
