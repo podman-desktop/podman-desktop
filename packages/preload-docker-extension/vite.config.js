@@ -19,6 +19,7 @@
 import { chrome } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
 const PACKAGE_NAME = 'preload-docker-extension';
@@ -37,14 +38,14 @@ const config = {
       '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
     },
   },
-  /*plugins: [
-     commonjs({
-       dynamicRequireTargets: [
-         // include using a glob pattern (either a string or an array of strings)
-         'node_modules/ssh2/lib/protocol/crypto/poly1305.js',
-       ]
-       }),
-   ],*/
+  plugins: [
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: 'preload-docker-extension',
+      uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false,
+    }),
+  ],
   build: {
     sourcemap: 'inline',
     target: `chrome${chrome}`,

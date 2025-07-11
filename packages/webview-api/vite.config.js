@@ -18,6 +18,7 @@
 /* eslint-env node */
 import { join } from 'path';
 import { defineConfig } from 'vite';
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -30,6 +31,14 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
+  plugins: [
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: 'webview-api',
+      uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false,
+    }),
+  ],
   base: '',
   server: {
     fs: {

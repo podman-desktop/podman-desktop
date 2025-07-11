@@ -19,6 +19,7 @@
 import { join } from 'path';
 import { builtinModules } from 'module';
 import { node } from '../../.electron-vendors.cache.json';
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -35,6 +36,14 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src', '/'),
     },
   },
+  plugins: [
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: 'extensions/kubectl-cli',
+      uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false,
+    }),
+  ],
   build: {
     sourcemap: 'inline',
     target: `node${node}`,
