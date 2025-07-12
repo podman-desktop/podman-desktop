@@ -48,6 +48,25 @@ const configurationRegistry = {
   }),
 } as unknown as ConfigurationRegistry;
 
+function mockAppGetPath(exe = appExePath, temp = tempPath, appData = appDataPath): void {
+  vi.mocked(app.getPath).mockImplementation(name => {
+    switch (name) {
+      case 'exe':
+        return exe;
+      case 'temp':
+        return temp;
+      case 'appData':
+        return appData;
+      default:
+        throw new Error('Unsupported path');
+    }
+  });
+}
+
+function mockFsExists(exists: boolean): void {
+  vi.mocked(existsSync).mockReturnValue(exists);
+}
+
 let windowsStartup: WindowsStartup;
 const appExePath = path.join('app-name', 'Podman Desktop.exe');
 const tempPath = 'temp';
@@ -55,19 +74,13 @@ const appDataPath = 'AppData';
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  mockAppGetPath();
   minimizeOnStatup.mockReturnValue(true);
 });
 
 test('Auto startup should not be enable for not portable installation in temp folder', async () => {
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(tempPath, appExePath);
-    }
-    if (name === 'temp') {
-      return tempPath;
-    }
-    throw new Error('Unsupported path');
-  });
+  vi.mocked(app.getPath).mockRestore();
+  mockAppGetPath(path.join(tempPath, appExePath), tempPath);
   windowsStartup = new WindowsStartup(configurationRegistry);
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).not.toHaveBeenCalled();
@@ -78,19 +91,7 @@ test('Autostart should be enabled for portable installation', async () => {
   vi.spyOn(process, 'env', 'get').mockReturnValue({
     PORTABLE_EXECUTABLE_FILE: portablePath,
   });
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(appExePath);
-    }
-    if (name === 'temp') {
-      return tempPath;
-    }
-    if (name === 'appData') {
-      return appDataPath;
-    }
-    throw new Error('Unsupported path');
-  });
-  vi.mocked(existsSync).mockReturnValue(false);
+  mockFsExists(false);
   windowsStartup = new WindowsStartup(configurationRegistry);
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
@@ -101,19 +102,7 @@ test('Autostart should be enabled for portable installation', async () => {
 });
 
 test('Autostart should be enabled for updated application when present', async () => {
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(appExePath);
-    }
-    if (name === 'temp') {
-      return tempPath;
-    }
-    if (name === 'appData') {
-      return appDataPath;
-    }
-    throw new Error('Unsupported path');
-  });
-  vi.mocked(existsSync).mockReturnValue(true);
+  mockFsExists(true);
   const resolvedUpdatedExecPath = path.join('Programs', 'Podman Desktop.exe');
   vi.spyOn(path, 'resolve').mockReturnValue(resolvedUpdatedExecPath);
   windowsStartup = new WindowsStartup(configurationRegistry);
@@ -126,19 +115,7 @@ test('Autostart should be enabled for updated application when present', async (
 });
 
 test('Autostart enable call should setup startup at login for normal installation minimized', async () => {
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(appExePath);
-    }
-    if (name === 'temp') {
-      return tempPath;
-    }
-    if (name === 'appData') {
-      return appDataPath;
-    }
-    throw new Error('Unsupported path');
-  });
-  vi.mocked(existsSync).mockReturnValue(false);
+  mockFsExists(false);
   windowsStartup = new WindowsStartup(configurationRegistry);
   await windowsStartup.enable();
   expect(app.setLoginItemSettings).toBeCalledWith({
@@ -149,19 +126,7 @@ test('Autostart enable call should setup startup at login for normal installatio
 });
 
 test('Autostart enable call should setup startup at login for normal installation not minimized', async () => {
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(appExePath);
-    }
-    if (name === 'temp') {
-      return tempPath;
-    }
-    if (name === 'appData') {
-      return appDataPath;
-    }
-    throw new Error('Unsupported path');
-  });
-  vi.mocked(existsSync).mockReturnValue(false);
+  mockFsExists(false);
   minimizeOnStatup.mockReturnValue(false);
   windowsStartup = new WindowsStartup(configurationRegistry);
   await windowsStartup.enable();
@@ -173,13 +138,7 @@ test('Autostart enable call should setup startup at login for normal installatio
 });
 
 test('Autostart disable call should disable startup at login', async () => {
-  vi.mocked(app.getPath).mockImplementation((name: Parameters<typeof app.getPath>[0]) => {
-    if (name === 'exe') {
-      return path.join(appExePath);
-    }
-    throw new Error('Unsupported path');
-  });
-  vi.mocked(existsSync).mockReturnValue(false);
+  mockFsExists(false);
   windowsStartup = new WindowsStartup(configurationRegistry);
   await windowsStartup.disable();
   expect(app.setLoginItemSettings).toBeCalledWith({
