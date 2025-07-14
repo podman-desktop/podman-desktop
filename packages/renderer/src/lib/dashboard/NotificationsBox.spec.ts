@@ -29,7 +29,7 @@ test('Expect notifications box to be hidden if there are no notifications in the
   notificationQueue.set([]);
   render(NotificationsBox);
 
-  const noNotificationsDiv = screen.queryByLabelText('Notifications');
+  const noNotificationsDiv = screen.queryByLabelText('Notifications Box');
   expect(noNotificationsDiv).not.toBeInTheDocument();
 });
 
