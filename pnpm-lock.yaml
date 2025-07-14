@@ -653,8 +653,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1(eslint@9.31.0(jiti@2.4.2))(svelte@5.35.5)
       filesize:
-        specifier: ^10.1.6
-        version: 10.1.6
+        specifier: ^11.0.1
+        version: 11.0.1
       humanize-duration:
         specifier: ^3.33.0
         version: 3.33.0
@@ -6906,8 +6906,8 @@ packages:
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
-  filesize@10.1.6:
-    resolution: {integrity: sha512-sJslQKU2uM33qH5nqewAwVB2QgR6w1aMNsYUp3aN5rMRyXEwJGmZvaWzeJFNTOXWlHQyBFCWrdj3fV/fsTOX8w==}
+  filesize@11.0.1:
+    resolution: {integrity: sha512-ua1SLPcFgqf1lICRVqTA5d8T6kqg2ZTIm0BImnUk4pZzfAlwhqO9zKv7GCE5FGl3zIbBZZSmq7yLikFNsi5eXw==}
     engines: {node: '>= 10.4.0'}
 
   filesize@8.0.7:
@@ -19562,7 +19562,7 @@ snapshots:
     dependencies:
       minimatch: 5.1.6
 
-  filesize@10.1.6: {}
+  filesize@11.0.1: {}
 
   filesize@8.0.7: {}
 
