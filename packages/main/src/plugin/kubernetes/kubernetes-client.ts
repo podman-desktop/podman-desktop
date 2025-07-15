@@ -262,7 +262,7 @@ export class KubernetesClient {
       }
     }
 
-    const statesExperimental = kubernetesConfiguration.get<boolean>('statesExperimental');
+    const statesExperimental = kubernetesConfiguration.get('statesExperimental');
     if (statesExperimental) {
       const manager = new ContextsManagerExperimental();
       this.contextsState = manager;
