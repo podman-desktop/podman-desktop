@@ -3058,7 +3058,9 @@ export class PluginSystem {
     apiSender.send('starting-extensions', `${this.isReady}`);
     console.log('System ready. Loading extensions...');
     try {
-      await this.extensionLoader.start();
+      if (process.env['NODE_ENV'] !== 'test') {
+        await this.extensionLoader.start();
+      }
       console.log('PluginSystem: initialization done.');
     } finally {
       apiSender.send('extensions-started');
