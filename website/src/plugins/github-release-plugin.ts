@@ -32,12 +32,6 @@ export interface WindowsDownloadData extends DownloadData {
 
 // --- Combined data types ---
 
-export interface AllDownloadsData {
-  linuxDownloads: LinuxDownloadData;
-  macosDownloads: MacosDownloadData;
-  windowsDownloads: WindowsDownloadData;
-}
-
 export interface GlobalData {
   linuxDownloads: LinuxDownloadData;
   macosDownloads: MacosDownloadData;
@@ -45,11 +39,11 @@ export interface GlobalData {
 }
 
 // The main plugin function, now strongly typed
-export default async function githubReleasePlugin(): Promise<Plugin<AllDownloadsData | null>> {
+export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>> {
   return {
     name: 'docusaurus-plugin-github-release',
 
-    async loadContent(): Promise<AllDownloadsData> {
+    async loadContent(): Promise<GlobalData> {
       console.log('Fetching latest GitHub release for podman-desktop using Octokit...');
 
       const octokit = new Octokit();
