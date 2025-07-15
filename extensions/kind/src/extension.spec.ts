@@ -415,14 +415,14 @@ describe('cli#install', () => {
   test('after selecting the version to be installed it should download kind', async () => {
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
     // mock prompt result
-    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
       tag: 'v1.0.0',
     } as unknown as KindGithubReleaseArtifactMetadata);
 
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
     // mock workflow (user select version then we install it)
-    await cliToolInstaller?.selectVersion();
+    await cliToolInstaller?.selectVersion(true);
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
     expect(KindInstaller.prototype.download).toHaveBeenCalledWith({

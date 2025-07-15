@@ -1326,9 +1326,12 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('selectCliToolVersionToInstall', async (id: string): Promise<string> => {
-    return ipcInvoke('cli-tool-registry:selectCliToolVersionToInstall', id);
-  });
+  contextBridge.exposeInMainWorld(
+    'selectCliToolVersionToInstall',
+    async (id: string, latest = true): Promise<string> => {
+      return ipcInvoke('cli-tool-registry:selectCliToolVersionToInstall', id, latest);
+    },
+  );
 
   contextBridge.exposeInMainWorld(
     'installCliTool',
