@@ -1006,11 +1006,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^2.5.7
-        version: 2.5.7
+        specifier: ^2.5.8
+        version: 2.5.8
       '@argos-ci/playwright':
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.6
+        version: 5.0.6
       '@playwright/test':
         specifier: 1.54.1
         version: 1.54.1
@@ -1123,21 +1123,21 @@ packages:
     resolution: {integrity: sha512-OljPFzxSNndWSwMBxKGtN3p8lSbt73z+/0CIXbBVTQOPjPMErXWjgtrFL23xqtTq5wdds3uxGv7tjVDWJbgBYg==}
     engines: {node: '>=18.0.0'}
 
-  '@argos-ci/cli@2.5.7':
-    resolution: {integrity: sha512-Qkiv8iFMA84ebTSaLxisAdjZN3J48Bayaz7fM5JHlOqbGLybh4BM+SK1MIyXbLihh/h1COk5g3S2qluX590Ttw==}
+  '@argos-ci/cli@2.5.8':
+    resolution: {integrity: sha512-llf/+lACysIpmukLtoMtt+UTJsFje8ZMuqmn5UfExuMPEau/TpEezYQdbW7qTUcEnQ1QGAMg1rs0iLrJ5MiHFw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  '@argos-ci/core@3.2.0':
-    resolution: {integrity: sha512-wraH5RGFpoU7zcKV2BVi4LvY+5bWR/Ds6OVhUtq3jtd7I3qJRFVFq2IX1TfPPvBBA7wX0OqcrqgIWAQwy+vsoA==}
+  '@argos-ci/core@3.2.1':
+    resolution: {integrity: sha512-P+tGofNLAtH0+e87M8sZc+juAtbOcnV6z2nA2MwB2OzUVVXGINJHAF2cK0ZUyXC9d8a7RL0+rQWkP4vXDA/gBw==}
     engines: {node: '>=18.0.0'}
 
-  '@argos-ci/playwright@5.0.5':
-    resolution: {integrity: sha512-ZqaqptjI8rVUjD2KQzpvI1olFDiiMjgDaIyFOMWo8531cB7CMCwPXDNsFw2psUfsz3a3LP91eH2OrJopmevEkQ==}
+  '@argos-ci/playwright@5.0.6':
+    resolution: {integrity: sha512-GvMmZJLHqmfDUD/IoWzQ8k47bpdbs/652mE6oZM3HJfkozZViRZOydRFLxQZ5bhl1GFYMxu4NIxzTpa7GlQXaw==}
     engines: {node: '>=18.16.0'}
 
-  '@argos-ci/util@2.3.1':
-    resolution: {integrity: sha512-kE61HU2480fbAnimmA4x9HK45ZJvkoqLdW5GxT5uvwhkclQykVd2S6WfGFUr3JokTXfZ5LZEEfoWgtGA316KSQ==}
+  '@argos-ci/util@2.3.2':
+    resolution: {integrity: sha512-xtNHJxpWYNst/sMNn4Jv/vkODuFsJ+APr4FBeoFUdIa+Izjl4ZFHsYA2PUyu+ygIpQCkof8yZLL9U1/VpiyyIw==}
     engines: {node: '>=18.0.0'}
 
   '@asamuzakjp/css-color@3.2.0':
@@ -2428,6 +2428,9 @@ packages:
 
   '@emnapi/runtime@1.4.3':
     resolution: {integrity: sha512-pBPWdu6MLKROBX05wSNKcNb++m5Er+KQ9QkB+WVM+pW2Kx9hoSrVTnu3BdkI5eBLZoKu/J6mW/B6i6bJB2ytXQ==}
+
+  '@emnapi/runtime@1.4.4':
+    resolution: {integrity: sha512-hHyapA4A3gPaDCNfiqyZUStTMqIkKRshqPIuDOXv1hcBnD4U3l8cP0T1HMCfGRxQ6V64TGCcoswChANyOAwbQg==}
 
   '@emnapi/wasi-threads@1.0.2':
     resolution: {integrity: sha512-5n3nTJblwRi8LlXkJ9eBzu+kZR8Yxcc7ubakyQTFzPMtIhFpUBRbsnc2Dv88IZDIbCDlBiWrknhB4Lsz7mg6BA==}
@@ -12080,19 +12083,19 @@ snapshots:
 
   '@argos-ci/browser@4.1.2': {}
 
-  '@argos-ci/cli@2.5.7':
+  '@argos-ci/cli@2.5.8':
     dependencies:
-      '@argos-ci/core': 3.2.0
+      '@argos-ci/core': 3.2.1
       commander: 13.1.0
       ora: 8.2.0
       update-notifier: 7.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@3.2.0':
+  '@argos-ci/core@3.2.1':
     dependencies:
       '@argos-ci/api-client': 0.8.1
-      '@argos-ci/util': 2.3.1
+      '@argos-ci/util': 2.3.2
       axios: 1.10.0(debug@4.4.1)
       convict: 6.2.4
       debug: 4.4.1
@@ -12102,17 +12105,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@5.0.5':
+  '@argos-ci/playwright@5.0.6':
     dependencies:
       '@argos-ci/browser': 4.1.2
-      '@argos-ci/core': 3.2.0
-      '@argos-ci/util': 2.3.1
+      '@argos-ci/core': 3.2.1
+      '@argos-ci/util': 2.3.2
       chalk: 5.4.1
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/util@2.3.1': {}
+  '@argos-ci/util@2.3.2': {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -14375,6 +14378,11 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@emnapi/runtime@1.4.4':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
   '@emnapi/wasi-threads@1.0.2':
     dependencies:
       tslib: 2.8.1
@@ -14738,7 +14746,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.33.5':
     dependencies:
-      '@emnapi/runtime': 1.4.3
+      '@emnapi/runtime': 1.4.4
     optional: true
 
   '@img/sharp-win32-ia32@0.33.5':
