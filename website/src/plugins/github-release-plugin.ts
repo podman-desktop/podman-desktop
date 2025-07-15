@@ -13,17 +13,19 @@ interface GitHubRelease {
   assets: GitHubAsset[];
 }
 
+interface DownloadData {
+  version: string;
+}
+
 // --- Data type definitions for each OS ---
 
-export interface LinuxDownloadData {
-  version: string;
+export interface LinuxDownloadData extends DownloadData {
   flatpak: string;
   amd64: string;
   arm64: string;
 }
 
-export interface MacosDownloadData {
-  version: string;
+export interface MacosDownloadData extends DownloadData {
   universal: string;
   x64: string;
   arm64: string;
@@ -31,8 +33,7 @@ export interface MacosDownloadData {
   airgapsetupArm64: string;
 }
 
-export interface WindowsDownloadData {
-  version: string;
+export interface WindowsDownloadData extends DownloadData {
   binaryX64: string;
   binaryArm64: string;
   setupX64: string;
