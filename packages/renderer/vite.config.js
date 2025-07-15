@@ -24,6 +24,7 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'url';
 import tailwindcss from '@tailwindcss/vite';
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
@@ -38,7 +39,17 @@ export default defineConfig({
       '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ hot: !process.env.VITEST }), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    svelte({ hot: !process.env.VITEST }),
+    svelteTesting(),
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: 'renderer',
+      uploadToken: process.env.CODECOV_TOKEN,
+      telemetry: false,
+    }),
+  ],
   optimizeDeps: {
     exclude: ['tinro'],
   },

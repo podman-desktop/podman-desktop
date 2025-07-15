@@ -152,6 +152,7 @@
     "shell-path": "^3.0.0"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^1.9.1",
     "@types/semver": "^7.7.0",
     "adm-zip": "^0.5.16",
     "byline": "^5.0.0",

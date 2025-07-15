@@ -42,6 +42,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^1.9.1",
     "adm-zip": "^0.5.16",
     "@types/js-yaml": "^4.0.9",
     "mkdirp": "^3.0.1",
