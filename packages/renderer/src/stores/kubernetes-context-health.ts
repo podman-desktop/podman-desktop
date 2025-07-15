@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,12 @@ import { EventStore } from './event-store';
 const windowEvents = ['kubernetes-contexts-healths', 'extension-stopped', 'extensions-started'];
 const windowListeners = ['extensions-already-started'];
 
-let experimentalStates: boolean | undefined = undefined;
 let readyToUpdate = false;
 
 export async function checkForUpdate(eventName: string): Promise<boolean> {
   // check for update only in experimental states mode
-  experimentalStates ??= (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
-  if (experimentalStates === false) {
+  const kubernetesExperimentalEnabled = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');;
+  if (!kubernetesExperimentalEnabled) {
     return false;
   }
 

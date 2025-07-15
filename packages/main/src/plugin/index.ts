@@ -144,6 +144,10 @@ import { InjectableColorRegistry } from './color-registry-inject.js';
 import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
+import {
+  ConfigurationRegistryExperimental,
+  type ExperimentalFeatureConfiguration,
+} from './configuration-registry-experimental.js';
 import { ConfirmationInit } from './confirmation-init.js';
 import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
@@ -437,6 +441,19 @@ export class PluginSystem {
     return configurationRegistry;
   }
 
+  protected initExperimentalConfigurationRegistry(
+    container: Container,
+    notifications: NotificationCardOptions[],
+    configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
+  ): ConfigurationRegistryExperimental {
+    const configurationRegistryExperimental = container.get<ConfigurationRegistryExperimental>(
+      ConfigurationRegistryExperimental,
+    );
+    notifications.push(...configurationRegistryExperimental.init());
+    configurationRegistryEmitter.fire(configurationRegistryExperimental);
+    return configurationRegistryExperimental;
+  }
+
   // initialize extension loader mechanism
   async initExtensions(configurationRegistryEmitter: Emitter<ConfigurationRegistry>): Promise<ExtensionLoader> {
     const notifications: NotificationCardOptions[] = [];
@@ -474,6 +491,14 @@ export class PluginSystem {
       notifications,
       configurationRegistryEmitter,
     );
+
+    container.bind<ConfigurationRegistryExperimental>(ConfigurationRegistryExperimental).toSelf().inSingletonScope();
+    const configurationRegistryExperimental = this.initExperimentalConfigurationRegistry(
+      container,
+      notifications,
+      configurationRegistryEmitter,
+    );
+
     container.bind<ColorRegistry>(ColorRegistry).to(InjectableColorRegistry).inSingletonScope();
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
@@ -2010,6 +2035,42 @@ export class PluginSystem {
         scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
       ): Promise<void> => {
         return configurationRegistry.updateConfigurationValue(key, value, scope);
+      },
+    );
+
+    // Configuration registry experimental handlers
+    this.ipcHandle(
+      'configuration-registry-experimental:updateExperimentalConfigurationValue',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        config?: ExperimentalFeatureConfiguration,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<void> => {
+        return configurationRegistryExperimental.updateExperimentalConfigurationValue(key, config, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'configuration-registry-experimental:isExperimentalConfigurationEnabled',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<boolean> => {
+        return configurationRegistryExperimental.isExperimentalConfigurationEnabled(key, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'configuration-registry-experimental:toggleExperimentalConfiguration',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        enable: boolean,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<void> => {
+        return configurationRegistryExperimental.toggleExperimentalConfiguration(key, enable, scope);
       },
     );
 

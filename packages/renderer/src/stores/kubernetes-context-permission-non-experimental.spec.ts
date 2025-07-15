@@ -34,7 +34,7 @@ beforeAll(() => {
   Object.defineProperty(global, 'window', {
     value: {
       kubernetesGetContextsPermissions: vi.fn(),
-      getConfigurationValue: vi.fn(),
+      isExperimentalConfigurationEnabled: vi.fn(),
       addEventListener: eventEmitter.receive,
       events: {
         receive: eventEmitter.receive,
@@ -44,7 +44,7 @@ beforeAll(() => {
 });
 
 test('kubernetesContextsPermissions in experimental states mode', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
 
   const initialValues: ContextPermission[] = [
     {
