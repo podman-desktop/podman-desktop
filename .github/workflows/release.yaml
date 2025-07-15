@@ -134,8 +134,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: "windows-2022"
-          - os: "windows-2022"
+          - os: "windows-2025"
+          - os: "windows-2025"
             airgap: "true"
           - os: "macos-15"
           - os: "macos-15"

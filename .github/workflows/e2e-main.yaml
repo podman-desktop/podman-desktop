@@ -176,7 +176,7 @@ jobs:
 
   win-update-e2e-test:
     name: win update e2e tests - ${{ matrix.installation }}
-    runs-on: windows-2022
+    runs-on: windows-2025
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:

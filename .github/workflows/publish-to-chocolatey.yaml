@@ -63,7 +63,7 @@ jobs:
       contents: write  # for Git to git push
     name: Update Chocolatey
     needs: version
-    runs-on: windows-2022
+    runs-on: windows-2025
     defaults:
       run:
         shell: powershell
