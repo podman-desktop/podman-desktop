@@ -20,7 +20,7 @@ import type { Configuration } from '@podman-desktop/api';
 import { shell } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { IConfigurationChangeEvent, IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { Timestamp } from './experimental-feature-feedback-form.js';
@@ -34,17 +34,17 @@ vi.mock('electron', () => ({
 }));
 
 const features: Record<string, IConfigurationPropertyRecordedSchema> = {
-  feature1: {
+  'feat.feature1': {
     title: 'feat.feature1',
     parentId: 'parent1',
     experimental: { githubDiscussionLink: 'https://feature.link.1.com' },
   },
-  feature2: {
+  'feat.feature2': {
     title: 'feat.feature2',
     parentId: 'parent2',
     experimental: { githubDiscussionLink: 'https://feature.link.2.com' },
   },
-  feature3: {
+  'feat.feature3': {
     title: 'feat.feature3',
     parentId: 'parent3',
     experimental: { githubDiscussionLink: 'https://feature.link.3.com' },
@@ -92,8 +92,8 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
     return super.showFeedbackDialog();
   }
 
-  override async save(): Promise<void> {
-    return super.save();
+  override async save(id: string): Promise<void> {
+    return super.save(id);
   }
 
   override disableFeature(id: string): void {
@@ -127,16 +127,16 @@ describe('init', () => {
     await feedbackForm.init();
 
     expect(setReminderSpy).toHaveBeenCalledTimes(3);
-    expect(setReminderSpy).toHaveBeenCalledWith('feature1');
-    expect(setReminderSpy).toHaveBeenCalledWith('feature2');
-    expect(setReminderSpy).toHaveBeenCalledWith('feature3');
+    expect(setReminderSpy).toHaveBeenCalledWith('feat.feature1');
+    expect(setReminderSpy).toHaveBeenCalledWith('feat.feature2');
+    expect(setReminderSpy).toHaveBeenCalledWith('feat.feature3');
 
     expect(showFeedbackDialogSpy).not.toHaveBeenCalled();
   });
 
   test('should load existing timestamps and show dialog', async () => {
-    const existingTimestamps = { feature1: 123456, feature2: 789012 };
-    configurationGetMock.mockReturnValue(existingTimestamps);
+    const conf = { remindAt: 123456, disabled: false };
+    configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
 
@@ -148,48 +148,7 @@ describe('init', () => {
     expect(showFeedbackDialogSpy).toHaveBeenCalledTimes(1);
     expect(setReminderSpy).not.toHaveBeenCalled();
 
-    expect(feedbackForm.timestamps.get('feature1')).toBe(123456);
-    expect(feedbackForm.timestamps.get('feature2')).toBe(789012);
-  });
-
-  describe('onDidChangeConfiguration event handler', () => {
-    let capturedCallback: (e: IConfigurationChangeEvent) => void;
-
-    beforeEach(() => {
-      vi.mocked(configurationRegistry.onDidChangeConfiguration).mockImplementation(callback => {
-        capturedCallback = callback;
-        return { dispose: vi.fn() };
-      });
-
-      vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-      configurationGetMock.mockReturnValue(undefined);
-      vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-    });
-
-    test('should call setTimestamp with days when an experimental feature is enabled', async () => {
-      await feedbackForm.init();
-      capturedCallback({ key: 'feature1', value: true, scope: 'default' });
-      expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 2);
-    });
-
-    test('should NOT call setTimestamp when an experimental feature is disabled', async () => {
-      await feedbackForm.init();
-      capturedCallback({ key: 'feature1', value: false, scope: 'default' });
-      expect(setTimestampSpy).not.toHaveBeenCalled();
-    });
-
-    test('should NOT call setTimestamp for a non-experimental feature change', async () => {
-      await feedbackForm.init();
-      capturedCallback({ key: 'regularFeature', value: true, scope: 'default' });
-      expect(setTimestampSpy).not.toHaveBeenCalled();
-    });
-
-    test('should NOT call setTimestamp for experimental feature with "disabled" value', async () => {
-      feedbackForm.disabled = ['feature1'];
-      await feedbackForm.init();
-      capturedCallback({ key: 'feature1', value: true, scope: 'default' });
-      expect(setTimestampSpy).not.toHaveBeenCalled();
-    });
+    expect(feedbackForm.timestamps.get('feat.feature1')).toBe(123456);
   });
 });
 
@@ -276,7 +235,7 @@ describe('showFeedbackDialog', () => {
 
   test('should open external link when user clicks "Share Feedback"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { feature1: pastTimestamp };
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     configurationGetMock.mockReturnValue(existingTimestamps);
 
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -290,12 +249,12 @@ describe('showFeedbackDialog', () => {
 
     expect(messageBox.showMessageBox).toHaveBeenCalledTimes(1);
     expect(openExternalSpy).toHaveBeenCalledWith('https://feature.link.1.com');
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', undefined);
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', undefined);
   });
 
   test('should set timestamp for 1 day when user selects "Remind me tomorrow"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { feature1: pastTimestamp };
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     configurationGetMock.mockReturnValue(existingTimestamps);
 
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -307,13 +266,13 @@ describe('showFeedbackDialog', () => {
     // For setting timestamps
     await feedbackForm.init();
 
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 1);
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 1);
     expect(openExternalSpy).not.toHaveBeenCalled();
   });
 
   test('should set timestamp for 2 days when user selects "Remind me in 2 days"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { feature1: pastTimestamp };
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     configurationGetMock.mockReturnValue(existingTimestamps);
 
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -325,13 +284,13 @@ describe('showFeedbackDialog', () => {
     // For setting timestamps
     await feedbackForm.init();
 
-    expect(setTimestampSpy).toHaveBeenCalledWith('feature1', 2);
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 2);
     expect(openExternalSpy).not.toHaveBeenCalled();
   });
 
   test('should call disableFeature when user selects "Dont show again"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { feature1: pastTimestamp };
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     configurationGetMock.mockReturnValue(existingTimestamps);
 
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -346,7 +305,7 @@ describe('showFeedbackDialog', () => {
     expect(setTimestampSpy).not.toHaveBeenCalled();
     expect(openExternalSpy).not.toHaveBeenCalled();
     expect(disableFeatureSpy).toBeCalledTimes(1);
-    expect(disableFeatureSpy).toBeCalledWith('feature1');
+    expect(disableFeatureSpy).toBeCalledWith('feat.feature1');
   });
 
   test('should NOT show a dialog if the timestamp is in the future', async () => {
@@ -364,13 +323,12 @@ describe('showFeedbackDialog', () => {
 
   test('should NOT show dialog when is a feature disabled', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { feature1: pastTimestamp, feature2: pastTimestamp };
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: true };
     configurationGetMock.mockReturnValue(existingTimestamps);
 
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
 
-    feedbackForm.disabled = ['feature1', 'feature2'];
     // For setting timestamps
     await feedbackForm.init();
 
