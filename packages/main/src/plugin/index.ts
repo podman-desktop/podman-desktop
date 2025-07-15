@@ -753,12 +753,6 @@ export class PluginSystem {
 
     await this.setupSecurityRestrictionsOnLinks(messageBox);
 
-    container.bind<ExperimentalFeatureFeedbackForm>(ExperimentalFeatureFeedbackForm).toSelf().inSingletonScope();
-    const experimentalFeatureFeedbackForm = container.get<ExperimentalFeatureFeedbackForm>(
-      ExperimentalFeatureFeedbackForm,
-    );
-    await experimentalFeatureFeedbackForm.init();
-
     this.ipcHandle('tasks:clear-all', async (): Promise<void> => {
       return taskManager.clearTasks();
     });

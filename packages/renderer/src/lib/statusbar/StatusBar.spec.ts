@@ -126,7 +126,6 @@ describe('providers', () => {
   test('providers are hidden when configuration changes from true to false', async () => {
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValueOnce(false);
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValueOnce(true);
-
     render(StatusBar);
 
     await vi.waitFor(() => {

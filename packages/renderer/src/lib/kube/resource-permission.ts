@@ -26,7 +26,6 @@ export async function listenResourcePermitted(
   callback: (permitted: boolean) => void,
 ): Promise<IDisposable> {
   const experimental = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
-
   let contextName = '';
   let permissions: ContextPermission[] = [];
 

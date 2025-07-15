@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type containerDesktopAPI from '@podman-desktop/api';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
@@ -34,7 +33,6 @@ const DAYS_TO_MS = 24 * 60 * 60 * 1_000;
 @injectable()
 export class ExperimentalFeatureFeedbackForm {
   #disposables: IDisposable[] = [];
-  protected configuration: containerDesktopAPI.Configuration | undefined;
   protected timestamps: Map<string, Timestamp> = new Map();
   protected disabled: string[] = [];
   protected experimentalFeatures: Set<string> = new Set([]);
@@ -48,10 +46,32 @@ export class ExperimentalFeatureFeedbackForm {
     this.#configurationRegistry = this.configurationRegistry;
   }
 
-  protected async save(): Promise<void> {
-    if (!this.configuration) throw new Error('Error while trying to save the experimental mode settings');
-    await this.configuration.update('remindAt', Object.fromEntries(this.timestamps));
-    await this.configuration.update('disabled', this.disabled);
+  protected async save(key: string): Promise<void> {
+    // If timestamp does not exist, the feature is not enabled
+    const timestamp: Timestamp = this.timestamps.get(key);
+    let disabled: boolean | undefined = this.disabled.includes(key);
+    if (!timestamp) {
+      // Timestam does not exist we need to set disabled manualy, otherwise we would endup with:
+      // feature {
+      //  "disabled" : false
+      // }
+      disabled = undefined;
+    }
+    const conf =
+      disabled || timestamp
+        ? {
+            remindAt: timestamp,
+            disabled: disabled,
+          }
+        : undefined;
+
+    const parts = key.split('.');
+    const firstPart = parts[0];
+    const secondPart = parts[1];
+    if (secondPart) {
+      const configuration = this.#configurationRegistry.getConfiguration(firstPart);
+      await configuration?.update(secondPart, conf);
+    }
   }
 
   dispose(): void {
@@ -66,62 +86,40 @@ export class ExperimentalFeatureFeedbackForm {
         this.experimentalFeatures.add(configurationKey);
     }
 
-    this.#disposables.push(
-      this.#configurationRegistry.registerConfigurations([
-        {
-          id: 'experimentalFeatures',
-          title: 'Experimental Features',
-          type: 'object',
-          scope: 'DEFAULT',
-          properties: {
-            ['remindAt']: {
-              description: 'Notification timestamp for each experimental feature',
-              type: 'object',
-              hidden: true,
-            },
-            ['disabled']: {
-              description: 'Array containing disabled experimental features that has disabled showing feedback form',
-              type: 'array',
-              hidden: true,
-            },
-          },
-        },
-      ]),
-      this.#configurationRegistry.onDidChangeConfiguration(event => {
-        // If configuration changed and if is experimenal feature
-        if (this.experimentalFeatures.has(event.key) && typeof event.value === 'boolean') {
-          // If we detect change, check if the timestamp for a feature does not have disabled value
-          // -> was previously selected "Don't show again"
-          if (this.disabled.includes(event.key)) {
-            return;
-          }
+    for (const feat of this.experimentalFeatures.values()) {
+      // Get configuration from settings.json
+      const parts = feat.split('.');
+      const firstPart = parts[0];
+      const secondPart = parts[1];
+      if (!secondPart) return;
 
-          // If value === true the feature is now enabled we want to schedule notification in 2 days if not done yet
-          // If value === false, the feature is disabled and we want keep curent value in settings
-          if (event.value && !this.timestamps.has(event.key)) {
-            this.setTimestamp(event.key, 2);
-          }
+      const conf = this.#configurationRegistry.getConfiguration(firstPart).get(secondPart);
+      // Set to undefined if is the feature disabled
+      let optionDisabled = undefined;
+      let optionRemindAt: Timestamp = undefined;
+      if (conf && typeof conf === 'object' && 'disabled' in conf && 'remindAt' in conf) {
+        optionDisabled = conf.disabled;
+        if (typeof conf.remindAt === 'number') optionRemindAt = conf.remindAt;
+      }
+
+      if (optionDisabled && !this.disabled.includes(feat)) {
+        this.disabled.push(feat);
+      } else if (!optionDisabled) {
+        const index = this.disabled.indexOf(feat, 0);
+        if (index > -1) {
+          this.disabled.splice(index, 1);
         }
-      }),
-    );
+      }
 
-    // Get configuration from settings.json
-    this.configuration = this.#configurationRegistry.getConfiguration('experimentalFeatures');
-    const optionsDisabled = this.configuration.get<string[]>('disabled');
-    const optionsRemindAt = this.configuration.get('remindAt');
-
-    if (Array.isArray(optionsDisabled)) {
-      this.disabled = optionsDisabled;
-    }
-
-    if (optionsRemindAt) {
-      this.timestamps = new Map<string, Timestamp>(Object.entries(optionsRemindAt).map(([k, v]) => [k as string, v!]));
-      await this.showFeedbackDialog();
-    } else {
-      // when started for first time, we need to set the timetamps for each experimental feature
-      this.experimentalFeatures.forEach(feature => {
-        this.setReminder(feature);
-      });
+      if (optionRemindAt) {
+        this.timestamps.set(feat, optionRemindAt);
+        await this.showFeedbackDialog();
+        // We want to show only one dialog at the time
+        return;
+      } else {
+        // when started for first time, we need to set the timetamps for each experimental feature
+        this.setReminder(feat);
+      }
     }
   }
 
@@ -137,7 +135,7 @@ export class ExperimentalFeatureFeedbackForm {
     }
     // update configuration
     this.timestamps.set(feature, date);
-    this.save().catch((e: unknown) =>
+    this.save(feature).catch((e: unknown) =>
       console.error(`Got error when saving timestamps for experimental features: ${e}`),
     );
   }
@@ -149,9 +147,7 @@ export class ExperimentalFeatureFeedbackForm {
   protected setReminder(configurationName: string): void {
     const splittedName = configurationName.split('.');
     if (splittedName.length >= 2 && splittedName[1]) {
-      const configurationValue = this.#configurationRegistry
-        .getConfiguration(splittedName[0])
-        .get<boolean>(splittedName[1]);
+      const configurationValue = this.#configurationRegistry.getConfiguration(splittedName[0]).get(splittedName[1]);
       if (configurationValue) this.setTimestamp(configurationName, 2);
       else this.setTimestamp(configurationName, undefined);
     }
@@ -176,7 +172,7 @@ export class ExperimentalFeatureFeedbackForm {
   protected disableFeature(id: string): void {
     if (!this.disabled.includes(id)) {
       this.disabled.push(id);
-      this.save().catch((e: unknown) =>
+      this.save(id).catch((e: unknown) =>
         console.error(`Got error when saving timestamps for experimental features: ${e}`),
       );
     }
@@ -193,7 +189,9 @@ export class ExperimentalFeatureFeedbackForm {
 
       // Compare timestamp of each experimental feature
       const date = new Date();
+      console.log(timestamp, date.getTime(), timestamp, date.getTime());
       if (timestamp > date.getTime()) return;
+      console.log('HEE');
       const featureName = this.formatName(key);
       const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
       const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
