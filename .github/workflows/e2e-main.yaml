@@ -257,7 +257,7 @@ jobs:
 
   mac-update-e2e-test:
     name: mac update e2e tests
-    runs-on: macos-latest
+    runs-on: macos-15
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     env:

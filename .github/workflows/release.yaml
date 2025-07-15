@@ -137,8 +137,8 @@ jobs:
           - os: "windows-2022"
           - os: "windows-2022"
             airgap: "true"
-          - os: "macos-14"
-          - os: "macos-14"
+          - os: "macos-15"
+          - os: "macos-15"
             airgap: "true"
           - os: "ubuntu-24.04"
     timeout-minutes: 60
