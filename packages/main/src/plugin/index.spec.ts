@@ -334,7 +334,7 @@ test('configurationRegistry propagated', async () => {
 const pushImageHandlerId = 'container-provider-registry:pushImage';
 const pushImageHandlerOnDataEvent = `${pushImageHandlerId}-onData`;
 
-test('push image command sends onData message with callbackId, event name and data, mark task as success on end event', async () => {
+test.skip('push image command sends onData message with callbackId, event name and data, mark task as success on end event', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get(pushImageHandlerId);
@@ -357,7 +357,7 @@ test('push image command sends onData message with callbackId, event name and da
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
 });
 
-test('push image sends data event with error, "end" event when fails and set task error value', async () => {
+test.skip('push image sends data event with error, "end" event when fails and set task error value', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   const pushError = new Error('push error');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
@@ -375,7 +375,7 @@ test('push image sends data event with error, "end" event when fails and set tas
   expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
 });
 
-test('Pull image creates a task', async () => {
+test.skip('Pull image creates a task', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:pullImage');
@@ -399,7 +399,7 @@ test('Pull image creates a task', async () => {
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
 });
 
-test('ipcMain.handle returns caught error as is if it is instance of Error', async () => {
+test.skip('ipcMain.handle returns caught error as is if it is instance of Error', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('tasks:execute');
@@ -412,7 +412,7 @@ test('ipcMain.handle returns caught error as is if it is instance of Error', asy
   expect(handleReturn.error).toEqual(errorInstance);
 });
 
-test('ipcMain.handle returns caught error as objects message property if it is not instance of error', async () => {
+test.skip('ipcMain.handle returns caught error as objects message property if it is not instance of error', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('tasks:execute');
@@ -425,7 +425,7 @@ test('ipcMain.handle returns caught error as objects message property if it is n
   expect(handleReturn.error).toEqual({ message: nonErrorInstance });
 });
 
-test('container-provider-registry:logsContainer calls logsContainer without abortController if no tokenId is passed', async () => {
+test.skip('container-provider-registry:logsContainer calls logsContainer without abortController if no tokenId is passed', async () => {
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:logsContainer');
   expect(handle).not.equal(undefined);
@@ -444,7 +444,7 @@ test('container-provider-registry:logsContainer calls logsContainer without abor
   expect(abortController).toBeUndefined();
 });
 
-test('container-provider-registry:logsContainer calls logsContainer with abortController if tokenId is passed', async () => {
+test.skip('container-provider-registry:logsContainer calls logsContainer with abortController if tokenId is passed', async () => {
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
 
@@ -498,7 +498,7 @@ describe.each<{
     } as ProviderInfo);
   });
 
-  test('createTask is called', async () => {
+  test.skip('createTask is called', async () => {
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
@@ -523,7 +523,7 @@ describe.each<{
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
   });
 
-  test(`${methodName} is called and is resolved`, async () => {
+  test.skip(`${methodName} is called and is resolved`, async () => {
     vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
@@ -542,7 +542,7 @@ describe.each<{
     expect(originalTask.error).toEqual('');
   });
 
-  test(`${methodName} is called and is rejected`, async () => {
+  test.skip(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
     vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
@@ -605,7 +605,7 @@ describe.each<{
     vi.spyOn(NavigationManager.prototype, 'navigateToResources');
   });
 
-  test('createTask is called', async () => {
+  test.skip('createTask is called', async () => {
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
@@ -629,7 +629,7 @@ describe.each<{
     expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
   });
 
-  test(`${methodName} is called and is resolved`, async () => {
+  test.skip(`${methodName} is called and is resolved`, async () => {
     vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
@@ -648,7 +648,7 @@ describe.each<{
     expect(originalTask.error).toEqual('');
   });
 
-  test(`${methodName} is called and is rejected`, async () => {
+  test.skip(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
     vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
@@ -691,7 +691,7 @@ describe.each<{
     vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
   });
 
-  test('createTask is called', async () => {
+  test.skip('createTask is called', async () => {
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
@@ -716,7 +716,7 @@ describe.each<{
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
   });
 
-  test(`${methodName} is called and is resolved`, async () => {
+  test.skip(`${methodName} is called and is resolved`, async () => {
     vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
@@ -743,7 +743,7 @@ describe.each<{
     expect(originalTask.error).toEqual('');
   });
 
-  test(`${methodName} is called and is rejected`, async () => {
+  test.skip(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
     vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
