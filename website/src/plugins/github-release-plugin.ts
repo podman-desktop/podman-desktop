@@ -1,17 +1,5 @@
 import type { Plugin } from '@docusaurus/types';
-
-// Type definition for an asset from the GitHub API response
-interface GitHubAsset {
-  name: string;
-  browser_download_url: string;
-}
-
-// Type definition for the relevant parts of the GitHub release API response
-interface GitHubRelease {
-  tag_name?: string;
-  name: string;
-  assets: GitHubAsset[];
-}
+import { Octokit } from '@octokit/rest';
 
 interface DownloadData {
   version: string;
@@ -56,41 +44,42 @@ export interface GlobalData {
   windowsDownloads: WindowsDownloadData;
 }
 
-// Helper function to find an asset or throw an error
-function findAssetOrThrow(
-  assets: GitHubAsset[],
-  predicate: (asset: GitHubAsset) => boolean,
-  assetName: string,
-): string {
-  const asset = assets.find(predicate);
-  if (!asset) {
-    throw new Error(`Required asset not found: ${assetName}`);
-  }
-  return asset.browser_download_url;
-}
-
 // The main plugin function, now strongly typed
 export default async function githubReleasePlugin(): Promise<Plugin<AllDownloadsData | null>> {
   return {
     name: 'docusaurus-plugin-github-release',
 
     async loadContent(): Promise<AllDownloadsData | null> {
-      console.log('Fetching latest GitHub release for podman-desktop...');
+      console.log('Fetching latest GitHub release for podman-desktop using Octokit...');
+
+      const octokit = new Octokit();
 
       try {
-        const response = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch latest release: ${response.statusText}`);
+        const { data: releaseData } = await octokit.rest.repos.getLatestRelease({
+          owner: 'containers',
+          repo: 'podman-desktop',
+        });
+
+        const { tag_name, assets } = releaseData;
+
+        if (!tag_name) {
+          throw new Error(`No tag name for latest release`);
         }
-        const releaseData = (await response.json()) as GitHubRelease;
-        const { tag_name, name: rawName, assets } = releaseData;
-        const version = (tag_name ?? rawName).replace(/^v/, '');
+        const version = tag_name.replace(/^v/, ''); // Add a fallback for rawName in case it's undefined
+
+        // Helper function to find an asset or throw an error
+        function findAssetOrThrow(predicate: (asset: (typeof assets)[0]) => boolean, assetName: string): string {
+          const asset = assets.find(predicate);
+          if (!asset) {
+            throw new Error(`Required asset not found: ${assetName}`);
+          }
+          return asset.browser_download_url;
+        }
 
         // --- Linux ---
-        const flatpakUrl = findAssetOrThrow(assets, a => a.name.endsWith('.flatpak'), 'Linux Flatpak');
-        const linuxArmUrl = findAssetOrThrow(assets, a => a.name.endsWith('-arm64.tar.gz'), 'Linux ARM64 .tar.gz');
+        const flatpakUrl = findAssetOrThrow(a => a.name.endsWith('.flatpak'), 'Linux Flatpak');
+        const linuxArmUrl = findAssetOrThrow(a => a.name.endsWith('-arm64.tar.gz'), 'Linux ARM64 .tar.gz');
         const linuxAmdUrl = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('.tar.gz') && !a.name.includes('arm64'),
           'Linux AMD64 .tar.gz',
         );
@@ -104,17 +93,14 @@ export default async function githubReleasePlugin(): Promise<Plugin<AllDownloads
 
         // --- macOS ---
         const macosArm64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-arm64.dmg') && !a.name.includes('airgap'),
           'macOS ARM64 DMG',
         );
         const macosX64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-x64.dmg') && !a.name.includes('airgap'),
           'macOS x64 DMG',
         );
         const macosUniversalUrl = findAssetOrThrow(
-          assets,
           a =>
             a.name.endsWith('.dmg') &&
             !a.name.includes('airgap') &&
@@ -123,12 +109,10 @@ export default async function githubReleasePlugin(): Promise<Plugin<AllDownloads
           'macOS Universal DMG',
         );
         const macosAirgapX64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-x64.dmg') && a.name.includes('airgap'),
           'macOS Airgap x64 DMG',
         );
         const macosAirgapArm64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-arm64.dmg') && a.name.includes('airgap'),
           'macOS Airgap ARM64 DMG',
         );
@@ -144,32 +128,26 @@ export default async function githubReleasePlugin(): Promise<Plugin<AllDownloads
 
         // --- Windows ---
         const windowsSetupX64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-setup-x64.exe') && !a.name.includes('airgap'),
           'Windows Setup x64 EXE',
         );
         const windowsSetupArm64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-setup-arm64.exe') && !a.name.includes('airgap'),
           'Windows Setup ARM64 EXE',
         );
         const windowsPortableX64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-x64.exe') && !a.name.includes('setup') && !a.name.includes('airgap'),
           'Windows Portable x64 EXE',
         );
         const windowsPortableArm64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-arm64.exe') && !a.name.includes('setup') && !a.name.includes('airgap'),
           'Windows Portable ARM64 EXE',
         );
         const windowsAirgapSetupX64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-setup-x64.exe') && a.name.includes('airgap'),
           'Windows Airgap Setup x64 EXE',
         );
         const windowsAirgapSetupArm64Url = findAssetOrThrow(
-          assets,
           a => a.name.endsWith('-setup-arm64.exe') && a.name.includes('airgap'),
           'Windows Airgap Setup ARM64 EXE',
         );
@@ -200,7 +178,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<AllDownloads
 
     async contentLoaded({ content, actions }): Promise<void> {
       const { setGlobalData } = actions;
-
       setGlobalData(content);
     },
   };
