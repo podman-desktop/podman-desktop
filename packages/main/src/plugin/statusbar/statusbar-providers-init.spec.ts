@@ -37,8 +37,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties).toBeDefined();
   expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
   expect(configurationNode?.properties?.['statusbarProviders.showProviders']).toBeDefined();
-  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.type).toBe('boolean');
-  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.default).toBe(true);
+  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.type).toBe('object');
   expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.description).toBe(
     'Show providers in the status bar',
   );
@@ -47,7 +46,7 @@ test('should register a configuration', async () => {
   );
 });
 
-test('False should be default if not in dev env', () => {
+test('Undefined should be default if not in dev env', () => {
   vi.resetAllMocks();
   vi.stubEnv('DEV', false);
   const statusbarProvidersInit = new StatusbarProvidersInit(configurationRegistryMock);
@@ -56,5 +55,5 @@ test('False should be default if not in dev env', () => {
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
 
-  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.default).toBe(false);
+  expect(configurationNode?.properties?.['statusbarProviders.showProviders']?.default).toBe(undefined);
 });

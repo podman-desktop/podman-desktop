@@ -23,9 +23,9 @@ import { configurationProperties } from './configurationProperties';
 export const isKubernetesExperimentalModeStore: Writable<boolean | undefined> = writable();
 
 configurationProperties.subscribe(() => {
-  if (window?.getConfigurationValue) {
+  if (window?.isExperimentalConfigurationEnabled) {
     window
-      ?.getConfigurationValue<boolean>('kubernetes.statesExperimental')
+      ?.isExperimentalConfigurationEnabled('kubernetes.statesExperimental')
       ?.then(value => isKubernetesExperimentalModeStore.set(value ?? false))
       ?.catch((err: unknown) =>
         console.error(`Error getting configuration value 'kubernetes.statesExperimental'}`, err),

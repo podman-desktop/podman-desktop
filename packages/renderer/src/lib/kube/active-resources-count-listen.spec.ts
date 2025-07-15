@@ -42,7 +42,7 @@ beforeAll(() => {
 });
 
 test('listenActiveResourcesCount is undefined in non experimental mode (setting is set to false)', async () => {
-  vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(false);
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
   const result = await listenActiveResourcesCount((): void => {});
   expect(result).toBeUndefined();
 });
@@ -55,7 +55,7 @@ test('listenActiveResourcesCount is undefined in non experimental mode (setting 
 
 describe('experimental mode is set', () => {
   beforeEach(() => {
-    vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
   });
 
   test('get initial and updated values', async () => {
