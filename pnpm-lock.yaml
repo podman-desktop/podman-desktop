@@ -82,6 +82,9 @@ importers:
       got:
         specifier: ^14.4.2
         version: 14.4.6
+      hosted-git-info:
+        specifier: ^8.1.0
+        version: 8.1.0
       hpagent:
         specifier: ^1.2.0
         version: 1.2.0
@@ -266,9 +269,6 @@ importers:
       globals:
         specifier: ^16.3.0
         version: 16.3.0
-      hosted-git-info:
-        specifier: ^8.1.0
-        version: 8.1.0
       husky:
         specifier: ^9.1.7
         version: 9.1.7
