@@ -10,6 +10,7 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
 
     "types": ["node"],
 
