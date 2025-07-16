@@ -23,7 +23,7 @@
 
 import { inject, injectable, preDestroy } from 'inversify';
 
-import { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from '../api.js';
 import type { IContext } from '../api/context-info.js';

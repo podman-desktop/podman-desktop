@@ -17,7 +17,7 @@
  ***********************************************************************/
 import { injectable, preDestroy } from 'inversify';
 
-import { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import type { KubernetesGeneratorInfo } from '../api/KubernetesGeneratorInfo.js';
 import { Disposable } from '../types/disposable.js';

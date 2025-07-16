@@ -29,7 +29,7 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable, preDestroy } from 'inversify';
 
-import { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from './api.js';
 import { Emitter } from './events/emitter.js';

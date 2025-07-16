@@ -18,7 +18,7 @@
 import { inject, injectable, preDestroy } from 'inversify';
 
 import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
-import { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from './api.js';
 

@@ -247,7 +247,7 @@ export class PluginSystem implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
-    await this.extensionLoader[Symbol.asyncDispose]();
+    await this.extensionLoader?.[Symbol.asyncDispose]();
   }
 
   getWebContentsSender(): WebContents {
