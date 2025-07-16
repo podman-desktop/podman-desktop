@@ -11,7 +11,7 @@ import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
   // Use the generic version of usePluginData for full type safety
-  const { linuxDownloads } = usePluginData('docusaurus-plugin-github-metedata') as GitHubMetadata;
+  const { linuxDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');
