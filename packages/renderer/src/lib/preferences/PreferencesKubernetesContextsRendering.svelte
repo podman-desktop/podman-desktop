@@ -74,7 +74,7 @@ onMount(async () => {
   }
 
   try {
-    experimentalStates = (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
+    experimentalStates = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
   } catch {
     // keep default value
   }
