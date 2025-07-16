@@ -5,13 +5,13 @@ import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
-import type { GlobalData } from '@site/src/plugins/github-release-plugin';
+import type { GitHubReleaseData } from '@site/src/plugins/github-release-plugin';
 import Layout from '@theme/Layout';
 import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
   // Use the generic version of usePluginData for full type safety
-  const { linuxDownloads } = usePluginData('docusaurus-plugin-github-release') as GlobalData;
+  const { linuxDownloads } = usePluginData('docusaurus-plugin-github-release') as GitHubReleaseData;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');

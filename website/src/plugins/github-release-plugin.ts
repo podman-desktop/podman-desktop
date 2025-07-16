@@ -28,19 +28,18 @@ export interface WindowsDownloadData extends DownloadData {
   airgapsetupArm64: string;
 }
 
-export interface GlobalData {
+export interface GitHubReleaseData {
   linuxDownloads: LinuxDownloadData;
   macosDownloads: MacosDownloadData;
   windowsDownloads: WindowsDownloadData;
 }
 
 // The main plugin function, now strongly typed
-export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>> {
+export default async function githubReleasePlugin(): Promise<Plugin<GitHubReleaseData>> {
   return {
     name: 'docusaurus-plugin-github-release',
 
-    async loadContent(): Promise<GlobalData> {
-
+    async loadContent(): Promise<GitHubReleaseData> {
       const octokit = new Octokit();
 
       try {
