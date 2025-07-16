@@ -21,7 +21,7 @@ import * as pathfs from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import * as chokidar from 'chokidar';
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
 
 import { IDisposable } from '/@api/disposable.js';
 
