@@ -51,7 +51,9 @@ export default async function githubReleasePlugin(): Promise<Plugin<GitHubMetada
         const { tag_name, assets } = releaseData;
 
         if (!tag_name) {
-          throw new Error(`No tag name for latest release`);
+          throw new Error(
+            `Failed to retrieve tag name for the latest Podman Desktop release from GitHub. The 'tag_name' field was missing in the release data.`,
+          );
         }
         const version = tag_name.replace(/^v/, ''); // Add a fallback for rawName in case it's undefined
 
