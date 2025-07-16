@@ -55,7 +55,7 @@ export default async function githubReleasePlugin(): Promise<Plugin<GitHubMetada
             `Failed to retrieve tag name for the latest Podman Desktop release from GitHub. The 'tag_name' field was missing in the release data.`,
           );
         }
-        const version = tag_name.replace(/^v/, ''); // Add a fallback for rawName in case it's undefined
+        const version = tag_name.replace(/^v/, '');
 
         // Helper function to find an asset or throw an error
         function findAssetOrThrow(predicate: (asset: (typeof assets)[0]) => boolean, assetName: string): string {
