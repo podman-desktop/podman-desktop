@@ -21,6 +21,7 @@ import { fromUrl } from 'hosted-git-info';
 import rootPackage from '../../../package.json' with { type: 'json' };
 
 export const REPOSITORY_URL = rootPackage.repository;
+export const HOMEPAGE_URL = rootPackage.homepage;
 
 const infos = fromUrl(REPOSITORY_URL);
 
