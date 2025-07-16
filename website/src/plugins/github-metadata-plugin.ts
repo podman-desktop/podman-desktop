@@ -1,7 +1,7 @@
 import type { Plugin } from '@docusaurus/types';
 
-import type { GitHubMetadata } from './GitHubMetadata';
-import { GitHubService } from './GitHubService';
+import type { GitHubMetadata } from './github-metadata';
+import { GitHubService } from './github-service';
 
 export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetadata>> {
   const githubService = new GitHubService('podman-desktop', 'podman-desktop');
