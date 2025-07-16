@@ -28,5 +28,9 @@ if (!infos) {
   throw new Error(`Could not parse repository information from URL: ${REPOSITORY_URL}`);
 }
 
+if (infos.type !== 'github') {
+  throw new Error(`Repository type is not GitHub. Detected type: ${infos.type}. URL: ${REPOSITORY_URL}`);
+}
+
 export const GITHUB_OWNER = infos.user;
 export const GITHUB_REPOSITORY = infos.project;
