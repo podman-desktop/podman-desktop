@@ -149,7 +149,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>>
           airgapsetupArm64: windowsAirgapSetupArm64Url,
         };
 
-        console.log(`Successfully fetched version ${version} for all platforms.`);
 
         return {
           linuxDownloads,
