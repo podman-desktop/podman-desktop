@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
@@ -29,7 +29,7 @@ describe('GitHubService', () => {
     service = new GitHubService(owner, repo);
   });
 
-  it('should fetch and correctly map the latest release metadata on success', async () => {
+  test('should fetch and correctly map the latest release metadata on success', async () => {
     const expectedMetadata: GitHubMetadata = {
       latestRelease: {
         linux: {
@@ -73,7 +73,7 @@ describe('GitHubService', () => {
     expect(metadata).toEqual(expectedMetadata);
   });
 
-  it('should throw an error if tag_name is missing', async () => {
+  test('should throw an error if tag_name is missing', async () => {
     // Override the default handler for this specific test
     server.use(
       http.get(URL, () => {
@@ -86,7 +86,7 @@ describe('GitHubService', () => {
     );
   });
 
-  it('should throw an error if a required asset is missing', async () => {
+  test('should throw an error if a required asset is missing', async () => {
     // Simulate a response where the flatpak asset is missing
     const incompleteAssets = mockReleaseData.assets.filter(a => !a.name.endsWith('.flatpak'));
     server.use(
@@ -98,7 +98,7 @@ describe('GitHubService', () => {
     await expect(service.getLatestReleaseMetadata()).rejects.toThrow('Required asset not found: Linux Flatpak');
   });
 
-  it('should throw an error if a different required asset is missing', async () => {
+  test('should throw an error if a different required asset is missing', async () => {
     // Simulate a response where the macOS ARM64 DMG is missing
     const incompleteAssets = mockReleaseData.assets.filter(a => !a.name.endsWith('-arm64.dmg'));
     server.use(
@@ -110,7 +110,7 @@ describe('GitHubService', () => {
     await expect(service.getLatestReleaseMetadata()).rejects.toThrow('Required asset not found: macOS ARM64 DMG');
   });
 
-  it('should re-throw an error if the GitHub API call fails', async () => {
+  test('should re-throw an error if the GitHub API call fails', async () => {
     // Simulate a server error from the GitHub API
     server.use(
       http.get(URL, () => {
