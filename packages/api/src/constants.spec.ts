@@ -18,7 +18,7 @@
 
 import { expect, test } from 'vitest';
 
-import { ORGANIZATION_NAME, REPOSITORY_NAME } from './constants';
+import { ORGANIZATION_NAME, REPOSITORY_NAME } from './constants.js';
 
 test('check constants correctly extracted from package.json', async () => {
   expect(ORGANIZATION_NAME).toBe('podman-desktop');
