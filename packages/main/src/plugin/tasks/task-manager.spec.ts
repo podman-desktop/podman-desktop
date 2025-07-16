@@ -78,9 +78,8 @@ test('task manager init should register a configuration option', async () => {
       expect.objectContaining({
         properties: expect.objectContaining({
           'tasks.Manager': {
-            type: 'boolean',
+            type: 'object',
             description: 'Replace the current task manager widget by the new one',
-            default: false,
             experimental: {
               githubDiscussionLink: expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions'),
             },

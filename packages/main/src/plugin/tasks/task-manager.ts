@@ -55,8 +55,8 @@ export class TaskManager {
     this.commandRegistry.registerCommand('show-task-manager', () => {
       // get the current value of the configuration flag for the task manager
       const useExperimentalTaskManager = this.configurationRegistry
-        .getConfiguration(ExperimentalTasksSettings.SectionName)
-        .get<boolean>(ExperimentalTasksSettings.Manager, false);
+        .getConfiguration(`${ExperimentalTasksSettings.SectionName}`)
+        .get(`${ExperimentalTasksSettings.Manager}`);
 
       const showEventName = useExperimentalTaskManager ? 'toggle-task-manager' : 'toggle-legacy-task-manager';
 
@@ -85,8 +85,7 @@ export class TaskManager {
           },
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`]: {
             description: 'Replace the current task manager widget by the new one',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
             },
