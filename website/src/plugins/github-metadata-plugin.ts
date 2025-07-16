@@ -166,7 +166,7 @@ class GitHubService {
   }
 }
 
-export default async function githubReleasePlugin(): Promise<Plugin<GitHubMetadata>> {
+export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetadata>> {
   const githubService = new GitHubService('podman-desktop', 'podman-desktop');
 
   return {
