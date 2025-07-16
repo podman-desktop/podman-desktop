@@ -27,7 +27,6 @@ export class GitHubService {
           `Failed to retrieve tag name for the latest ${this.repo} release from GitHub. The 'tag_name' field was missing in the release data.`,
         );
       }
-      const latestReleaseVersion = tag_name.replace(/^v/, '');
 
       // Helper function to find an asset or throw an error
       const findAssetOrThrow = (predicate: (asset: (typeof assets)[0]) => boolean, assetName: string): string => {
@@ -96,26 +95,28 @@ export class GitHubService {
       );
 
       return {
-        latestReleaseVersion,
-        linux: {
-          flatpak: flatpakUrl,
-          arm64: linuxArmUrl,
-          amd64: linuxAmdUrl,
-        },
-        macos: {
-          universal: macosUniversalUrl,
-          x64: macosX64Url,
-          arm64: macosArm64Url,
-          airgapsetupX64: macosAirgapX64Url,
-          airgapsetupArm64: macosAirgapArm64Url,
-        },
-        windows: {
-          setupX64: windowsSetupX64Url,
-          setupArm64: windowsSetupArm64Url,
-          binaryX64: windowsPortableX64Url,
-          binaryArm64: windowsPortableArm64Url,
-          airgapsetupX64: windowsAirgapSetupX64Url,
-          airgapsetupArm64: windowsAirgapSetupArm64Url,
+        latestRelease: {
+          version: tag_name.replace(/^v/, ''),
+          linux: {
+            flatpak: flatpakUrl,
+            arm64: linuxArmUrl,
+            amd64: linuxAmdUrl,
+          },
+          macos: {
+            universal: macosUniversalUrl,
+            x64: macosX64Url,
+            arm64: macosArm64Url,
+            airgapsetupX64: macosAirgapX64Url,
+            airgapsetupArm64: macosAirgapArm64Url,
+          },
+          windows: {
+            setupX64: windowsSetupX64Url,
+            setupArm64: windowsSetupArm64Url,
+            binaryX64: windowsPortableX64Url,
+            binaryArm64: windowsPortableArm64Url,
+            airgapsetupX64: windowsAirgapSetupX64Url,
+            airgapsetupArm64: windowsAirgapSetupArm64Url,
+          },
         },
       };
     } catch (err) {

@@ -10,9 +10,9 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
-  const { latestReleaseVersion, linux: linuxDownloads } = usePluginData(
-    'docusaurus-plugin-github-metadata',
-  ) as GitHubMetadata;
+  const {
+    latestRelease: { linux, version },
+  } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');
@@ -30,12 +30,12 @@ export function LinuxDownloads(): JSX.Element {
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               eventPath="download"
               eventTitle="download-linux"
-              to={linuxDownloads.flatpak}>
+              to={linux.flatpak}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Linux *.flatpak, version {latestReleaseVersion}
+              Linux *.flatpak, version {version}
             </caption>
           </div>
           <div className="mt-4">
@@ -44,7 +44,7 @@ export function LinuxDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-linux"
-              to={linuxDownloads.amd64}>
+              to={linux.amd64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               AMD64 binary (tar.gz)
             </TelemetryLink>
@@ -52,7 +52,7 @@ export function LinuxDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-linux"
-              to={linuxDownloads.arm64}>
+              to={linux.arm64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               ARM64 binary (tar.gz)
             </TelemetryLink>

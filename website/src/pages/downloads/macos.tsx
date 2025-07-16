@@ -10,9 +10,9 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function MacOSDownloads(): JSX.Element {
-  const { latestReleaseVersion, macos: macosDownloads } = usePluginData(
-    'docusaurus-plugin-github-metadata',
-  ) as GitHubMetadata;
+  const {
+    latestRelease: { macos, version },
+  } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyBrewInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('brew install podman-desktop');
@@ -30,12 +30,12 @@ export function MacOSDownloads(): JSX.Element {
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               eventPath="download"
               eventTitle="download-mac"
-              to={macosDownloads.universal}>
+              to={macos.universal}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Universal *.dmg, version v{latestReleaseVersion}
+              Universal *.dmg, version v{version}
             </caption>
           </div>
           <div className="mt-4">
@@ -44,7 +44,7 @@ export function MacOSDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-mac"
-              to={macosDownloads.x64}>
+              to={macos.x64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Intel
             </TelemetryLink>
@@ -52,7 +52,7 @@ export function MacOSDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 text-md font-semibold"
               eventPath="download"
               eventTitle="download-mac"
-              to={macosDownloads.arm64}>
+              to={macos.arm64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Apple silicon
             </TelemetryLink>
@@ -64,7 +64,7 @@ export function MacOSDownloads(): JSX.Element {
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                 eventPath="download"
                 eventTitle="download-mac"
-                to={macosDownloads.airgapsetupX64}>
+                to={macos.airgapsetupX64}>
                 <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                 Intel
               </TelemetryLink>
@@ -72,7 +72,7 @@ export function MacOSDownloads(): JSX.Element {
                 className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                 eventPath="download"
                 eventTitle="download-mac"
-                to={macosDownloads.airgapsetupArm64}>
+                to={macos.airgapsetupArm64}>
                 <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                 Apple silicon
               </TelemetryLink>

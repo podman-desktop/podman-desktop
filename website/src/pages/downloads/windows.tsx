@@ -11,9 +11,9 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function WindowsDownloads(): JSX.Element {
-  const { latestReleaseVersion, windows: windowsDownloads } = usePluginData(
-    'docusaurus-plugin-github-metadata',
-  ) as GitHubMetadata;
+  const {
+    latestRelease: { windows, version },
+  } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyCliInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('winget install -e --id RedHat.Podman-Desktop');
@@ -31,12 +31,12 @@ export function WindowsDownloads(): JSX.Element {
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               eventPath="download"
               eventTitle="download-windows"
-              to={windowsDownloads.setupX64}>
+              to={windows.setupX64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Windows installer x64, version v{latestReleaseVersion}
+              Windows installer x64, version v{version}
             </caption>
           </div>
           <div className="mt-4">
@@ -49,7 +49,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.setupX64}>
+                  to={windows.setupX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -57,7 +57,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.setupArm64}>
+                  to={windows.setupArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>
@@ -71,7 +71,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.binaryX64}>
+                  to={windows.binaryX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -79,7 +79,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.binaryArm64}>
+                  to={windows.binaryArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>
@@ -93,7 +93,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.airgapsetupX64}>
+                  to={windows.airgapsetupX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -101,7 +101,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={windowsDownloads.airgapsetupArm64}>
+                  to={windows.airgapsetupArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>
