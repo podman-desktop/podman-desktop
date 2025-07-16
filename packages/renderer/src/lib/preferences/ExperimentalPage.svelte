@@ -23,8 +23,8 @@ let loading: boolean = $state(false);
 function update(propertyId: string, value: unknown): void {
   if (value === undefined) {
     values[propertyId] = false;
-  } else if (typeof value === 'boolean') {
-    values[propertyId] = value;
+  } else if (typeof value === 'object') {
+    values[propertyId] = true;
   }
 }
 
@@ -44,7 +44,8 @@ async function onCheckedAll(event: { detail: boolean }): Promise<void> {
     for (const property of experimental) {
       if (!property.id) continue;
 
-      await window.updateConfigurationValue(property.id, event.detail, property.scope);
+      const settings = event.detail ? {} : undefined;
+      await window.updateConfigurationValue(property.id, settings, property.scope);
     }
   } finally {
     loading = false;
