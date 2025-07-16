@@ -1701,7 +1701,7 @@ export const mockReleaseData = {
   ],
   tarball_url: 'https://api.github.com/repos/podman-desktop/podman-desktop/tarball/v1.19.2',
   zipball_url: 'https://api.github.com/repos/podman-desktop/podman-desktop/zipball/v1.19.2',
-  body: "## What's Changed\r\n* chore: update podman to v5.5.1 (backport #12762) by @mergify in https://github.com/podman-desktop/podman-desktop/pull/12804\r\n\r\n\r\n**Full Changelog**: https://github.com/podman-desktop/podman-desktop/compare/v1.19.1...v1.19.2",
+  body: `## What's Changed\r\n* chore: update podman to v5.5.1 (backport #12762) by @mergify in https://github.com/podman-desktop/podman-desktop/pull/12804\r\n\r\n\r\n**Full Changelog**: https://github.com/podman-desktop/podman-desktop/compare/v1.19.1...v1.19.2`,
   reactions: {
     url: 'https://api.github.com/repos/podman-desktop/podman-desktop/releases/224602012/reactions',
     total_count: 6,
