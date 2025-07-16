@@ -54,4 +54,33 @@ export class ExtensionNotifications {
   public set notificationDisposable(notificationDisposable: extensionApi.Disposable) {
     this._notificationDisposable = notificationDisposable;
   }
+
+  private _disguisedPodmanNotificationDisposable?: extensionApi.Disposable;
+
+  public get disguisedPodmanNotificationDisposable(): extensionApi.Disposable | undefined {
+    return this._disguisedPodmanNotificationDisposable;
+  }
+
+  public set disguisedPodmanNotificationDisposable(disguisedPodmanNotificationDisposable: extensionApi.Disposable) {
+    this._disguisedPodmanNotificationDisposable = disguisedPodmanNotificationDisposable;
+  }
+
+  private _doNotShowMacHelperSetup = false;
+
+  public get doNotShowMacHelperSetup(): boolean {
+    return this._doNotShowMacHelperSetup;
+  }
+
+  public set doNotShowMacHelperSetup(doNotShowMacHelperSetup: boolean) {
+    this._doNotShowMacHelperSetup = doNotShowMacHelperSetup;
+  }
+
+  private _podmanMacHelperNotificationDisposable?: extensionApi.Disposable;
+  public get podmanMacHelperNotificationDisposable(): extensionApi.Disposable | undefined {
+    return this._podmanMacHelperNotificationDisposable;
+  }
+
+  public set podmanMacHelperNotificationDisposable(podmanMacHelperNotificationDisposable: extensionApi.Disposable) {
+    this._podmanMacHelperNotificationDisposable = podmanMacHelperNotificationDisposable;
+  }
 }
