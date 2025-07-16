@@ -44,7 +44,7 @@ export default async function githubReleasePlugin(): Promise<Plugin<GitHubMetada
 
       try {
         const { data: releaseData } = await octokit.rest.repos.getLatestRelease({
-          owner: 'containers',
+          owner: 'podman-desktop',
           repo: 'podman-desktop',
         });
 
