@@ -11,7 +11,7 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function WindowsDownloads(): JSX.Element {
-  const { latestReleaseVersion, windowsDownloads } = usePluginData(
+  const { latestReleaseVersion, windows: windowsDownloads } = usePluginData(
     'docusaurus-plugin-github-metadata',
   ) as GitHubMetadata;
 
