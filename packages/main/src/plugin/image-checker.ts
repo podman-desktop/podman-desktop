@@ -24,8 +24,9 @@ import type {
   ImageChecks,
   ImageInfo,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '/@api/image-checker-info.js';
 
 import { ApiSenderType } from './api.js';
@@ -37,13 +38,18 @@ export interface ImageCheckerProviderWithMetadata {
 }
 
 @injectable()
-export class ImageCheckerImpl {
+export class ImageCheckerImpl implements IDisposable {
   private _imageCheckerProviders: Map<string, ImageCheckerProviderWithMetadata> = new Map<
     string,
     ImageCheckerProviderWithMetadata
   >();
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
+
+  @preDestroy()
+  dispose(): void {
+    this._imageCheckerProviders.clear();
+  }
 
   registerImageCheckerProvider(
     extensionInfo: ImageCheckerExtensionInfo,

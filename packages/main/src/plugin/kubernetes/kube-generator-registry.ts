@@ -15,7 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 import type { KubernetesGeneratorInfo } from '../api/KubernetesGeneratorInfo.js';
 import { Disposable } from '../types/disposable.js';
@@ -42,10 +44,15 @@ export interface KubernetesGeneratorProvider {
 }
 
 @injectable()
-export class KubeGeneratorRegistry {
+export class KubeGeneratorRegistry implements IDisposable {
   private defaultProvider?: string;
   private kubeGenerators = new Map<string, KubernetesGeneratorProvider>();
   private count = 0;
+
+  @preDestroy()
+  dispose(): void {
+    this.kubeGenerators.clear();
+  }
 
   unregisterKubeGenerator(providerId: string): void {
     this.kubeGenerators.delete(providerId);

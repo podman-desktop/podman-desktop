@@ -17,9 +17,11 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
+import { preDestroy } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
@@ -29,7 +31,7 @@ import { AppearanceSettings } from './appearance-settings.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
-export class ColorRegistry {
+export class ColorRegistry implements IDisposable {
   #apiSender: ApiSenderType;
   #configurationRegistry: ConfigurationRegistry;
   #definitions: Map<string, ColorDefinition>;
@@ -47,6 +49,13 @@ export class ColorRegistry {
     // default themes
     this.#themes.set('light', new Map());
     this.#themes.set('dark', new Map());
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.#themes.clear();
+    this.#parentThemes.clear();
+    this.#definitions.clear();
   }
 
   registerExtensionThemes(extension: AnalyzedExtension, themes: RawThemeContribution[]): extensionApi.Disposable {

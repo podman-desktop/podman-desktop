@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { CommandInfo } from '/@api/command-info.js';
+import { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from './api.js';
 import { Telemetry } from './telemetry/telemetry.js';
@@ -42,7 +43,7 @@ export interface CommandHandler {
 }
 
 @injectable()
-export class CommandRegistry {
+export class CommandRegistry implements IDisposable {
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
@@ -57,6 +58,12 @@ export class CommandRegistry {
 
   static readonly GLOBAL = 'GLOBAL';
   private commandPaletteCommands = new Map<string, RawCommand[]>();
+
+  @preDestroy()
+  dispose(): void {
+    this.commands.clear();
+    this.commandPaletteCommands.clear();
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {

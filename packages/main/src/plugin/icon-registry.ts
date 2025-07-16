@@ -18,9 +18,10 @@
 
 import { join } from 'node:path';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { FontDefinition } from '/@api/font-info.js';
 import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
 
@@ -28,13 +29,19 @@ import { isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 
 @injectable()
-export class IconRegistry {
+export class IconRegistry implements IDisposable {
   private icons: Map<string, IconDefinition>;
   private fonts: Map<string, FontDefinition>;
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {
     this.icons = new Map();
     this.fonts = new Map();
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.icons.clear();
+    this.fonts.clear();
   }
 
   protected registerIcon(iconId: string, definition: IconDefinition): void {

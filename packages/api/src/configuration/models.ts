@@ -99,7 +99,7 @@ export interface IConfigurationNode {
 }
 
 export const IConfigurationRegistry = Symbol.for('IConfigurationRegistry');
-export interface IConfigurationRegistry {
+export interface IConfigurationRegistry extends IDisposable {
   registerConfigurations(configurations: IConfigurationNode[]): IDisposable;
   deregisterConfigurations(configurations: IConfigurationNode[]): void;
   updateConfigurations(configurations: { add: IConfigurationNode[]; remove: IConfigurationNode[] }): void;

@@ -19,9 +19,10 @@
 import type { OpenDialogOptions, SaveDialogOptions, Uri as APIUri } from '@podman-desktop/api';
 import type { BrowserWindow } from 'electron';
 import { dialog } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { isMac } from '/@/util.js';
+import { IDisposable } from '/@api/disposable.js';
 
 import { Uri } from './types/uri.js';
 
@@ -29,7 +30,7 @@ import { Uri } from './types/uri.js';
  * Handle native open and save dialogs
  */
 @injectable()
-export class DialogRegistry {
+export class DialogRegistry implements IDisposable {
   #browserWindow: BrowserWindow | undefined;
 
   #mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
@@ -39,6 +40,9 @@ export class DialogRegistry {
   ) {
     this.#mainWindowDeferred = mainWindowDeferred;
   }
+
+  @preDestroy()
+  dispose(): void {}
 
   init(): void {
     // browser window will be initialized when promise is resolved

@@ -17,11 +17,12 @@
  ***********************************************************************/
 
 import type { Event, ProxySettings } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 import { ProxyAgent } from 'undici';
 
 import { Certificates } from '/@/plugin/certificates.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IDisposable } from '/@api/disposable.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import { Emitter } from './events/emitter.js';
@@ -56,7 +57,7 @@ function asURL(url: unknown): URL {
  * Handle proxy settings for Podman Desktop
  */
 @injectable()
-export class Proxy {
+export class Proxy implements IDisposable {
   private proxySettings: ProxySettings | undefined;
   private proxyState: ProxyState = ProxyState.PROXY_SYSTEM;
 
@@ -72,6 +73,12 @@ export class Proxy {
     @inject(Certificates)
     private certificates: Certificates,
   ) {}
+
+  @preDestroy()
+  dispose(): void {
+    this._onDidUpdateProxy.dispose();
+    this._onDidStateChange.dispose();
+  }
 
   async init(): Promise<void> {
     const proxyConfigurationNode: IConfigurationNode = {

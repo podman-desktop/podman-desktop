@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type {
@@ -68,6 +68,15 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationContributors = [];
     this.configurationValues = new Map();
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this._onDidUpdateConfiguration.dispose();
+    this._onDidChangeConfiguration.dispose();
+    this._onDidChangeConfigurationAPI.dispose();
+
+    this.configurationValues.clear();
   }
 
   protected getSettingsFile(): string {

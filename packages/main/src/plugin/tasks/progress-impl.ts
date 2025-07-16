@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type * as extensionApi from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { findWindow } from '/@/electron-util.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { TaskAction } from '/@/plugin/tasks/tasks.js';
+import { IDisposable } from '/@api/disposable.js';
 
 import { CancellationTokenImpl } from '../cancellation-token.js';
 import { CancellationTokenRegistry } from '../cancellation-token-registry.js';
@@ -39,7 +40,7 @@ export enum ProgressLocation {
 }
 
 @injectable()
-export class ProgressImpl {
+export class ProgressImpl implements IDisposable {
   constructor(
     @inject(TaskManager)
     private taskManager: TaskManager,
@@ -48,6 +49,9 @@ export class ProgressImpl {
     @inject(CancellationTokenRegistry)
     private cancellationTokenRegistry: CancellationTokenRegistry,
   ) {}
+
+  @preDestroy()
+  dispose(): void {}
 
   /**
    * Execute a task with progress, based on the provided options and task function.

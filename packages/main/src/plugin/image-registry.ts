@@ -29,10 +29,11 @@ import * as fzstd from 'fzstd';
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got, { HTTPError, RequestError } from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 
 import { isMac, isWindows } from '../util.js';
@@ -51,7 +52,7 @@ export interface RegistryAuthInfo {
 }
 
 @injectable()
-export class ImageRegistry {
+export class ImageRegistry implements IDisposable {
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
   private providers: Map<string, containerDesktopAPI.RegistryProvider> = new Map();
@@ -92,6 +93,16 @@ export class ImageRegistry {
     if (this.proxyEnabled) {
       this.proxySettings = this.proxy.proxy;
     }
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.providers.clear();
+
+    // dispose event emitters
+    this._onDidRegisterRegistry.dispose();
+    this._onDidUpdateRegistry.dispose();
+    this._onDidUnregisterRegistry.dispose();
   }
 
   extractRegistryServerFromImage(imageName: string): string | undefined {

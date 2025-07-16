@@ -28,7 +28,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 import moment from 'moment';
 import { coerce, gtr } from 'semver';
 import StreamValues from 'stream-json/streamers/StreamValues.js';
@@ -52,6 +52,7 @@ import type {
 } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesOptions } from '/@api/image-info.js';
@@ -109,7 +110,7 @@ interface JSONEvent {
 }
 
 @injectable()
-export class ContainerProviderRegistry {
+export class ContainerProviderRegistry implements IDisposable {
   private readonly _onEvent = new Emitter<JSONEvent>();
   readonly onEvent: Event<JSONEvent> = this._onEvent.event;
 
@@ -145,6 +146,17 @@ export class ContainerProviderRegistry {
   // map of streams per container id
   protected streamsPerContainerId: Map<string, NodeJS.ReadWriteStream> = new Map();
   protected streamsOutputPerContainerId: Map<string, Buffer[]> = new Map();
+
+  @preDestroy()
+  dispose(): void {
+    this._onEvent.dispose();
+    this._onApiAttached.dispose();
+
+    this.containerProviders.clear();
+    this.internalProviders.clear();
+    this.streamsPerContainerId.clear();
+    this.streamsOutputPerContainerId.clear();
+  }
 
   useLibpodApiForImageList(): boolean {
     return this.configurationRegistry

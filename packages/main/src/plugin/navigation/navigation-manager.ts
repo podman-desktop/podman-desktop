@@ -24,6 +24,7 @@ import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { IDisposable } from '/@api/disposable.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
 
@@ -37,7 +38,7 @@ export interface NavigationRoute {
 }
 
 @injectable()
-export class NavigationManager {
+export class NavigationManager implements IDisposable {
   #registry: Map<string, NavigationRoute>;
 
   constructor(
@@ -57,6 +58,10 @@ export class NavigationManager {
     private onboardingRegistry: OnboardingRegistry,
   ) {
     this.#registry = new Map();
+  }
+
+  dispose(): void {
+    this.#registry.clear();
   }
 
   navigateTo<T extends NavigationPage>(navigateRequest: NavigationRequest<T>): void {

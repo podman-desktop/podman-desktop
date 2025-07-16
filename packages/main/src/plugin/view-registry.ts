@@ -15,18 +15,24 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { ViewContribution, ViewInfoUI } from '/@api/view-info.js';
 
 import { Disposable } from './types/disposable.js';
 
 @injectable()
-export class ViewRegistry {
+export class ViewRegistry implements IDisposable {
   private extViewContribution: Map<string, Map<string, ViewContribution[]>>;
 
   constructor() {
     this.extViewContribution = new Map();
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.extViewContribution.clear();
   }
 
   registerView(extensionId: string, viewId: string, contribution: ViewContribution): void {

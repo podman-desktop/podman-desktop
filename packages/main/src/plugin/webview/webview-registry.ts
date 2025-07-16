@@ -23,10 +23,11 @@ import { resolve } from 'node:path';
 import type * as podmanDesktopAPI from '@podman-desktop/api';
 import type { Application } from 'express';
 import express from 'express';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { ApiSenderType } from '/@/plugin/api.js';
 import { Uri } from '/@/plugin/types/uri.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
 import { getFreePort } from '../util/port.js';
@@ -78,7 +79,7 @@ export class HttpServer {
 }
 
 @injectable()
-export class WebviewRegistry {
+export class WebviewRegistry implements IDisposable {
   #count = 0;
   #webviews: Map<string, WebviewPanelImpl>;
 
@@ -100,6 +101,15 @@ export class WebviewRegistry {
 
     this.#app = express();
     this.#expressServer = new HttpServer(this.#app);
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.stop().catch(console.error);
+    this.#webviews.forEach(({ dispose }) => dispose());
+
+    this.#webviews.clear();
+    this.#uuidAndPaths.clear();
   }
 
   protected initRouting(): void {

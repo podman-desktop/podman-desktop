@@ -21,7 +21,9 @@ import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 export interface AnalyzedExtension {
   id: string;
@@ -57,7 +59,10 @@ export interface AnalyzedExtension {
 }
 
 @injectable()
-export class ExtensionAnalyzer {
+export class ExtensionAnalyzer implements IDisposable {
+  @preDestroy()
+  dispose(): void {}
+
   async analyzeExtension(extensionPath: string, removable: boolean, devMode: boolean): Promise<AnalyzedExtension> {
     const resolvedExtensionPath = await realpath(extensionPath);
     // do nothing if there is no package.json file

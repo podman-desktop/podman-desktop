@@ -220,7 +220,7 @@ export interface LoggerWithEnd extends containerDesktopAPI.Logger {
   onEnd: () => void;
 }
 
-export class PluginSystem {
+export class PluginSystem implements AsyncDisposable {
   // ready is when we've finished to initialize extension system
   private isReady = false;
 
@@ -244,6 +244,10 @@ export class PluginSystem {
     app.on('before-quit', () => {
       this.isQuitting = true;
     });
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.extensionLoader[Symbol.asyncDispose]();
   }
 
   getWebContentsSender(): WebContents {

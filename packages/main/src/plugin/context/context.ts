@@ -21,16 +21,23 @@
  *--------------------------------------------------------------------------------------------*/
 // based on https://github.com/microsoft/vscode/blob/3eed9319874b7ca037128962593b6a8630869253/src/vs/platform/contextkey/browser/contextKeyService.ts
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from '../api.js';
 import type { IContext } from '../api/context-info.js';
 
 @injectable()
-export class Context implements IContext {
+export class Context implements IContext, IDisposable {
   private _value: Record<string, unknown>;
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {
+    this._value = {};
+  }
+
+  @preDestroy()
+  dispose(): void {
     this._value = {};
   }
 

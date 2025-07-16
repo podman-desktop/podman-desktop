@@ -27,7 +27,9 @@ import type {
   Event,
   ProviderImages,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from './api.js';
 import { Emitter } from './events/emitter.js';
@@ -97,7 +99,7 @@ export interface AuthenticationSessionMenuInfo {
 }
 
 @injectable()
-export class AuthenticationImpl {
+export class AuthenticationImpl implements IDisposable {
   async getAccountsMenuInfo(): Promise<MenuInfo[]> {
     const requestsMenuInfo: MenuInfo[] = this.getSessionRequests().reduce((prev: MenuInfo[], current) => {
       const provider = this._authenticationProviders.get(current.providerId);
@@ -139,6 +141,13 @@ export class AuthenticationImpl {
     @inject(MessageBox)
     private messageBox: MessageBox,
   ) {}
+
+  @preDestroy()
+  dispose(): void {
+    this._authenticationProviders.clear();
+    this._signInRequests.clear();
+    this._signInRequestsData.clear();
+  }
 
   public async getAuthenticationProvidersInfo(): Promise<AuthenticationProviderInfo[]> {
     const values = Array.from(this._authenticationProviders.values());

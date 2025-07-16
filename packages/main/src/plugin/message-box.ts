@@ -15,21 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
+import { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from './api.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
 @injectable()
-export class MessageBox {
+export class MessageBox implements IDisposable {
   private callbackId = 0;
 
   private callbacksMessageBox = new Map<number, PromiseWithResolvers<MessageBoxReturnValue>>();
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
+
+  @preDestroy()
+  dispose(): void {
+    this.callbacksMessageBox.clear();
+  }
 
   async showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
     // keep track of this request

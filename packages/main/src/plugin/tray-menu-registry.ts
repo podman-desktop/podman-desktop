@@ -18,8 +18,9 @@
 
 import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
 import { dialog, ipcMain } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 import type { MenuItem } from '/@api/tray-menu-info.js';
 
@@ -40,7 +41,7 @@ export interface TrayProviderInfo {
 }
 
 @injectable()
-export class TrayMenuRegistry {
+export class TrayMenuRegistry implements IDisposable {
   private menuItems = new Map<string, MenuItem>();
   private providers = new Map<string, ProviderInfo>();
 
@@ -139,6 +140,12 @@ export class TrayMenuRegistry {
         }
       },
     );
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.menuItems.clear();
+    this.providers.clear();
   }
 
   registerMenuItem(menuItem: MenuItem): Disposable {
