@@ -1,38 +1,7 @@
 import type { Plugin } from '@docusaurus/types';
 import { Octokit } from '@octokit/rest';
 
-interface DownloadData {
-  version: string;
-}
-
-export interface LinuxDownloadData extends DownloadData {
-  flatpak: string;
-  amd64: string;
-  arm64: string;
-}
-
-export interface MacosDownloadData extends DownloadData {
-  universal: string;
-  x64: string;
-  arm64: string;
-  airgapsetupX64: string;
-  airgapsetupArm64: string;
-}
-
-export interface WindowsDownloadData extends DownloadData {
-  binaryX64: string;
-  binaryArm64: string;
-  setupX64: string;
-  setupArm64: string;
-  airgapsetupX64: string;
-  airgapsetupArm64: string;
-}
-
-export interface GitHubMetadata {
-  linuxDownloads: LinuxDownloadData;
-  macosDownloads: MacosDownloadData;
-  windowsDownloads: WindowsDownloadData;
-}
+import type { GitHubMetadata, LinuxDownloadData, MacosDownloadData, WindowsDownloadData } from './GitHubMetadata';
 
 class GitHubService {
   private octokit: Octokit;
