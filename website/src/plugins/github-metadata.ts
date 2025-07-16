@@ -1,14 +1,10 @@
-interface DownloadData {
-  version: string;
-}
-
-export interface LinuxDownloadData extends DownloadData {
+export interface LinuxDownloadData {
   flatpak: string;
   amd64: string;
   arm64: string;
 }
 
-export interface MacosDownloadData extends DownloadData {
+export interface MacosDownloadData {
   universal: string;
   x64: string;
   arm64: string;
@@ -16,7 +12,7 @@ export interface MacosDownloadData extends DownloadData {
   airgapsetupArm64: string;
 }
 
-export interface WindowsDownloadData extends DownloadData {
+export interface WindowsDownloadData {
   binaryX64: string;
   binaryArm64: string;
   setupX64: string;
@@ -26,6 +22,7 @@ export interface WindowsDownloadData extends DownloadData {
 }
 
 export interface GitHubMetadata {
+  latestReleaseVersion: string;
   linuxDownloads: LinuxDownloadData;
   macosDownloads: MacosDownloadData;
   windowsDownloads: WindowsDownloadData;

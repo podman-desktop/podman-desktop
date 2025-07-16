@@ -5,12 +5,12 @@ import { faBeer, faDownload, faPaste, faTerminal } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
-import type { GitHubMetadata } from '@site/src/plugins/GitHubMetadata';
+import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 import Layout from '@theme/Layout';
 import React from 'react';
 
 export function MacOSDownloads(): JSX.Element {
-  const { macosDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
+  const { latestReleaseVersion, macosDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyBrewInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('brew install podman-desktop');
@@ -33,7 +33,7 @@ export function MacOSDownloads(): JSX.Element {
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Universal *.dmg, version v{macosDownloads.version}
+              Universal *.dmg, version v{latestReleaseVersion}
             </caption>
           </div>
           <div className="mt-4">

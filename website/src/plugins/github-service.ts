@@ -27,7 +27,7 @@ export class GitHubService {
           `Failed to retrieve tag name for the latest ${this.repo} release from GitHub. The 'tag_name' field was missing in the release data.`,
         );
       }
-      const version = tag_name.replace(/^v/, '');
+      const latestReleaseVersion = tag_name.replace(/^v/, '');
 
       // Helper function to find an asset or throw an error
       const findAssetOrThrow = (predicate: (asset: (typeof assets)[0]) => boolean, assetName: string): string => {
@@ -46,7 +46,6 @@ export class GitHubService {
       );
 
       const linuxDownloads: LinuxDownloadData = {
-        version,
         flatpak: flatpakUrl,
         arm64: linuxArmUrl,
         amd64: linuxAmdUrl,
@@ -78,7 +77,6 @@ export class GitHubService {
       );
 
       const macosDownloads: MacosDownloadData = {
-        version,
         universal: macosUniversalUrl,
         x64: macosX64Url,
         arm64: macosArm64Url,
@@ -112,7 +110,6 @@ export class GitHubService {
       );
 
       const windowsDownloads: WindowsDownloadData = {
-        version,
         setupX64: windowsSetupX64Url,
         setupArm64: windowsSetupArm64Url,
         binaryX64: windowsPortableX64Url,
@@ -122,6 +119,7 @@ export class GitHubService {
       };
 
       return {
+        latestReleaseVersion,
         linuxDownloads,
         macosDownloads,
         windowsDownloads,
