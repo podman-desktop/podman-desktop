@@ -5,7 +5,7 @@ import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
-import type { GlobalData } from '@site/src/plugins/github-release-plugin'; // Adjust path if needed
+import type { GlobalData } from '@site/src/plugins/github-release-plugin';
 import Layout from '@theme/Layout';
 import React from 'react';
 
