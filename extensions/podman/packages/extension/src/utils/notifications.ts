@@ -44,4 +44,14 @@ export class ExtensionNotifications {
   public set shouldNotifySetup(shouldNotifySetup: boolean) {
     this._shouldNotifySetup = shouldNotifySetup;
   }
+
+  private _notificationDisposable?: extensionApi.Disposable;
+
+  public get notificationDisposable(): extensionApi.Disposable | undefined {
+    return this._notificationDisposable;
+  }
+
+  public set notificationDisposable(notificationDisposable: extensionApi.Disposable) {
+    this._notificationDisposable = notificationDisposable;
+  }
 }

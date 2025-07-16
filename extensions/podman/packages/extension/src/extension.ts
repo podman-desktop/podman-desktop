@@ -106,8 +106,6 @@ let wslEnabled = false;
 
 const extensionNotifications = new ExtensionNotifications();
 
-let notificationDisposable: extensionApi.Disposable;
-
 let disguisedPodmanNotificationDisposable: extensionApi.Disposable;
 
 let doNotShowMacHelperSetup = false;
@@ -179,9 +177,9 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
 // to avoid having multiple notification of the same nature in the notifications list
 // we first dispose the old one and then push the same again
 function notifySetupPodman(): void {
-  if (!notificationDisposable) {
-    notificationDisposable = extensionApi.window.showNotification(ExtensionNotifications.setupPodmanNotification);
-  }
+  extensionNotifications.notificationDisposable ??= extensionApi.window.showNotification(
+    ExtensionNotifications.setupPodmanNotification,
+  );
 }
 
 function notifyDisguisedPodmanSocket(): void {
@@ -301,7 +299,7 @@ async function doUpdateMachines(
   // podman is correctly setup so if there is an old notification asking the user to take action
   // we dispose it as not needed anymore
   if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
-    notificationDisposable?.dispose();
+    extensionNotifications.notificationDisposable?.dispose();
     extensionNotifications.shouldNotifySetup = true;
   }
 
@@ -811,7 +809,7 @@ async function doMonitorProvider(provider: extensionApi.Provider): Promise<void>
       if (extensionApi.env.isLinux) {
         extensionNotifications.shouldNotifySetup = true;
         // notification is no more required
-        notificationDisposable?.dispose();
+        extensionNotifications.notificationDisposable?.dispose();
       }
     }
   } catch (error) {
@@ -1343,7 +1341,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
 
       extensionNotifications.shouldNotifySetup = true;
       // notification is no more required
-      notificationDisposable?.dispose();
+      extensionNotifications.notificationDisposable?.dispose();
     }
 
     if (errors.length > 0) {
@@ -2347,7 +2345,7 @@ export async function createMachine(
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
   extensionNotifications.shouldNotifySetup = true;
   // notification is no more required
-  notificationDisposable?.dispose();
+  extensionNotifications.notificationDisposable?.dispose();
 }
 
 export function resetShouldNotifySetup(): void {
