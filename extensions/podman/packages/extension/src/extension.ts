@@ -104,7 +104,7 @@ let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
 
-let shouldNotifySetup = true;
+const extensionNotifications = new ExtensionNotifications();
 
 let notificationDisposable: extensionApi.Disposable;
 
@@ -259,10 +259,10 @@ async function doUpdateMachines(
 
     // Only on macOS and Windows should we show the setup notification
     // if for some reason doing getJSONMachineList fails..
-    if (shouldNotifySetup && !extensionApi.env.isLinux) {
+    if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
       // push setup notification
       notifySetupPodman();
-      shouldNotifySetup = false;
+      extensionNotifications.shouldNotifySetup = false;
     }
     throw error;
   }
@@ -281,20 +281,20 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine && shouldNotifySetup && !extensionApi.env.isLinux) {
+  if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
     // push setup notification
     notifySetupPodman();
-    shouldNotifySetup = false;
+    extensionNotifications.shouldNotifySetup = false;
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
   // Only show the notification on macOS and Windows
   // as Podman is already installed on Linux and machine is OPTIONAL.
-  if (shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
+  if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
     // push setup notification
     notifySetupPodman();
-    shouldNotifySetup = false;
+    extensionNotifications.shouldNotifySetup = false;
   }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
@@ -302,7 +302,7 @@ async function doUpdateMachines(
   // we dispose it as not needed anymore
   if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
     notificationDisposable?.dispose();
-    shouldNotifySetup = true;
+    extensionNotifications.shouldNotifySetup = true;
   }
 
   // update status of existing machines
@@ -794,10 +794,10 @@ async function doMonitorProvider(provider: extensionApi.Provider): Promise<void>
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
       // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
       // and the notification is handled by checking the machine
-      if (extensionApi.env.isLinux && shouldNotifySetup) {
+      if (extensionApi.env.isLinux && extensionNotifications.shouldNotifySetup) {
         // push setup notification
         notifySetupPodman();
-        shouldNotifySetup = false;
+        extensionNotifications.shouldNotifySetup = false;
       }
     } else if (installedPodman.version) {
       provider.updateVersion(installedPodman.version);
@@ -809,7 +809,7 @@ async function doMonitorProvider(provider: extensionApi.Provider): Promise<void>
       extensionApi.context.setValue('podmanIsNotInstalled', false, 'onboarding');
       // if podman has been installed, we reset the notification flag so if podman is uninstalled in future we can show the notification again
       if (extensionApi.env.isLinux) {
-        shouldNotifySetup = true;
+        extensionNotifications.shouldNotifySetup = true;
         // notification is no more required
         notificationDisposable?.dispose();
       }
@@ -1099,8 +1099,10 @@ export async function registerUpdatesIfAny(
       version: updateInfo.bundledVersion,
       update: () => {
         // disable notification before the update to prevent the notification to be shown and re-enabled when update is done
-        shouldNotifySetup = false;
-        return podmanInstall.performUpdate(provider, installedPodman).finally(() => (shouldNotifySetup = true));
+        extensionNotifications.shouldNotifySetup = false;
+        return podmanInstall
+          .performUpdate(provider, installedPodman)
+          .finally(() => (extensionNotifications.shouldNotifySetup = true));
       },
       preflightChecks: () => podmanInstall.getUpdatePreflightChecks() ?? [],
     });
@@ -1339,7 +1341,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
         }
       }
 
-      shouldNotifySetup = true;
+      extensionNotifications.shouldNotifySetup = true;
       // notification is no more required
       notificationDisposable?.dispose();
     }
@@ -2343,13 +2345,13 @@ export async function createMachine(
     sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
   }
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
-  shouldNotifySetup = true;
+  extensionNotifications.shouldNotifySetup = true;
   // notification is no more required
   notificationDisposable?.dispose();
 }
 
 export function resetShouldNotifySetup(): void {
-  shouldNotifySetup = true;
+  extensionNotifications.shouldNotifySetup = true;
 }
 
 async function switchCompatibilityMode(enabled: boolean): Promise<void> {

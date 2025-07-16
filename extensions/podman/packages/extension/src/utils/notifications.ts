@@ -34,4 +34,14 @@ export class ExtensionNotifications {
     highlight: true,
     silent: true,
   };
+
+  private _shouldNotifySetup = true;
+
+  public get shouldNotifySetup(): boolean {
+    return this._shouldNotifySetup;
+  }
+
+  public set shouldNotifySetup(shouldNotifySetup: boolean) {
+    this._shouldNotifySetup = shouldNotifySetup;
+  }
 }
