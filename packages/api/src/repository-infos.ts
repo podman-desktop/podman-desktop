@@ -20,10 +20,12 @@ import { fromUrl } from 'hosted-git-info';
 
 import rootPackage from '../../../package.json' with { type: 'json' };
 
-const infos = fromUrl(rootPackage.repository);
+export const REPOSITORY_URL = rootPackage.repository;
+
+const infos = fromUrl(REPOSITORY_URL);
 
 if (!infos) {
-  throw new Error(`Could not parse repository information from URL: ${rootPackage.repository}`);
+  throw new Error(`Could not parse repository information from URL: ${REPOSITORY_URL}`);
 }
 
 export const GITHUB_OWNER = infos.user;

@@ -18,9 +18,10 @@
 
 import { expect, test } from 'vitest';
 
-import { GITHUB_OWNER, GITHUB_REPOSITORY } from './repository-infos.js';
+import { GITHUB_OWNER, GITHUB_REPOSITORY, REPOSITORY_URL } from './repository-infos.js';
 
 test('check constants correctly extracted from package.json', async () => {
+  expect(REPOSITORY_URL).toBe('https://github.com/podman-desktop/podman-desktop');
   expect(GITHUB_OWNER).toBe('podman-desktop');
   expect(GITHUB_REPOSITORY).toBe('podman-desktop');
 });
