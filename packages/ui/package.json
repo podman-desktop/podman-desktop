@@ -169,7 +169,7 @@
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "eslint-plugin-svelte": "^3.10.1",
     "jsdom": "^27.0.0-beta.2",
-    "svelte": "5.35.6",
+    "svelte": "5.36.2",
     "svelte-check": "^4.2.2",
     "svelte-eslint-parser": "^1.2.0",
     "tailwindcss": "^4.1.11",
