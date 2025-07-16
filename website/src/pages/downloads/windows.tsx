@@ -36,7 +36,7 @@ export function WindowsDownloads(): JSX.Element {
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Windows installer x64, version v{version}
+              Windows installer x64, version {version}
             </caption>
           </div>
           <div className="mt-4">

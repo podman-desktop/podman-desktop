@@ -47,7 +47,7 @@ export class GitHubService {
 
       return {
         latestRelease: {
-          version: tag_name.replace(/^v/, ''),
+          version: tag_name,
           linux: {
             flatpak: findAssetOrThrow(a => a.name.endsWith('.flatpak'), 'Linux Flatpak'),
             arm64: findAssetOrThrow(a => a.name.endsWith('-arm64.tar.gz'), 'Linux ARM64 .tar.gz'),

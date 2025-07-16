@@ -35,7 +35,7 @@ export function MacOSDownloads(): JSX.Element {
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Universal *.dmg, version v{version}
+              Universal *.dmg, version {version}
             </caption>
           </div>
           <div className="mt-4">
