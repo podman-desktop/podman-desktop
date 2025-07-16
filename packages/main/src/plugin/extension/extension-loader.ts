@@ -31,7 +31,7 @@ import {
 } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import { isAsyncFunction } from '/@/plugin/util/deferred.js';
+import { isAsyncFunction } from '/@/plugin/util/async.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';

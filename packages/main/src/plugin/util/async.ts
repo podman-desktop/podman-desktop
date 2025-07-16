@@ -15,20 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { expect, test } from 'vitest';
 
-import { isAsyncFunction } from '/@/plugin/util/deferred.js';
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
-test('normal function not detected as async', () => {
-  const func = (): boolean => true;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const result = isAsyncFunction(func);
-  expect(result).toBe(false);
-});
-
-test('async function detected as async', () => {
-  const func = async (): Promise<boolean> => Promise.resolve(true);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const result = isAsyncFunction(func);
-  expect(result).toBe(true);
-});
+export function isAsyncFunction(fn: unknown): boolean {
+  return fn?.constructor === AsyncFunction;
+}
