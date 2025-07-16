@@ -42,7 +42,7 @@ beforeAll(() => {
 });
 
 test('kubernetesContextsHealths in experimental states mode', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue({});
   const initialValues = [
     {
       contextName: 'context1',

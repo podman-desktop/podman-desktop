@@ -25,8 +25,12 @@ export const isKubernetesExperimentalModeStore: Writable<boolean | undefined> = 
 configurationProperties.subscribe(() => {
   if (window?.getConfigurationValue) {
     window
-      ?.getConfigurationValue<boolean>('kubernetes.statesExperimental')
-      ?.then(value => isKubernetesExperimentalModeStore.set(value ?? false))
+      ?.getConfigurationValue('kubernetes.statesExperimental')
+      ?.then(value =>
+        isKubernetesExperimentalModeStore.set(
+          typeof value === 'object' ? true : typeof value === 'undefined' ? undefined : false,
+        ),
+      )
       ?.catch((err: unknown) =>
         console.error(`Error getting configuration value 'kubernetes.statesExperimental'}`, err),
       );

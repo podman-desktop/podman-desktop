@@ -44,7 +44,7 @@ beforeAll(() => {
 });
 
 test('kubernetesContextsPermissions in experimental states mode', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 
   const initialValues: ContextPermission[] = [
     {

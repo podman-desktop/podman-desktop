@@ -239,7 +239,7 @@ describe.each([
           count: 2,
         },
       ]);
-      vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+      vi.mocked(window.getConfigurationValue).mockResolvedValue({});
       kubernetesContextsHealths.set([
         {
           contextName: 'context-name',

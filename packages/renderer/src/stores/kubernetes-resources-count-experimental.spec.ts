@@ -44,7 +44,7 @@ beforeAll(() => {
 });
 
 test('kubernetesResourcesCount in experimental states mode', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue({});
 
   const initialValues: ResourceCount[] = [];
   const nextValues: ResourceCount[] = [

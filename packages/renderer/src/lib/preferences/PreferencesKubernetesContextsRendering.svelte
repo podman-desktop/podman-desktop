@@ -15,6 +15,7 @@ import type { SelectedResourceName } from '/@api/kubernetes-contexts-states';
 
 import { kubernetesContexts } from '../../stores/kubernetes-contexts';
 import { clearKubeUIContextErrors, setKubeUIContextError } from '../kube/KubeContextUI';
+import { isKubernetesExperimentalMode } from '../kube/resources-listen';
 import EngineIcon from '../ui/EngineIcon.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
@@ -74,7 +75,7 @@ onMount(async () => {
   }
 
   try {
-    experimentalStates = (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
+    experimentalStates = await isKubernetesExperimentalMode();
   } catch {
     // keep default value
   }
