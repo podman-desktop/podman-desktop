@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 
-import type { GitHubMetadata, LinuxDownloadData, MacosDownloadData, WindowsDownloadData } from './GitHubMetadata';
+import type { GitHubMetadata, LinuxDownloadData, MacosDownloadData, WindowsDownloadData } from './github-metadata';
 
 export class GitHubService {
   private octokit: Octokit;
