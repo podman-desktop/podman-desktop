@@ -24,7 +24,10 @@ import { ExtensionCardPage, ExtensionCatalogCardPage } from '../..';
 import type { StatusBar } from '../../model/workbench/status-bar';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
-import { isLinux, isMac } from '../../utility/platform';
+import { isLinux, isMac, isWindows } from '../../utility/platform';
+import path from 'node:path';
+import fs from 'node:fs';
+import { homedir } from 'node:os';
 
 const installExtensions = process.env.INSTALLATION_TYPE === 'custom-extensions' ? true : false;
 const activeExtensionStatus = 'ACTIVE';
@@ -138,5 +141,27 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     // some buttons
     await handleConfirmationDialog(page, 'Update Downloaded', false, 'Restart', 'Cancel');
     await playExpect(updateDownloadedDialog).not.toBeVisible();
+  });
+
+  // Running the test to make sure we download correct architecture of the installer file
+  // setup.exe should contain both installers (for x64 and arm64) so that option is always valid
+  // or depending on what process.arch returns
+  test(`Correct installer file is downloaded for ${process.arch} architecture during update`, async () => {
+    test.skip(!isWindows, 'This test runs only on Windows platform');
+    // get installer path - windows should be on %LocalAppData%/podman-desktop-updater/pending/
+    const cacheDir = process.env["LOCALAPPDATA"] ?? path.join(homedir(), "AppData", "Local");
+    const installerPath = path.join( cacheDir, 'podman-desktop-updater', 'pending');
+    const findFiles = fs.readdirSync(installerPath).filter(file => file.endsWith('.exe'));
+    playExpect(findFiles.length, `No files with .exe were found during update on {installerPath}`).toBeGreaterThanOrEqual(1);
+    playExpect(findFiles.length, `More than one installer files were found: ${findFiles.join()}`).toEqual(1);
+    if (process.arch === 'x64') {
+      playExpect(findFiles[0]).toMatch(new RegExp('podman-desktop.*setup(-x64)?.exe'));
+    }
+    else if( process.arch === 'arm64') {
+      playExpect(findFiles[0]).toMatch(new RegExp('podman-desktop.*setup(-arm64)?.exe'));
+    }
+    else {
+      throw new Error(`Unsupported architecture: ${process.arch}`);
+    }
   });
 });
