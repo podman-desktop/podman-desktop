@@ -65,13 +65,17 @@ onMount(async () => {
       });
   });
 
-  experimentalTaskStatusBar =
-    (await window.getConfigurationValue<boolean>(
-      `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
-    )) ?? false;
+  const statusBarConf = await window.getConfigurationValue(
+    `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
+  );
+  if (statusBarConf && typeof statusBarConf === 'object') {
+    experimentalTaskStatusBar = true;
+  }
 
-  experimentalProvidersStatusBar =
-    (await window.getConfigurationValue<boolean>('statusbarProviders.showProviders')) ?? false;
+  const showProvidersConf = await window.getConfigurationValue('statusbarProviders.showProviders');
+  if (showProvidersConf && typeof showProvidersConf === 'object') {
+    experimentalProvidersStatusBar = true;
+  }
 
   onDidChangeConfiguration.addEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });
