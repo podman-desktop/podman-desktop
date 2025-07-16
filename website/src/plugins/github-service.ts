@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 
-import type { GitHubMetadata, LinuxDownloadData, MacosDownloadData, WindowsDownloadData } from './github-metadata';
+import type { GitHubMetadata } from './github-metadata';
 
 export class GitHubService {
   private octokit: Octokit;
@@ -45,12 +45,6 @@ export class GitHubService {
         'Linux AMD64 .tar.gz',
       );
 
-      const linuxDownloads: LinuxDownloadData = {
-        flatpak: flatpakUrl,
-        arm64: linuxArmUrl,
-        amd64: linuxAmdUrl,
-      };
-
       const macosArm64Url = findAssetOrThrow(
         a => a.name.endsWith('-arm64.dmg') && !a.name.includes('airgap'),
         'macOS ARM64 DMG',
@@ -75,14 +69,6 @@ export class GitHubService {
         a => a.name.endsWith('-arm64.dmg') && a.name.includes('airgap'),
         'macOS Airgap ARM64 DMG',
       );
-
-      const macosDownloads: MacosDownloadData = {
-        universal: macosUniversalUrl,
-        x64: macosX64Url,
-        arm64: macosArm64Url,
-        airgapsetupX64: macosAirgapX64Url,
-        airgapsetupArm64: macosAirgapArm64Url,
-      };
 
       const windowsSetupX64Url = findAssetOrThrow(
         a => a.name.endsWith('-setup-x64.exe') && !a.name.includes('airgap'),
@@ -109,20 +95,28 @@ export class GitHubService {
         'Windows Airgap Setup ARM64 EXE',
       );
 
-      const windowsDownloads: WindowsDownloadData = {
-        setupX64: windowsSetupX64Url,
-        setupArm64: windowsSetupArm64Url,
-        binaryX64: windowsPortableX64Url,
-        binaryArm64: windowsPortableArm64Url,
-        airgapsetupX64: windowsAirgapSetupX64Url,
-        airgapsetupArm64: windowsAirgapSetupArm64Url,
-      };
-
       return {
         latestReleaseVersion,
-        linuxDownloads,
-        macosDownloads,
-        windowsDownloads,
+        linux: {
+          flatpak: flatpakUrl,
+          arm64: linuxArmUrl,
+          amd64: linuxAmdUrl,
+        },
+        macos: {
+          universal: macosUniversalUrl,
+          x64: macosX64Url,
+          arm64: macosArm64Url,
+          airgapsetupX64: macosAirgapX64Url,
+          airgapsetupArm64: macosAirgapArm64Url,
+        },
+        windows: {
+          setupX64: windowsSetupX64Url,
+          setupArm64: windowsSetupArm64Url,
+          binaryX64: windowsPortableX64Url,
+          binaryArm64: windowsPortableArm64Url,
+          airgapsetupX64: windowsAirgapSetupX64Url,
+          airgapsetupArm64: windowsAirgapSetupArm64Url,
+        },
       };
     } catch (err) {
       console.error('Error fetching GitHub release data:', err);

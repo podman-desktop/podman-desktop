@@ -10,7 +10,9 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
-  const { latestReleaseVersion, linuxDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
+  const { latestReleaseVersion, linux: linuxDownloads } = usePluginData(
+    'docusaurus-plugin-github-metadata',
+  ) as GitHubMetadata;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');

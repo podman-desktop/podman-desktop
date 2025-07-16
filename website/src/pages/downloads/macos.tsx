@@ -10,7 +10,9 @@ import Layout from '@theme/Layout';
 import React from 'react';
 
 export function MacOSDownloads(): JSX.Element {
-  const { latestReleaseVersion, macosDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
+  const { latestReleaseVersion, macos: macosDownloads } = usePluginData(
+    'docusaurus-plugin-github-metadata',
+  ) as GitHubMetadata;
 
   const copyBrewInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('brew install podman-desktop');
