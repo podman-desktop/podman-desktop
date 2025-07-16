@@ -40,7 +40,7 @@ export class InputQuickPickRegistry {
     number,
     {
       items: readonly (string | QuickPickItem)[];
-      deferred: PromiseWithResolvers<string[] | string | undefined>;
+      deferred: PromiseWithResolvers<(string | QuickPickItem)[] | string | QuickPickItem | undefined>;
       options?: QuickPickOptions;
       token?: CancellationToken;
     }
@@ -182,7 +182,7 @@ export class InputQuickPickRegistry {
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = Promise.withResolvers<string | string[] | undefined>();
+    const deferred = Promise.withResolvers<(string | QuickPickItem)[] | string | QuickPickItem | undefined>();
 
     // check if the items are a promise
     if (items instanceof Promise) {
