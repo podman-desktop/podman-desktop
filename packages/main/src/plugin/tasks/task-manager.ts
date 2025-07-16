@@ -72,8 +72,7 @@ export class TaskManager {
         properties: {
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`]: {
             description: 'Show running tasks in the status bar',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10777',
             },

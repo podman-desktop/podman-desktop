@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ const callbacks = new Map<string, (arg: unknown) => void>();
 beforeEach(() => {
   vi.resetAllMocks();
 
+  Object.defineProperty(window, 'isExperimentalConfigurationEnabled', { value: vi.fn() });
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
@@ -56,21 +57,20 @@ beforeEach(() => {
   ]);
 });
 
-test('onMount should call getConfigurationValue', async () => {
+test('onMount should call getConfigurationValue and isExperimentalConfigurationEnabled', async () => {
   render(StatusBar);
 
-  await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(2));
+  await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(1));
+  await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(1));
 
-  expect(window.getConfigurationValue).nthCalledWith(
-    1,
+  expect(window.isExperimentalConfigurationEnabled).toBeCalledWith(
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
-
-  expect(window.getConfigurationValue).nthCalledWith(2, `statusbarProviders.showProviders`);
+  expect(window.getConfigurationValue).toBeCalledWith(`statusbarProviders.showProviders`);
 });
 
-test('tasks should be visible when getConfigurationValue is true', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+test('tasks should be visible when isExperimentalConfigurationEnabled is true', async () => {
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
 
   const { getByRole } = render(StatusBar);
 
@@ -81,8 +81,8 @@ test('tasks should be visible when getConfigurationValue is true', async () => {
   });
 });
 
-test('tasks should not be visible when getConfigurationValue is false', () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+test('tasks should not be visible when isExperimentalConfigurationEnabled is false', () => {
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
 
   const { queryByRole } = render(StatusBar);
   const status = queryByRole('status');
@@ -109,23 +109,26 @@ describe('providers', () => {
   });
 
   test('providers should show up when configuration changes from false to true', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
     vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
     render(StatusBar);
 
-    await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(2));
+    await vi.waitFor(() => expect(window.isExperimentalConfigurationEnabled).toBeCalledTimes(1));
+    await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(1));
 
     expect(Providers).not.toHaveBeenCalled();
 
     callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: true },
+      detail: { key: `statusbarProviders.showProviders`, value: {} },
     });
 
     await vi.waitFor(() => expect(Providers).toHaveBeenCalled());
   });
 
   test('providers are hidden when configuration changes from true to false', async () => {
-    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(false);
     vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(true);
+    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(false);
+
     render(StatusBar);
 
     await vi.waitFor(() => {
@@ -135,7 +138,7 @@ describe('providers', () => {
     vi.mocked(Providers).mockReset();
 
     callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: false },
+      detail: { key: `statusbarProviders.showProviders`, value: undefined },
     });
 
     await tick();
