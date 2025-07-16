@@ -5,8 +5,6 @@ interface DownloadData {
   version: string;
 }
 
-// --- Data type definitions for each OS ---
-
 export interface LinuxDownloadData extends DownloadData {
   flatpak: string;
   amd64: string;
@@ -29,8 +27,6 @@ export interface WindowsDownloadData extends DownloadData {
   airgapsetupX64: string;
   airgapsetupArm64: string;
 }
-
-// --- Combined data types ---
 
 export interface GlobalData {
   linuxDownloads: LinuxDownloadData;
@@ -70,7 +66,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>>
           return asset.browser_download_url;
         }
 
-        // --- Linux ---
         const flatpakUrl = findAssetOrThrow(a => a.name.endsWith('.flatpak'), 'Linux Flatpak');
         const linuxArmUrl = findAssetOrThrow(a => a.name.endsWith('-arm64.tar.gz'), 'Linux ARM64 .tar.gz');
         const linuxAmdUrl = findAssetOrThrow(
@@ -85,7 +80,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>>
           amd64: linuxAmdUrl,
         };
 
-        // --- macOS ---
         const macosArm64Url = findAssetOrThrow(
           a => a.name.endsWith('-arm64.dmg') && !a.name.includes('airgap'),
           'macOS ARM64 DMG',
@@ -120,7 +114,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>>
           airgapsetupArm64: macosAirgapArm64Url,
         };
 
-        // --- Windows ---
         const windowsSetupX64Url = findAssetOrThrow(
           a => a.name.endsWith('-setup-x64.exe') && !a.name.includes('airgap'),
           'Windows Setup x64 EXE',
