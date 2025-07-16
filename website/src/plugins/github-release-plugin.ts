@@ -40,7 +40,6 @@ export default async function githubReleasePlugin(): Promise<Plugin<GlobalData>>
     name: 'docusaurus-plugin-github-release',
 
     async loadContent(): Promise<GlobalData> {
-      console.log('Fetching latest GitHub release for podman-desktop using Octokit...');
 
       const octokit = new Octokit();
 
