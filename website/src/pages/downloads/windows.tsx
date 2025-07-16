@@ -6,12 +6,14 @@ import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
-import type { GitHubMetadata } from '@site/src/plugins/GitHubMetadata';
+import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 import Layout from '@theme/Layout';
 import React from 'react';
 
 export function WindowsDownloads(): JSX.Element {
-  const { windowsDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
+  const { latestReleaseVersion, windowsDownloads } = usePluginData(
+    'docusaurus-plugin-github-metadata',
+  ) as GitHubMetadata;
 
   const copyCliInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('winget install -e --id RedHat.Podman-Desktop');
@@ -34,7 +36,7 @@ export function WindowsDownloads(): JSX.Element {
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Windows installer x64, version v{windowsDownloads.version}
+              Windows installer x64, version v{latestReleaseVersion}
             </caption>
           </div>
           <div className="mt-4">

@@ -5,13 +5,12 @@ import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
-import type { GitHubMetadata } from '@site/src/plugins/GitHubMetadata';
+import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 import Layout from '@theme/Layout';
 import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
-  // Use the generic version of usePluginData for full type safety
-  const { linuxDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
+  const { latestReleaseVersion, linuxDownloads } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');
@@ -34,7 +33,7 @@ export function LinuxDownloads(): JSX.Element {
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Linux *.flatpak, version {linuxDownloads.version}
+              Linux *.flatpak, version {latestReleaseVersion}
             </caption>
           </div>
           <div className="mt-4">
