@@ -237,6 +237,8 @@ export class PluginSystem {
   private extensionLoader!: ExtensionLoader;
   private validExtList!: ExtensionInfo[];
 
+  #container: Container | undefined = undefined;
+
   constructor(
     private trayMenu: TrayMenu,
     private mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
@@ -455,7 +457,12 @@ export class PluginSystem {
 
     // init api sender
     const apiSender = this.getApiSender(this.getWebContentsSender());
+    if (this.#container) {
+      // if the container is already initialized, we need to dispose all instances
+      await this.#container.unbindAll();
+    }
     const container = new Container();
+    this.#container = container;
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
