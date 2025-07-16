@@ -1,4 +1,7 @@
-import type * as extensionApi from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
+
+import { getSocketCompatibility } from './compatibility-mode';
+import { isDisguisedPodman } from './warnings';
 
 export class ExtensionNotifications {
   // Alert for setting up
@@ -82,5 +85,71 @@ export class ExtensionNotifications {
 
   public set podmanMacHelperNotificationDisposable(podmanMacHelperNotificationDisposable: extensionApi.Disposable) {
     this._podmanMacHelperNotificationDisposable = podmanMacHelperNotificationDisposable;
+  }
+
+  // to avoid having multiple notification of the same nature in the notifications list
+  // we first dispose the old one and then push the same again
+  public notifySetupPodman(): void {
+    this.notificationDisposable ??= extensionApi.window.showNotification(
+      ExtensionNotifications.setupPodmanNotification,
+    );
+  }
+
+  private notifyDisguisedPodmanSocket(): void {
+    this.disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification(
+      ExtensionNotifications.disguisedPodmanNotification,
+    );
+  }
+
+  // Check that the socket is indeed a disguised podman socket, if it is NOT, we should
+  // alert the user that compatibility was not ran.
+  public async checkAndNotifyDisguisedPodman(): Promise<void> {
+    const socketCompatibilityMode = getSocketCompatibility();
+
+    // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
+    if (!socketCompatibilityMode.isEnabled()) {
+      return;
+    }
+
+    const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+    // If the socket is not disguised, we should alert the user that compatibility was not ran.
+    if (!isDisguisedPodmanSocket) {
+      this.notifyDisguisedPodmanSocket();
+    } else {
+      // If it's already disguised, dispose of the notification.
+      this.disguisedPodmanNotificationDisposable?.dispose();
+    }
+  }
+
+  // Show the banner for running podman-mac-helper
+  private notifySetupPodmanMacHelper(): void {
+    this.podmanMacHelperNotificationDisposable?.dispose();
+    this.podmanMacHelperNotificationDisposable = extensionApi.window.showNotification(
+      ExtensionNotifications.setupMacHelperNotification,
+    );
+  }
+
+  public async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
+    // Exit immediately if doNotShowMacHelperSetup is true
+    if (this.doNotShowMacHelperSetup) {
+      return;
+    }
+
+    // We do one last check to see if the socket is truly disguised or not by checking isEnabled for socketCompatibilityMode
+    const socketCompatibilityMode = getSocketCompatibility();
+
+    // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
+    const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+    // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
+    // and we are on macOS, as the helper is only required for macOS.
+    // We also only notify if the actual notification is undefined (already disposed / not exists)
+    if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
+      this.notifySetupPodmanMacHelper();
+    } else {
+      // If it's already enabled, just dispose the notification
+      this.podmanMacHelperNotificationDisposable?.dispose();
+    }
   }
 }
