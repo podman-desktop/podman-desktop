@@ -26,5 +26,5 @@ if (!infos) {
   throw new Error(`Could not parse repository information from URL: ${rootPackage.repository}`);
 }
 
-export const ORGANIZATION_NAME = infos.user;
-export const REPOSITORY_NAME = infos.project;
+export const GITHUB_OWNER = infos.user;
+export const GITHUB_REPOSITORY = infos.project;
