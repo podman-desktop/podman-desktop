@@ -22,6 +22,10 @@ import { getSocketCompatibility } from './compatibility-mode';
 import { isDisguisedPodman } from './warnings';
 
 export class ExtensionNotifications {
+  // Configuration buttons
+  public static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
+    'setting.doNotShowMacHelperNotification';
+
   private _shouldNotifySetup = true;
 
   public get shouldNotifySetup(): boolean {
@@ -57,6 +61,15 @@ export class ExtensionNotifications {
   private _podmanMacHelperNotificationDisposable?: extensionApi.Disposable;
   public get podmanMacHelperNotificationDisposable(): extensionApi.Disposable | undefined {
     return this._podmanMacHelperNotificationDisposable;
+  }
+
+  // Shortform for getting the do not show ever again setting for the podman-mac-helper notification
+  public getDoNotShowMacHelperSetting(): boolean {
+    return (
+      extensionApi.configuration
+        .getConfiguration('podman')
+        .get<boolean>(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
+    );
   }
 
   // to avoid having multiple notification of the same nature in the notifications list

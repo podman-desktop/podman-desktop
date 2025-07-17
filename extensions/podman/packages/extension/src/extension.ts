@@ -86,9 +86,6 @@ const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
 
-// Configuration buttons
-const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
-
 // Telemetry
 let telemetryLogger: extensionApi.TelemetryLogger;
 
@@ -166,15 +163,6 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
   } else {
     return false;
   }
-}
-
-// Shortform for getting the do not show ever again setting for the podman-mac-helper notification
-function getDoNotShowMacHelperSetting(): boolean {
-  return (
-    extensionApi.configuration
-      .getConfiguration('podman')
-      .get<boolean>(configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
-  );
 }
 
 export async function updateMachines(
@@ -1398,7 +1386,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // only available for macOS
   if (extensionApi.env.isMac) {
     // Get if we should never show the podman-mac-helper notification ever again
-    extensionNotifications.doNotShowMacHelperSetup = getDoNotShowMacHelperSetting();
+    extensionNotifications.doNotShowMacHelperSetup = extensionNotifications.getDoNotShowMacHelperSetting();
 
     // Register the command for disabling the do not show mac helper setting permanently
     extensionContext.subscriptions.push(
@@ -1407,7 +1395,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         // is consistent / will not show the notification again
         await extensionApi.configuration
           .getConfiguration('podman')
-          .update(configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
+          .update(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
 
         //  Set the global variable to true
         extensionNotifications.doNotShowMacHelperSetup = true;
