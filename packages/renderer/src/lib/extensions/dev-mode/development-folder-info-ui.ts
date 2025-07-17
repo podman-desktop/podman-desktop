@@ -27,9 +27,3 @@ export interface SelectableExtensionDevelopmentFolderInfoUI extends ExtensionDev
     state?: string;
   };
 }
-
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-
-export function isAsyncFunction(fn: unknown): boolean {
-  return fn?.constructor === AsyncFunction;
-}
