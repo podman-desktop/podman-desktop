@@ -38,18 +38,10 @@ export class ExtensionNotifications {
     return this._notificationDisposable;
   }
 
-  public set notificationDisposable(notificationDisposable: extensionApi.Disposable) {
-    this._notificationDisposable = notificationDisposable;
-  }
-
   private _disguisedPodmanNotificationDisposable?: extensionApi.Disposable;
 
   public get disguisedPodmanNotificationDisposable(): extensionApi.Disposable | undefined {
     return this._disguisedPodmanNotificationDisposable;
-  }
-
-  public set disguisedPodmanNotificationDisposable(disguisedPodmanNotificationDisposable: extensionApi.Disposable) {
-    this._disguisedPodmanNotificationDisposable = disguisedPodmanNotificationDisposable;
   }
 
   private _doNotShowMacHelperSetup = false;
@@ -71,7 +63,7 @@ export class ExtensionNotifications {
   // we first dispose the old one and then push the same again
   public notifySetupPodman(): void {
     // Alert for setting up
-    this.notificationDisposable ??= extensionApi.window.showNotification({
+    this._notificationDisposable ??= extensionApi.window.showNotification({
       title: 'Podman needs to be set up',
       body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
       type: 'info',
@@ -83,7 +75,7 @@ export class ExtensionNotifications {
 
   private notifyDisguisedPodmanSocket(): void {
     // Notification for if Docker Desktop has overriden the socket other tools are using it.
-    this.disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification({
+    this._disguisedPodmanNotificationDisposable ??= extensionApi.window.showNotification({
       title: 'Docker socket is not disguised correctly',
       body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
       markdownActions:
