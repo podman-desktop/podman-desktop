@@ -23,8 +23,8 @@ import { tmpdir } from 'node:os';
 import type { PullEvent } from '@podman-desktop/api';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
-import { Container } from 'inversify';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Container as InversifyContainer } from 'inversify';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -54,7 +54,7 @@ let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {
   override initConfigurationRegistry(
-    container: Container,
+    container: InversifyContainer,
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
   ): ConfigurationRegistry {
@@ -65,6 +65,7 @@ class TestPluginSystem extends PluginSystem {
   }
 }
 
+let inversifyContainer: InversifyContainer;
 const emitter = new EventEmitter();
 const webContents = emitter as unknown as WebContents;
 webContents.isDestroyed = vi.fn();
@@ -118,6 +119,12 @@ beforeAll(async () => {
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   // to avoid port conflict when tests are running on windows host
   vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
+
+  inversifyContainer = new InversifyContainer();
+});
+
+afterEach(async () => {
+  await inversifyContainer.unbindAll();
 });
 
 beforeEach(() => {
@@ -316,12 +323,11 @@ test('configurationRegistry propagated', async () => {
   } as unknown as Directories;
   const notifications: NotificationCardOptions[] = [];
 
-  const container = new Container();
-  container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
-  container.bind<Directories>(Directories).toConstantValue(directoriesMock);
+  inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
+  inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
 
   const configurationRegistry = pluginSystem.initConfigurationRegistry(
-    container,
+    inversifyContainer,
     notifications,
     configurationRegistryEmitter,
   );
