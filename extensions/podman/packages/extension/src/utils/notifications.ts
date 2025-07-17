@@ -67,10 +67,6 @@ export class ExtensionNotifications {
     return this._podmanMacHelperNotificationDisposable;
   }
 
-  public set podmanMacHelperNotificationDisposable(podmanMacHelperNotificationDisposable: extensionApi.Disposable) {
-    this._podmanMacHelperNotificationDisposable = podmanMacHelperNotificationDisposable;
-  }
-
   // to avoid having multiple notification of the same nature in the notifications list
   // we first dispose the old one and then push the same again
   public notifySetupPodman(): void {
@@ -125,7 +121,7 @@ export class ExtensionNotifications {
 
     // Alert for running podman-mac-helper
     // Add notification that podman-mac-helper needs setting up
-    this.podmanMacHelperNotificationDisposable = extensionApi.window.showNotification({
+    this._podmanMacHelperNotificationDisposable = extensionApi.window.showNotification({
       title: 'Podman Mac Helper needs to be set up',
       body: 'The Podman Mac Helper is not set up, some features might not function optimally.',
       type: 'info',
