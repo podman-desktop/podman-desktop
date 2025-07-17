@@ -112,12 +112,12 @@ beforeAll(async () => {
       } as unknown as BrowserWindow,
     ];
   });
-  // to avoid port conflict when tests are running on windows host
-  vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  // to avoid port conflict when tests are running on windows host
+  vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
 });
 
 beforeEach(() => {
