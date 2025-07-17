@@ -16,21 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { fromUrl } from 'hosted-git-info';
-
 import rootPackage from '../../../package.json' with { type: 'json' };
+import { RepositoryInfoParser } from './repository-info-parser';
 
 export const REPOSITORY_URL = rootPackage.repository;
+export const REPOSITORY_HOMEPAGE = rootPackage.homepage;
 
-const infos = fromUrl(REPOSITORY_URL);
+const parser = new RepositoryInfoParser(REPOSITORY_URL);
 
-if (!infos) {
-  throw new Error(`Could not parse repository information from URL: ${REPOSITORY_URL}`);
-}
-
-if (infos.type !== 'github') {
-  throw new Error(`Repository type is not GitHub. Detected type: ${infos.type}. URL: ${REPOSITORY_URL}`);
-}
-
-export const GITHUB_OWNER = infos.user;
-export const GITHUB_REPOSITORY = infos.project;
+export const GITHUB_OWNER = parser.owner;
+export const GITHUB_REPOSITORY = parser.repository;
