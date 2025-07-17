@@ -156,7 +156,12 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
       ? (process.env['LOCALAPPDATA'] ?? path.join(homedir(), 'AppData', 'Local'))
       : path.join(homedir(), 'Library', 'Caches');
     const installerPath = path.join(cacheDir, 'podman-desktop-updater', 'pending');
-    const findFiles = fs.readdirSync(installerPath).filter(file => new RegExp(`.*(${fileFormatRegexp})$`).exec(file));
+    playExpect(
+      fs.existsSync(installerPath),
+      `Directory with installer files (${installerPath}) does not exist`,
+    ).toBeTruthy();
+    const files = await fs.promises.readdir(installerPath);
+    const findFiles = files.filter(file => new RegExp(`^podman-desktop.*\\.(${fileFormatRegexp})$`).exec(file));
     playExpect(
       findFiles.length,
       `No files with ${fileFormatRegexp} were found during update on ${installerPath}`,
