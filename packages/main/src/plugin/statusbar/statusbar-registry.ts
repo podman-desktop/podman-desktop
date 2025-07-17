@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { STATUS_BAR_UPDATED_EVENT_NAME, type StatusBarEntry, type StatusBarEntryDescriptor } from '/@api/status-bar.js';
 
@@ -90,6 +90,7 @@ export class StatusBarRegistry implements IDisposable {
     this.apiSender.send(STATUS_BAR_UPDATED_EVENT_NAME, undefined);
   }
 
+  @preDestroy()
   dispose(): void {
     this.entries.clear();
   }

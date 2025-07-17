@@ -22,12 +22,14 @@ import type {
   InputBoxValidationMessage,
   QuickPickOptions,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 import { ApiSenderType } from '../api.js';
 
 @injectable()
-export class InputQuickPickRegistry {
+export class InputQuickPickRegistry implements IDisposable {
   private callbackId = 0;
 
   private callbacksInputBox = new Map<
@@ -47,6 +49,11 @@ export class InputQuickPickRegistry {
   >();
 
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
+
+  @preDestroy()
+  dispose(): void {
+    this.callbacksInputBox.clear();
+  }
 
   async showInputBox(options?: InputBoxOptions, token?: CancellationToken): Promise<string | undefined> {
     // keep track of this request

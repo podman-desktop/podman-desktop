@@ -21,8 +21,10 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
 import wincaAPI from 'win-ca/api';
+
+import { IDisposable } from '/@api/disposable.js';
 
 import { isLinux, isMac, isWindows } from '../util.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
@@ -32,8 +34,13 @@ import { spawnWithPromise } from './util/spawn-promise.js';
  * It supports Linux, Windows and MacOS.
  */
 @injectable()
-export class Certificates {
+export class Certificates implements IDisposable {
   private allCertificates: string[] = [];
+
+  @preDestroy()
+  dispose(): void {
+    this.allCertificates = [];
+  }
 
   /**
    * Setup all certificates globally depending on the platform.

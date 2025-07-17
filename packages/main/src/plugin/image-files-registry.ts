@@ -23,9 +23,10 @@ import type {
   ImageFilesProviderMetadata,
   ImageInfo,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
@@ -41,7 +42,7 @@ export interface ImageFilesProviderWithMetadata {
 }
 
 @injectable()
-export class ImageFilesRegistry {
+export class ImageFilesRegistry implements IDisposable {
   private _imageFilesProviders: Map<string, ImageFilesProviderWithMetadata> = new Map<
     string,
     ImageFilesProviderWithMetadata
@@ -70,6 +71,11 @@ export class ImageFilesRegistry {
       },
     };
     this.configurationRegistry.registerConfigurations([imagesFilesConfiguration]);
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this._imageFilesProviders.clear();
   }
 
   create(

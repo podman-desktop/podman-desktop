@@ -25,9 +25,10 @@ import type {
   CliToolUpdate,
   Logger,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { CliToolExtensionInfo, CliToolInfo } from '/@api/cli-tool-info.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 
 import { ApiSenderType } from './api.js';
@@ -36,7 +37,7 @@ import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
 
 @injectable()
-export class CliToolRegistry {
+export class CliToolRegistry implements IDisposable {
   constructor(@inject(ApiSenderType) private apiSender: ApiSenderType) {}
 
   private cliTools = new Map<string, CliToolImpl>();
@@ -45,6 +46,16 @@ export class CliToolRegistry {
 
   private readonly _onDidCliToolsChange = new Emitter<void>();
   readonly onDidCliToolsChange: Event<void> = this._onDidCliToolsChange.event;
+
+  @preDestroy()
+  dispose(): void {
+    this.cliTools.clear();
+    this.cliToolsUpdater.clear();
+    this.cliToolsInstaller.clear();
+
+    // dispose event emitter
+    this._onDidCliToolsChange.dispose();
+  }
 
   createCliTool(extensionInfo: CliToolExtensionInfo, options: CliToolOptions): CliTool {
     const cliTool = new CliToolImpl(extensionInfo, this, options);

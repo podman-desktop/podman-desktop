@@ -18,7 +18,7 @@
 
 import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { Event } from '/@api/event.js';
 
@@ -118,6 +118,7 @@ export class ExtensionWatcher implements IDisposable {
     this.#watcherExtensions.delete(extension.id);
   }
 
+  @preDestroy()
   dispose(): void {
     // dispose all watchers
     for (const watcher of this.#watcherExtensions.values()) {

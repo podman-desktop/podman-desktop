@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CustomPick, CustomPickItem } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { ApiSenderType } from '../api.js';
 import type { IDisposable } from '../types/disposable.js';
@@ -56,6 +56,7 @@ export class CustomPickRegistry implements IDisposable {
     }
   }
 
+  @preDestroy()
   dispose(): void {
     this.entries.forEach(entry => entry.dispose());
     this.entries.clear();

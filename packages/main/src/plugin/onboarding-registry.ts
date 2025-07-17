@@ -18,9 +18,10 @@
 
 import * as path from 'node:path';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { Onboarding, OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
 
 import { getBase64Image } from '../util.js';
@@ -28,10 +29,15 @@ import { Context } from './context/context.js';
 import { Disposable } from './types/disposable.js';
 
 @injectable()
-export class OnboardingRegistry {
+export class OnboardingRegistry implements IDisposable {
   private onboardingInfos: Map<string, OnboardingInfo> = new Map<string, OnboardingInfo>();
 
   constructor(@inject(Context) private context: Context) {}
+
+  @preDestroy()
+  dispose(): void {
+    this.onboardingInfos.clear();
+  }
 
   registerOnboarding(extension: AnalyzedExtension, onboarding: Onboarding): Disposable {
     const onInfo = this.createOnboardingInfo(extension, onboarding);

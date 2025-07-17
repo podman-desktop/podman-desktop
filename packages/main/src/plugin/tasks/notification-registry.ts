@@ -18,8 +18,9 @@
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Notification } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 
 import { ApiSenderType } from '../api.js';
@@ -27,7 +28,7 @@ import { Disposable } from '../types/disposable.js';
 import { TaskManager } from './task-manager.js';
 
 @injectable()
-export class NotificationRegistry {
+export class NotificationRegistry implements IDisposable {
   private notificationId = 0;
   private notificationQueue: NotificationCard[] = [];
 
@@ -37,6 +38,11 @@ export class NotificationRegistry {
     @inject(TaskManager)
     private taskManager: TaskManager,
   ) {}
+
+  @preDestroy()
+  dispose(): void {
+    this.notificationQueue = [];
+  }
 
   registerExtension(extensionId: string): Disposable {
     return Disposable.create(() => {

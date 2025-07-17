@@ -21,10 +21,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { safeStorage } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
@@ -33,7 +34,7 @@ import type { NotificationCardOptions } from '/@api/notification.js';
  * It's only converted to readable content when getting the value
  */
 @injectable()
-export class SafeStorageRegistry {
+export class SafeStorageRegistry implements IDisposable {
   readonly #directories: Directories;
 
   #extensionStorage: SafeStorage | undefined;
@@ -41,6 +42,9 @@ export class SafeStorageRegistry {
   constructor(@inject(Directories) directories: Directories) {
     this.#directories = directories;
   }
+
+  @preDestroy()
+  dispose(): void {}
 
   protected getSafeStorageDataPath(): string {
     // create directory if it does not exist

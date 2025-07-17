@@ -30,10 +30,11 @@ import { Analytics, type UserTraits } from '@segment/analytics-node';
 import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 import * as osLocale from 'os-locale';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
 
@@ -63,7 +64,7 @@ export type EventType =
  * Handle the telemetry reporting.
  */
 @injectable()
-export class Telemetry {
+export class Telemetry implements IDisposable {
   public static readonly DEFAULT_DELAY_AGGREGATE = 10_000; // 10 seconds
 
   private static readonly SEGMENT_KEY = 'Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy';
@@ -98,6 +99,13 @@ export class Telemetry {
   ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.lastTimeEvents.clear();
+    this.aggregateTimeoutEvents.clear();
+    this.regexp.clear();
   }
 
   async init(): Promise<void> {
@@ -572,6 +580,7 @@ export class TelemetryLoggerImpl implements TelemetryLogger {
   }
 
   dispose(): void {
+    this._onDidChangeEnableStates.dispose();
     this.commonProperties = {};
   }
 }

@@ -20,6 +20,8 @@ import * as path from 'node:path';
 
 import type * as api from '@podman-desktop/api';
 
+import type { IDisposable } from '/@api/disposable.js';
+
 export interface ExtensionModule {
   path: string;
   api: typeof api;
@@ -33,7 +35,7 @@ export interface NodeInternalModule {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OverrideFunction = (ext: ExtensionModule) => any;
 
-export class ModuleLoader {
+export class ModuleLoader implements IDisposable {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _internalLoad: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,5 +89,10 @@ export class ModuleLoader {
         return internalLoad.apply(this, arguments);
       };
     }
+  }
+
+  dispose(): void {
+    this._overrides.clear();
+    this._extModuleCache.clear();
   }
 }

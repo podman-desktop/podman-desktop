@@ -53,8 +53,9 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type {
   LifecycleMethod,
@@ -93,7 +94,7 @@ export type ContainerConnectionProviderLifecycleListener = (
  * subscribe to events to get notified about provider creation and lifecycle changes.
  */
 @injectable()
-export class ProviderRegistry {
+export class ProviderRegistry implements IDisposable {
   private count = 0;
   private providers: Map<string, ProviderImpl>;
   private providerStatuses = new Map<string, ProviderStatus>();
@@ -202,6 +203,44 @@ export class ProviderRegistry {
         }
       }
     }, 2000);
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.providers.clear();
+    this.providerStatuses.clear();
+    this.providerWarnings.clear();
+    this.providerLifecycles.clear();
+    this.providerLifecycleContexts.clear();
+    this.providerInstallations.clear();
+    this.providerUpdates.clear();
+    this.providerAutostarts.clear();
+    this.providerCleanup.clear();
+
+    this.autostartEngine = undefined;
+
+    this.connectionLifecycleContexts.clear();
+
+    this.listeners = [];
+    this.lifecycleListeners = [];
+    this.containerConnectionLifecycleListeners = [];
+
+    this.kubernetesProviders.clear();
+    this.vmProviders.clear();
+
+    // dispose event emitters
+    this._onDidUpdateProvider.dispose();
+    this._onBeforeDidUpdateContainerConnection.dispose();
+    this._onDidUpdateContainerConnection.dispose();
+    this._onAfterDidUpdateContainerConnection.dispose();
+    this._onDidUpdateKubernetesConnection.dispose();
+    this._onDidUpdateVmConnection.dispose();
+    this._onDidUnregisterContainerConnection.dispose();
+    this._onDidUnregisterKubernetesConnection.dispose();
+    this._onDidUnregisterVmConnection.dispose();
+    this._onDidRegisterKubernetesConnection.dispose();
+    this._onDidRegisterVmConnection.dispose();
+    this._onDidRegisterContainerConnection.dispose();
   }
 
   createProvider(extensionId: string, extensionDisplayName: string, providerOptions: ProviderOptions): Provider {

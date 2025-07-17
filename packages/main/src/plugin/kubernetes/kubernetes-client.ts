@@ -66,7 +66,7 @@ import {
 } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware.js';
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 import * as jsYaml from 'js-yaml';
 import type { WebSocket } from 'ws';
 import type { Tags } from 'yaml';
@@ -75,6 +75,7 @@ import { parseAllDocuments } from 'yaml';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IDisposable } from '/@api/disposable.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
@@ -168,7 +169,7 @@ export interface PodCreationSource {
  * Handle calls to kubernetes API
  */
 @injectable()
-export class KubernetesClient {
+export class KubernetesClient implements IDisposable {
   protected kubeConfig;
 
   private static readonly DEFAULT_KUBECONFIG_PATH = resolve(homedir(), '.kube', 'config');
@@ -1418,6 +1419,7 @@ export class KubernetesClient {
     return this.contextsState.unregisterGetCurrentContextResources(resourceName);
   }
 
+  @preDestroy()
   public dispose(): void {
     this.contextsState.dispose();
   }

@@ -15,18 +15,24 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
+import { IDisposable } from '/@api/disposable.js';
 import type { Menu } from '/@api/menu.js';
 
 import { CommandRegistry } from './command-registry.js';
 import { Disposable } from './types/disposable.js';
 
 @injectable()
-export class MenuRegistry {
+export class MenuRegistry implements IDisposable {
   private menus = new Map<string, Map<string, Menu>>();
 
   constructor(@inject(CommandRegistry) private commandRegisty: CommandRegistry) {}
+
+  @preDestroy()
+  dispose(): void {
+    this.menus.clear();
+  }
 
   registerMenus(menus: { [key: string]: Menu[] }): Disposable {
     for (const name in menus) {

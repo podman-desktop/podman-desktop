@@ -20,11 +20,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
+
+import { IDisposable } from '/@api/disposable.js';
 
 // handle the different directories for the different OSes for Podman Desktop
 @injectable()
-export class Directories {
+export class Directories implements IDisposable {
   static readonly XDG_DATA_DIRECTORY = `.local${path.sep}share${path.sep}containers${path.sep}podman-desktop`;
 
   public static readonly PODMAN_DESKTOP_HOME_DIR = 'PODMAN_DESKTOP_HOME_DIR';
@@ -53,6 +55,9 @@ export class Directories {
     this.contributionStorageDirectory = path.resolve(this.desktopAppHomeDir, 'contributions');
     this.safeStorageDirectory = path.resolve(this.desktopAppHomeDir, 'safe-storage');
   }
+
+  @preDestroy()
+  dispose(): void {}
 
   getConfigurationDirectory(): string {
     return this.configurationDirectory;
