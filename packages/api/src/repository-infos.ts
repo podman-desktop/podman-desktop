@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import rootPackage from '../../../package.json' with { type: 'json' };
-import { RepositoryInfoParser } from './repository-info-parser';
+import { RepositoryInfoParser } from './repository-info-parser.js';
 
 export const REPOSITORY_URL = rootPackage.repository;
 export const REPOSITORY_HOMEPAGE = rootPackage.homepage;
