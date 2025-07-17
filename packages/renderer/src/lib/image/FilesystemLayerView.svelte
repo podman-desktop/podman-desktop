@@ -1,11 +1,12 @@
 <script lang="ts">
-const expansionState = new Map<string, boolean>();
-
 import type { ImageFile, ImageFileSymlink } from '@podman-desktop/api';
+import { SvelteMap } from 'svelte/reactivity';
 
 import type { FilesystemNode } from '/@api/filesystem-tree';
 
 import { ImageUtils } from './image-utils';
+
+const expansionState = new SvelteMap<string, boolean>();
 
 export let tree: FilesystemNode<ImageFile>;
 export let margin = 0;

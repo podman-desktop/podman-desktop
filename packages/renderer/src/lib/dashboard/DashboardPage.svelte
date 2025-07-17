@@ -1,5 +1,6 @@
 <script lang="ts">
 import { NavPage } from '@podman-desktop/ui-svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import ProviderConfiguring from '/@/lib/dashboard/ProviderConfiguring.svelte';
 import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
@@ -17,7 +18,7 @@ import ProviderStarting from './ProviderStarting.svelte';
 import ProviderStopped from './ProviderStopped.svelte';
 import ReleaseNotesBox from './ReleaseNotesBox.svelte';
 
-const providerInitContexts = new Map<string, InitializationContext>();
+const providerInitContexts = new SvelteMap<string, InitializationContext>();
 
 $: providersNotInstalled = $providerInfos.filter(provider => provider.status === 'not-installed');
 $: providersInstalled = $providerInfos.filter(provider => provider.status === 'installed');

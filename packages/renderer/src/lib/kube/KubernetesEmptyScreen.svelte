@@ -2,6 +2,7 @@
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { ComponentProps } from 'svelte';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import KubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
 import type { IDisposable } from '/@api/disposable';
@@ -18,7 +19,7 @@ let { icon, resources, titleEmpty, titleNotPermitted, ...restProps }: Props = $p
 
 let resourcesPermitted: boolean = $state(false);
 let disposables: IDisposable[] = [];
-let resourcePermittedMap: Map<string, boolean> = new Map();
+let resourcePermittedMap: Map<string, boolean> = new SvelteMap();
 
 onMount(async () => {
   for (let i = 0; i < resources?.length; i++) {

@@ -5,6 +5,7 @@ import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-s
 import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
@@ -47,9 +48,9 @@ import {
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];
 let providers: ProviderInfo[] = [];
-let containerConnectionStatus = new Map<string, IConnectionStatus>();
-let providerInstallationInProgress = new Map<string, boolean>();
-let extensionOnboardingEnablement = new Map<string, string>();
+let containerConnectionStatus = new SvelteMap<string, IConnectionStatus>();
+let providerInstallationInProgress = new SvelteMap<string, boolean>();
+let extensionOnboardingEnablement = new SvelteMap<string, string>();
 let isStatusUpdated = false;
 let displayInstallModal = false;
 let providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
@@ -184,7 +185,7 @@ onMount(async () => {
   });
 
   onboardingsUnsubscribe = onboardingList.subscribe(onboardingItems => {
-    extensionOnboardingEnablement = new Map<string, string>();
+    extensionOnboardingEnablement = new SvelteMap<string, string>();
     onboardingItems.forEach(o => {
       // maybe the boolean value should represent if the onboarding has been completed, to show the setup button or not
       // now true by default
