@@ -15,7 +15,6 @@ export class RepositoryInfoParser {
       throw new Error(`Repository type is not GitHub. Detected type: ${infos.type}. URL: ${this.url}`);
     }
 
-    // For valid GitHub URLs, 'user' and 'project' are guaranteed to be strings.
     this.owner = infos.user;
     this.repository = infos.project;
   }
