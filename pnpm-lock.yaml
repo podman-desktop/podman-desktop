@@ -653,8 +653,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1(eslint@9.31.0(jiti@2.4.2))(svelte@5.35.6)
       filesize:
-        specifier: ^11.0.1
-        version: 11.0.1
+        specifier: ^11.0.2
+        version: 11.0.2
       humanize-duration:
         specifier: ^3.33.0
         version: 3.33.0
@@ -6901,8 +6901,8 @@ packages:
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
-  filesize@11.0.1:
-    resolution: {integrity: sha512-ua1SLPcFgqf1lICRVqTA5d8T6kqg2ZTIm0BImnUk4pZzfAlwhqO9zKv7GCE5FGl3zIbBZZSmq7yLikFNsi5eXw==}
+  filesize@11.0.2:
+    resolution: {integrity: sha512-s/iAeeWLk5BschUIpmdrF8RA8lhFZ/xDZgKw1Tan72oGws1/dFGB06nYEiyyssWUfjKNQTNRlrwMVjO9/hvXDw==}
     engines: {node: '>= 10.4.0'}
 
   filesize@8.0.7:
@@ -7001,6 +7001,10 @@ packages:
 
   form-data@4.0.3:
     resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
+    engines: {node: '>= 6'}
+
+  form-data@4.0.4:
+    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
 
   format@0.2.2:
@@ -16910,7 +16914,7 @@ snapshots:
       ejs: 3.1.10
       electron-builder-squirrel-windows: 25.1.8(dmg-builder@26.0.15)
       electron-publish: 25.1.7
-      form-data: 4.0.3
+      form-data: 4.0.4
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
@@ -19555,7 +19559,7 @@ snapshots:
     dependencies:
       minimatch: 5.1.6
 
-  filesize@11.0.1: {}
+  filesize@11.0.2: {}
 
   filesize@8.0.7: {}
 
@@ -19661,6 +19665,14 @@ snapshots:
       mime-types: 2.1.35
 
   form-data@4.0.3:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
+      mime-types: 2.1.35
+
+  form-data@4.0.4:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8

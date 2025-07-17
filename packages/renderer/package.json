@@ -28,7 +28,7 @@
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@xterm/addon-serialize": "^0.13.0",
     "eslint-plugin-svelte": "^3.10.1",
-    "filesize": "^11.0.1",
+    "filesize": "^11.0.2",
     "humanize-duration": "^3.33.0",
     "jsdom": "^27.0.0-beta.2",
     "micromark": "^4.0.2",
