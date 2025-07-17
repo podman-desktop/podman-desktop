@@ -172,6 +172,7 @@ test('Check SecurityRestrictions on Links and user accept', async () => {
 
 test('Check SecurityRestrictions on Links and user copy link', async () => {
   const showMessageBoxMock = vi.fn();
+
   const messageBox = {
     showMessageBox: showMessageBoxMock,
   } as unknown as MessageBox;
