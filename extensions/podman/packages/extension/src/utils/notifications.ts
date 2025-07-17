@@ -84,6 +84,7 @@ export class ExtensionNotifications {
       highlight: true,
       silent: true,
     });
+    this.shouldNotifySetup = false;
   }
 
   private notifyDisguisedPodmanSocket(): void {

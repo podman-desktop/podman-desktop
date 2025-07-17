@@ -195,7 +195,6 @@ async function doUpdateMachines(
     if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
       // push setup notification
       extensionNotifications.notifySetupPodman();
-      extensionNotifications.shouldNotifySetup = false;
     }
     throw error;
   }
@@ -217,7 +216,6 @@ async function doUpdateMachines(
   if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
     // push setup notification
     extensionNotifications.notifySetupPodman();
-    extensionNotifications.shouldNotifySetup = false;
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
@@ -227,7 +225,6 @@ async function doUpdateMachines(
   if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
     // push setup notification
     extensionNotifications.notifySetupPodman();
-    extensionNotifications.shouldNotifySetup = false;
   }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
@@ -730,7 +727,6 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       if (extensionApi.env.isLinux && extensionNotifications.shouldNotifySetup) {
         // push setup notification
         extensionNotifications.notifySetupPodman();
-        extensionNotifications.shouldNotifySetup = false;
       }
     } else if (installedPodman.version) {
       provider.updateVersion(installedPodman.version);
