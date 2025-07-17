@@ -20,6 +20,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
+import { GITHUB_OWNER, GITHUB_REPOSITORY } from '../../../packages/api/src/repository-infos';
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
 import { mockReleaseData } from './test/resources/mock-release-data';
@@ -33,8 +34,6 @@ const server = setupServer(
 );
 
 describe('GitHubService', () => {
-  const owner = 'podman-desktop';
-  const repo = 'podman-desktop';
   let service: GitHubService;
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -44,7 +43,7 @@ describe('GitHubService', () => {
   afterAll(() => server.close());
 
   beforeEach(() => {
-    service = new GitHubService(owner, repo);
+    service = new GitHubService(GITHUB_OWNER, GITHUB_REPOSITORY);
   });
 
   test('should fetch and correctly map the latest release metadata on success', async () => {
@@ -100,7 +99,7 @@ describe('GitHubService', () => {
     );
 
     await expect(service.getLatestReleaseMetadata()).rejects.toThrow(
-      `Failed to retrieve tag name for the latest ${repo} release from GitHub. The 'tag_name' field was missing in the release data.`,
+      `Failed to retrieve tag name for the latest ${GITHUB_REPOSITORY} release from GitHub. The 'tag_name' field was missing in the release data.`,
     );
   });
 

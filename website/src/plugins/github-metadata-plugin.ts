@@ -18,11 +18,12 @@
 
 import type { Plugin } from '@docusaurus/types';
 
+import { GITHUB_OWNER, GITHUB_REPOSITORY } from '../../../packages/api/src/repository-infos';
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
 
 export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetadata>> {
-  const githubService = new GitHubService('podman-desktop', 'podman-desktop');
+  const githubService = new GitHubService(GITHUB_OWNER, GITHUB_REPOSITORY);
 
   return {
     name: 'docusaurus-plugin-github-metadata',
