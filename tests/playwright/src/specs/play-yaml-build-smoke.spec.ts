@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { PodState } from '../model/core/states';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteImage, deletePod } from '../utility/operations';
+import { isCI, isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const POD_NAME: string = 'play-yaml-build-test';
@@ -33,6 +34,8 @@ const CONTAINER_NAME: string = `${POD_NAME}-container`;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const POD_YAML_PATH: string = path.resolve(__dirname, '..', '..', 'resources', 'kube', 'play-yaml-build-test.yaml');
+
+test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
 
 test.beforeAll(async ({ runner, page, welcomePage }) => {
   runner.setVideoAndTraceName('play-yaml-build-smoke');
@@ -50,27 +53,26 @@ test.afterAll(async ({ page, runner }) => {
   }
 });
 
-test.describe
-  .serial('Deploy pod via Play YAML using locally built image', () => {
-    test('Deploy pod from YAML using build option and verify it is running', async ({ navigationBar }) => {
-      const podsPage = await navigationBar.openPods();
-      await playExpect(podsPage.heading).toBeVisible();
-      const playYamlPage = await podsPage.openPlayKubeYaml();
-      await playExpect(playYamlPage.heading).toBeVisible();
+test.describe.serial('Deploy pod via Play YAML using locally built image', { tag: '@smoke' }, () => {
+  test('Deploy pod from YAML using build option and verify it is running', async ({ navigationBar }) => {
+    const podsPage = await navigationBar.openPods();
+    await playExpect(podsPage.heading).toBeVisible();
+    const playYamlPage = await podsPage.openPlayKubeYaml();
+    await playExpect(playYamlPage.heading).toBeVisible();
 
-      await playYamlPage.playYaml(POD_YAML_PATH, true);
-      await playExpect(podsPage.heading).toBeVisible();
-      const podDetails = await podsPage.openPodDetails(POD_NAME);
-      await playExpect(podDetails.heading).toBeVisible();
-      await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
-    });
-    test('Verify that the deployed pod container uses the localhost image', async ({ navigationBar }) => {
-      const imagesPage = await navigationBar.openImages();
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect.poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME)).toBe('USED');
-
-      const containersPage = await navigationBar.openContainers();
-      await playExpect(containersPage.heading).toBeVisible();
-      playExpect(await containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
-    });
+    await playYamlPage.playYaml(POD_YAML_PATH, true);
+    await playExpect(podsPage.heading).toBeVisible();
+    const podDetails = await podsPage.openPodDetails(POD_NAME);
+    await playExpect(podDetails.heading).toBeVisible();
+    await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
   });
+  test('Verify that the deployed pod container uses the localhost image', async ({ navigationBar }) => {
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect.poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME)).toBe('USED');
+
+    const containersPage = await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible();
+    playExpect(await containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
+  });
+});
