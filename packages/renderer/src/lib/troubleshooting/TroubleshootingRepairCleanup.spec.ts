@@ -91,9 +91,6 @@ test('Check errors are displayed with clipboard button', async () => {
   expect(cleanupButton).toBeEnabled();
   await fireEvent.click(cleanupButton);
 
-  // wait next tick
-  await new Promise(resolve => setTimeout(resolve, 100));
-
   // check that we asked for confirmation
   expect(showMessageBoxMock).toBeCalledWith({
     buttons: ['Yes', 'Cancel'],
