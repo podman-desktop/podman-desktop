@@ -3300,16 +3300,21 @@ test('activate and autostart should not duplicate machines ', async () => {
   // call the autostart method
   const promiseAutoStart = autoStartMethod?.start();
 
-  // call 100 times monitorMachines
-  for (let i = 0; i < 100; i++) {
-    extension.monitorMachines(provider, podmanConfiguration).catch(() => {});
-  }
+  vi.useFakeTimers();
+
+  const promises = Array.from({ length: 100 }).map(() => extension.monitorMachines(provider, podmanConfiguration));
 
   await promiseAutoStart;
 
   // should be only 1 but we allow some more calls (if there is not a check to check during the autostart it would be 100+ calls)
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
+
+  await vi.advanceTimersByTimeAsync(5000);
+
+  await Promise.allSettled(promises);
+
+  vi.useRealTimers();
 });
 
 describe('macOS: tests for notifying if disguised podman socket fails / passes', () => {
