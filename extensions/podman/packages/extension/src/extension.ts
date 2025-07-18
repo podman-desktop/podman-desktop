@@ -1304,6 +1304,8 @@ async function exec(args: string[], options?: PodmanRunOptions): Promise<extensi
 }
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<PodmanExtensionApi> {
+  stopLoop = false;
+
   initExtensionContext(extensionContext);
 
   initTelemetryLogger();
