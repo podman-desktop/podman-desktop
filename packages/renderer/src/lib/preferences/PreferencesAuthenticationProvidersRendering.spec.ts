@@ -21,7 +21,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
 import { authenticationProviders } from '../../stores/authenticationProviders';
@@ -232,12 +232,11 @@ test('Expects images.icon option to be used when no themes are present', async (
   authenticationProviders.set(providerWithImageIcon);
   render(PreferencesAuthenticationProvidersRendering, {});
 
-  // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const icon = screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
-  expect(icon).toBeInTheDocument();
-  expect(icon).toHaveAttribute('src', './icon.png');
+  await waitFor(() => {
+    const icon = screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('src', './icon.png');
+  });
 });
 
 test('Expects images.icon.dark option to be used when theme is dark', async () => {
@@ -261,10 +260,9 @@ test('Expects images.icon.dark option to be used when theme is dark', async () =
   configMock.mockReturnValue('dark');
   render(PreferencesAuthenticationProvidersRendering, {});
 
-  // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const icon = screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
-  expect(icon).toBeInTheDocument();
-  expect(icon).toHaveAttribute('src', './icon-dark.png');
+  await waitFor(() => {
+    const icon = screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('src', './icon-dark.png');
+  });
 });
