@@ -196,7 +196,6 @@ beforeEach(() => {
       VMType: 'wsl',
     },
   };
-  vi.resetAllMocks();
   extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
   vi.mocked(fs).readFile.mockImplementation(
@@ -385,6 +384,7 @@ afterEach(async () => {
   console.error = originalConsoleError;
   await extension.deactivate();
   vi.useRealTimers();
+  vi.resetAllMocks();
 });
 
 describe.each([
@@ -3601,3 +3601,37 @@ describe('Check notify podman setup', () => {
     expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
   });
 });
+
+describe('monitorProvider', () => {
+  test('should run the monitoring loop once and then stop correctly', async () => {
+    vi.useFakeTimers();
+
+    const contextMock = getContextMock();
+    await extension.activate(contextMock);
+
+    // Start the monitor. DO NOT await it, since it's a "never-ending" loop.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    extension.monitorProvider(provider);
+
+    expect(extensionApi.process.exec).toHaveBeenCalledTimes(3);
+
+    await vi.advanceTimersByTimeAsync(8000);
+
+    await extension.deactivate();
+
+    await vi.runAllTimersAsync();
+    expect(extensionApi.process.exec).toHaveBeenCalledTimes(4);
+  });
+});
+
+function getContextMock() {
+  return {
+    subscriptions: [],
+    secrets: {
+      delete: vi.fn(),
+      get: vi.fn(),
+      onDidChange: vi.fn(),
+      store: vi.fn(),
+    },
+  } as unknown as extensionApi.ExtensionContext;
+}
