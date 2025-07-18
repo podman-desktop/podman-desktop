@@ -232,11 +232,12 @@ test('Expects images.icon option to be used when no themes are present', async (
   authenticationProviders.set(providerWithImageIcon);
   render(PreferencesAuthenticationProvidersRendering, {});
 
-  await waitFor(() => {
-    const icon = screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
-    expect(icon).toBeInTheDocument();
-    expect(icon).toHaveAttribute('src', './icon.png');
+  const icon = await waitFor(() => {
+    return screen.getByRole('img', { name: `${testProvidersInfoWithSessionRequests[0].displayName}` });
   });
+    
+  expect(icon).toBeInTheDocument();
+  expect(icon).toHaveAttribute('src', './icon.png');
 });
 
 test('Expects images.icon.dark option to be used when theme is dark', async () => {
