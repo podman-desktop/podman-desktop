@@ -62,7 +62,7 @@ function getRootElementClassesValue(container: HTMLElement): string | undefined 
   return getRootElement(container).classList.value;
 }
 
-async function awaitRender(): Promise<RenderResult<Component<ComponentProps<Appearance>>>> {
+function renderComponent(): RenderResult<Component<ComponentProps<Appearance>>> {
   const result = render<Component<ComponentProps<Appearance>>>(Appearance);
   return result;
 }
@@ -77,7 +77,7 @@ test('Expect light mode using system when OS is set to light', async () => {
   getConfigurationValueMock.mockResolvedValue(AppearanceSettings.SystemEnumValue);
   configurationProperties.set([]);
 
-  const { baseElement } = await awaitRender();
+  const { baseElement } = renderComponent();
   // expect to have no (dark) class as OS is using light
   await vi.waitFor(() => expect(getRootElementClassesValue(baseElement)).toBe(''));
 });
@@ -92,7 +92,7 @@ test('Expect dark mode using system when OS is set to dark', async () => {
   getConfigurationValueMock.mockResolvedValue(AppearanceSettings.SystemEnumValue);
   configurationProperties.set([]);
 
-  const { baseElement } = await awaitRender();
+  const { baseElement } = renderComponent();
   // expect to have class being "dark" as OS is using dark
   await vi.waitFor(() => expect(getRootElementClassesValue(baseElement)).toBe('dark'));
 });
@@ -101,7 +101,7 @@ test('Expect light mode using light configuration', async () => {
   getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightEnumValue);
   configurationProperties.set([]);
 
-  const { baseElement } = await awaitRender();
+  const { baseElement } = renderComponent();
 
   // expect to have class being ""  as we should be in light mode
   expect(getRootElementClassesValue(baseElement)).toBe('');
@@ -114,7 +114,7 @@ test('Expect dark mode using dark configuration', async () => {
   getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkEnumValue);
   configurationProperties.set([]);
 
-  const { baseElement } = await awaitRender();
+  const { baseElement } = renderComponent();
 
   // expect to have class being "dark" as we should be in dark mode
   expect(getRootElementClassesValue(baseElement)).toBe('dark');
@@ -133,7 +133,7 @@ test('Expect event being changed when changing the default appearance on the ope
     }
   });
 
-  await awaitRender();
+  renderComponent();
 
   // check no dispatched event for now
   expect(spyDispatchEvent).not.toHaveBeenCalled();
