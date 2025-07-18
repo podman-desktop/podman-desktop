@@ -74,6 +74,17 @@ export class ReleaseNotesPreparator {
     const formattedDate = date.toISOString().split('T')[0];
     const version = this.milestone.slice(0, -2);
     const releaseNotesTemplate = await fs.promises.readFile('./scripts/release-notes/release-notes.mustache', 'utf8');
+
+    // Sorting changelog
+    const priorityOrder = ['feat', 'fix', 'chore'];
+    changelog = changelog.sort((a, b) => {
+      const priorityA = priorityOrder.indexOf(a.category) === -1 ? Infinity : priorityOrder.indexOf(a.category);
+
+      const priorityB = priorityOrder.indexOf(b.category) === -1 ? Infinity : priorityOrder.indexOf(b.category);
+
+      return priorityA - priorityB;
+    });
+
     const renderedMarkdown = mustache.render(releaseNotesTemplate, {
       firstTimeContributors: firstTimeContributors,
       changelog: changelog,
@@ -224,7 +235,55 @@ export class ReleaseNotesPreparator {
       required: ['prs'],
     };
 
-    const prompt = `Instruction: Identify the 4 most interesting PRs from the list provided. Return them in JSON schema with property "prs" which is an array of objects. For each of them (those objects), generate the following: An original title (do not use prefix like "prefix:" or just copy the original PR title) - example: "Experimental dashboard for Kubernetes containers". A short description of exactly 1-2 sentences. A long description of exactly 2 to 4 sentences. Be creative dont just copy text from PRs, and dont use/speak about the feature as of a "PR" in the generated text. DATA: ${content}`;
+    const prompt = `You are given a changelog or release note text that includes multiple product updates or features.
+
+Your task is to extract and rewrite the most notable individual features from the text. For each of them, generate a new JSON object with the following structure:
+
+{
+  "title": string,             // A short and original title (no colons or prefix like "Title:" or "Feature:")
+  "shortDesc": string,         // A short summary of the feature in 1–2 sentences
+  "longDesc": string           // A more detailed explanation in 2–4 sentences
+}
+
+Be concise, creative, and do not repeat the same phrases across multiple items. Do not refer to the original PR or changelog directly. Rewrite in a natural user-facing tone, suitable for a changelog or release blog post.
+
+If the input contains bullet points or grouped features, extract each as a separate feature when relevant.
+
+⚠️ Return **a JSON array of at most 5 objects** — choose the 5 most interesting, relevant, or user-impacting items.
+
+Here are a few examples of the expected output format:
+
+[
+  {
+    "title": "Kubernetes improvements with a new dashboard",
+    "shortDesc": "A new landing screen for Kubernetes has been added with UI changes that gives an overview of your entire cluster.",
+    "longDesc": "We have updated the Kubernetes dashboard page to provide a quick overview of a user's Kubernetes cluster, alongside with multiple changes to Kubernetes backend."
+  },
+  {
+    "title": "Port forwarding for pods",
+    "shortDesc": "This new feature allows users to configure port forwarding in their Kubernetes environment.",
+    "longDesc": "Podman Desktop now supports port forwarding for pods in Kubernetes environments. Port forwarding can be done from the pod detail page and then visible in the Port forwarding page."
+  },
+  {
+    "title": "Experimental Features",
+    "shortDesc": "A new 'Experimental' section in the Settings provides the list of current experiments, and links to related discussions.",
+    "longDesc": "In Podman Desktop v1.16, experimental features are now grouped into a dedicated section in the Settings, making them easier to discover and manage. Each experiment includes a link to its discussion page for feedback and iteration."
+  },
+  {
+    "title": "Providers appear in the Status Bar",
+    "shortDesc": "Providers are moved from Dashboard to Status Bar, to increase their visibility (experimental feature).",
+    "longDesc": "When this experimental option is enabled, provider status is shown directly in the status bar. This helps users see at a glance whether a provider is active and whether it’s running or stopped."
+  },
+  {
+    "title": "Prune only untagged images",
+    "shortDesc": "Choose to prune 'All untagged images' or 'All unused images' when pruning images.",
+    "longDesc": "Image pruning is now more flexible. Users can decide whether to remove only untagged images or all unused ones, providing more control over cleanup operations."
+  }
+]
+
+DATA:
+${content}
+`;
     let body;
     if (this.useOllama) {
       body = {
