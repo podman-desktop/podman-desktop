@@ -57,7 +57,7 @@ test('Expect valid source and alt text with dark mode', async () => {
 
   const image = render(IconImage, { image: { light: 'light.png', dark: 'dark.png' }, alt: 'this is alt text' });
 
-  await waitFor(async () => {
+  await waitFor(() => {
     // grab image element
     const imageElement = image.getByRole('img');
 
