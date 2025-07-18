@@ -701,7 +701,7 @@ function shouldNotifyQemuMachinesWithV5(installedPodman: InstalledPodman): boole
   return false;
 }
 
-async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
+export async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
   // call us again
   if (!stopLoop) {
     await doMonitorProvider(provider);
