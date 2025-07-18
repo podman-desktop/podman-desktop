@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
@@ -50,20 +50,19 @@ test('Check cleanupProviders is called and button is in progress', async () => {
   expect(cleanupButton).toBeEnabled();
   await fireEvent.click(cleanupButton);
 
-  // wait next tick
-  await new Promise(resolve => setTimeout(resolve, 5));
+  await waitFor(() => {
+    // button should be in progress
+    expect(cleanupButton).toBeDisabled();
+  });
 
-  // button should be in progress
-  expect(cleanupButton).toBeDisabled();
   // svg should be inside the button
   const svg = cleanupButton.querySelector('svg');
   expect(svg).toBeInTheDocument();
 
-  // wait 10ms for the cleanup to finish
-  await new Promise(resolve => setTimeout(resolve, 10));
-
-  // button should not be in progress anymore
-  expect(cleanupButton).toBeEnabled();
+  await waitFor(() => {
+    // button should not be in progress anymore
+    expect(cleanupButton).toBeEnabled();
+  });
 
   // check that we asked for confirmation
   expect(showMessageBoxMock).toBeCalledWith({
