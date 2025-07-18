@@ -384,6 +384,7 @@ beforeEach(() => {
 afterEach(async () => {
   console.error = originalConsoleError;
   await extension.deactivate();
+  vi.useRealTimers();
 });
 
 describe.each([
@@ -3313,8 +3314,6 @@ test('activate and autostart should not duplicate machines ', async () => {
   await vi.advanceTimersByTimeAsync(5000);
 
   await Promise.allSettled(promises);
-
-  vi.useRealTimers();
 });
 
 describe('macOS: tests for notifying if disguised podman socket fails / passes', () => {
