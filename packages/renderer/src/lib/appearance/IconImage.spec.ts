@@ -19,7 +19,7 @@
 /* eslint-disable no-null/no-null */
 import '@testing-library/jest-dom/vitest';
 
-import { render } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -57,15 +57,13 @@ test('Expect valid source and alt text with dark mode', async () => {
 
   const image = render(IconImage, { image: { light: 'light.png', dark: 'dark.png' }, alt: 'this is alt text' });
 
-  // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
+  await waitFor(async () => {
+    // grab image element
+    const imageElement = image.getByRole('img');
 
-  // grab image element
-  const imageElement = image.getByRole('img');
-
-  // expect to have valid source
-  await vi.waitFor(async () => expect(imageElement).toHaveAttribute('src', 'dark.png'));
-  expect(imageElement).toHaveAttribute('alt', 'this is alt text');
+    expect(imageElement).toHaveAttribute('src', 'dark.png');
+    expect(imageElement).toHaveAttribute('alt', 'this is alt text');
+  });
 
   vi.clearAllMocks();
   await image.rerender({ image: { light: 'light2.png', dark: 'dark2.png' }, alt: 'this is another alt text' });

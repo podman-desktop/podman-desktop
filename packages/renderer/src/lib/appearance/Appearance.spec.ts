@@ -64,10 +64,6 @@ function getRootElementClassesValue(container: HTMLElement): string | undefined 
 
 async function awaitRender(): Promise<RenderResult<Component<ComponentProps<Appearance>>>> {
   const result = render<Component<ComponentProps<Appearance>>>(Appearance);
-  // wait end of asynchrounous onMount
-  // wait 200ms
-  await new Promise(resolve => setTimeout(resolve, 200));
-
   return result;
 }
 
