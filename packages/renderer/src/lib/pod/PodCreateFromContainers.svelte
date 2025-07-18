@@ -133,7 +133,7 @@ onMount(() => {
       return;
     }
     podCreation = value;
-    const mapPortPrivate = new Map<number, string[]>();
+    const mapPortPrivate = new SvelteMap<number, string[]>();
     podCreation.containers.forEach(container => {
       container.ports.forEach(port => {
         mapPortExposed.set(port.PublicPort, {
