@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -138,13 +138,11 @@ test('Expect volumes being displayed once extensions are started (without size d
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
@@ -202,13 +200,11 @@ test('Expect volumes being displayed once extensions are started (with size data
   // first call is with listing with details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, true);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
@@ -310,13 +306,11 @@ test('Expect filter empty screen', async () => {
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({ searchTerm: 'No match' });
 
@@ -369,13 +363,11 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
