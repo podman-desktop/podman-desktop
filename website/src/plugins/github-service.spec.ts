@@ -20,7 +20,8 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
-import { GITHUB_OWNER, GITHUB_REPOSITORY } from '../../../packages/api/src/repository-infos';
+import { GITHUB_OWNER, GITHUB_REPOSITORY } from '/@api/repository-infos';
+
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
 import { mockReleaseData } from './test/resources/mock-release-data';
