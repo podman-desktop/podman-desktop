@@ -328,6 +328,65 @@ async function abortBuild(): Promise<void> {
   buildImageInfo.buildRunning = false;
   buildImageInfo.buildFinished = true;
 }
+<<<<<<< HEAD
+=======
+
+let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
+
+let providerConnections = $derived(
+  $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
+    return acc.concat(startedConnections);
+  }, []),
+);
+let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
+$effect(() => {
+  if (taskId && taskId !== buildImageInfo.taskId) {
+    // switching previous task wich could be finished or still running
+    if (buildImageInfo.buildImageKey) {
+      // disconnect UI regardless of state
+      disconnectUI(buildImageInfo.buildImageKey);
+    }
+    buildImageInfo.logsTerminal?.reset(); // clean up terminal before loading the state
+    const buildImagesInfoMap = get(buildImagesInfo); // get background task states
+    const bgBuildImageInfo = buildImagesInfoMap.get(taskId); // get state for loading task
+    if (bgBuildImageInfo) {
+      bgBuildImageInfo.logsTerminal = buildImageInfo.logsTerminal;
+      if (bgBuildImageInfo.buildRunning) {
+        buildImageInfo = bgBuildImageInfo;
+      } else {
+        buildImageInfo = cloneBuildImageInfo(bgBuildImageInfo);
+        taskId = 0;
+      }
+      if (buildImageInfo.buildImageKey) {
+        reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
+      }
+    }
+  }
+  if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
+    // select the parent directory of the file as default
+    buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
+      .replace(/\\/g, '/')
+      .replace(/\/[^\/]*$/, '');
+  }
+  buildImageInfo.selectedProvider = selectedProvider;
+});
+
+let errorContainerImageName = $derived(
+  buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase()
+    ? undefined
+    : 'Image name should be lowercase',
+);
+
+let hasInvalidFields = $derived(
+  !buildImageInfo.containerFilePath ||
+    !buildImageInfo.containerBuildContextDirectory ||
+    (platforms.length > 1 && !buildImageInfo.containerImageName) ||
+    platforms.length === 0 ||
+    !!errorContainerImageName ||
+    !selectedProvider,
+);
+>>>>>>> 4568b44b (fix: display an error to the user using uppercase in image name (#13103))
 </script>
 
 <EngineFormPage
@@ -372,6 +431,7 @@ async function abortBuild(): Promise<void> {
           name="containerImageName"
           id="containerImageName"
           placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
+          error={errorContainerImageName}
           class="w-full" />
       </div>
 
