@@ -50,6 +50,12 @@ export default defineConfig({
       ],
       exclude: [...configDefaults.coverage.exclude, ...PODMAN_DESKTOP_EXCLUDED],
     },
+    poolOptions: {
+      forks: {
+        maxForks: 1,
+        minForks: 1,
+      },
+    },
     exclude: [...configDefaults.exclude, ...PODMAN_DESKTOP_EXCLUDED],
   },
 });
