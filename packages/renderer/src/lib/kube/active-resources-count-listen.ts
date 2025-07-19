@@ -53,7 +53,8 @@ function collectAndSendCount(callback: (activeResourcesCount: ResourceCount[]) =
 
 export async function isKubernetesExperimentalMode(): Promise<boolean> {
   try {
-    return (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
+    const conf = await window.getConfigurationValue('kubernetes.statesExperimental');
+    return conf && typeof conf === 'object' ? true : false;
   } catch {
     return false;
   }
