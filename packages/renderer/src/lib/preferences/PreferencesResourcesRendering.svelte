@@ -579,7 +579,7 @@ function handleError(errorMessage: string): void {
                             percent={peerValue} />
                         </div>
                       {/if}
-                    {:else}
+                    {:else if !connectionSetting.hidden}
                       {connectionSetting.description}: {connectionSetting.value}
                     {/if}
                   {/each}
