@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ test('onMount should call getConfigurationValue', async () => {
 });
 
 test('tasks should be visible when getConfigurationValue is true', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue({});
 
   const { getByRole } = render(StatusBar);
 
@@ -82,7 +82,7 @@ test('tasks should be visible when getConfigurationValue is true', async () => {
 });
 
 test('tasks should not be visible when getConfigurationValue is false', () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 
   const { queryByRole } = render(StatusBar);
   const status = queryByRole('status');
@@ -90,7 +90,7 @@ test('tasks should not be visible when getConfigurationValue is false', () => {
 });
 
 test('providers should be visible when getConfigurationValue is true', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue({});
 
   render(StatusBar);
 
@@ -101,7 +101,7 @@ test('providers should be visible when getConfigurationValue is true', async () 
 
 describe('providers', () => {
   test('providers should not be visible when getConfigurationValue is false', () => {
-    vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 
     render(StatusBar);
 
@@ -109,14 +109,14 @@ describe('providers', () => {
   });
 
   test('providers should show up when configuration changes from false to true', async () => {
-    vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+    vi.mocked(window.getConfigurationValue).mockResolvedValue({});
     render(StatusBar);
     await tick();
 
     expect(Providers).not.toHaveBeenCalled();
 
     callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: true },
+      detail: { key: `statusbarProviders.showProviders`, value: {} },
     });
 
     await tick();
@@ -127,8 +127,8 @@ describe('providers', () => {
   });
 
   test('providers are hidden when configuration changes from true to false', async () => {
-    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(false);
-    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(true);
+    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce(undefined);
+    vi.mocked(window.getConfigurationValue).mockResolvedValueOnce({});
     render(StatusBar);
 
     await vi.waitFor(() => {
@@ -138,7 +138,7 @@ describe('providers', () => {
     vi.mocked(Providers).mockReset();
 
     callbacks.get(`statusbarProviders.showProviders`)?.({
-      detail: { key: `statusbarProviders.showProviders`, value: false },
+      detail: { key: `statusbarProviders.showProviders`, value: undefined },
     });
 
     await tick();
