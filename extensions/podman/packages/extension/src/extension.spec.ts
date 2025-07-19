@@ -196,7 +196,6 @@ beforeEach(() => {
       VMType: 'wsl',
     },
   };
-  vi.resetAllMocks();
   extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
   vi.mocked(fs).readFile.mockImplementation(
@@ -385,6 +384,7 @@ afterEach(async () => {
   console.error = originalConsoleError;
   await extension.deactivate();
   vi.useRealTimers();
+  vi.resetAllMocks();
 });
 
 describe.each([
@@ -2712,15 +2712,7 @@ test('activate function returns an api implementation', async () => {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
   const api = await extension.activate(contextMock);
   expect(api).toBeDefined();
   expect(typeof api.exec).toBe('function');
@@ -2730,15 +2722,7 @@ function mockExtensionForAuditTests() {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
   vi.spyOn(provider, 'setContainerProviderConnectionFactory');
   return contextMock;
 }
@@ -2775,16 +2759,7 @@ test('activate on mac register commands for setting compatibility moide ', async
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
-
+  const contextMock = getContextMock();
   // mock getSocketCompatibility
   const disableMock = vi.fn();
   const enableMock = vi.fn();
@@ -3239,15 +3214,7 @@ test('activate and autostart should not duplicate machines ', async () => {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
 
   // mock getSocketCompatibility
   const disableMock = vi.fn();
@@ -3320,15 +3287,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
   let contextMock: extensionApi.ExtensionContext;
 
   beforeEach(() => {
-    contextMock = {
-      subscriptions: [],
-      secrets: {
-        delete: vi.fn(),
-        get: vi.fn(),
-        onDidChange: vi.fn(),
-        store: vi.fn(),
-      },
-    } as unknown as extensionApi.ExtensionContext;
+    contextMock = getContextMock();
 
     // Mock the get compatibility functionality.
     // we will always assuming it's "disabled" for the tests
@@ -3459,15 +3418,7 @@ describe('podman-mac-helper tests', () => {
     vi.mocked(extensionApi.env).isLinux = false;
 
     // Mock the context
-    contextMock = {
-      subscriptions: [],
-      secrets: {
-        delete: vi.fn(),
-        get: vi.fn(),
-        onDidChange: vi.fn(),
-        store: vi.fn(),
-      },
-    } as unknown as extensionApi.ExtensionContext;
+    contextMock = getContextMock();
 
     // Mock the get compatibility functionality.
     // we just assume that it's false / not enabled by default to test the functionality.
@@ -3601,3 +3552,37 @@ describe('Check notify podman setup', () => {
     expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
   });
 });
+
+describe('monitorProvider', () => {
+  test('should run the monitoring loop once and then stop correctly', async () => {
+    vi.useFakeTimers();
+
+    const contextMock = getContextMock();
+    await extension.activate(contextMock);
+
+    // Start the monitor. DO NOT await it, since it's a "never-ending" loop.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    extension.monitorProvider(provider);
+
+    expect(extensionApi.process.exec).toHaveBeenCalledTimes(3);
+
+    await vi.advanceTimersByTimeAsync(8000);
+
+    await extension.deactivate();
+
+    await vi.runAllTimersAsync();
+    expect(extensionApi.process.exec).toHaveBeenCalledTimes(4);
+  });
+});
+
+function getContextMock() {
+  return {
+    subscriptions: [],
+    secrets: {
+      delete: vi.fn(),
+      get: vi.fn(),
+      onDidChange: vi.fn(),
+      store: vi.fn(),
+    },
+  } as unknown as extensionApi.ExtensionContext;
+}
