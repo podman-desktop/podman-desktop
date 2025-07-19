@@ -21,6 +21,7 @@ import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
 
+import { PodmanConnectionTypes } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -33,6 +34,9 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
+  readonly providerTypeDiv: Locator;
+  readonly providerTypeWslOption: Locator;
+  readonly providerTypeHypervOption: Locator;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -57,6 +61,10 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
+    this.providerTypeDiv = this.podmanMachineConfiguration.getByLabel('Provider Type');
+    this.providerTypeWslOption = this.providerTypeDiv.getByRole('button', { name: 'wsl' });
+    this.providerTypeHypervOption = this.providerTypeDiv.getByRole('button', { name: 'hyperv' });
+
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
   }
@@ -67,13 +75,15 @@ export class MachineCreationForm extends BasePage {
       isRootful = true,
       enableUserNet = false,
       startNow = true,
+      connectionType,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
+      connectionType?: PodmanConnectionTypes;
     } = {},
   ): Promise<void> {
-    return test.step(`Create Podman Machine: ${machineName} with settings ${isRootful}, ${enableUserNet} and ${startNow}`, async () => {
+    return test.step(`Create Podman Machine '${machineName}' with settings: ${isRootful ? 'rootful' : 'rootless'}, ${enableUserNet ? 'usernet enabled' : 'usernet disabled'}, ${startNow ? 'startnow enabled' : 'startnow disabled'}${connectionType ? ', and ' + connectionType : ''}`, async () => {
       await playExpect(this.podmanMachineConfiguration).toBeVisible({
         timeout: 10_000,
       });
@@ -81,8 +91,20 @@ export class MachineCreationForm extends BasePage {
       await this.podmanMachineName.fill(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
+
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
+        if (connectionType === PodmanConnectionTypes.HyperV) {
+          await playExpect(this.providerTypeWslOption).toBeVisible({ timeout: 10_000 });
+          await this.providerTypeWslOption.scrollIntoViewIfNeeded();
+          await this.providerTypeWslOption.click();
+
+          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
+          await this.providerTypeHypervOption.click();
+
+          await playExpect(this.providerTypeWslOption).not.toBeVisible({ timeout: 10_000 });
+          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
+        }
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
