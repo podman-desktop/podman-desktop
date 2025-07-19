@@ -42,7 +42,7 @@ test('isDisguisedPodman', async () => {
 test('isDisguisedPodman with timeout', async () => {
   const handlers = [
     http.get('http://localhost/libpod/_ping', async () => {
-      // we do a reply OK after 3s but we will check with a delay of 1s the request so it should still fail
+      // we do a reply OK after 3s but we will check with a delay of 50ms the request so it should still fail
       await delay(3_000);
 
       return HttpResponse.text('OK');
@@ -51,7 +51,7 @@ test('isDisguisedPodman with timeout', async () => {
   server = setupServer(...handlers);
   server.listen({ onUnhandledRequest: 'error' });
 
-  const response = await isDisguisedPodmanPath('http://localhost:10000/socket', 1000);
+  const response = await isDisguisedPodmanPath('http://localhost:10000/socket', 50);
 
   expect(response).toBe(false);
 });
