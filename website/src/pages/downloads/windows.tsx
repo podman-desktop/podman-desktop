@@ -1,111 +1,41 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { usePluginData } from '@docusaurus/useGlobalData';
 import { faMicrosoft, faWindows } from '@fortawesome/free-brands-svg-icons';
 import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
+import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 import Layout from '@theme/Layout';
-import type { SetStateAction } from 'react';
-import React, { useEffect, useState } from 'react';
-
-async function grabfilenameforWindows(
-  setDownloadData: React.Dispatch<
-    SetStateAction<{
-      version: string;
-      binaryX64: string;
-      binaryArm64: string;
-      setupX64: string;
-      setupArm64: string;
-      airgapsetupX64: string;
-      airgapsetupArm64: string;
-    }>
-  >,
-): Promise<void> {
-  const result = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
-  const jsonContent = await result.json();
-  const assets = jsonContent.assets;
-  const windowsX64SetupAssets = assets.filter(
-    (asset: { name: string }) => (asset.name as string).endsWith('-setup-x64.exe') && !asset.name.includes('airgap'),
-  );
-  if (windowsX64SetupAssets.length !== 1) {
-    throw new Error('Unable to grab setup.exe');
-  }
-  const windowsArm64SetupAssets = assets.filter(
-    (asset: { name: string }) => (asset.name as string).endsWith('-setup-arm64.exe') && !asset.name.includes('airgap'),
-  );
-  const setupX64Asset = windowsX64SetupAssets?.[0];
-  const setupX64 = setupX64Asset?.browser_download_url;
-  const setupArm64Asset = windowsArm64SetupAssets?.[0];
-  const setupArm64 = setupArm64Asset?.browser_download_url;
-
-  const binaryOnlyX64WindowsAssets = assets.filter(
-    (asset: { name: string }) =>
-      (asset.name as string).endsWith('x64.exe') &&
-      !asset.name.includes('airgap') &&
-      asset.name !== setupX64Asset?.name,
-  );
-  const binaryX64 = binaryOnlyX64WindowsAssets?.[0]?.browser_download_url;
-
-  const binaryOnlyArm64WindowsAssets = assets.filter(
-    (asset: { name: string }) =>
-      (asset.name as string).endsWith('arm64.exe') &&
-      !asset.name.includes('airgap') &&
-      asset.name !== setupArm64Asset?.name,
-  );
-  const binaryArm64 = binaryOnlyArm64WindowsAssets?.[0]?.browser_download_url;
-
-  /* Find Windows installer for restricted environment */
-  const windowsX64AirgapSetupAssets = assets.filter(
-    (asset: { name: string }) =>
-      (asset.name as string).endsWith('-setup-x64.exe') &&
-      asset.name.includes('airgap') &&
-      asset.name !== setupX64Asset?.name,
-  );
-
-  const airgapsetupX64 = windowsX64AirgapSetupAssets?.[0]?.browser_download_url;
-
-  const windowsArm64AirgapSetupAssets = assets.filter(
-    (asset: { name: string }) =>
-      (asset.name as string).endsWith('-setup-arm64.exe') &&
-      asset.name.includes('airgap') &&
-      asset.name !== setupArm64Asset?.name,
-  );
-
-  const airgapsetupArm64 = windowsArm64AirgapSetupAssets?.[0]?.browser_download_url;
-
-  const data = {
-    version: jsonContent.name,
-    binaryX64,
-    setupX64,
-    airgapsetupX64,
-    binaryArm64,
-    setupArm64,
-    airgapsetupArm64,
-  };
-  setDownloadData(data);
-}
+import React from 'react';
 
 export function WindowsDownloads(): JSX.Element {
-  const [downloadData, setDownloadData] = useState({
-    version: '',
-    binaryX64: '',
-    setupX64: '',
-    airgapsetupX64: '',
-    binaryArm64: '',
-    setupArm64: '',
-    airgapsetupArm64: '',
-  });
+  const {
+    latestRelease: { windows, version },
+  } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyCliInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('winget install -e --id RedHat.Podman-Desktop');
   };
-
-  useEffect(() => {
-    grabfilenameforWindows(setDownloadData).catch((err: unknown) => {
-      console.error(err);
-    });
-  }, []);
 
   return (
     <div className="basis-1/3 py-2 rounded-lg dark:text-gray-400 text-charcoal-300  bg-zinc-300/25 dark:bg-zinc-700/25 bg-blend-multiply text-center items-center">
@@ -119,12 +49,12 @@ export function WindowsDownloads(): JSX.Element {
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               eventPath="download"
               eventTitle="download-windows"
-              to={downloadData.setupX64}>
+              to={windows.setupX64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Windows installer x64, version {downloadData.version}
+              Windows installer x64, version {version}
             </caption>
           </div>
           <div className="mt-4">
@@ -137,7 +67,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.setupX64}>
+                  to={windows.setupX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -145,7 +75,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-3 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.setupArm64}>
+                  to={windows.setupArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>
@@ -159,7 +89,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.binaryX64}>
+                  to={windows.binaryX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -167,7 +97,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-2 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.binaryArm64}>
+                  to={windows.binaryArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>
@@ -181,7 +111,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.airgapsetupX64}>
+                  to={windows.airgapsetupX64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   x64
                 </TelemetryLink>
@@ -189,7 +119,7 @@ export function WindowsDownloads(): JSX.Element {
                   className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
                   eventPath="download"
                   eventTitle="download-windows"
-                  to={downloadData.airgapsetupArm64}>
+                  to={windows.airgapsetupArm64}>
                   <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
                   arm64
                 </TelemetryLink>

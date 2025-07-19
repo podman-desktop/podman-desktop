@@ -341,6 +341,7 @@ const config = {
         routeBasePath: 'tutorial',
       },
     ],
+    './src/plugins/github-metadata-plugin.ts',
     [
       'docusaurus-plugin-typedoc',
       {
