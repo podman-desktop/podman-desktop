@@ -33,6 +33,7 @@ export class PlayKubeYamlPage extends BasePage {
   readonly kubernetesContext: Locator;
   readonly kubernetesNamespaces: Locator;
   readonly alertMessage: Locator;
+  readonly buildCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -52,10 +53,12 @@ export class PlayKubeYamlPage extends BasePage {
     this.playButton = page.getByRole('button', { name: 'Play' });
     this.doneButton = page.getByRole('button', { name: 'Done' });
     this.alertMessage = this.page.getByLabel('Error Message Content');
+    this.buildCheckbox = page.getByRole('checkbox', { name: 'Enable build' }).locator('..');
   }
 
   async playYaml(
     pathToYaml: string,
+    buildImage: boolean = false,
     timeout: number = 120_000,
     { runtime, kubernetesContext, kubernetesNamespace }: PlayKubernetesOptions = {
       kubernetesContext: 'kind-kind-cluster',
@@ -99,6 +102,12 @@ export class PlayKubeYamlPage extends BasePage {
       }
 
       await this.yamlPathInput.fill(pathToYaml);
+      await playExpect(this.buildCheckbox).not.toBeChecked();
+      await playExpect(this.buildCheckbox).toBeEnabled();
+      if (buildImage) {
+        await this.buildCheckbox.check();
+        await playExpect(this.buildCheckbox).toBeChecked();
+      }
       await this.playButton.click();
       await playExpect(this.doneButton.or(this.alertMessage).first()).toBeVisible({ timeout: timeout });
 
