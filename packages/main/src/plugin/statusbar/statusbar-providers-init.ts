@@ -32,8 +32,8 @@ export class StatusbarProvidersInit {
       properties: {
         [`statusbarProviders.showProviders`]: {
           description: 'Show providers in the status bar',
-          type: 'boolean',
-          default: import.meta.env.DEV ? true : false,
+          type: 'object',
+          default: import.meta.env.DEV ? {} : undefined,
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10802',
           },

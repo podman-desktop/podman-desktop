@@ -109,6 +109,7 @@ import type { ContextInfo } from '../../main/src/plugin/api/context-info';
 import type { KubernetesGeneratorInfo } from '../../main/src/plugin/api/KubernetesGeneratorInfo';
 import type { PodCreateOptions, PodInfo, PodInspectInfo } from '../../main/src/plugin/api/pod-info';
 import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
+import type { ExperimentalFeatureConfiguration } from '../../main/src/plugin/configuration-registry-experimental';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
@@ -2512,6 +2513,38 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
     return ipcInvoke('statusbar:unpin', optionId);
   });
+
+  contextBridge.exposeInMainWorld(
+    'updateExperimentalConfigurationValue',
+    async (
+      key: string,
+      config?: ExperimentalFeatureConfiguration,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('configuration-registry-experimental:updateExperimentalConfigurationValue', key, config, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'isExperimentalConfigurationEnabled',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<boolean> => {
+      return ipcInvoke('configuration-registry-experimental:isExperimentalConfigurationEnabled', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'toggleExperimentalConfiguration',
+    async (
+      key: string,
+      enable: boolean,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('configuration-registry-experimental:toggleExperimentalConfiguration', key, enable, scope);
+    },
+  );
 }
 
 // expose methods

@@ -58,10 +58,7 @@ onMount(() => {
     callBack = (): void => {
       getInitialValue(record)
         .then(v => {
-          // v may be `false` which is a valid value for boolean types
-          if (v !== undefined) {
-            recordValue = v;
-          }
+          recordValue = v;
         })
         .catch((err: unknown) => console.error(`Error getting initial value ${record.id}`, err));
     };
@@ -91,7 +88,7 @@ $effect(() => {
     initialValue
       .then(value => {
         recordValue = value;
-        if (record.type === 'boolean') {
+        if (record.type === 'boolean' || record.type === 'object') {
           recordValue = !!value;
         }
       })
@@ -106,7 +103,12 @@ async function update(record: IConfigurationPropertyRecordedSchema): Promise<voi
   // save the value
   if (record.id && isEqual(currentRecord, record)) {
     try {
-      await window.updateConfigurationValue(record.id, recordValue, record.scope);
+      // HACK: when setting `{}` as value we need to stringify and parse the svelte state
+      let settings = recordValue;
+      if (typeof recordValue === 'object') {
+        settings = JSON.parse(JSON.stringify(recordValue));
+      }
+      await window.updateConfigurationValue(record.id, settings, record.scope);
     } catch (error) {
       invalidText = String(error);
       invalidRecord(invalidText);
@@ -133,7 +135,7 @@ function autoSave(): Promise<void> {
 function ensureType(value: unknown): boolean {
   switch (typeof value) {
     case 'boolean':
-      return record.type === 'boolean';
+      return record.type === 'boolean' || record.type === 'object';
     case 'number':
       return record.type === 'number' || record.type === 'integer';
     case 'string':
@@ -155,8 +157,19 @@ async function onChange(recordId: string, value: boolean | string | number): Pro
 
   clearTimeout(recordUpdateTimeout);
 
-  // update the value
-  recordValue = value;
+  // HACK: when updating experimental features (representated in settings.json by object)
+  // disabling this feature will set undefined as a value
+  // enabling will set empty object
+  if (record.type === 'object' && typeof value === 'boolean') {
+    if (value) {
+      recordValue = {};
+    } else {
+      recordValue = undefined;
+    }
+  } else {
+    // update the value
+    recordValue = value;
+  }
 
   // propagate the update to parent
   setRecordValue(recordId, value);
@@ -187,6 +200,11 @@ function numberItemValue(): number {
     <BooleanItem
       record={record}
       checked={typeof givenValue === 'boolean' ? givenValue : !!recordValue}
+      onChange={onChange} />
+  {:else if record.type === 'object'}
+    <BooleanItem
+      record={record}
+      checked={!!recordValue}
       onChange={onChange} />
   {:else if record.type === 'number' || record.type === 'integer'}
     {#if enableSlider && typeof record.maximum === 'number'}

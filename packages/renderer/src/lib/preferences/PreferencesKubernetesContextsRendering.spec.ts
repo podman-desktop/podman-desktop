@@ -222,7 +222,7 @@ describe.each([
     initMocks: (): void => {
       Object.defineProperty(global, 'window', {
         value: {
-          getConfigurationValue: vi.fn(),
+          isExperimentalConfigurationEnabled: vi.fn(),
           telemetryTrack: vi.fn(),
           kubernetesRefreshContextState: vi.fn(),
         },
@@ -239,7 +239,7 @@ describe.each([
           count: 2,
         },
       ]);
-      vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+      vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
       kubernetesContextsHealths.set([
         {
           contextName: 'context-name',

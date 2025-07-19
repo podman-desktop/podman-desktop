@@ -224,6 +224,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     value: unknown,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
+    console.log('Classic update of value', key, value);
     if (Array.isArray(scope)) {
       for (const scopeItem of scope) {
         await this.updateSingleScopeConfigurationValue(key, value, scopeItem);
