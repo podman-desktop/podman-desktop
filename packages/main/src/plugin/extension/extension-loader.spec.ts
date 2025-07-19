@@ -165,7 +165,9 @@ const progress: ProgressImpl = {
 
 const statusBarRegistry: StatusBarRegistry = {} as unknown as StatusBarRegistry;
 
-const kubernetesClient: KubernetesClient = {} as unknown as KubernetesClient;
+const kubernetesClient: KubernetesClient = {
+  dispose: vi.fn(),
+} as unknown as KubernetesClient;
 
 const fileSystemMonitoring: FilesystemMonitoring = {} as unknown as FilesystemMonitoring;
 
@@ -275,6 +277,7 @@ const extensionWatcher = {
   monitor: vi.fn(),
   untrack: vi.fn(),
   stop: vi.fn(),
+  dispose: vi.fn(),
   reloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
@@ -2623,4 +2626,42 @@ describe('loadDevelopmentFolderExtensions', () => {
 
     consoleErrorSpy.mockRestore();
   });
+});
+
+test('ExtensionLoader async dispose should stop all extensions', async () => {
+  const activateMock = vi.fn().mockResolvedValue(undefined);
+  const deactivateMock = vi.fn().mockResolvedValue(undefined);
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({ get: vi.fn().mockReturnValue(1) });
+
+  const id = 'extension.id';
+  await extensionLoader.activateExtension(
+    {
+      id: id,
+      name: 'id',
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      manifest: {},
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    {
+      activate: activateMock,
+      deactivate: deactivateMock,
+    },
+  );
+
+  const extensions = extensionLoader.getActivatedExtensions();
+  expect(extensions.size).toEqual(1);
+
+  expect(activateMock).toHaveBeenCalledOnce();
+  expect(deactivateMock).not.toHaveBeenCalled();
+
+  await extensionLoader[Symbol.asyncDispose]();
+
+  expect(deactivateMock).toHaveBeenCalledOnce();
 });
