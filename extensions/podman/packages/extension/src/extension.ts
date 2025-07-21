@@ -190,7 +190,7 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    extensionNotifications.checkShouldNotifyListMachinesFailed();
+    extensionNotifications.notifySetupPodmanNotLinux();
     throw error;
   }
 
@@ -208,19 +208,12 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
+  if (shouldCleanMachine || machines.length === 0) {
     // push setup notification
-    extensionNotifications.notifySetupPodman();
+    extensionNotifications.notifySetupPodmanNotLinux();
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
-
-  // Only show the notification on macOS and Windows
-  // as Podman is already installed on Linux and machine is OPTIONAL.
-  if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
-    // push setup notification
-    extensionNotifications.notifySetupPodman();
-  }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
   // podman is correctly setup so if there is an old notification asking the user to take action

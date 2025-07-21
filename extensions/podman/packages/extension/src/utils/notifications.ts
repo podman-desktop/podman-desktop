@@ -177,9 +177,9 @@ export class ExtensionNotifications {
     }
   }
 
-  public checkShouldNotifyListMachinesFailed(): void {
-    // Only on macOS and Windows should we show the setup notification
-    // if for some reason doing getJSONMachineList fails..
+  public notifySetupPodmanNotLinux(): void {
+    // Only show the notification on macOS and Windows
+    // as Podman is already installed on Linux and machine is OPTIONAL.
     if (this.shouldNotifySetup && !extensionApi.env.isLinux) {
       // push setup notification
       this.notifySetupPodman();
