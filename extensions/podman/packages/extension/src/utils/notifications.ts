@@ -102,7 +102,7 @@ export class ExtensionNotifications {
 
   // Check that the socket is indeed a disguised podman socket, if it is NOT, we should
   // alert the user that compatibility was not ran.
-  public async checkAndNotifyDisguisedPodman(): Promise<void> {
+  private async checkAndNotifyDisguisedPodman(): Promise<void> {
     const socketCompatibilityMode = getSocketCompatibility();
 
     // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
@@ -139,7 +139,7 @@ export class ExtensionNotifications {
     });
   }
 
-  public async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
+  private async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
     // Exit immediately if doNotShowMacHelperSetup is true
     if (this.doNotShowMacHelperSetup) {
       return;
@@ -163,12 +163,16 @@ export class ExtensionNotifications {
   }
 
   public async checkMacSocket(): Promise<void> {
+    // This check specifically applies to macOS environments.
     if (extensionApi.env.isMac) {
-      // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-      // and if we should notify that we need to run podman-mac-helper, we do so.
+      // On macOS, verify if the Podman socket requires the podman-mac-helper.
+      // This notification should ideally occur only once upon initial extension activation
+      // to prevent repetitive user prompts.
       await this.checkAndNotifySetupPodmanMacHelper();
 
-      // Check with regards to the disguised podman socket as well
+      // Additionally, verify if the Podman socket is a "disguised" Podman socket
+      // (e.g., a Docker-compatible socket provided by Podman) and notify the user
+      // if any specific setup or awareness is required.
       await this.checkAndNotifyDisguisedPodman();
     }
   }

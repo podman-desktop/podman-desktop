@@ -1448,13 +1448,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // Only on macOS, and only do the check if the provider is actually ready.
-    if (extensionApi.env.isMac && provider.status === 'ready') {
-      // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
-      // extension activation so that the user isn't constantly prompted with the error message.
-      await extensionNotifications.checkAndNotifyDisguisedPodman();
-      // After pushing, let's check to see if we need to run podman-mac-helper notification at all
-      await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
+    // Do the check if the provider is actually ready.
+    if (provider.status === 'ready') {
+      await extensionNotifications.checkMacSocket();
     }
   }
 
