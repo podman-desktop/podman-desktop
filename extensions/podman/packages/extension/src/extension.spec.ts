@@ -3555,8 +3555,8 @@ describe('Check notify podman setup', () => {
 
 describe('monitorProvider', () => {
   test('should run the monitoring loop once and then stop correctly', async () => {
-    vi.resetAllMocks();
-    await extension.deactivate();
+    const mockDoMonitorProvider = vi.fn().mockResolvedValue(undefined);
+
     vi.useFakeTimers();
 
     const contextMock = getContextMock();
@@ -3564,16 +3564,21 @@ describe('monitorProvider', () => {
 
     // Start the monitor. DO NOT await it, since it's a "never-ending" loop.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    extension.monitorProvider(provider);
+    extension.monitorProvider(provider, mockDoMonitorProvider);
 
-    expect(extensionApi.process.exec).toHaveBeenCalledTimes(3);
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(1);
 
     await vi.advanceTimersByTimeAsync(8000);
+
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
 
     await extension.deactivate();
 
     await vi.runAllTimersAsync();
-    expect(extensionApi.process.exec).toHaveBeenCalledTimes(4);
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
   });
 });
 

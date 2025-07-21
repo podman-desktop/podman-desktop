@@ -701,12 +701,15 @@ function shouldNotifyQemuMachinesWithV5(installedPodman: InstalledPodman): boole
   return false;
 }
 
-export async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
+export async function monitorProvider(
+  provider: extensionApi.Provider,
+  monitorAction: (provider: extensionApi.Provider) => Promise<void>,
+): Promise<void> {
   // call us again
   if (!stopLoop) {
-    await doMonitorProvider(provider);
+    await monitorAction(provider);
     await timeout(8000);
-    monitorProvider(provider).catch((error: unknown) => {
+    monitorProvider(provider, monitorAction).catch((error: unknown) => {
       console.error('Error monitoring podman provider', error);
     });
   }
@@ -1642,7 +1645,7 @@ export async function start(
 
   // monitor provider
   // like version, checks, warnings
-  monitorProvider(provider).catch((error: unknown) => {
+  monitorProvider(provider, doMonitorProvider).catch((error: unknown) => {
     console.error('Error while monitoring provider', error);
   });
 
