@@ -9,4 +9,3 @@ spec:
       ports:
         - name: http
           containerPort: 80
- 
