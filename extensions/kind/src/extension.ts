@@ -579,6 +579,8 @@ async function registerCliTool(
 
       // update the version and path to undefined
       kindPath = undefined;
+
+      currentUpdateDisposable?.dispose();
     },
   });
 }
