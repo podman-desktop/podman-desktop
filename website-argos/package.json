@@ -10,6 +10,6 @@
     "@argos-ci/cli": "^2.5.8",
     "@argos-ci/playwright": "^5.0.6",
     "@playwright/test": "1.54.1",
-    "cheerio": "^1.1.0"
+    "cheerio": "^1.1.1"
   }
 }
