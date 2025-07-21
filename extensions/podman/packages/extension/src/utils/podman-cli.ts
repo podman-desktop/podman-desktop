@@ -15,9 +15,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import * as fs from 'node:fs';
+import { existsSync } from 'node:fs';
 
 import * as extensionApi from '@podman-desktop/api';
+
+import { PODMAN_INSTALLATION_PATHS } from '../constants';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
 
@@ -70,32 +72,19 @@ export async function getPodmanInstallation(): Promise<InstalledPodman | undefin
   }
 }
 
-// Checks if there ara more than one version of podman installed in macos
+// Checks if there are more than one version of podman installed in macos
 export async function isMultiplePodmanInstalledinMacos(): Promise<boolean> {
-  let isBrewInstalled = false;
-  let isDmgInstalled = false;
-
   // Checks if custom binary path is set. If so, we don't need to check for multiple installations.
-  const customPath = getCustomBinaryPath();
-  console.log('customPath', customPath);
-  if (customPath) {
+  if (getCustomBinaryPath()) {
     return false;
   }
-
   // Check if Podman is installed via Homebrew
   try {
     await extensionApi.process.exec('brew', ['list', '--verbose', 'podman'], {
       env: { HOMEBREW_NO_AUTO_UPDATE: '1', HOMEBREW_NO_ANALYTICS: '1' },
     });
-    isBrewInstalled = true;
-  } catch (err) {
-    // podman is not installed with brew
+  } catch {
     return false;
   }
-  // Check each non-Homebrew path
-  if (fs.existsSync('/opt/podman/bin/podman') || fs.existsSync('/opt/local/bin/podman')) {
-    isDmgInstalled = true;
-  }
-  // Return true if we found more than one installation
-  return isBrewInstalled && isDmgInstalled;
+  return PODMAN_INSTALLATION_PATHS.some(path => existsSync(path));
 }
