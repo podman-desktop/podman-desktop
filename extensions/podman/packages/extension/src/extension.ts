@@ -396,13 +396,8 @@ async function doUpdateMachines(
   }
 
   // Only do the check if the provider is ready
-  if (extensionApi.env.isMac && provider.status === 'ready') {
-    // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-    // and if we should notify that we need to run podman-mac-helper, we do so.
-    await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
-
-    // Check with regards to the disguised podman socket as well
-    await extensionNotifications.checkAndNotifyDisguisedPodman();
+  if (provider.status === 'ready') {
+    await extensionNotifications.checkMacSocket();
   }
 }
 

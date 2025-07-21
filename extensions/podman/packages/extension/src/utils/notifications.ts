@@ -161,4 +161,15 @@ export class ExtensionNotifications {
       this.podmanMacHelperNotificationDisposable?.dispose();
     }
   }
+
+  public async checkMacSocket(): Promise<void> {
+    if (extensionApi.env.isMac) {
+      // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
+      // and if we should notify that we need to run podman-mac-helper, we do so.
+      await this.checkAndNotifySetupPodmanMacHelper();
+
+      // Check with regards to the disguised podman socket as well
+      await this.checkAndNotifyDisguisedPodman();
+    }
+  }
 }
