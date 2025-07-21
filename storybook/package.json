@@ -39,7 +39,7 @@
     "react": "18.2.0",
     "react-dom": "18.3.1",
     "storybook": "^9.0.14",
-    "svelte": "5.35.6",
+    "svelte": "5.36.12",
     "svelte-check": "^4.3.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
