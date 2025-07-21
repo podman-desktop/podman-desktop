@@ -131,6 +131,10 @@ const telemetryLogger: extensionApi.TelemetryLogger = {
   logError: vi.fn(),
 } as unknown as extensionApi.TelemetryLogger;
 
+async function waitTelemetryLoggerUsage() {
+  await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
+}
+
 const mocks = vi.hoisted(() => ({
   getPodmanLocationMacMock: vi.fn(),
   getKrunkitVersionMock: vi.fn(),
@@ -430,12 +434,7 @@ describe.each([
         },
       },
     );
-
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
@@ -473,10 +472,7 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -515,10 +511,7 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -560,10 +553,7 @@ describe.each([
     );
     expect(console.error).not.toBeCalled();
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -741,10 +731,7 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -788,10 +775,7 @@ test.each([
   );
 
   expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.init',
@@ -832,10 +816,7 @@ test.each([
   );
 
   expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.init',
@@ -951,10 +932,7 @@ test('if a machine is successfully reporting telemetry', async () => {
     .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
   await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.start',
@@ -972,10 +950,7 @@ test('if a machine is successfully reporting an error in telemetry', async () =>
   });
   await expect(extension.startMachine(provider, podmanConfiguration, machineInfo)).rejects.toThrow(customError.message);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.start',
@@ -2541,7 +2516,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
       'evt',
       expect.objectContaining({
@@ -2571,7 +2546,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
       'evt',
       expect.objectContaining({
@@ -2654,10 +2629,7 @@ test('if a machine stopped is successfully reporting telemetry', async () => {
   mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
   await extension.stopMachine(provider, machineInfo);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.stop',
@@ -2687,10 +2659,7 @@ test('if a machine stopped is successfully reporting an error in telemetry', asy
   mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
   await expect(extension.stopMachine(provider, machineInfo)).rejects.toThrow(customError.message);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.stop',
