@@ -3556,6 +3556,7 @@ describe('Check notify podman setup', () => {
 describe('monitorProvider', () => {
   test('should run the monitoring loop once and then stop correctly', async () => {
     vi.resetAllMocks();
+    await extension.deactivate();
     vi.useFakeTimers();
 
     const contextMock = getContextMock();
