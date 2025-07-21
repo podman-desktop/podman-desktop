@@ -20,7 +20,7 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { getPodmanCli } from './podman-cli';
+import { getPodmanCli, type InstalledPodman, isMultiplePodmanInstalledinMacos } from './podman-cli';
 
 const xdgDataDirectory = '.local/share/containers';
 export function appHomeDir(): string {
@@ -169,4 +169,32 @@ export function getProviderByLabel(label: string): string {
     default:
       return label;
   }
+}
+
+/**
+ * Checks for multiple Podman installations on macOS and returns a warning if found.
+ * @param installedPodman - The installed Podman version.
+ * @returns A promise that resolves to an array of ProviderInformation objects.
+ */
+export async function getMultiplePodmanInstallationsMacosWarnings(
+  installedPodman: InstalledPodman | undefined,
+): Promise<extensionApi.ProviderInformation[]> {
+  const warnings: extensionApi.ProviderInformation[] = [];
+
+  // Check for multiple Podman installations on macOS
+  if (extensionApi.env.isMac && installedPodman) {
+    try {
+      const hasMultiplePodmanInstallations = await isMultiplePodmanInstalledinMacos();
+      if (hasMultiplePodmanInstallations) {
+        warnings.push({
+          name: 'Multiple Podman installations detected',
+          details:
+            'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+        });
+      }
+    } catch (error) {
+      console.error('Error checking for multiple Podman installations', error);
+    }
+  }
+  return warnings;
 }
