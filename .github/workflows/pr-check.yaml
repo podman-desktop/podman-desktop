@@ -319,45 +319,12 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Update podman to 5.x
-        run: |
-          echo "ubuntu version from kubic repository to install podman we need (v5)"
-          ubuntu_version='23.10'
-          echo "Add unstable kubic repo into list of available sources and get the repo key"
-          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
-          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
-          echo "Updating all dependencies..."
-          sudo apt-get update -qq
-          echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
-          sudo apt-get install --allow-unauthenticated -qq libprotobuf32t64 python3-protobuf libnet1
-          echo "install criu manually from static location"
-          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          echo "installing/update podman package..."
-          sudo apt-get -qq -y install --allow-unauthenticated podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
-            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
-            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add - && \
-            sudo apt-get --allow-insecure-repositories update && \
-            sudo apt-get --allow-unauthenticated -y install podman; }
-          podman version
+      - name: Install Podman v5 using external action
+        # Use the action from the other repository
+        uses: cbr7/pde2e-testenv-podman-install@v1.0.1
 
-      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
-        run: |
-          # allow unprivileged user namespace
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      # Enables multi-architecture support for building multi-arch manifests
-      - name: Install QEMU for Multi-Arch
-        run: |
-          sudo apt install -y qemu-user-static
-
-      - name: Set cgroup_manager to 'cgroupfs' instead of systemd
-        run: |
-          mkdir -p ~/.config/containers
-          cat <<EOT >> ~/.config/containers/containers.conf
-          [engine]
-          cgroup_manager="cgroupfs"
-          EOT
-          podman info
+      - name: Setup testenv using external action
+        uses: cbr7/pde2e-testenv-prepare-actions@v1.0.2
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
