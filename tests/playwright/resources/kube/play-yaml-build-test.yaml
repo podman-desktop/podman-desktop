@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: play-yaml-build-test
+spec:
+  containers:
+    - name: container
+      image: foobar
+      ports:
+        - name: http
+          containerPort: 80
+ 

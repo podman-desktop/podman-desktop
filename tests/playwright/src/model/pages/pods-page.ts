@@ -46,7 +46,7 @@ export class PodsPage extends MainPage {
       if (podRow === undefined) {
         throw Error(`Pod: ${name} does not exist`);
       }
-      await podRow.getByText(name).click();
+      await podRow.getByText(name, { exact: true }).click();
       return new PodDetailsPage(this.page, name);
     });
   }
