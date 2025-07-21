@@ -196,6 +196,7 @@ beforeEach(() => {
       VMType: 'wsl',
     },
   };
+  vi.resetAllMocks();
   extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
   vi.mocked(fs).readFile.mockImplementation(
@@ -384,7 +385,6 @@ afterEach(async () => {
   console.error = originalConsoleError;
   await extension.deactivate();
   vi.useRealTimers();
-  vi.resetAllMocks();
 });
 
 describe.each([
