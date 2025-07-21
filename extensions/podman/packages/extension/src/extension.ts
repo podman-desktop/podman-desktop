@@ -190,12 +190,7 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    // Only on macOS and Windows should we show the setup notification
-    // if for some reason doing getJSONMachineList fails..
-    if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
-      // push setup notification
-      extensionNotifications.notifySetupPodman();
-    }
+    extensionNotifications.checkShouldNotifyListMachinesFailed();
     throw error;
   }
 

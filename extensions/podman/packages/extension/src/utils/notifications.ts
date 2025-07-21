@@ -176,4 +176,13 @@ export class ExtensionNotifications {
       await this.checkAndNotifyDisguisedPodman();
     }
   }
+
+  public checkShouldNotifyListMachinesFailed(): void {
+    // Only on macOS and Windows should we show the setup notification
+    // if for some reason doing getJSONMachineList fails..
+    if (this.shouldNotifySetup && !extensionApi.env.isLinux) {
+      // push setup notification
+      this.notifySetupPodman();
+    }
+  }
 }
