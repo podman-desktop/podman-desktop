@@ -180,21 +180,21 @@ export async function getMultiplePodmanInstallationsMacosWarnings(
   installedPodman: InstalledPodman | undefined,
 ): Promise<extensionApi.ProviderInformation[]> {
   const warnings: extensionApi.ProviderInformation[] = [];
-
+  if (!extensionApi.env.isMac || !installedPodman) {
+    return warnings;
+  }
   // Check for multiple Podman installations on macOS
-  if (extensionApi.env.isMac && installedPodman) {
-    try {
-      const hasMultiplePodmanInstallations = await isMultiplePodmanInstalledinMacos();
-      if (hasMultiplePodmanInstallations) {
-        warnings.push({
-          name: 'Multiple Podman installations detected',
-          details:
-            'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
-        });
-      }
-    } catch (error) {
-      console.error('Error checking for multiple Podman installations', error);
+  try {
+    const hasMultiplePodmanInstallations = await isMultiplePodmanInstalledinMacos();
+    if (hasMultiplePodmanInstallations) {
+      warnings.push({
+        name: 'Multiple Podman installations detected',
+        details:
+          'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+      });
     }
+  } catch (error) {
+    console.error('Error checking for multiple Podman installations', error);
   }
   return warnings;
 }
