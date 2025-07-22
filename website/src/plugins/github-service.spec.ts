@@ -26,7 +26,7 @@ import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
 import { mockReleaseData } from './test/resources/mock-release-data';
 
-const URL = 'https://api.github.com/repos/podman-desktop/podman-desktop/releases/latest';
+const URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}/releases/latest`;
 
 const server = setupServer(
   http.get(URL, () => {
