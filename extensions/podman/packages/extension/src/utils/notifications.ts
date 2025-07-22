@@ -38,10 +38,6 @@ export class ExtensionNotifications {
 
   private _notificationDisposable?: extensionApi.Disposable;
 
-  public get notificationDisposable(): extensionApi.Disposable | undefined {
-    return this._notificationDisposable;
-  }
-
   private _disguisedPodmanNotificationDisposable?: extensionApi.Disposable;
 
   public get disguisedPodmanNotificationDisposable(): extensionApi.Disposable | undefined {
@@ -184,5 +180,11 @@ export class ExtensionNotifications {
       // push setup notification
       this.notifySetupPodman();
     }
+  }
+
+  public disposeNotification(): void {
+    // notification is no more required
+    this._notificationDisposable?.dispose();
+    this.shouldNotifySetup = true;
   }
 }
