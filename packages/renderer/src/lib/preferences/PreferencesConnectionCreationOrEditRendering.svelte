@@ -100,9 +100,10 @@ $effect(() => {
   if (!reconnectedUI && logsTerminal && loggerHandlerKey) {
     try {
       reconnectUI(loggerHandlerKey, getLoggerHandler());
-      reconnectedUI = true;
     } catch (error) {
       console.error('error while reconnecting', error);
+    } finally {
+      reconnectedUI = true;
     }
   }
 });
