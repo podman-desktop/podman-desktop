@@ -6,6 +6,8 @@ spec:
   containers:
     - name: container
       image: foobar
+      imagePullPolicy: Never
       ports:
         - name: http
           containerPort: 80
+ 

@@ -46,7 +46,9 @@ export class PodsPage extends MainPage {
       if (podRow === undefined) {
         throw Error(`Pod: ${name} does not exist`);
       }
-      await podRow.getByText(name, { exact: true }).click();
+      const openPodDetailsButton = podRow.getByRole('button').getByText(name, { exact: true });
+      await playExpect(openPodDetailsButton).toBeEnabled();
+      await openPodDetailsButton.click();
       return new PodDetailsPage(this.page, name);
     });
   }
