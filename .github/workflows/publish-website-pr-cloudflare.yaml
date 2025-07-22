@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: read
+  deployments: write
 
 jobs:
   publish:
