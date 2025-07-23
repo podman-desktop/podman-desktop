@@ -729,16 +729,6 @@ test('Expect reconnectUI to be called only once', async () => {
     };
   });
 
-  vi.mock('@xterm/xterm', () => {
-    const writeMock = vi.fn();
-    return {
-      writeMock,
-      Terminal: vi
-        .fn()
-        .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: writeMock, clear: vi.fn(), dispose: vi.fn() }),
-    };
-  });
-
   let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
   const callback = mockCallback(async keyLogger => {
     providedKeyLogger = keyLogger;
