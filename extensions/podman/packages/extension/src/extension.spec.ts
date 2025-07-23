@@ -1536,30 +1536,21 @@ test('provider is registered with limited capabilities on (HyperV) Windows', asy
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(
-    (command, args) =>
-      new Promise<extensionApi.RunResult>((resolve, reject) => {
-        if (command === 'powershell.exe') {
-          resolve({
-            stdout: args?.[0] === '@(Get-Service vmms).Status' ? 'Running' : 'True',
-            stderr: '',
-            command: 'command',
-          });
-        } else {
-          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-        }
-      }),
-  );
+  spyExecPromise.mockImplementation(() => {
+    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+  });
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
     return Disposable.from({ dispose: () => {} });
   });
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-    version: '5.2.1',
-  });
 
-  await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+  await extension.registerProviderFor(
+    provider,
+    podmanConfiguration,
+    { ...machineInfo, vmType: VMTYPE.HYPERV },
+    'socket',
+  );
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();

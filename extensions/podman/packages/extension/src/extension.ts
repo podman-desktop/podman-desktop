@@ -857,9 +857,9 @@ export async function registerProviderFor(
   machineInfo: MachineInfo,
   socketPath: string,
 ): Promise<void> {
-  const hyperVEnabled = await isHyperVEnabled();
-  const isEditMemorySupported = extensionApi.env.isMac || hyperVEnabled;
-  const isEditCPUSupported = extensionApi.env.isMac || hyperVEnabled;
+  const isHyperVMachine = extensionApi.env.isWindows && machineInfo.vmType === VMTYPE.HYPERV;
+  const isEditMemorySupported = extensionApi.env.isMac || isHyperVMachine;
+  const isEditCPUSupported = extensionApi.env.isMac || isHyperVMachine;
   const isEditDiskSizeSupported = extensionApi.env.isMac;
 
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
