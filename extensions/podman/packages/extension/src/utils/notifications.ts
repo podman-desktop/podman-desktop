@@ -23,7 +23,7 @@ import { isDisguisedPodman } from './warnings';
 
 export class ExtensionNotifications {
   // Configuration buttons
-  public static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
+  private static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
     'setting.doNotShowMacHelperNotification';
 
   private _shouldNotifySetup = true;
@@ -60,12 +60,31 @@ export class ExtensionNotifications {
   }
 
   // Shortform for getting the do not show ever again setting for the podman-mac-helper notification
-  public getDoNotShowMacHelperSetting(): boolean {
+  private getDoNotShowMacHelperSetting(): boolean {
     return (
       extensionApi.configuration
         .getConfiguration('podman')
         .get<boolean>(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
     );
+  }
+
+  public setupNotificationMacPodman(): extensionApi.Disposable {
+    // Get if we should never show the podman-mac-helper notification ever again
+    this.doNotShowMacHelperSetup = this.getDoNotShowMacHelperSetting();
+
+    return extensionApi.commands.registerCommand('podman.doNotShowMacHelperNotification', async () => {
+      // Set the configuration setting to true, so on reload of Podman Desktop it
+      // is consistent / will not show the notification again
+      await extensionApi.configuration
+        .getConfiguration('podman')
+        .update(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
+
+      //  Set the global variable to true
+      this.doNotShowMacHelperSetup = true;
+
+      // Dismiss the notification
+      this.podmanMacHelperNotificationDisposable?.dispose();
+    });
   }
 
   // to avoid having multiple notification of the same nature in the notifications list

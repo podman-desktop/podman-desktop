@@ -255,4 +255,26 @@ describe('podman-mac-helper tests', () => {
       );
     });
   });
+
+  test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
+    const extensionNotifications = new ExtensionNotifications();
+
+    // Set configuration to always be true
+    // mimicking the 'doNotShow' setting being true
+    const spyGetConfiguration = vi.spyOn(config, 'get');
+    spyGetConfiguration.mockReturnValue(true);
+
+    extensionNotifications.setupNotificationMacPodman();
+
+    await extensionNotifications.checkMacSocket();
+
+    // Make sure showNotification is not shown at all.
+    expect(extensionApi.window.showNotification).not.toBeCalledWith(
+      expect.objectContaining({
+        body: expect.stringContaining(
+          'The Podman Mac Helper is not set up, some features might not function optimally.',
+        ),
+      }),
+    );
+  });
 });

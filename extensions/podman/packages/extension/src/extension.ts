@@ -1365,25 +1365,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // Compatibility mode status bar item
   // only available for macOS
   if (extensionApi.env.isMac) {
-    // Get if we should never show the podman-mac-helper notification ever again
-    extensionNotifications.doNotShowMacHelperSetup = extensionNotifications.getDoNotShowMacHelperSetting();
-
     // Register the command for disabling the do not show mac helper setting permanently
-    extensionContext.subscriptions.push(
-      extensionApi.commands.registerCommand('podman.doNotShowMacHelperNotification', async () => {
-        // Set the configuration setting to true, so on reload of Podman Desktop it
-        // is consistent / will not show the notification again
-        await extensionApi.configuration
-          .getConfiguration('podman')
-          .update(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
-
-        //  Set the global variable to true
-        extensionNotifications.doNotShowMacHelperSetup = true;
-
-        // Dismiss the notification
-        extensionNotifications.podmanMacHelperNotificationDisposable?.dispose();
-      }),
-    );
+    extensionContext.subscriptions.push(extensionNotifications.setupNotificationMacPodman());
 
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(

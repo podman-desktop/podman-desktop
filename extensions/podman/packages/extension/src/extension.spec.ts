@@ -3332,26 +3332,6 @@ describe('podman-mac-helper tests', () => {
     );
   });
 
-  test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
-    // Set configuration to always be true
-    // mimicking the 'doNotShow' setting being true
-    const spyGetConfiguration = vi.spyOn(config, 'get');
-    spyGetConfiguration.mockReturnValue(true);
-
-    // Activate
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Make sure showNotification is not shown at all.
-    expect(extensionApi.window.showNotification).not.toBeCalledWith(
-      expect.objectContaining({
-        body: expect.stringContaining(
-          'The Podman Mac Helper is not set up, some features might not function optimally.',
-        ),
-      }),
-    );
-  });
-
   test('mock that the provider is "stopped" and make sure that the notification is NOT shown', async () => {
     // Mock the provider to be "stopped"
     vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
