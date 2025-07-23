@@ -356,6 +356,14 @@ describe('cli#update', () => {
 
     expect(disposeMock).toHaveBeenCalled();
   });
+
+  test('uninstall updatable version should dispose update', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
+
+    await (await getCliToolInstaller()).doUninstall({} as unknown as extensionApi.Logger);
+
+    expect(disposeMock).toHaveBeenCalled();
+  });
 });
 
 /**
