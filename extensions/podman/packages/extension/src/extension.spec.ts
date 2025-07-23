@@ -1572,6 +1572,7 @@ test('provider is registered with edit capabilities on MacOS', async () => {
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
 });
 
 test('display name is beautified version of the name', async () => {
@@ -1610,7 +1611,7 @@ test('display name is beautified version of the name', async () => {
   expect(registeredConnection?.name).toBe(machineDefaultName);
 });
 
-test('provider is registered without edit capabilities on (non-HyperV) Windows', async () => {
+test('provider is registered with limited edit capabilities on (non-HyperV) Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
@@ -1640,19 +1641,35 @@ test('provider is registered without edit capabilities on (non-HyperV) Windows',
   await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
-  expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
 });
 
-test('provider is registered with limited capabilities on (HyperV) Windows', async () => {
+test('provider is registered with limited edit capabilities on (HyperV) Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+        }
+      }),
+  );
   let registeredConnection: ContainerProviderConnection | undefined;
   vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
     registeredConnection = connection;
@@ -1671,6 +1688,7 @@ test('provider is registered with limited capabilities on (HyperV) Windows', asy
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
   expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
 
   await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
     'podman.machine.cpus': 1,
@@ -1680,7 +1698,7 @@ test('provider is registered with limited capabilities on (HyperV) Windows', asy
   });
   expect(spyExecPromise).toBeCalledWith(
     'podman.exe',
-    ['machine', 'set', machineInfo.name, '--rootful=true'],
+    expect.arrayContaining(['machine', 'set', machineInfo.name, '--rootful=true']),
     expect.any(Object),
   );
 });

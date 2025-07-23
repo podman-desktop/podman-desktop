@@ -117,7 +117,7 @@
           "default": true,
           "scope": "ContainerConnection",
           "description": "Machine with root privileges",
-          "when": "podman.isRootfulMachineInitSupported == true",
+          "when": "podman.podmanMachineEditRootfulSupported",
           "hidden": true
         },
         "podman.factory.machine.name": {
