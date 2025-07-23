@@ -35,6 +35,28 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
+vi.mock('@xterm/xterm', () => {
+  return {
+    Terminal: vi.fn(() => {
+      return {
+        loadAddon: vi.fn(),
+        open: vi.fn(),
+        write: vi.fn(),
+        clear: vi.fn(),
+        dispose: vi.fn(),
+      };
+    }),
+  };
+});
+
+vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    reconnectUI: vi.fn(),
+  };
+});
+
 type LoggerEventName = 'log' | 'warn' | 'error' | 'finish';
 const properties: IConfigurationPropertyRecordedSchema[] = [
   {
@@ -721,14 +743,6 @@ test('Expect form data saved in store to be repopulated when reopening a task', 
 });
 
 test('Expect reconnectUI to be called only once', async () => {
-  vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
-    const original = await importOriginal();
-    return {
-      ...original,
-      reconnectUI: vi.fn(),
-    };
-  });
-
   let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
   const callback = mockCallback(async keyLogger => {
     providedKeyLogger = keyLogger;
@@ -763,10 +777,6 @@ test('Expect reconnectUI to be called only once', async () => {
     expect(screen.getByRole('term')).toBeInTheDocument();
     expect(reconnectUI).toBeCalledTimes(1);
   });
-
-  operationConnectionsInfo.update(map =>
-    map.set(taskId, { ...operationConnectionsInfoMock, errorMessage: 'error message' }),
-  );
 
   await rerender({
     properties,
