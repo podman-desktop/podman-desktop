@@ -187,6 +187,10 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     //prune unused volumes
     volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
+    await playExpect
+      .poll(async () => (await volumesPage.getRowsFromTableByStatus(VolumeState.Unused)).length, { timeout: 30_000 })
+      .toBeGreaterThanOrEqual(1);
+
     volumesPage = await volumesPage.pruneVolumes();
     await playExpect
       .poll(async () => volumesPage.getRowsFromTableByStatus(VolumeState.Unused), { timeout: 30_000 })

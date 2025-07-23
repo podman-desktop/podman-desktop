@@ -114,11 +114,10 @@ test.describe.serial('Verification of kube context management', { tag: '@smoke' 
       } else {
         await kubePage.deleteContext(context, false);
       }
+
+      await playExpect(await kubePage.getContextRowByName(context)).not.toBeVisible({ timeout: 15_000 });
     }
 
-    for (const context of testContexts) {
-      await playExpect(await kubePage.getContextRowByName(context)).not.toBeVisible({ timeout: 10_000 });
-    }
     // check that the page is empty
     await playExpect.poll(async () => await kubePage.pageIsEmpty(), { timeout: 10_000 }).toBeTruthy();
   });
