@@ -3520,6 +3520,31 @@ describe('Check notify podman setup', () => {
 
     expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
   });
+
+  test('reset the notification flag so if podman is uninstalled in future we can show the notification again', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+
+    // No podman install
+
+    await extension.doMonitorProvider(provider);
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+
+    // Podman has been installed
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+
+    // Podman has been uninstalled -> Show the notification a second time
+
+    await extension.doMonitorProvider(provider);
+    expect(extensionApi.window.showNotification).toHaveBeenCalledTimes(2);
+    expect(extensionApi.window.showNotification).toHaveBeenLastCalledWith(notifySetupPodmanExpectedContent);
+  });
 });
 
 describe('monitorProvider', () => {
