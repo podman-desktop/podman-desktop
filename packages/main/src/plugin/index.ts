@@ -160,6 +160,7 @@ import type {
 } from './dockerode/libpod-dockerode.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
+import { ExperimentalConfigurationManager } from './experimental-configuration-manager.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -473,6 +474,12 @@ export class PluginSystem {
       notifications,
       configurationRegistryEmitter,
     );
+
+    container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
+    const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
+      ExperimentalConfigurationManager,
+    );
+
     container.bind<ColorRegistry>(ColorRegistry).to(InjectableColorRegistry).inSingletonScope();
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
@@ -2003,6 +2010,51 @@ export class PluginSystem {
         scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
       ): Promise<void> => {
         return configurationRegistry.updateConfigurationValue(key, value, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'experimental-configuration-manager:updateExperimentalConfigurationValue',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        value: unknown,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<void> => {
+        return experimentalConfigurationManager.updateExperimentalConfigurationValue(key, value, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'experimental-configuration-manager:isExperimentalConfigurationEnabled',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<boolean> => {
+        return experimentalConfigurationManager.isExperimentalConfigurationEnabled(key, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'experimental-configuration-manager:enableExperimentalConfiguration',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<void> => {
+        return experimentalConfigurationManager.enableExperimentalConfiguration(key, scope);
+      },
+    );
+
+    this.ipcHandle(
+      'experimental-configuration-manager:disableExperimentalConfiguration',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+      ): Promise<void> => {
+        return experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
       },
     );
 
