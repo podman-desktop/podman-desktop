@@ -467,6 +467,13 @@ jobs:
 
       - name: Run E2E Update test
         run: |
+          echo "supply different update channel: owner/repo odockal/podman-desktop-qe with simulation of 1.20.1"
+          # sed -i -e 's/owner: podman-desktop/owner: odockal/g' ./dist/win-unpacked/resources/app-update.yml
+          # sed -i -e 's/repo: podman-desktop/repo: podman-desktop-qe/g' ./dist/win-unpacked/resources/app-update.yml
+          (Get-Content dist/win-unpacked/resources/app-update.yml).Replace('owner: podman-desktop', 'owner: odockal') | Set-Content dist/win-unpacked/resources/app-update.yml
+          (Get-Content dist/win-unpacked/resources/app-update.yml).Replace('repo: podman-desktop', 'repo: podman-desktop-qe') | Set-Content dist/win-unpacked/resources/app-update.yml
+          echo "Read app-update.yml after replace..."
+          cat dist/win-unpacked/resources/app-update.yml
           echo "${{ env.PODMAN_DESKTOP_BINARY }}"
           pnpm test:e2e:update:run
 
