@@ -83,6 +83,15 @@ vi.mock('/@/stores/kubernetes-no-current-context');
 const dispatchEventMock = vi.fn();
 const messages = new Map<string, (args: unknown) => void>();
 
+class ResizeObserverMock {
+  private _cb: ResizeObserverCallback;
+  constructor(cb: ResizeObserverCallback) {
+    this._cb = cb;
+  }
+  observe(): void {}
+  disconnect(): void {}
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   router.goto('/');
@@ -94,6 +103,7 @@ beforeEach(() => {
   Object.defineProperty(window, 'dispatchEvent', { value: dispatchEventMock });
   (window.getConfigurationValue as unknown) = vi.fn();
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
+  global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 });
 
 test('test /image/run/* route', async () => {
