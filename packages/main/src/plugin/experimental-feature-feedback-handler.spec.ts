@@ -22,8 +22,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { Timestamp } from './experimental-feature-feedback-form.js';
-import { ExperimentalFeatureFeedbackForm } from './experimental-feature-feedback-form.js';
+import type { ExperimentalConfiguration, Timestamp } from './experimental-feature-feedback-handler.js';
+import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 
 vi.mock('electron', () => ({
   shell: {
@@ -65,10 +65,8 @@ const configuration: Configuration = {
   update: () => Promise.resolve(),
 };
 
-class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackForm {
-  override timestamps: Map<string, Timestamp> = new Map<string, Timestamp>();
-  override disabled: string[] = [];
-  override experimentalFeatures: Set<string> = new Set<string>();
+class TestExperimentalFeatureFeedbackHandler extends ExperimentalFeatureFeedbackHandler {
+  override experimentalFeatures: Map<string, ExperimentalConfiguration> = new Map<string, ExperimentalConfiguration>();
 
   override setTimestamp(feature: string, days: Timestamp): void {
     return super.setTimestamp(feature, days);
@@ -76,10 +74,6 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
 
   override setReminder(configurationName: string): void {
     return super.setReminder(configurationName);
-  }
-
-  override formatName(id: string): string {
-    return super.formatName(id);
   }
 
   override async save(id: string): Promise<void> {
@@ -95,13 +89,13 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
   }
 }
 
-const setReminderSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'setReminder');
-const setTimestampSpy = vi.spyOn(TestExperimentalFeatureFeedbackForm.prototype, 'setTimestamp');
+const setReminderSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'setReminder');
+const setTimestampSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'setTimestamp');
 
-let feedbackForm: TestExperimentalFeatureFeedbackForm;
+let feedbackForm: TestExperimentalFeatureFeedbackHandler;
 beforeEach(() => {
   vi.resetAllMocks();
-  feedbackForm = new TestExperimentalFeatureFeedbackForm(configurationRegistry);
+  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry);
 
   vi.spyOn(feedbackForm, 'save').mockImplementation(() => {
     return Promise.resolve();
@@ -109,7 +103,8 @@ beforeEach(() => {
 });
 
 describe('init', () => {
-  test('should setup reminders on first run when no timestamps exist', async () => {
+  test('should setup reminders on first run', async () => {
+    configurationGetMock.mockReturnValue({});
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     await feedbackForm.init();
@@ -120,7 +115,15 @@ describe('init', () => {
     expect(setReminderSpy).toHaveBeenCalledWith('feat.feature3');
   });
 
-  test('should load existing timestamps and show dialog', async () => {
+  test('should NOT setup reminders when no configuration exist', async () => {
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    await feedbackForm.init();
+
+    expect(setReminderSpy).not.toBeCalled();
+  });
+
+  test('should load existing configurations and show dialog', async () => {
     const conf = { remindAt: 123456, disabled: false };
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -130,7 +133,7 @@ describe('init', () => {
 
     expect(setReminderSpy).not.toHaveBeenCalled();
 
-    expect(feedbackForm.timestamps.get('feat.feature1')).toBe(123456);
+    expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
   });
 });
 
@@ -150,7 +153,7 @@ describe('setTimestamp', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
-    const setSpy = vi.spyOn(feedbackForm.timestamps, 'set');
+    const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
 
     const days = 42;
     const expectedTimestamp = new Date(MOCK_NOW.getTime() + days * 24 * 60 * 60 * 1_000).getTime();
@@ -158,7 +161,7 @@ describe('setTimestamp', () => {
     feedbackForm.setTimestamp('feature1', days);
 
     expect(setSpy).toHaveBeenCalledTimes(1);
-    expect(setSpy).toHaveBeenCalledWith('feature1', expectedTimestamp);
+    expect(setSpy).toHaveBeenCalledWith('feature1', { remindAt: expectedTimestamp, disabled: false });
   });
 
   test('should set timestamp when days are not defined', () => {
@@ -191,34 +194,23 @@ describe('setReminder', () => {
   });
 });
 
-describe('formatName', () => {
-  test.each([
-    { id: 'helloWorld', expected: 'hello World' },
-    { id: 'parent.childFeature', expected: 'parent child Feature' },
-    { id: 'config.sectionName.isEnabled', expected: 'config section Name is Enabled' },
-    { id: 'already.formatted string', expected: 'already formatted string' },
-  ])('should correctly format "$id" to "$expected"', ({ id, expected }) => {
-    const name = feedbackForm.formatName(id);
-    expect(name).toBe(expected);
-  });
-});
-
 describe('disableFeature', () => {
-  test('should add feature to disabled', () => {
-    const pushDisabledSpy = vi.spyOn(feedbackForm.disabled, 'push');
-    feedbackForm.disableFeature('feat.feature1');
+  test('should set disable of enabled feature', () => {
+    const feat = 'feat.feature1';
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    feedbackForm.experimentalFeatures = new Map([[feat, existingTimestamps]]);
+    const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
+    feedbackForm.disableFeature(feat);
 
-    expect(pushDisabledSpy).toBeCalled();
-    expect(pushDisabledSpy).toBeCalledWith('feat.feature1');
-    expect(feedbackForm.disabled).toContain('feat.feature1');
+    expect(setSpy).toHaveBeenCalledWith(feat, { remindAt: pastTimestamp, disabled: true });
   });
 
-  test('should NOT add feature to disabled if already there', () => {
-    const pushDisabledSpy = vi.spyOn(feedbackForm.disabled, 'push');
-    feedbackForm.disabled = ['feat.feature1'];
-    feedbackForm.disableFeature('feat.feature1');
+  test('should NOT set disable of feature that is not enabled', () => {
+    const feat = 'feat.feature1';
+    const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
+    feedbackForm.disableFeature(feat);
 
-    expect(pushDisabledSpy).not.toHaveBeenCalled();
-    expect(feedbackForm.disabled).toContain('feat.feature1');
+    expect(setSpy).not.toBeCalled();
   });
 });

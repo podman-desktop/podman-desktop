@@ -24,15 +24,17 @@ import type { IDisposable } from '/@api/disposable.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 
 export type Timestamp = number | undefined;
+export interface ExperimentalConfiguration {
+  remindAt: Timestamp;
+  disabled: boolean;
+}
 
 const DAYS_TO_MS = 24 * 60 * 60 * 1_000;
 
 @injectable()
-export class ExperimentalFeatureFeedbackForm {
+export class ExperimentalFeatureFeedbackHandler {
   #disposables: IDisposable[] = [];
-  protected timestamps: Map<string, Timestamp> = new Map();
-  protected disabled: string[] = [];
-  protected experimentalFeatures: Set<string> = new Set([]);
+  protected experimentalFeatures: Map<string, ExperimentalConfiguration> = new Map();
   readonly #configurationRegistry: IConfigurationRegistry;
   constructor(
     @inject(ConfigurationRegistry)
@@ -42,30 +44,16 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   protected async save(key: string): Promise<void> {
-    // If timestamp does not exist, the feature is not enabled
-    const timestamp: Timestamp = this.timestamps.get(key);
-    let disabled: boolean | undefined = this.disabled.includes(key);
-    if (!timestamp) {
-      // Timestamp does not exist we need to set disabled manually, otherwise we would end up with:
-      // feature {
-      //  "disabled" : false
-      // }
-      disabled = undefined;
-    }
-    const conf =
-      disabled || timestamp
-        ? {
-            remindAt: timestamp,
-            disabled: disabled,
-          }
-        : undefined;
-
-    const parts = key.split('.');
-    const firstPart = parts[0];
-    const secondPart = parts[1];
-    if (secondPart) {
-      const configuration = this.#configurationRegistry.getConfiguration(firstPart);
-      await configuration?.update(secondPart, conf);
+    // If conf does not exist, the feature is not enabled
+    const conf = this.experimentalFeatures.get(key);
+    if (conf) {
+      const parts = key.split('.');
+      const firstPart = parts[0];
+      const secondPart = parts[1];
+      if (secondPart) {
+        const configuration = this.#configurationRegistry.getConfiguration(firstPart);
+        await configuration?.update(secondPart, conf);
+      }
     }
   }
 
@@ -77,48 +65,42 @@ export class ExperimentalFeatureFeedbackForm {
   async init(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
     for (const configurationKey in configurationProperties) {
-      if (configurationProperties[configurationKey]?.experimental?.githubDiscussionLink)
-        this.experimentalFeatures.add(configurationKey);
-    }
+      if (!configurationProperties[configurationKey]?.experimental?.githubDiscussionLink) {
+        continue;
+      }
 
-    for (const feat of this.experimentalFeatures.values()) {
       // Get configuration from settings.json
-      const parts = feat.split('.');
+      const parts = configurationKey.split('.');
       const firstPart = parts[0];
       const secondPart = parts[1];
       if (!secondPart) return;
 
       const conf = this.#configurationRegistry.getConfiguration(firstPart).get(secondPart);
-      // Set to undefined if is the feature disabled
-      let optionDisabled = undefined;
+      // Configuration does not exist (feature is not enabled)
+      if (!conf) {
+        continue;
+      }
+
+      let optionDisabled = false;
       let optionRemindAt: Timestamp = undefined;
-      if (conf && typeof conf === 'object' && 'disabled' in conf && 'remindAt' in conf) {
-        optionDisabled = conf.disabled;
+      if (typeof conf === 'object' && 'disabled' in conf && 'remindAt' in conf) {
+        if (typeof conf.disabled === 'boolean') optionDisabled = conf.disabled;
         if (typeof conf.remindAt === 'number') optionRemindAt = conf.remindAt;
       }
 
-      if (optionDisabled && !this.disabled.includes(feat)) {
-        this.disabled.push(feat);
-      } else if (!optionDisabled) {
-        const index = this.disabled.indexOf(feat, 0);
-        if (index > -1) {
-          this.disabled.splice(index, 1);
-        }
-      }
-
       if (optionRemindAt) {
-        this.timestamps.set(feat, optionRemindAt);
-        // TODO: Show Feedback
-        // We want to show only one dialog at a time to avoid overwhelming the user.
-        // This ensures that the user can focus on providing feedback for one feature
-        // before being prompted about another. If additional dialogs are needed,
-        // they will be shown in subsequent application sessions.
-        return;
+        const configuration: ExperimentalConfiguration = {
+          remindAt: optionRemindAt,
+          disabled: optionDisabled,
+        };
+
+        this.experimentalFeatures.set(configurationKey, configuration);
       } else {
         // when started for first time, we need to set the timetamps for each experimental feature
-        this.setReminder(feat);
+        this.setReminder(configurationKey);
       }
     }
+    // When are all features set, show dialog
   }
 
   /**
@@ -132,7 +114,8 @@ export class ExperimentalFeatureFeedbackForm {
       date = new Date(new Date().getTime() + days * DAYS_TO_MS).getTime();
     }
     // update configuration
-    this.timestamps.set(feature, date);
+    const conf = this.experimentalFeatures.get(feature);
+    this.experimentalFeatures.set(feature, { remindAt: date, disabled: conf ? conf.disabled : false });
     this.save(feature).catch((e: unknown) =>
       console.error(`Got error when saving timestamps for experimental features: ${e}`),
     );
@@ -152,24 +135,13 @@ export class ExperimentalFeatureFeedbackForm {
   }
 
   /**
-   * Replaces dots by spaces and adds uppercase on each sequence
-   * @param id in format feature.name
-   * @returns nicely formatted name e.g. feature Name
-   */
-  protected formatName(id: string): string {
-    return id
-      .split('.')
-      .map(part => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
-      .join(' ');
-  }
-
-  /**
    * Disables feedback for feature by adding it to list of disabled features
    * @param id in format feature.name
    */
   protected disableFeature(id: string): void {
-    if (!this.disabled.includes(id)) {
-      this.disabled.push(id);
+    const conf = this.experimentalFeatures.get(id);
+    if (conf) {
+      this.experimentalFeatures.set(id, { ...conf, disabled: true });
       this.save(id).catch((e: unknown) =>
         console.error(`Got error when saving timestamps for experimental features: ${e}`),
       );
