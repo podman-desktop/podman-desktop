@@ -1021,8 +1021,8 @@ importers:
         specifier: ^2.5.8
         version: 2.5.8
       '@argos-ci/playwright':
-        specifier: ^5.0.7
-        version: 5.0.7
+        specifier: ^5.0.8
+        version: 5.0.8
       '@playwright/test':
         specifier: 1.54.1
         version: 1.54.1
@@ -1131,8 +1131,8 @@ packages:
     resolution: {integrity: sha512-3IHv7ANSPNO6OwWgwULlHbP9/tFV9kQDu6+nL9jysfPkGj0GgtrOsyBb+iU931c7wSMo1OD+XNujCnRzDD968w==}
     engines: {node: '>=18.0.0'}
 
-  '@argos-ci/browser@4.1.3':
-    resolution: {integrity: sha512-y0JgT61MdMZnH0YbhXQJYFBo/cLs6UUvT1GZVYpX0QGV2rRuWWFn6+urGVBMcjQRKpKjkyvbyLhA+rORMutdLg==}
+  '@argos-ci/browser@4.1.4':
+    resolution: {integrity: sha512-ayV7kcnk8Xm0y1FlTKzr7XLkxmUnLIjzmPCLuGarOYzpy2KdPr6Q/ay8UkwfyAL3yswdWVRZwaqb7kZrrgbKcA==}
     engines: {node: '>=18.0.0'}
 
   '@argos-ci/cli@2.5.8':
@@ -1144,8 +1144,8 @@ packages:
     resolution: {integrity: sha512-P+tGofNLAtH0+e87M8sZc+juAtbOcnV6z2nA2MwB2OzUVVXGINJHAF2cK0ZUyXC9d8a7RL0+rQWkP4vXDA/gBw==}
     engines: {node: '>=18.0.0'}
 
-  '@argos-ci/playwright@5.0.7':
-    resolution: {integrity: sha512-7lokNcj2NOHYljeSDrHG1kwiVuf4NwKvGm5lpgbuFCaTfotgn4d/IabpgI2xVTfzFl0OUKDJ46oFQMwYqBu7bA==}
+  '@argos-ci/playwright@5.0.8':
+    resolution: {integrity: sha512-MXoEVVX+0sz7KbZHMQlPO0xSu1hx3KcyHlHpOVYEZzeSmOT8YVgDO2lAevSZU0vjAF/WzIO7lmyy5tHXWOHOtg==}
     engines: {node: '>=18.16.0'}
 
   '@argos-ci/util@2.3.2':
@@ -1733,8 +1733,8 @@ packages:
     resolution: {integrity: sha512-2WJMeRQPHKSPemqk/awGrAiuFfzBmOIPXKizAsVhWH9YJqLZ0H+HS4c8loHGgW6utJ3E/ejXQUsiGaQy2NZ9Fw==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/runtime@7.27.6':
-    resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
+  '@babel/runtime@7.28.2':
+    resolution: {integrity: sha512-KHp2IflsnGywDjBWDkR9iEqiWSpc8GIi0lgTT3mOElT0PP1tG26P4tmFI2YvAdzgq9RGyoHZQEIEdZy6Ec5xCA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.25.9':
@@ -12071,7 +12071,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/browser@4.1.3': {}
+  '@argos-ci/browser@4.1.4': {}
 
   '@argos-ci/cli@2.5.8':
     dependencies:
@@ -12095,9 +12095,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@5.0.7':
+  '@argos-ci/playwright@5.0.8':
     dependencies:
-      '@argos-ci/browser': 4.1.3
+      '@argos-ci/browser': 4.1.4
       '@argos-ci/core': 3.2.1
       '@argos-ci/util': 2.3.2
       chalk: 5.4.1
@@ -12876,7 +12876,7 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@babel/runtime@7.27.6': {}
+  '@babel/runtime@7.28.2': {}
 
   '@babel/template@7.25.9':
     dependencies:
@@ -15423,7 +15423,7 @@ snapshots:
 
   '@slorber/react-helmet-async@1.3.0(react-dom@18.3.1(react@18.2.0))(react@18.2.0)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.2
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 18.2.0
@@ -20091,7 +20091,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.2
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23323,7 +23323,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.2
 
   regexp-ast-analysis@0.7.1:
     dependencies:
