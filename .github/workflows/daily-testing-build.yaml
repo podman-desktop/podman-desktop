@@ -131,20 +131,9 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Run Build on Ubuntu
-        if: ${{ matrix.os == 'ubuntu-24.04' }}
-        timeout-minutes: 40
-        run: pnpm compile:next --linux tar.gz
-
-      - name: Run Build on Mac OS
-        if: startsWith(matrix.os, 'macos')
-        timeout-minutes: 40
-        run: pnpm compile:next --mac dmg
-
-      - name: Run Build on Windows
-        if: startsWith(matrix.os, 'windows')
-        timeout-minutes: 40
-        run: pnpm compile:next --win nsis portable
+      - name: Run Build and Compile on all platforms
+        timeout-minutes: 60
+        run: pnpm compile:next
 
   release:
     needs: [tag, build]
