@@ -31,12 +31,13 @@ export class GitHubService {
     this.repo = repo;
   }
 
-  public async getLatestReleaseMetadata(): Promise<GitHubMetadata> {
+  public async getMetadata(): Promise<GitHubMetadata> {
     try {
-      const { data: releaseData } = await this.octokit.rest.repos.getLatestRelease({
+      const repoInfo = {
         owner: this.owner,
         repo: this.repo,
-      });
+      };
+      const { data: releaseData } = await this.octokit.rest.repos.getLatestRelease(repoInfo);
 
       const { tag_name, assets } = releaseData;
 
@@ -63,7 +64,18 @@ export class GitHubService {
         'macOS x64 DMG',
       );
 
+      const {
+        data: { stargazers_count },
+      } = await this.octokit.rest.repos.get(repoInfo);
+
+      if (!stargazers_count) {
+        throw new Error(
+          `Failed to retrieve stargazers count name for ${this.repo} repo from GitHub. The 'stargazers_count' field was missing in the data.`,
+        );
+      }
+
       return {
+        stargazersCount: stargazers_count,
         latestRelease: {
           version: tag_name,
           linux: {

@@ -25,11 +25,16 @@ import { GITHUB_OWNER, GITHUB_REPOSITORY } from '/@api/repository-infos';
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
 import { mockReleaseData } from './test/resources/mock-release-data';
+import { mockRepositoryData } from './test/resources/mock-repository-data';
 
-const URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}/releases/latest`;
+const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}`;
+const latestReleaseUrl = `${url}/releases/latest`;
 
 const server = setupServer(
-  http.get(URL, () => {
+  http.get(url, () => {
+    return HttpResponse.json(mockRepositoryData);
+  }),
+  http.get(latestReleaseUrl, () => {
     return HttpResponse.json(mockReleaseData);
   }),
 );
@@ -49,6 +54,7 @@ describe('GitHubService', () => {
 
   test('should fetch and correctly map the latest release metadata on success', async () => {
     const expectedMetadata: GitHubMetadata = {
+      stargazersCount: 6140,
       latestRelease: {
         linux: {
           amd64:
@@ -87,19 +93,19 @@ describe('GitHubService', () => {
       },
     };
 
-    const metadata = await service.getLatestReleaseMetadata();
+    const metadata = await service.getMetadata();
     expect(metadata).toEqual(expectedMetadata);
   });
 
   test('should throw an error if tag_name is missing', async () => {
     // Override the default handler for this specific test
     server.use(
-      http.get(URL, () => {
+      http.get(latestReleaseUrl, () => {
         return HttpResponse.json({ ...mockReleaseData, tag_name: '' });
       }),
     );
 
-    await expect(service.getLatestReleaseMetadata()).rejects.toThrow(
+    await expect(service.getMetadata()).rejects.toThrow(
       `Failed to retrieve tag name for the latest ${GITHUB_REPOSITORY} release from GitHub. The 'tag_name' field was missing in the release data.`,
     );
   });
@@ -108,34 +114,34 @@ describe('GitHubService', () => {
     // Simulate a response where the flatpak asset is missing
     const incompleteAssets = mockReleaseData.assets.filter(a => !a.name.endsWith('.flatpak'));
     server.use(
-      http.get(URL, () => {
+      http.get(latestReleaseUrl, () => {
         return HttpResponse.json({ ...mockReleaseData, assets: incompleteAssets });
       }),
     );
 
-    await expect(service.getLatestReleaseMetadata()).rejects.toThrow('Required asset not found: Linux Flatpak');
+    await expect(service.getMetadata()).rejects.toThrow('Required asset not found: Linux Flatpak');
   });
 
   test('should throw an error if a different required asset is missing', async () => {
     // Simulate a response where the macOS ARM64 DMG is missing
     const incompleteAssets = mockReleaseData.assets.filter(a => !a.name.endsWith('-arm64.dmg'));
     server.use(
-      http.get(URL, () => {
+      http.get(latestReleaseUrl, () => {
         return HttpResponse.json({ ...mockReleaseData, assets: incompleteAssets });
       }),
     );
 
-    await expect(service.getLatestReleaseMetadata()).rejects.toThrow('Required asset not found: macOS ARM64 DMG');
+    await expect(service.getMetadata()).rejects.toThrow('Required asset not found: macOS ARM64 DMG');
   });
 
   test('should re-throw an error if the GitHub API call fails', async () => {
     // Simulate a server error from the GitHub API
     server.use(
-      http.get(URL, () => {
+      http.get(latestReleaseUrl, () => {
         return new HttpResponse(null, { status: 500, statusText: 'Internal Server Error' });
       }),
     );
 
-    await expect(service.getLatestReleaseMetadata()).rejects.toThrow();
+    await expect(service.getMetadata()).rejects.toThrow();
   });
 });
