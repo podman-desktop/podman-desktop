@@ -19,8 +19,10 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { PodmanConnectionTypes } from '../core/types';
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
+import { ResourceConnectionCardPage } from './resource-connection-card-page';
 import { ResourcesPage } from './resources-page';
 
 export class CreateMachinePage extends BasePage {
@@ -39,13 +41,26 @@ export class CreateMachinePage extends BasePage {
 
   async createMachine(
     machineName: string,
-    { isRootful = true, enableUserNet = false, startNow = true, setAsDefault = true },
+    {
+      isRootful = true,
+      enableUserNet = false,
+      startNow = true,
+      setAsDefault = true,
+      connectionType,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      setAsDefault?: boolean;
+      connectionType?: PodmanConnectionTypes;
+    },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
       await this.machineCreationForm.setupAndCreateMachine(machineName, {
         isRootful,
         enableUserNet,
         startNow,
+        connectionType,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
@@ -66,7 +81,20 @@ export class CreateMachinePage extends BasePage {
 
       await playExpect(goBackToResourcesButton).toBeEnabled();
       await goBackToResourcesButton.click();
-      return new ResourcesPage(this.page);
+
+      const resourcesPage = new ResourcesPage(this.page);
+      await playExpect(resourcesPage.heading).toBeVisible();
+      const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
+      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+
+      if (connectionType) {
+        await machineCard.resourceElement.getByLabel('Connection Type').scrollIntoViewIfNeeded();
+        playExpect(await machineCard.resourceElement.getByLabel('Connection Type').innerText()).toContain(
+          connectionType,
+        );
+      }
+
+      return resourcesPage;
     });
   }
 
