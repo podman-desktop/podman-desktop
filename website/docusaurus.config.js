@@ -393,6 +393,8 @@ const config = {
     ],
   ],
 
+  clientModules: [require.resolve('./src/scripts/fontAwesomeIcons.ts')],
+
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
