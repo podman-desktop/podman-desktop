@@ -66,3 +66,15 @@ export function requireNonUndefined<T>(obj: T | undefined, message?: string): T 
 
   return obj;
 }
+
+/**
+ * Replaces dots by spaces and adds uppercase on each sequence
+ * @param id in format feature.name
+ * @returns nicely formatted name e.g. feature Name
+ */
+export function formatName(id: string): string {
+  return id
+    .split('.')
+    .map(part => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
+    .join(' ');
+}

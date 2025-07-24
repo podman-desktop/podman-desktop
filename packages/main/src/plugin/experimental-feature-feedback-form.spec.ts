@@ -78,10 +78,6 @@ class TestExperimentalFeatureFeedbackForm extends ExperimentalFeatureFeedbackFor
     return super.setReminder(configurationName);
   }
 
-  override formatName(id: string): string {
-    return super.formatName(id);
-  }
-
   override async save(id: string): Promise<void> {
     return super.save(id);
   }
@@ -188,18 +184,6 @@ describe('setReminder', () => {
     const setTimestampSpy = vi.spyOn(feedbackForm, 'setTimestamp');
     feedbackForm.setReminder('feat.feature42');
     expect(setTimestampSpy).toBeCalledWith('feat.feature42', undefined);
-  });
-});
-
-describe('formatName', () => {
-  test.each([
-    { id: 'helloWorld', expected: 'hello World' },
-    { id: 'parent.childFeature', expected: 'parent child Feature' },
-    { id: 'config.sectionName.isEnabled', expected: 'config section Name is Enabled' },
-    { id: 'already.formatted string', expected: 'already formatted string' },
-  ])('should correctly format "$id" to "$expected"', ({ id, expected }) => {
-    const name = feedbackForm.formatName(id);
-    expect(name).toBe(expected);
   });
 });
 

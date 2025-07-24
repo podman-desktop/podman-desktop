@@ -129,7 +129,7 @@ export class ExperimentalFeatureFeedbackForm {
   protected setTimestamp(feature: string, days: Timestamp): void {
     let date: Timestamp = days;
     if (typeof days === 'number') {
-      date = new Date(new Date().getTime() + days * DAYS_TO_MS).getTime();
+      date = Date.now() + days * DAYS_TO_MS;
     }
     // update configuration
     this.timestamps.set(feature, date);
@@ -149,18 +149,6 @@ export class ExperimentalFeatureFeedbackForm {
       if (configurationValue) this.setTimestamp(configurationName, 2);
       else this.setTimestamp(configurationName, undefined);
     }
-  }
-
-  /**
-   * Replaces dots by spaces and adds uppercase on each sequence
-   * @param id in format feature.name
-   * @returns nicely formatted name e.g. feature Name
-   */
-  protected formatName(id: string): string {
-    return id
-      .split('.')
-      .map(part => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
-      .join(' ');
   }
 
   /**
