@@ -454,3 +454,19 @@ export async function setStatusBarProvidersFeature(
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
+
+export async function readFileInVolumeFromCLI(
+  volumePath: string,
+  volumeName: string,
+  fileName: string,
+): Promise<string> {
+  return test.step('Read file in volume from CLI', async () => {
+    try {
+      // eslint-disable-next-line sonarjs/os-command
+      const contentBuffer = execSync(`podman machine ssh cat ${volumePath}/${volumeName}/_data/${fileName}`);
+      return contentBuffer.toString();
+    } catch (error) {
+      throw new Error(`Error reading file: ${fileName} in volume: ${volumeName} from CLI: ${error}`);
+    }
+  });
+}
