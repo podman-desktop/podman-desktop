@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
-import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -33,7 +32,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
-import { isLinux } from './platform';
+import { isLinux, isMac, isWindows } from './platform';
 import { waitUntil, waitWhile } from './wait';
 
 /**
@@ -459,14 +458,13 @@ export async function setStatusBarProvidersFeature(
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
   return test.step('Read file in volume from CLI', async () => {
     try {
-      const platform = os.platform();
       let command: string;
 
-      if (platform === 'darwin' || platform === 'win32') {
+      if (isMac || isWindows) {
         // macOS and Windows: Use podman machine to SSH into the VM
         const pathInVM = `/var/lib/containers/storage/volumes/${volumeName}/_data/${fileName}`;
         command = `podman machine ssh cat ${pathInVM}`;
-      } else if (platform === 'linux') {
+      } else if (isLinux) {
         // Linux: Assume Podman is running natively
         // Detect if running rootless by checking env or fallback to rootful
         const isRootless = process.getuid && process.getuid() !== 0;
@@ -477,7 +475,7 @@ export async function readFileInVolumeFromCLI(volumeName: string, fileName: stri
         const fullPath = `${basePath}/${volumeName}/_data/${fileName}`;
         command = `cat ${fullPath}`;
       } else {
-        throw new Error(`Unsupported platform: ${platform}`);
+        throw new Error(`Unsupported platform`);
       }
 
       // eslint-disable-next-line sonarjs/os-command
