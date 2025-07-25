@@ -426,7 +426,7 @@ describe('cli#install', () => {
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
     // mock workflow (user select version then we install it)
-    await cliToolInstaller?.selectVersion();
+    await cliToolInstaller?.selectVersion(true);
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
     expect(KindInstaller.prototype.download).toHaveBeenCalledWith(mockV1Release);
