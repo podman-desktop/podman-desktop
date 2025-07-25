@@ -261,18 +261,11 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     await containersDetails.executeCommandInTerminal('ls');
     await playExpect(containersDetails.terminalContent).toContainText(fileName);
 
-    let fileContent;
-
     //read the file from the volume using CLI
-    try {
-      fileContent = await readFileInVolumeFromCLI(podmanMachineVolumePath, volumeName, fileName);
-      console.log(`Successfully read file. Content: "${fileContent}"`);
-      playExpect(fileContent).toContain(textContent); // Check if the file is not empty
-      console.log(`File "${fileName}" exists in volume "${volumeName}"`);
-    } catch (error) {
-      console.error('Error reading file from volume:', error);
-      throw new Error(`Failed to read file ${fileName} from volume ${volumeName}`);
-    }
+    const fileContent = await readFileInVolumeFromCLI(podmanMachineVolumePath, volumeName, fileName);
+    console.log(`Successfully read file. Content: "${fileContent}"`);
+    playExpect(fileContent).toContain(textContent); // Check if the file is not empty
+    console.log(`File "${fileName}" exists in volume "${volumeName}"`);
 
     //delete the volume
     await containersDetails.deleteContainer();
