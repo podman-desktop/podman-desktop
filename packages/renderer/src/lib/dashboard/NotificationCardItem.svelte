@@ -8,10 +8,6 @@ import Markdown from '../markdown/Markdown.svelte';
 
 export let notification: NotificationCard;
 
-async function removeNotification(id: number): Promise<void> {
-  await window.removeNotification(id);
-}
-
 const notificationStyleMap = {
   info: {
     borderColor: 'border-[var(--pd-state-info)]',
@@ -61,7 +57,7 @@ const notificationStyle = notificationStyleMap[notification.type];
     <div class="text-[var(--pd-content-card-carousel-card-header-text)]">
       <button
         class="p-1 hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px]"
-        on:click={(): Promise<void> => removeNotification(notification.id)}
+        on:click={(): Promise<void> => window.removeNotification(notification.id)}
         aria-label={`Delete notification ${notification.id}`}>
         <Icon icon={faXmark} />
       </button>
