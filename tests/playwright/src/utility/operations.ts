@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
+import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -455,15 +456,32 @@ export async function setStatusBarProvidersFeature(
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
 
-export async function readFileInVolumeFromCLI(
-  volumePath: string,
-  volumeName: string,
-  fileName: string,
-): Promise<string> {
+export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
   return test.step('Read file in volume from CLI', async () => {
     try {
+      const platform = os.platform();
+      let command: string;
+
+      if (platform === 'darwin' || platform === 'win32') {
+        // macOS and Windows: Use podman machine to SSH into the VM
+        const pathInVM = `/var/lib/containers/storage/volumes/${volumeName}/_data/${fileName}`;
+        command = `podman machine ssh cat ${pathInVM}`;
+      } else if (platform === 'linux') {
+        // Linux: Assume Podman is running natively
+        // Detect if running rootless by checking env or fallback to rootful
+        const isRootless = process.getuid && process.getuid() !== 0;
+        const basePath = isRootless
+          ? `${process.env.HOME}/.local/share/containers/storage/volumes`
+          : '/var/lib/containers/storage/volumes';
+
+        const fullPath = `${basePath}/${volumeName}/_data/${fileName}`;
+        command = `cat ${fullPath}`;
+      } else {
+        throw new Error(`Unsupported platform: ${platform}`);
+      }
+
       // eslint-disable-next-line sonarjs/os-command
-      const contentBuffer = execSync(`podman machine ssh cat ${volumePath}/${volumeName}/_data/${fileName}`);
+      const contentBuffer = execSync(command);
       return contentBuffer.toString();
     } catch (error) {
       throw new Error(`Error reading file: ${fileName} in volume: ${volumeName} from CLI: ${error}`);
