@@ -321,10 +321,10 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: cbr7/pde2e-testenv-podman-install@v1.0.2
+        uses: cbr7/pde2e-testenv-podman-install@b14aa4dea90487e73aeaeb35348ecc6901a466f5
 
       - name: Setup testenv using external action
-        uses: cbr7/pde2e-testenv-prepare-actions@v1.0.2
+        uses: cbr7/pde2e-testenv-prepare-actions@833c33b9c64efa68bcd6535a051454a1f6201a87
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
