@@ -19,7 +19,7 @@ import * as fs from 'node:fs';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getBase64Image, requireNonUndefined } from './util.js';
+import { formatName, getBase64Image, requireNonUndefined } from './util.js';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -63,5 +63,17 @@ describe('requireNonUndefined', () => {
   test('should throw an error with a custom message if the value is undefined', () => {
     const customMessage = 'Custom error message';
     expect(() => requireNonUndefined(undefined, customMessage)).toThrow(customMessage);
+  });
+});
+
+describe('formatName', () => {
+  test.each([
+    { id: 'helloWorld', expected: 'hello World' },
+    { id: 'parent.childFeature', expected: 'parent child Feature' },
+    { id: 'config.sectionName.isEnabled', expected: 'config section Name is Enabled' },
+    { id: 'already.formatted string', expected: 'already formatted string' },
+  ])('should correctly format "$id" to "$expected"', ({ id, expected }) => {
+    const name = formatName(id);
+    expect(name).toBe(expected);
   });
 });
