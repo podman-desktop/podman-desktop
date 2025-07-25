@@ -94,7 +94,7 @@ testComponent('renders button to run first pod', async () => {
 });
 
 testComponent('button click creates and starts a pod', async () => {
-  vi.spyOn(window, 'createPod').mockResolvedValue(podInfo);
+  vi.mocked(window.createPod).mockResolvedValue(podInfo);
   await fireEvent.click(getButton());
   expect(window.createPod).toBeCalledWith({ name: 'my-first-pod' });
   expect(window.createAndStartContainer).toBeCalledWith(podInfo.engineId, {
@@ -104,14 +104,14 @@ testComponent('button click creates and starts a pod', async () => {
 });
 
 testComponent('button click shows error message if creating pod fails', async () => {
-  vi.spyOn(window, 'createPod').mockRejectedValue(error);
+  vi.mocked(window.createPod).mockRejectedValue(error);
   await fireEvent.click(getButton());
   expect(window.showMessageBox).toBeCalledWith(errorMessage);
 });
 
 testComponent('button click shows error message if starting pod fails', async () => {
-  vi.spyOn(window, 'createPod').mockResolvedValue(podInfo);
-  vi.spyOn(window, 'createAndStartContainer').mockRejectedValue(error);
+  vi.mocked(window.createPod).mockResolvedValue(podInfo);
+  vi.mocked(window.createAndStartContainer).mockRejectedValue(error);
   await fireEvent.click(getButton());
   await vi.waitFor(() => expect(window.showMessageBox).toBeCalledWith(errorMessage));
 });

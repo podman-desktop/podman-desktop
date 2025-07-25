@@ -339,27 +339,27 @@ describe.each([
 
   test(`Expect ${label} button to be disabled if itemsAudit returns errors or enabled otherwise`, async () => {
     const callback = vi.fn();
-    let auditSpy = vi.spyOn(window as any, 'auditConnectionParameters');
+    let auditSpy = vi.mocked(window.auditConnectionParameters);
     if (!connectionInfo) {
-      auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockImplementationOnce(() => ({ records: [] }));
+      auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValueOnce({ records: [] });
     }
     auditSpy = auditSpy
-      .mockImplementationOnce(() => ({
+      .mockResolvedValueOnce({
         records: [
           {
             type: 'error',
             record: 'error message',
           },
         ],
-      }))
-      .mockImplementationOnce(() => ({
+      })
+      .mockResolvedValueOnce({
         records: [
           {
             type: 'info',
             record: 'info message',
           },
         ],
-      }));
+      });
     // eslint-disable-next-line @typescript-eslint/await-thenable
     render(PreferencesConnectionCreationOrEditRendering, {
       properties: [
@@ -396,8 +396,8 @@ describe.each([
 
 test(`Check itemsAudit receive updated values`, async () => {
   const callback = mockCallback(async () => {});
-  const auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockResolvedValue({ records: [] });
-  vi.spyOn(window as any, 'openDialog').mockResolvedValue(['somefile']);
+  const auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+  vi.mocked(window.openDialog).mockResolvedValue(['somefile']);
   // eslint-disable-next-line @typescript-eslint/await-thenable
   render(PreferencesConnectionCreationOrEditRendering, {
     properties: [
