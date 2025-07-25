@@ -19,7 +19,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PodState } from '../model/core/states';
+import { ImageState, PodState } from '../model/core/states';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteImage, deletePod } from '../utility/operations';
 import { isCI, isLinux } from '../utility/platform';
@@ -66,7 +66,7 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
   });
-  test('Verify that the deployed pod container uses the localhost image', async ({ navigationBar }) => {
+  test('Verify that the deployed pod container uses the localhost image', async ({ page, navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect.poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME)).toBe('USED');
@@ -74,5 +74,13 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
     const containersPage = await navigationBar.openContainers();
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect.poll(async () => containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
+
+    // delete applied pod, check the image now has unused state
+    await deletePod(page, POD_NAME);
+    await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
   });
 });
