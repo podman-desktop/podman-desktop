@@ -250,8 +250,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     const containersDetails = await containers.openContainersDetails(backendContainerName);
     await playExpect(containersDetails.heading).toBeVisible();
     await playExpect(containersDetails.heading).toContainText(backendContainerName);
-    const containerState = await containersDetails.getState();
-    playExpect(containerState).toContain(ContainerState.Running);
+    await playExpect.poll(async () => containersDetails.getState()).toContain(ContainerState.Running);
     await containersDetails.activateTab('Terminal');
     await playExpect(containersDetails.terminalInput).toBeVisible();
     await containersDetails.executeCommandInTerminal(`cd ${containerVolumePath}`);
