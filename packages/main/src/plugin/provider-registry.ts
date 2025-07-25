@@ -1323,6 +1323,7 @@ export class ProviderRegistry {
     };
     this._onDidUpdateContainerConnection.fire(event);
     this._onAfterDidUpdateContainerConnection.fire(event);
+    this.apiSender.send('provider-container-connection-update-status');
   }
 
   onDidUnregisterContainerConnectionCallback(
