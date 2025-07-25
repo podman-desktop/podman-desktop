@@ -297,6 +297,10 @@ test('Ensuring a progress task is created when calling kind.image.move command',
   expect(contextSetValueMock).toHaveBeenNthCalledWith(2, 'imagesPushInProgressToKind', []);
 });
 
+const mockV1Release = {
+  tag: 'v1.0.0',
+} as unknown as KindGithubReleaseArtifactMetadata;
+
 describe('cli#update', () => {
   /**
    * Utility method to get the {@link extensionApi.CliToolSelectUpdate} object registered by kind
@@ -334,19 +338,13 @@ describe('cli#update', () => {
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
 
     vi.mocked(KindInstaller.prototype.getKindCliStoragePath).mockReturnValue('storage-path');
-    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
-      tag: 'v1.0.0',
-    } as unknown as KindGithubReleaseArtifactMetadata);
-    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
-      tag: 'v1.0.0',
-    } as unknown as KindGithubReleaseArtifactMetadata);
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue(mockV1Release);
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
     const update: extensionApi.CliToolSelectUpdate = await getCliToolUpdate();
     await update?.selectVersion();
     await update.doUpdate({} as unknown as extensionApi.Logger);
 
-    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
-      tag: 'v1.0.0',
-    });
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith(mockV1Release);
     expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
 
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
@@ -355,6 +353,14 @@ describe('cli#update', () => {
       path: 'path',
       version: '1.0.0',
     });
+
+    expect(disposeMock).toHaveBeenCalled();
+  });
+
+  test('uninstall updatable version should dispose update', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
+
+    await (await getCliToolInstaller()).doUninstall({} as unknown as extensionApi.Logger);
 
     expect(disposeMock).toHaveBeenCalled();
   });
@@ -415,9 +421,7 @@ describe('cli#install', () => {
   test('after selecting the version to be installed it should download kind', async () => {
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
     // mock prompt result
-    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
-      tag: 'v1.0.0',
-    } as unknown as KindGithubReleaseArtifactMetadata);
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue(mockV1Release);
 
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
@@ -425,9 +429,7 @@ describe('cli#install', () => {
     await cliToolInstaller?.selectVersion();
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
-    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
-      tag: 'v1.0.0',
-    });
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith(mockV1Release);
     expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({
@@ -441,9 +443,7 @@ describe('cli#install', () => {
     // mock error when trying to install system wide
     vi.mocked(util.installBinaryToSystem).mockRejectedValue('error');
     // mock user select v1.0.0
-    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue({
-      tag: 'v1.0.0',
-    } as unknown as KindGithubReleaseArtifactMetadata);
+    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue(mockV1Release);
 
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
@@ -452,9 +452,7 @@ describe('cli#install', () => {
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
     // ensure the download has been called
-    expect(KindInstaller.prototype.download).toHaveBeenCalledWith({
-      tag: 'v1.0.0',
-    });
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith(mockV1Release);
     expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({

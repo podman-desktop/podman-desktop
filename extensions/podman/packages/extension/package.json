@@ -67,7 +67,8 @@
           "default": "HOST_HALF_CPU_CORES",
           "maximum": "HOST_TOTAL_CPU",
           "scope": "ContainerConnection",
-          "description": "CPU(s)"
+          "description": "CPU(s)",
+          "when": "podman.podmanMachineEditCPUSupported"
         },
         "podman.machine.cpusUsage": {
           "type": "number",
@@ -84,7 +85,8 @@
           "maximum": "HOST_TOTAL_MEMORY",
           "scope": "ContainerConnection",
           "step": 500000000,
-          "description": "Memory"
+          "description": "Memory",
+          "when": "podman.podmanMachineEditMemorySupported"
         },
         "podman.machine.memoryUsage": {
           "type": "number",
@@ -100,7 +102,8 @@
           "maximum": "HOST_TOTAL_DISKSIZE",
           "scope": "ContainerConnection",
           "step": 500000000,
-          "description": "Disk size"
+          "description": "Disk size",
+          "when": "podman.podmanMachineEditDiskSizeSupported"
         },
         "podman.machine.diskSizeUsage": {
           "type": "number",

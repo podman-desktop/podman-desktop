@@ -59,7 +59,7 @@ const style = $derived(
 </script>
 
 <Tooltip bottom tip={tooltip}>
-  <button aria-label={capitalize(action)} class="mx-2.5 my-2 {style}" onclick={clickAction} disabled={disable}>
+  <button aria-label={capitalize(action)} class="px-2.5 py-2 {style}" onclick={clickAction} disabled={disable}>
     <LoadingIcon
       icon={icon}
       loadingWidthClass="w-6"

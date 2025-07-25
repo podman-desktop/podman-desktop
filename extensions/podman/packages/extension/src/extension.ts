@@ -190,12 +190,7 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    // Only on macOS and Windows should we show the setup notification
-    // if for some reason doing getJSONMachineList fails..
-    if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
-      // push setup notification
-      extensionNotifications.notifySetupPodman();
-    }
+    extensionNotifications.notifySetupPodmanNotLinux();
     throw error;
   }
 
@@ -213,26 +208,18 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
+  if (shouldCleanMachine || machines.length === 0) {
     // push setup notification
-    extensionNotifications.notifySetupPodman();
+    extensionNotifications.notifySetupPodmanNotLinux();
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
-
-  // Only show the notification on macOS and Windows
-  // as Podman is already installed on Linux and machine is OPTIONAL.
-  if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
-    // push setup notification
-    extensionNotifications.notifySetupPodman();
-  }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
   // podman is correctly setup so if there is an old notification asking the user to take action
   // we dispose it as not needed anymore
   if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
-    extensionNotifications.notificationDisposable?.dispose();
-    extensionNotifications.shouldNotifySetup = true;
+    extensionNotifications.disposeNotification();
   }
 
   // update status of existing machines
@@ -396,13 +383,8 @@ async function doUpdateMachines(
   }
 
   // Only do the check if the provider is ready
-  if (extensionApi.env.isMac && provider.status === 'ready') {
-    // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-    // and if we should notify that we need to run podman-mac-helper, we do so.
-    await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
-
-    // Check with regards to the disguised podman socket as well
-    await extensionNotifications.checkAndNotifyDisguisedPodman();
+  if (provider.status === 'ready') {
+    await extensionNotifications.checkMacSocket();
   }
 }
 
@@ -701,15 +683,18 @@ function shouldNotifyQemuMachinesWithV5(installedPodman: InstalledPodman): boole
   return false;
 }
 
-async function monitorProvider(provider: extensionApi.Provider): Promise<void> {
+export async function monitorProvider(
+  provider: extensionApi.Provider,
+  monitorAction: (provider: extensionApi.Provider) => Promise<void>,
+): Promise<void> {
   // call us again
   if (!stopLoop) {
-    await doMonitorProvider(provider);
+    await monitorAction(provider);
+    await timeout(8000);
+    monitorProvider(provider, monitorAction).catch((error: unknown) => {
+      console.error('Error monitoring podman provider', error);
+    });
   }
-  await timeout(8000);
-  monitorProvider(provider).catch((error: unknown) => {
-    console.error('Error monitoring podman provider', error);
-  });
 }
 
 export async function doMonitorProvider(provider: extensionApi.Provider): Promise<void> {
@@ -724,7 +709,7 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
       // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
       // and the notification is handled by checking the machine
-      if (extensionApi.env.isLinux && extensionNotifications.shouldNotifySetup) {
+      if (extensionApi.env.isLinux) {
         // push setup notification
         extensionNotifications.notifySetupPodman();
       }
@@ -738,9 +723,8 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       extensionApi.context.setValue('podmanIsNotInstalled', false, 'onboarding');
       // if podman has been installed, we reset the notification flag so if podman is uninstalled in future we can show the notification again
       if (extensionApi.env.isLinux) {
-        extensionNotifications.shouldNotifySetup = true;
         // notification is no more required
-        extensionNotifications.notificationDisposable?.dispose();
+        extensionNotifications.disposeNotification();
       }
     }
   } catch (error) {
@@ -767,6 +751,15 @@ export async function registerProviderFor(
   machineInfo: MachineInfo,
   socketPath: string,
 ): Promise<void> {
+  const isHyperVMachine = extensionApi.env.isWindows && machineInfo.vmType === VMTYPE.HYPERV;
+  const isEditMemorySupported = extensionApi.env.isMac || isHyperVMachine;
+  const isEditCPUSupported = extensionApi.env.isMac || isHyperVMachine;
+  const isEditDiskSizeSupported = extensionApi.env.isMac;
+
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_CPU, isEditCPUSupported);
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_DISK_SIZE, isEditDiskSizeSupported);
+
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
       await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
@@ -780,19 +773,19 @@ export async function registerProviderFor(
       });
     },
   };
-  //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac) {
+  //support edit only on MacOS and HyperV machines as Podman WSL is nop and generates errors
+  if (isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
       for (const key of Object.keys(params)) {
-        if (key === 'podman.machine.cpus') {
+        if (isEditCPUSupported && key === 'podman.machine.cpus') {
           args.push('--cpus', params[key]);
           effective = true;
-        } else if (key === 'podman.machine.memory') {
+        } else if (isEditMemorySupported && key === 'podman.machine.memory') {
           args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
           effective = true;
-        } else if (key === 'podman.machine.diskSize') {
+        } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
           args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
           effective = true;
         }
@@ -1049,6 +1042,9 @@ export const PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY = 'podman.isLibkrunSupported'
 export const CREATE_WSL_MACHINE_OPTION_SELECTED_KEY = 'podman.isCreateWSLOptionSelected';
 export const WSL_HYPERV_ENABLED_KEY = 'podman.wslHypervEnabled';
 export const PODMAN_DOCKER_COMPAT_ENABLE_KEY = 'podman.podmanDockerCompatibilityEnabled';
+export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
+export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
+export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
 
 export function initTelemetryLogger(): void {
   telemetryLogger = extensionApi.env.createTelemetryLogger();
@@ -1270,9 +1266,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
         }
       }
 
-      extensionNotifications.shouldNotifySetup = true;
-      // notification is no more required
-      extensionNotifications.notificationDisposable?.dispose();
+      extensionNotifications.disposeNotification();
     }
 
     if (errors.length > 0) {
@@ -1383,25 +1377,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // Compatibility mode status bar item
   // only available for macOS
   if (extensionApi.env.isMac) {
-    // Get if we should never show the podman-mac-helper notification ever again
-    extensionNotifications.doNotShowMacHelperSetup = extensionNotifications.getDoNotShowMacHelperSetting();
-
     // Register the command for disabling the do not show mac helper setting permanently
-    extensionContext.subscriptions.push(
-      extensionApi.commands.registerCommand('podman.doNotShowMacHelperNotification', async () => {
-        // Set the configuration setting to true, so on reload of Podman Desktop it
-        // is consistent / will not show the notification again
-        await extensionApi.configuration
-          .getConfiguration('podman')
-          .update(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
-
-        //  Set the global variable to true
-        extensionNotifications.doNotShowMacHelperSetup = true;
-
-        // Dismiss the notification
-        extensionNotifications.podmanMacHelperNotificationDisposable?.dispose();
-      }),
-    );
+    extensionContext.subscriptions.push(extensionNotifications.setupNotificationMacPodman());
 
     // register two commands to enable and disable compatibility mode
     extensionContext.subscriptions.push(
@@ -1453,13 +1430,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // Only on macOS, and only do the check if the provider is actually ready.
-    if (extensionApi.env.isMac && provider.status === 'ready') {
-      // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
-      // extension activation so that the user isn't constantly prompted with the error message.
-      await extensionNotifications.checkAndNotifyDisguisedPodman();
-      // After pushing, let's check to see if we need to run podman-mac-helper notification at all
-      await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
+    // Do the check if the provider is actually ready.
+    if (provider.status === 'ready') {
+      await extensionNotifications.checkMacSocket();
     }
   }
 
@@ -1642,7 +1615,7 @@ export async function start(
 
   // monitor provider
   // like version, checks, warnings
-  monitorProvider(provider).catch((error: unknown) => {
+  monitorProvider(provider, doMonitorProvider).catch((error: unknown) => {
     console.error('Error while monitoring provider', error);
   });
 
@@ -2276,9 +2249,7 @@ export async function createMachine(
     sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
   }
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
-  extensionNotifications.shouldNotifySetup = true;
-  // notification is no more required
-  extensionNotifications.notificationDisposable?.dispose();
+  extensionNotifications.disposeNotification();
 }
 
 export function resetShouldNotifySetup(): void {
