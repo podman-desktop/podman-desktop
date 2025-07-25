@@ -9,6 +9,7 @@ import {
 import type { ImageCheck } from '@podman-desktop/api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
@@ -95,7 +96,7 @@ const filtered = $derived(
 
 function onProviderChecked(id: string, checked: boolean): void {
   selectedProviders.set(id, checked);
-  selectedProviders = new Map(selectedProviders);
+  selectedProviders = new SvelteMap(selectedProviders);
 }
 
 function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 'success', clicked: boolean): void {

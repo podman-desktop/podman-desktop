@@ -2,7 +2,7 @@
   "name": "podman",
   "displayName": "Podman",
   "description": "Integration for Podman and Podman Machines",
-  "version": "1.20.0-next",
+  "version": "1.21.0-next",
   "icon": "icon.png",
   "type": "module",
   "publisher": "podman-desktop",
@@ -67,7 +67,8 @@
           "default": "HOST_HALF_CPU_CORES",
           "maximum": "HOST_TOTAL_CPU",
           "scope": "ContainerConnection",
-          "description": "CPU(s)"
+          "description": "CPU(s)",
+          "when": "podman.podmanMachineEditCPUSupported"
         },
         "podman.machine.cpusUsage": {
           "type": "number",
@@ -84,7 +85,8 @@
           "maximum": "HOST_TOTAL_MEMORY",
           "scope": "ContainerConnection",
           "step": 500000000,
-          "description": "Memory"
+          "description": "Memory",
+          "when": "podman.podmanMachineEditMemorySupported"
         },
         "podman.machine.memoryUsage": {
           "type": "number",
@@ -100,7 +102,8 @@
           "maximum": "HOST_TOTAL_DISKSIZE",
           "scope": "ContainerConnection",
           "step": 500000000,
-          "description": "Disk size"
+          "description": "Disk size",
+          "when": "podman.podmanMachineEditDiskSizeSupported"
         },
         "podman.machine.diskSizeUsage": {
           "type": "number",
@@ -175,10 +178,10 @@
         },
         "podman.factory.machine.provider": {
           "type": "string",
-          "default": "default (Apple HyperVisor)",
+          "default": "default GPU enabled (LibKrun)",
           "enum": [
-            "default (Apple HyperVisor)",
-            "GPU enabled (LibKrun)"
+            "default GPU enabled (LibKrun)",
+            "Apple HyperVisor"
           ],
           "scope": "ContainerProviderConnectionFactory",
           "description": "Provider Type",
@@ -438,11 +441,11 @@
     "adm-zip": "^0.5.16",
     "hasha": "^6.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^2.10.2",
+    "msw": "^2.10.4",
     "octokit": "^5.0.3",
     "sshpk": "^1.18.0",
     "tsx": "^4.20.3",
-    "vite": "^6.3.5",
+    "vite": "^7.0.5",
     "vitest": "^3.2.4"
   }
 }

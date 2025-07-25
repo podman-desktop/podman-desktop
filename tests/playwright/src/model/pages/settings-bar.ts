@@ -67,6 +67,7 @@ export class SettingsBar {
   }
 
   public async expandPreferencesTab(): Promise<void> {
+    await playExpect(this.preferencesTab).toBeVisible({ timeout: 10_000 });
     await this.preferencesTab.click();
   }
 }

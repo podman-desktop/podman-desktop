@@ -4,6 +4,7 @@ import '@xterm/xterm/css/xterm.css';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import { ansi256Colours, colourizedANSIContainerName } from '../editor/editor-utils';
 import { isMultiplexedLog } from '../stream/stream-utils';
@@ -30,7 +31,7 @@ $: {
 
 // Create a map that will store the ANSI 256 colour for each container name
 // if we run out of colours, we'll start from the beginning.
-const colourizedContainerName = new Map<string, string>();
+const colourizedContainerName = new SvelteMap<string, string>();
 pod.containers.forEach((container, index) => {
   const colour = ansi256Colours[index % ansi256Colours.length];
   colourizedContainerName.set(container.Names, colourizedANSIContainerName(container.Names, colour));

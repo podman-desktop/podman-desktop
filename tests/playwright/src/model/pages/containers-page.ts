@@ -175,4 +175,13 @@ export class ContainersPage extends MainPage {
       return this;
     });
   }
+
+  async getContainerImage(name: string): Promise<string> {
+    const container = await this.getContainerRowByName(name);
+    const image = await container?.getByRole('cell').nth(5).textContent();
+    if (image) {
+      return image;
+    }
+    return '';
+  }
 }

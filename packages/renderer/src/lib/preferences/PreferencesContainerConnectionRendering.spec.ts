@@ -322,15 +322,9 @@ test('Expect startContainerProvider to only be called once when restarting', asy
   providerInfo.containerConnections[0].status = 'stopped';
   providerInfos.set([providerInfo]);
 
-  // wait a bit
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
   // update provider connection status - simulate it is started again
   providerInfo.containerConnections[0].status = 'started';
   providerInfos.set([providerInfo]);
-
-  // wait a bit
-  await new Promise(resolve => setTimeout(resolve, 1000));
 
   expect(startConnectionMock).toBeCalledTimes(1);
 });

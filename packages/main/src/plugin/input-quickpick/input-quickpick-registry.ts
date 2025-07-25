@@ -25,7 +25,6 @@ import type {
 import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '../api.js';
-import { Deferred } from '../util/deferred.js';
 
 @injectable()
 export class InputQuickPickRegistry {
@@ -33,7 +32,7 @@ export class InputQuickPickRegistry {
 
   private callbacksInputBox = new Map<
     number,
-    { deferred: Deferred<string | undefined>; options?: InputBoxOptions; token?: CancellationToken }
+    { deferred: PromiseWithResolvers<string | undefined>; options?: InputBoxOptions; token?: CancellationToken }
   >();
 
   private callbacksQuickPicks = new Map<
@@ -41,7 +40,7 @@ export class InputQuickPickRegistry {
     {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       items: readonly any[];
-      deferred: Deferred<string[] | string | undefined>;
+      deferred: PromiseWithResolvers<string[] | string | undefined>;
       options?: QuickPickOptions;
       token?: CancellationToken;
     }
@@ -54,7 +53,7 @@ export class InputQuickPickRegistry {
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = new Deferred<string | undefined>();
+    const deferred = Promise.withResolvers<string | undefined>();
 
     // store the callback that will resolve the promise
     this.callbacksInputBox.set(this.callbackId, { deferred, options, token });
@@ -181,7 +180,7 @@ export class InputQuickPickRegistry {
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = new Deferred<string | string[] | undefined>();
+    const deferred = Promise.withResolvers<string | string[] | undefined>();
 
     // check if the items are a promise
     if (items instanceof Promise) {

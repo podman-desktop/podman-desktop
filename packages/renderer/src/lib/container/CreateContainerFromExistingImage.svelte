@@ -3,6 +3,7 @@ import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
@@ -51,7 +52,7 @@ let providerConnections = $derived(
 
 let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = $state();
 
-const lineNumberPerId = new Map<string, number>();
+const lineNumberPerId = new SvelteMap<string, number>();
 let lineIndex = 0;
 
 async function resolveShortname(): Promise<void> {

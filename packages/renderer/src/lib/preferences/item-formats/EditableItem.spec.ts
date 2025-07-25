@@ -167,9 +167,6 @@ test('Expect onSave function called if save button is clicked', async () => {
   await userEvent.clear(input);
   await userEvent.keyboard('20');
 
-  // wait setTimeout in NumberItem expires and push call
-  await new Promise(resolve => setTimeout(resolve, 600));
-
   const buttonCancel = await screen.findByRole('button', { name: 'Cancel' });
   expect(buttonCancel).toBeInTheDocument();
 

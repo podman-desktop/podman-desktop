@@ -33,7 +33,7 @@ jobs:
   windows:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Windows
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
   darwin:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macOS
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,7 +173,7 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
     name: build website
     runs-on: ubuntu-24.04
     steps:
@@ -276,7 +276,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-15]
+        os: [windows-2025, ubuntu-24.04, macos-15]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -292,7 +292,14 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+        # run the unit tests with coverage on ubuntu
+      - name: Run unit tests with coverage
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        run: pnpm test:unit:coverage
+
+        # do not run coverage on non-ubuntu os
       - name: Run unit tests
+        if: ${{ matrix.os!='ubuntu-24.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
@@ -319,12 +326,12 @@ jobs:
           echo "Add unstable kubic repo into list of available sources and get the repo key"
           sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
           curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "Updating all dependencies..."
+          sudo apt-get update -qq
           echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
           sudo apt-get install --allow-unauthenticated -qq libprotobuf32t64 python3-protobuf libnet1
           echo "install criu manually from static location"
-          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          echo "Updating all dependencies..."
-          sudo apt-get update --allow-insecure-repositories -qq
+          curl -sLO http://archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
           echo "installing/update podman package..."
           sudo apt-get -qq -y install --allow-unauthenticated podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
             sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
@@ -378,7 +385,7 @@ jobs:
           pnpm test:e2e:smoke
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -425,7 +432,7 @@ jobs:
     name: win update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -464,7 +471,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -487,7 +494,7 @@ jobs:
     name: mac update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
@@ -540,7 +547,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true

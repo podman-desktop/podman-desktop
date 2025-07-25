@@ -26,7 +26,6 @@ import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/co
 import { mainWindowDeferred } from './index.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
-import { Deferred } from './plugin/util/deferred.js';
 import * as util from './util.js';
 
 const consoleLogMock = vi.fn();
@@ -177,7 +176,7 @@ beforeEach(() => {
   });
 
   vi.mocked(app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
-  const newDefer = new Deferred<BrowserWindow>();
+  const newDefer = Promise.withResolvers<BrowserWindow>();
   if (mainWindowDeferred.promise !== undefined) {
     mainWindowDeferred.resolve = newDefer.resolve;
     mainWindowDeferred.promise = newDefer.promise;

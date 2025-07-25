@@ -65,6 +65,8 @@ jobs:
   e2e-tests:
     name: Run All E2E tests
     runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
@@ -92,12 +94,12 @@ jobs:
           echo "Add unstable kubic repo into list of available sources and get the repo key"
           sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
           curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "Updating all dependencies..."
+          sudo apt-get update -qq
           echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
           sudo apt-get install -qq libprotobuf32t64 python3-protobuf libnet1
           echo "install criu manually from static location"
-          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          echo "Updating all dependencies..."
-          sudo apt-get update -qq
+          curl -sLO http://archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
           echo "installing/update podman package..."
           sudo apt-get -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
             sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
@@ -154,7 +156,7 @@ jobs:
           pnpm ${{ env.NPM_TARGET }}
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -174,7 +176,9 @@ jobs:
 
   win-update-e2e-test:
     name: win update e2e tests - ${{ matrix.installation }}
-    runs-on: windows-2022
+    runs-on: windows-2025
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     env:
@@ -233,7 +237,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -253,7 +257,9 @@ jobs:
 
   mac-update-e2e-test:
     name: mac update e2e tests
-    runs-on: macos-latest
+    runs-on: macos-15
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
@@ -313,7 +319,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true

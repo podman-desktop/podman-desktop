@@ -79,7 +79,7 @@ const imageInfo = {
   RepoTags: [helloImage],
 } as ImageInfo;
 const podInfo = { engineId: imageInfo.engineId, Id: 'Id' };
-const podCreateCommand = `podman run -dt --pod new:myFirstPod ${helloImage}`;
+const podCreateCommand = `podman run -dt --pod new:my-first-pod ${helloImage}`;
 
 function testComponent(name: string, fn: () => Promise<unknown>): void {
   test(name, () => {
@@ -96,10 +96,10 @@ testComponent('renders button to run first pod', async () => {
 testComponent('button click creates and starts a pod', async () => {
   vi.spyOn(window, 'createPod').mockResolvedValue(podInfo);
   await fireEvent.click(getButton());
-  expect(window.createPod).toBeCalledWith({ name: 'myFirstPod' });
+  expect(window.createPod).toBeCalledWith({ name: 'my-first-pod' });
   expect(window.createAndStartContainer).toBeCalledWith(podInfo.engineId, {
     Image: helloImage,
-    pod: 'myFirstPod',
+    pod: 'my-first-pod',
   });
 });
 

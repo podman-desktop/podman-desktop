@@ -17,7 +17,7 @@
  ***********************************************************************/
 import { app, ipcMain, Menu, Tray } from 'electron';
 
-import { createNewWindow, restoreWindow } from '/@/mainWindow.js';
+import { restoreWindow } from '/@/mainWindow.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { Event } from '/@api/event.js';
 
@@ -87,38 +87,6 @@ app.on('will-finish-launching', () => {
 
 app.whenReady().then(
   async () => {
-    // We must create the window first before initialization so that we can load the
-    // configuration as well as plugins
-    // The window is hiddenly created and shown when ready
-
-    // Platforms: Linux, macOS, Windows
-    // Create the main window
-    createNewWindow()
-      .then(w => podmanDesktopMain.mainWindowDeferred.resolve(w))
-      .catch((error: unknown) => {
-        console.error('Error creating window', error);
-      });
-
-    // Platforms: macOS
-    // Required for macOS to start the app correctly (this is will be shown in the dock)
-    // We use 'activate' within whenReady in order to gracefully start on macOS, see this link:
-    // https://www.electronjs.org/docs/latest/tutorial/quick-start#open-a-window-if-none-are-open-macos
-    app.on('activate', (_event, hasVisibleWindows) => {
-      createNewWindow()
-        .then(w => podmanDesktopMain.mainWindowDeferred.resolve(w))
-        .catch((error: unknown) => {
-          console.log('Error creating window', error);
-        });
-
-      // try to restore the window if it's not visible
-      // for example user click on the dock icon
-      if (isMac() && !hasVisibleWindows) {
-        restoreWindow().catch((error: unknown) => {
-          console.error('Error restoring window', error);
-        });
-      }
-    });
-
     // Setup the default tray icon + menu items
     const animatedTray = new AnimatedTray();
     tray = new Tray(animatedTray.getDefaultImage());

@@ -3,6 +3,9 @@
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "/@api/*": ["../packages/api/src/*"]
+    }
   }
 }

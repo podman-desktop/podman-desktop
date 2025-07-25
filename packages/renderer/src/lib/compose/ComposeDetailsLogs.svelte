@@ -4,6 +4,7 @@ import '@xterm/xterm/css/xterm.css';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import { ansi256Colours, colourizedANSIContainerName } from '../editor/editor-utils';
 import { isMultiplexedLog } from '../stream/stream-utils';
@@ -29,7 +30,7 @@ $: {
 
 // Create a map that will store the ANSI 256 colour for each container name
 // if we run out of colours, we'll start from the beginning.
-const colourizedContainerName = new Map<string, string>();
+const colourizedContainerName = new SvelteMap<string, string>();
 
 // Callback for logs which will output the logs to the terminal
 function callback(name: string, data: string): void {

@@ -16,6 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import fs from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'node:path';
+
 import type { Locator } from '@playwright/test';
 
 import { extensionsExternalList, podmanExtension } from '/@/model/core/extensions';
@@ -24,7 +28,7 @@ import { ExtensionCardPage, ExtensionCatalogCardPage } from '../..';
 import type { StatusBar } from '../../model/workbench/status-bar';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
-import { isLinux, isMac } from '../../utility/platform';
+import { isLinux, isMac, isWindows } from '../../utility/platform';
 
 const installExtensions = process.env.INSTALLATION_TYPE === 'custom-extensions' ? true : false;
 const activeExtensionStatus = 'ACTIVE';
@@ -138,5 +142,42 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     // some buttons
     await handleConfirmationDialog(page, 'Update Downloaded', false, 'Restart', 'Cancel');
     await playExpect(updateDownloadedDialog).not.toBeVisible();
+  });
+
+  // Running the test to make sure we download correct architecture of the installer file
+  // setup.exe should contain both installers (for x64 and arm64) so that option is always valid
+  // or depending on what process.arch returns
+  test(`Correct installer file is downloaded for ${process.arch} architecture during update`, async () => {
+    test.skip(isLinux, 'This test runs only on Windows and Mac platform');
+    const fileFormatRegexp = isWindows ? 'exe' : 'zip|dmg';
+    const generalInstallerPattern = isWindows ? 'setup' : 'universal';
+    // get installer path - windows should be on %LocalAppData%/podman-desktop-updater/pending/
+    const cacheDir = isWindows
+      ? (process.env['LOCALAPPDATA'] ?? path.join(homedir(), 'AppData', 'Local'))
+      : path.join(homedir(), 'Library', 'Caches');
+    const installerPath = path.join(cacheDir, 'podman-desktop-updater', 'pending');
+    playExpect(
+      fs.existsSync(installerPath),
+      `Directory with installer files (${installerPath}) does not exist`,
+    ).toBeTruthy();
+    const files = await fs.promises.readdir(installerPath);
+    const findFiles = files.filter(file => new RegExp(`^podman-desktop.*\\.(${fileFormatRegexp})$`).exec(file));
+    playExpect(
+      findFiles.length,
+      `No files with ${fileFormatRegexp} were found during update on ${installerPath}`,
+    ).toBeGreaterThanOrEqual(1);
+    playExpect(findFiles.length, `More than one installer files were found: ${findFiles.join()}`).toEqual(1);
+    // on windows it is valid to get general setup.exe or setup-$arch.exe file
+    if (process.arch === 'x64') {
+      playExpect(findFiles[0]).toMatch(
+        new RegExp(`podman-desktop.*-(x64|${generalInstallerPattern}).${fileFormatRegexp}`),
+      );
+    } else if (process.arch === 'arm64') {
+      playExpect(findFiles[0]).toMatch(
+        new RegExp(`podman-desktop.*-(arm64|${generalInstallerPattern}).${fileFormatRegexp}`),
+      );
+    } else {
+      throw new Error(`Unsupported architecture: ${process.arch}`);
+    }
   });
 });

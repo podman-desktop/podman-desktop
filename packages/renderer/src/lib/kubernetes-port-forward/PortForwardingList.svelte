@@ -18,21 +18,25 @@ const columns = [
   new TableColumn<ForwardConfig>('Name', {
     align: 'left',
     renderer: PodNameColumn,
+    comparator: (a, b): number => a.name.localeCompare(b.name),
   }),
   new TableColumn<ForwardConfig, string>('Type', {
     align: 'left',
     renderer: TableSimpleColumn,
     renderMapping: (config): WorkloadKind => config.kind,
+    comparator: (a, b): number => a.kind.localeCompare(b.kind),
   }),
   new TableColumn<ForwardConfig, string>('Local Port', {
     align: 'left',
     renderer: TableSimpleColumn,
     renderMapping: (config): string => String(config.forward.localPort),
+    comparator: (a, b): number => a.forward.localPort - b.forward.localPort,
   }),
   new TableColumn<ForwardConfig, string>('Remote Port', {
     align: 'left',
     renderer: TableSimpleColumn,
     renderMapping: (config): string => String(config.forward.remotePort),
+    comparator: (a, b): number => a.forward.remotePort - b.forward.remotePort,
   }),
   new TableColumn<ForwardConfig>('Actions', {
     align: 'right',

@@ -21,8 +21,9 @@ import type { BrowserWindow } from 'electron';
 import { dialog } from 'electron';
 import { inject, injectable } from 'inversify';
 
+import { isMac } from '/@/util.js';
+
 import { Uri } from './types/uri.js';
-import { Deferred } from './util/deferred.js';
 
 /**
  * Handle native open and save dialogs
@@ -31,9 +32,11 @@ import { Deferred } from './util/deferred.js';
 export class DialogRegistry {
   #browserWindow: BrowserWindow | undefined;
 
-  #mainWindowDeferred: Deferred<BrowserWindow>;
+  #mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 
-  constructor(@inject(Deferred<BrowserWindow>) readonly mainWindowDeferred: Deferred<BrowserWindow>) {
+  constructor(
+    @inject(Promise.withResolvers<BrowserWindow>) readonly mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
+  ) {
     this.#mainWindowDeferred = mainWindowDeferred;
   }
 
@@ -69,7 +72,7 @@ export class DialogRegistry {
     // convert options into electron dialog options
     const electronOpenDialogOptions: Electron.OpenDialogOptions = {
       filters: options?.filters,
-      properties: selectors,
+      properties: isMac() ? [...selectors, 'noResolveAliases'] : selectors,
       defaultPath,
       title: options?.title,
       message: options?.title,

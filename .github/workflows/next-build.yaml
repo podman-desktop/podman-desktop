@@ -35,6 +35,8 @@ jobs:
   tag:
     name: Tagging
     runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
     outputs:
       githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
       desktopVersion: ${{ steps.TAG_UTIL.outputs.desktopVersion}}
@@ -93,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-14]
+        os: [windows-2025, ubuntu-24.04, macos-15]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

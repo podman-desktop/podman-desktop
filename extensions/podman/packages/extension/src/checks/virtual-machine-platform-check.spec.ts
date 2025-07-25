@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { process } from '@podman-desktop/api';
+import { process, type TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { VirtualMachinePlatformCheck } from './virtual-machine-platform-check';
@@ -26,6 +26,8 @@ vi.mock('@podman-desktop/api', () => ({
     exec: vi.fn(),
   },
 }));
+
+const mockTelemetryLogger = {} as TelemetryLogger;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -40,7 +42,7 @@ test('expect winVirtualMachine preflight check return successful result if the v
     }),
   );
 
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
+  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
   expect(process.exec).toBeCalledWith(expect.anything(), expect.arrayContaining([expect.anything()]), {
     encoding: 'utf16le',
@@ -57,7 +59,7 @@ test('expect winVirtualMachine preflight check return successful result if the v
     }),
   );
 
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
+  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
   expect(result.description).equal('Virtual Machine Platform should be enabled to be able to run Podman.');
   expect(result.docLinksDescription).equal('Learn about how to enable the Virtual Machine Platform feature:');
@@ -72,7 +74,7 @@ test('expect winVirtualMachine preflight check return successful result if there
     throw new Error();
   });
 
-  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck();
+  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
   expect(result.description).equal('Virtual Machine Platform should be enabled to be able to run Podman.');
   expect(result.docLinksDescription).equal('Learn about how to enable the Virtual Machine Platform feature:');

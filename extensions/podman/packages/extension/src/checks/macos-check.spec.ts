@@ -18,10 +18,11 @@
 
 import * as os from 'node:os';
 
+import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { MacVersionCheck, MINIMUM_VERSION } from './macos-checks';
+import { MacKrunkitPodmanMachineCreationCheck, MacVersionCheck, MINIMUM_VERSION } from './macos-checks';
 
 let macVersionCheck: MacVersionCheck;
 
@@ -29,6 +30,14 @@ vi.mock('node:os', () => {
   return {
     release: vi.fn(),
     platform: vi.fn(),
+  };
+});
+
+vi.mock('@podman-desktop/api', async () => {
+  return {
+    process: {
+      exec: vi.fn(),
+    },
   };
 });
 
@@ -60,4 +69,40 @@ test('expect success on a recent macOS version', async () => {
   const result = await macVersionCheck.execute();
   expect(result).toBeDefined();
   expect(result.successful).toBeTruthy();
+});
+
+describe('Krunkit', () => {
+  test('Krunkit is installed by brew', async () => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() =>
+      Promise.resolve({ exitCode: 0, stdout: 'hello-world' } as extensionApi.RunError),
+    );
+
+    const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
+    const result = await krunkitCheck.execute();
+    expect(result).toBeDefined();
+    expect(result.successful).toBeTruthy();
+  });
+
+  test('Krunkit is installed by Podman installer', async () => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() => Promise.reject(new Error('Brew is not installed')));
+
+    const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
+    const result = await krunkitCheck.execute();
+    expect(result).toBeDefined();
+    expect(result.successful).toBeTruthy();
+  });
+
+  test('Krunkit is not installed', async () => {
+    vi.mocked(extensionApi.process.exec).mockImplementation(() =>
+      Promise.resolve({ exitCode: 1, stderr: 'error-world' } as extensionApi.RunError),
+    );
+
+    vi.mocked(extensionApi.process.exec).mockImplementationOnce(() =>
+      Promise.resolve({ exitCode: 0, stdout: 'hello-world' } as extensionApi.RunError),
+    );
+    const krunkitCheck = new MacKrunkitPodmanMachineCreationCheck();
+    const result = await krunkitCheck.execute();
+    expect(result).toBeDefined();
+    expect(result.successful).toBeFalsy();
+  });
 });

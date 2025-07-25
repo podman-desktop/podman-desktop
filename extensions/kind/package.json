@@ -2,7 +2,7 @@
   "name": "kind",
   "displayName": "Kind",
   "description": "Integration for Kind: run local Kubernetes clusters using container “nodes”",
-  "version": "1.20.0-next",
+  "version": "1.21.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -120,7 +120,7 @@
     "mkdirp": "^3.0.1",
     "tmp-promise": "^3.0.3",
     "tsx": "^4.20.3",
-    "vite": "^6.3.5",
+    "vite": "^7.0.5",
     "vitest": "^3.2.4"
   },
   "patchedDependencies": {

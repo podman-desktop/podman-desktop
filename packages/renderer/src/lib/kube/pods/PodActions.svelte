@@ -2,6 +2,7 @@
 import { faArrowsRotate, faExternalLinkSquareAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
@@ -13,7 +14,7 @@ export let pod: PodUI;
 export let dropdownMenu = false;
 export let detailed = false;
 
-let openingKubernetesUrls = new Map();
+let openingKubernetesUrls = new SvelteMap<string, string>();
 
 onMount(async () => {
   const ns = await window.kubernetesGetCurrentNamespace();

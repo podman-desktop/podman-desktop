@@ -54,12 +54,12 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 test.afterAll(async ({ runner, page }) => {
   test.setTimeout(120_000);
 
-  if (test.info().status === 'failed') {
-    await resetPodmanMachinesFromCLI();
-    await createPodmanMachineFromCLI();
-  }
-
   try {
+    if (test.info().status === 'failed') {
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+    }
+
     await handleConfirmationDialog(page, 'Podman', true, 'Yes');
     await handleConfirmationDialog(page, 'Podman', true, 'OK');
   } catch (error) {

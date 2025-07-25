@@ -92,18 +92,19 @@ Make sure you have:
 Perform this task only if you want to experiment with the model before using it to start your AI application.
 
 1. Click **AI Lab** in the left navigation pane.
-2. In the Playgrounds section, click **New Playground**.
+1. In the Playgrounds section, click **New Playground**.
    ![create a new playground](img/new-playground.png)
 
-3. Optional: Enter the name of the playground.
-4. Select a model from the dropdown list.
-5. Click **Create playground**.
+1. Optional: Enter the name of the playground.
+1. Select an inference runtime for the playground.
+1. Select a model from the dropdown list.
+1. Click **Create playground**.
    ![create playground button](img/create-a-playground.png)
 
-6. View the newly created playground on the same page.
+1. View the newly created playground on the same page.
    ![newly created playground](img/newly-created-playground.png)
 
-7. Click the name of the playground to edit the model settings for experiment:
+1. Click the name of the playground to edit the model settings for experiment:
    1. Edit the value of the model parameters.
       ![editing model parameters](img/editing-model-parameters.png)
 
