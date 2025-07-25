@@ -29,7 +29,7 @@ export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetad
     name: 'docusaurus-plugin-github-metadata',
 
     async loadContent(): Promise<GitHubMetadata> {
-      return githubService.getLatestReleaseMetadata();
+      return githubService.getMetadata();
     },
 
     async contentLoaded({ content, actions }): Promise<void> {

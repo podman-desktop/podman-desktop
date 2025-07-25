@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 export interface GitHubMetadata {
+  stargazersCount: number;
   latestRelease: {
     version: string;
     linux: {

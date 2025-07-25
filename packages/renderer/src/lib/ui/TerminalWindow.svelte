@@ -86,6 +86,7 @@ onDestroy(() => {
 </script>
 
 {#if search && terminal}
-  <TerminalSearchControls terminal={terminal} />
+  <TerminalSearchControls {terminal} />
 {/if}
-<div class="{className} p-[5px] pr-0 bg-[var(--pd-terminal-background)]" role="term" bind:this={logsXtermDiv}></div>
+
+<div class="{className} overflow-hidden p-[5px] pr-0 bg-[var(--pd-terminal-background)]" role="term" bind:this={logsXtermDiv}></div>

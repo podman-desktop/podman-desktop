@@ -234,11 +234,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   // Push the CLI tool as well (but it will do it postActivation so it does not block the activate() function)
   // Post activation
-  setTimeout(() => {
-    registerCLITool(composeDownload, detect, extensionContext).catch((error: unknown) => {
-      console.error('Error activating extension', error);
-    });
-  }, 0);
+  registerCLITool(composeDownload, detect, extensionContext).catch((error: unknown) => {
+    console.error('Error activating extension', error);
+  });
 }
 
 // Activate the CLI tool (check version, etc) and register the CLi so it does not block activation.
