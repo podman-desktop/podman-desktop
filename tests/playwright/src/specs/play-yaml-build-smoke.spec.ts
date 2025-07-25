@@ -75,12 +75,15 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
     await playExpect(containersPage.heading).toBeVisible();
     await playExpect.poll(async () => containersPage.getContainerImage(CONTAINER_NAME)).toBe(CONTAINER_IMAGE);
 
-    // delete applied pod, check the image now has unused state
+    // delete applied pod, check the images now have unused state
     await deletePod(page, POD_NAME);
     await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
       .toEqual(ImageState.Unused);
   });
 });
