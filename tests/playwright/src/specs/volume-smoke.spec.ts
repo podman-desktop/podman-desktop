@@ -248,7 +248,6 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     //access the container's terminal and create a file inside the volume's path to confirm that it is mounted and has write permissions
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(backendContainerName);
-    await playExpect(containersDetails.heading).toBeVisible();
     await playExpect(containersDetails.heading).toContainText(backendContainerName);
     await playExpect.poll(async () => containersDetails.getState()).toContain(ContainerState.Running);
     await containersDetails.activateTab('Terminal');
