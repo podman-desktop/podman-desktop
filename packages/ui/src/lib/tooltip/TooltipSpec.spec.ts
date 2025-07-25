@@ -50,7 +50,7 @@ test('Expect basic prop styling', async () => {
 });
 
 test('Expect class styling to apply to tip slot div', async () => {
-  render(TooltipSpec, { classStyle: 'my-[5px] mx-[10px]' });
+  render(TooltipSpec, { tipProp: tip, classStyle: 'my-[5px] mx-[10px]' });
 
   const slotElement = screen.getByLabelText('tooltip');
   expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
