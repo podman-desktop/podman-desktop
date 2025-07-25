@@ -200,7 +200,7 @@
     "express": "^4.21.2",
     "getos": "^3.2.1",
     "got": "^14.4.2",
-    "hosted-git-info": "^8.1.0",
+    "hosted-git-info": "^9.0.0",
     "hpagent": "^1.2.0",
     "minimist": "^1.2.8",
     "moment": "^2.30.1",
