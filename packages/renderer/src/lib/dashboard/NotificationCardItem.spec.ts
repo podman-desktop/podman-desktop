@@ -17,6 +17,7 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import { faCircleExclamation, faCircleInfo, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -55,4 +56,70 @@ test('Expect notification card to show notification title, description and close
   await fireEvent.click(deleteButton);
 
   expect(removeNotificationMock).toBeCalled();
+});
+
+test('Test info notification style and icon', () => {
+  const notification: NotificationCard = {
+    id: 1,
+    extensionId: 'extension',
+    title: 'Info notification title',
+    body: 'Info notification description',
+    type: 'info',
+  };
+  const { getAllByRole } = render(NotificationCardItem, {
+    notification,
+  });
+  const icon = getAllByRole('img', { hidden: true })[0];
+  // check icon shape
+  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const faIconPath = faCircleInfo.icon[4]; // index 4 is the actual path as per FA IconDefinition
+  expect(pdIconPath).toBe(faIconPath);
+  // check icon color
+  expect(icon).toHaveClass('text-[var(--pd-state-info)]');
+  // check region top border
+  expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-info)]');
+});
+
+test('Test warning notification style and icon', () => {
+  const notification: NotificationCard = {
+    id: 1,
+    extensionId: 'extension',
+    title: 'Warning notification title',
+    body: 'Warning notification description',
+    type: 'warn',
+  };
+  const { getAllByRole } = render(NotificationCardItem, {
+    notification,
+  });
+  const icon = getAllByRole('img', { hidden: true })[0];
+  // check icon shape
+  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const faIconPath = faExclamationTriangle.icon[4]; // index 4 is the actual path as per FA IconDefinition
+  expect(pdIconPath).toBe(faIconPath);
+  // check icon color
+  expect(icon).toHaveClass('text-[var(--pd-state-warning)]');
+  // check region top border
+  expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-warning)]');
+});
+
+test('Test error notification style and icon', () => {
+  const notification: NotificationCard = {
+    id: 1,
+    extensionId: 'extension',
+    title: 'Error notification title',
+    body: 'Error notification description',
+    type: 'error',
+  };
+  const { getAllByRole } = render(NotificationCardItem, {
+    notification,
+  });
+  const icon = getAllByRole('img', { hidden: true })[0];
+  // check icon shape
+  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const faIconPath = faCircleExclamation.icon[4]; // index 4 is the actual path as per FA IconDefinition
+  expect(pdIconPath).toBe(faIconPath);
+  // check icon color
+  expect(icon).toHaveClass('text-[var(--pd-state-error)]');
+  // check region top border
+  expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-error)]');
 });
