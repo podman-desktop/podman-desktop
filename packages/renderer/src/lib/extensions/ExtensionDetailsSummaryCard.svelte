@@ -2,7 +2,11 @@
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import ExtensionDetailsSummaryCardEntry from './InstalledExtensionDetailsSummaryCardEntry.svelte';
 
-export let extensionDetails: ExtensionDetailsUI;
+interface Props {
+  extensionDetails: ExtensionDetailsUI;
+}
+
+let { extensionDetails }: Props = $props();
 </script>
 
 <div class="order-first lg:order-last w-full lg:w-48 flex flex-row grow justify-end pb-4 lg:pb-0">
