@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getPodmanCli } from './podman-cli';
+import * as podmanCli from './podman-cli';
 import {
   APPLEHV_LABEL,
   execPodman,
+  getMultiplePodmanInstallationsMacosWarnings,
   getProviderByLabel,
   getProviderLabel,
   LIBKRUN_LABEL,
@@ -97,7 +98,7 @@ test('expect exec called with CONTAINERS_MACHINE_PROVIDER if a provider is defin
     },
   });
 
-  expect(execMock).toBeCalledWith(getPodmanCli(), ['machine', 'inspect'], {
+  expect(execMock).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect'], {
     env: {
       label: 'one',
       CONTAINERS_MACHINE_PROVIDER: 'libkrun',
@@ -116,7 +117,7 @@ test('expect exec called without CONTAINERS_MACHINE_PROVIDER if a provider is NO
     },
   });
 
-  expect(execMock).toBeCalledWith(getPodmanCli(), ['machine', 'inspect'], {
+  expect(execMock).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect'], {
     env: {
       label: 'one',
     },
@@ -151,4 +152,58 @@ test('expect applehv provider with applehv label', async () => {
 test('expect wsl name with provider wsl label', async () => {
   const provider = getProviderByLabel(VMTYPE.WSL);
   expect(provider).equals(VMTYPE.WSL);
+});
+
+describe('Check multiple Podman installations in macOS', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    // Setup macOS environment
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+    vi.spyOn(podmanCli, 'isMultiplePodmanInstalledinMacos').mockResolvedValue(false);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  test('should return empty warnings when not on macOS', async () => {
+    // Setup non-macOS environment
+    vi.mocked(extensionApi.env).isMac = false;
+    vi.mocked(extensionApi.env).isWindows = true;
+
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+
+    expect(podmanCli.isMultiplePodmanInstalledinMacos).not.toHaveBeenCalled();
+  });
+
+  test('should return empty warnings when no multiple installations detected', async () => {
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+  });
+
+  test('should return warning when Homebrew + .dmg detected', async () => {
+    vi.mocked(podmanCli.isMultiplePodmanInstalledinMacos).mockResolvedValue(true);
+
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([
+      {
+        name: 'Multiple Podman installations detected',
+        details:
+          'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+      },
+    ]);
+  });
+
+  test('should log error and return empty warnings when isMultiplePodmanInstalledinMacos throws', async () => {
+    const mockError = new Error('Failed to check installations');
+    vi.mocked(podmanCli.isMultiplePodmanInstalledinMacos).mockRejectedValue(mockError);
+
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+    expect(console.error).toHaveBeenCalledWith('Error checking for multiple Podman installations', mockError);
+  });
 });

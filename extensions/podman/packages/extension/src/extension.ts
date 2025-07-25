@@ -55,6 +55,7 @@ import {
   appHomeDir,
   execPodman,
   getAssetsFolder,
+  getMultiplePodmanInstallationsMacosWarnings,
   getProviderByLabel,
   getProviderLabel,
   LoggerDelegator,
@@ -701,6 +702,10 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
   try {
     const installedPodman = await getPodmanInstallation();
     provider.updateDetectionChecks(getDetectionChecks(installedPodman));
+
+    // get warnings for multiple Podman installations in macOS
+    const warnings = await getMultiplePodmanInstallationsMacosWarnings(installedPodman);
+    provider.updateWarnings(warnings);
 
     // update version
     if (!installedPodman) {
