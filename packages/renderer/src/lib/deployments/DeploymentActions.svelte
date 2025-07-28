@@ -6,8 +6,12 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 
-export let deployment: DeploymentUI;
-export let detailed = false;
+interface Props {
+  deployment: DeploymentUI;
+  detailed?: boolean;
+}
+
+let { deployment, detailed = false }: Props = $props();
 
 async function deleteDeployment(): Promise<void> {
   deployment.status = 'DELETING';
