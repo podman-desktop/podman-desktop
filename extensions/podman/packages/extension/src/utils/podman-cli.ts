@@ -15,26 +15,58 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { existsSync } from 'node:fs';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { PODMAN_INSTALLATION_PATHS } from '../constants';
-
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
+
+/**
+ * Finds all installations of podman in the system PATH (Windows, macOS, Linux)
+ * @returns Array of unique podman installation paths found
+ */
+async function findPodmanInstallations(): Promise<string[]> {
+  try {
+    if (extensionApi.env.isWindows) {
+      // Windows: Use 'where podman' command
+      const result = await extensionApi.process.exec('where', ['podman']);
+      const lines = result.stdout
+        .trim()
+        .split('\n')
+        .filter(line => line.trim().length > 0);
+      // Windows 'where' output format: direct paths
+      return lines.map(line => line.trim()).filter(path => path.length > 0);
+    }
+    // Unix/macOS: Use 'type -a podman' command
+    const result = await extensionApi.process.exec('sh', ['-c', 'type -a podman']);
+    const lines = result.stdout
+      .trim()
+      .split('\n')
+      .filter(line => line.trim().length > 0);
+
+    // Extract paths and deduplicate
+    const uniquePaths = new Set(
+      lines.map(line => line.replace(/^podman is\s+/, '').trim()).filter(path => path.length > 0),
+    );
+    return Array.from(uniquePaths);
+  } catch (error) {
+    console.warn('Failed to detect podman installations:', error);
+    return [];
+  }
+}
 
 export function getInstallationPath(): string | undefined {
   const env = process.env;
   if (extensionApi.env.isWindows) {
     return `c:\\Program Files\\RedHat\\Podman;${env.PATH}`;
-  }
-  if (extensionApi.env.isMac) {
+  } else if (extensionApi.env.isMac) {
     if (!env.PATH) {
       return macosExtraPath;
+    } else {
+      return env.PATH.concat(':').concat(macosExtraPath);
     }
-    return env.PATH.concat(':').concat(macosExtraPath);
+  } else {
+    return env.PATH;
   }
-  return env.PATH;
 }
 
 export function getPodmanCli(): string {
@@ -72,19 +104,13 @@ export async function getPodmanInstallation(): Promise<InstalledPodman | undefin
   }
 }
 
-// Checks if there are more than one version of podman installed in macos
-export async function isMultiplePodmanInstalledinMacos(): Promise<boolean> {
+// Checks if there are more than one version of podman installed (Windows, macOS, Linux)
+export async function isMultiplePodmanInstalled(): Promise<boolean> {
   // Checks if custom binary path is set. If so, we don't need to check for multiple installations.
   if (getCustomBinaryPath()) {
     return false;
   }
-  // Check if Podman is installed via Homebrew
-  try {
-    await extensionApi.process.exec('brew', ['list', '--verbose', 'podman'], {
-      env: { HOMEBREW_NO_AUTO_UPDATE: '1', HOMEBREW_NO_ANALYTICS: '1' },
-    });
-  } catch {
-    return false;
-  }
-  return PODMAN_INSTALLATION_PATHS.some(path => existsSync(path));
+  const installations = await findPodmanInstallations();
+  // If there are 2 or more unique installations, return true
+  return installations.length > 1;
 }

@@ -23,7 +23,7 @@ import * as podmanCli from './podman-cli';
 import {
   APPLEHV_LABEL,
   execPodman,
-  getMultiplePodmanInstallationsMacosWarnings,
+  getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
   LIBKRUN_LABEL,
@@ -154,56 +154,38 @@ test('expect wsl name with provider wsl label', async () => {
   expect(provider).equals(VMTYPE.WSL);
 });
 
-describe('Check multiple Podman installations in macOS', () => {
+describe('Check multiple Podman installations', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    // Setup macOS environment
-    vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = false;
-    vi.spyOn(podmanCli, 'isMultiplePodmanInstalledinMacos').mockResolvedValue(false);
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(podmanCli, 'isMultiplePodmanInstalled').mockResolvedValue(false);
   });
 
-  test('should return empty warnings when not on macOS', async () => {
-    // Setup non-macOS environment
-    vi.mocked(extensionApi.env).isMac = false;
-    vi.mocked(extensionApi.env).isWindows = true;
-
-    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+  test('should return empty warnings when no Podman installation provided', async () => {
+    const warnings = await getMultiplePodmanInstallationsWarnings(undefined);
 
     expect(warnings).toEqual([]);
-
-    expect(podmanCli.isMultiplePodmanInstalledinMacos).not.toHaveBeenCalled();
+    expect(podmanCli.isMultiplePodmanInstalled).not.toHaveBeenCalled();
   });
 
   test('should return empty warnings when no multiple installations detected', async () => {
-    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+    const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
 
     expect(warnings).toEqual([]);
+    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
   });
 
-  test('should return warning when Homebrew + .dmg detected', async () => {
-    vi.mocked(podmanCli.isMultiplePodmanInstalledinMacos).mockResolvedValue(true);
+  test('should return warning when multiple installations detected', async () => {
+    vi.mocked(podmanCli.isMultiplePodmanInstalled).mockResolvedValue(true);
 
-    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
+    const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
 
     expect(warnings).toEqual([
       {
         name: 'Multiple Podman installations detected',
         details:
-          'You have Podman installed via both Homebrew and the official installer. This may cause conflicts. Consider removing one installation to avoid issues.',
+          'You have multiple Podman installations. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
       },
     ]);
-  });
-
-  test('should log error and return empty warnings when isMultiplePodmanInstalledinMacos throws', async () => {
-    const mockError = new Error('Failed to check installations');
-    vi.mocked(podmanCli.isMultiplePodmanInstalledinMacos).mockRejectedValue(mockError);
-
-    const warnings = await getMultiplePodmanInstallationsMacosWarnings({ version: '5.0.0' });
-
-    expect(warnings).toEqual([]);
-    expect(console.error).toHaveBeenCalledWith('Error checking for multiple Podman installations', mockError);
+    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
   });
 });
