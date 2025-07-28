@@ -6,10 +6,10 @@ import InstalledExtensionCardLeftOnboardingAndProperties from './InstalledExtens
 
 interface Props {
   extension: CombinedExtensionInfoUI;
-  className: string;
+  class: string;
 }
 
-let { extension, className }: Props = $props();
+let { extension, class: className }: Props = $props();
 </script>
 
 <div class="text-center flex-row flex {className}">
