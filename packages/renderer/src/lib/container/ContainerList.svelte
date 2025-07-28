@@ -48,26 +48,25 @@ import ContainerEmptyScreen from './ContainerEmptyScreen.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerGroupInfoUI, type ContainerInfoUI } from './ContainerInfoUI';
 
 const containerUtils = new ContainerUtils();
-let openChoiceModal = false;
-let enginesList: EngineInfoUI[];
+let openChoiceModal = $state(false);
+let enginesList: EngineInfoUI[] = $state([]);
 
 // groups of containers that will be displayed
-let containerGroups: ContainerGroupInfoUI[] = [];
-let viewContributions: ViewInfoUI[] = [];
-let globalContext: ContextUI;
-let containersInfo: ContainerInfo[] = [];
-export let searchTerm = '';
-$: updateContainers(containersInfo, globalContext, viewContributions, searchTerm);
+let containerGroups: ContainerGroupInfoUI[] = $state([]);
+let viewContributions: ViewInfoUI[] = $state([]);
+let globalContext: ContextUI | undefined = $state();
+let containersInfo: ContainerInfo[] = $state([]);
+  interface Props {
+    searchTerm?: string;
+  }
+
+  let { searchTerm = $bindable('') }: Props = $props();
 
 function fromExistingImage(): void {
   openChoiceModal = false;
   handleNavigation({ page: NavigationPage.EXISTING_IMAGE_CREATE_CONTAINER });
 }
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
 // filter containers by group type pod
 function filterContainersByGroupTypePod(): ContainerGroupInfoUI[] {
@@ -83,7 +82,7 @@ function filterContainersByGroupTypeNotPod(): ContainerInfoUI[] {
 }
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state(false);
 async function deleteSelectedContainers(): Promise<void> {
   const podGroups = filterContainersByGroupTypePod();
   const selectedContainers = filterContainersByGroupTypeNotPod();
@@ -137,7 +136,7 @@ async function deleteSelectedContainers(): Promise<void> {
 }
 
 // run the items selected in the list
-let bulkRunInProgress = false;
+let bulkRunInProgress = $state(false);
 async function runSelectedContainers(): Promise<void> {
   const podGroups = filterContainersByGroupTypePod();
   const selectedContainers = filterContainersByGroupTypeNotPod();
@@ -238,13 +237,15 @@ onMount(async () => {
 
   viewsUnsubscribe = viewsContributions.subscribe(value => {
     viewContributions = value.filter(view => view.viewId === CONTAINER_LIST_VIEW) || [];
-    if (containersInfo.length > 0) {
+    if (containersInfo.length > 0 && globalContext) {
       updateContainers(containersInfo, globalContext, viewContributions, searchTerm);
     }
   });
 
   containersUnsubscribe = containersInfos.subscribe(value => {
+    if (globalContext){
     updateContainers(value, globalContext, viewContributions, searchTerm);
+    }
   });
 
   podUnsubscribe = podsInfos.subscribe(podInfos => {
@@ -366,7 +367,7 @@ function setStoppedFilter(): void {
   searchTerm = containerUtils.filterSetStopped(searchTerm);
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number = $state(0);
 
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
   align: 'center',
@@ -440,14 +441,22 @@ const row = new TableRow<ContainerGroupInfoUI | ContainerInfoUI>({
   },
 });
 
-let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[];
-$: containersAndGroups = containerGroups.map(group =>
+let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[] = $derived(containerGroups.map(group =>
   group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group,
-);
+));
 
 function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
   return item.id;
 }
+$effect(() => {
+  if (globalContext){
+    updateContainers(containersInfo, globalContext, viewContributions, searchTerm);}
+  });
+let providerConnections = $derived($providerInfos
+  .map(provider => provider.containerConnections)
+  .flat()
+  .filter(providerContainerConnection => providerContainerConnection.status === 'started'));
+
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
@@ -539,19 +548,23 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 {#if openChoiceModal}
   <Dialog
     title="Create a new container"
-    on:close={(): void => {
+    onclose={(): void => {
       openChoiceModal = false;
     }}>
-    <div slot="content" class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
-      <span class="pb-3">Choose the following:</span>
-      <ul class="list-disc ml-8 space-y-2">
-        <li>Create a container from a Containerfile</li>
-        <li>Create a container from an existing image stored in the local registry</li>
-      </ul>
-    </div>
-    <svelte:fragment slot="buttons">
-      <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
-      <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
-    </svelte:fragment>
+    {#snippet content()}
+        <div  class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
+        <span class="pb-3">Choose the following:</span>
+        <ul class="list-disc ml-8 space-y-2">
+          <li>Create a container from a Containerfile</li>
+          <li>Create a container from an existing image stored in the local registry</li>
+        </ul>
+      </div>
+      {/snippet}
+    {#snippet buttons()}
+      
+        <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
+        <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
+      
+      {/snippet}
   </Dialog>
 {/if}

@@ -9,7 +9,7 @@ import { allEventStoresInfo } from '/@/stores/event-store-manager';
 
 import TroubleshootingPageStore from './TroubleshootingPageStore.svelte';
 
-let allEventstores: EventStoreInfo[] = [];
+let allEventstores: EventStoreInfo[] = $state([]);
 
 let allEventsUnsubscriber: Unsubscriber;
 

@@ -4,11 +4,15 @@ import { Button, ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-export let providerContainerEngine: ProviderContainerConnectionInfo;
+interface Props {
+  providerContainerEngine: ProviderContainerConnectionInfo;
+}
 
-let listContainersResult = '';
-let listInProgress = false;
-let listError = '';
+let { providerContainerEngine }: Props = $props();
+
+let listContainersResult = $state('');
+let listInProgress = $state(false);
+let listError = $state('');
 
 async function grabContainers(): Promise<void> {
   const start = performance.now();

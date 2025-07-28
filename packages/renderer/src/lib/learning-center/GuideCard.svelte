@@ -3,9 +3,13 @@ import { Button } from '@podman-desktop/ui-svelte';
 
 import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
 
-export let guide: Guide;
-export let width = 300;
-export let height = 300;
+interface Props {
+  guide: Guide;
+  width?: number;
+  height?: number;
+}
+
+let { guide, width = 300, height = 300 }: Props = $props();
 
 async function openGuide(guide: Guide): Promise<void> {
   await window.telemetryTrack('openLearningCenterGuide', {

@@ -2,12 +2,20 @@
 import Dialog from './Dialog.svelte';
 </script>
 
-<Dialog title="Test dialog">
-  <i slot="icon" aria-label="icon">Icon</i>
+<Dialog title="Test dialog" onclose={(): undefined => {}}>
+  {#snippet icon()}
+    <i  aria-label="icon">Icon</i>
+  {/snippet}
 
-  <i slot="content" aria-label="content">Content</i>
+  {#snippet content()}
+    <i  aria-label="content">Content</i>
+  {/snippet}
 
-  <i slot="validation" aria-label="validation">Validation</i>
+  {#snippet validation()}
+    <i  aria-label="validation">Validation</i>
+  {/snippet}
 
-  <i slot="buttons" aria-label="buttons">Buttons</i>
+  {#snippet buttons()}
+    <i  aria-label="buttons">Buttons</i>
+  {/snippet}
 </Dialog>

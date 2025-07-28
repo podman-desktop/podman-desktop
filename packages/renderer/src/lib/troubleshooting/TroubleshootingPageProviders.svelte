@@ -8,7 +8,7 @@ import type { ProviderInfo } from '/@api/provider-info';
 import TroubleshootingContainerEngines from './TroubleshootingContainerEngines.svelte';
 import TroubleshootingRepair from './TroubleshootingRepair.svelte';
 
-let providers: ProviderInfo[] = [];
+let providers: ProviderInfo[] = $state([]);
 
 let providersUnsubscribe: Unsubscriber;
 

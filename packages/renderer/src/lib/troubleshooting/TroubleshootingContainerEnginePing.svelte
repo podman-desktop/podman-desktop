@@ -5,11 +5,15 @@ import { Buffer } from 'buffer';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-export let providerContainerEngine: ProviderContainerConnectionInfo;
+interface Props {
+  providerContainerEngine: ProviderContainerConnectionInfo;
+}
 
-let pingResult = '';
-let pingInProgress = false;
-let pingError = '';
+let { providerContainerEngine }: Props = $props();
+
+let pingResult = $state('');
+let pingInProgress = $state(false);
+let pingError = $state('');
 
 async function pingConnection(): Promise<void> {
   const start = performance.now();

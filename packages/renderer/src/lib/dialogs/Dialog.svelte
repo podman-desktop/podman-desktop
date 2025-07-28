@@ -1,34 +1,37 @@
 <script lang="ts">
 import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher } from 'svelte';
+import { type Snippet } from 'svelte';
 
-export let title: string;
+interface Props {
+  title: string;
+  onclose: () => void;
+  icon?: Snippet;
+  content?: Snippet;
+  validation?: Snippet;
+  buttons?: Snippet;
+}
 
-const dispatch = createEventDispatcher();
-
-export let onclose: () => void = () => {
-  dispatch('close');
-};
+let { title, onclose, icon, content, validation, buttons }: Props = $props();
 </script>
 
 <Modal name={title} on:close={onclose}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
-    <slot name="icon" />
+    {@render icon?.()}
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>
 
     <CloseButton onclick={onclose} />
   </div>
 
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4">
-    <slot name="content" />
+    {@render content?.()}
   </div>
 
   <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5">
-    {#if $$slots.validation}
+    {#if validation}
       <div class="grow">
-        <slot name="validation" />
+        {@render validation?.()}
       </div>
     {/if}
-    <slot name="buttons" />
+    {@render buttons?.()}
   </div>
 </Modal>
