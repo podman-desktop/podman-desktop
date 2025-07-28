@@ -16,7 +16,7 @@ let { toastId, taskInfo, onpop = (): void => {} }: Props = $props();
 
 const taskStatus: { [taskInfo.status]: string } = {
   failure: 'Error',
-  canceled: 'Cancelled',
+  canceled: 'Canceled',
 };
 
 function hideToast(): void {
@@ -35,7 +35,7 @@ const closeAction = (): void => {
 >
   <div class="flex flex-row gap-1">
     <div
-      class="mr-1 text-[var(--pd-state-info)] w-fit h-fit self-center w-[2em]"
+      class="mr-1 text-[var(--pd-state-info)] w-fit h-fit self-center"
       role="status"
       aria-label={taskInfo.status}
     >
@@ -46,13 +46,16 @@ const closeAction = (): void => {
       {:else if taskInfo.status === 'canceled'}
         <Fa icon={faCircleXmark} class="text-[var(--pd-state-error)] fa-xl"/>
       {:else if taskInfo.status === 'failure'}
-        <Fa icon={faTriangleExclamation } class=" fa fa-exclamation-triangle text-[var(--pd-state-warning)] fa-xl" />
+        <Fa icon={faTriangleExclamation } class="text-[var(--pd-state-warning)] fa-xl" />
       {/if}
     </div>
 
-    <p class="text-base text-ellipsis text-[var(--pd-modal-text)] line-clamp-3 h-full overflow-hidden break-all">
+    <div class="text-base text-ellipsis text-[var(--pd-card-text)] line-clamp-3 h-full overflow-hidden break-all">
       {taskStatus[taskInfo.status] ?? ''} {taskInfo.name}
-    </p>
+      {#if taskInfo.error}
+        <p class="text-[var(--pd-content-text)]">{taskInfo.error}</p>
+      {/if}
+    </div>
   </div>
 
   <div class="flex flex-none whitespace-nowrap flex-col self-start w-fit">
