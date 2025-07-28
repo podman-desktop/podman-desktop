@@ -10,9 +10,13 @@ import KubeDeploymentStatusArtifact from '../kube/details/KubeDeploymentStatusAr
 import KubeEventsArtifact from '../kube/details/KubeEventsArtifact.svelte';
 import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
 
-export let deployment: V1Deployment | undefined;
-export let kubeError: string | undefined = undefined;
-export let events: EventUI[];
+interface Props {
+  deployment: V1Deployment | undefined;
+  kubeError?: string;
+  events: EventUI[];
+}
+
+let { deployment, kubeError = undefined, events }: Props = $props();
 </script>
 
 <!-- Show the kube error if we're unable to retrieve the data correctly, but we still want to show the
