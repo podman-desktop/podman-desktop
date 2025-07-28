@@ -481,22 +481,22 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
-async function isRootfulMachineInfo(machineInfo: MachineInfo): Promise<boolean | undefined> {
-  const machinesJSONList = (await getJSONMachineList()).list;
-  const machineJSON = machinesJSONList.find(machine => machine.Name === machineInfo.name);
-  return machineJSON ? isRootfulMachine(machineJSON) : undefined;
-}
-
-async function isRootfulMachine(machineJSON: MachineJSON): Promise<boolean> {
+async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
   let isRootful = false;
+  let vmType: string;
+  let machineName: string;
+  if ('name' in machineDetails) {
+    machineName = machineDetails.name;
+    vmType = machineDetails.vmType;
+  } else {
+    machineName = machineDetails.Name;
+    vmType = machineDetails.VMType;
+  }
   try {
-    const { stdout: machineInspectJson } = await execPodman(
-      ['machine', 'inspect', machineJSON.Name],
-      machineJSON.VMType,
-    );
+    const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
     const machinesInspect = JSON.parse(machineInspectJson);
     // find the machine name in the array
-    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineJSON.Name);
+    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
     isRootful = machineInspect?.Rootful ?? false;
   } catch (error) {
     console.error('Error when checking rootful machine: ', error);
@@ -526,7 +526,7 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachineInfo(machineInfo);
+  const isRootful = await isRootfulMachine(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -854,7 +854,7 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
-  const isRootful = await isRootfulMachineInfo(machineInfo);
+  const isRootful = await isRootfulMachine(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
