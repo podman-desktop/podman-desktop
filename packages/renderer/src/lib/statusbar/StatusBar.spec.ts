@@ -111,7 +111,8 @@ describe('providers', () => {
   test('providers should show up when configuration changes from false to true', async () => {
     vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
     render(StatusBar);
-    await tick();
+
+    await vi.waitFor(() => expect(window.getConfigurationValue).toBeCalledTimes(2));
 
     expect(Providers).not.toHaveBeenCalled();
 
@@ -119,11 +120,7 @@ describe('providers', () => {
       detail: { key: `statusbarProviders.showProviders`, value: true },
     });
 
-    await tick();
-
-    await vi.waitFor(() => {
-      expect(Providers).toHaveBeenCalled();
-    });
+    await vi.waitFor(() => expect(Providers).toHaveBeenCalled());
   });
 
   test('providers are hidden when configuration changes from true to false', async () => {
