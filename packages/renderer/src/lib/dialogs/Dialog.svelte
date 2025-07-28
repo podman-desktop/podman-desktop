@@ -1,14 +1,9 @@
 <script lang="ts">
 import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher } from 'svelte';
 
 export let title: string;
 
-const dispatch = createEventDispatcher();
-
-export let onclose: () => void = () => {
-  dispatch('close');
-};
+export let onclose: () => void;
 </script>
 
 <Modal name={title} on:close={onclose}>

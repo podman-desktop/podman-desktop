@@ -45,7 +45,7 @@ async function pushManifestFinished(): Promise<void> {
 
 <Dialog
   title="Push manifest"
-  on:close={(): void => {
+  onclose={(): void => {
     closeCallback();
     logsPush?.dispose();
   }}>

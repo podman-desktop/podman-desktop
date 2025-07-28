@@ -67,7 +67,7 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
 
 <Dialog
   title="Edit Image"
-  on:close={closeCallback}>
+  onclose={closeCallback}>
   <div slot="content" class="w-full">
     <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Name</label>
     <Input

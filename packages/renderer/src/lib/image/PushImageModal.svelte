@@ -81,7 +81,7 @@ $: window
 
 <Dialog
   title="Push image"
-  on:close={closeCallback}>
+  onclose={closeCallback}>
   <div slot="content" class="flex flex-col text-sm leading-5 space-y-5">
     <div class="pb-4">
       <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
