@@ -22,9 +22,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
-import { tick } from 'svelte';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -90,11 +89,7 @@ test('Should call startReceiveLogs with empty colour codes', async () => {
     noLog: false,
   });
 
-  await tick();
-  // second tick need to process all await statements in onMount method
-  await tick();
-
-  expect(window.startReceiveLogs).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(window.startReceiveLogs).toHaveBeenCalledTimes(1));
 
   const args = (window.startReceiveLogs as Mock).mock.calls[0];
   const [id, cb1, cb2, cb3] = args;

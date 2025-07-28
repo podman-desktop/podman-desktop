@@ -102,11 +102,11 @@ test('Toggling expansion sets configuration', async () => {
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toBeInTheDocument();
-  expect(button).toHaveAttribute('aria-expanded', 'true');
+  await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'true'));
 
   await fireEvent.click(button);
   expect(updateConfigurationValueMock).toHaveBeenCalledWith('learningCenter.expanded', false);
-  expect(button).toHaveAttribute('aria-expanded', 'false');
+  await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'false'));
 
   await fireEvent.click(button);
   expect(updateConfigurationValueMock).toHaveBeenCalledWith('learningCenter.expanded', true);
