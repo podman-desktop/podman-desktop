@@ -25,6 +25,6 @@ export let extension: CombinedExtensionInfoUI;
       </div>
     </div>
     <ExtensionBadge class="mt-4" extension={extension} />
-    <InstalledExtensionActions class="mt-4" extension={extension} />
+    <InstalledExtensionActions className="mt-4" extension={extension} />
   </div>
 </div>

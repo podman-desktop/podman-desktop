@@ -58,7 +58,7 @@ $: extension = derived(
     {#snippet actionsSnippet()}
       <div class="flex items-center space-x-10 w-full">
         {#if $extension.installedExtension}
-          <InstalledExtensionActions class="w-48" extension={$extension.installedExtension} />
+          <InstalledExtensionActions className="w-48" extension={$extension.installedExtension} />
         {:else if $extension.fetchable}
           <div class="flex flex-1 justify-items-end w-18 flex-col items-end place-content-center">
             <div class="italic text-sm text-[var(--pd-content-text)] pb-3">

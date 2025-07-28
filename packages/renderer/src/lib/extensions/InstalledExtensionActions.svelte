@@ -4,10 +4,15 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import InstalledExtensionCardLeftLifecycle from './InstalledExtensionCardLeftLifecycle.svelte';
 import InstalledExtensionCardLeftOnboardingAndProperties from './InstalledExtensionCardLeftOnboardingAndProperties.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+  className: string;
+}
+
+let { extension, className }: Props = $props();
 </script>
 
-<div class="text-center flex-row flex {$$props.class}">
-  <InstalledExtensionCardLeftLifecycle extension={extension} />
-  <InstalledExtensionCardLeftOnboardingAndProperties extension={extension} />
+<div class="text-center flex-row flex {className}">
+  <InstalledExtensionCardLeftLifecycle {extension} />
+  <InstalledExtensionCardLeftOnboardingAndProperties {extension} />
 </div>
