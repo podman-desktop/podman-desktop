@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
+import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -458,6 +459,7 @@ export async function setStatusBarProvidersFeature(
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
   return test.step('Read file in volume from CLI', async () => {
     try {
+      const platform = os.platform();
       let command: string;
 
       if (isMac || isWindows) {
@@ -469,13 +471,13 @@ export async function readFileInVolumeFromCLI(volumeName: string, fileName: stri
         // Detect if running rootless by checking env or fallback to rootful
         const isRootless = process.getuid && process.getuid() !== 0;
         const basePath = isRootless
-          ? `${process.env.HOME}/.local/share/containers/storage/volumes`
+          ? `${os.homedir()}/.local/share/containers/storage/volumes`
           : '/var/lib/containers/storage/volumes';
 
         const fullPath = `${basePath}/${volumeName}/_data/${fileName}`;
         command = `cat ${fullPath}`;
       } else {
-        throw new Error(`Unsupported platform`);
+        throw new Error(`Unsupported platform: ${platform}`);
       }
 
       // eslint-disable-next-line sonarjs/os-command
