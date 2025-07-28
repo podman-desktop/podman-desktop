@@ -65,6 +65,13 @@ describe('font awesome', () => {
     const path = img.querySelector('path');
     expect(path).toHaveAttribute('fill', 'currentColor');
   });
+
+  test('icon should have title', () => {
+    const { getByTitle } = render(Icon, { icon: faGithub, title: 'test title' });
+
+    const img = getByTitle('test title');
+    expect(img).toBeInTheDocument();
+  });
 });
 
 describe('class icon', () => {
@@ -93,6 +100,13 @@ describe('class icon', () => {
     expect(img).toHaveClass('fas fa-icon');
     expect(img).toHaveClass('some-class');
   });
+
+  test('icon should have title', () => {
+    const { getByTitle } = render(Icon, { icon: 'fas fa-icon', title: 'test title' });
+
+    const img = getByTitle('test title');
+    expect(img).toBeInTheDocument();
+  });
 });
 
 describe('component icon', () => {
@@ -120,5 +134,12 @@ describe('component icon', () => {
     const imgComponent = img.firstChild;
     expect(imgComponent).toBeInTheDocument();
     expect(imgComponent).toHaveClass('some-class');
+  });
+
+  test('icon should have title', () => {
+    const { getByTitle } = render(Icon, { icon: ContainerIcon, title: 'test title' });
+
+    const img = getByTitle('test title');
+    expect(img).toBeInTheDocument();
   });
 });
