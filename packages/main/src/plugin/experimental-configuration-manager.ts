@@ -32,6 +32,9 @@ export class ExperimentalConfigurationManager {
    */
   parseKey(key: string): { section: string; property: string } {
     const dotIndex = key.indexOf('.');
+    // If is the '.' not found
+    // if is the key '.property'
+    // If is the key 'section.'
     if (dotIndex === -1 || dotIndex === 0 || dotIndex === key.length - 1) {
       return { section: '', property: '' };
     }
@@ -53,12 +56,7 @@ export class ExperimentalConfigurationManager {
     config: unknown,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
-    // HACK: when setting `{}` as value we need to stringify and parse the svelte state
-    let settings = config;
-    if (typeof config === 'object') {
-      settings = JSON.parse(JSON.stringify(config));
-    }
-    await this.configurationRegistry.updateConfigurationValue(key, settings, scope);
+    await this.configurationRegistry.updateConfigurationValue(key, config, scope);
   }
 
   /**
@@ -70,8 +68,7 @@ export class ExperimentalConfigurationManager {
     key: string,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
-    // HACK: when setting `{}` as value we need to stringify and parse the svelte state
-    const settings = JSON.parse(JSON.stringify({}));
+    const settings = {};
 
     if (Array.isArray(scope)) {
       for (const scopeItem of scope) {
