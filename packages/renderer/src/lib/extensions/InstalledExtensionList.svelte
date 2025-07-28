@@ -3,7 +3,11 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import InstalledExtensionCard from './InstalledExtensionCard.svelte';
 
-export let extensionInfos: CombinedExtensionInfoUI[] = [];
+interface Props {
+  extensionInfos?: CombinedExtensionInfoUI[];
+}
+
+let { extensionInfos = [] }: Props = $props();
 </script>
 
 <div class="grow px-5 py-3">

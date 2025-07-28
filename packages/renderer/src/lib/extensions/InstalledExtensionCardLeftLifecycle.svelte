@@ -5,7 +5,11 @@ import InstalledExtensionCardLeftLifecycleDelete from './InstalledExtensionCardL
 import InstalledExtensionCardLeftLifecycleStart from './InstalledExtensionCardLeftLifecycleStart.svelte';
 import InstalledExtensionCardLeftLifecycleStop from './InstalledExtensionCardLeftLifecycleStop.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
 </script>
 
 <div class="flex bg-[var(--pd-action-button-bg)] w-fit rounded-lg" role="group" aria-label="Extension Actions">

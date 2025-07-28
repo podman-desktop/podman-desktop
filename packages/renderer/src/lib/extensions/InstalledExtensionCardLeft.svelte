@@ -7,7 +7,11 @@ import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsLink from './ExtensionDetailsLink.svelte';
 import InstalledExtensionActions from './InstalledExtensionActions.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
 </script>
 
 <div role="region" aria-label="Extension {extension.name} left actions">
