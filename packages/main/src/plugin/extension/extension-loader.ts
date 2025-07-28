@@ -37,6 +37,7 @@ import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
+import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
@@ -1562,6 +1563,7 @@ export class ExtensionLoader {
       cli,
       imageChecker,
       navigation,
+      RepositoryInfoParser,
     };
   }
 
