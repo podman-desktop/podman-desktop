@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import learningCenter from '../../../../main/src/plugin/learning-center/guides.json';
@@ -94,9 +93,6 @@ test('Clicking on LearningCenter title hides carousel with guides', async () => 
 
 test('Toggling expansion sets configuration', async () => {
   render(LearningCenter);
-
-  // wait for onMount
-  await tick();
 
   expect(updateConfigurationValueMock).not.toHaveBeenCalled();
 

@@ -166,7 +166,6 @@ test('show release notes on configuration change to non-current version value', 
   getConfigurationValueMock.mockResolvedValueOnce('1.1.0');
   const showReleaseNotes = 'releaseNotesBanner.show';
   render(ReleaseNotesBox);
-  await tick();
   await waitFor(() => expect(podmanDesktopGetReleaseNotesMock).toBeCalled());
 
   expect(screen.queryByText(responseJSON.title)).not.toBeInTheDocument();
