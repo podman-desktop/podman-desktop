@@ -3,10 +3,10 @@ import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
 
 export let title: string;
 
-export let onclose: () => void;
+export let onclose: (() => void) | undefined = undefined;
 </script>
 
-<Modal name={title} on:close={onclose}>
+<Modal name={title} onclose={onclose}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     <slot name="icon" />
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>
