@@ -6,7 +6,7 @@ import InstalledExtensionCardLeftOnboardingAndProperties from './InstalledExtens
 
 interface Props {
   extension: CombinedExtensionInfoUI;
-  class: string;
+  class?: string;
 }
 
 let { extension, class: className }: Props = $props();
