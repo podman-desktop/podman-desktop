@@ -27,7 +27,7 @@ import type { Mock, MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Detect } from './detect';
-import type { OS } from './os';
+import { OS } from './os';
 
 const osMock: OS = {
   isWindows: vi.fn(),
@@ -315,5 +315,21 @@ describe('Check docker socket', async () => {
     expect(result).toBeFalsy();
     expect(spyOnce).toBeCalledWith('error', expect.any(Function));
     expect(console.debug).toBeCalledWith('Error while pinging docker', expect.any(Error));
+  });
+});
+
+describe('getDockerComposeBinaryInfo', () => {
+  test('expects to return binary info as updatable after user chancels password request dialog', async () => {
+    const os = new OS();
+    const executable = os.isWindows() ? 'docker-compose' + '.exe' : 'docker-compose';
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({
+      command: '',
+      stdout: '{"version":"v2.38.0"}',
+      stderr: '',
+    });
+    vi.spyOn(detect, 'getStoragePath').mockResolvedValue(`extension/storage/${executable}`);
+    vi.spyOn(detect, 'getDockerComposePath').mockResolvedValue(`extension/storage/${executable}`);
+    const binaryInfo = await detect.getDockerComposeBinaryInfo(executable);
+    expect(binaryInfo.updatable).equals(true);
   });
 });

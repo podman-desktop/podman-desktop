@@ -161,6 +161,7 @@ import type {
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExperimentalConfigurationManager } from './experimental-configuration-manager.js';
+import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -538,6 +539,12 @@ export class PluginSystem {
     statusbarProviders.init();
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
+
+    container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
+    const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
+      ExperimentalFeatureFeedbackHandler,
+    );
+    await experimentalFeatureFeedbackHandler.init();
 
     // Don't show the tray icon options on Mac
     if (!isMac()) {
