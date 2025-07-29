@@ -179,18 +179,18 @@ export function getProviderByLabel(label: string): string {
 export async function getMultiplePodmanInstallationsWarnings(
   installedPodman: InstalledPodman | undefined,
 ): Promise<extensionApi.ProviderInformation[]> {
-  const warnings: extensionApi.ProviderInformation[] = [];
   if (!installedPodman) {
-    return warnings;
+    return [];
   }
   // Check for multiple Podman installations
   const hasMultiplePodmanInstallations = await isMultiplePodmanInstalled();
   if (hasMultiplePodmanInstallations) {
-    warnings.push({
+    const warning: extensionApi.ProviderInformation = {
       name: 'Multiple Podman installations detected',
       details:
         'You have multiple Podman installations. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
-    });
+    };
+    return [warning];
   }
-  return warnings;
+  return [];
 }

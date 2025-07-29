@@ -37,7 +37,9 @@ vi.mock('@podman-desktop/api', () => {
       exec: vi.fn(),
     },
     env: {
-      isWindows: false, // Default to Linux/macOS
+      isWindows: false,
+      isMac: true,
+      isLinux: true,
     },
   };
 });
@@ -45,8 +47,9 @@ vi.mock('@podman-desktop/api', () => {
 describe('isMultiplePodmanInstalled', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    // Reset to Linux/macOS by default
     vi.mocked(env).isWindows = false;
+    vi.mocked(env).isMac = true;
+    vi.mocked(env).isLinux = true;
   });
 
   describe('Custom binary path', () => {
@@ -64,6 +67,8 @@ describe('isMultiplePodmanInstalled', () => {
   describe('Windows platform', () => {
     beforeEach(() => {
       vi.mocked(env).isWindows = true;
+      vi.mocked(env).isMac = false;
+      vi.mocked(env).isLinux = false;
     });
 
     test('should return false when where command fails', async () => {

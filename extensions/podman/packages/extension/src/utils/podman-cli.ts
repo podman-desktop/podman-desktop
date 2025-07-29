@@ -26,28 +26,23 @@ const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/lo
  */
 async function findPodmanInstallations(): Promise<string[]> {
   try {
+    let result: extensionApi.RunResult;
     if (extensionApi.env.isWindows) {
       // Windows: Use 'where podman' command
-      const result = await extensionApi.process.exec('where', ['podman']);
-      const lines = result.stdout
+      result = await extensionApi.process.exec('where', ['podman']);
+    } else {
+      // Unix/macOS: Use 'type -a podman' command
+      result = await extensionApi.process.exec('sh', ['-c', 'type -a podman']);
+    }
+
+    // Remove duplicates and return array of unique lines (installations)
+    const uniqueLines = new Set(
+      result.stdout
         .trim()
         .split('\n')
-        .filter(line => line.trim().length > 0);
-      // Windows 'where' output format: direct paths
-      return lines.map(line => line.trim()).filter(path => path.length > 0);
-    }
-    // Unix/macOS: Use 'type -a podman' command
-    const result = await extensionApi.process.exec('sh', ['-c', 'type -a podman']);
-    const lines = result.stdout
-      .trim()
-      .split('\n')
-      .filter(line => line.trim().length > 0);
-
-    // Extract paths and deduplicate
-    const uniquePaths = new Set(
-      lines.map(line => line.replace(/^podman is\s+/, '').trim()).filter(path => path.length > 0),
+        .filter(line => line.trim().length > 0),
     );
-    return Array.from(uniquePaths);
+    return Array.from(uniqueLines);
   } catch (error) {
     console.warn('Failed to detect podman installations:', error);
     return [];
