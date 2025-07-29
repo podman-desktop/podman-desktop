@@ -10,9 +10,13 @@ import Title from '/@/lib/details/DetailsTitle.svelte';
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let image: ImageInfoUI;
+interface Props {
+  image: ImageInfoUI;
+}
 
-let manifestDetails: ManifestInspectInfo | undefined;
+let { image }: Props = $props();
+
+let manifestDetails: ManifestInspectInfo | undefined = $state();
 
 const imageUtils = new ImageUtils();
 

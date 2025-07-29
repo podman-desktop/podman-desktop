@@ -35,9 +35,13 @@ import type { ImageInfoUI } from './ImageInfoUI';
 import PushImageModal from './PushImageModal.svelte';
 import RenameImageModal from './RenameImageModal.svelte';
 
-export let imageID: string;
-export let engineId: string;
-export let base64RepoTag: string;
+interface Props {
+  imageID: string;
+  engineId: string;
+  base64RepoTag: string;
+}
+
+let { imageID, engineId, base64RepoTag }: Props = $props();
 
 let globalContext: ContextUI;
 let viewContributions: ViewInfoUI[] = [];
@@ -45,12 +49,12 @@ let allImages: ImageInfo[];
 
 const imageUtils = new ImageUtils();
 
-let pushImageModal = false;
+let pushImageModal = $state(false);
 function handlePushImageModal(): void {
   pushImageModal = true;
 }
 
-let renameImageModal = false;
+let renameImageModal = $state(false);
 function handleRenameImageModal(): void {
   renameImageModal = true;
 }
@@ -60,12 +64,12 @@ function closeModals(): void {
   renameImageModal = false;
 }
 
-let imageInfo: ImageInfo | undefined;
-let image: ImageInfoUI | undefined;
-let detailsPage: DetailsPage | undefined;
+let imageInfo: ImageInfo | undefined = $state();
+let image: ImageInfoUI | undefined = $state();
+let detailsPage: DetailsPage | undefined = $state();
 
-let showCheckTab: boolean = false;
-let showFilesTab: boolean = false;
+let showCheckTab: boolean = $state(false);
+let showFilesTab: boolean = $state(false);
 let checkerProvidersUnsubscribe: Unsubscriber;
 let filesProvidersUnsubscribe: Unsubscriber;
 let viewsUnsubscribe: Unsubscriber;

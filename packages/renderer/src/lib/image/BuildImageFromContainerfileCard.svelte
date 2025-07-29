@@ -3,34 +3,48 @@ import { faCircle, faPlusCircle, type IconDefinition } from '@fortawesome/free-s
 import { Checkbox, isFontAwesomeIcon, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
 import { createEventDispatcher, onMount, tick } from 'svelte';
+import { preventDefault } from 'svelte/legacy';
 import Fa from 'svelte-fa';
 
-export let title: string = '';
-export let badge: string = '';
-export let isDefault: boolean = false;
-export let checked: boolean = false;
-export let value: string = '';
-export let icon: IconDefinition | Component | undefined = undefined;
-let iconType: 'fontAwesome' | 'unknown' | undefined = undefined;
+let iconType: 'fontAwesome' | 'unknown' | undefined = $state(undefined);
 
-export let additionalItem: boolean = false;
-let additionalValue: string = '';
+let additionalValue: string = $state('');
 
-let displayValueFieldInput = false;
+let displayValueFieldInput = $state(false);
 
-let inputHtmlElement: HTMLInputElement | undefined;
+let inputHtmlElement: HTMLInputElement | undefined = $state();
 
-let badges: string[] = [];
+let badges: string[] = $state([]);
 
 const dispatch = createEventDispatcher();
 
-export let onAddcard: (obj: { value: string }) => void = obj => {
-  dispatch('addcard', obj);
-};
+interface Props {
+  title?: string;
+  badge?: string;
+  isDefault?: boolean;
+  checked?: boolean;
+  value?: string;
+  icon?: IconDefinition | Component;
+  additionalItem?: boolean;
+  onAddcard?: (obj: { value: string }) => void;
+  onCard?: (obj: { mode: 'add' | 'remove'; value: string }) => void;
+}
 
-export let onCard: (obj: { mode: 'add' | 'remove'; value: string }) => void = obj => {
-  dispatch('card', obj);
-};
+let {
+  title = '',
+  badge = '',
+  isDefault = false,
+  checked = $bindable(false),
+  value = '',
+  icon = undefined,
+  additionalItem = false,
+  onAddcard = (obj): void => {
+    dispatch('addcard', obj);
+  },
+  onCard = (obj): void => {
+    dispatch('card', obj);
+  },
+}: Props = $props();
 
 function handleKeydownAdditionalField(event: KeyboardEvent): void {
   if (event.key === 'Enter') {
@@ -89,7 +103,7 @@ onMount(() => {
     ? 'border-[var(--pd-content-card-border-selected)]'
     : 'border-[var(--pd-content-card-border)]'} border-2 flex flex-col"
   aria-label={value}
-  on:click|preventDefault={handleClick}>
+  onclick={preventDefault(handleClick)}>
   <div class="flex flex-row">
     <div class="flex flex-col">
       {#if !additionalItem}
@@ -121,7 +135,7 @@ onMount(() => {
           class="w-40 outline-hidden bg-[var(--pd-input-field-bg)] focus:bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-content-text)]"
           bind:value={additionalValue}
           bind:this={inputHtmlElement}
-          on:keydown={handleKeydownAdditionalField} />
+          onkeydown={handleKeydownAdditionalField} />
       {/if}
     </div>
     <div class="flex grow justify-end">
@@ -129,7 +143,8 @@ onMount(() => {
         {#if iconType === 'fontAwesome'}
           <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
         {:else if iconType === 'unknown'}
-          <svelte:component this={icon as Component} class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
+          {@const SvelteComponent = icon as Component}
+          <SvelteComponent class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />
         {/if}
       {/if}
     </div>
