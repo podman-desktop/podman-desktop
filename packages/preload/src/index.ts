@@ -1526,6 +1526,47 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'isExperimentalConfigurationEnabled',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<boolean> => {
+      return ipcInvoke('experimental-configuration-manager:isExperimentalConfigurationEnabled', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'enableExperimentalConfiguration',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:enableExperimentalConfiguration', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'disableExperimentalConfiguration',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:disableExperimentalConfiguration', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'updateExperimentalConfigurationValue',
+    async (
+      key: string,
+      value: unknown,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:updateExperimentalConfigurationValue', key, value, scope);
+    },
+  );
+
   contextBridge.exposeInMainWorld('getFeaturedExtensions', async (): Promise<FeaturedExtension[]> => {
     return ipcInvoke('featured:getFeaturedExtensions');
   });

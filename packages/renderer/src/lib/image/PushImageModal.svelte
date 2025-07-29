@@ -6,7 +6,7 @@ import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -79,7 +79,7 @@ $: window
   .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageInfoToPush.id}`, err));
 </script>
 
-<Dialog
+<LegacyDialog
   title="Push image"
   onclose={closeCallback}>
   <div slot="content" class="flex flex-col text-sm leading-5 space-y-5">
@@ -92,7 +92,7 @@ $: window
       {/if}
 
       <select
-        class="text-sm rounded-lg block w-full p-2.5 bg-[var(--pd-dropdown-bg)] pl-6 border-r-8 border-transparent outline-1 outline {isAuthenticatedForThisImage
+        class="text-sm rounded-lg block w-full p-2.5 bg-[var(--pd-dropdown-bg)] pl-6 border-r-8 border-transparent outline {isAuthenticatedForThisImage
           ? 'outline-[var(--pd-modal-border)]'
           : 'outline-[var(--pd-state-warning)]'} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
         name="imageChoice"
@@ -134,4 +134,4 @@ $: window
       <Button on:click={pushImageFinished} class="w-auto">Done</Button>
     {/if}
   </svelte:fragment>
-</Dialog>
+</LegacyDialog>

@@ -6,24 +6,28 @@ import PushImageModal from './PushImageModal.svelte';
 import PushManifestModal from './PushManifestModal.svelte';
 import RenameImageModal from './RenameImageModal.svelte';
 
-export let object: ImageInfoUI;
+interface Props {
+  object: ImageInfoUI;
+}
 
-let pushImageModal = false;
-let pushImageModalImageInfo: ImageInfoUI | undefined = undefined;
+let { object }: Props = $props();
+
+let pushImageModal = $state(false);
+let pushImageModalImageInfo: ImageInfoUI | undefined = $state(undefined);
 function handlePushImageModal(imageInfo: ImageInfoUI): void {
   pushImageModalImageInfo = imageInfo;
   pushImageModal = true;
 }
 
-let renameImageModal = false;
-let renameImageModalImageInfo: ImageInfoUI | undefined = undefined;
+let renameImageModal = $state(false);
+let renameImageModalImageInfo: ImageInfoUI | undefined = $state(undefined);
 function handleRenameImageModal(imageInfo: ImageInfoUI): void {
   renameImageModalImageInfo = imageInfo;
   renameImageModal = true;
 }
 
-let pushManifestModal = false;
-let pushManifestModalInfo: ImageInfoUI | undefined = undefined;
+let pushManifestModal = $state(false);
+let pushManifestModalInfo: ImageInfoUI | undefined = $state(undefined);
 function handlePushManifestModal(imageInfo: ImageInfoUI): void {
   pushManifestModalInfo = imageInfo;
   pushManifestModal = true;

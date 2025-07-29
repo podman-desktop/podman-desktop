@@ -13,16 +13,15 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 
-let containersToImport: { imagePath: string; nameWhenImporting: string }[] = [];
-let importError: string = '';
+let containersToImport: { imagePath: string; nameWhenImporting: string }[] = $state([]);
+let importError: string = $state('');
 
 let providers: ProviderInfo[] = [];
-let providerConnections: ProviderContainerConnectionInfo[] = [];
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
-let inProgress = false;
+let providerConnections: ProviderContainerConnectionInfo[] = $state([]);
+let selectedProvider: ProviderContainerConnectionInfo | undefined = $state(undefined);
+let inProgress = $state(false);
 
-let importDisabled = false;
-$: importDisabled = !selectedProvider || containersToImport.length === 0;
+let importDisabled = $derived(!selectedProvider || containersToImport.length === 0);
 
 onMount(async () => {
   providers = get(providerInfos);

@@ -263,7 +263,7 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
   let renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
 
   // wait shellInContainerMock is called
-  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalled());
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledOnce());
 
   // write some data on the terminal
   onDataCallback(Buffer.from('prompt$ \nhello\nworld\nprompt$ '));
@@ -281,13 +281,14 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
 
   // destroy the the terminal tab
   renderObject.unmount();
+  shellInContainerMock.mockClear();
 
   // render the same component again and check if terminal restored without calling
   // terminal.write
   renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
 
   // wait shellInContainerMock is called
-  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalled());
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledOnce());
 
   await waitFor(() => {
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');

@@ -4,19 +4,20 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import type { FilesystemNode } from '/@api/filesystem-tree';
 
+import FilesystemLayerView from './FilesystemLayerView.svelte';
 import { ImageUtils } from './image-utils';
 
 const expansionState = new SvelteMap<string, boolean>();
 
-export let tree: FilesystemNode<ImageFile>;
-export let margin = 0;
-export let root = true;
-export let layerMode = false;
+interface Props {
+  tree: FilesystemNode<ImageFile>;
+  margin?: number;
+  root?: boolean;
+  layerMode?: boolean;
+}
 
-$: label = tree.name;
-$: children = tree?.children;
-$: file = tree?.data;
-$: colorClass = getColor(tree);
+let { tree, margin = 0, root = true, layerMode = false }: Props = $props();
+
 function getColor(tree: FilesystemNode<ImageFile>): string {
   if (tree.hidden) {
     return 'text-[var(--pd-files-hidden)]';
@@ -38,14 +39,15 @@ function getColor(tree: FilesystemNode<ImageFile>): string {
   }
   return '';
 }
-let expanded = false;
-$: expanded = expansionState.get(label) ?? false;
+
+let label = $derived(tree.name);
+
+let expanded = $derived(expansionState.get(label) ?? false);
 
 const toggleExpansion = (): void => {
   expanded = !expanded;
   expansionState.set(label, expanded);
 };
-$: arrowDown = expanded;
 function getLink(file: ImageFile | undefined): string {
   if (!file) {
     return '';
@@ -75,13 +77,17 @@ function modeString(data: ImageFile): string {
     (data.mode & 0o1000 ? 't' : data.mode & 0o001 ? 'x' : '-')
   );
 }
+let children = $derived(tree?.children);
+let file = $derived(tree?.data);
+let colorClass = $derived(getColor(tree));
+let arrowDown = $derived(expanded);
 </script>
 
 {#if layerMode || !tree.hidden}
   {#if root}
     {#if children}
       {#each children as [key, child] (key)}
-        <svelte:self root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
+        <FilesystemLayerView root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
       {/each}
     {/if}
   {:else}
@@ -89,13 +95,13 @@ function modeString(data: ImageFile): string {
     <div class="text-right">{tree.data && !tree.hidden ? tree.data.uid + ':' + tree.data.gid : ''}</div>
     <span class="text-right">{!tree.hidden ? new ImageUtils().getHumanSize(tree.size) : ''}</span>
     {#if children?.size || (file && file.type === 'directory')}
-      <button style="margin-left: {margin}rem" class={`text-left ${colorClass}`} on:click={toggleExpansion}>
+      <button style="margin-left: {margin}rem" class={`text-left ${colorClass}`} onclick={toggleExpansion}>
         <span class="cursor-pointer inline-block mr-1" class:rotate-90={arrowDown}>&gt;</span>
         {label}<span class="text-[var(--pd-content-text)] opacity-70">{getLink(tree?.data)}</span>
       </button>
       {#if expanded && children}
         {#each children as [key, child] (key)}
-          <svelte:self root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
+          <FilesystemLayerView root={false} margin={margin + 0.5} tree={child} layerMode={layerMode} />
         {/each}
       {/if}
     {:else}

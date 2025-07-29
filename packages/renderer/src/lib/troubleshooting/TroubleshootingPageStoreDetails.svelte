@@ -6,7 +6,7 @@ import moment from 'moment';
 
 import type { EventStoreInfo } from '/@/stores/event-store';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 
 export let closeCallback: () => void;
 
@@ -23,7 +23,7 @@ async function fetch(): Promise<void> {
 }
 </script>
 
-<Dialog title="Details of {eventStoreInfo.name}" onclose={closeCallback}>
+<LegacyDialog title="Details of {eventStoreInfo.name}" onclose={closeCallback}>
   <svelte:component this={eventStoreInfo.iconComponent} slot="icon" size="20" />
 
   <div slot="content" class="inline-block w-full overflow-hidden overflow-y-auto text-left transition-all">
@@ -96,4 +96,4 @@ async function fetch(): Promise<void> {
     <Button aria-label="Cancel" class="mr-3" type="link" on:click={closeCallback}>Cancel</Button>
     <Button aria-label="OK" on:click={closeCallback}>OK</Button>
   </svelte:fragment>
-</Dialog>
+</LegacyDialog>

@@ -1,12 +1,16 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
-export let command: string = '';
+interface Props {
+  command?: string;
+}
 
-let formatted: string = '';
-let header: string = '';
-let short: boolean = false;
-let moreDisplayed: boolean = false;
+let { command = '' }: Props = $props();
+
+let formatted: string = $state('');
+let header: string = $state('');
+let short: boolean = $state(false);
+let moreDisplayed: boolean = $state(false);
 
 onMount(() => {
   // add a newline before a tab or several spaces
@@ -22,7 +26,7 @@ onMount(() => {
 {#if short}
   <button
     class="text-xs underline decoration-dashed"
-    on:click={(): void => {
+    onclick={(): void => {
       moreDisplayed = !moreDisplayed;
     }}>{moreDisplayed ? 'show less' : 'show more'}</button>
 {/if}

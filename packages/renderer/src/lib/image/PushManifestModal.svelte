@@ -5,7 +5,7 @@ import type { Terminal } from '@xterm/xterm';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -43,7 +43,7 @@ async function pushManifestFinished(): Promise<void> {
 }
 </script>
 
-<Dialog
+<LegacyDialog
   title="Push manifest"
   onclose={(): void => {
     closeCallback();
@@ -80,4 +80,4 @@ async function pushManifestFinished(): Promise<void> {
       <Button on:click={pushManifestFinished} class="w-auto">Done</Button>
     {/if}
   </svelte:fragment>
-</Dialog>
+</LegacyDialog>

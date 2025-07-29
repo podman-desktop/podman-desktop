@@ -9,8 +9,12 @@ import { signedHumanSize } from './ImageDetailsFilesLayers';
 
 const dispatch = createEventDispatcher();
 
-export let layers: ImageFilesystemLayerUI[];
-let currentLayerId: string | undefined;
+interface Props {
+  layers: ImageFilesystemLayerUI[];
+}
+
+let { layers }: Props = $props();
+let currentLayerId: string | undefined = $state();
 
 function onLayerSelected(layer: ImageFilesystemLayerUI): void {
   currentLayerId = layer.id;
@@ -38,7 +42,7 @@ function getSizesText(layer: ImageFilesystemLayerUI): string {
 {#each layers as layer (layer.id)}
   {@const sizesText = getSizesText(layer)}
   <button
-    on:click={(): void => onLayerSelected(layer)}
+    onclick={(): void => onLayerSelected(layer)}
     role="row"
     aria-label={layer.id}
     class="rounded-lg mb-4 p-4 flex flex-col w-full text-left hover:bg-[var(--pd-content-card-hover-bg)]"

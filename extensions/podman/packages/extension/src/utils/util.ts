@@ -20,7 +20,7 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { getPodmanCli } from './podman-cli';
+import { getPodmanCli, type InstalledPodman, isMultiplePodmanInstalled } from './podman-cli';
 
 const xdgDataDirectory = '.local/share/containers';
 export function appHomeDir(): string {
@@ -169,4 +169,28 @@ export function getProviderByLabel(label: string): string {
     default:
       return label;
   }
+}
+
+/**
+ * Checks for multiple Podman installations and returns a warning if found.
+ * @param installedPodman - The installed Podman version.
+ * @returns A promise that resolves to an array of ProviderInformation objects.
+ */
+export async function getMultiplePodmanInstallationsWarnings(
+  installedPodman: InstalledPodman | undefined,
+): Promise<extensionApi.ProviderInformation[]> {
+  if (!installedPodman) {
+    return [];
+  }
+  // Check for multiple Podman installations
+  const hasMultiplePodmanInstallations = await isMultiplePodmanInstalled();
+  if (hasMultiplePodmanInstallations) {
+    const warning: extensionApi.ProviderInformation = {
+      name: 'Multiple Podman installations detected',
+      details:
+        'You have multiple Podman installations. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
+    };
+    return [warning];
+  }
+  return [];
 }

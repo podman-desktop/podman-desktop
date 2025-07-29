@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,39 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import * as extensionApi from '@podman-desktop/api';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
+
+/**
+ * Finds all installations of podman in the system PATH (Windows, macOS, Linux)
+ * @returns Array of unique podman installation paths found
+ */
+async function findPodmanInstallations(): Promise<string[]> {
+  try {
+    let result: extensionApi.RunResult;
+    if (extensionApi.env.isWindows) {
+      // Windows: Use 'where podman' command
+      result = await extensionApi.process.exec('where', ['podman']);
+    } else {
+      // Unix/macOS: Use 'type -a podman' command
+      result = await extensionApi.process.exec('sh', ['-c', 'type -a podman']);
+    }
+
+    // Remove duplicates and return array of unique lines (installations)
+    const uniqueLines = new Set(
+      result.stdout
+        .trim()
+        .split('\n')
+        .filter(line => line.trim().length > 0),
+    );
+    return Array.from(uniqueLines);
+  } catch (error) {
+    console.warn('Failed to detect podman installations:', error);
+    return [];
+  }
+}
 
 export function getInstallationPath(): string | undefined {
   const env = process.env;
@@ -67,4 +97,15 @@ export async function getPodmanInstallation(): Promise<InstalledPodman | undefin
     // no podman binary
     return undefined;
   }
+}
+
+// Checks if there are more than one version of podman installed (Windows, macOS, Linux)
+export async function isMultiplePodmanInstalled(): Promise<boolean> {
+  // Checks if custom binary path is set. If so, we don't need to check for multiple installations.
+  if (getCustomBinaryPath()) {
+    return false;
+  }
+  const installations = await findPodmanInstallations();
+  // If there are 2 or more unique installations, return true
+  return installations.length > 1;
 }
