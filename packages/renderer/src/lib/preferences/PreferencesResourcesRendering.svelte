@@ -46,27 +46,24 @@ import {
   isPropertyValidInContext,
 } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-let providers: ProviderInfo[] = [];
+let providers = $state<ProviderInfo[]>([]);
 let containerConnectionStatus = new SvelteMap<string, IConnectionStatus>();
 let providerInstallationInProgress = new SvelteMap<string, boolean>();
 let extensionOnboardingEnablement = new SvelteMap<string, string>();
-let isStatusUpdated = false;
-let displayInstallModal = false;
-let providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
+let displayInstallModal = $state(false);
+let providerToBeInstalled = $state<{ provider: ProviderInfo; displayName: string }>();
 let doExecuteAfterInstallation: () => void;
-let preflightChecks: CheckStatus[] = [];
+let preflightChecks = $state<CheckStatus[]>([]);
 
-let configurationKeys: IConfigurationPropertyRecordedSchema[];
 let restartingQueue: IConnectionRestart[] = [];
-let globalContext: ContextUI;
+let globalContext = $state<ContextUI>();
 
 let providersUnsubscribe: Unsubscriber;
 let configurationPropertiesUnsubscribe: Unsubscriber;
 let onboardingsUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 
-let contributionsContainerConnection: Menu[] = [];
+let contributionsContainerConnection = $state<Menu[]>([]);
 
 onMount(async () => {
   configurationPropertiesUnsubscribe = configurationProperties.subscribe(value => {
@@ -95,7 +92,6 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== container.status
         ) {
-          isStatusUpdated = true;
           const containerToRestart = getContainerRestarting(provider.internalId, container.name);
           if (containerToRestart) {
             containerConnectionStatus.set(containerConnectionName, {
@@ -123,7 +119,6 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== connection.status
         ) {
-          isStatusUpdated = true;
           const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
           if (containerToRestart) {
             containerConnectionStatus.set(containerConnectionName, {
@@ -151,7 +146,6 @@ onMount(async () => {
           !containerConnectionStatus.has(vmConnectionName) ||
           containerConnectionStatus.get(vmConnectionName)?.status !== connection.status
         ) {
-          isStatusUpdated = true;
           const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
           if (containerToRestart) {
             containerConnectionStatus.set(vmConnectionName, {
@@ -178,10 +172,6 @@ onMount(async () => {
         containerConnectionStatus.delete(k);
       }
     });
-    if (isStatusUpdated) {
-      isStatusUpdated = false;
-      containerConnectionStatus = containerConnectionStatus;
-    }
   });
 
   onboardingsUnsubscribe = onboardingList.subscribe(onboardingItems => {
@@ -224,51 +214,6 @@ onDestroy(() => {
   }
 });
 
-$: configurationKeys = properties
-  .filter(property => property.scope === 'ContainerConnection')
-  .sort((a, b) => (a?.id ?? '').localeCompare(b?.id ?? ''));
-
-let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
-function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
-  tmpProviderContainerConfiguration = value;
-}
-
-$: Promise.all(
-  providers.map(async provider => {
-    const providerContainer = await Promise.all(
-      provider.containerConnections.map(async container => {
-        return await Promise.all(
-          configurationKeys.map(async configurationKey => {
-            return {
-              ...configurationKey,
-              value: configurationKey.id
-                ? await window.getConfigurationValue(
-                    configurationKey.id,
-                    container as unknown as ContainerProviderConnection,
-                  )
-                : undefined,
-              connection: container.name,
-              providerId: provider.internalId,
-            };
-          }),
-        );
-      }),
-    );
-    return providerContainer.flat();
-  }),
-)
-  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
-  .catch((err: unknown) => console.error('Error collecting providers', err));
-
-$: providerContainerConfiguration = tmpProviderContainerConfiguration
-  .filter(configurationKey => configurationKey.value !== undefined)
-  .reduce((map, value) => {
-    const innerProviderContainerConfigurations = map.get(value.providerId) ?? [];
-    innerProviderContainerConfigurations.push(value);
-    map.set(value.providerId, innerProviderContainerConfigurations);
-    return map;
-  }, new Map<string, IProviderConnectionConfigurationPropertyRecorded[]>());
-
 function updateContainerStatus(
   provider: ProviderInfo,
   containerConnectionInfo: ProviderConnectionInfo,
@@ -293,7 +238,6 @@ function updateContainerStatus(
       status: containerConnectionInfo.status,
     });
   }
-  containerConnectionStatus = containerConnectionStatus;
 }
 
 function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
@@ -307,7 +251,7 @@ async function startConnectionProvider(
 ): Promise<void> {
   await window.startProviderConnectionLifecycle(
     provider.internalId,
-    containerConnectionInfo,
+    $state.snapshot(containerConnectionInfo),
     loggerHandlerKey,
     eventCollect,
   );
@@ -317,7 +261,6 @@ async function doCreateNew(provider: ProviderInfo, displayName: string): Promise
   displayInstallModal = false;
   if (provider.status === 'not-installed') {
     providerInstallationInProgress.set(provider.name, true);
-    providerInstallationInProgress = providerInstallationInProgress;
     providerToBeInstalled = { provider, displayName };
     doExecuteAfterInstallation = (): void => router.goto(`/preferences/provider/${provider.internalId}`);
     await performInstallation(provider);
@@ -365,7 +308,6 @@ async function performInstallation(provider: ProviderInfo): Promise<void> {
     displayInstallModal = true;
   }
   providerInstallationInProgress.set(provider.name, false);
-  providerInstallationInProgress = providerInstallationInProgress;
 }
 
 function hideInstallModal(): void {
@@ -392,28 +334,86 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
           isDefaultScope(property.scope) &&
           !property.hidden,
       )
-      .filter(property => isPropertyValidInContext(property.when, globalContext)).length > 0
+      .filter(property => globalContext && isPropertyValidInContext(property.when, globalContext)).length > 0
   );
 }
 
-export let focus: string | undefined;
-let providerElementMap: Record<string, HTMLElement> = {};
-
-$: if (focus && providerElementMap[focus]) {
-  providerElementMap[focus].scrollIntoView({ behavior: 'auto', block: 'start' });
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  focus: string | undefined;
 }
+
+let { properties = $bindable([]), focus }: Props = $props();
+let providerElementMap = $state<Record<string, HTMLElement>>({});
 
 function handleError(errorMessage: string): void {
   console.error(errorMessage);
 }
+
+let configurationKeys: IConfigurationPropertyRecordedSchema[] = $derived(
+  properties
+    .filter(property => property.scope === 'ContainerConnection')
+    .sort((a, b) => (a?.id ?? '').localeCompare(b?.id ?? '')),
+);
+
+let tmpProviderContainerConfiguration = $state<IProviderConnectionConfigurationPropertyRecorded[]>([]);
+function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
+  tmpProviderContainerConfiguration = value;
+}
+
+$effect(() => {
+  Promise.all(
+    providers.map(async provider => {
+      const providerContainer = await Promise.all(
+        provider.containerConnections.map(async container => {
+          return await Promise.all(
+            configurationKeys.map(async configurationKey => {
+              return {
+                ...configurationKey,
+                value: configurationKey.id
+                  ? await window.getConfigurationValue(
+                      configurationKey.id,
+                      $state.snapshot(container) as unknown as ContainerProviderConnection,
+                    )
+                  : undefined,
+                connection: container.name,
+                providerId: provider.internalId,
+              };
+            }),
+          );
+        }),
+      );
+      return providerContainer.flat();
+    }),
+  )
+    .then(value => updateTmpProviderContainerConfiguration(value.flat()))
+    .catch((err: unknown) => console.error('Error collecting providers', err));
+});
+let providerContainerConfiguration = $derived(
+  tmpProviderContainerConfiguration
+    .filter(configurationKey => configurationKey.value !== undefined)
+    .reduce((map, value) => {
+      const innerProviderContainerConfigurations = map.get(value.providerId) ?? [];
+      innerProviderContainerConfigurations.push(value);
+      map.set(value.providerId, innerProviderContainerConfigurations);
+      return map;
+    }, new Map<string, IProviderConnectionConfigurationPropertyRecorded[]>()),
+);
+$effect(() => {
+  if (focus && providerElementMap[focus]) {
+    providerElementMap[focus].scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
+});
 </script>
 
 <SettingsPage title="Resources">
-  <span slot="subtitle" class:hidden={providers.length === 0}>
-    Additional provider information is available under <a
-      href="/extensions"
-      class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
-  </span>
+  {#snippet subtitle()}
+    <span  class:hidden={providers.length === 0}>
+      Additional provider information is available under <a
+        href="/extensions"
+        class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
+    </span>
+  {/snippet}
   <div class="h-full" role="region" aria-label="Featured Provider Resources">
     <EmptyScreen
       aria-label="no-resource-panel"
@@ -446,7 +446,7 @@ function handleError(errorMessage: string): void {
             </div>
             <div class="text-center mt-10">
               <!-- Some providers have a status of 'unknown' so that they do not appear in the dashboard, this allows onboarding to still show. -->
-              {#if isOnboardingEnabled(provider, globalContext) && (provider.status === 'not-installed' || provider.status === 'unknown')}
+              {#if globalContext && isOnboardingEnabled(provider, globalContext) && (provider.status === 'not-installed' || provider.status === 'unknown')}
                 <Button
                   aria-label="Setup {provider.name}"
                   title="Setup {provider.name}"
@@ -482,12 +482,12 @@ function handleError(errorMessage: string): void {
                       </Button>
                     </Tooltip>
                   {/if}
-                  {#if isOnboardingEnabled(provider, globalContext) || hasAnyConfiguration(provider)}
+                  {#if globalContext && (isOnboardingEnabled(provider, globalContext) || hasAnyConfiguration(provider))}
                     <Button
                       aria-label="Setup {provider.name}"
                       title="Setup {provider.name}"
                       on:click={(): void => {
-                        if (isOnboardingEnabled(provider, globalContext)) {
+                        if (globalContext && isOnboardingEnabled(provider, globalContext)) {
                           router.goto(`/preferences/onboarding/${provider.extensionId}`);
                         } else {
                           router.goto(`/preferences/default/preferences.${provider.extensionId}`);
@@ -520,7 +520,7 @@ function handleError(errorMessage: string): void {
                   <button
                     aria-label="{provider.name} details"
                     type="button"
-                    on:click={(): void =>
+                    onclick={(): void =>
                       router.goto(
                         `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
                           container.name,
@@ -591,28 +591,30 @@ function handleError(errorMessage: string): void {
                 connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, container))}
                 updateConnectionStatus={updateContainerStatus}
                 addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
-                <span slot="advanced-actions" class:hidden={providers.length === 0}>
-                  <Tooltip bottom tip="More Options">
-                    <ActionsMenu
-                      dropdownMenu={true}
-                      onBeforeToggle={(): void => {
-                        globalContext?.setValue('selectedProviderConnectionType', container.type);
-                        globalContext?.setValue('selectedProviderConnectionStatus', container.status);
-                    }}>
-                      <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => {router.goto(
-                        `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
-                          container.name,
-                        ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/terminal`);}}/>
-                      <ContributionActions
-                        args={[container]}
-                        contextPrefix="providerConnectionItem"
+                {#snippet advanced_actions()}
+                  <span  class:hidden={providers.length === 0}>
+                    <Tooltip bottom tip="More Options">
+                      <ActionsMenu
                         dropdownMenu={true}
-                        contributions={contributionsContainerConnection}
-                        detailed={false}
-                        onError={handleError} />
-                    </ActionsMenu>
-                  </Tooltip>
-                </span>
+                        onBeforeToggle={(): void => {
+                          globalContext?.setValue('selectedProviderConnectionType', container.type);
+                          globalContext?.setValue('selectedProviderConnectionStatus', container.status);
+                      }}>
+                        <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => {router.goto(
+                          `/preferences/container-connection/view/${provider.internalId}/${Buffer.from(
+                            container.name,
+                          ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/terminal`);}}/>
+                        <ContributionActions
+                          args={[container]}
+                          contextPrefix="providerConnectionItem"
+                          dropdownMenu={true}
+                          contributions={contributionsContainerConnection}
+                          detailed={false}
+                          onError={handleError} />
+                      </ActionsMenu>
+                    </Tooltip>
+                  </span>
+                {/snippet}
               </PreferencesConnectionActions>
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
                 <div aria-label="Connection Version">
@@ -630,7 +632,7 @@ function handleError(errorMessage: string): void {
                   <button
                     aria-label="{provider.name} details"
                     type="button"
-                    on:click={(): void =>
+                    onclick={(): void =>
                       router.goto(
                         `/preferences/kubernetes-connection/${provider.internalId}/${Buffer.from(
                           kubeConnection.endpoint.apiURL,
@@ -668,7 +670,7 @@ function handleError(errorMessage: string): void {
                 <button
                   aria-label="{provider.name} details"
                   type="button"
-                  on:click={(): void =>
+                  onclick={(): void =>
                     router.goto(
                       `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
                     )}>
@@ -692,15 +694,17 @@ function handleError(errorMessage: string): void {
               connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
               updateConnectionStatus={updateContainerStatus}
               addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
-              <span slot="advanced-actions" class:hidden={providers.length === 0}>
-                <Tooltip bottom tip="More Options">
-                  <ActionsMenu dropdownMenu={true}>
-                    <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => router.goto(
-                      `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
-                    )}/>
-                  </ActionsMenu>
-                </Tooltip>
-              </span>
+              {#snippet advanced_actions()}
+                <span  class:hidden={providers.length === 0}>
+                  <Tooltip bottom tip="More Options">
+                    <ActionsMenu dropdownMenu={true}>
+                      <DropdownMenu.Item title="Open Terminal" icon={faTerminal} onClick={(): void => router.goto(
+                        `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
+                      )}/>
+                    </ActionsMenu>
+                  </Tooltip>
+                </span>
+              {/snippet}
             </PreferencesConnectionActions>
           </div>
         {/each}
