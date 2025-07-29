@@ -7,7 +7,7 @@ import { router } from 'tinro';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import type { KubeContext } from '/@api/kubernetes-context';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 
 interface Props {
   detailed?: boolean;
@@ -103,7 +103,7 @@ function onUserStateChange(key: unknown): void {
 }
 </script>
 
-<Dialog
+<LegacyDialog
     title="Edit Context"
     onclose={closeCallback}>
     <div slot="content" class="w-full">
@@ -169,5 +169,5 @@ function onUserStateChange(key: unknown): void {
         await editContext(contextName, contextNamespace, contextUser, contextCluster);
         }}>Save</Button>
     </svelte:fragment>
-</Dialog>
+</LegacyDialog>
     

@@ -1,8 +1,8 @@
 <script lang="ts">
-import Dialog from './Dialog.svelte';
+import LegacyDialog from './LegacyDialog.svelte';
 </script>
 
-<Dialog title="Test dialog" onclose={(): void => {}}>
+<LegacyDialog title="Test dialog" onclose={(): void => {}}>
   <i slot="icon" aria-label="icon">Icon</i>
 
   <i slot="content" aria-label="content">Content</i>
@@ -10,4 +10,4 @@ import Dialog from './Dialog.svelte';
   <i slot="validation" aria-label="validation">Validation</i>
 
   <i slot="buttons" aria-label="buttons">Buttons</i>
-</Dialog>
+</LegacyDialog>

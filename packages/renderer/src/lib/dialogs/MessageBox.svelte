@@ -8,7 +8,7 @@ import Fa from 'svelte-fa';
 import { type ButtonsType, type DropdownType, type IconButtonType } from '/@api/dialog';
 
 import Markdown from '../markdown/Markdown.svelte';
-import Dialog from './Dialog.svelte';
+import LegacyDialog from './LegacyDialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
 
 let currentId = 0;
@@ -116,7 +116,7 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} onclose={onClose}>
+  <LegacyDialog title={title} onclose={onClose}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
@@ -174,5 +174,5 @@ function getButtonType(b: boolean): ButtonType {
         {/if}
       {/each}
     </svelte:fragment>
-  </Dialog>
+  </LegacyDialog>
 {/if}

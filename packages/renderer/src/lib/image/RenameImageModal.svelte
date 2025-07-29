@@ -3,7 +3,7 @@ import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 export let closeCallback: () => void;
@@ -65,7 +65,7 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
 }
 </script>
 
-<Dialog
+<LegacyDialog
   title="Edit Image"
   onclose={closeCallback}>
   <div slot="content" class="w-full">
@@ -107,4 +107,4 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
         await renameImage(imageName, imageTag);
       }}>Save</Button>
   </svelte:fragment>
-</Dialog>
+</LegacyDialog>

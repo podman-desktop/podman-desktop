@@ -8,7 +8,7 @@ import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
 import IconImage from '../appearance/IconImage.svelte';
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
 // contains the original instances of registries when user clicks on `Edit password` menu item
@@ -447,7 +447,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 </SettingsPage>
 
 {#if showNewRegistryForm}
-  <Dialog
+  <LegacyDialog
     title="Add Registry"
     onclose={(): void => {
       setNewRegistryFormVisible(false);
@@ -489,5 +489,5 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
         inProgress={loggingIn}
         on:click={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
     </svelte:fragment>
-  </Dialog>
+  </LegacyDialog>
 {/if}

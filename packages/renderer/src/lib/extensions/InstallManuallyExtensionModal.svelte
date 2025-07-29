@@ -3,7 +3,7 @@ import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 
 export let closeCallback: () => void;
 let imageName = '';
@@ -90,7 +90,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 
 <svelte:window on:keydown={handleKeydown} />
 
-<Dialog
+<LegacyDialog
   title="Install Custom Extension"
   onclose={closeCallback}>
   <div slot="content" class="flex flex-col leading-5 space-y-5">
@@ -145,4 +145,4 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       <Button on:click={closeCallback}>Done</Button>
     {/if}
   </svelte:fragment>
-</Dialog>
+</LegacyDialog>

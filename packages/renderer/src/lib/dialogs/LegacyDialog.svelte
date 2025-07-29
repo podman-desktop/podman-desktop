@@ -1,37 +1,34 @@
+<!--
+    @component
+    @deprecated Use Dialog component instead, this is kept for the time to migrate all components using it to Svelte 5 Runes mode.
+-->
+
 <script lang="ts">
 import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
-import type { Snippet } from 'svelte';
 
-interface Props {
-  title: string;
-  onclose: () => void;
-  icon?: Snippet;
-  content?: Snippet;
-  validation?: Snippet;
-  buttons?: Snippet;
-}
+export let title: string;
 
-let { title, onclose, icon, content, validation, buttons }: Props = $props();
+export let onclose: () => void;
 </script>
 
 <Modal name={title} onclose={onclose}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
-    {@render icon?.()}
+    <slot name="icon" />
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>
 
     <CloseButton onclick={onclose} />
   </div>
 
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4">
-    {@render content?.()}
+    <slot name="content" />
   </div>
 
   <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5">
-    {#if validation}
+    {#if $$slots.validation}
       <div class="grow">
-        {@render validation?.()}
+        <slot name="validation" />
       </div>
     {/if}
-    {@render buttons?.()}
+    <slot name="buttons" />
   </div>
 </Modal>
