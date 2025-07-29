@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import { shell } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
@@ -24,6 +25,7 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { ExperimentalConfiguration, Timestamp } from './experimental-feature-feedback-handler.js';
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
+import type { MessageBox } from './message-box.js';
 
 vi.mock('electron', () => ({
   shell: {
@@ -66,6 +68,10 @@ const configuration: Configuration = {
   update: updateMock,
 };
 
+const messageBox: MessageBox = {
+  showMessageBox: vi.fn(),
+} as unknown as MessageBox;
+
 class TestExperimentalFeatureFeedbackHandler extends ExperimentalFeatureFeedbackHandler {
   override experimentalFeatures: Map<string, ExperimentalConfiguration> = new Map<string, ExperimentalConfiguration>();
 
@@ -75,6 +81,10 @@ class TestExperimentalFeatureFeedbackHandler extends ExperimentalFeatureFeedback
 
   override setReminder(configurationName: string): void {
     return super.setReminder(configurationName);
+  }
+
+  override async showFeedbackDialog(): Promise<void> {
+    return super.showFeedbackDialog();
   }
 
   override async save(id: string): Promise<void> {
@@ -92,11 +102,12 @@ class TestExperimentalFeatureFeedbackHandler extends ExperimentalFeatureFeedback
 
 const setReminderSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'setReminder');
 const setTimestampSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'setTimestamp');
+const disableFeatureSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.prototype, 'disableFeature');
 
 let feedbackForm: TestExperimentalFeatureFeedbackHandler;
 beforeEach(() => {
   vi.resetAllMocks();
-  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry);
+  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox);
 
   vi.spyOn(feedbackForm, 'save').mockImplementation(() => {
     return Promise.resolve();
@@ -129,12 +140,15 @@ describe('init', () => {
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-
+    const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockImplementation(() => {
+      return Promise.resolve();
+    });
     await feedbackForm.init();
 
     expect(setReminderSpy).not.toHaveBeenCalled();
 
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
+    expect(showFeedbackDialogSpy).toBeCalled();
   });
 
   test(`should remove old configs with 'false' value`, async () => {
@@ -236,6 +250,108 @@ describe('setReminder', () => {
     const setTimestampSpy = vi.spyOn(feedbackForm, 'setTimestamp');
     feedbackForm.setReminder('feat.feature42');
     expect(setTimestampSpy).toBeCalledWith('feat.feature42', undefined);
+  });
+});
+
+describe('showFeedbackDialog', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers();
+    const MOCK_NOW = new Date('2025-01-01T12:00:00.000Z');
+    vi.setSystemTime(MOCK_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('should open external link when user clicks "Share Feedback"', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
+      return Promise.resolve();
+    });
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(messageBox.showMessageBox).toHaveBeenCalledTimes(1);
+    expect(openExternalSpy).toHaveBeenCalledWith('https://feature.link.1.com');
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', undefined);
+  });
+
+  test('should set timestamp for 1 day when user selects "Remind me tomorrow"', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 0 });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
+      return Promise.resolve();
+    });
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 1);
+    expect(openExternalSpy).not.toHaveBeenCalled();
+  });
+
+  test('should set timestamp for 2 days when user selects "Remind me in 2 days"', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
+      return Promise.resolve();
+    });
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 2);
+    expect(openExternalSpy).not.toHaveBeenCalled();
+  });
+
+  test('should call disableFeature when user selects "Dont show again"', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 2 });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
+      return Promise.resolve();
+    });
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(openExternalSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).toBeCalledTimes(1);
+    expect(disableFeatureSpy).toBeCalledWith('feat.feature1');
+  });
+
+  test('should NOT show a dialog if the timestamp is in the future', async () => {
+    const futureTimestamp = new Date('2100-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: futureTimestamp, disabled: true };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+    expect(messageBox.showMessageBox).not.toHaveBeenCalled();
+  });
+
+  test('should NOT show dialog when is a feature disabled', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: true };
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).not.toHaveBeenCalled();
   });
 });
 
