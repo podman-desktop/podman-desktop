@@ -3,7 +3,7 @@ import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
 
 export let title: string;
 
-export let onclose: (() => void) | undefined = undefined;
+export let onclose: () => void;
 </script>
 
 <Modal name={title} onclose={onclose}>

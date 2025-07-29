@@ -2,7 +2,7 @@
 import Dialog from './Dialog.svelte';
 </script>
 
-<Dialog title="Test dialog">
+<Dialog title="Test dialog" onclose={(): void => {}}>
   <i slot="icon" aria-label="icon">Icon</i>
 
   <i slot="content" aria-label="content">Content</i>
