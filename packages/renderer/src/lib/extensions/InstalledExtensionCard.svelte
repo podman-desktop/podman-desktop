@@ -4,7 +4,11 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import InstalledExtensionCardLeft from './InstalledExtensionCardLeft.svelte';
 import InstalledExtensionCardRight from './InstalledExtensionCardRight.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
 </script>
 
 <div
