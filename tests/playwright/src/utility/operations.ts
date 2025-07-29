@@ -462,13 +462,15 @@ export async function readFileInVolumeFromCLI(volumeName: string, fileName: stri
       const platform = os.platform();
       let command: string;
 
-      if (isMac || isWindows) {
-        // macOS and Windows: Use podman machine to SSH into the VM
+      if (isMac) {
         const pathInVM = `/var/lib/containers/storage/volumes/${volumeName}/_data/${fileName}`;
         command = `podman machine ssh cat ${pathInVM}`;
+      } else if (isWindows) {
+        const user = execSync(`podman machine ssh 'echo $USER'`).toString().trim();
+        const homeDir = `/home/${user}`;
+        const pathInVM = `${homeDir}/.local/share/containers/storage/volumes/${volumeName}/_data/${fileName}`;
+        command = `podman machine ssh cat ${pathInVM}`;
       } else if (isLinux) {
-        // Linux: Assume Podman is running natively
-        // Detect if running rootless by checking env or fallback to rootful
         const isRootless = process.getuid && process.getuid() !== 0;
         const basePath = isRootless
           ? `${os.homedir()}/.local/share/containers/storage/volumes`
