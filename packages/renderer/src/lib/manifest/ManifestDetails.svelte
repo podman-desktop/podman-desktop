@@ -18,17 +18,21 @@ import Badge from '../ui/Badge.svelte';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
 
-export let imageID: string;
-export let engineId: string;
-export let base64RepoTag: string;
+interface Props {
+  imageID: string;
+  engineId: string;
+  base64RepoTag: string;
+}
+
+let { imageID, engineId, base64RepoTag }: Props = $props();
 
 let globalContext: ContextUI | undefined;
 let viewContributions: ViewInfoUI[] = [];
 let allImages: ImageInfo[];
 
 let imageInfo: ImageInfo | undefined;
-let imageMetadataInfo: ImageInfoUI | undefined;
-let detailsPage: DetailsPage | undefined;
+let imageMetadataInfo: ImageInfoUI | undefined = $state();
+let detailsPage: DetailsPage | undefined = $state();
 
 const imageUtils = new ImageUtils();
 

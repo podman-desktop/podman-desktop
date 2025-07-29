@@ -4,7 +4,11 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import TroubleshootingContainerEngineGrabContainers from './TroubleshootingContainerEngineGrabContainers.svelte';
 import TroubleshootingContainerEnginePing from './TroubleshootingContainerEnginePing.svelte';
 
-export let containerEngineRunning: ProviderContainerConnectionInfo;
+interface Props {
+  containerEngineRunning: ProviderContainerConnectionInfo;
+}
+
+let { containerEngineRunning }: Props = $props();
 </script>
 
 <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] m-4 p-4 text-sm" role="region" aria-label={containerEngineRunning.name}>

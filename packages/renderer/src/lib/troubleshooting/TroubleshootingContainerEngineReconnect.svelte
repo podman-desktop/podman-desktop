@@ -2,9 +2,9 @@
 import { faPlug } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage } from '@podman-desktop/ui-svelte';
 
-let reconnectInProgress = false;
-let reconnectError = '';
-let reconnectResult = '';
+let reconnectInProgress = $state(false);
+let reconnectError = $state('');
+let reconnectResult = $state('');
 
 async function reconnectContainerProviders(): Promise<void> {
   const start = performance.now();

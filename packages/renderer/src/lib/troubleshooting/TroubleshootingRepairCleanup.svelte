@@ -5,13 +5,18 @@ import Fa from 'svelte-fa';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
-export let providers: ProviderInfo[] = [];
-let providerIdsWithCleanup: string[] = [];
-$: providerIdsWithCleanup = providers.filter(provider => provider.cleanupSupport).map(provider => provider.internalId);
+interface Props {
+  providers?: ProviderInfo[];
+}
 
-let cleanupInProgress = false;
+let { providers = [] }: Props = $props();
+let providerIdsWithCleanup: string[] = $derived(
+  providers.filter(provider => provider.cleanupSupport).map(provider => provider.internalId),
+);
 
-let cleanupFailures: string[] = [];
+let cleanupInProgress = $state(false);
+
+let cleanupFailures: string[] = $state([]);
 
 async function openCleanupDialog(): Promise<void> {
   let message = 'This action may delete data. Proceed ?';

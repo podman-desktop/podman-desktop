@@ -6,9 +6,15 @@ import type { ProviderInfo } from '/@api/provider-info';
 import TroubleshootingContainerEngine from './TroubleshootingContainerEngine.svelte';
 import TroubleshootingContainerEngineReconnect from './TroubleshootingContainerEngineReconnect.svelte';
 
-export let providers: ProviderInfo[] = [];
-$: containerEngines = providers.map(provider => provider.containerConnections).flat();
-$: containerEnginesRunning = containerEngines.filter(containerEngine => containerEngine.status === 'started');
+interface Props {
+  providers?: ProviderInfo[];
+}
+
+let { providers = [] }: Props = $props();
+let containerEngines = $derived(providers.map(provider => provider.containerConnections).flat());
+let containerEnginesRunning = $derived(
+  containerEngines.filter(containerEngine => containerEngine.status === 'started'),
+);
 </script>
 
 <div class="flex flex-col w-full bg-[var(--pd-content-card-bg)] p-4 rounded-lg" role="region" aria-label="Container Connections">
