@@ -3,7 +3,6 @@ import { faCircle, faPlusCircle, type IconDefinition } from '@fortawesome/free-s
 import { Checkbox, isFontAwesomeIcon, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
 import { createEventDispatcher, onMount, tick } from 'svelte';
-import { preventDefault } from 'svelte/legacy';
 import Fa from 'svelte-fa';
 
 let iconType: 'fontAwesome' | 'unknown' | undefined = $state(undefined);
@@ -53,7 +52,9 @@ function handleKeydownAdditionalField(event: KeyboardEvent): void {
   }
 }
 
-function handleClick(): void {
+function handleClick(event: Event): void {
+  event.preventDefault();
+
   if (additionalItem) {
     // display the new field input
     displayValueFieldInput = true;
@@ -103,7 +104,7 @@ onMount(() => {
     ? 'border-[var(--pd-content-card-border-selected)]'
     : 'border-[var(--pd-content-card-border)]'} border-2 flex flex-col"
   aria-label={value}
-  onclick={preventDefault(handleClick)}>
+  onclick={handleClick}>
   <div class="flex flex-row">
     <div class="flex flex-col">
       {#if !additionalItem}
