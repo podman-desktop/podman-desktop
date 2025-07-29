@@ -150,6 +150,11 @@ export class Main implements IDisposable {
    */
   protected onBeforeQuit(): void {
     this.dispose();
+    // Override Command+Q macOS to call app.exit()
+    // Temp fix for https://github.com/electron/electron/issues/47420
+    if (isMac()) {
+      this.app.exit();
+    }
   }
 
   dispose(): void {
