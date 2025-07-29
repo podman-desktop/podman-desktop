@@ -92,7 +92,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 
 <Dialog
   title="Install Custom Extension"
-  on:close={closeCallback}>
+  onclose={closeCallback}>
   <div slot="content" class="flex flex-col leading-5 space-y-5">
     <div>
       <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">OCI Image:</label>

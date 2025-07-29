@@ -1,17 +1,12 @@
 <script lang="ts">
 import { CloseButton, Modal } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher } from 'svelte';
 
 export let title: string;
 
-const dispatch = createEventDispatcher();
-
-export let onclose: () => void = () => {
-  dispatch('close');
-};
+export let onclose: (() => void) | undefined = undefined;
 </script>
 
-<Modal name={title} on:close={onclose}>
+<Modal name={title} onclose={onclose}>
   <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
     <slot name="icon" />
     <h1 class="grow text-lg font-bold capitalize">{title}</h1>

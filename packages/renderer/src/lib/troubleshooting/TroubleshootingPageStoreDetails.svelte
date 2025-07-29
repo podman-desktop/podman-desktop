@@ -23,7 +23,7 @@ async function fetch(): Promise<void> {
 }
 </script>
 
-<Dialog title="Details of {eventStoreInfo.name}" on:close={closeCallback}>
+<Dialog title="Details of {eventStoreInfo.name}" onclose={closeCallback}>
   <svelte:component this={eventStoreInfo.iconComponent} slot="icon" size="20" />
 
   <div slot="content" class="inline-block w-full overflow-hidden overflow-y-auto text-left transition-all">

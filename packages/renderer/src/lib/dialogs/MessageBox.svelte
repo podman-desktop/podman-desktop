@@ -116,7 +116,7 @@ function getButtonType(b: boolean): ButtonType {
 </script>
 
 {#if display}
-  <Dialog title={title} on:close={onClose}>
+  <Dialog title={title} onclose={onClose}>
     <svelte:fragment slot="icon">
       {#if type === 'error'}
         <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />

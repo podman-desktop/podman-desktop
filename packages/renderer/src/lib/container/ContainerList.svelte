@@ -539,7 +539,7 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 {#if openChoiceModal}
   <Dialog
     title="Create a new container"
-    on:close={(): void => {
+    onclose={(): void => {
       openChoiceModal = false;
     }}>
     <div slot="content" class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">

@@ -105,7 +105,7 @@ function onUserStateChange(key: unknown): void {
 
 <Dialog
     title="Edit Context"
-    on:close={closeCallback}>
+    onclose={closeCallback}>
     <div slot="content" class="w-full">
     <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Name</label>
     <Input

@@ -449,7 +449,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 {#if showNewRegistryForm}
   <Dialog
     title="Add Registry"
-    on:close={(): void => {
+    onclose={(): void => {
       setNewRegistryFormVisible(false);
     }}>
     <div slot="content" class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
