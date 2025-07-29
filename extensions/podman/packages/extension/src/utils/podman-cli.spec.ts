@@ -39,7 +39,7 @@ vi.mock('@podman-desktop/api', () => {
     env: {
       isWindows: false,
       isMac: true,
-      isLinux: true,
+      isLinux: false,
     },
   };
 });
@@ -49,7 +49,7 @@ describe('isMultiplePodmanInstalled', () => {
     vi.resetAllMocks();
     vi.mocked(env).isWindows = false;
     vi.mocked(env).isMac = true;
-    vi.mocked(env).isLinux = true;
+    vi.mocked(env).isLinux = false;
   });
 
   describe('Custom binary path', () => {

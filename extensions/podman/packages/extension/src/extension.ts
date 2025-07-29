@@ -703,7 +703,6 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
     const installedPodman = await getPodmanInstallation();
     provider.updateDetectionChecks(getDetectionChecks(installedPodman));
 
-    // get warnings for multiple Podman installations
     const warnings = await getMultiplePodmanInstallationsWarnings(installedPodman);
     provider.updateWarnings(warnings);
 
