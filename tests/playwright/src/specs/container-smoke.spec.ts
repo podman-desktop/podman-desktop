@@ -316,10 +316,8 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
         .toBeTruthy();
 
       await containersPage.stopContainer(container);
-      const constainersDetailsPage = await containersPage.openContainersDetails(container);
-      await playExpect
-        .poll(async () => constainersDetailsPage.getState(), { timeout: 30_000 })
-        .toMatch(stopStatusRegex);
+      const containersDetailsPage = await containersPage.openContainersDetails(container);
+      await playExpect.poll(async () => containersDetailsPage.getState(), { timeout: 30_000 }).toMatch(stopStatusRegex);
     }
 
     //Start all containers

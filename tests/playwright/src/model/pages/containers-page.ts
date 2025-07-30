@@ -154,9 +154,8 @@ export class ContainersPage extends MainPage {
 
   async checkAllContainers(): Promise<void> {
     return test.step('Checks all containers', async () => {
-      let containersTable;
       try {
-        containersTable = await this.getTable();
+        const containersTable = await this.getTable();
         await playExpect(containersTable).toBeVisible();
         const controlRow = containersTable.getByRole('row').first();
         await playExpect(controlRow).toBeAttached();
