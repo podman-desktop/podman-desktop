@@ -176,7 +176,7 @@ jobs:
 
   win-update-e2e-test:
     name: win update e2e tests - ${{ matrix.installation }}
-    runs-on: windows-2025
+    runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:
@@ -188,6 +188,7 @@ jobs:
       fail-fast: false
       matrix:
         installation: ['vanilla', 'custom-extensions']
+        os: [windows-2025, windows-11-arm]
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
@@ -220,10 +221,24 @@ jobs:
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
           pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
+          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml").Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
@@ -247,7 +262,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: update-e2e-test-${{ matrix.installation }}
+          name: ${{ matrix.os }}-update-e2e-test-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw

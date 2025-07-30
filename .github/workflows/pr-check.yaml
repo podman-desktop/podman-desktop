@@ -434,7 +434,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: 
-        os: [windows-2025]
+        os: [windows-2025, windows-11-arm]
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
