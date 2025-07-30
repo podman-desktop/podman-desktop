@@ -458,7 +458,15 @@ export async function setStatusBarProvidersFeature(
 
 function isRootlessPodman(): boolean {
   try {
-    const output = execSync(`podman machine ssh podman info --format json`).toString();
+    let output: string;
+
+    if (isMac || isWindows) {
+      output = execSync(`podman machine ssh podman info --format json`).toString();
+    } else if (isLinux) {
+      output = execSync(`podman info --format json`).toString();
+    } else {
+      throw new Error('Unsupported platform');
+    }
     const info = JSON.parse(output);
     return info?.host?.security?.rootless === true;
   } catch (err) {
