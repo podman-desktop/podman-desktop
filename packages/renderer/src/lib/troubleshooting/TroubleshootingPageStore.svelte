@@ -6,9 +6,13 @@ import type { EventStoreInfo } from '/@/stores/event-store';
 
 import TroubleshootingPageStoreDetails from './TroubleshootingPageStoreDetails.svelte';
 
-export let eventStoreInfo: EventStoreInfo;
+interface Props {
+  eventStoreInfo: EventStoreInfo;
+}
 
-let fetchInProgress = false;
+let { eventStoreInfo }: Props = $props();
+
+let fetchInProgress = $state(false);
 async function fetch(): Promise<void> {
   fetchInProgress = true;
   try {
@@ -18,18 +22,18 @@ async function fetch(): Promise<void> {
   }
 }
 
-let openDetails = false;
+let openDetails = $state(false);
 </script>
 
 <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] p-2 items-center rounded-sm w-full" role="listitem" aria-label={eventStoreInfo.name}>
-  <div><svelte:component this={eventStoreInfo.iconComponent} size="20" /></div>
+  <div><eventStoreInfo.iconComponent size="20" /></div>
   <div class="text-xl">
     <button
       disabled={fetchInProgress}
       class="underline outline-hidden"
       title="Open Details"
       aria-label="Open Details"
-      on:click={(): boolean => (openDetails = true)}>
+      onclick={(): boolean => (openDetails = true)}>
       {eventStoreInfo.name}
     </button>
   </div>
