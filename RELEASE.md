@@ -75,6 +75,8 @@ You'll need to create another release from the 1.3.x branch. This can be done by
 
 ✅ If QE agrees with the release, we have a green light!
 
+**IMPORTANT NOTE:** Only the .z version that was approved by QE should be changed from pre-release to release. Any previous blocked versions need to stay as pre-release. For example, if the respin version `1.3.1` was approved by QE after finding bugs in `1.3.0`, only `1.3.1` should be moved from pre-release to release
+
 1. Ensure release notes PR is ready
 1. Merge the release notes before flagging the release as the 'latest': It is because Podman Desktop is displaying in the UI the release notes of the new release, so as soon as there is an update, the data needs to be there.
 
