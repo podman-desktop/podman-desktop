@@ -93,14 +93,17 @@ let contextsUnsubscribe: Unsubscriber;
 const buttonLabel = connectionInfo ? 'Update' : 'Create';
 const operationLabel = connectionInfo ? 'Update' : 'Creation';
 let loggerHandlerKey: symbol | undefined = undefined;
+let reconnectedUI: boolean = false;
 
 // reconnect the logger handler
 $effect(() => {
-  if (logsTerminal && loggerHandlerKey) {
+  if (!reconnectedUI && logsTerminal && loggerHandlerKey) {
     try {
       reconnectUI(loggerHandlerKey, getLoggerHandler());
     } catch (error) {
       console.error('error while reconnecting', error);
+    } finally {
+      reconnectedUI = true;
     }
   }
 });
