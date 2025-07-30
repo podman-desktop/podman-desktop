@@ -16,7 +16,7 @@ let providerIdsWithCleanup: string[] = $derived(
 
 let cleanupInProgress = $state(false);
 
-let cleanupFailures: string[] = $state([]);
+let cleanupFailures = $state<string[]>([]);
 
 async function openCleanupDialog(): Promise<void> {
   let message = 'This action may delete data. Proceed ?';
