@@ -450,7 +450,7 @@ $effect(() => {
                 <Button
                   aria-label="Setup {provider.name}"
                   title="Setup {provider.name}"
-                  on:click={(): void => router.goto(`/preferences/onboarding/${provider.extensionId}`)}>
+                  onclick={(): void => router.goto(`/preferences/onboarding/${provider.extensionId}`)}>
                   Setup ...
                 </Button>
               {:else}
@@ -477,7 +477,7 @@ $effect(() => {
                       <Button
                         aria-label="Create new {providerDisplayName}"
                         inProgress={providerInstallationInProgress.get(provider.name)}
-                        on:click={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
+                        onclick={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
                         {buttonTitle} ...
                       </Button>
                     </Tooltip>
@@ -486,7 +486,7 @@ $effect(() => {
                     <Button
                       aria-label="Setup {provider.name}"
                       title="Setup {provider.name}"
-                      on:click={(): void => {
+                      onclick={(): void => {
                         if (globalContext && isOnboardingEnabled(provider, globalContext)) {
                           router.goto(`/preferences/onboarding/${provider.extensionId}`);
                         } else {

@@ -233,7 +233,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 <SettingsPage title="Registries">
   {#snippet actions()}
     <div >
-      <Button on:click={(): void => setNewRegistryFormVisible(true)} icon={faPlusCircle} disabled={showNewRegistryForm}>
+      <Button onclick={(): void => setNewRegistryFormVisible(true)} icon={faPlusCircle} disabled={showNewRegistryForm}>
         Add registry
       </Button>
     </div>
@@ -284,7 +284,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
                 <Input placeholder="Username" aria-label="Username" bind:value={registry.username} />
               {:else if !registry.username && !registry.secret}
-                <Button on:click={(): void => markRegistryAsModified(registry)}>Login now</Button>
+                <Button onclick={(): void => markRegistryAsModified(registry)}>Login now</Button>
               {:else}
                 {registry.alias ?? registry.username}
               {/if}
@@ -303,8 +303,8 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                     )} />
               </div>
               <div class="w-1/5" role="cell">
-                <Button on:click={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
-                <Button on:click={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
+                <Button onclick={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
+                <Button onclick={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
               </div>
             {:else}
               <div class="w-1/5" role="cell">
@@ -423,7 +423,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
             <div class="w-1/5 flex space-x-2 justify-end" role="cell">
               {#if listedSuggestedRegistries[i]}
                 <Button
-                  on:click={(): Promise<void> => loginToRegistry(newRegistryRequest)}
+                  onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}
                   disabled={!newRegistryRequest.serverUrl || !newRegistryRequest.username || !newRegistryRequest.secret}
                   inProgress={loggingIn}>
                   Login
@@ -431,9 +431,9 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {/if}
 
               {#if listedSuggestedRegistries[i]}
-                <Button on:click={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
+                <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
               {:else}
-                <Button on:click={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
+                <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}
             </div>
           </div>
@@ -490,14 +490,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
       {/snippet}
     {#snippet buttons()}
       
-        <Button type="link" on:click={(): boolean => (showNewRegistryForm = false)}>Cancel</Button>
+        <Button type="link" onclick={(): boolean => (showNewRegistryForm = false)}>Cancel</Button>
         <Button
           type="primary"
           disabled={!newRegistryRequest.serverUrl.trim() ||
             !newRegistryRequest.username.trim() ||
             !newRegistryRequest.secret.trim()}
           inProgress={loggingIn}
-          on:click={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
+          onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
       
       {/snippet}
   </Dialog>
