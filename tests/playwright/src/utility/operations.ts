@@ -471,11 +471,7 @@ function getPodmanVolumePath(volumeName: string, fileName: string): string {
   const isRootless = isRootlessPodman();
 
   if (isMac || isWindows) {
-    const user = execSync(`podman machine ssh 'echo $USER'`).toString().trim();
-    const homeDir = `/home/${user}`;
-    const base = isRootless
-      ? `${homeDir}/.local/share/containers/storage/volumes`
-      : '/var/lib/containers/storage/volumes';
+    const base = isRootless ? `.local/share/containers/storage/volumes` : '/var/lib/containers/storage/volumes';
     return `${base}/${relativePath}`;
   }
 
