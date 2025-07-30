@@ -5,17 +5,21 @@ import type { Terminal } from '@xterm/xterm';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 
-import LegacyDialog from '../dialogs/LegacyDialog.svelte';
+import Dialog from '../dialogs/Dialog.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let closeCallback: () => void;
-export let manifestInfoToPush: ImageInfoUI;
+interface Props {
+  closeCallback: () => void;
+  manifestInfoToPush: ImageInfoUI;
+}
 
-let pushInProgress = false;
-let pushFinished = false;
-let initTerminal = false;
-let logsPush: Terminal;
+let { closeCallback, manifestInfoToPush }: Props = $props();
+
+let pushInProgress = $state(false);
+let pushFinished = $state(false);
+let initTerminal = $state(false);
+let logsPush = $state<Terminal>();
 
 async function pushManifest(): Promise<void> {
   initTerminal = true;
@@ -26,12 +30,12 @@ async function pushManifest(): Promise<void> {
   pushInProgress = true;
 
   try {
-    logsPush.write(`Pushing manifest ${manifestInfoToPush.name} ...\n\r`);
+    logsPush?.write(`Pushing manifest ${manifestInfoToPush.name} ...\n\r`);
     await window.pushManifest({ name: manifestInfoToPush.name, destination: manifestInfoToPush.name });
-    logsPush.write('Manifest pushed successfully\n\r');
+    logsPush?.write('Manifest pushed successfully\n\r');
     pushFinished = true;
   } catch (err) {
-    logsPush.write(err + '\n\r');
+    logsPush?.write(err + '\n\r');
     pushFinished = true;
     console.error(err);
   }
@@ -43,41 +47,45 @@ async function pushManifestFinished(): Promise<void> {
 }
 </script>
 
-<LegacyDialog
+<Dialog
   title="Push manifest"
   onclose={(): void => {
     closeCallback();
     logsPush?.dispose();
   }}>
-  <div slot="content" class="flex flex-col leading-5 space-y-5">
-    {#if !pushInProgress}
-      <p class="text-sm">
-        Push manifest {manifestInfoToPush.name}
+  {#snippet content()}
+    <div  class="flex flex-col leading-5 space-y-5">
+      {#if !pushInProgress}
+        <p class="text-sm">
+          Push manifest {manifestInfoToPush.name}
 
-        {#if manifestInfoToPush.children && manifestInfoToPush.children.length > 0}
-          with {manifestInfoToPush.children.length} associated images
-        {/if}
-      </p>
-    {/if}
-    <div class="h-[185px]" hidden={initTerminal === false}>
-      <TerminalWindow class="h-full" bind:terminal={logsPush} disableStdIn />
+          {#if manifestInfoToPush.children && manifestInfoToPush.children.length > 0}
+            with {manifestInfoToPush.children.length} associated images
+          {/if}
+        </p>
+      {/if}
+      <div class="h-[185px]" hidden={initTerminal === false}>
+        <TerminalWindow class="h-full" bind:terminal={logsPush} disableStdIn />
+      </div>
     </div>
-  </div>
+  {/snippet}
 
-  <svelte:fragment slot="buttons">
-    {#if !pushInProgress && !pushFinished}
-      <Button class="w-auto" type="secondary" on:click={closeCallback}>Cancel</Button>
-    {/if}
-    {#if !pushFinished}
-      <Button
-        class="w-auto"
-        icon={faCircleArrowUp}
-        on:click={pushManifest}
-        inProgress={pushInProgress}>
-        Push manifest
-      </Button>
-    {:else}
-      <Button on:click={pushManifestFinished} class="w-auto">Done</Button>
-    {/if}
-  </svelte:fragment>
-</LegacyDialog>
+  {#snippet buttons()}
+  
+      {#if !pushInProgress && !pushFinished}
+        <Button class="w-auto" type="secondary" on:click={closeCallback}>Cancel</Button>
+      {/if}
+      {#if !pushFinished}
+        <Button
+          class="w-auto"
+          icon={faCircleArrowUp}
+          on:click={pushManifest}
+          inProgress={pushInProgress}>
+          Push manifest
+        </Button>
+      {:else}
+        <Button on:click={pushManifestFinished} class="w-auto">Done</Button>
+      {/if}
+    
+  {/snippet}
+</Dialog>
