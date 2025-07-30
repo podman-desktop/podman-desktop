@@ -298,12 +298,6 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
     const stopStatusRegex = new RegExp(`${stopStatusArray.join('|')}`);
 
-    let images = await navigationBar.openImages();
-    const pullImagePage = await images.openPullImage();
-    images = await pullImagePage.pullImage(imageToPull, imageTag);
-
-    await playExpect.poll(async () => await images.waitForImageExists(imageToPull), { timeout: 10_000 }).toBeTruthy();
-
     //Start 3 containers and stop them
     for (const container of containerList) {
       const images = await navigationBar.openImages();
