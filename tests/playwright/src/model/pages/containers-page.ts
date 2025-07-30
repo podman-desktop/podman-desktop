@@ -30,6 +30,7 @@ export class ContainersPage extends MainPage {
   readonly createContainerButton: Locator;
   readonly playKubernetesYAMLButton: Locator;
   readonly pruneConfirmationButton: Locator;
+  readonly runAllContainersButton: Locator;
 
   constructor(page: Page) {
     super(page, 'containers');
@@ -45,6 +46,7 @@ export class ContainersPage extends MainPage {
     this.pruneConfirmationButton = this.page.getByRole('button', {
       name: 'Yes',
     });
+    this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
   }
 
   async openContainersDetails(name: string): Promise<ContainerDetailsPage> {
@@ -150,6 +152,32 @@ export class ContainersPage extends MainPage {
     });
   }
 
+  async checkAllContainers(): Promise<void> {
+    return test.step('Checks all containers', async () => {
+      let containersTable;
+      try {
+        containersTable = await this.getTable();
+        await playExpect(containersTable).toBeVisible();
+        const controlRow = containersTable.getByRole('row').first();
+        await playExpect(controlRow).toBeAttached();
+        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
+        await playExpect(checkboxColumnHeader).toBeAttached();
+        const containersToggle = checkboxColumnHeader.getByTitle('Toggle all');
+        await playExpect(containersToggle).toBeAttached();
+
+        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-unchecked')) {
+          await containersToggle.click();
+        }
+
+        await playExpect
+          .poll(async () => containersToggle.innerHTML(), { timeout: 15_000 })
+          .toContain('pd-input-checkbox-checked');
+      } catch (err) {
+        console.log(`Exception caught on containers page when checking cells with message: ${err}`);
+      }
+    });
+  }
+
   async containerExists(name: string): Promise<boolean> {
     return (await this.getContainerRowByName(name)) !== undefined;
   }
@@ -183,5 +211,13 @@ export class ContainersPage extends MainPage {
       return image;
     }
     return '';
+  }
+
+  async startAllContainers(): Promise<ContainersPage> {
+    return test.step('Start all containers', async () => {
+      await this.checkAllContainers();
+      await this.runAllContainersButton.click();
+      return this;
+    });
   }
 }

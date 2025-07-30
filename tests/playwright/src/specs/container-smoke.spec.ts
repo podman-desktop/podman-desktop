@@ -291,4 +291,60 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
         .toBeFalsy();
     }
   });
+
+  test('Bulk action start all containers', async ({ navigationBar }) => {
+    test.setTimeout(210_000);
+
+    const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
+    const stopStatusRegex = new RegExp(`${stopStatusArray.join('|')}`);
+
+    let images = await navigationBar.openImages();
+    const pullImagePage = await images.openPullImage();
+    images = await pullImagePage.pullImage(imageToPull, imageTag);
+
+    await playExpect.poll(async () => await images.waitForImageExists(imageToPull), { timeout: 10_000 }).toBeTruthy();
+
+    //Start 3 containers and stop them
+    for (const container of containerList) {
+      const images = await navigationBar.openImages();
+      await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
+
+      const containersPage = await images.startContainerWithImage(imageToPull, container, containerStartParams);
+      await playExpect(containersPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
+        .toBeTruthy();
+
+      await containersPage.stopContainer(container);
+      const constainersDetailsPage = await containersPage.openContainersDetails(container);
+      await playExpect
+        .poll(async () => constainersDetailsPage.getState(), { timeout: 30_000 })
+        .toMatch(stopStatusRegex);
+    }
+
+    //Start all containers
+    let containersPage = await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible();
+    await containersPage.startAllContainers();
+
+    for (const container of containerList) {
+      containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const containersDetailsPage = await containersPage.openContainersDetails(container);
+      await playExpect(containersDetailsPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => containersDetailsPage.getState(), { timeout: 30_000 })
+        .toContain(ContainerState.Running);
+    }
+
+    //Delete all containers
+    for (const container of containerList) {
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      await containersPage.deleteContainer(container);
+      await playExpect
+        .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
+        .toBeFalsy();
+    }
+  });
 });
