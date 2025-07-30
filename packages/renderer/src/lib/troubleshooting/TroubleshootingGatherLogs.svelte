@@ -5,7 +5,7 @@ import Fa from 'svelte-fa';
 
 import { Uri } from '../uri/Uri';
 
-let logs: string[] = [];
+let logs = $state<string[]>([]);
 
 // Save files as a zip file (we first ask the user for the dialog, and then save the files to the filepath)
 async function saveLogsAsZip(): Promise<void> {
