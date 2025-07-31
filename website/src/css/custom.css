@@ -239,3 +239,7 @@ article .markdown ol {
 article .markdown ol ol {
   list-style-type: lower-roman;
 }
+.dropdown__link:hover {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+}
