@@ -33,14 +33,14 @@ const closeAction = (): void => {
   class="flex flex-nowrap min-h-10 cursor-default max-h-30 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded-md bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
   title={taskInfo.name}
 >
-  <div class="flex flex-row gap-1">
+  <div class="flex flex-row gap-1 items-center">
     <div
       class="mr-1 text-[var(--pd-state-info)] w-fit h-fit self-center"
       role="status"
       aria-label={taskInfo.status}
     >
       {#if taskInfo.status === 'in-progress'}
-        <Spinner size="2em"/>
+        <Spinner size="1.5em"/>
       {:else if taskInfo.status === 'success'}
         <Fa icon={faCheckCircle} class="text-[var(--pd-state-success)] fa-xl"/>
       {:else if taskInfo.status === 'canceled'}
@@ -50,7 +50,7 @@ const closeAction = (): void => {
       {/if}
     </div>
 
-    <div class="text-base text-ellipsis text-[var(--pd-card-text)] line-clamp-3 h-full overflow-hidden break-all">
+    <div class="text-base text-ellipsis text-[var(--pd-card-text)] line-clamp-3 h-fit overflow-hidden break-all">
       {taskStatus[taskInfo.status] ?? ''} {taskInfo.name}
       {#if taskInfo.error}
         <p class="text-[var(--pd-content-text)]">{taskInfo.error}</p>
