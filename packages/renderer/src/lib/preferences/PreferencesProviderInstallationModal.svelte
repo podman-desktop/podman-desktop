@@ -7,10 +7,14 @@ import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 import IconImage from '../appearance/IconImage.svelte';
 
-export let providerToBeInstalled: { provider: ProviderInfo; displayName: string };
-export let preflightChecks: CheckStatus[];
-export let closeCallback: () => void;
-export let doCreateNew: (provider: ProviderInfo, displayName: string) => void;
+interface Props {
+  providerToBeInstalled: { provider: ProviderInfo; displayName: string };
+  preflightChecks: CheckStatus[];
+  closeCallback: () => void;
+  doCreateNew: (provider: ProviderInfo, displayName: string) => void;
+}
+
+let { providerToBeInstalled, preflightChecks, closeCallback, doCreateNew }: Props = $props();
 
 async function openLink(e: MouseEvent, url: string): Promise<void> {
   e.preventDefault();
@@ -47,7 +51,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
                       <div class="flex flex-row mt-0.5">
                         <span class="mr-1">See:</span>
                         {#each preCheck.docLinks as link, index (index)}
-                          <a href={link.url} target="_blank" class="mr-1" on:click={async (e): Promise<void> => await openLink(e, link.url)}
+                          <a href={link.url} target="_blank" class="mr-1" onclick={async (e): Promise<void> => await openLink(e, link.url)}
                             >{link.title}</a>
                         {/each}
                       </div>
