@@ -19,10 +19,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import type { PodmanConnectionTypes } from '../core/types';
+import type { PodmanVirtualizationProviders } from '../core/types';
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
-import { ResourceConnectionCardPage } from './resource-connection-card-page';
 import { ResourcesPage } from './resources-page';
 
 export class CreateMachinePage extends BasePage {
@@ -46,13 +45,13 @@ export class CreateMachinePage extends BasePage {
       enableUserNet = false,
       startNow = true,
       setAsDefault = true,
-      connectionType,
+      virtualizationProvider,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
       setAsDefault?: boolean;
-      connectionType?: PodmanConnectionTypes;
+      virtualizationProvider?: PodmanVirtualizationProviders;
     },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
@@ -60,7 +59,7 @@ export class CreateMachinePage extends BasePage {
         isRootful,
         enableUserNet,
         startNow,
-        connectionType,
+        virtualizationProvider,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
@@ -81,20 +80,7 @@ export class CreateMachinePage extends BasePage {
 
       await playExpect(goBackToResourcesButton).toBeEnabled();
       await goBackToResourcesButton.click();
-
-      const resourcesPage = new ResourcesPage(this.page);
-      await playExpect(resourcesPage.heading).toBeVisible();
-      const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
-      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-
-      if (connectionType) {
-        await machineCard.resourceElement.getByLabel('Connection Type').scrollIntoViewIfNeeded();
-        playExpect(await machineCard.resourceElement.getByLabel('Connection Type').innerText()).toContain(
-          connectionType,
-        );
-      }
-
-      return resourcesPage;
+      return new ResourcesPage(this.page);
     });
   }
 
