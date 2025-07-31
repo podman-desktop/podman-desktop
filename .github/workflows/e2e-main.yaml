@@ -225,7 +225,7 @@ jobs:
             Write-host "Major version change, using default version 1.20.0"
             $newVersion = "1.20.0"
           }
-          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -FilePath package.json_tmp
+          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -Encoding utf8 -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
       - name: Build Podman Desktop locally with electron updater included
