@@ -85,7 +85,10 @@ export const KubernetesResourceAttributes: Record<KubernetesResources, string[]>
   [KubernetesResources.Jobs]: ['Selected', 'Status', 'Name', 'Conditions', 'Completions', 'Age', 'Actions'],
 };
 
-export enum PodmanConnectionTypes {
+export enum PodmanVirtualizationProviders {
   WSL = 'Wsl',
   HyperV = 'Hyperv',
+  AppleHV = 'Apple HyperVisor',
+  LibKrun = 'default GPU enabled (LibKrun)',
+  Qemu = 'Qemu',
 }

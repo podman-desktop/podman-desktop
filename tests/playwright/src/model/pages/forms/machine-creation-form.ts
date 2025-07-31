@@ -20,8 +20,9 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
-import { PodmanConnectionTypes } from '../../core/types';
+import type { PodmanVirtualizationProviders } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -75,15 +76,15 @@ export class MachineCreationForm extends BasePage {
       isRootful = true,
       enableUserNet = false,
       startNow = true,
-      connectionType,
+      virtualizationProvider,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
-      connectionType?: PodmanConnectionTypes;
+      virtualizationProvider?: PodmanVirtualizationProviders;
     } = {},
   ): Promise<void> {
-    return test.step(`Create Podman Machine '${machineName}' with settings: ${isRootful ? 'rootful' : 'rootless'}, ${enableUserNet ? 'usernet enabled' : 'usernet disabled'}, ${startNow ? 'startnow enabled' : 'startnow disabled'}${connectionType ? ', and ' + connectionType : ''}`, async () => {
+    return test.step(`Create Podman Machine '${machineName}' with settings: ${isRootful ? 'rootful' : 'rootless'}, ${enableUserNet ? 'usernet enabled' : 'usernet disabled'}, ${startNow ? 'startnow enabled' : 'startnow disabled'}${virtualizationProvider ? ', and ' + virtualizationProvider : ''}`, async () => {
       await playExpect(this.podmanMachineConfiguration).toBeVisible({
         timeout: 10_000,
       });
@@ -91,20 +92,27 @@ export class MachineCreationForm extends BasePage {
       await this.podmanMachineName.fill(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
-
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
-        if (connectionType === PodmanConnectionTypes.HyperV) {
-          await playExpect(this.providerTypeWslOption).toBeVisible({ timeout: 10_000 });
-          await this.providerTypeWslOption.scrollIntoViewIfNeeded();
-          await this.providerTypeWslOption.click();
+      }
+      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
+        const providerTypeButton = this.podmanMachineConfiguration.getByRole('button', {
+          name: getDefaultVirtualizationProvider(),
+          exact: true,
+        });
+        await playExpect(providerTypeButton).toBeVisible({ timeout: 10_000 });
+        await providerTypeButton.scrollIntoViewIfNeeded();
+        await providerTypeButton.click();
 
-          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
-          await this.providerTypeHypervOption.click();
+        const newProviderTypeButton = this.podmanMachineConfiguration.getByRole('button', {
+          name: virtualizationProvider,
+          exact: true,
+        });
+        await playExpect(newProviderTypeButton).toBeVisible({ timeout: 10_000 });
+        await newProviderTypeButton.click();
 
-          await playExpect(this.providerTypeWslOption).not.toBeVisible({ timeout: 10_000 });
-          await playExpect(this.providerTypeHypervOption).toBeVisible({ timeout: 10_000 });
-        }
+        await playExpect(providerTypeButton).not.toBeVisible({ timeout: 10_000 });
+        await playExpect(newProviderTypeButton).toBeVisible({ timeout: 10_000 });
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 

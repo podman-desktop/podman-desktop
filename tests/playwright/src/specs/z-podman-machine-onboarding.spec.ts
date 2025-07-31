@@ -186,6 +186,7 @@ test.describe
               await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
               await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
               await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
+              //TODO: does it make sense to add the check from podman-machine-tests?
               await resourcesPodmanConnections.resourceElementDetailsButton.click();
               const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
               await playExpect(podmanMachineDetails.podmanMachineStatus).toBeVisible();

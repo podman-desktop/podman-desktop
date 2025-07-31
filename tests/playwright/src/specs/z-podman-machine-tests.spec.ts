@@ -18,7 +18,6 @@
 
 import type { Locator } from '@playwright/test';
 
-import { PodmanConnectionTypes } from '../model/core/types';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
@@ -31,6 +30,7 @@ import {
   resetPodmanMachinesFromCLI,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
+import { getDefaultVirtualizationProvider, virtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const DEFAULT_PODMAN_MACHINE = 'Podman Machine';
@@ -147,11 +147,6 @@ test.describe
         await resourcesPage.goToCreateNewResourcePage(RESOURCE_NAME);
       });
 
-      const connectionType = {
-        wsl: PodmanConnectionTypes.WSL,
-        hyperv: PodmanConnectionTypes.HyperV,
-      }[process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase() ?? ''];
-
       const podmanMachineCreatePage = new PodmanOnboardingPage(page);
 
       await test.step('Create podman machine', async () => {
@@ -159,13 +154,16 @@ test.describe
           isRootful: false,
           enableUserNet: true,
           startNow: false,
-          connectionType,
+          virtualizationProvider,
         });
         await playExpect(podmanMachineCreatePage.goBackButton).toBeEnabled({ timeout: 180_000 });
         await podmanMachineCreatePage.goBackButton.click();
       });
 
-      await playExpect(resourcesPage.heading).toBeVisible();
+      await resourcesPage.verifyVirtualizationProvider(
+        ROOTLESS_PODMAN_MACHINE_VISIBLE,
+        virtualizationProvider ?? getDefaultVirtualizationProvider(),
+      );
     });
 
     test('Switch to rootless podman machine', async ({ page }) => {
