@@ -21,6 +21,7 @@ import type { ContainerInteractiveParams } from '../model/core/types';
 import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '../utility/operations';
+import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
@@ -212,6 +213,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
   });
 
   test('Create volume on the system mapped into container', async ({ navigationBar, page }) => {
+    test.skip(isWindows, 'Skipped on Windows due to platform-specific limitations.');
     //create a new volume
     let volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();
