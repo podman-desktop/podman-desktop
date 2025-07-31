@@ -7,7 +7,7 @@ import { router } from 'tinro';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import type { KubeContext } from '/@api/kubernetes-context';
 
-import LegacyDialog from '../dialogs/LegacyDialog.svelte';
+import Dialog from '../dialogs/Dialog.svelte';
 
 interface Props {
   detailed?: boolean;
@@ -103,71 +103,74 @@ function onUserStateChange(key: unknown): void {
 }
 </script>
 
-<LegacyDialog
+<Dialog
     title="Edit Context"
     onclose={closeCallback}>
-    <div slot="content" class="w-full">
-    <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Name</label>
-    <Input
-        bind:value={contextName}
-        name="contextName"
-        id="contextName"
-        placeholder="Enter context name (e.g. kind-context-name-1)"
-        aria-invalid={contextNameErrorMessage !== ''}
-        aria-label="contextName"
-        required />
-    {#if contextNameErrorMessage}
-        <ErrorMessage error={contextNameErrorMessage} />
-    {/if}
+    {#snippet content()}
+    <div  class="w-full">
+      <label for="contextName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Name</label>
+      <Input
+          bind:value={contextName}
+          name="contextName"
+          id="contextName"
+          placeholder="Enter context name (e.g. kind-context-name-1)"
+          aria-invalid={contextNameErrorMessage !== ''}
+          aria-label="contextName"
+          required />
+      {#if contextNameErrorMessage}
+          <ErrorMessage error={contextNameErrorMessage} />
+      {/if}
 
-    <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Cluster</label>
-    <Dropdown
-      class="text-sm"
-      id="contextCluster"
-      onChange={onClusterStateChange}
-      value={contextCluster}
-      options={clusters?.map((cluster) => ({
-        value: cluster.name,
-        label: cluster.name,
-      }))}>
-    </Dropdown>
+      <label for="contextCluster" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Cluster</label>
+      <Dropdown
+        class="text-sm"
+        id="contextCluster"
+        onChange={onClusterStateChange}
+        value={contextCluster}
+        options={clusters?.map((cluster) => ({
+          value: cluster.name,
+          label: cluster.name,
+        }))}>
+      </Dropdown>
 
-    <label for="contextUser" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">User</label>
-    <Dropdown
-      class="text-sm"
-      id="contextUser"
-      onChange={onUserStateChange}
-      value={contextUser}
-      options={users?.map((user) => ({
-        value: user.name,
-        label: user.name,
-      }))}>
-    </Dropdown>
+      <label for="contextUser" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">User</label>
+      <Dropdown
+        class="text-sm"
+        id="contextUser"
+        onChange={onUserStateChange}
+        value={contextUser}
+        options={users?.map((user) => ({
+          value: user.name,
+          label: user.name,
+        }))}>
+      </Dropdown>
 
-    <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
-    <Input
-        bind:value={contextNamespace}
-        name="contextNamespace"
-        id="contextNamespace"
-        placeholder="Enter context namespace (e.g. production)"
-        aria-invalid={contextNamespaceErrorMessage !== ''}
-        aria-label="contextNamespace"
-        required />
-    {#if contextNamespaceErrorMessage}
-        <ErrorMessage error={contextNamespaceErrorMessage} />
-    {/if}
-    </div>
-    <svelte:fragment slot="buttons">
-    <Button
-        class="pcol-start-3"
-        type="link"
-        on:click={closeCallback}>Cancel</Button>
-    <Button
-        class="col-start-4"
-        disabled={disableSave(contextName, contextNamespace)}
-        on:click={async (): Promise<void> => {
-        await editContext(contextName, contextNamespace, contextUser, contextCluster);
-        }}>Save</Button>
-    </svelte:fragment>
-</LegacyDialog>
-    
+      <label for="contextNamespace" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Namespace</label>
+      <Input
+          bind:value={contextNamespace}
+          name="contextNamespace"
+          id="contextNamespace"
+          placeholder="Enter context namespace (e.g. production)"
+          aria-invalid={contextNamespaceErrorMessage !== ''}
+          aria-label="contextNamespace"
+          required />
+      {#if contextNamespaceErrorMessage}
+          <ErrorMessage error={contextNamespaceErrorMessage} />
+      {/if}
+      </div>
+  {/snippet}
+    {#snippet buttons()}
+  
+      <Button
+          class="pcol-start-3"
+          type="link"
+          on:click={closeCallback}>Cancel</Button>
+      <Button
+          class="col-start-4"
+          disabled={disableSave(contextName, contextNamespace)}
+          on:click={async (): Promise<void> => {
+          await editContext(contextName, contextNamespace, contextUser, contextCluster);
+          }}>Save</Button>
+      
+  {/snippet}
+</Dialog>

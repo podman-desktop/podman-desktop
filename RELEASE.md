@@ -60,7 +60,7 @@ The release may be tested using the assets generated within the pre-release.
 If there are fixes that need to be made to the release as brought up by QE the following steps need to be completed:
 
 1. Create a branch **FROM THE RELEASE**. Example, 1.3.x of release 1.3.0. **IMPORTANT NOTE:** Literally `1.3.x` not `1.3.1`.
-2. Create PR(s) with the fixes that merge into the 1.3.x branch
+2. Create PR(s) with the fixes that merge into the main branch and use mergify.io to open a backport PR(s) to the 1.3.x branch by adding the following comment in the main PR(s): `@Mergifyio backport 1.3.x`
 3. Make sure all PR's are merged
 
 **Re-spin a release:**
