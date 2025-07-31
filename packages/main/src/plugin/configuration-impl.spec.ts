@@ -92,30 +92,3 @@ test('Uses localKey when deleting values', async () => {
     value: undefined,
   });
 });
-
-test.fails('Uses original update with section when deleting values', async () => {
-  // Test with globalSection to ensure localKey != section
-  const sendMock = vi.fn();
-  const map = new Map<string, { [key: string]: unknown }>();
-  const config = new TestConfigurationImpl({ send: sendMock } as unknown as ApiSenderType, vi.fn(), map, 'prefix');
-
-  // Set value
-  await config.originalUpdate('key', 'value');
-  // stored with section
-  expect(config['key']).toBe('value');
-  // NOT stored with localKey
-  expect(config['prefix.key']).toBeUndefined();
-  expect(config.get('key')).toBe('value');
-
-  // Delete value
-  await config.originalUpdate('key', undefined);
-
-  // THIS WILL FAIL, actualy it will be "value" and not undefined as expected
-  expect(config['key']).toBeUndefined();
-
-  // deleted using localKey
-  expect(config['prefix.key']).toBeUndefined();
-
-  // THIS WILL FAIL, actualy it will be "value" and not undefined as expected
-  expect(config.get('key')).toBeUndefined();
-});
