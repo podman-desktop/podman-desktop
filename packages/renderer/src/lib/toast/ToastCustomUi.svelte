@@ -30,12 +30,12 @@ const closeAction = (): void => {
 </script>
 
 <div
-  class="flex flex-nowrap min-h-10 cursor-default max-h-30 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded-md bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
+  class="flex flex-nowrap min-h-10 cursor-default max-h-50 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded-md bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
   title={taskInfo.name}
 >
-  <div class="flex flex-row gap-1 items-center">
+  <div class="flex flex-row gap-1 items-start">
     <div
-      class="mr-1 text-[var(--pd-state-info)] w-fit h-fit self-center"
+      class="mr-1 text-[var(--pd-state-info)] w-fit h-fit"
       role="status"
       aria-label={taskInfo.status}
     >
@@ -50,7 +50,7 @@ const closeAction = (): void => {
       {/if}
     </div>
 
-    <div class="text-base text-ellipsis text-[var(--pd-card-text)] line-clamp-3 h-fit overflow-hidden break-all">
+    <div class="text-base text-balance text-ellipsis text-[var(--pd-card-text)] h-fit wrap-break-word max-w-46">
       {taskStatus[taskInfo.status] ?? ''} {taskInfo.name}
       {#if taskInfo.error}
         <p class="text-[var(--pd-content-text)]">{taskInfo.error}</p>
