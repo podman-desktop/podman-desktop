@@ -12,7 +12,7 @@ import {
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
-import { get, type Unsubscriber } from 'svelte/store';
+import { type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
@@ -21,7 +21,6 @@ import { NavigationPage } from '/@api/navigation-page';
 import type { ViewInfoUI } from '/@api/view-info';
 
 import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
-import { containerGroupsInfo } from '../../stores/containerGroups';
 import { containersInfos } from '../../stores/containers';
 import { context } from '../../stores/context';
 import { podCreationHolder } from '../../stores/creation-from-containers-store';
@@ -226,9 +225,6 @@ let viewsUnsubscribe: Unsubscriber;
 let pods: PodInfo[];
 
 onMount(async () => {
-  // grab previous groups
-  containerGroups = get(containerGroupsInfo);
-
   contextsUnsubscribe = context.subscribe(value => {
     globalContext = value;
     if (containersInfo.length > 0) {
@@ -327,9 +323,6 @@ function updateContainers(
 }
 
 onDestroy(() => {
-  // store current groups for later
-  containerGroupsInfo.set(containerGroups);
-
   // unsubscribe from the store
   if (containersUnsubscribe) {
     containersUnsubscribe();
