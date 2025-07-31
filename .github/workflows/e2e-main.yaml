@@ -215,8 +215,17 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
+          $originalVersion = (jq -r '.version' package.json).Trim()
+          $parts = $originalVersion -split '\.'
+          $x = [int]$parts[0]
+          $y = [int]$parts[1]
+          $newY = $y - 1
+          $newVersion = "$x.$newY.0"
+          if ($newY -lt 0) {
+            Write-host "Major version change, using default version 1.20.0"
+            $newVersion = "1.20.0"
+          }
+          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
       - name: Build Podman Desktop locally with electron updater included
@@ -288,8 +297,17 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
+          actualVersion=$(jq -r '.version' package.json)
+          xy=$(echo "$actualVersion" | cut -d'.' -f1-2)
+          IFS='.' read -r x y <<< "$xy"
+          newY=$((y - 1))
+          newVersion="${x}.${newY}.0"
+          if [ $newY -lt 0 ]; then
+            echo "Major version change, using default version 1.20.0"
+            newVersion="1.20.0"
+          fi
+          echo "PD_VERSION=$newVersion" >> $GITHUB_ENV
+          jq --arg version "$newVersion" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 
       - name: Build Podman Desktop locally with electron updater included
@@ -301,7 +319,7 @@ jobs:
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -309,6 +327,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
 
       - name: Run E2E Update test
