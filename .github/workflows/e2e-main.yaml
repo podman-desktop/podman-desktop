@@ -175,7 +175,7 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests - ${{ matrix.installation }}
+    name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
     runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
