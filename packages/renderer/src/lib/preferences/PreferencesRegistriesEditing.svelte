@@ -26,7 +26,7 @@ interface Props {
   showNewRegistryForm?: boolean;
 }
 
-let { showNewRegistryForm = $bindable(false) }: Props = $props();
+let { showNewRegistryForm = false }: Props = $props();
 
 // at this moment it should be `podman`, but later can be any
 let defaultProviderSourceName: string;

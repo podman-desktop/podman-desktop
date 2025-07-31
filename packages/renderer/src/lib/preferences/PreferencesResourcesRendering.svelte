@@ -343,7 +343,7 @@ interface Props {
   focus: string | undefined;
 }
 
-let { properties = $bindable([]), focus }: Props = $props();
+let { properties = [], focus }: Props = $props();
 let providerElementMap = $state<Record<string, HTMLElement>>({});
 
 function handleError(errorMessage: string): void {
