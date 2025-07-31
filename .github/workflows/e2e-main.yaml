@@ -216,18 +216,8 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $originalVersion = (jq -r '.version' package.json).Trim()
-          $parts = $originalVersion -split '\.'
-          $x = [int]$parts[0]
-          $y = [int]$parts[1]
-          $newY = $y - 1
-          $newVersion = "$x.$newY.0"
-          if ($newY -lt 0) {
-            $newVersion = "1.20.0"
-          }
-          Write-Host "Original: $originalVersion"
-          Write-Host "Decremented: $newVersion"
-          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -FilePath package.json_tmp
+          $version="1.15.0"
+          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
       - name: Build Podman Desktop locally with electron updater included
