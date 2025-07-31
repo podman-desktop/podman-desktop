@@ -456,8 +456,17 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.20.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
+          $originalVersion = (jq -r '.version' package.json).Trim()
+          $parts = $originalVersion -split '\.'
+          $x = [int]$parts[0]
+          $y = [int]$parts[1]
+          $newY = $y - 1
+          $newVersion = "$x.$newY.0"
+          if ($newY -lt 0) {
+            Write-host "Major version change, using default version 1.20.0"
+            $newVersion = "1.20.0"
+          }
+          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
       - name: Build Podman Desktop locally with electron updater included, allow prereleases
@@ -531,14 +540,20 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          testingVersion="1.20.0"
           actualVersion=$(jq -r '.version' package.json)
-          echo "Current version: $actualVersion, testing version: $testingVersion"
-          version=$testingVersion
-          echo "PD_VERSION=$version" >> $GITHUB_ENV
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
+          xy=$(echo "$actualVersion" | cut -d'.' -f1-2)
+          IFS='.' read -r x y <<< "$xy"
+          newY=$((y - 1))
+          newVersion="${x}.${newY}.0"
+          if [ $newY -lt 0 ]; then
+            echo "Major version change, using default version 1.20.0"
+            newVersion="1.20.0"
+          fi
+          echo "PD_VERSION=$newVersion" >> $GITHUB_ENV
+          jq --arg version "$newVersion" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 
       - name: Build Podman Desktop locally and allow prereleases on update
