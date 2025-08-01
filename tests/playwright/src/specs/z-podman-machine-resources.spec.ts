@@ -20,6 +20,7 @@ import type { Locator } from '@playwright/test';
 
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
+import { PodmanVirtualizationProviders } from '../model/core/types';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -32,6 +33,7 @@ import {
   resetPodmanMachinesFromCLI,
 } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
@@ -140,6 +142,11 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
     'Testing user networking machine only on Windows',
   );
 
+  test.skip(
+    getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
+    'Podman Desktop is not able to have 2 HyperV machines running at the same time',
+  );
+
   test.describe
     .serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, () => {
       test('Create machine through Resources page', async ({ page, navigationBar }) => {
@@ -152,14 +159,19 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         await podmanResources.createButton.click();
 
         const createMachinePage = new CreateMachinePage(page);
+
         const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
           isRootful: isRoot,
           enableUserNet: userNet,
           setAsDefault: false,
           startNow: false,
+          virtualizationProvider: getVirtualizationProvider(),
         });
+        await resourcePage.verifyVirtualizationProvider(
+          PODMAN_MACHINE_NAME,
+          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+        );
 
-        await playExpect(resourcePage.heading).toBeVisible();
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
         playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
         playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);

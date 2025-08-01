@@ -20,7 +20,9 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 
+import type { PodmanVirtualizationProviders } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -33,6 +35,8 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
+  readonly providerTypeDiv: Locator;
+  readonly providerTypeDropdownOption: Locator;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -57,8 +61,20 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
+    this.providerTypeDiv = this.podmanMachineConfiguration.getByLabel('Provider Type');
+    this.providerTypeDropdownOption = this.getProviderTypeDropdownOption(getVirtualizationProvider() ?? '');
+
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
+  }
+
+  /**
+   * Get the provider type option locator for the given provider name.
+   * @param providerName - The name of the provider to get the option for (e.g. 'hyperv', 'wsl', 'default GPU enabled (LibKrun)', 'Apple HyperVisor')
+   * @returns The provider type option locator for the given provider name.
+   */
+  getProviderTypeDropdownOption(providerName: string): Locator {
+    return this.providerTypeDiv.getByRole('button', { name: providerName, exact: false }); //not case-sensitive due to windows options
   }
 
   async setupAndCreateMachine(
@@ -67,13 +83,15 @@ export class MachineCreationForm extends BasePage {
       isRootful = true,
       enableUserNet = false,
       startNow = true,
+      virtualizationProvider,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
     } = {},
   ): Promise<void> {
-    return test.step(`Create Podman Machine: ${machineName} with settings ${isRootful}, ${enableUserNet} and ${startNow}`, async () => {
+    return test.step(`Create Podman Machine '${machineName}' with settings: ${isRootful ? 'rootful' : 'rootless'}, ${enableUserNet ? 'usernet enabled' : 'usernet disabled'}, ${startNow ? 'startnow enabled' : 'startnow disabled'}${virtualizationProvider ? ', and ' + virtualizationProvider : ''}`, async () => {
       await playExpect(this.podmanMachineConfiguration).toBeVisible({
         timeout: 10_000,
       });
@@ -83,6 +101,15 @@ export class MachineCreationForm extends BasePage {
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
+      }
+      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
+        await playExpect(this.providerTypeDiv).toBeVisible({ timeout: 10_000 });
+        playExpect(this.providerTypeDiv.innerText()).toContain(getDefaultVirtualizationProvider());
+        await this.providerTypeDiv.scrollIntoViewIfNeeded();
+        await this.providerTypeDiv.click();
+        await playExpect(this.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
+        await this.providerTypeDropdownOption.click();
+        playExpect(this.providerTypeDiv.innerText()).toContain(virtualizationProvider);
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
