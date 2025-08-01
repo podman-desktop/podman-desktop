@@ -44,6 +44,7 @@ const ELECTRON_APP_MOCK: ElectronApp = {
   requestSingleInstanceLock: vi.fn(),
   setAppUserModelId: vi.fn(),
   quit: vi.fn(),
+  exit: vi.fn(),
   on: vi.fn(),
   whenReady: vi.fn(),
   setAsDefaultProtocolClient: vi.fn(),
