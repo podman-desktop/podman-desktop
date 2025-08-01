@@ -28,12 +28,8 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { createPodmanMachineFromCLI, deletePodmanMachine } from '../utility/operations';
-<<<<<<< HEAD
 import { isLinux } from '../utility/platform';
-=======
-import { isLinux, isMac } from '../utility/platform';
 import { getDefaultVirtualizationProvider } from '../utility/provider';
->>>>>>> 47a01694317 (test(e2e): more @odockal and @cbr7's feeback)
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const PODMAN_MACHINE_STARTUP_TIMEOUT: number = 360_000;
