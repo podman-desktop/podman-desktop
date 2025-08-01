@@ -68,9 +68,7 @@ onMount(async () => {
   experimentalTaskStatusBar = await window.isExperimentalConfigurationEnabled(
     `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
   );
-
-  experimentalProvidersStatusBar =
-    (await window.getConfigurationValue<boolean>('statusbarProviders.showProviders')) ?? false;
+  experimentalProvidersStatusBar = await window.isExperimentalConfigurationEnabled('statusbarProviders.showProviders');
 
   onDidChangeConfiguration.addEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });
