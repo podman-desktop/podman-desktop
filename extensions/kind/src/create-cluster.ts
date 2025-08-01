@@ -29,6 +29,7 @@ import { parseAllDocuments, stringify } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
 
+import { getFreePort } from '../../../packages/main/src/plugin/util/port';
 import createClusterConfTemplate from './templates/create-cluster-conf.mustache?raw';
 import { getKindPath, getMemTotalInfo } from './util';
 
@@ -115,6 +116,42 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
   return auditResult;
 }
 
+async function confirmChangingPortsIfNeeded(
+  httpPort: number,
+  freeHttpPort: number,
+  httpsPort: number,
+  freeHttpsPort: number,
+): Promise<void> {
+  let selection: string | undefined;
+  if (httpPort !== freeHttpPort && httpsPort !== freeHttpsPort) {
+    // show message for both ports
+    selection = await extensionApi.window.showInformationMessage(
+      `Selected ports ${httpPort} for HTTP and ${httpsPort} for HTTPS are not available. Should next available HTTP port ${freeHttpPort} and HTTPS port ${freeHttpsPort} be used instead?`,
+      'Yes',
+      'No',
+    );
+  } else if (httpPort !== freeHttpPort || httpsPort !== freeHttpsPort) {
+    let port: number, freePort: number, protocol: 'HTTP' | 'HTTPS';
+    if (httpPort !== freeHttpPort) {
+      port = httpPort;
+      freePort = freeHttpPort;
+      protocol = 'HTTP';
+    } else {
+      port = httpsPort;
+      freePort = freeHttpsPort;
+      protocol = 'HTTPS';
+    }
+    selection = await extensionApi.window.showInformationMessage(
+      `Selected port ${port} for ${protocol} is not available. Should next available port ${freePort} be used instead?`,
+      'Yes',
+      'No',
+    );
+  }
+  if (selection === 'No') {
+    throw new Error('Selected port is not available. Please use next available port.');
+  }
+}
+
 export async function createCluster(
   params: { [key: string]: unknown },
   kindCli: string,
@@ -153,6 +190,7 @@ export async function createCluster(
   ) {
     httpHostPort = Number(params['kind.cluster.creation.http.port']);
   }
+  const freeHttpHostPort = await getFreePort(httpHostPort);
 
   // grab https host port
   let httpsHostPort = 9443;
@@ -162,6 +200,12 @@ export async function createCluster(
   ) {
     httpsHostPort = Number(params['kind.cluster.creation.https.port']);
   }
+  const freeHttpsHostPort = await getFreePort(httpsHostPort);
+
+  await confirmChangingPortsIfNeeded(httpHostPort, freeHttpHostPort, httpsHostPort, freeHttpsHostPort);
+
+  httpHostPort = freeHttpHostPort;
+  httpsHostPort = freeHttpsHostPort;
 
   let ingressController = false;
   // The params['kind.cluster.creation.ingress'] can be only "on" or "undefined"
