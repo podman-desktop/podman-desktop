@@ -144,7 +144,7 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
 
   test.skip(
     getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
-    "Podman Desktop can't have 2 HyperV machines running at the same time",
+    'Podman Desktop is not able to have 2 HyperV machines running at the same time',
   );
 
   test.describe
