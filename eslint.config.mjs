@@ -78,6 +78,7 @@ export default [
       'extensions/*/scripts/**/*',
       'extensions/*/packages/*/scripts/**/*',
       'extensions/*/packages/*/builtin/**/*',
+      'tests/playwright/scripts/**',
       'website/storybook.ts',
       'website/src/pages/storybook/sidebar.cjs',
     ],
