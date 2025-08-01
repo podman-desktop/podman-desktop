@@ -214,19 +214,7 @@ jobs:
         run: pnpm install
 
       - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $originalVersion = (jq -r '.version' package.json).Trim()
-          $parts = $originalVersion -split '\.'
-          $x = [int]$parts[0]
-          $y = [int]$parts[1]
-          $newY = $y - 1
-          $newVersion = "$x.$newY.0"
-          if ($newY -lt 0) {
-            Write-host "Major version change, using default version 1.20.0"
-            $newVersion = "1.20.0"
-          }
-          jq --arg version "$newVersion" '.version = $version' package.json | Out-File -Encoding utf8 -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
       - name: Build Podman Desktop locally with electron updater included
         env:
@@ -297,18 +285,9 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
           actualVersion=$(jq -r '.version' package.json)
-          xy=$(echo "$actualVersion" | cut -d'.' -f1-2)
-          IFS='.' read -r x y <<< "$xy"
-          newY=$((y - 1))
-          newVersion="${x}.${newY}.0"
-          if [ $newY -lt 0 ]; then
-            echo "Major version change, using default version 1.20.0"
-            newVersion="1.20.0"
-          fi
-          echo "PD_VERSION=$newVersion" >> $GITHUB_ENV
-          jq --arg version "$newVersion" '.version = $version' package.json > package.json_tmp
-          mv package.json_tmp package.json
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
       - name: Build Podman Desktop locally with electron updater included
         env:
