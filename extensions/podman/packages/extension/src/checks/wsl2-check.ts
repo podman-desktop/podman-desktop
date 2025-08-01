@@ -147,7 +147,12 @@ export class WSL2Check extends BaseCheck {
       const runError = error as RunError;
       if (runError.stdout.includes('Wsl/WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED')) {
         return true;
-      } else if (runError.stdout.includes('Wsl/WSL_E_DEFAULT_DISTRO_NOT_FOUND')) {
+      } else if (
+        runError.stdout.includes('Wsl/WSL_E_DEFAULT_DISTRO_NOT_FOUND') ||
+        runError.stdout.includes('Windows Subsystem for Linux has no installed distributions')
+      ) {
+        // Previously the stdout has contained the "Wsl/WSL_E_DEFAULT_DISTRO_NOT_FOUND" text,
+        // now it is no longer true
         // treating this log differently as we install wsl without any distro
         console.log('WSL has been installed without the default distribution');
       } else {
