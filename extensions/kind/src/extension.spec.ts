@@ -418,24 +418,30 @@ describe('cli#install', () => {
     );
   });
 
-  test('after selecting the version to be installed it should download kind', async () => {
+  test('should install latest version', async () => {
+    const latest = {
+      label: 'kind v1.0.2',
+      tag: 'v1.0.2',
+      id: 1,
+    };
     vi.mocked(util.installBinaryToSystem).mockResolvedValue('path');
     // mock prompt result
-    vi.mocked(KindInstaller.prototype.promptUserForVersion).mockResolvedValue(mockV1Release);
 
     const cliToolInstaller: extensionApi.CliToolInstaller = await getCliToolInstaller();
 
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(latest);
     // mock workflow (user select version then we install it)
-    await cliToolInstaller?.selectVersion();
+    vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.2');
+    expect(await cliToolInstaller?.selectVersion(true)).equals('1.0.2');
     await cliToolInstaller?.doInstall({} as unknown as extensionApi.Logger);
 
-    expect(KindInstaller.prototype.download).toHaveBeenCalledWith(mockV1Release);
+    expect(KindInstaller.prototype.download).toHaveBeenCalledWith(latest);
     expect(KindInstaller.prototype.getKindCliStoragePath).toHaveBeenCalled();
     expect(util.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'kind');
     expect(CLI_TOOL_MOCK.updateVersion).toHaveBeenCalledWith({
       installationSource: 'extension',
       path: 'path',
-      version: '1.0.0',
+      version: '1.0.2',
     });
   });
 

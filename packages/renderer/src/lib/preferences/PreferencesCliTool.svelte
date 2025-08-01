@@ -257,7 +257,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                     await update(cliTool);
                   }
                 }}
-                title={`${cliTool.displayName} will be updated`}
+                title={`${cliTool.displayName} will be updated${cliTool.newVersion ? ' to ' + cliTool.newVersion : ''} `}
                 disabled={!cliTool.canUpdate}
                 aria-label="Update available">
                 {`${cliTool.newVersion ? 'Update available' : 'Upgrade/Downgrade'}`}
