@@ -153,7 +153,7 @@ test('Check with failure', async () => {
   // expect the failure status is used
   const status = screen.getByRole('status', { name: 'failure' });
   expect(status).toBeInTheDocument();
-  expect(status.children[0]).toHaveClass('text-[var(--pd-state-warning)]');
+  expect(status.children[0]).toHaveClass('text-[var(--pd-state-error)]');
 
   // expect name is there
   const name = screen.getByText(`Error ${FAILURE_TASK.name}`);
@@ -185,7 +185,7 @@ test('Check with cancel', async () => {
   // expect the failure status is used
   const status = screen.getByRole('status', { name: 'canceled' });
   expect(status).toBeInTheDocument();
-  expect(status.children[0]).toHaveClass('text-[var(--pd-state-error)]');
+  expect(status.children[0]).toHaveClass('text-[var(--pd-state-warning)]');
 
   // expect name is there
   const name = screen.getByText(`Canceled ${CANCELED_TASK.name}`);
