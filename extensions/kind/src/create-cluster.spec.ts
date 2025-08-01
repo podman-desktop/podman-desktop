@@ -23,6 +23,7 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as port from '../../../packages/main/src/plugin/util/port';
 import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
 import { getKindPath, getMemTotalInfo } from './util';
 
@@ -51,6 +52,9 @@ vi.mock('@podman-desktop/api', async () => {
     },
     process: {
       exec: vi.fn(),
+    },
+    window: {
+      showInformationMessage: vi.fn(),
     },
   };
 });
@@ -356,6 +360,68 @@ test('expect cluster to be created with ports as numbers', async () => {
     protocol: TCP`),
     expect.anything(),
   );
+});
+
+describe.each([
+  [9090, 9090, 9443, 9443, 'Yes'],
+  [9090, 9091, 9443, 9444, 'Yes'],
+  [9090, 9091, 9443, 9443, 'Yes'],
+  [9090, 9090, 9443, 9444, 'Yes'],
+  [9090, 9091, 9443, 9444, 'No'],
+  [9090, 9091, 9443, 9443, 'No'],
+  [9090, 9090, 9443, 9444, 'No'],
+])('Port availability check', (httpPort, httpFreePort, httpsPort, httpsFreePort, response) => {
+  const yamlString = `
+  - containerPort: 80
+    hostPort: ${httpFreePort}
+    protocol: TCP
+  - containerPort: 443
+    hostPort: ${httpsFreePort}
+    protocol: TCP`;
+  test('expect createCuster do not ask to change ports if both http and http host ports are not used', async () => {
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+    const logger = {
+      log: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+    };
+    vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(httpFreePort).mockResolvedValueOnce(httpsFreePort);
+    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue(response);
+    let error: unknown | undefined;
+    try {
+      await createCluster(
+        {
+          'kind.cluster.creation.http.port': httpPort,
+          'kind.cluster.creation.https.port': httpsPort,
+        },
+        '',
+        telemetryLoggerMock,
+        logger,
+      );
+    } catch (e: unknown) {
+      error = e;
+    }
+
+    if (httpPort !== httpFreePort || httpsPort !== httpsFreePort) {
+      expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
+      if (response === 'Yes') {
+        expect(fs.promises.writeFile).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.stringContaining(yamlString),
+          expect.anything(),
+        );
+      } else {
+        expect(fs.promises.writeFile).not.toHaveBeenCalled();
+        expect(error).not.toBeUndefined();
+      }
+    } else {
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining(yamlString),
+        expect.anything(),
+      );
+    }
+  });
 });
 
 test('expect error if Kubernetes reports error', async () => {
