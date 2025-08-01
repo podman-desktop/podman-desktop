@@ -86,6 +86,7 @@ export async function isFreePort(port: number): Promise<boolean> {
 
   const intfs = getIPv4Interfaces();
 
+  await isFreeAddressPort('localhost', port);
   await isFreeAddressPort('0.0.0.0', port);
   await Promise.all(intfs.map(intf => isFreeAddressPort(intf, port)));
 
