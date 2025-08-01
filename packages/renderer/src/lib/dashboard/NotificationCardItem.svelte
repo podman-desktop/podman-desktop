@@ -35,7 +35,7 @@ const notificationStyle = notificationStyleMap[notification.type];
   aria-label="id: {notification.id}">
   <div class="flex flex-row space-x-3">
     <div class="flex">
-        <Icon size="1.5x" icon={notificationStyle.icon} class={notificationStyle.iconColor} />
+        <Icon size="1.5x" icon={notificationStyle.icon} class={notificationStyle.iconColor} title={'Notification icon - ' + notification.type}/>
     </div>
     <div class="flex flex-col space-y-2 flex-1">
       <div class="flex flex-row items-center justify-between">
@@ -58,8 +58,9 @@ const notificationStyle = notificationStyleMap[notification.type];
       <button
         class="p-1 hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px]"
         on:click={(): Promise<void> => window.removeNotification(notification.id)}
-        aria-label={`Delete notification ${notification.id}`}>
-        <Icon icon={faXmark} />
+        aria-label={`Delete notification ${notification.id}`}
+        title="Delete notification">
+        <Icon icon={faXmark}/>
       </button>
     </div>
   </div>
