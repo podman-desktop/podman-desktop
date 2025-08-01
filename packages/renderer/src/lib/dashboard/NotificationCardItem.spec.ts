@@ -52,6 +52,7 @@ test('Expect notification card to show notification title, description and close
 
   const deleteButton = screen.getByRole('button', { name: 'Delete notification 1' });
   expect(deleteButton).toBeInTheDocument();
+  expect(deleteButton).toHaveAttribute('title', 'Delete notification');
 
   await fireEvent.click(deleteButton);
 
@@ -66,16 +67,19 @@ test('Test info notification style and icon', () => {
     body: 'Info notification description',
     type: 'info',
   };
-  const { getAllByRole } = render(NotificationCardItem, {
+  const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const icon = getAllByRole('img', { hidden: true })[0];
+  const iconTitle = getByTitle('Notification icon', { exact: false });
+  const icon = iconTitle.parentElement;
   // check icon shape
-  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
   const faIconPath = faCircleInfo.icon[4]; // index 4 is the actual path as per FA IconDefinition
   expect(pdIconPath).toBe(faIconPath);
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-info)]');
+  // check icon title contains the text from nested title element
+  expect(iconTitle.textContent).toBe('Notification icon - info');
   // check region top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-info)]');
 });
@@ -88,16 +92,19 @@ test('Test warning notification style and icon', () => {
     body: 'Warning notification description',
     type: 'warn',
   };
-  const { getAllByRole } = render(NotificationCardItem, {
+  const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const icon = getAllByRole('img', { hidden: true })[0];
+  const iconTitle = getByTitle('Notification icon', { exact: false });
+  const icon = iconTitle.parentElement;
   // check icon shape
-  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
   const faIconPath = faExclamationTriangle.icon[4]; // index 4 is the actual path as per FA IconDefinition
   expect(pdIconPath).toBe(faIconPath);
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-warning)]');
+  // check icon title
+  expect(iconTitle.textContent).toBe('Notification icon - warn');
   // check region top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-warning)]');
 });
@@ -110,16 +117,19 @@ test('Test error notification style and icon', () => {
     body: 'Error notification description',
     type: 'error',
   };
-  const { getAllByRole } = render(NotificationCardItem, {
+  const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const icon = getAllByRole('img', { hidden: true })[0];
+  const iconTitle = getByTitle('Notification icon', { exact: false });
+  const icon = iconTitle.parentElement;
   // check icon shape
-  const pdIconPath = icon.querySelector('path')?.getAttribute('d');
+  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
   const faIconPath = faCircleExclamation.icon[4]; // index 4 is the actual path as per FA IconDefinition
   expect(pdIconPath).toBe(faIconPath);
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-error)]');
+  // check icon title
+  expect(iconTitle.textContent).toBe('Notification icon - error');
   // check region top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-error)]');
 });
