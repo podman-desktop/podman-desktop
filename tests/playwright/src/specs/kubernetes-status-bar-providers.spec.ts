@@ -31,7 +31,7 @@ import {
   setStatusBarProvidersFeature,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
-import { getDefaultVirtualizationProvider, virtualizationProvider } from '../utility/provider';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
 const podmanProviderName = 'Podman';
@@ -107,11 +107,11 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     const resourcesPage = await createMachinePage.createMachine(newMachineName, {
       startNow: true,
       setAsDefault: false,
-      virtualizationProvider,
+      virtualizationProvider: getVirtualizationProvider(),
     });
     await resourcesPage.verifyVirtualizationProvider(
       newMachineName,
-      virtualizationProvider ?? getDefaultVirtualizationProvider(),
+      getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
     );
 
     const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);

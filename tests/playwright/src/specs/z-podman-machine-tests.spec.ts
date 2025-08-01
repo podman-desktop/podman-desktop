@@ -31,7 +31,7 @@ import {
   resetPodmanMachinesFromCLI,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
-import { getDefaultVirtualizationProvider, virtualizationProvider } from '../utility/provider';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const DEFAULT_PODMAN_MACHINE = 'Podman Machine';
@@ -159,7 +159,7 @@ test.describe
           isRootful: false,
           enableUserNet: true,
           startNow: false,
-          virtualizationProvider,
+          virtualizationProvider: getVirtualizationProvider(),
         });
         await playExpect(podmanMachineCreatePage.goBackButton).toBeEnabled({ timeout: 180_000 });
         await podmanMachineCreatePage.goBackButton.click();
@@ -167,7 +167,7 @@ test.describe
 
       await resourcesPage.verifyVirtualizationProvider(
         ROOTLESS_PODMAN_MACHINE_VISIBLE,
-        virtualizationProvider ?? getDefaultVirtualizationProvider(),
+        getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
       );
     });
 

@@ -33,7 +33,7 @@ import {
   resetPodmanMachinesFromCLI,
 } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
-import { getDefaultVirtualizationProvider, virtualizationProvider } from '../utility/provider';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
@@ -153,19 +153,18 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
         await podmanResources.createButton.click();
 
         const createMachinePage = new CreateMachinePage(page);
-        //Hyperv can't have 2 podman machines at the same time, in that case, change to default one
-        const virtualizationProviderToUse =
-          virtualizationProvider === PodmanVirtualizationProviders.HyperV
-            ? getDefaultVirtualizationProvider()
-            : (virtualizationProvider ?? getDefaultVirtualizationProvider());
+
         const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
           isRootful: isRoot,
           enableUserNet: userNet,
           setAsDefault: false,
           startNow: false,
-          virtualizationProvider: virtualizationProviderToUse,
+          virtualizationProvider: getVirtualizationProvider(),
         });
-        await resourcePage.verifyVirtualizationProvider(PODMAN_MACHINE_NAME, virtualizationProviderToUse);
+        await resourcePage.verifyVirtualizationProvider(
+          PODMAN_MACHINE_NAME,
+          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+        );
 
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
         playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();

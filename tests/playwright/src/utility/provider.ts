@@ -19,24 +19,28 @@
 import { isMac, isWindows } from '..';
 import { PodmanVirtualizationProviders } from '../model/core/types';
 
-export const envProvider = process.env.CONTAINERS_MACHINE_PROVIDER?.toLowerCase();
-export const virtualizationProvider =
-  envProvider === 'wsl'
-    ? PodmanVirtualizationProviders.WSL
-    : envProvider === 'hyperv'
-      ? PodmanVirtualizationProviders.HyperV
-      : envProvider === 'applehv'
-        ? PodmanVirtualizationProviders.AppleHV
-        : envProvider === 'libkrun'
-          ? PodmanVirtualizationProviders.LibKrun
-          : envProvider === 'qemu'
-            ? PodmanVirtualizationProviders.Qemu
-            : undefined;
+export const envProvider = process.env.CONTAINERS_MACHINE_PROVIDER;
+
+const PROVIDER_MAP: Record<string, PodmanVirtualizationProviders> = {
+  wsl: PodmanVirtualizationProviders.WSL,
+  hyperv: PodmanVirtualizationProviders.HyperV,
+  applehv: PodmanVirtualizationProviders.AppleHV,
+  libkrun: PodmanVirtualizationProviders.LibKrun,
+  qemu: PodmanVirtualizationProviders.Qemu,
+};
+
+export function getVirtualizationProvider(): PodmanVirtualizationProviders | undefined {
+  return envProvider ? PROVIDER_MAP[envProvider?.toLowerCase()] : undefined;
+}
 
 export function getDefaultVirtualizationProvider(): PodmanVirtualizationProviders {
   if (isWindows) {
     return PodmanVirtualizationProviders.WSL;
-  } else if (isMac) {
+  }
+
+  if (isMac) {
     return PodmanVirtualizationProviders.AppleHV;
-  } else return PodmanVirtualizationProviders.Qemu;
+  }
+
+  return PodmanVirtualizationProviders.Native;
 }

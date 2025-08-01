@@ -30,6 +30,7 @@ import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
 import { isLinux } from '../utility/platform';
+import { getDefaultVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const PODMAN_MACHINE_STARTUP_TIMEOUT: number = 360_000;
@@ -187,9 +188,12 @@ test.describe
                 PODMAN_MACHINE_NAME,
               );
               await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
+              await playExpect(resourcesPodmanConnections.connectionType).toBeVisible({ timeout: 10_000 });
+              await playExpect(resourcesPodmanConnections.connectionType).toHaveText(
+                getDefaultVirtualizationProvider(),
+              );
               await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
               await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
-              //TODO: does it make sense to add the check from podman-machine-tests?
               await resourcesPodmanConnections.resourceElementDetailsButton.click();
               const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
               await playExpect(podmanMachineDetails.podmanMachineStatus).toBeVisible();

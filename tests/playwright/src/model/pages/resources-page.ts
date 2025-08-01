@@ -69,10 +69,8 @@ export class ResourcesPage extends SettingsPage {
       const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
       playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
 
-      await machineCard.resourceElement.getByLabel('Connection Type').scrollIntoViewIfNeeded();
-      playExpect(await machineCard.resourceElement.getByLabel('Connection Type').innerText()).toContain(
-        virtualizationProvider,
-      );
+      await machineCard.connectionType.scrollIntoViewIfNeeded();
+      playExpect(await machineCard.connectionType.innerText()).toContain(virtualizationProvider);
     });
   }
 }
