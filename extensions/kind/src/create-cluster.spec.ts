@@ -362,68 +362,6 @@ test('expect cluster to be created with ports as numbers', async () => {
   );
 });
 
-describe.each([
-  [9090, 9090, 9443, 9443, 'Yes'],
-  [9090, 9091, 9443, 9444, 'Yes'],
-  [9090, 9091, 9443, 9443, 'Yes'],
-  [9090, 9090, 9443, 9444, 'Yes'],
-  [9090, 9091, 9443, 9444, 'No'],
-  [9090, 9091, 9443, 9443, 'No'],
-  [9090, 9090, 9443, 9444, 'No'],
-])('Port availability check', (httpPort, httpFreePort, httpsPort, httpsFreePort, response) => {
-  const yamlString = `
-  - containerPort: 80
-    hostPort: ${httpFreePort}
-    protocol: TCP
-  - containerPort: 443
-    hostPort: ${httpsFreePort}
-    protocol: TCP`;
-  test('expect createCuster do not ask to change ports if both http and http host ports are not used', async () => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
-    const logger = {
-      log: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-    };
-    vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(httpFreePort).mockResolvedValueOnce(httpsFreePort);
-    vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue(response);
-    let error: unknown | undefined;
-    try {
-      await createCluster(
-        {
-          'kind.cluster.creation.http.port': httpPort,
-          'kind.cluster.creation.https.port': httpsPort,
-        },
-        '',
-        telemetryLoggerMock,
-        logger,
-      );
-    } catch (e: unknown) {
-      error = e;
-    }
-
-    if (httpPort !== httpFreePort || httpsPort !== httpsFreePort) {
-      expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
-      if (response === 'Yes') {
-        expect(fs.promises.writeFile).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.stringContaining(yamlString),
-          expect.anything(),
-        );
-      } else {
-        expect(fs.promises.writeFile).not.toHaveBeenCalled();
-        expect(error).not.toBeUndefined();
-      }
-    } else {
-      expect(fs.promises.writeFile).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.stringContaining(yamlString),
-        expect.anything(),
-      );
-    }
-  });
-});
-
 test('expect error if Kubernetes reports error', async () => {
   const error = new Error('Kubernetes error');
   try {
@@ -463,8 +401,12 @@ test('check cluster configuration null string image', async () => {
 });
 
 test('check that consilience check returns warning message', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(3000000000);
-  const checks = await connectionAuditor('docker', {});
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -476,8 +418,12 @@ test('check that consilience check returns warning message', async () => {
 });
 
 test('check that consilience check returns no warning messages', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(6000000001);
-  const checks = await connectionAuditor('docker', {});
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -485,7 +431,12 @@ test('check that consilience check returns no warning messages', async () => {
 });
 
 test('check that consilience check returns warning message when image has no sha256 digest', async () => {
-  const checks = await connectionAuditor('docker', { 'kind.cluster.creation.controlPlaneImage': 'image:tag' });
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.controlPlaneImage': 'image:tag',
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -495,11 +446,43 @@ test('check that consilience check returns warning message when image has no sha
 });
 
 test('check that consilience check returns warning message when config file is specified', async () => {
-  const checks = await connectionAuditor('docker', { 'kind.cluster.creation.configFile': '/path' });
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.configFile': '/path',
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('warning');
+});
+
+test('check that auditItems returns error message when HTTP port is not available', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9091).mockResolvedValueOnce(9443);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+});
+
+test('check that auditItems returns error message when HTTPS port is not available', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9444);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
 });

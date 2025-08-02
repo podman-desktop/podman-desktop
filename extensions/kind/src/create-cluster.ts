@@ -97,6 +97,25 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
+  const httpPort = items['kind.cluster.creation.http.port'];
+  const freeHttpPort = await getFreePort(httpPort);
+  if (httpPort !== freeHttpPort) {
+    records.push({
+      type: 'error',
+      record: `HTTP Port ${httpPort} is not available. Please use next available port ${freeHttpPort}.`,
+    });
+  }
+
+  const httpsPort = items['kind.cluster.creation.https.port'];
+  const freeHttpsPort = await getFreePort(httpsPort);
+
+  if (httpsPort !== freeHttpsPort) {
+    records.push({
+      type: 'error',
+      record: `HTTPS Port ${httpsPort} is not available. Please use next available port ${freeHttpsPort}.`,
+    });
+  }
+
   const providerSocket = extensionApi.provider
     .getContainerConnections()
     .find(connection => connection.connection.type === provider);
@@ -112,44 +131,7 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
       record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
     });
   }
-
   return auditResult;
-}
-
-async function confirmChangingPortsIfNeeded(
-  httpPort: number,
-  freeHttpPort: number,
-  httpsPort: number,
-  freeHttpsPort: number,
-): Promise<void> {
-  let selection: string | undefined;
-  if (httpPort !== freeHttpPort && httpsPort !== freeHttpsPort) {
-    // show message for both ports
-    selection = await extensionApi.window.showInformationMessage(
-      `Selected ports ${httpPort} for HTTP and ${httpsPort} for HTTPS are not available. Should next available HTTP port ${freeHttpPort} and HTTPS port ${freeHttpsPort} be used instead?`,
-      'Yes',
-      'No',
-    );
-  } else if (httpPort !== freeHttpPort || httpsPort !== freeHttpsPort) {
-    let port: number, freePort: number, protocol: 'HTTP' | 'HTTPS';
-    if (httpPort !== freeHttpPort) {
-      port = httpPort;
-      freePort = freeHttpPort;
-      protocol = 'HTTP';
-    } else {
-      port = httpsPort;
-      freePort = freeHttpsPort;
-      protocol = 'HTTPS';
-    }
-    selection = await extensionApi.window.showInformationMessage(
-      `Selected port ${port} for ${protocol} is not available. Should next available port ${freePort} be used instead?`,
-      'Yes',
-      'No',
-    );
-  }
-  if (selection === 'No') {
-    throw new Error('Selected port is not available. Please use next available port.');
-  }
 }
 
 export async function createCluster(
@@ -190,7 +172,6 @@ export async function createCluster(
   ) {
     httpHostPort = Number(params['kind.cluster.creation.http.port']);
   }
-  const freeHttpHostPort = await getFreePort(httpHostPort);
 
   // grab https host port
   let httpsHostPort = 9443;
@@ -200,12 +181,6 @@ export async function createCluster(
   ) {
     httpsHostPort = Number(params['kind.cluster.creation.https.port']);
   }
-  const freeHttpsHostPort = await getFreePort(httpsHostPort);
-
-  await confirmChangingPortsIfNeeded(httpHostPort, freeHttpHostPort, httpsHostPort, freeHttpsHostPort);
-
-  httpHostPort = freeHttpHostPort;
-  httpsHostPort = freeHttpsHostPort;
 
   let ingressController = false;
   // The params['kind.cluster.creation.ingress'] can be only "on" or "undefined"
