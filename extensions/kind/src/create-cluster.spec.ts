@@ -23,6 +23,7 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as port from '../../../packages/main/src/plugin/util/port';
 import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
 import { getKindPath, getMemTotalInfo } from './util';
 
@@ -51,6 +52,9 @@ vi.mock('@podman-desktop/api', async () => {
     },
     process: {
       exec: vi.fn(),
+    },
+    window: {
+      showInformationMessage: vi.fn(),
     },
   };
 });
@@ -397,8 +401,12 @@ test('check cluster configuration null string image', async () => {
 });
 
 test('check that consilience check returns warning message', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(3000000000);
-  const checks = await connectionAuditor('docker', {});
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -410,8 +418,12 @@ test('check that consilience check returns warning message', async () => {
 });
 
 test('check that consilience check returns no warning messages', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
   (getMemTotalInfo as Mock).mockReturnValue(6000000001);
-  const checks = await connectionAuditor('docker', {});
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -419,7 +431,12 @@ test('check that consilience check returns no warning messages', async () => {
 });
 
 test('check that consilience check returns warning message when image has no sha256 digest', async () => {
-  const checks = await connectionAuditor('docker', { 'kind.cluster.creation.controlPlaneImage': 'image:tag' });
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.controlPlaneImage': 'image:tag',
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
@@ -429,11 +446,43 @@ test('check that consilience check returns warning message when image has no sha
 });
 
 test('check that consilience check returns warning message when config file is specified', async () => {
-  const checks = await connectionAuditor('docker', { 'kind.cluster.creation.configFile': '/path' });
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.configFile': '/path',
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
 
   expect(checks).toBeDefined();
   expect(checks).toHaveProperty('records');
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('warning');
+});
+
+test('check that auditItems returns error message when HTTP port is not available', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9091).mockResolvedValueOnce(9443);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+});
+
+test('check that auditItems returns error message when HTTPS port is not available', async () => {
+  vi.spyOn(port, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9444);
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
 });
