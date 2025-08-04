@@ -64,6 +64,10 @@ export class RegistrySetup {
         // split the decoded string into username and password separated by :
         const [username, secret] = decoded.split(':');
 
+        if (!secret) {
+          console.warn(`Invalid auth value for ${serverUrl}`);
+        }
+
         const registry = {
           source,
           serverUrl,
@@ -109,16 +113,31 @@ export class RegistrySetup {
     extensionApi.registry.onDidRegisterRegistry(async registry => {
       // external change, update the local registries
       if (!this.localRegistries.has(registry.serverUrl)) {
+        let encode = true;
         this.localRegistries.set(registry.serverUrl, registry);
-        // update the file
+        // read the file
         const authFile = await this.readAuthFile();
         authFile.auths ??= {};
-        authFile.auths[registry.serverUrl] = {
-          auth: Buffer.from(`${registry.username}:${registry.secret}`).toString('base64'),
-          podmanDesktopAlias: registry.alias,
-        };
 
-        await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+        // if the registry already exists in the file, check if it has the same value as the registered registry
+        if (authFile.auths[registry.serverUrl]) {
+          const decoded = Buffer.from(authFile.auths[registry.serverUrl].auth, 'base64').toString();
+
+          // split the decoded string into username and password separated by :
+          const [username, secret] = decoded.split(':');
+
+          // do not encode the registry again if the values are not different from the ones file
+          encode = !(username === registry.username && secret === registry.secret);
+        }
+
+        if (encode) {
+          authFile.auths[registry.serverUrl] = {
+            auth: Buffer.from(`${registry.username}:${registry.secret}`).toString('base64'),
+            podmanDesktopAlias: registry.alias,
+          };
+
+          await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+        }
       }
     });
 
