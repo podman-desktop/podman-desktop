@@ -126,7 +126,7 @@ export class RegistrySetup {
           // split the decoded string into username and password separated by :
           const [username, secret] = decoded.split(':');
 
-          // do not encode the registry again if the values are not different from the ones file
+          // do not encode the registry again if the values are not different from the ones in the file
           encode = !(username === registry.username && secret === registry.secret);
         }
 
