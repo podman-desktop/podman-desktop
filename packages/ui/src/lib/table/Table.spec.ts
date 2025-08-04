@@ -385,7 +385,7 @@ test('Expect duration cell to be empty when undefined', async () => {
   }
 });
 
-test('Expect row component to have proper css style', async () => {
+test('Expect table to have proper css style', async () => {
   render(TestTable, {});
 
   // Wait for the table to update
