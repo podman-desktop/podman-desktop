@@ -1,6 +1,7 @@
 <style>
 .grid-table {
   display: grid;
+  grid-template-columns: var(--table-grid-table-columns);
 }
 </style>
 
@@ -8,7 +9,7 @@
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { afterUpdate, onMount, tick } from 'svelte';
+import { onMount, tick } from 'svelte';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 import Icon from '../icons/Icon.svelte';
@@ -139,13 +140,8 @@ onMount(async () => {
   }
 });
 
-afterUpdate(() => {
-  tick()
-    .then(() => setGridColumns())
-    .catch((err: unknown) => console.error('unable to refresh grid columns', err));
-});
-
-function setGridColumns(): void {
+let gridTemplateColumns: string;
+$: {
   // section and checkbox columns
   let columnWidths: string[] = ['20px'];
 
@@ -159,13 +155,7 @@ function setGridColumns(): void {
   // final spacer
   columnWidths.push('5px');
 
-  let wid = columnWidths.join(' ');
-  if (tableHtmlDivElement) {
-    let grids: HTMLCollection = tableHtmlDivElement.getElementsByClassName('grid-table');
-    for (const element of grids) {
-      (element as HTMLElement).style.setProperty('grid-template-columns', wid);
-    }
-  }
+  gridTemplateColumns = columnWidths.join(' ');
 }
 
 function objectChecked(object: T): void {
@@ -197,7 +187,13 @@ function toggleChildren(name: string | undefined): void {
 }
 </script>
 
-<div class="w-full mx-5" class:hidden={data.length === 0} role="table" aria-label={kind} bind:this={tableHtmlDivElement}>
+<div
+  style="--table-grid-table-columns: {gridTemplateColumns}"
+  class="w-full mx-5"
+  class:hidden={data.length === 0}
+  role="table"
+  aria-label={kind}
+  bind:this={tableHtmlDivElement}>
   <!-- Table header -->
   <div role="rowgroup">
     <div

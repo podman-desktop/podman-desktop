@@ -385,7 +385,7 @@ test('Expect duration cell to be empty when undefined', async () => {
   }
 });
 
-test('Expect table is scoped for css manipulation', async () => {
+test('Expect row component to have proper css style', async () => {
   render(TestTable, {});
 
   // Wait for the table to update
@@ -397,8 +397,12 @@ test('Expect table is scoped for css manipulation', async () => {
   const rows = await within(table).findAllByRole('row');
   // expect each row of the table has the grid-template-columns style applied
   for (const element of rows) {
-    expect(element.style.gridTemplateColumns).toBe('20px 32px 1fr 3fr 1fr 1fr 1fr 5px');
+    expect(element).toHaveClass('grid-table');
   }
+
+  expect(table).toHaveStyle({
+    '--table-grid-table-columns': '20px 32px 1fr 3fr 1fr 1fr 1fr 5px',
+  });
 
   // ok so now look at our dummy component
   const dummyComponent = await screen.findByRole('group', { name: 'dummy component' });
