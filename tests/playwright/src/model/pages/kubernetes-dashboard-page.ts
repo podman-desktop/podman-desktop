@@ -22,15 +22,15 @@ import { expect as playExpect } from '@playwright/test';
 import { MainPage } from './main-page';
 
 export class KubernetesDashboardPage extends MainPage {
-  readonly namepaceLocator: Locator;
+  readonly namespaceLocator: Locator;
   readonly namespaceDropdownButton: Locator;
   readonly currentNamespace: Locator;
 
   constructor(page: Page) {
     super(page, 'Dashboard');
-    this.namepaceLocator = this.page.getByLabel('Kubernetes Namespace', { exact: true });
-    this.namespaceDropdownButton = this.namepaceLocator.getByRole('button', { name: 'Namespace' });
-    this.currentNamespace = this.namepaceLocator.getByLabel('hidden input', { exact: true });
+    this.namespaceLocator = this.page.getByLabel('Kubernetes Namespace', { exact: true });
+    this.namespaceDropdownButton = this.namespaceLocator.getByRole('button', { name: 'Namespace' });
+    this.currentNamespace = this.namespaceLocator.getByLabel('hidden input', { exact: true });
   }
 
   async changeNamespace(name: string): Promise<void> {
@@ -50,6 +50,6 @@ export class KubernetesDashboardPage extends MainPage {
   }
 
   private namespaceLocatorByName(name: string): Locator {
-    return this.namepaceLocator.getByRole('button', { name, exact: true });
+    return this.namespaceLocator.getByRole('button', { name, exact: true });
   }
 }
