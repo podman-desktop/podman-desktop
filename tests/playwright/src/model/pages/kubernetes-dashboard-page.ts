@@ -36,6 +36,7 @@ export class KubernetesDashboardPage extends MainPage {
   async changeNamespace(name: string): Promise<void> {
     await playExpect(this.currentNamespace).not.toHaveValue(name, { timeout: 10_000 });
     await this.selectNamespaceByName(name);
+    await playExpect(this.currentNamespace).toHaveValue(name, { timeout: 10_000 });
   }
 
   async selectNamespaceByName(name: string): Promise<void> {
@@ -45,8 +46,6 @@ export class KubernetesDashboardPage extends MainPage {
     const namespaceLocator = this.namespaceLocatorByName(name);
     await playExpect(namespaceLocator).toBeVisible({ timeout: 10_000 });
     await namespaceLocator.click();
-
-    await playExpect(this.currentNamespace).toHaveValue(name, { timeout: 10_000 });
   }
 
   private namespaceLocatorByName(name: string): Locator {

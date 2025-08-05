@@ -149,10 +149,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
     await playExpect(dashboardPage.currentNamespace).toHaveValue('default');
 
     await dashboardPage.changeNamespace('kube-public');
-    await playExpect(dashboardPage.currentNamespace).toHaveValue('kube-public');
-
     await dashboardPage.changeNamespace('default');
-    await playExpect(dashboardPage.currentNamespace).toHaveValue('default');
   });
 
   test.describe
