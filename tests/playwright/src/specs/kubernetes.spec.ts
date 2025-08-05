@@ -19,6 +19,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { expect as playExpect } from '@playwright/test';
+
 import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
@@ -138,6 +140,21 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
   test('Kubernetes Nodes test', async ({ page }) => {
     await checkKubernetesResourceState(page, KubernetesResources.Nodes, KIND_NODE, KubernetesResourceState.Running);
   });
+
+  test('Kubernetes Namespaces test', async ({ navigationBar }) => {
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const dashboardPage = await kubernetesBar.openKubernetesDashboardPage();
+
+    await playExpect(dashboardPage.namespaceDropdownButton).toBeVisible({ timeout: 10_000 });
+    await playExpect(dashboardPage.currentNamespace).toHaveValue('default');
+
+    await dashboardPage.changeNamespace('kube-public');
+    await playExpect(dashboardPage.currentNamespace).toHaveValue('kube-public');
+
+    await dashboardPage.changeNamespace('default');
+    await playExpect(dashboardPage.currentNamespace).toHaveValue('default');
+  });
+
   test.describe
     .serial('PVC lifecycle test', () => {
       test('Create a new PVC resource', async ({ page }) => {
