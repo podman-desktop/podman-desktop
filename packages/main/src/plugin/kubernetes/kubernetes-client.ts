@@ -87,6 +87,7 @@ import type { V1Route } from '/@api/openshift-types.js';
 
 import { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
+import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import { Telemetry } from '../telemetry/telemetry.js';
 import { Uri } from '../types/uri.js';
@@ -214,6 +215,8 @@ export class KubernetesClient {
     private readonly fileSystemMonitoring: FilesystemMonitoring,
     @inject(Telemetry)
     private readonly telemetry: Telemetry,
+    @inject(ExperimentalConfigurationManager)
+    private readonly experimentalConfigurationManager: ExperimentalConfigurationManager,
   ) {
     this.kubeConfig = new KubeConfig();
     this.contextsState = new ContextsManager(this.apiSender);
@@ -238,8 +241,7 @@ export class KubernetesClient {
         },
         ['kubernetes.statesExperimental']: {
           description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
-          type: 'boolean',
-          default: false,
+          type: 'object',
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/11424',
           },
@@ -263,7 +265,9 @@ export class KubernetesClient {
       }
     }
 
-    const statesExperimental = kubernetesConfiguration.get<boolean>('statesExperimental');
+    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+      'kubernetes.statesExperimental',
+    );
     if (statesExperimental) {
       const manager = new ContextsManagerExperimental();
       this.contextsState = manager;

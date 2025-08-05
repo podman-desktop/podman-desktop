@@ -101,24 +101,7 @@ sources={{
   }}
 />
 
-### Generate Quadlets :hammer:
-
-To generate a Quadlet from an existing container, you’ll need to install [Podlet](https://github.com/containers/podlet). The extension simplifies installation.
-
-Use one of the following ways to install Podlet:
-
-- Go to **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > CLI Tools** and install Podlet using the Podman Quadlet extension.
-- Download Podlet manually from its [GitHub release page](https://github.com/containers/podlet/releases).
-
-<ThemedImage
-alt="Podlet Installation"
-sources={{
-    light: require('./img/podman-quadlet/cli-podlet-light.png').default,
-    dark: require('./img/podman-quadlet/cli-podlet-dark.png').default,
-  }}
-/>
-
-#### Example: Generate a Container Quadlet
+### Generate a container Quadlet :hammer:
 
 1. Start a container using Podman:
 

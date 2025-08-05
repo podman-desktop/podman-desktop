@@ -2,16 +2,16 @@
 
 ## Pre-requisites
 
-- Create Enhancement Issue `Release vX.X.X` for current sprint, then update the label to `kind/release` and assign it to yourself.
+- Create Enhancement Issue `Release vX.X.X` for current sprint (if such an issue does not already exist), then update the label to `kind/release` and assign it to yourself.
 - Confirm with Podman Desktop maintainers that pending / need-to-go-in PR's have been merged.
 - Notify main contributors on Discord / Slack.
-- Release notes for the blog: Communicate with the person who has been tasked with creating the documentation. If you are assigned, see the below "Documentation" section.
+- Release notes for the blog: Communicate with the person who has been tasked with creating the documentation. If you are assigned, see the below ["Documentation"](#documentation) section.
 
 In the below example, we will pretend that we're upgrading from `0.11.0` to `0.12.0`. Please use the CORRECT release numbers as these are just example numbers.
 
 ## Release timeline
 
-Below is what a typical release week may look like:
+Below is what a typical release week may look like (This is just an example of timeline, some tasks may require extra days to complete):
 
 - **Monday (Notify):** 48-hour notification. Communicate to maintainers and public channels a release will be cut on Wednesday and to merge any pending PRs. Inform QE team. Start work on blog post as it is usually the longest part of the release process.
 - **Tuesday (Staging, Testing & Blog):** Stage the release (see instructions below) to create a new cut of the release to test. Test the pre-release (master branch) build briefly. Get feedback from committers (if applicable). Push the blog post for review (as it usually takes a few back-and-forth reviews on documentation).
@@ -53,23 +53,23 @@ The release may be tested using the assets generated within the pre-release.
 
 ## QE and cherry picking fixes
 
-- ❌ All severe bugs and regressions brought up by QE are investigated and discussed. If we agree any should block the release, need to fix the bugs and do a respin of the release with a new .z release like 1.3.1 instead of 1.3.0.
+- ❌ All critical bugs and regressions reported by QE are investigated and reviewed. If we determine that any of these issues warrant blocking the release, the necessary fixes will be implemented, and a new release candidate will be created—incrementing the patch version (e.g., 0.12.1 instead of 0.12.0).
 
 **Cherry picking:**
 
 If there are fixes that need to be made to the release as brought up by QE the following steps need to be completed:
 
-1. Create a branch **FROM THE RELEASE**. Example, 1.3.x of release 1.3.0. **IMPORTANT NOTE:** Literally `1.3.x` not `1.3.1`.
-2. Create PR(s) with the fixes that merge into the 1.3.x branch
+1. Create a branch **FROM THE RELEASE**. Example, 0.12.x of release 0.12.0. **IMPORTANT NOTE:** Literally `0.12.x` not `0.12.1`.
+2. Create PR(s) with the fixes that merge into the main branch and use mergify.io to open a backport PR(s) to the 0.12.x branch by adding the following comment in the main PR(s): `@Mergifyio backport 0.12.x`
 3. Make sure all PR's are merged
 
 **Re-spin a release:**
 
-You'll need to create another release from the 1.3.x branch. This can be done by doing the following:
+You'll need to create another release from the 0.12.x branch. This can be done by doing the following:
 
 1. Go to `Run workflow` in the [release steps](/RELEASE.md#releasing-on-github) again.
-2. **MAKE SURE** you specify that you want to use the `1.3.x` branch, NOT `main` under `Branch to use for the release`.
-3. Version to release should be `1.3.1` **IMPORTANT NOTE:** Literally `1.3.1` NOT the branch name `1.3.x`.
+2. **MAKE SURE** you specify that you want to use the `0.12.x` branch, NOT `main` under `Branch to use for the release`.
+3. Version to release should be `0.12.1` **IMPORTANT NOTE:** Literally `0.12.1` NOT the branch name `0.12.x`.
 
 ## Change from pre-release to release
 
@@ -87,6 +87,8 @@ This is done on your release URL
 1.  Go to your release: https://github.com/containers/podman-desktop/releases/tag/vX.X.X
 2.  Press the edit button.
 3.  Uncheck `Set as a pre-release`
+
+**IMPORTANT NOTE:** Only the .z version that was approved by QE should be changed from pre-release to release. Any previous blocked versions need to stay as pre-release. For example, if the respin version `0.12.1` was approved by QE after finding bugs in `0.12.0`, only `0.12.1` should be moved from pre-release to release.
 
 ## Updating package managers (Brew, Winget, Chocolatey, Flathub)
 
@@ -151,8 +153,8 @@ The below workflow will create a PR for the Podman [website](https://podman.io) 
 
 1. Go to https://github.com/containers/podman-desktop/actions/workflows/publish-to-podman_io.yaml
 1. Click on the top right drop-down `Run workflow`
-1. Select the release (under tags), which would be `v1.2.0`
-1. Enter the release version `1.2.0`. DO NOT add the `v`
+1. Select the release (under tags), which would be `v0.12.0`
+1. Enter the release version `0.12.0`. DO NOT add the `v`
 1. Click `Run workflow`
 1. Check that the PR has been created after the workflow at https://github.com/containers/podman.io/pull/
 
@@ -171,13 +173,13 @@ The below workflow will create a PR for the Podman [website](https://podman.io) 
 ```
 Hello,
 
-A new release of Podman Desktop is out: [v0.11.0](https://github.com/containers/podman-desktop/milestone/12?closed=1)
+A new release of Podman Desktop is out: [v0.12.0](https://github.com/containers/podman-desktop/milestone/12?closed=1)
 
 Download it from the [download section](https://podman-desktop.io/downloads) of the [Podman Desktop website](https://podman-desktop.io/)
 
-Release Notes are available at https://podman-desktop.io/blog/podman-desktop-release-0.11
+Release Notes are available at https://podman-desktop.io/blog/podman-desktop-release-0.12
 
-Full Changelog is available at https://github.com/containers/podman-desktop/releases/tag/v0.11.0
+Full Changelog is available at https://github.com/containers/podman-desktop/releases/tag/v0.12.0
 ```
 
 #### Create a post on Reddit

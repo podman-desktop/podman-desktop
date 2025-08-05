@@ -29,6 +29,7 @@ import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
 import { ApiSenderType } from '../api.js';
 import { CommandRegistry } from '../command-registry.js';
+import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
 
 @injectable()
@@ -46,6 +47,8 @@ export class TaskManager {
     private commandRegistry: CommandRegistry,
     @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(ExperimentalConfigurationManager)
+    private experimentalConfigurationManager: ExperimentalConfigurationManager,
   ) {}
 
   public init(): void {
@@ -54,10 +57,9 @@ export class TaskManager {
 
     this.commandRegistry.registerCommand('show-task-manager', () => {
       // get the current value of the configuration flag for the task manager
-      const useExperimentalTaskManager = this.configurationRegistry
-        .getConfiguration(ExperimentalTasksSettings.SectionName)
-        .get<boolean>(ExperimentalTasksSettings.Manager, false);
-
+      const useExperimentalTaskManager = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+        `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`,
+      );
       const showEventName = useExperimentalTaskManager ? 'toggle-task-manager' : 'toggle-legacy-task-manager';
 
       this.apiSender.send(showEventName, '');
@@ -72,8 +74,7 @@ export class TaskManager {
         properties: {
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`]: {
             description: 'Show running tasks in the status bar',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10777',
             },
@@ -85,8 +86,7 @@ export class TaskManager {
           },
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`]: {
             description: 'Replace the current task manager widget by the new one',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
             },

@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
+import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -32,7 +33,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
-import { isLinux } from './platform';
+import { isLinux, isMac, isWindows } from './platform';
 import { waitUntil, waitWhile } from './wait';
 
 /**
@@ -453,4 +454,57 @@ export async function setStatusBarProvidersFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
+}
+
+function isRootlessPodman(): boolean {
+  try {
+    let output: string;
+
+    if (isMac || isWindows) {
+      output = execSync(`podman machine ssh podman info --format json`).toString();
+    } else if (isLinux) {
+      output = execSync(`podman info --format json`).toString();
+    } else {
+      throw new Error('Unsupported platform');
+    }
+    const info = JSON.parse(output);
+    return info?.host?.security?.rootless === true;
+  } catch (err) {
+    throw new Error(`Failed to determine Podman rootless mode: ${err}`);
+  }
+}
+
+function getPodmanVolumePath(volumeName: string, fileName: string): string {
+  const relativePath = `${volumeName}/_data/${fileName}`;
+  const isRootless = isRootlessPodman();
+
+  if (isMac || isWindows) {
+    const base = isRootless ? `.local/share/containers/storage/volumes` : '/var/lib/containers/storage/volumes';
+    return `${base}/${relativePath}`;
+  }
+
+  if (isLinux) {
+    const base = isRootless
+      ? `${os.homedir()}/.local/share/containers/storage/volumes`
+      : '/var/lib/containers/storage/volumes';
+    return `${base}/${relativePath}`;
+  }
+
+  throw new Error('Unsupported platform');
+}
+
+export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
+  return test.step('Read file in volume from CLI', async () => {
+    try {
+      const fullPath = getPodmanVolumePath(volumeName, fileName);
+
+      const command = isMac || isWindows ? `podman machine ssh sudo cat ${fullPath}` : `cat ${fullPath}`;
+
+      // eslint-disable-next-line sonarjs/os-command
+      const output = execSync(command);
+      return output.toString();
+    } catch (error) {
+      throw new Error(`Error reading file: ${fileName} in volume: ${volumeName} from CLI: ${error}`);
+    }
+  });
 }

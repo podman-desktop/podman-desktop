@@ -26,12 +26,14 @@ export class KubeContextPage extends SettingsPage {
   readonly heading: Locator;
   readonly content: Locator;
   readonly contextTable: Locator;
+  readonly editContextDialog: Locator;
 
   constructor(page: Page) {
     super(page, 'Kubernetes');
     this.heading = this.page.getByLabel('Title', { exact: true });
     this.content = this.page.getByLabel('Content');
     this.contextTable = this.content.getByLabel('Contexts');
+    this.editContextDialog = this.page.getByRole('dialog', { name: 'Edit Context' });
   }
 
   async pageIsEmpty(): Promise<boolean> {
@@ -85,6 +87,45 @@ export class KubeContextPage extends SettingsPage {
       await handleConfirmationDialog(this.page, 'Delete Context');
     }
   }
+
+  async duplicateContext(name: string): Promise<void> {
+    const contextRow = await this.getContextRowByName(name);
+    if (contextRow === undefined) {
+      throw Error(`Context: '${name}' does not exist`);
+    }
+    const duplicateButton = contextRow.getByLabel('Duplicate Context');
+    await playExpect(duplicateButton).toBeEnabled();
+    await duplicateButton.click();
+  }
+
+  async editContext(name: string, newName: string): Promise<void> {
+    const contextRow = await this.getContextRowByName(name);
+    if (contextRow === undefined) {
+      throw Error(`Context: '${name}' does not exist`);
+    }
+
+    if (newName === name) {
+      throw Error(`New context name must be different from the current one: ${name}`);
+    }
+
+    const editButton = contextRow.getByLabel('Edit Context');
+    await playExpect(editButton).toBeEnabled();
+    await editButton.click();
+
+    await playExpect(this.editContextDialog).toBeVisible({ timeout: 10_000 });
+
+    const nameInput = this.editContextDialog.getByLabel('contextName', { exact: true });
+    await playExpect(nameInput).toBeVisible();
+    await nameInput.clear();
+    await playExpect(nameInput).toHaveValue('');
+    await nameInput.fill(newName);
+    await playExpect(nameInput).toHaveValue(newName);
+
+    const saveButton = this.editContextDialog.getByRole('button', { name: 'Save' });
+    await playExpect(saveButton).toBeEnabled();
+    await saveButton.click();
+  }
+
   async getContextName(context: string): Promise<string> {
     const row = await this.getContextRowByName(context);
     return row.getByLabel('Context Name', { exact: true }).innerText();

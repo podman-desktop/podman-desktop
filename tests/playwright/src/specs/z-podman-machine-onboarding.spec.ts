@@ -28,7 +28,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { createPodmanMachineFromCLI, deletePodmanMachine } from '../utility/operations';
-import { isLinux, isMac } from '../utility/platform';
+import { isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const PODMAN_MACHINE_STARTUP_TIMEOUT: number = 360_000;
@@ -73,11 +73,6 @@ test.afterAll(async ({ runner }) => {
 
   await runner.close();
 });
-
-test.skip(
-  isMac,
-  'Skip this test suite on MacOS until issue https://github.com/podman-desktop/podman-desktop/issues/12334 is fixed',
-);
 
 test.describe
   .serial('Podman Machine verification', () => {

@@ -18,19 +18,30 @@ import ActionsWrapper from './ActionsMenu.svelte';
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let onPushImage: (imageInfo: ImageInfoUI) => void;
-export let onRenameImage: (imageInfo: ImageInfoUI) => void;
-export let image: ImageInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
-export let groupContributions = false;
+interface Props {
+  onPushImage: (imageInfo: ImageInfoUI) => void;
+  onRenameImage: (imageInfo: ImageInfoUI) => void;
+  image: ImageInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+  groupContributions?: boolean;
+}
+
+let {
+  onPushImage,
+  onRenameImage,
+  image = $bindable(),
+  dropdownMenu = false,
+  detailed = false,
+  groupContributions = false,
+}: Props = $props();
 
 const imageUtils = new ImageUtils();
 
-let contributions: Menu[] = [];
-let globalContext: ContextUI;
+let contributions: Menu[] = $state([]);
+let globalContext: ContextUI | undefined = $state();
 let contextsUnsubscribe: Unsubscriber;
-let groupingContributions = false;
+let groupingContributions = $state(false);
 
 const dispatch = createEventDispatcher<{ update: ImageInfoUI }>();
 

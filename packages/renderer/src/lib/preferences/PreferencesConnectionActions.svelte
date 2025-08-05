@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faEdit, faPlay, faRotateRight, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Buffer } from 'buffer';
+import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
@@ -13,17 +14,29 @@ import {
 } from './preferences-connection-rendering-task';
 import { type IConnectionRestart, type IConnectionStatus } from './Util';
 
-export let connectionStatus: IConnectionStatus | undefined;
-export let provider: ProviderInfo;
-export let connection: ProviderConnectionInfo;
-export let updateConnectionStatus: (
-  provider: ProviderInfo,
-  providerConnectionInfo: ProviderConnectionInfo,
-  action?: string,
-  error?: string,
-  inProgress?: boolean,
-) => void;
-export let addConnectionToRestartingQueue: (connection: IConnectionRestart) => void;
+interface Props {
+  connectionStatus: IConnectionStatus | undefined;
+  provider: ProviderInfo;
+  connection: ProviderConnectionInfo;
+  updateConnectionStatus: (
+    provider: ProviderInfo,
+    providerConnectionInfo: ProviderConnectionInfo,
+    action?: string,
+    error?: string,
+    inProgress?: boolean,
+  ) => void;
+  addConnectionToRestartingQueue: (connection: IConnectionRestart) => void;
+  advanced_actions?: Snippet;
+}
+
+let {
+  connectionStatus,
+  provider,
+  connection,
+  updateConnectionStatus,
+  addConnectionToRestartingQueue,
+  advanced_actions,
+}: Props = $props();
 
 async function startConnectionProvider(
   provider: ProviderInfo,
@@ -38,7 +51,7 @@ async function startConnectionProvider(
       }
       await window.startProviderConnectionLifecycle(
         provider.internalId,
-        providerConnectionInfo,
+        $state.snapshot(providerConnectionInfo),
         loggerHandlerKey,
         eventCollect,
       );
@@ -57,7 +70,7 @@ async function restartConnectionProvider(
     const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(provider, providerConnectionInfo));
     await window.stopProviderConnectionLifecycle(
       provider.internalId,
-      providerConnectionInfo,
+      $state.snapshot(providerConnectionInfo),
       loggerHandlerKey,
       eventCollect,
     );
@@ -79,7 +92,7 @@ async function stopConnectionProvider(
       const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(provider, providerConnectionInfo));
       await window.stopProviderConnectionLifecycle(
         provider.internalId,
-        providerConnectionInfo,
+        $state.snapshot(providerConnectionInfo),
         loggerHandlerKey,
         eventCollect,
       );
@@ -110,7 +123,7 @@ async function deleteConnectionProvider(
       const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(provider, providerConnectionInfo));
       await window.deleteProviderConnectionLifecycle(
         provider.internalId,
-        providerConnectionInfo,
+        $state.snapshot(providerConnectionInfo),
         loggerHandlerKey,
         eventCollect,
       );
@@ -185,7 +198,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             leftPosition="left-[0.15rem]" />
         {/if}
         <div class="mr-2 text-sm">
-          <slot name="advanced-actions" />
+          {@render advanced_actions?.()}
         </div>
       </div>
     </div>

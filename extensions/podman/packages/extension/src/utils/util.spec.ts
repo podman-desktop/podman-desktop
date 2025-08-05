@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getPodmanCli } from './podman-cli';
+import * as podmanCli from './podman-cli';
 import {
   APPLEHV_LABEL,
   execPodman,
+  getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
   LIBKRUN_LABEL,
@@ -97,7 +98,7 @@ test('expect exec called with CONTAINERS_MACHINE_PROVIDER if a provider is defin
     },
   });
 
-  expect(execMock).toBeCalledWith(getPodmanCli(), ['machine', 'inspect'], {
+  expect(execMock).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect'], {
     env: {
       label: 'one',
       CONTAINERS_MACHINE_PROVIDER: 'libkrun',
@@ -116,7 +117,7 @@ test('expect exec called without CONTAINERS_MACHINE_PROVIDER if a provider is NO
     },
   });
 
-  expect(execMock).toBeCalledWith(getPodmanCli(), ['machine', 'inspect'], {
+  expect(execMock).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'inspect'], {
     env: {
       label: 'one',
     },
@@ -151,4 +152,40 @@ test('expect applehv provider with applehv label', async () => {
 test('expect wsl name with provider wsl label', async () => {
   const provider = getProviderByLabel(VMTYPE.WSL);
   expect(provider).equals(VMTYPE.WSL);
+});
+
+describe('Check multiple Podman installations', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.spyOn(podmanCli, 'isMultiplePodmanInstalled').mockResolvedValue(false);
+  });
+
+  test('should return empty warnings when no Podman installation provided', async () => {
+    const warnings = await getMultiplePodmanInstallationsWarnings(undefined);
+
+    expect(warnings).toEqual([]);
+    expect(podmanCli.isMultiplePodmanInstalled).not.toHaveBeenCalled();
+  });
+
+  test('should return empty warnings when no multiple installations detected', async () => {
+    const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
+  });
+
+  test('should return warning when multiple installations detected', async () => {
+    vi.mocked(podmanCli.isMultiplePodmanInstalled).mockResolvedValue(true);
+
+    const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([
+      {
+        name: 'Multiple Podman installations detected',
+        details:
+          'You have multiple Podman installations. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
+      },
+    ]);
+    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
+  });
 });

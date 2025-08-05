@@ -21,6 +21,8 @@ import type { PlayYamlRuntime } from './operations';
 export interface ContainerInteractiveParams {
   interactive?: boolean;
   attachTerminal?: boolean;
+  attachVolumeName?: string;
+  attachVolumePath?: string;
 }
 
 export interface KindClusterOptions {

@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { ColorRegistry } from '/@/plugin/color-registry.js';
 import {
@@ -37,6 +37,7 @@ import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
+import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
@@ -115,7 +116,7 @@ export interface AnalyzedExtensionWithApi extends AnalyzedExtension {
  * Handle the loading of an extension
  */
 @injectable()
-export class ExtensionLoader {
+export class ExtensionLoader implements AsyncDisposable {
   private moduleLoader: ModuleLoader;
 
   protected activatedExtensions = new Map<string, ActivatedExtension>();
@@ -219,6 +220,21 @@ export class ExtensionLoader {
     this.extensionsStorageDirectory = directories.getExtensionsStorageDirectory();
     this.moduleLoader = new ModuleLoader(require('node:module'), this.analyzedExtensions);
     this.extensionDevelopmentFolder.onNeedToLoadExension(extension => this.loadExtension(extension));
+  }
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.stopAllExtensions();
+
+    // clear maps
+    this.activatedExtensions.clear();
+    this.analyzedExtensions.clear();
+    this.reloadInProgressExtensions.clear();
+    this.extensionState.clear();
+    this.extensionStateErrors.clear();
+
+    // clear emitter
+    this._onDidChange.dispose();
   }
 
   mapError(err: unknown): ExtensionError | undefined {
@@ -1562,6 +1578,7 @@ export class ExtensionLoader {
       cli,
       imageChecker,
       navigation,
+      RepositoryInfoParser,
     };
   }
 

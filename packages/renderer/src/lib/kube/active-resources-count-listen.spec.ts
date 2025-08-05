@@ -55,7 +55,7 @@ test('listenActiveResourcesCount is undefined in non experimental mode (setting 
 
 describe('experimental mode is set', () => {
   beforeEach(() => {
-    vi.mocked(window.getConfigurationValue<boolean>).mockResolvedValue(true);
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
   });
 
   test('get initial and updated values', async () => {

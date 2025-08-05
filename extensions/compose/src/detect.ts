@@ -82,7 +82,7 @@ export class Detect {
     }
 
     const systemWidePath = getSystemBinaryPath(composeCliName);
-    const extensionStoragePath = this.getStoragePath();
+    const extensionStoragePath = await this.getStoragePath();
 
     return {
       version: version,

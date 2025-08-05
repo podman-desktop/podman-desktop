@@ -220,16 +220,16 @@ test('Expect to create routes with OpenShift and open Link', async () => {
   await fireEvent.click(createButton);
 
   // wait that openshiftCreateRouteMock is called
-  while (openshiftCreateRouteMock.mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await vi.waitFor(() => expect(openshiftCreateRouteMock.mock.calls).not.toHaveLength(0));
 
-  expect(telemetryTrackMock).toBeCalledWith('deployToKube', {
-    useRoutes: true,
-    useServices: true,
-    isOpenshift: true,
-    createIngress: false,
-  });
+  await vi.waitFor(() =>
+    expect(telemetryTrackMock).toBeCalledWith('deployToKube', {
+      useRoutes: true,
+      useServices: true,
+      isOpenshift: true,
+      createIngress: false,
+    }),
+  );
 
   // check tls option is used
   expect(openshiftCreateRouteMock).toBeCalledWith('default', {

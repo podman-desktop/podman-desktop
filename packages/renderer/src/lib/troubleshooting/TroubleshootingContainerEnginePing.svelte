@@ -5,11 +5,15 @@ import { Buffer } from 'buffer';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-export let providerContainerEngine: ProviderContainerConnectionInfo;
+interface Props {
+  providerContainerEngine: ProviderContainerConnectionInfo;
+}
 
-let pingResult = '';
-let pingInProgress = false;
-let pingError = '';
+let { providerContainerEngine }: Props = $props();
+
+let pingResult = $state('');
+let pingInProgress = $state(false);
+let pingError = $state('');
 
 async function pingConnection(): Promise<void> {
   const start = performance.now();
@@ -17,7 +21,7 @@ async function pingConnection(): Promise<void> {
   pingError = '';
   pingResult = '...Waiting for response...';
   try {
-    const result = await window.pingContainerEngine(providerContainerEngine);
+    const result = await window.pingContainerEngine($state.snapshot(providerContainerEngine));
     pingResult = `Responded: ${Buffer.from(String(result)).toString()}`;
   } catch (e) {
     pingResult = 'Failed';

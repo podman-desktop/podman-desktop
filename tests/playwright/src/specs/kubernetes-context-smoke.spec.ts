@@ -102,6 +102,40 @@ test.describe.serial('Verification of kube context management', { tag: '@smoke' 
     playExpect(await kubePage.isContextDefault('context-3')).toBeFalsy();
   });
 
+  test('Can edit context', async ({ navigationBar }) => {
+    const settingsBar = await navigationBar.openSettings();
+    const kubePage = await settingsBar.openTabPage(KubeContextPage);
+    await playExpect(kubePage.heading).toBeVisible();
+
+    const newName = 'context-1-edited';
+    await kubePage.editContext('context-1', newName);
+    // check that the context name was changed
+    await playExpect(await kubePage.getContextRowByName(newName)).toBeVisible();
+    playExpect(await kubePage.getContextName(newName)).toBe(newName);
+
+    //revert modification
+    await kubePage.editContext(newName, 'context-1');
+    await playExpect(await kubePage.getContextRowByName('context-1')).toBeVisible();
+    playExpect(await kubePage.getContextName('context-1')).toBe('context-1');
+  });
+
+  test('Can duplicate context', async ({ navigationBar }) => {
+    const settingsBar = await navigationBar.openSettings();
+    const kubePage = await settingsBar.openTabPage(KubeContextPage);
+    await playExpect(kubePage.heading).toBeVisible();
+
+    const contextToDuplicate = 'context-1';
+    await kubePage.duplicateContext(contextToDuplicate);
+
+    const duplicatedContext = contextToDuplicate + '-1';
+    await playExpect(await kubePage.getContextRowByName(duplicatedContext)).toBeVisible();
+    playExpect(await kubePage.getContextName(duplicatedContext)).toBe(duplicatedContext);
+
+    //clean up context duplication
+    await kubePage.deleteContext(duplicatedContext, false);
+    await playExpect(await kubePage.getContextRowByName(duplicatedContext)).not.toBeVisible({ timeout: 15_000 });
+  });
+
   test('Can delete all contexts from Kubernetes Contexts page', async ({ navigationBar }) => {
     const settingsBar = await navigationBar.openSettings();
     const kubePage = await settingsBar.openTabPage(KubeContextPage);

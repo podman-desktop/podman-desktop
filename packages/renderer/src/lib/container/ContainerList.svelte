@@ -31,7 +31,7 @@ import { findMatchInLeaves } from '../../stores/search-util';
 import { viewsContributions } from '../../stores/views';
 import { withBulkConfirmation } from '../actions/BulkActions';
 import type { ContextUI } from '../context/context';
-import Dialog from '../dialogs/Dialog.svelte';
+import LegacyDialog from '../dialogs/LegacyDialog.svelte';
 import type { EngineInfoUI } from '../engine/EngineInfoUI';
 import Prune from '../engine/Prune.svelte';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
@@ -537,9 +537,9 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
 </NavPage>
 
 {#if openChoiceModal}
-  <Dialog
+  <LegacyDialog
     title="Create a new container"
-    on:close={(): void => {
+    onclose={(): void => {
       openChoiceModal = false;
     }}>
     <div slot="content" class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
@@ -553,5 +553,5 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
       <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
     </svelte:fragment>
-  </Dialog>
+  </LegacyDialog>
 {/if}
