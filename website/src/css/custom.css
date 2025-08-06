@@ -132,6 +132,7 @@ li.footer__item a svg {
 
 .navbar__item {
   font-size: 0.9em;
+  white-space: nowrap;
 }
 
 .pagination-nav {

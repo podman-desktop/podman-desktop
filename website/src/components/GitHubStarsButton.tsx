@@ -12,7 +12,7 @@ export function GitHubStarsButton(): JSX.Element {
       target="_blank"
       id="github-stars-button"
       rel="noopener noreferrer"
-      className="hidden lg:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg navbar__item navbar__link font-medium min-w-[9rem]">
+      className="hidden xl:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg navbar__item navbar__link font-medium min-w-[9rem]">
       <FontAwesomeIcon icon={faGithub} />
       <span>Star</span>
       <span

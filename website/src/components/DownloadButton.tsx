@@ -68,7 +68,7 @@ export function HeaderDownloadButton(): JSX.Element {
     return (
       <div>
         <Link
-          className="hidden lg:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
+          className="hidden xl:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
           to="/downloads">
           Download
         </Link>
@@ -81,7 +81,7 @@ export function HeaderDownloadButton(): JSX.Element {
   return (
     <div>
       <TelemetryLink
-        className="hidden lg:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
+        className="hidden xl:flex font-semibold no-underline hover:no-underline items-center text-white hover:text-white bg-gradient-to-b from-violet-500 to-violet-600 border-0 py-3 px-6 focus:outline-hidden hover:from-violet-600 hover:to-violet-700 rounded-lg text-base mt-0 mb-0 ml-4 mr-2"
         eventPath="landing"
         eventTitle="hero-download"
         to={`/downloads/${url}`}>
