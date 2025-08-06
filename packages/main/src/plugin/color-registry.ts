@@ -591,7 +591,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-border`, {
-      dark: colorPalette.charcoal[700],
+      dark: colorPalette.charcoal[800],
       light: colorPalette.gray[200],
     });
 
