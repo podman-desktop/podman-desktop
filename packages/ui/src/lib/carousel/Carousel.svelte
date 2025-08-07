@@ -9,108 +9,159 @@ interface Props<T> {
   cardWidth?: number;
   card: Snippet<[T]>;
 }
-let { cards, card, cardWidth = 340 }: Props<T> = $props();
+let { cards, card, cardWidth = 350 }: Props<T> = $props();
 
 let resizeObserver: ResizeObserver;
+let cardsContainer: HTMLElement;
 
-let cardsFit = $state(1);
-let startIndex = $state(0);
+let containerWidth = $state(0);
+let scrollPosition = $state(0);
+let maxScroll = $state(0);
+let isDragging = $state(false);
+let dragStartX = $state(0);
+let dragStartScroll = $state(0);
+
+// 12px gap between cards
+const GAP = 12;
+
 // eslint-disable-next-line sonarjs/pseudo-random
 const containerId = Math.random().toString(36).slice(-6);
 
-const visibleCards = $derived(cards.slice(startIndex, startIndex + cardsFit));
-const previousPreviewCard = $derived(startIndex > 0 ? cards[startIndex - 1] : undefined);
-const nextPreviewCard = $derived(startIndex + cardsFit < cards.length ? cards[startIndex + cardsFit] : undefined);
+// Calculate total width of all cards
+const totalCardsWidth = $derived(cards.length * cardWidth + (cards.length - 1) * GAP);
 
-function calcCardsToFit(width: number): number {
-  const cf = Math.floor(width / cardWidth);
-  return cf === 0 ? 1 : cf;
+// Check if we can scroll left or right
+const canScrollLeft = $derived(scrollPosition > 0);
+const canScrollRight = $derived(scrollPosition < maxScroll);
+
+function updateScrollLimits(): void {
+  maxScroll = Math.max(0, totalCardsWidth - containerWidth);
+  scrollPosition = Math.min(scrollPosition, maxScroll);
 }
 
 function update(entries: ResizeObserverEntry[]): void {
-  const width = entries[0].contentRect.width;
-  cardsFit = calcCardsToFit(width);
-  if (startIndex + cardsFit > cards.length) {
-    startIndex = Math.max(0, cards.length - cardsFit);
-  }
+  containerWidth = entries[0].contentRect.width;
+  updateScrollLimits();
+}
+
+function scrollToPosition(newPosition: number): void {
+  scrollPosition = Math.max(0, Math.min(newPosition, maxScroll));
+}
+
+function scrollLeft(): void {
+  const scrollAmount = cardWidth + GAP;
+  scrollToPosition(scrollPosition - scrollAmount);
+}
+
+function scrollRight(): void {
+  const scrollAmount = cardWidth + GAP;
+  scrollToPosition(scrollPosition + scrollAmount);
+}
+
+function handleWheel(event: WheelEvent): void {
+  event.preventDefault();
+  const scrollAmount = event.deltaY > 0 ? 100 : -100;
+  scrollToPosition(scrollPosition + scrollAmount);
+}
+
+function handleMouseDown(event: MouseEvent): void {
+  isDragging = true;
+  dragStartX = event.clientX;
+  dragStartScroll = scrollPosition;
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+}
+
+function handleMouseMove(event: MouseEvent): void {
+  if (!isDragging) return;
+  const deltaX = dragStartX - event.clientX;
+  scrollToPosition(dragStartScroll + deltaX);
+}
+
+function handleMouseUp(): void {
+  isDragging = false;
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
 }
 
 onMount(() => {
-  const cardsContainer = document.getElementById(`carousel-cards-${containerId}`);
-  const initialWidth = cardsContainer?.offsetWidth as number;
-  cardsFit = calcCardsToFit(initialWidth);
+  cardsContainer = document.getElementById(`carousel-cards-${containerId}`) as HTMLElement;
+  containerWidth = cardsContainer?.offsetWidth || 0;
+  updateScrollLimits();
+
   resizeObserver = new ResizeObserver(update);
-  resizeObserver.observe(cardsContainer as Element);
+  resizeObserver.observe(cardsContainer);
+
+  // Add wheel event listener
+  cardsContainer.addEventListener('wheel', handleWheel, { passive: false });
 });
 
 onDestroy(() => {
-  resizeObserver.disconnect();
+  resizeObserver?.disconnect();
+  cardsContainer?.removeEventListener('wheel', handleWheel);
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
 });
 
-function rotateLeft(): void {
-  if (startIndex > 0) {
-    startIndex--;
-  }
-}
-
-function rotateRight(): void {
-  if (startIndex + cardsFit < cards.length) {
-    startIndex++;
-  }
-}
+$effect(() => {
+  updateScrollLimits();
+});
 </script>
 
 <div class="flex flex-row items-center relative">
   <button
     id="left"
-    onclick={rotateLeft}
-    aria-label="Rotate left"
-    class="absolute h-8 w-8 left-2 z-10 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full"
-    hidden={!previousPreviewCard}>
+    onclick={scrollLeft}
+    aria-label="Scroll left"
+    class="absolute h-8 w-8 left-2 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full transition-opacity duration-200"
+    class:opacity-0={!canScrollLeft}
+    class:opacity-100={canScrollLeft}
+    class:pointer-events-none={!canScrollLeft}>
     <Icon class="w-8 h-8" icon={faChevronLeft} />
   </button>
 
-  <div id="carousel-cards-{containerId}" class="flex grow overflow-hidden relative gap-3">
-    <!-- Previous card preview (1/4 visible) -->
-    {#if previousPreviewCard}
-      <div 
-        class="flex-shrink-0 overflow-hidden"
-        style="width: {cardWidth / 4}px;"
-      >
-        <div style="width: {cardWidth}px; transform: translateX(-{cardWidth * 3/4}px);">
-          {@render card(previousPreviewCard)}
-        </div>
-        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--pd-content-card-border)] to-transparent pointer-events-none" style="width: {cardWidth/4}px;"></div>
-      </div>
-    {/if}
+  <!-- Left edge shadow for partially visible cards -->
+  {#if canScrollLeft}
+    <div 
+      class="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--pd-content-card-border)] to-transparent pointer-events-none z-10 w-[60px]">
+    </div>
+  {/if}
 
-    <!-- Main visible cards -->
-    <div class="flex gap-3">
-      {#each visibleCards as cardValue, index (startIndex + index)}
-        {@render card(cardValue)}
+  <div 
+    id="carousel-cards-{containerId}" 
+    role="carousel-cards-{containerId}"
+    class="flex grow overflow-hidden relative cursor-grab select-none"
+    class:cursor-grabbing={isDragging}
+    onmousedown={handleMouseDown}
+    onwheel={handleWheel}>
+    
+    <!-- Scrollable container with all cards -->
+    <div 
+      class="flex gap-3 transition-transform duration-300 ease-out"
+      style="transform: translateX(-{scrollPosition}px);">
+      {#each cards as cardValue (cardValue)}
+        <div style="width: {cardWidth}px; flex-shrink: 0;">
+          {@render card(cardValue)}
+        </div>
       {/each}
     </div>
 
-    <!-- Next card preview (1/4 visible) -->
-    {#if nextPreviewCard}
+    <!-- Right edge shadow for partially visible cards -->
+    {#if canScrollRight}
       <div 
-        class="flex-shrink-0 overflow-hidden"
-        style="width: {cardWidth / 4}px;"
-      >
-        <div style="width: {cardWidth}px; transform: translateX(0);">
-          {@render card(nextPreviewCard)}
-        </div>
-        <div class="absolute top-0 right-0 h-full bg-gradient-to-l from-[var(--pd-content-card-border)] to-transparent pointer-events-none" style="width: {cardWidth/4}px;"></div>
+        class="absolute top-0 right-0 h-full bg-gradient-to-l from-[var(--pd-content-card-border)] to-transparent pointer-events-none z-10 w-[60px]">
       </div>
     {/if}
   </div>
 
   <button
     id="right"
-    onclick={rotateRight}
-    aria-label="Rotate right"
-    class="absolute h-8 w-8 right-2 z-10 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full"
-    hidden={!nextPreviewCard}>
+    onclick={scrollRight}
+    aria-label="Scroll right"
+    class="absolute h-8 w-8 right-2 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full transition-opacity duration-200"
+    class:opacity-0={!canScrollRight}
+    class:opacity-100={canScrollRight}
+    class:pointer-events-none={!canScrollRight}>
     <Icon class="h-8 w-8" icon={faChevronRight} />
   </button>
 </div>
