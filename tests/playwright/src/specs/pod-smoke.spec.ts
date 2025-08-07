@@ -188,11 +188,11 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
 
     await podDetails.findInLogs('backend');
     await playExpect
-      .poll(async () => podDetails.getCountofSearchResults(), { timeout: 10_000 })
+      .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
     await podDetails.findInLogs('frontend');
     await playExpect
-      .poll(async () => podDetails.getCountofSearchResults(), { timeout: 10_000 })
+      .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
 
     await podDetails.activateTab('Summary');

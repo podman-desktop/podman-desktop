@@ -30,7 +30,8 @@ const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
 const containerList = ['first', 'second', 'third'];
-let containerStartParams: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
+const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
+const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('containers-e2e');
@@ -88,7 +89,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     let images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
-    await runImage.startContainer(containerToRun, containerStartParams);
+    await runImage.startContainer(containerToRun, containerStartParamsInteractive);
 
     const containers = await navigationBar.openContainers();
     await playExpect(containers.header).toBeVisible({ timeout: 10_000 });
@@ -145,7 +146,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     await containersDetails.executeCommandInTty('echo "Hello World"');
     await containersDetails.findInLogs('Hello World');
     await playExpect
-      .poll(async () => containersDetails.getCountofSearchResults(), { timeout: 10_000 })
+      .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
   });
 
@@ -225,7 +226,6 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     let images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
-    containerStartParams = { attachTerminal: false };
     const containers = await runImage.startContainer(containerToRun, containerStartParams);
     await playExpect(containers.header).toBeVisible();
     await playExpect
