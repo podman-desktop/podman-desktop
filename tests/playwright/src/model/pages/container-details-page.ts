@@ -33,12 +33,15 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly startButton: Locator;
   readonly terminalInput: Locator;
   readonly terminalContent: Locator;
+  readonly findInLogsInput: Locator;
+  readonly searchResults: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
   static readonly KUBE_TAB = 'Kube';
   static readonly TERMINAL_TAB = 'Terminal';
   static readonly INSPECT_TAB = 'Inspect';
+  static readonly Tty_TAB = 'Tty';
 
   constructor(page: Page, name: string) {
     super(page, name);
@@ -55,6 +58,8 @@ export class ContainerDetailsPage extends DetailsPage {
 
     this.terminalInput = this.tabContent.getByLabel('Terminal input');
     this.terminalContent = this.tabContent.locator('.xterm-rows');
+    this.findInLogsInput = this.tabContent.getByLabel('Find');
+    this.searchResults = this.tabContent.locator('div.xterm-selection > div');
   }
 
   async getState(): Promise<string> {
@@ -109,5 +114,35 @@ export class ContainerDetailsPage extends DetailsPage {
     await playExpect(this.terminalInput).toBeVisible();
     await this.terminalInput.pressSequentially(command);
     await this.terminalInput.press('Enter');
+  }
+
+  async executeCommandInTty(command: string): Promise<void> {
+    return test.step('Execute command in TTY terminal', async () => {
+      await this.activateTab(ContainerDetailsPage.Tty_TAB);
+
+      await this.terminalInput.pressSequentially(command, { delay: 10 });
+      await this.terminalInput.press('Enter');
+    });
+  }
+
+  async findInLogs(text: string): Promise<void> {
+    return test.step('Find text in logs', async () => {
+      await this.activateTab(ContainerDetailsPage.LOGS_TAB);
+      await playExpect(this.findInLogsInput).toBeVisible();
+      await this.findInLogsInput.clear();
+      await playExpect(this.findInLogsInput).toHaveValue('');
+
+      await this.findInLogsInput.fill(text);
+      await playExpect(this.findInLogsInput).toHaveValue(text);
+    });
+  }
+
+  async getCountofSearchResults(): Promise<number> {
+    return test.step('Get count of search results', async () => {
+      await this.activateTab(ContainerDetailsPage.LOGS_TAB);
+      await playExpect(this.findInLogsInput).toBeVisible();
+
+      return await this.searchResults.count();
+    });
   }
 }
