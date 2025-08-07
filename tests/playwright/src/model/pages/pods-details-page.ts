@@ -104,7 +104,7 @@ export class PodDetailsPage extends DetailsPage {
     });
   }
 
-  async getCountofSearchResults(): Promise<number> {
+  async getCountOfSearchResults(): Promise<number> {
     return test.step('Get count of search results', async () => {
       await this.activateTab(PodDetailsPage.LOGS_TAB);
       await playExpect(this.findInLogsInput).toBeVisible();

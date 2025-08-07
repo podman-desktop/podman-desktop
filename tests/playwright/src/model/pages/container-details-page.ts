@@ -137,7 +137,7 @@ export class ContainerDetailsPage extends DetailsPage {
     });
   }
 
-  async getCountofSearchResults(): Promise<number> {
+  async getCountOfSearchResults(): Promise<number> {
     return test.step('Get count of search results', async () => {
       await this.activateTab(ContainerDetailsPage.LOGS_TAB);
       await playExpect(this.findInLogsInput).toBeVisible();
