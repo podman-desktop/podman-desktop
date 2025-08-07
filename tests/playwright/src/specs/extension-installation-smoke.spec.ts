@@ -35,6 +35,7 @@ import { SettingsBar } from '../model/pages/settings-bar';
 import { WelcomePage } from '../model/pages/welcome-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { Runner } from '../runner/podman-desktop-runner';
+import { isCI, isWindows } from '../utility/platform';
 
 let pdRunner: Runner;
 let page: Page;
@@ -64,6 +65,8 @@ for (const {
   extensionFullName,
 } of extensionsInstallationSmokeList) {
   test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
+    test.skip(extensionName === openshiftDockerExtension.extensionName && !!isCI && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
+
     test.beforeAll(async () => {
       await _startup(extensionLabel);
     });
