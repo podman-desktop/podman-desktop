@@ -1,8 +1,13 @@
 # Default Owners
 * @podman-desktop/reviewers @benoitf
 
+packages/renderer/** @podman-desktop/reviewers @vancura @MariaLeonova @benoitf
+packages/ui/** @podman-desktop/reviewers @vancura @MariaLeonova @benoitf
+storybook/** @podman-desktop/reviewers @vancura @MariaLeonova @benoitf
+*.css @podman-desktop/reviewers @vancura @MariaLeonova @benoitf
+
 # website
-website/** @podman-desktop/reviewers @slemeur @cdrage @benoitf @Firewall
+website/** @podman-desktop/reviewers @slemeur @cdrage @benoitf @Firewall @vancura @MariaLeonova
 website/docs/** @podman-desktop/reviewers @shipsing @slemeur @cdrage @benoitf @Firewall
 
 # playwright tests
