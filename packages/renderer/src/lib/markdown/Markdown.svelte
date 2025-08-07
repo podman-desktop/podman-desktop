@@ -42,6 +42,14 @@ UI guidelines -->
 .markdown :global(a):hover {
   background-color: var(--pd-link-hover-bg);
 }
+.markdown :global(.markdown-image) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: box-shadow 0.3s ease;
+  display: block;
+}
 </style>
 
 <script lang="ts">
@@ -50,6 +58,7 @@ import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
 
 import { button } from './micromark-button-directive';
+import { image } from './micromark-image-directive';
 import { link } from './micromark-link-directive';
 import { createListener } from './micromark-listener-handler';
 import { warnings } from './micromark-warnings-directive';
@@ -77,7 +86,7 @@ const eventListeners: EventListener[] = [];
 $: markdown
   ? (html = micromark(markdown, {
       extensions: [directive()],
-      htmlExtensions: [directiveHtml({ button, link, warnings })],
+      htmlExtensions: [directiveHtml({ button, image, link, warnings })],
     }))
   : undefined;
 
@@ -89,7 +98,7 @@ onMount(() => {
   // Provide micromark + extensions
   html = micromark(text, {
     extensions: [directive()],
-    htmlExtensions: [directiveHtml({ button, link, warnings })],
+    htmlExtensions: [directiveHtml({ button, image, link, warnings })],
   });
 
   // remove href values in each anchor using # for links
