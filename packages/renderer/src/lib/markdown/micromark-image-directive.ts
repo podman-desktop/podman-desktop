@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ export function image(d: Directive): void {
   }
 
   // Add default styling class and any additional classes
-  let cssClasses = 'markdown-image';
+  let cssClasses = 'max-w-full h-auto rounded-md shadow-md block transition-shadow duration-300';
   if (d.attributes.class) {
     cssClasses += ' ' + this.encode(d.attributes.class);
   }

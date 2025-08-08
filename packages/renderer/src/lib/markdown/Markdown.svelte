@@ -42,14 +42,6 @@ UI guidelines -->
 .markdown :global(a):hover {
   background-color: var(--pd-link-hover-bg);
 }
-.markdown :global(.markdown-image) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  transition: box-shadow 0.3s ease;
-  display: block;
-}
 </style>
 
 <script lang="ts">
