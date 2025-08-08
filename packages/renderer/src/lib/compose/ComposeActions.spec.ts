@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ContainerInfoUI } from '../container/ContainerInfoUI';
@@ -142,4 +143,26 @@ test('Expect no error and status deleting compose', async () => {
   expect(compose.containers[0].state).toEqual('DELETING');
   expect(compose.containers[0].actionError).toEqual('');
   expect(updateMock).toHaveBeenCalled();
+});
+
+test('Hide start button when stop is pressed and vice versa', async () => {
+  render(ComposeActions, { compose, onUpdate: updateMock });
+
+  const startBtn = screen.getByRole('button', { name: 'Start Compose' });
+
+  await fireEvent.click(startBtn);
+  await tick();
+
+  expect(screen.getByRole('button', { name: 'Stop Compose' })).toHaveClass('hidden');
+
+  compose.status = 'RUNNING';
+  compose.containers[0].state = 'RUNNING';
+  compose.actionInProgress = false;
+  await tick();
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Stop Compose' }));
+  await tick();
+
+  const startBtnDuringStop = screen.getByRole('button', { name: 'Start Compose' });
+  expect(startBtnDuringStop).toHaveClass('hidden');
 });

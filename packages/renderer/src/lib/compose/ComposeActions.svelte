@@ -28,6 +28,11 @@ onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_COMPOSE);
 });
 
+$: isStarting = compose.actionInProgress && compose.status === 'STARTING';
+$: isStopping = compose.actionInProgress && compose.status === 'STOPPING';
+$: someRunning = compose.containers?.some(c => c.state === 'RUNNING');
+$: someStopped = compose.containers?.some(c => c.state !== 'RUNNING');
+
 function inProgress(inProgress: boolean, state?: string): void {
   compose.actionInProgress = inProgress;
   // reset error when starting task
@@ -122,18 +127,18 @@ if (dropdownMenu) {
 <ListItemButtonIcon
   title="Start Compose"
   onClick={startCompose}
-  hidden={compose.status === 'RUNNING' || compose.status === 'STOPPING'}
+  hidden={compose.status === 'STOPPING' || !someStopped}
   detailed={detailed}
-  inProgress={compose.actionInProgress && compose.status === 'STARTING'}
+  inProgress={isStarting}
   icon={faPlay}
   iconOffset="pl-[0.15rem]" />
 
 <ListItemButtonIcon
   title="Stop Compose"
   onClick={stopCompose}
-  hidden={!(compose.status === 'RUNNING' || compose.status === 'STOPPING')}
+  hidden={compose.status === 'STARTING' || !someRunning}
   detailed={detailed}
-  inProgress={compose.actionInProgress && compose.status === 'STOPPING'}
+  inProgress={isStopping}
   icon={faStop} />
 
 <ListItemButtonIcon
