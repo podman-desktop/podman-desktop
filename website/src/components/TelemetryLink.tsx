@@ -7,6 +7,7 @@ type TelemetryLinkProps = {
   eventTitle: string;
   className: string;
   children?: ReactNode[];
+  mobile: boolean;
 };
 
 const sendGoatCounterEvent = (path: string, title: string): void => {
@@ -18,7 +19,7 @@ const sendGoatCounterEvent = (path: string, title: string): void => {
 };
 
 export const TelemetryLink = (props: TelemetryLinkProps): JSX.Element => {
-  return (
+  const link = (
     <Link
       className={props.className}
       to={props.to}
@@ -26,4 +27,6 @@ export const TelemetryLink = (props: TelemetryLinkProps): JSX.Element => {
       {props.children}
     </Link>
   );
+  /**check for mobile menu */
+  return props.mobile ? <li className="menu__list-item">{link}</li> : link;
 };
