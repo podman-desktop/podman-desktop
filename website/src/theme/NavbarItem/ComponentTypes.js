@@ -7,7 +7,7 @@ import { GitHubStarsButton } from '@site/src/components/GitHubStarsButton';
 export default {
   ...ComponentTypes,
   'custom-telemetryLink': props => (
-    <TelemetryLink {...props} className="navbar__item navbar__link">
+    <TelemetryLink {...props} className={props.mobile ? 'menu__link' : 'navbar__item navbar__link'}>
       Downloads
     </TelemetryLink>
   ),
