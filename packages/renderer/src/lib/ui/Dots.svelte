@@ -19,7 +19,7 @@ $: organizedContainers = organizeContainers(containers);
   {/each}
 {:else}
   {#each Object.entries(organizedContainers) as [status, c] (status)}
-    {#each c as container (container.Id)}
+    {#each c as container, i (i)}
       <StatusDot status={status} name={container.Names} />
     {/each}
   {/each}
