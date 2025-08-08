@@ -72,7 +72,7 @@ export function image(d: Directive): void {
   }
 
   // Add default styling class and any additional classes
-  let cssClasses = 'markdown-image';
+  let cssClasses = 'max-w-full h-auto rounded-md shadow-md block transition-shadow duration-300';
   if (d.attributes.class) {
     cssClasses += ' ' + this.encode(d.attributes.class);
   }

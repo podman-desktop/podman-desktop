@@ -125,6 +125,29 @@ describe('Custom link', () => {
   });
 });
 
+describe('Custom image', () => {
+  test('Expect image to be rendered as a image without attributes', async () => {
+    await waitRender({ markdown: ':image[Name of the image]{src=path/to/image.png}' });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML(
+      '<img src="path/to/image.png" alt="Name of the image" class="max-w-full h-auto rounded-md shadow-md block transition-shadow duration-300" loading="lazy"/>',
+    );
+  });
+
+  test('Expect image to be rendered as a image with all attributes', async () => {
+    await waitRender({
+      markdown: ':image[Name of the image]{src=path/to/image.png title="Image title" width="300" height="200"}',
+    });
+    const markdownImage = screen.getByRole('img');
+    expect(markdownImage).toBeInTheDocument();
+    expect(markdownImage).toHaveAttribute('alt', 'Name of the image');
+    expect(markdownImage).toHaveAttribute('height', '200');
+    expect(markdownImage).toHaveAttribute('width', '300');
+    expect(markdownImage).toHaveAttribute('title', 'Image title');
+  });
+});
+
 describe('Custom warnings', () => {
   test('Expect warning failed status and description', async () => {
     const warnings = [
