@@ -35,7 +35,9 @@ const RESOURCE_NAME: string = 'Compose';
 let composeVersion: string;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
 const composePartialInstallation = process.env.COMPOSE_PARTIAL_INSTALL ?? false;
+const skipComposeOnboardingTest = process.env.SKIP_COMPOSE_ONBOARDING_TEST ?? false;
 
+test.skip(!!skipComposeOnboardingTest, 'Skip test suite based on env. variable');
 test.skip(!!isCI && isLinux, 'Tests suite should not run on Linux platform');
 
 test.beforeAll(async ({ runner, welcomePage }) => {
