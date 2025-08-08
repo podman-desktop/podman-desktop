@@ -16,19 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
+import { formatName } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
+import { MessageBox } from './message-box.js';
 
 export type Timestamp = number | undefined;
+
 export interface ExperimentalConfiguration {
   remindAt: Timestamp;
   disabled: boolean;
 }
 
+type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
 const DAYS_TO_MS = 24 * 60 * 60 * 1_000;
 
 @injectable()
@@ -39,6 +44,8 @@ export class ExperimentalFeatureFeedbackHandler {
   constructor(
     @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(MessageBox)
+    private messageBox: MessageBox,
   ) {
     this.#configurationRegistry = this.configurationRegistry;
   }
@@ -108,6 +115,7 @@ export class ExperimentalFeatureFeedbackHandler {
       }
     }
     // When are all features set, show dialog
+    await this.showFeedbackDialog();
   }
 
   /**
@@ -153,5 +161,74 @@ export class ExperimentalFeatureFeedbackHandler {
         console.error(`Got error when saving timestamps for experimental features: ${e}`),
       );
     }
+  }
+
+  /**
+   * Goes through each enabled experimental feature and shows dialog if current timestamp is greater than stored value
+   */
+  protected async showFeedbackDialog(): Promise<void> {
+    const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
+    // Go through all experimental features (in this point we should have all properties set)
+    this.experimentalFeatures.forEach((configuration: ExperimentalConfiguration, key: string) => {
+      const featureGitHubLink = configurationProperties[key]?.experimental?.githubDiscussionLink;
+      // If the feature does not have a link or the dialog is disabled
+      if (!featureGitHubLink || configuration.disabled) return;
+
+      // Compare timestamp of each experimental feature
+      const date = new Date();
+      if (configuration.remindAt && configuration.remindAt > date.getTime()) return;
+      const featureName = formatName(key);
+      const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
+      const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
+
+      this.messageBox
+        .showMessageBox({
+          title: `Share Your Feedback`,
+          message: `We are testing something new!\n\nHow's your experience so far with [${featureName}](${featureGitHubLink})? Let us know on GitHub!`,
+          type: `info`,
+          buttons: [
+            {
+              heading: 'Remind me later',
+              buttons: options,
+              type: 'dropdownButton',
+            },
+            {
+              label: 'Share Feedback on GitHub',
+              icon: 'fas fa-arrow-up-right-from-square',
+              type: 'iconButton',
+            },
+          ],
+          defaultId: 1,
+          footerMarkdownDescription: footerMarkdownDescription,
+        })
+        .then(response => {
+          // Share Feedback on GitHub was selected
+          if (response.response === 1) {
+            shell
+              .openExternal(featureGitHubLink)
+              .then(() => {})
+              .catch(console.error);
+            this.setTimestamp(key, undefined);
+          }
+          // Option from Dropdown was selected
+          else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
+            switch (options[response.dropdownIndex]) {
+              case 'Remind me tomorrow':
+                this.setTimestamp(key, 1);
+                break;
+              case 'Remind me in 2 days':
+                this.setTimestamp(key, 2);
+                break;
+              case `Don't show again`:
+              default:
+                // Set all of the experimental features to disabled
+                this.experimentalFeatures.forEach((_t, k) => {
+                  this.disableFeature(k);
+                });
+            }
+          }
+        })
+        .catch(console.error);
+    });
   }
 }
