@@ -214,10 +214,7 @@ jobs:
         run: pnpm install
 
       - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
       - name: Build Podman Desktop locally with electron updater included
         env:
@@ -288,9 +285,9 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
-          mv package.json_tmp package.json
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
+          actualVersion=$(jq -r '.version' package.json)
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
       - name: Build Podman Desktop locally with electron updater included
         env:
@@ -301,7 +298,7 @@ jobs:
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -309,6 +306,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
 
       - name: Run E2E Update test

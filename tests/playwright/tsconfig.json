@@ -20,6 +20,6 @@
       "/@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "../types/**/*.d.ts", "../../playwright.config.ts"],
+  "include": ["src/**/*.ts", "../types/**/*.d.ts", "../../playwright.config.ts", "scripts/*"],
   "exclude": ["node_modules"]
 }
