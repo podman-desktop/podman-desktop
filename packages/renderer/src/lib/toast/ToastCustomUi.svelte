@@ -1,6 +1,6 @@
 <script lang="ts">
-import { faCheckCircle, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { CloseButton, Link, Spinner } from '@podman-desktop/ui-svelte';
+import { faCheckCircle, faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { CloseButton, Spinner } from '@podman-desktop/ui-svelte';
 import { toast } from '@zerodevx/svelte-toast';
 import Fa from 'svelte-fa';
 
@@ -14,6 +14,11 @@ interface Props {
 
 let { toastId, taskInfo, onpop = (): void => {} }: Props = $props();
 
+const taskStatus: { [taskInfo.status]: string } = {
+  failure: 'Error',
+  canceled: 'Canceled',
+};
+
 function hideToast(): void {
   toast.pop(toastId);
 }
@@ -22,58 +27,39 @@ const closeAction = (): void => {
   hideToast();
   onpop();
 };
-
-const executeAction = async (): Promise<void> => {
-  hideToast();
-  await window.executeTask(taskInfo.id);
-};
 </script>
 
 <div
-  class="flex min-h-10 cursor-default max-h-30 max-w-[var(--toastWidth)] flex-col p-2 border-[var(--pd-button-tab-border-selected)] border rounded-md bg-[var(--pd-modal-bg)]"
+  class="flex flex-nowrap min-h-10 select-none pointer-events-auto cursor-default max-h-50 max-w-[var(--toastWidth)] flex-row p-2 border-[var(--pd-content-divider)] border rounded-md bg-[var(--pd-modal-bg)] gap-2 justify-between text-base"
   title={taskInfo.name}
 >
-  <div class="mb-1 flex flex-row items-center">
+  <div class="flex flex-row gap-1 items-start">
     <div
-      class="mr-1 text-[var(--pd-state-info)]"
+      class="mr-1 text-[var(--pd-state-info)] w-fit h-fit"
       role="status"
       aria-label={taskInfo.status}
     >
       {#if taskInfo.status === 'in-progress'}
-        <Spinner size="1em"/>
+        <Spinner size="1.5em"/>
       {:else if taskInfo.status === 'success'}
-        <Fa icon={faCheckCircle} />
+        <Fa icon={faCheckCircle} class="text-[var(--pd-state-success)] fa-xl"/>
       {:else if taskInfo.status === 'failure'}
-        <Fa icon={faCircleExclamation} class="text-[var(--pd-state-error)]" />
+        <Fa icon={faCircleExclamation} class="text-[var(--pd-state-error)] fa-xl"/>
+      {:else if taskInfo.status === 'canceled'}
+        <Fa icon={faTriangleExclamation } class="text-[var(--pd-state-warning)] fa-xl" />
       {/if}
     </div>
 
-    <div class="font-bold text-ellipsis line-clamp-1 overflow-hidden text-[var(--pd-modal-text)]">
-      {taskInfo.name}
-    </div>
-
-    {#if taskInfo.progress && taskInfo.status === 'in-progress'}
-      <span class="ml-1">{taskInfo.progress}%</span>
-    {/if}
-
-    <div class="flex grow flex-col items-end">
-      <CloseButton class="text-[var(--pd-modal-text)]" onclick={closeAction} />
+    <div class="text-base text-balance text-ellipsis text-[var(--pd-card-text)] h-fit wrap-break-word max-w-46">
+      {taskStatus[taskInfo.status] ?? ''} {taskInfo.name}
+      {#if taskInfo.error}
+        <p class="text-[var(--pd-content-text)]">{taskInfo.error}</p>
+      {/if}
     </div>
   </div>
-  <div class="flex flex-row items-center italic line-clamp-4">
-    {#if taskInfo.error}
-      <p class="flex-1 text-sm line-clamp-4 text-[var(--pd-state-error)]">
-        {taskInfo.error}
-      </p>
-    {:else}
-    <p class="flex-1 text-sm text-ellipsis overflow-hidden text-[var(--pd-modal-text)]">
-      {taskInfo.name}
-    </p>
-    {/if}
+
+  <div class="flex flex-none whitespace-nowrap flex-col self-start w-fit">
+    <CloseButton class="text-[var(--pd-modal-text)]" onclick={closeAction} />
   </div>
-  {#if taskInfo.action}
-    <div class="text-right text-xs text-[var(--pd-content-text)]">
-      <Link onclick={executeAction}>{taskInfo.action}</Link>
-    </div>
-  {/if}
+
 </div>
