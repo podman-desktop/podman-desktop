@@ -29,6 +29,7 @@ import { parseAllDocuments, stringify } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
 
+import { getFreePort } from '../../../packages/main/src/plugin/util/port';
 import createClusterConfTemplate from './templates/create-cluster-conf.mustache?raw';
 import { getKindPath, getMemTotalInfo } from './util';
 
@@ -96,6 +97,25 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
+  const httpPort = items['kind.cluster.creation.http.port'];
+  const freeHttpPort = await getFreePort(httpPort);
+  if (httpPort !== freeHttpPort) {
+    records.push({
+      type: 'error',
+      record: `HTTP Port ${httpPort} is not available. Please use next available port ${freeHttpPort}.`,
+    });
+  }
+
+  const httpsPort = items['kind.cluster.creation.https.port'];
+  const freeHttpsPort = await getFreePort(httpsPort);
+
+  if (httpsPort !== freeHttpsPort) {
+    records.push({
+      type: 'error',
+      record: `HTTPS Port ${httpsPort} is not available. Please use next available port ${freeHttpsPort}.`,
+    });
+  }
+
   const providerSocket = extensionApi.provider
     .getContainerConnections()
     .find(connection => connection.connection.type === provider);
@@ -111,7 +131,6 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
       record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
     });
   }
-
   return auditResult;
 }
 
