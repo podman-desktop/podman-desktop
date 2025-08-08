@@ -34,6 +34,10 @@ export interface NotificationCardOptions extends NotificationInfo {
   highlight?: boolean;
   // whether or not to emit an OS notification noise when showing the notification.
   silent?: boolean;
+  // icon to display in the notification
+  icon?: string;
+  // icon color for custom icon
+  iconColor?: string;
 }
 
 export interface NotificationCard extends NotificationCardOptions {

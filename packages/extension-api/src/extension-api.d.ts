@@ -1752,6 +1752,14 @@ declare module '@podman-desktop/api' {
      * this notification will be highlighted to the user so it draws attention
      */
     highlight?: boolean;
+    /**
+     * icon to display in the notification
+     */
+    icon?: string;
+    /**
+     * icon color for custom icon
+     */
+    iconColor?: string;
   }
 
   /**
