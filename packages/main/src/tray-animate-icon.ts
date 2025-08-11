@@ -31,7 +31,7 @@ export class AnimatedTray {
   private trayIconLoopId = 0;
   private animatedInterval: NodeJS.Timeout | undefined = undefined;
   private tray: Tray | undefined = undefined;
-  private color = 'default'; // default, light, dark
+  private color: 'default' | 'light' | 'dark' = 'default';
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
   constructor() {
@@ -99,7 +99,7 @@ export class AnimatedTray {
 
   // set the color of the icon if we're manually overriding the theme
   // and then update the current icon
-  public setColor(color: string): void {
+  public setColor(color: 'default' | 'light' | 'dark'): void {
     this.color = color;
     this.updateIcon();
   }
@@ -112,7 +112,7 @@ export class AnimatedTray {
    * @return {string} The fully resolved file path of the requested icon based on preferences.
    */
   protected getIconPath(iconName: string): string {
-    let name;
+    let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
