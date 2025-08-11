@@ -134,7 +134,7 @@ export class AnimatedTray {
       } else if (isMac()) {
         suffix = 'Template'; // macOS uses template images that adapt to the menu bar
       } else {
-        suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // windows: check system theme.
+        suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
       }
     }
 
@@ -205,6 +205,11 @@ export class AnimatedTray {
       image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
     }
 
+    // On macOS, mark Template images as actual template images so they adapt to the menu bar.
+    if (isMac() && basePath.includes('Template')) {
+      image.setTemplateImage(true);
+    }
+
     return image;
   }
 
@@ -251,7 +256,13 @@ export class AnimatedTray {
     }
   }
 
-  getDefaultImage(): string {
+  getDefaultImage(): string | Electron.NativeImage {
+    // On macOS, return a properly configured template image.
+    if (isMac()) {
+      return this.createTrayImage('empty');
+    }
+
+    // For other platforms, return the path.
     return this.getIconPath('empty');
   }
 
