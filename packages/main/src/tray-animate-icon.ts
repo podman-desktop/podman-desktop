@@ -258,14 +258,9 @@ export class AnimatedTray {
     }
   }
 
-  getDefaultImage(): string | Electron.NativeImage {
-    // On macOS, return a properly configured template image.
-    if (isMac()) {
-      return this.createTrayImage('empty');
-    }
-
-    // For other platforms, return the path.
-    return this.getIconPath('empty');
+  getDefaultImage(): Electron.NativeImage {
+    // Return a properly configured image for all platforms.
+    return this.createTrayImage('empty');
   }
 
   setStatus(status: TrayIconStatus): void {
