@@ -113,17 +113,20 @@ $effect(() => {
     id="left"
     onclick={scrollLeft}
     aria-label="Scroll left"
-    class="absolute h-8 w-8 left-2 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full transition-opacity duration-200"
+    class="absolute h-full w-12 z-20 flex items-center justify-center"
     class:opacity-0={!canScrollLeft}
     class:opacity-100={canScrollLeft}
     class:pointer-events-none={!canScrollLeft}>
-    <Icon class="w-8 h-8" icon={faChevronLeft} />
+
+    <div class="h-8 w-8 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] transition-opacity duration-200 rounded-full flex items-center justify-center">
+      <Icon class="w-4 h-4" icon={faChevronLeft} />
+    </div>
   </button>
 
   <!-- Left edge shadow for partially visible cards -->
   {#if canScrollLeft}
     <div 
-      class="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--pd-content-card-border)] to-transparent pointer-events-none z-10 w-[60px]">
+      class="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--pd-content-card-bg)] to-[var(--pd-content-card-border)/1] pointer-events-none z-10 w-[60px]">
     </div>
   {/if}
 
@@ -149,7 +152,7 @@ $effect(() => {
     <!-- Right edge shadow for partially visible cards -->
     {#if canScrollRight}
       <div 
-        class="absolute top-0 right-0 h-full bg-gradient-to-l from-[var(--pd-content-card-border)] to-transparent pointer-events-none z-10 w-[60px]">
+        class="absolute top-0 right-0 h-full bg-gradient-to-l from-[var(--pd-content-card-bg)] to-[var(--pd-content-card-border)/1] pointer-events-none z-10 w-[60px]">
       </div>
     {/if}
   </div>
@@ -158,10 +161,13 @@ $effect(() => {
     id="right"
     onclick={scrollRight}
     aria-label="Scroll right"
-    class="absolute h-8 w-8 right-2 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] rounded-full transition-opacity duration-200"
+    class="absolute h-full w-12 right-0 z-20 flex items-center justify-center"
     class:opacity-0={!canScrollRight}
     class:opacity-100={canScrollRight}
     class:pointer-events-none={!canScrollRight}>
-    <Icon class="h-8 w-8" icon={faChevronRight} />
+
+    <div class="h-8 w-8 z-20 bg-[var(--pd-content-card-carousel-nav)] hover:bg-[var(--pd-content-card-carousel-hover-nav)] transition-opacity duration-200 rounded-full flex items-center justify-center">
+      <Icon class="w-4 h-4" icon={faChevronRight} />
+    </div>
   </button>
 </div>
