@@ -431,7 +431,7 @@
     "compare-versions": "^6.1.1",
     "mustache": "^4.2.0",
     "ps-list": "^8.1.1",
-    "smol-toml": "1.4.1",
+    "smol-toml": "1.4.2",
     "ssh2": "^1.16.0"
   },
   "devDependencies": {
