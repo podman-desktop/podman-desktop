@@ -16,7 +16,7 @@ export function GitHubStarsButton({ mobile = false }: { readonly mobile?: boolea
       className={
         mobile
           ? 'dropdown__link flex items-center gap-2 px-4 py-[9px] font-medium text-base'
-          : 'navbar__item navbar__link hidden xl:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg font-medium min-w-[9rem]'
+          : 'navbar__item navbar__link hidden xl:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg font-medium min-w-[9rem] text-base'
       }>
       <FontAwesomeIcon icon={faGithub} />
       <span>Star</span>
