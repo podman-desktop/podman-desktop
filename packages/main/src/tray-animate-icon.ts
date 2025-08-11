@@ -150,7 +150,9 @@ export class AnimatedTray {
    */
   protected createTrayImage(iconName: string): Electron.NativeImage {
     const basePath = this.getIconPath(iconName);
-    const retinaPath = basePath.replace('.png', '@2x.png');
+    const dir = path.dirname(basePath);
+    const basename = path.basename(basePath, '.png');
+    const retinaPath = path.join(dir, `${basename}@2x.png`);
 
     let image = nativeImage.createEmpty();
     let hasLoadedImage = false;

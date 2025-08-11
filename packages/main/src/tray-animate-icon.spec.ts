@@ -78,15 +78,16 @@ test('valid path for icons', () => {
   const appPathValue = path.resolve(__dirname, 'appPath-value');
 
   const spyElectronGetAppPath = vi.spyOn(app, 'getAppPath').mockReturnValue(appPathValue);
+  const isProdSpy = vi.spyOn(testAnimatedTray, 'isProd');
 
   // Test production mode.
-  vi.spyOn(testAnimatedTray, 'isProd').mockReturnValue(true);
+  isProdSpy.mockReturnValue(true);
   let assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(appPathValue, AnimatedTray.MAIN_ASSETS_FOLDER));
   expect(spyElectronGetAppPath).toHaveBeenCalled();
 
   // Test development mode.
-  vi.spyOn(testAnimatedTray, 'isProd').mockReturnValue(false);
+  isProdSpy.mockReturnValue(false);
   const cwd = process.cwd();
   assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(cwd, AnimatedTray.MAIN_ASSETS_FOLDER));
