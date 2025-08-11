@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import LegacyDialogSpec from './LegacyDialogSpec.svelte';
+import LegacyDialogSpec from './DialogSpec.svelte';
 
 test('Expect icon is defined', async () => {
   render(LegacyDialogSpec);
