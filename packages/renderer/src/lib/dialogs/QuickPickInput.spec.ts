@@ -208,6 +208,33 @@ describe('QuickPickInput', () => {
     expect(area).toBeInTheDocument();
   });
 
+  test.each([
+    { password: true, type: 'password' },
+    { password: false, type: 'text' },
+  ])('Expect that input is displayed correctly with type %s', async ({ password, type }) => {
+    const idRequest = 123;
+
+    const inputBoxOptions: InputBoxOptions = {
+      password: password,
+      validate: false,
+      placeHolder: 'Some placeholder',
+      prompt: 'Enter a value',
+      id: idRequest,
+    };
+
+    receiveFunctionMock.mockImplementation((message: string, callback: (options: InputBoxOptions) => void) => {
+      if (message === 'showInputBox:add') {
+        callback(inputBoxOptions);
+      }
+    });
+
+    render(QuickPickInput, {});
+
+    const area = await screen.findByPlaceholderText('Some placeholder');
+    expect(area).toBeInTheDocument();
+    expect(area).toHaveAttribute('type', type);
+  });
+
   test('Expect that filtering works', async () => {
     const idRequest = 123;
 
