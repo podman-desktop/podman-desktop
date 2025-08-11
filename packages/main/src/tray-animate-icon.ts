@@ -126,17 +126,17 @@ export class AnimatedTray {
     if (this.color === 'light') {
       suffix = 'Template';
     } else if (this.color === 'dark') {
-      suffix = 'Dark';
-    } else {
-      // No user preference, use platform defaults.
-      if (isLinux()) {
-        suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
-      } else if (isMac()) {
-        suffix = 'Template'; // macOS uses template images that adapt to the menu bar
-      } else {
-        suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
-      }
-    }
+                 suffix = 'Dark';
+               }
+           else if (isLinux()) {
+                   suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
+                 }
+           else if (isMac()) {
+                   suffix = 'Template'; // macOS uses template images that adapt to the menu bar
+                 } else {
+                   suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
+                 }
+
 
     return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
   }
