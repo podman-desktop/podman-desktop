@@ -40,17 +40,25 @@ import ImageEmptyScreen from './ImageEmptyScreen.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 import NoContainerEngineEmptyScreen from './NoContainerEngineEmptyScreen.svelte';
 
-export let searchTerm = '';
-export let imageEngineId = '';
-$: searchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+  imageEngineId?: string;
+}
 
-let images: ImageInfoUI[] = [];
-let enginesList: EngineInfoUI[];
+let { searchTerm = $bindable(''), imageEngineId = '' }: Props = $props();
+$effect(() => {
+  searchPattern.set(searchTerm);
+});
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let images: ImageInfoUI[] = $state([]);
+let enginesList: EngineInfoUI[] = $state([]);
+
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 const imageUtils = new ImageUtils();
 
@@ -181,7 +189,7 @@ function loadImages(): void {
 }
 
 // delete the items selected in the list
-let bulkDeleteInProgress = false;
+let bulkDeleteInProgress = $state(false);
 async function deleteSelectedImages(): Promise<void> {
   const selectedImages = images.filter(image => image.selected);
   if (selectedImages.length === 0) {
@@ -212,7 +220,7 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
@@ -293,13 +301,13 @@ const row = new TableRow<ImageInfoUI>({
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
-    {#if selectedItemsNumber > 0}
+    {#if selectedItemsNumber && selectedItemsNumber > 0}
       <Button
-        on:click={(): void =>
-          withBulkConfirmation(
+        on:click={(): void => {
+          if (selectedItemsNumber) {withBulkConfirmation(
             deleteSelectedImages,
             `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
-          )}
+          );}}}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
@@ -314,15 +322,6 @@ const row = new TableRow<ImageInfoUI>({
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
-    <Table
-      kind="image"
-      bind:selectedItemsNumber={selectedItemsNumber}
-      data={images}
-      columns={columns}
-      row={row}
-      defaultSortColumn="Age"
-      on:update={(): ImageInfoUI[] => (images = images)}>
-    </Table>
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
@@ -332,6 +331,16 @@ const row = new TableRow<ImageInfoUI>({
       {:else}
         <ImageEmptyScreen />
       {/if}
+    {:else}
+      <Table
+        kind="image"
+        bind:selectedItemsNumber={selectedItemsNumber}
+        data={images}
+        columns={columns}
+        row={row}
+        defaultSortColumn="Age"
+        on:update={(): ImageInfoUI[] => (images = images)}>
+      </Table>
     {/if}
   </div>
   {/snippet}

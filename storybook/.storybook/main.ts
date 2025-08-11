@@ -30,12 +30,10 @@ function getAbsolutePath(value: string): any {
 const config: StorybookConfig = {
   stories: ['../src/stories/**/*.mdx', '../src/stories/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
   addons: [
-    getAbsolutePath('@storybook/addon-links'),
-    getAbsolutePath('@storybook/addon-essentials'),
-    getAbsolutePath('@storybook/addon-interactions'),
     // Do not use getAbsolutePath
+    getAbsolutePath('@storybook/addon-links'),
     '@storybook/addon-svelte-csf',
-    'storybook-dark-mode',
+    getAbsolutePath('@storybook/addon-docs'),
   ],
   typescript: {
     check: true,

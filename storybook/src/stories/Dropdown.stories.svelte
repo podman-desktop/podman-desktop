@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
 import { Dropdown } from '@podman-desktop/ui-svelte';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
-import { fn } from '@storybook/test';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
+import { fn } from 'storybook/test';
 
 const onChangeFn = fn().mockName('onchange');
 
@@ -10,6 +10,7 @@ const onChangeFn = fn().mockName('onchange');
  */
 const { Story } = defineMeta({
   component: Dropdown,
+  render: template,
   title: 'Dropdown',
   tags: ['autodocs'],
   argTypes: {
@@ -29,10 +30,6 @@ const { Story } = defineMeta({
     },
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

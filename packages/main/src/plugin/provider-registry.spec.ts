@@ -59,7 +59,6 @@ import { Disposable } from './types/disposable.js';
 let providerRegistry: TestProviderRegistry;
 let autostartEngine: AutostartEngine;
 
-const telemetryTrackMock = vi.fn();
 const apiSenderSendMock = vi.fn();
 
 let containerRegistry: ContainerProviderRegistry;
@@ -77,14 +76,15 @@ class TestProviderRegistry extends ProviderRegistry {
   }
 }
 
+const telemetry: Telemetry = {
+  track: vi.fn(),
+  aggregateTrack: vi.fn(),
+} as unknown as Telemetry;
+
 beforeEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
   vi.restoreAllMocks();
-  telemetryTrackMock.mockImplementation(() => Promise.resolve());
-  const telemetry: Telemetry = {
-    track: telemetryTrackMock,
-  } as unknown as Telemetry;
   const apiSender = {
     send: apiSenderSendMock,
   } as unknown as ApiSenderType;
@@ -125,7 +125,7 @@ test('should initialize provider if there is kubernetes connection provider', as
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
 
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
@@ -153,7 +153,7 @@ test('should initialize provider if there is VM connection provider', async () =
 
   await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+  expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
     name: 'internal',
     status: 'installed',
   });
@@ -191,7 +191,7 @@ test('should send version event if update', async () => {
   if (providerInternalId) {
     await providerRegistry.updateProvider(providerInternalId);
 
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
@@ -229,7 +229,7 @@ test('should initialize provider if there is container connection provider', asy
   if (providerInternalId) {
     await providerRegistry.initializeProvider(providerInternalId);
 
-    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+    expect(telemetry.aggregateTrack).toHaveBeenNthCalledWith(1, 'createProviders', {
       name: 'internal',
       status: 'installed',
     });
@@ -382,7 +382,7 @@ describe('a Kubernetes provider is registered', async () => {
   });
 
   test('should send telemetry and be added to registry', async () => {
-    expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerKubernetesProviderConnection', {
+    expect(telemetry.track).toHaveBeenLastCalledWith('registerKubernetesProviderConnection', {
       name: 'connection',
       total: 1,
     });
@@ -543,7 +543,7 @@ describe('a vm provider is registered', async () => {
   });
 
   test('should send telemetry and be added to registry', async () => {
-    expect(telemetryTrackMock).toHaveBeenLastCalledWith('registerVmProviderConnection', {
+    expect(telemetry.track).toHaveBeenLastCalledWith('registerVmProviderConnection', {
       name: 'connection',
       total: 1,
     });
@@ -1675,7 +1675,7 @@ test('should execute actions', async () => {
   expect(logger.log).toBeCalledWith('executing action ', 'hello');
 
   // check telemetry
-  expect(telemetryTrackMock).toBeCalledWith('executeCleanupActions', { success: true });
+  expect(telemetry.track).toBeCalledWith('executeCleanupActions', { success: true });
 });
 
 test('should execute actions with error', async () => {
@@ -1710,7 +1710,7 @@ test('should execute actions with error', async () => {
   expect(logger.log).toBeCalledWith('executing action ', 'hello');
 
   // check telemetry should have an error and success false
-  expect(telemetryTrackMock).toBeCalledWith('executeCleanupActions', { success: false, error: ['Error: fake error'] });
+  expect(telemetry.track).toBeCalledWith('executeCleanupActions', { success: false, error: ['Error: fake error'] });
 });
 
 test('registerInstallation should notify when an installation is registered or unregistered', async () => {

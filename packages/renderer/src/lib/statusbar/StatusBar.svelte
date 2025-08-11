@@ -65,13 +65,10 @@ onMount(async () => {
       });
   });
 
-  experimentalTaskStatusBar =
-    (await window.getConfigurationValue<boolean>(
-      `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
-    )) ?? false;
-
-  experimentalProvidersStatusBar =
-    (await window.getConfigurationValue<boolean>('statusbarProviders.showProviders')) ?? false;
+  experimentalTaskStatusBar = await window.isExperimentalConfigurationEnabled(
+    `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`,
+  );
+  experimentalProvidersStatusBar = await window.isExperimentalConfigurationEnabled('statusbarProviders.showProviders');
 
   onDidChangeConfiguration.addEventListener('statusbarProviders.showProviders', onDidChangeConfigurationCallback);
 });

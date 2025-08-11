@@ -19,11 +19,11 @@ import type { App as ElectronApp, BrowserWindow } from 'electron';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
+import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { IDisposable } from '/@api/disposable.js';
 
-import { Deferred } from './plugin/util/deferred.js';
 import { ProtocolLauncher } from './protocol-launcher.js';
 
 export type AdditionalData = {
@@ -37,7 +37,7 @@ export class Main implements IDisposable {
   // TODO: should be renamed to #app
   public app: ElectronApp;
   // TODO: should be renamed to #mainWindowDeferred
-  public mainWindowDeferred: Deferred<BrowserWindow>;
+  public mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
   // TODO: should be renamed to #protocolLauncher
   public protocolLauncher: ProtocolLauncher;
 
@@ -54,9 +54,9 @@ export class Main implements IDisposable {
 
   constructor(app: ElectronApp) {
     this.app = app;
-    this.mainWindowDeferred = new Deferred<BrowserWindow>();
+    this.mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     this.protocolLauncher = new ProtocolLauncher(this.mainWindowDeferred);
-    this.#plugins = [new DefaultProtocolClient(this.app)];
+    this.#plugins = [new DefaultProtocolClient(this.app), new WindowPlugin(this.app, this.mainWindowDeferred.resolve)];
   }
 
   main(args: string[]): void {

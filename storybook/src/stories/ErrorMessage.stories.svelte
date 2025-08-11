@@ -1,12 +1,13 @@
 <script context="module" lang="ts">
 import ErrorMessage from '@podman-desktop/ui-svelte/ErrorMessage';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `ErrorMessage` component.
  */
 const { Story } = defineMeta({
   component: ErrorMessage,
+  render: template,
   title: 'Alert/ErrorMessage',
   tags: ['autodocs'],
   args: {
@@ -14,10 +15,6 @@ const { Story } = defineMeta({
     wrapMessage: false,
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

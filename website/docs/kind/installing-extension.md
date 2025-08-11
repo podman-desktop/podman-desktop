@@ -26,7 +26,7 @@ The Kind extension provides the capability of creating a local Kubernetes cluste
 
 The following video provides a complete guide on creating a single-node cluster:
 
-<ReactPlayer playing playsinline controls url='https://github.com/containers/podman-desktop-media/raw/refs/heads/kind/video/cluster-creation-kind.mp4' width='100%' height='100%' />
+<ReactPlayer playing playsInline controls src='https://github.com/containers/podman-desktop-media/raw/refs/heads/kind/video/cluster-creation-kind.mp4' width='100%' height='100%' />
 
 :::note
 

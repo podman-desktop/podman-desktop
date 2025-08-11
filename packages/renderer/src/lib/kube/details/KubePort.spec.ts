@@ -250,4 +250,33 @@ describe('port forwarding', () => {
       expect(error).toBeNull();
     });
   });
+
+  test('existing forward should display localhost port and copy', async () => {
+    const clipboardWriteTextMock = vi.fn().mockImplementation(() => {});
+    Object.defineProperty(window, 'clipboardWriteText', { value: clipboardWriteTextMock });
+    const { getByTitle, getByRole } = render(KubePort, {
+      namespace: 'dummy-ns',
+      port: {
+        displayValue: '80/TCP',
+        value: 80,
+        protocol: 'TCP',
+      },
+      forwardConfig: DUMMY_FORWARD_CONFIG,
+      resourceName: 'dummy-pod-name',
+      kind: WorkloadKind.POD,
+    });
+
+    const expected = 'http://localhost:55076';
+    const copySpan = getByTitle(expected);
+    expect(copySpan).toBeDefined();
+
+    const button = getByRole('button', { name: 'Copy To Clipboard' });
+
+    expect(button).toBeInTheDocument();
+    expect(button).toBeEnabled();
+
+    await fireEvent.click(button);
+
+    expect(clipboardWriteTextMock).toBeCalledWith(expected);
+  });
 });

@@ -28,6 +28,8 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 
 import { MacosStartup } from './macos-startup.js';
 
+type AppGetPathParam = Parameters<typeof app.getPath>[0];
+
 vi.mock('electron', async () => {
   return {
     app: {
@@ -66,35 +68,15 @@ beforeEach(() => {
   // fake path.resolve by just adding /
   vi.mocked(resolve).mockImplementation((...args: string[]) => args.join('/'));
 
-  vi.mocked(app.getPath).mockImplementation(
-    (
-      name:
-        | 'home'
-        | 'appData'
-        | 'userData'
-        | 'sessionData'
-        | 'temp'
-        | 'exe'
-        | 'module'
-        | 'desktop'
-        | 'documents'
-        | 'downloads'
-        | 'music'
-        | 'pictures'
-        | 'videos'
-        | 'recent'
-        | 'logs'
-        | 'crashDumps',
-    ) => {
-      if (name === 'exe') {
-        return fakeAppExe;
-      }
-      if (name === 'home') {
-        return fakeAppHome;
-      }
-      throw new Error('Unsupported path');
-    },
-  );
+  vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
+    if (name === 'exe') {
+      return fakeAppExe;
+    }
+    if (name === 'home') {
+      return fakeAppHome;
+    }
+    throw new Error('Unsupported path');
+  });
   macosStartup = new MacosStartup(configurationRegistry);
 });
 
@@ -124,35 +106,15 @@ describe('enable', () => {
 
   test('check unable to write the plist file if app is in /Volumes', async () => {
     // change the app home to be in /Volumes
-    vi.mocked(app.getPath).mockImplementation(
-      (
-        name:
-          | 'home'
-          | 'appData'
-          | 'userData'
-          | 'sessionData'
-          | 'temp'
-          | 'exe'
-          | 'module'
-          | 'desktop'
-          | 'documents'
-          | 'downloads'
-          | 'music'
-          | 'pictures'
-          | 'videos'
-          | 'recent'
-          | 'logs'
-          | 'crashDumps',
-      ) => {
-        if (name === 'exe') {
-          return `/Volumes/${fakeAppExe}`;
-        }
-        if (name === 'home') {
-          return fakeAppHome;
-        }
-        throw new Error('Unsupported path');
-      },
-    );
+    vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
+      if (name === 'exe') {
+        return `/Volumes/${fakeAppExe}`;
+      }
+      if (name === 'home') {
+        return fakeAppHome;
+      }
+      throw new Error('Unsupported path');
+    });
     // recreate the object to get correct resolve method
     macosStartup = new MacosStartup(configurationRegistry);
 
@@ -223,35 +185,15 @@ describe('disable', () => {
 describe('shouldEnable', () => {
   test('check shouldEnable being true', async () => {
     // change the app folder to be in /Applications
-    vi.mocked(app.getPath).mockImplementation(
-      (
-        name:
-          | 'home'
-          | 'appData'
-          | 'userData'
-          | 'sessionData'
-          | 'temp'
-          | 'exe'
-          | 'module'
-          | 'desktop'
-          | 'documents'
-          | 'downloads'
-          | 'music'
-          | 'pictures'
-          | 'videos'
-          | 'recent'
-          | 'logs'
-          | 'crashDumps',
-      ) => {
-        if (name === 'exe') {
-          return `/Applications/${fakeAppExe}`;
-        }
-        if (name === 'home') {
-          return fakeAppHome;
-        }
-        throw new Error('Unsupported path');
-      },
-    );
+    vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
+      if (name === 'exe') {
+        return `/Applications/${fakeAppExe}`;
+      }
+      if (name === 'home') {
+        return fakeAppHome;
+      }
+      throw new Error('Unsupported path');
+    });
 
     // recreate the object to get correct resolve method
     macosStartup = new MacosStartup(configurationRegistry);

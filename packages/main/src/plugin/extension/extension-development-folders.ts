@@ -19,15 +19,18 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { inject, injectable } from 'inversify';
+
 import { Emitter } from '/@/plugin/events/emitter.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
+import { ApiSenderType } from '../api.js';
+import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 
 // Handle the registration / track of all development folders used when developing extensions
+@injectable()
 export class ExtensionDevelopmentFolders {
   #configurationRegistry: IConfigurationRegistry;
 
@@ -52,8 +55,11 @@ export class ExtensionDevelopmentFolders {
   onNeedToLoadExension = this.#onRequestLoadExension.event;
 
   constructor(
+    @inject(IConfigurationRegistry)
     configurationRegistry: IConfigurationRegistry,
+    @inject(ExtensionAnalyzer)
     extensionAnalyzer: ExtensionAnalyzer,
+    @inject(ApiSenderType)
     apiSender: ApiSenderType,
   ) {
     this.#configurationRegistry = configurationRegistry;

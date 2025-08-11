@@ -21,7 +21,7 @@ import * as fs from 'node:fs';
 import type { AuditRecord, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
 import { getKindPath, getMemTotalInfo } from './util';
@@ -112,35 +112,44 @@ test('expect cluster to be created', async () => {
   expect(env).toStrictEqual({ PATH: '/kind/path' });
 });
 
-test('expect cluster creation to wait for kubeconfig change', async () => {
-  vi.mocked(getKindPath).mockReturnValue('/kind/path');
-  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
-
-  // record kubeconfig listener
-  let listener!: (e: extensionApi.KubeconfigUpdateEvent) => extensionApi.Disposable;
-  vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(x => {
-    listener = x;
-    return {
-      dispose: vi.fn(),
-    };
+describe('fake timers', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  createCluster({}, '', telemetryLoggerMock).catch((error: unknown) => {
-    console.error('Error creating cluster', error);
+  test('expect cluster creation to wait for kubeconfig change', async () => {
+    vi.mocked(getKindPath).mockReturnValue('/kind/path');
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+    // record kubeconfig listener
+    let listener!: (e: extensionApi.KubeconfigUpdateEvent) => extensionApi.Disposable;
+    vi.mocked(extensionApi.kubernetes.onDidUpdateKubeconfig).mockImplementation(x => {
+      listener = x;
+      return {
+        dispose: vi.fn(),
+      };
+    });
+
+    createCluster({}, '', telemetryLoggerMock).catch((error: unknown) => {
+      console.error('Error creating cluster', error);
+    });
+
+    // wait for the listener to be registered and wait for 29s
+    await vi.waitFor(() => {
+      if (!listener) throw new Error('Not listening yet');
+    });
+    await vi.advanceTimersByTimeAsync(29_000);
+
+    expect(telemetryLogUsageMock).not.toHaveBeenCalled();
+
+    // notify listener
+    listener({} as extensionApi.KubeconfigUpdateEvent);
+
+    await vi.waitFor(() => expect(telemetryLogUsageMock).toHaveBeenCalled());
   });
-
-  // wait for the listener to be registered and wait another 100ms
-  await vi.waitFor(() => {
-    if (!listener) throw new Error('Not listening yet');
-  });
-  await new Promise(f => setTimeout(f, 100));
-
-  expect(telemetryLogUsageMock).not.toHaveBeenCalled();
-
-  // notify listener
-  listener({} as extensionApi.KubeconfigUpdateEvent);
-
-  await vi.waitFor(() => expect(telemetryLogUsageMock).toHaveBeenCalled());
 });
 
 test('expect cluster to be created using config file', async () => {

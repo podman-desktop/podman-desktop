@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import Badge from './Badge.svelte';
@@ -48,11 +48,10 @@ test('Should display badge', async () => {
   const label = screen.getByText('customLabel');
   expect(label).toBeInTheDocument();
 
-  // check color being the default one
-  await new Promise(r => setTimeout(r, 100));
-
-  // check color being there in the style
-  expect(label).toHaveClass('bg-gray-500');
+  await waitFor(() => {
+    // check color being there in the style
+    expect(label).toHaveClass('bg-gray-500');
+  });
 });
 
 test('Should display badge with rgb color', async () => {
@@ -63,11 +62,10 @@ test('Should display badge with rgb color', async () => {
   const label = screen.getByText('customLabel');
   expect(label).toBeInTheDocument();
 
-  // wait for some time
-  await new Promise(r => setTimeout(r, 100));
-
-  // check color being there in the style
-  expect(label).toHaveStyle('background-color: rgb(255, 0, 0)');
+  await waitFor(() => {
+    // check color being there in the style
+    expect(label).toHaveStyle('background-color: rgb(255, 0, 0)');
+  });
 });
 
 test('Should display badge with light color', async () => {
@@ -78,11 +76,10 @@ test('Should display badge with light color', async () => {
   const label = screen.getByText('customLabel');
   expect(label).toBeInTheDocument();
 
-  // wait for some time
-  await new Promise(r => setTimeout(r, 100));
-
-  // check color being there in the style
-  expect(label).toHaveStyle('background-color: rgb(255, 0, 0)');
+  await waitFor(() => {
+    // check color being there in the style
+    expect(label).toHaveStyle('background-color: rgb(255, 0, 0)');
+  });
 });
 
 test('Should display badge with dark color', async () => {
@@ -93,11 +90,10 @@ test('Should display badge with dark color', async () => {
   const label = screen.getByText('customLabel');
   expect(label).toBeInTheDocument();
 
-  // wait for some time
-  await new Promise(r => setTimeout(r, 100));
-
-  // check color being there in the style
-  expect(label).toHaveStyle('background-color: rgb(0, 255, 0)');
+  await waitFor(() => {
+    // check color being there in the style
+    expect(label).toHaveStyle('background-color: rgb(0, 255, 0)');
+  });
 });
 
 test('Should display badge with custom class', async () => {

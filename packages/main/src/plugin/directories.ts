@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,10 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { injectable } from 'inversify';
+
 // handle the different directories for the different OSes for Podman Desktop
+@injectable()
 export class Directories {
   static readonly XDG_DATA_DIRECTORY = `.local${path.sep}share${path.sep}containers${path.sep}podman-desktop`;
 

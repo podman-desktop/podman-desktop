@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
+import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 
@@ -29,9 +30,13 @@ import { Main } from './main.js';
 vi.mock('electron');
 vi.mock('/@/util.js');
 vi.mock('/@/security-restrictions.js');
+vi.mock(import('electron-context-menu'), () => ({
+  default: vi.fn(),
+}));
 
 // App Plugin
 vi.mock(import('/@/plugin/app-ready/default-protocol-client.js'));
+vi.mock(import('/@/plugin/app-ready/window-plugin.js'));
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   name: 'dummy-electron-mock',
@@ -182,7 +187,7 @@ describe('ElectronApp#on window-all-closed', () => {
 });
 
 describe('AppPlugin', () => {
-  const plugins: Array<AppPlugin> = [DefaultProtocolClient.prototype];
+  const plugins: Array<AppPlugin> = [DefaultProtocolClient.prototype, WindowPlugin.prototype];
 
   let promiseWithResolvers: PromiseWithResolvers<void>;
 

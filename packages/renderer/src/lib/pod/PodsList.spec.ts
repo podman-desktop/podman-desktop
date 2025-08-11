@@ -33,7 +33,7 @@ import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
-import type { ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 
@@ -572,4 +572,35 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removePod).toHaveBeenCalled());
+});
+
+test('Expect to see empty page and no table when no container engine is running', async () => {
+  getProvidersInfoMock.mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'stopped',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+  listPodsMock.mockResolvedValue([pod1]);
+
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  // wait imageInfo store is populated
+  await vi.waitFor(() => get(podsInfos).length > 0);
+
+  await waitRender({});
+
+  const table = screen.queryByRole('table');
+  expect(table).toBeNull();
+
+  const noContainerEngine = screen.getByText('No Container Engine');
+  expect(noContainerEngine).toBeInTheDocument();
 });

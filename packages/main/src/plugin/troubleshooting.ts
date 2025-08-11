@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 
 import AdmZip from 'adm-zip';
+import { injectable } from 'inversify';
 import moment from 'moment';
 
 const SYSTEM_FILENAME = 'system';
@@ -31,6 +32,7 @@ export interface TroubleshootingFileMap {
 
 export type LogType = 'log' | 'warn' | 'trace' | 'debug' | 'error';
 
+@injectable()
 export class Troubleshooting {
   // The "main" function that is exposes that is used to gather
   // all the logs and save them to a zip file.

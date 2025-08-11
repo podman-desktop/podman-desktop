@@ -33,7 +33,7 @@ jobs:
   windows:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Windows
-    runs-on: windows-2022
+    runs-on: windows-2025
     timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
   darwin:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macOS
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,7 +173,7 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
     name: build website
     runs-on: ubuntu-24.04
     steps:
@@ -276,7 +276,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-15]
+        os: [windows-2025, ubuntu-24.04, macos-15]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -292,7 +292,14 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+        # run the unit tests with coverage on ubuntu
+      - name: Run unit tests with coverage
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        run: pnpm test:unit:coverage
+
+        # do not run coverage on non-ubuntu os
       - name: Run unit tests
+        if: ${{ matrix.os!='ubuntu-24.04' }}
         run: pnpm test:unit
 
         # publish codecov report if linux
@@ -319,12 +326,12 @@ jobs:
           echo "Add unstable kubic repo into list of available sources and get the repo key"
           sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
           curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "Updating all dependencies..."
+          sudo apt-get update -qq
           echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
           sudo apt-get install --allow-unauthenticated -qq libprotobuf32t64 python3-protobuf libnet1
           echo "install criu manually from static location"
-          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
-          echo "Updating all dependencies..."
-          sudo apt-get update --allow-insecure-repositories -qq
+          curl -sLO http://archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
           echo "installing/update podman package..."
           sudo apt-get -qq -y install --allow-unauthenticated podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
             sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
@@ -378,7 +385,7 @@ jobs:
           pnpm test:e2e:smoke
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -424,8 +431,12 @@ jobs:
   win-update-e2e-test:
     name: win update e2e tests
     needs: detect_pnpm_changes
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [windows-2025]
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: windows-2022
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -445,18 +456,32 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.15.0"
+          $version="1.20.0"
           jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally with electron updater included, allow prereleases
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
           pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
+          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml").Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
 
       - name: Run E2E Update test
         run: |
@@ -464,7 +489,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -477,17 +502,16 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: win-update-e2e-test
+          name: ${{ matrix.os }}-update-e2e-test
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
-
 
   mac-update-e2e-test:
     name: mac update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
@@ -509,20 +533,28 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
+          testingVersion="1.20.0"
+          actualVersion=$(jq -r '.version' package.json)
+          echo "Current version: $actualVersion, testing version: $testingVersion"
+          version=$testingVersion
+          echo "PD_VERSION=$version" >> $GITHUB_ENV
           jq --arg version "$version" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally and allow prereleases on update
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          echo "Allow Prerelease when updating, setting it inline in the code"
+          sed -i '' '/autoUpdater.autoDownload = false;/a \
+          autoUpdater.allowPrerelease = true; \
+          ' packages/main/src/plugin/updater.ts
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -530,7 +562,14 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease"
+          sudo sed -i '' 's/repo: podman-desktop/repo: testing-prereleases/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
@@ -540,7 +579,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5.6.2
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true

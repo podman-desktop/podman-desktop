@@ -626,7 +626,6 @@ describe('postActivate', () => {
     await cliInstaller.doUninstall({} as unknown as Logger);
 
     expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(extensionContext.storagePath, 'bin', 'kubectl'));
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('which', ['system-path']);
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-path'], { isAdmin: true });
   });
 

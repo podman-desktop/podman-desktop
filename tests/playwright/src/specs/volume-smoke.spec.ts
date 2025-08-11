@@ -18,12 +18,21 @@
 
 import { ContainerState, VolumeState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
+import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
+import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '../utility/operations';
+import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
 const imageTag = 'latest';
+const noVolumeImageToPull = 'ghcr.io/linuxcontainers/alpine';
+const containerName = 'alpine';
 const containerToRun = 'bootc-image-builder';
+const volumeName = 'e2eVolume';
+const containerVolumePath = '/tmp/mount';
+const fileName = 'test.txt';
+const textContent = 'This is a test file created in the volume.';
 const containerStartParams: ContainerInteractiveParams = {
   attachTerminal: false,
 };
@@ -35,11 +44,15 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner }) => {
-  await runner.close();
-});
+test.afterAll(async ({ runner, page }) => {
+  try {
+    await deleteContainer(page, containerName);
 
-const volumeName = 'e2eVolume';
+    await deleteImage(page, noVolumeImageToPull);
+  } finally {
+    await runner.close();
+  }
+});
 
 test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
   test('Create new Volume', async ({ navigationBar }) => {
@@ -187,11 +200,87 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     //prune unused volumes
     volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
+    await playExpect
+      .poll(async () => (await volumesPage.getRowsFromTableByStatus(VolumeState.Unused)).length, { timeout: 30_000 })
+      .toBeGreaterThanOrEqual(1);
+
     volumesPage = await volumesPage.pruneVolumes();
     await playExpect
-      .poll(async () => (await volumesPage.getRowsFromTableByStatus(VolumeState.Unused)).length, { timeout: 10_000 })
-      .toBe(0);
+      .poll(async () => volumesPage.getRowsFromTableByStatus(VolumeState.Unused), { timeout: 30_000 })
+      .toHaveLength(0);
     const finalVolumes = await volumesPage.countVolumesFromTable();
     playExpect(finalVolumes - previousVolumes).toBe(0);
+  });
+
+  test('Create volume on the system mapped into container', async ({ navigationBar, page }) => {
+    test.skip(!!isWindows, 'Skipped on Windows due to file system issues');
+    //create a new volume
+    let volumesPage = await navigationBar.openVolumes();
+    await playExpect(volumesPage.heading).toBeVisible();
+    const createVolumePage = await volumesPage.openCreateVolumePage(volumeName);
+    volumesPage = await createVolumePage.createVolume(volumeName);
+    await playExpect
+      .poll(async () => await volumesPage.waitForVolumeExists(volumeName), {
+        timeout: 25_000,
+      })
+      .toBeTruthy();
+
+    //pull image from quay.io/podman-desktop-demo/podify-demo-backend
+    let images = await navigationBar.openImages();
+    const pullImagePage = await images.openPullImage();
+    images = await pullImagePage.pullImage(noVolumeImageToPull, imageTag, 120_000);
+    await playExpect
+      .poll(async () => await images.waitForImageExists(noVolumeImageToPull, 30_000), { timeout: 0 })
+      .toBeTruthy();
+
+    //start a container from the image and map the volume into it
+    const imageDetails = await images.openImageDetails(noVolumeImageToPull);
+    const runImage = await imageDetails.openRunImage();
+    const containerStartParams: ContainerInteractiveParams = {
+      attachTerminal: true,
+      attachVolumeName: volumeName,
+      attachVolumePath: containerVolumePath,
+    };
+    await runImage.startContainer(containerName, containerStartParams);
+    const containerDetailsPage = new ContainerDetailsPage(page, containerName);
+    await playExpect(containerDetailsPage.heading).toBeVisible({ timeout: 60_000 });
+
+    //access the container's terminal and create a file inside the volume's path to confirm that it is mounted and has write permissions
+    const containers = await navigationBar.openContainers();
+    const containersDetails = await containers.openContainersDetails(containerName);
+    await playExpect(containersDetails.heading).toContainText(containerName);
+    await playExpect.poll(async () => containersDetails.getState()).toContain(ContainerState.Running);
+    await containersDetails.activateTab('Terminal');
+    await playExpect(containersDetails.terminalInput).toBeVisible();
+    await containersDetails.executeCommandInTerminal(`cd ${containerVolumePath}`);
+    await containersDetails.executeCommandInTerminal('pwd');
+    await playExpect(containersDetails.terminalContent).toContainText(containerVolumePath);
+    await containersDetails.executeCommandInTerminal(`echo ${textContent} > ${fileName}`);
+    await containersDetails.executeCommandInTerminal('ls');
+    await playExpect(containersDetails.terminalContent).toContainText(fileName);
+
+    //read the file from the volume using CLI
+    const fileContent = await readFileInVolumeFromCLI(volumeName, fileName);
+    console.log(`Successfully read file. Content: "${fileContent}"`);
+    playExpect(fileContent).toContain(textContent); // Check if the file is not empty
+    console.log(`File "${fileName}" exists in volume "${volumeName}"`);
+
+    //delete the volume
+    await containersDetails.deleteContainer();
+    const containersPageAfterDelete = await navigationBar.openContainers();
+    await playExpect(containersPageAfterDelete.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await containersPageAfterDelete.containerExists(containerName), { timeout: 60_000 })
+      .toBeFalsy();
+    volumesPage = await navigationBar.openVolumes();
+    await playExpect(volumesPage.heading).toBeVisible();
+    const volumeRow = await volumesPage.getVolumeRowByName(volumeName);
+    playExpect(volumeRow).not.toBeUndefined();
+    volumesPage = await volumesPage.deleteVolume(volumeName);
+    await playExpect
+      .poll(async () => await volumesPage.waitForVolumeDelete(volumeName), {
+        timeout: 35_000,
+      })
+      .toBeTruthy();
   });
 });

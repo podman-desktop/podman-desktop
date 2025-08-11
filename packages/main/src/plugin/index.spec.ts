@@ -23,7 +23,8 @@ import { tmpdir } from 'node:os';
 import type { PullEvent } from '@podman-desktop/api';
 import type { WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Container as InversifyContainer } from 'inversify';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -32,11 +33,11 @@ import type { ProviderInfo } from '/@api/provider-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
-import type { ApiSenderType } from './api.js';
+import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
-import type { ConfigurationRegistry } from './configuration-registry.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
-import type { Directories } from './directories.js';
+import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -47,22 +48,24 @@ import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
 import type { Task } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
-import { Deferred } from './util/deferred.js';
 import { HttpServer } from './webview/webview-registry.js';
 
 let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {
   override initConfigurationRegistry(
-    apiSender: ApiSenderType,
-    directories: Directories,
+    container: InversifyContainer,
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
   ): ConfigurationRegistry {
-    return super.initConfigurationRegistry(apiSender, directories, notifications, configurationRegistryEmitter);
+    if (!container.isBound(ConfigurationRegistry)) {
+      container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
+    }
+    return super.initConfigurationRegistry(container, notifications, configurationRegistryEmitter);
   }
 }
 
+let inversifyContainer: InversifyContainer;
 const emitter = new EventEmitter();
 const webContents = emitter as unknown as WebContents;
 webContents.isDestroyed = vi.fn();
@@ -70,9 +73,10 @@ webContents.isDestroyed = vi.fn();
 // add send method
 webContents.send = vi.fn();
 
-const mainWindowDeferred = new Deferred<BrowserWindow>();
+const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
+const handlers = new Map<string, any>();
 
-beforeAll(() => {
+beforeAll(async () => {
   vi.mock('electron', () => {
     return {
       shell: {
@@ -97,13 +101,7 @@ beforeAll(() => {
   });
   const trayMenuMock = {} as unknown as TrayMenu;
   pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
-});
 
-const handlers = new Map<string, any>();
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  handlers.clear();
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
@@ -118,8 +116,19 @@ beforeEach(() => {
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   // to avoid port conflict when tests are running on windows host
   vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
+
+  inversifyContainer = new InversifyContainer();
+});
+
+afterEach(async () => {
+  await inversifyContainer.unbindAll();
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
 test('Should queue events until we are ready', async () => {
@@ -170,6 +179,7 @@ test('Check SecurityRestrictions on Links and user accept', async () => {
 
 test('Check SecurityRestrictions on Links and user copy link', async () => {
   const showMessageBoxMock = vi.fn();
+
   const messageBox = {
     showMessageBox: showMessageBoxMock,
   } as unknown as MessageBox;
@@ -313,9 +323,11 @@ test('configurationRegistry propagated', async () => {
   } as unknown as Directories;
   const notifications: NotificationCardOptions[] = [];
 
+  inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
+  inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
+
   const configurationRegistry = pluginSystem.initConfigurationRegistry(
-    apiSenderMock,
-    directoriesMock,
+    inversifyContainer,
     notifications,
     configurationRegistryEmitter,
   );
@@ -331,7 +343,6 @@ const pushImageHandlerOnDataEvent = `${pushImageHandlerId}-onData`;
 
 test('push image command sends onData message with callbackId, event name and data, mark task as success on end event', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get(pushImageHandlerId);
   expect(handle).not.equal(undefined);
   const defaultCallback = vi.fn();
@@ -355,7 +366,6 @@ test('push image command sends onData message with callbackId, event name and da
 test('push image sends data event with error, "end" event when fails and set task error value', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   const pushError = new Error('push error');
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:pushImage');
   expect(handle).not.equal(undefined);
   vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
@@ -372,7 +382,6 @@ test('push image sends data event with error, "end" event when fails and set tas
 
 test('Pull image creates a task', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:pullImage');
   expect(handle).not.equal(undefined);
   const defaultCallback = vi.fn();
@@ -396,7 +405,6 @@ test('Pull image creates a task', async () => {
 
 test('ipcMain.handle returns caught error as is if it is instance of Error', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('tasks:execute');
   const errorInstance = new Error('error');
   createTaskSpy.mockImplementation(() => {
@@ -409,7 +417,6 @@ test('ipcMain.handle returns caught error as is if it is instance of Error', asy
 
 test('ipcMain.handle returns caught error as objects message property if it is not instance of error', async () => {
   const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('tasks:execute');
   const nonErrorInstance = 'error';
   createTaskSpy.mockImplementation(() => {
@@ -421,7 +428,6 @@ test('ipcMain.handle returns caught error as objects message property if it is n
 });
 
 test('container-provider-registry:logsContainer calls logsContainer without abortController if no tokenId is passed', async () => {
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:logsContainer');
   expect(handle).not.equal(undefined);
 
@@ -443,7 +449,6 @@ test('container-provider-registry:logsContainer calls logsContainer with abortCo
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
 
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   const handle = handlers.get('container-provider-registry:logsContainer');
   expect(handle).not.equal(undefined);
 
@@ -494,7 +499,6 @@ describe.each<{
   });
 
   test('createTask is called', async () => {
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     await handle(undefined, 'internal1', { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
@@ -601,7 +605,6 @@ describe.each<{
   });
 
   test('createTask is called', async () => {
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
@@ -632,7 +635,6 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     const result = await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
@@ -652,7 +654,6 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     const result = await handle(undefined, 'internal1', { name: 'name1' }, 'logger');
@@ -687,7 +688,6 @@ describe.each<{
   });
 
   test('createTask is called', async () => {
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     await handle(undefined, 'internal1', { name: 'name1' }, { key1: 'value1', key2: 42 }, 'logger1', 'token1', 'task1');
@@ -719,7 +719,6 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     const result = await handle(
@@ -747,7 +746,6 @@ describe.each<{
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
     const handle = handlers.get(handler);
     expect(handle).not.equal(undefined);
     const result = await handle(

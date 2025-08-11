@@ -12,7 +12,11 @@ import Fa from 'svelte-fa';
 import WebAssemblyIcon from '../images/WebAssemblyIcon.svelte';
 import BuildImageFromContainerfileCard from './BuildImageFromContainerfileCard.svelte';
 
-export let platforms: string = '';
+interface Props {
+  platforms?: string;
+}
+
+let { platforms = $bindable('') }: Props = $props();
 let platformsArray: string[] = [];
 
 interface CardInfo {
@@ -70,10 +74,10 @@ const ADVANCED_CARDS: CardInfo[] = [
   },
 ];
 
-let showMoreOptions = false;
+let showMoreOptions = $state(false);
 
-let sortedCards: CardInfo[] = [];
-let advancedCards: CardInfo[] = [];
+let sortedCards: CardInfo[] = $state([]);
+let advancedCards: CardInfo[] = $state([]);
 
 onMount(async () => {
   // need to sort the default cards by having the first card using the same arch than Podman Desktop
@@ -165,7 +169,7 @@ function addCard(item: { value: string }): void {
     <button
       aria-label="Show more options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
-      on:click={(): boolean => (showMoreOptions = !showMoreOptions)}>
+      onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Fa icon={faChevronRight} class=" mr-2 " />
       More Options...
     </button>
@@ -195,7 +199,7 @@ function addCard(item: { value: string }): void {
     <button
       aria-label="Show less options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
-      on:click={(): boolean => (showMoreOptions = !showMoreOptions)}>
+      onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
       <Fa icon={faChevronCircleDown} class=" mr-2 transform rotate-90" />
       Less Options...
     </button>

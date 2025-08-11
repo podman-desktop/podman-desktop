@@ -16,21 +16,25 @@ import TerminalWindow from '../ui/TerminalWindow.svelte';
 import PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 import { writeToTerminal } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let taskId: number | undefined = undefined;
-let inProgress: boolean = false;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  taskId?: number;
+}
 
-let showModalProviderInfo: ProviderInfo | undefined = undefined;
+let { properties = [], providerInternalId, taskId }: Props = $props();
+let inProgress: boolean = $state(false);
 
-let providerLifecycleError = '';
+let showModalProviderInfo = $state<ProviderInfo>();
+
+let providerLifecycleError = $state('');
 router.subscribe(() => {
   providerLifecycleError = '';
 });
 
-let connectionInfo: ProviderConnectionInfo | undefined = undefined;
+let connectionInfo = $state<ProviderConnectionInfo>();
 
-let providers: ProviderInfo[] = [];
+let providers: ProviderInfo[] = $state([]);
 onMount(() => {
   providerLifecycleError = '';
   providerInfos.subscribe(value => {
@@ -43,23 +47,23 @@ onMount(() => {
   });
 });
 
-let providerInfo: ProviderInfo;
-$: providerInfo = providers.filter(provider => provider.internalId === providerInternalId)[0];
+let providerInfo = $derived(providers.filter(provider => provider.internalId === providerInternalId)[0]);
 
-let providerDisplayName: string;
-$: providerDisplayName =
+let providerDisplayName: string = $derived(
   (providerInfo?.containerProviderConnectionCreation
     ? (providerInfo?.containerProviderConnectionCreationDisplayName ?? undefined)
     : providerInfo?.kubernetesProviderConnectionCreation
       ? providerInfo?.kubernetesProviderConnectionCreationDisplayName
       : providerInfo?.vmProviderConnectionCreation
         ? providerInfo?.vmProviderConnectionCreationDisplayName
-        : undefined) ?? providerInfo?.name;
+        : undefined) ?? providerInfo?.name,
+);
 
-let title: string;
-$: title = connectionInfo ? `Update ${providerDisplayName} ${connectionInfo.name}` : `Create ${providerDisplayName}`;
+let title: string = $derived(
+  connectionInfo ? `Update ${providerDisplayName} ${connectionInfo.name}` : `Create ${providerDisplayName}`,
+);
 
-let logsTerminal: Terminal;
+let logsTerminal = $state<Terminal>();
 
 async function startProvider(): Promise<void> {
   await window.startProviderLifecycle(providerInfo.internalId);
@@ -73,7 +77,9 @@ async function stopProvider(): Promise<void> {
 
 async function startReceivingLogs(providerInternalId: string): Promise<void> {
   const logHandler = (newContent: unknown[]): void => {
-    writeToTerminal(logsTerminal, newContent, '\x1b[37m');
+    if (logsTerminal) {
+      writeToTerminal(logsTerminal, newContent, '\x1b[37m');
+    }
   };
   await window.startReceiveLogs(providerInternalId, logHandler, logHandler, logHandler);
 }

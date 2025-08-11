@@ -22,12 +22,12 @@ import path from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from '/@/plugin/util/deferred.js';
+import { isMac } from '/@/util.js';
 
 import { DialogRegistry } from './dialog-registry.js';
 import { Uri } from './types/uri.js';
 
-let mainWindowDeferred: Deferred<BrowserWindow>;
+let mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 
 const fakeBrowserWindow: BrowserWindow = {
   webContents: {
@@ -55,7 +55,7 @@ const mockedConsoleError = vi.fn();
 beforeEach(() => {
   vi.resetAllMocks();
   console.error = mockedConsoleError;
-  mainWindowDeferred = new Deferred<BrowserWindow>();
+  mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
   mainWindowDeferred.resolve(fakeBrowserWindow);
   dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
   dialogRegistry.init();
@@ -67,7 +67,7 @@ afterEach(() => {
 
 // check a failure on init
 test('check failure on init method', async () => {
-  mainWindowDeferred = new Deferred<BrowserWindow>();
+  mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
   dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
   mainWindowDeferred.reject(new Error('test error'));
 
@@ -81,15 +81,22 @@ const tmpMyPath = path.resolve(tmpdir(), 'my/path');
 
 describe('showOpenDialog', () => {
   beforeEach(() => {
+    vi.resetAllMocks();
     vi.mocked(dialog.showOpenDialog).mockResolvedValue({
       filePaths: [tmpMyPath],
       canceled: false,
     });
   });
 
+  vi.mock(import('/@/util.js'), () => {
+    return {
+      isMac: vi.fn().mockReturnValue(false),
+    };
+  });
+
   // check opendialog is failing without browserwindow
   test('check failure on init method', async () => {
-    mainWindowDeferred = new Deferred<BrowserWindow>();
+    mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
     // we don't resolve the promise
 
@@ -152,6 +159,15 @@ describe('showOpenDialog', () => {
     // no result sent to browserWindow
     expect(fakeBrowserWindow.webContents.send).not.toHaveBeenCalled();
   });
+
+  test('use noResolveAliases property on mac', async () => {
+    vi.mocked(isMac).mockReturnValue(true);
+    await dialogRegistry.openDialog();
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith(
+      fakeBrowserWindow,
+      expect.objectContaining({ properties: ['openFile', 'noResolveAliases'] }),
+    );
+  });
 });
 
 describe('showSaveDialog', () => {
@@ -164,7 +180,7 @@ describe('showSaveDialog', () => {
 
   // check showSaveDialog is failing without browserwindow
   test('check failure on init method', async () => {
-    mainWindowDeferred = new Deferred<BrowserWindow>();
+    mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
     dialogRegistry = new TestDialogRegistry(mainWindowDeferred);
     // we don't resolve the promise
 

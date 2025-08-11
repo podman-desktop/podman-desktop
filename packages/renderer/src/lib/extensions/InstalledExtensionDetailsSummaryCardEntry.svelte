@@ -1,6 +1,10 @@
 <script lang="ts">
-export let label: string;
-export let value: string;
+interface Props {
+  label: string;
+  value: string;
+}
+
+let { label, value }: Props = $props();
 </script>
 
 <div class="flex flex-col lg:mb-4 items-start">

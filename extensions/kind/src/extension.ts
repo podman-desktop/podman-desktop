@@ -579,6 +579,8 @@ async function registerCliTool(
 
       // update the version and path to undefined
       kindPath = undefined;
+
+      currentUpdateDisposable?.dispose();
     },
   });
 }
@@ -627,28 +629,12 @@ async function deleteFileAsAdmin(filePath: string): Promise<void> {
 
 async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
   const command = extensionApi.env.isWindows ? 'del' : 'rm';
-  const checkCommand = extensionApi.env.isWindows ? 'where.exe' : 'which';
-  let fileExistsPath = '';
-
   try {
-    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, [filePath]);
-    fileExistsPath = fullPath;
-  } catch (err) {
-    if (err && typeof err === 'object' && 'stderr' in err) {
-      console.log(err.stderr);
-    } else {
-      console.warn(`Error checking Kind ${filePath} path`, err);
-    }
-  }
-
-  if (fileExistsPath) {
-    try {
-      // Use admin privileges
-      await extensionApi.process.exec(command, [filePath], { isAdmin: true });
-    } catch (error) {
-      console.error(`Failed to uninstall '${filePath}': ${error}`);
-      throw error;
-    }
+    // Use admin privileges
+    await extensionApi.process.exec(command, [filePath], { isAdmin: true });
+  } catch (error) {
+    console.error(`Failed to uninstall '${filePath}': ${error}`);
+    throw error;
   }
 }
 

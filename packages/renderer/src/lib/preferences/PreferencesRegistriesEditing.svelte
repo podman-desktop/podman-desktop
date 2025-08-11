@@ -13,33 +13,37 @@ import SettingsPage from './SettingsPage.svelte';
 
 // contains the original instances of registries when user clicks on `Edit password` menu item
 // to be able to roll back changes when `Cancel` button is clicked
-let originRegistries: containerDesktopAPI.Registry[] = [];
+let originRegistries = $state<containerDesktopAPI.Registry[]>([]);
 
 // login error responses
-let errorResponses: { serverUrl: string; error: string }[] = [];
+let errorResponses = $state<{ serverUrl: string; error: string }[]>([]);
 
 // list of server urls for which we show the password
-let showPasswordForServerUrls: string[] = [];
+let showPasswordForServerUrls = $state<string[]>([]);
 
-// show or hide new registry form
-export let showNewRegistryForm = false;
+interface Props {
+  // show or hide new registry form
+  showNewRegistryForm?: boolean;
+}
+
+let { showNewRegistryForm = false }: Props = $props();
 
 // at this moment it should be `podman`, but later can be any
 let defaultProviderSourceName: string;
 
 // List of registries to keep track of hidden / unhidden inputs
-let listedSuggestedRegistries: boolean[] = [];
+let listedSuggestedRegistries = $state<boolean[]>([]);
 
 // Busy flag while attempting login
-let loggingIn = false;
+let loggingIn = $state(false);
 
 // used when user tries to add new registry
-const newRegistryRequest = {
+const newRegistryRequest = $state<containerDesktopAPI.Registry>({
   source: '',
   serverUrl: '',
   username: '',
   secret: '',
-} as containerDesktopAPI.Registry;
+});
 
 onMount(async () => {
   let providerSourceNames = await window.getImageRegistryProviderNames();
@@ -227,11 +231,13 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 </script>
 
 <SettingsPage title="Registries">
-  <div slot="actions">
-    <Button on:click={(): void => setNewRegistryFormVisible(true)} icon={faPlusCircle} disabled={showNewRegistryForm}>
-      Add registry
-    </Button>
-  </div>
+  {#snippet actions()}
+    <div >
+      <Button onclick={(): void => setNewRegistryFormVisible(true)} icon={faPlusCircle} disabled={showNewRegistryForm}>
+        Add registry
+      </Button>
+    </div>
+  {/snippet}
 
   <div class="container bg-[var(--pd-invert-content-card-bg)] rounded-md p-3">
     <!-- Registries table start -->
@@ -278,7 +284,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
                 <Input placeholder="Username" aria-label="Username" bind:value={registry.username} />
               {:else if !registry.username && !registry.secret}
-                <Button on:click={(): void => markRegistryAsModified(registry)}>Login now</Button>
+                <Button onclick={(): void => markRegistryAsModified(registry)}>Login now</Button>
               {:else}
                 {registry.alias ?? registry.username}
               {/if}
@@ -297,8 +303,8 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                     )} />
               </div>
               <div class="w-1/5" role="cell">
-                <Button on:click={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
-                <Button on:click={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
+                <Button onclick={(): Promise<void>=> loginToRegistry(registry)} inProgress={loggingIn}>Login</Button>
+                <Button onclick={(): void => markRegistryAsClean(registry)} type="link">Cancel</Button>
               </div>
             {:else}
               <div class="w-1/5" role="cell">
@@ -326,7 +332,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                       aria-label="Hide password"
                       aria-expanded="true"
                       aria-haspopup="true"
-                      on:click={(): void => setPasswordForRegistryVisible(registry, false)}>
+                      onclick={(): void => setPasswordForRegistryVisible(registry, false)}>
                       <i class="fa fa-eye-slash"></i>
                     </button>
                   {:else}
@@ -338,7 +344,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
                       aria-label="Show password"
                       aria-expanded="true"
                       aria-haspopup="true"
-                      on:click={(): void => setPasswordForRegistryVisible(registry, true)}>
+                      onclick={(): void => setPasswordForRegistryVisible(registry, true)}>
                       <i class="fa fa-eye"></i>
                     </button>
                   {/if}
@@ -417,7 +423,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
             <div class="w-1/5 flex space-x-2 justify-end" role="cell">
               {#if listedSuggestedRegistries[i]}
                 <Button
-                  on:click={(): Promise<void> => loginToRegistry(newRegistryRequest)}
+                  onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}
                   disabled={!newRegistryRequest.serverUrl || !newRegistryRequest.username || !newRegistryRequest.secret}
                   inProgress={loggingIn}>
                   Login
@@ -425,9 +431,9 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {/if}
 
               {#if listedSuggestedRegistries[i]}
-                <Button on:click={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
+                <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
               {:else}
-                <Button on:click={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
+                <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}
             </div>
           </div>
@@ -449,45 +455,50 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
 {#if showNewRegistryForm}
   <Dialog
     title="Add Registry"
-    on:close={(): void => {
+    onclose={(): void => {
       setNewRegistryFormVisible(false);
     }}>
-    <div slot="content" class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
-      <div>
-        <div>URL (HTTPS only)</div>
-        <Input placeholder="https://registry.io" bind:value={newRegistryRequest.serverUrl}></Input>
-      </div>
-
-      <div class="flex flex-row space-x-5 justify-stretch w-full">
-        <div class="w-full">
-          <div>Username</div>
-          <Input placeholder="username" bind:value={newRegistryRequest.username}></Input>
+    {#snippet content()}
+        <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
+        <div>
+          <div>URL (HTTPS only)</div>
+          <Input placeholder="https://registry.io" bind:value={newRegistryRequest.serverUrl}></Input>
         </div>
 
-        <div class="w-full">
-          <div>Password</div>
-          <PasswordInput
-            id="newRegistryRequest"
-            bind:password={newRegistryRequest.secret}
-            on:action={(): void =>
-              setPasswordForRegistryVisible(newRegistryRequest, !showPasswordForServerUrls.some(r => r === ''))}
-          ></PasswordInput>
+        <div class="flex flex-row space-x-5 justify-stretch w-full">
+          <div class="w-full">
+            <div>Username</div>
+            <Input placeholder="username" bind:value={newRegistryRequest.username}></Input>
+          </div>
+
+          <div class="w-full">
+            <div>Password</div>
+            <PasswordInput
+              id="newRegistryRequest"
+              bind:password={newRegistryRequest.secret}
+              on:action={(): void =>
+                setPasswordForRegistryVisible(newRegistryRequest, !showPasswordForServerUrls.some(r => r === ''))}
+            ></PasswordInput>
+          </div>
         </div>
       </div>
-    </div>
-    <svelte:fragment slot="validation"
-      ><ErrorMessage error={errorResponses.find(o => o.serverUrl === newRegistryRequest.serverUrl)?.error ?? ''}
-      ></ErrorMessage
-      ></svelte:fragment>
-    <svelte:fragment slot="buttons">
-      <Button type="link" on:click={(): boolean => (showNewRegistryForm = false)}>Cancel</Button>
-      <Button
-        type="primary"
-        disabled={!newRegistryRequest.serverUrl.trim() ||
-          !newRegistryRequest.username.trim() ||
-          !newRegistryRequest.secret.trim()}
-        inProgress={loggingIn}
-        on:click={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
-    </svelte:fragment>
+      {/snippet}
+    {#snippet validation()}
+        <ErrorMessage error={errorResponses.find(o => o.serverUrl === newRegistryRequest.serverUrl)?.error ?? ''}
+        ></ErrorMessage
+        >
+      {/snippet}
+    {#snippet buttons()}
+      
+        <Button type="link" onclick={(): boolean => (showNewRegistryForm = false)}>Cancel</Button>
+        <Button
+          type="primary"
+          disabled={!newRegistryRequest.serverUrl.trim() ||
+            !newRegistryRequest.username.trim() ||
+            !newRegistryRequest.secret.trim()}
+          inProgress={loggingIn}
+          onclick={(): Promise<void> => loginToRegistry(newRegistryRequest)}>Add</Button>
+      
+      {/snippet}
   </Dialog>
 {/if}

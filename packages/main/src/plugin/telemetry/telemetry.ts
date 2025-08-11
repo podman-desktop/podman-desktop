@@ -30,9 +30,10 @@ import { Analytics, type UserTraits } from '@segment/analytics-node';
 import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
+import { inject, injectable } from 'inversify';
 import * as osLocale from 'os-locale';
 
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
 
@@ -61,7 +62,10 @@ export type EventType =
 /**
  * Handle the telemetry reporting.
  */
+@injectable()
 export class Telemetry {
+  public static readonly DEFAULT_DELAY_AGGREGATE = 10_000; // 10 seconds
+
   private static readonly SEGMENT_KEY = 'Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy';
 
   private cachedTelemetrySettings: TelemetryRule[] | undefined;
@@ -73,20 +77,25 @@ export class Telemetry {
 
   private analytics: Analytics | undefined;
 
-  private telemetryEnabled = false;
+  protected telemetryEnabled = false;
 
-  private telemetryInitialized = false;
+  protected telemetryInitialized = false;
 
   private telemetryConfigured = false;
 
-  private pendingItems: { eventName: string; properties?: unknown }[] = [];
+  protected pendingItems: { eventName: string; properties?: unknown }[] = [];
+
+  protected aggregateTimeoutEvents: Map<string, { timeout: NodeJS.Timeout; properties: unknown[] }> = new Map();
 
   protected lastTimeEvents: Map<string, number>;
 
   private readonly _onDidChangeTelemetryEnabled = new Emitter<boolean>();
   readonly onDidChangeTelemetryEnabled: Event<boolean> = this._onDidChangeTelemetryEnabled.event;
 
-  constructor(private configurationRegistry: IConfigurationRegistry) {
+  constructor(
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
+  ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
   }
@@ -338,6 +347,69 @@ export class Telemetry {
     });
 
     return dropIt;
+  }
+
+  /**
+   * will cumulate the data for the given the event and send it to the telemetry system.
+   * @param event the event to send after the given delay
+   * @param eventProperties all properties that will be aggregated into an array and be sent after the delay if there is no other event received during this time window
+   * @param delay the delay in milliseconds before sending the aggregated event, default is 10 seconds
+   */
+  aggregateTrack(event: EventType, eventProperties?: unknown, delay: number = Telemetry.DEFAULT_DELAY_AGGREGATE): void {
+    // skip event ?
+    if (this.shouldDropEvent(event)) {
+      return;
+    }
+
+    const eventPropertiesOrEmpty = eventProperties ?? {};
+
+    // if telemetry is not initialized, we store the event in a pending list
+    // but aggregate the data
+    if (!this.telemetryInitialized) {
+      // search an existing event
+      const existingItem = this.pendingItems.find(item => item.eventName === event);
+      if (existingItem) {
+        if (Array.isArray(existingItem.properties)) {
+          // push item to the existing array
+          existingItem.properties.push(eventPropertiesOrEmpty);
+        } else {
+          console.warn(`Event ${event} already exists in pending items, but properties is not an array. Overwriting.`);
+          // overwrite the properties
+          existingItem.properties = [eventPropertiesOrEmpty];
+        }
+      } else {
+        // create a new item
+        this.pendingItems.push({ eventName: event, properties: [eventPropertiesOrEmpty] });
+      }
+      return;
+    }
+    if (!this.telemetryEnabled) {
+      return;
+    }
+
+    // is there an existing timeout for this event name ?
+    const existingTimeoutData = this.aggregateTimeoutEvents.get(event);
+    let propertiesToSend: unknown[];
+    if (existingTimeoutData) {
+      propertiesToSend = existingTimeoutData.properties.concat(eventPropertiesOrEmpty);
+      // if yes, we clear it
+      clearTimeout(existingTimeoutData.timeout);
+    } else {
+      propertiesToSend = [eventPropertiesOrEmpty];
+    }
+
+    const timeout = setTimeout(() => {
+      // after delay, we send the aggregated event
+      const telemetryData = { aggregated: propertiesToSend };
+      this.internalTrack(event, telemetryData).catch((err: unknown) => {
+        console.warn(`Error sending aggregated event: ${event}`, err);
+      });
+      // remove the timeout from the map
+      this.aggregateTimeoutEvents.delete(event);
+    }, delay);
+
+    // sets a new timeout for this event name
+    this.aggregateTimeoutEvents.set(event, { timeout, properties: propertiesToSend });
   }
 
   track(event: EventType, eventProperties?: unknown): void {

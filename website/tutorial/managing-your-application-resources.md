@@ -69,6 +69,7 @@ Based on your needs, perform any of the following actions after navigating to th
    - Open a terminal to interact with the container.
    - Restart your container.
    - Export a container to your local machine.
+4. Bulk start: Select multiple containers and run them in a single step.
 
    :::note
 
@@ -174,6 +175,7 @@ On the **Settings > Resources** page, perform any of the following actions:
 
 1. Create a new cluster.
 2. Access other useful actions to start, restart, stop, or delete a cluster.
+3. Upgrade your cluster to the latest version.
 
 **_Managing your CLI tools_**
 

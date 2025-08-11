@@ -19,7 +19,7 @@ import {
   lastUpdatedTaskId,
 } from '/@/stores/build-images';
 import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
@@ -28,58 +28,17 @@ import { type BuildImageCallback, disconnectUI, eventCollect, reconnectUI, start
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
-export let taskId: number | undefined;
-let buildImageInfo: BuildImageInfo = createDefaultBuildImageInfo();
-let providers: ProviderInfo[] = [];
+interface Props {
+  taskId?: number;
+}
+
+let { taskId = $bindable() }: Props = $props();
+let buildImageInfo: BuildImageInfo = $state(createDefaultBuildImageInfo());
 
 const containerFileDialogOptions: OpenDialogOptions = {
   title: 'Select Containerfile to build',
 };
 const contextDialogOptions: OpenDialogOptions = { title: 'Select Root Context', selectors: ['openDirectory'] };
-
-$: platforms = buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : [];
-$: containerFilePath = buildImageInfo.containerFilePath;
-$: containerBuildContextDirectory = buildImageInfo.containerBuildContextDirectory;
-$: if (containerFilePath && !containerBuildContextDirectory) {
-  // select the parent directory of the file as default
-  buildImageInfo.containerBuildContextDirectory = containerFilePath.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
-}
-$: containerImageName = buildImageInfo.containerImageName;
-$: providerConnections = providers
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-$: selectedProvider = providerConnections.length > 0 ? providerConnections[0] : undefined;
-$: buildImageInfo.selectedProvider = selectedProvider;
-$: hasInvalidFields =
-  !containerFilePath ||
-  !containerBuildContextDirectory ||
-  (platforms.length > 1 && !containerImageName) ||
-  platforms.length === 0 ||
-  !selectedProvider;
-
-$: if (taskId && taskId !== buildImageInfo.taskId) {
-  // switching previous task wich could be finished or still running
-  if (buildImageInfo.buildImageKey) {
-    // disconnect UI regardless of state
-    disconnectUI(buildImageInfo.buildImageKey);
-  }
-  buildImageInfo.logsTerminal?.reset(); // clean up terminal before loading the state
-  const buildImagesInfoMap = get(buildImagesInfo); // get background task states
-  const bgBuildImageInfo = buildImagesInfoMap.get(taskId); // get state for loading task
-  if (bgBuildImageInfo) {
-    bgBuildImageInfo.logsTerminal = buildImageInfo.logsTerminal;
-    if (bgBuildImageInfo.buildRunning) {
-      buildImageInfo = bgBuildImageInfo;
-    } else {
-      buildImageInfo = cloneBuildImageInfo(bgBuildImageInfo);
-      taskId = 0;
-    }
-    if (buildImageInfo.buildImageKey) {
-      reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
-    }
-  }
-}
 
 interface BuildOutputItem {
   stream?: string;
@@ -178,7 +137,7 @@ async function buildSinglePlatformImage(): Promise<void> {
       relativeContainerfilePath,
       buildImageInfo.containerImageName,
       buildImageInfo.containerBuildPlatform,
-      buildImageInfo.selectedProvider,
+      $state.snapshot(buildImageInfo.selectedProvider),
       buildImageInfo.buildImageKey,
       eventCollect,
       buildImageInfo.cancellableTokenId,
@@ -240,7 +199,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         relativeContainerfilePath,
         undefined, // Omitting the image name for multi-platform builds, as we'll be creating a singular manifest.
         platform,
-        buildImageInfo.selectedProvider,
+        $state.snapshot(buildImageInfo.selectedProvider),
         buildImageInfo.buildImageKey,
         eventCollect,
         buildImageInfo.cancellableTokenId,
@@ -302,10 +261,6 @@ let buildImagesInfoUnsubscriber: Unsubscriber = buildImagesInfo.subscribe(map =>
   $lastUpdatedTaskId = undefined;
 });
 
-let providerInfosUnsubscriber: Unsubscriber = providerInfos.subscribe(infos => {
-  providers = infos;
-});
-
 function onInit(): void {
   if (buildImageInfo.buildImageKey) {
     reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
@@ -317,7 +272,6 @@ onDestroy(() => {
     disconnectUI(buildImageInfo.buildImageKey);
   }
   buildImagesInfoUnsubscriber();
-  providerInfosUnsubscriber();
 });
 
 async function abortBuild(): Promise<void> {
@@ -328,6 +282,62 @@ async function abortBuild(): Promise<void> {
   buildImageInfo.buildRunning = false;
   buildImageInfo.buildFinished = true;
 }
+
+let platforms = $derived(buildImageInfo.containerBuildPlatform ? buildImageInfo.containerBuildPlatform.split(',') : []);
+
+let providerConnections = $derived(
+  $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
+    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
+    return acc.concat(startedConnections);
+  }, []),
+);
+let selectedProvider = $derived(providerConnections.length > 0 ? providerConnections[0] : undefined);
+$effect(() => {
+  if (taskId && taskId !== buildImageInfo.taskId) {
+    // switching previous task wich could be finished or still running
+    if (buildImageInfo.buildImageKey) {
+      // disconnect UI regardless of state
+      disconnectUI(buildImageInfo.buildImageKey);
+    }
+    buildImageInfo.logsTerminal?.reset(); // clean up terminal before loading the state
+    const buildImagesInfoMap = get(buildImagesInfo); // get background task states
+    const bgBuildImageInfo = buildImagesInfoMap.get(taskId); // get state for loading task
+    if (bgBuildImageInfo) {
+      bgBuildImageInfo.logsTerminal = buildImageInfo.logsTerminal;
+      if (bgBuildImageInfo.buildRunning) {
+        buildImageInfo = bgBuildImageInfo;
+      } else {
+        buildImageInfo = cloneBuildImageInfo(bgBuildImageInfo);
+        taskId = 0;
+      }
+      if (buildImageInfo.buildImageKey) {
+        reconnectUI(buildImageInfo.buildImageKey, getTerminalCallback());
+      }
+    }
+  }
+  if (buildImageInfo.containerFilePath && !buildImageInfo.containerBuildContextDirectory) {
+    // select the parent directory of the file as default
+    buildImageInfo.containerBuildContextDirectory = buildImageInfo.containerFilePath
+      .replace(/\\/g, '/')
+      .replace(/\/[^\/]*$/, '');
+  }
+  buildImageInfo.selectedProvider = selectedProvider;
+});
+
+let errorContainerImageName = $derived(
+  buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase()
+    ? undefined
+    : 'Image name should be lowercase',
+);
+
+let hasInvalidFields = $derived(
+  !buildImageInfo.containerFilePath ||
+    !buildImageInfo.containerBuildContextDirectory ||
+    (platforms.length > 1 && !buildImageInfo.containerImageName) ||
+    platforms.length === 0 ||
+    !!errorContainerImageName ||
+    !selectedProvider,
+);
 </script>
 
 <EngineFormPage
@@ -372,6 +382,7 @@ async function abortBuild(): Promise<void> {
           name="containerImageName"
           id="containerImageName"
           placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
+          error={errorContainerImageName}
           class="w-full" />
       </div>
 

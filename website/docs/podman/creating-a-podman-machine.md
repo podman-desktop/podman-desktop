@@ -23,6 +23,12 @@ Consider creating a custom Podman machine to:
 
 - The Podman executable is installed.
 
+  :::note
+
+  On the macOS ARM64 platform, you might get a warning that the `krunkit` binary is unavailable on the _Create Podman machine_ page. To resolve the warning, [install `krunkit` manually](https://github.com/containers/krunkit?tab=readme-ov-file#installation) or [install Podman using the GitHub installer](https://github.com/containers/podman/releases).
+
+  :::
+
 #### Procedure
 
 1. Go to **Settings > Resources**.
@@ -46,8 +52,10 @@ Consider creating a custom Podman machine to:
       - (On Windows)
         - **User mode networking (traffic relayed by a user process)**: Enable to route the traffic through the network connection from your Windows session. This setting is required to access resources behind your VPN connection.
         - **Provider Type**: The setting is visible only to administrators, and its default value is `wsl`.
-      - (On macOS)
-        - **Provider Type**: The default value is `Apple HyperVisor`. Before switching to `GPU enabled (LibKrun)`, ensure that you have [configured the machine provider](/docs/installation/macos-install#using-libkrun-as-machine-provider) manually.
+      - (On macOS) **Provider Type**:
+        - For the macOS ARM64 platform, the default value is `GPU enabled (LibKrun)`. However, you can switch to `Apple HyperVisor` when needed.
+        - For the macOS AMD64 platform, the default value is `Apple HyperVisor`, and you cannot use the `GPU enabled (LibKrun)` provider.
+
    1. Click **Create**.
 
-   ![Create a Podman machine](img/create-a-podman-machine.png)
+      ![Create a Podman machine](img/create-a-podman-machine.png)

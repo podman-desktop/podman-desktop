@@ -16,12 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ButtonsType } from '/@api/dialog';
+
 export interface MessageBoxOptions {
   id: number;
   title: string;
   message: string;
   detail?: string;
-  buttons?: string[];
+  buttons?: ButtonsType[];
   type?: string;
   defaultId?: number;
   cancelId?: number;

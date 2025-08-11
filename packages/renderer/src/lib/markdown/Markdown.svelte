@@ -50,6 +50,7 @@ import { directive, directiveHtml } from 'micromark-extension-directive';
 import { onDestroy, onMount } from 'svelte';
 
 import { button } from './micromark-button-directive';
+import { image } from './micromark-image-directive';
 import { link } from './micromark-link-directive';
 import { createListener } from './micromark-listener-handler';
 import { warnings } from './micromark-warnings-directive';
@@ -77,7 +78,7 @@ const eventListeners: EventListener[] = [];
 $: markdown
   ? (html = micromark(markdown, {
       extensions: [directive()],
-      htmlExtensions: [directiveHtml({ button, link, warnings })],
+      htmlExtensions: [directiveHtml({ button, image, link, warnings })],
     }))
   : undefined;
 
@@ -89,7 +90,7 @@ onMount(() => {
   // Provide micromark + extensions
   html = micromark(text, {
     extensions: [directive()],
-    htmlExtensions: [directiveHtml({ button, link, warnings })],
+    htmlExtensions: [directiveHtml({ button, image, link, warnings })],
   });
 
   // remove href values in each anchor using # for links

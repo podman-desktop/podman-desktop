@@ -310,6 +310,12 @@ export default config;
    The extension compiles and generates the output in the `dist` folder of the subdirectory.
    ![output in the dist folder](img/dist-folder.png)
 
+   :::note
+
+   You can also [run and verify the extension](/docs/extensions/debugging-an-extension) directly from the Podman Desktop UI.
+
+   :::
+
 ## Verifying the extension's features
 
 1. Click **Extensions** in the left navigation pane.

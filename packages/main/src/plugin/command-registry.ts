@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type CommandInfo } from '/@api/command-info.js';
+import { inject, injectable } from 'inversify';
 
-import { type ApiSenderType } from './api.js';
-import type { Telemetry } from './telemetry/telemetry.js';
+import type { CommandInfo } from '/@api/command-info.js';
+
+import { ApiSenderType } from './api.js';
+import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
 export interface RawCommand {
@@ -39,9 +41,12 @@ export interface CommandHandler {
   thisArg: any;
 }
 
+@injectable()
 export class CommandRegistry {
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(Telemetry)
     private readonly telemetry: Telemetry,
   ) {
     // init empty array

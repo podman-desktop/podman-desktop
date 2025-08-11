@@ -165,7 +165,9 @@ const progress: ProgressImpl = {
 
 const statusBarRegistry: StatusBarRegistry = {} as unknown as StatusBarRegistry;
 
-const kubernetesClient: KubernetesClient = {} as unknown as KubernetesClient;
+const kubernetesClient: KubernetesClient = {
+  dispose: vi.fn(),
+} as unknown as KubernetesClient;
 
 const fileSystemMonitoring: FilesystemMonitoring = {} as unknown as FilesystemMonitoring;
 
@@ -203,7 +205,7 @@ const onboardingRegistry: OnboardingRegistry = {
 } as unknown as OnboardingRegistry;
 
 const telemetryTrackMock = vi.fn();
-const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
+const telemetry: Telemetry = { aggregateTrack: vi.fn(), track: telemetryTrackMock } as unknown as Telemetry;
 
 const viewRegistry: ViewRegistry = {} as unknown as ViewRegistry;
 
@@ -275,6 +277,7 @@ const extensionWatcher = {
   monitor: vi.fn(),
   untrack: vi.fn(),
   stop: vi.fn(),
+  dispose: vi.fn(),
   reloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
@@ -2239,7 +2242,7 @@ describe('extensionContext', async () => {
 
     expect(extensionContext).toBeDefined();
     expect(extensionContext?.secrets).toBeDefined();
-    expect(telemetry.track).toBeCalledWith('activateExtension', {
+    expect(telemetry.aggregateTrack).toBeCalledWith('activateExtensions', {
       extensionId: 'fooPublisher.fooName',
       extensionVersion: '1.0',
       duration: expect.any(Number),
@@ -2623,4 +2626,42 @@ describe('loadDevelopmentFolderExtensions', () => {
 
     consoleErrorSpy.mockRestore();
   });
+});
+
+test('ExtensionLoader async dispose should stop all extensions', async () => {
+  const activateMock = vi.fn().mockResolvedValue(undefined);
+  const deactivateMock = vi.fn().mockResolvedValue(undefined);
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({ get: vi.fn().mockReturnValue(1) });
+
+  const id = 'extension.id';
+  await extensionLoader.activateExtension(
+    {
+      id: id,
+      name: 'id',
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      manifest: {},
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    {
+      activate: activateMock,
+      deactivate: deactivateMock,
+    },
+  );
+
+  const extensions = extensionLoader.getActivatedExtensions();
+  expect(extensions.size).toEqual(1);
+
+  expect(activateMock).toHaveBeenCalledOnce();
+  expect(deactivateMock).not.toHaveBeenCalled();
+
+  await extensionLoader[Symbol.asyncDispose]();
+
+  expect(deactivateMock).toHaveBeenCalledOnce();
 });

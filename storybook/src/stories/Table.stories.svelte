@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
 import { Table, TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
 /**
  * These are the stories for the `Table` component.
@@ -8,6 +8,7 @@ import { type Args, defineMeta, setTemplate, type StoryContext } from '@storyboo
  */
 const { Story } = defineMeta({
   component: Table,
+  render: template,
   title: 'Table',
   tags: ['autodocs'],
   args: {},
@@ -59,10 +60,6 @@ const rowGroup = new TableRow<Group, Person>({
     }
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

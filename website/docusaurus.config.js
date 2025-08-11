@@ -341,6 +341,7 @@ const config = {
         routeBasePath: 'tutorial',
       },
     ],
+    './src/plugins/github-metadata-plugin.ts',
     [
       'docusaurus-plugin-typedoc',
       {
@@ -391,6 +392,8 @@ const config = {
       }),
     ],
   ],
+
+  clientModules: [require.resolve('./src/scripts/fontAwesomeIcons.ts')],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */

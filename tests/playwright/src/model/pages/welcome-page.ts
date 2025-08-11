@@ -79,16 +79,11 @@ export class WelcomePage extends BasePage {
     });
   }
 
-  async waitForInitialization(): Promise<void> {
-    await playExpect(this.checkLoader).toHaveCount(0, { timeout: 10_000 });
-  }
-
   /**
    * Waits for application to initialize, turn off telemetry and closes welcome page
    */
   async handleWelcomePage(skipIfNotPresent: boolean): Promise<void> {
     return test.step('Handle Welcome Page', async () => {
-      await this.waitForInitialization();
       if (skipIfNotPresent) {
         try {
           await this.skipOnBoarding.waitFor({ state: 'visible' });

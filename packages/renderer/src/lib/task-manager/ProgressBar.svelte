@@ -53,6 +53,6 @@ let { progress, width = 'w-36', height = 'h-4', class: className, ...restProps }
     {/if}
   </div>
   {#if progress !== undefined}
-    <div class="ml-2 text-xs">{Math.round(progress)}%</div>
+    <div class="ml-2 text-xs min-w-5">{Math.round(progress)}%</div>
   {/if}
 </div>

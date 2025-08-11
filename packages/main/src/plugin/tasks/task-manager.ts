@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,38 @@
  ***********************************************************************/
 
 import type { NotificationOptions } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { NotificationImpl } from '/@/plugin/tasks/notification-impl.js';
 import type { NotificationTask } from '/@/plugin/tasks/notifications.js';
 import { TaskImpl } from '/@/plugin/tasks/task-impl.js';
 import type { Task, TaskAction, TaskUpdateEvent } from '/@/plugin/tasks/tasks.js';
+import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { CommandRegistry } from '../command-registry.js';
-import type { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
+import { ApiSenderType } from '../api.js';
+import { CommandRegistry } from '../command-registry.js';
+import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
+import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
 
+@injectable()
 export class TaskManager {
   private taskId = 0;
 
   private tasks = new Map<string, TaskImpl>();
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(StatusBarRegistry)
     private statusBarRegistry: StatusBarRegistry,
+    @inject(CommandRegistry)
     private commandRegistry: CommandRegistry,
-    private configurationRegistry: ConfigurationRegistry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
+    @inject(ExperimentalConfigurationManager)
+    private experimentalConfigurationManager: ExperimentalConfigurationManager,
   ) {}
 
   public init(): void {
@@ -48,10 +57,9 @@ export class TaskManager {
 
     this.commandRegistry.registerCommand('show-task-manager', () => {
       // get the current value of the configuration flag for the task manager
-      const useExperimentalTaskManager = this.configurationRegistry
-        .getConfiguration(ExperimentalTasksSettings.SectionName)
-        .get<boolean>(ExperimentalTasksSettings.Manager, false);
-
+      const useExperimentalTaskManager = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+        `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`,
+      );
       const showEventName = useExperimentalTaskManager ? 'toggle-task-manager' : 'toggle-legacy-task-manager';
 
       this.apiSender.send(showEventName, '');
@@ -66,8 +74,7 @@ export class TaskManager {
         properties: {
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`]: {
             description: 'Show running tasks in the status bar',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10777',
             },
@@ -79,8 +86,7 @@ export class TaskManager {
           },
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`]: {
             description: 'Replace the current task manager widget by the new one',
-            type: 'boolean',
-            default: false,
+            type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
             },

@@ -3,6 +3,7 @@ import { faAngleDown, faAngleUp, faCircleCheck, faXmark } from '@fortawesome/fre
 import type { CustomPickItem } from '@podman-desktop/api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 
 import Markdown from '../markdown/Markdown.svelte';
@@ -22,7 +23,7 @@ let minHeight = '';
 let display = false;
 
 // used to keep track of if the item section is opened or closed (true: close, false: open)
-let itemSectionHiddenStatus = new Map<number, boolean>();
+let itemSectionHiddenStatus = new SvelteMap<number, boolean>();
 
 onMount(() => {
   // handle the showCustomPick events

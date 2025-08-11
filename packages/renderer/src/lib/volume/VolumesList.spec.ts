@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -138,13 +138,11 @@ test('Expect volumes being displayed once extensions are started (without size d
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
@@ -202,13 +200,11 @@ test('Expect volumes being displayed once extensions are started (with size data
   // first call is with listing with details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, true);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
@@ -310,13 +306,11 @@ test('Expect filter empty screen', async () => {
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({ searchTerm: 'No match' });
 
@@ -369,13 +363,11 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   // first call is with listing without details
   expect(listVolumesMock).toHaveBeenNthCalledWith(1, false);
 
-  // wait store are populated
-  while (get(volumeListInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    // wait store are populated
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 
@@ -395,4 +387,53 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   await fireEvent.click(deleteButton);
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await vi.waitFor(() => expect(window.removeVolume).toHaveBeenCalled());
+});
+
+test('Expect to see empty page and no table when no container engine is running', async () => {
+  getProviderInfosMock.mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'stopped',
+        },
+      ],
+    },
+  ]);
+
+  listVolumesMock.mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
+          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman',
+          engineId: 'podman.Podman Machine',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+        },
+      ],
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  // wait imageInfo store is populated
+  await vi.waitFor(() => get(volumeListInfos).length > 0);
+
+  await waitRender({});
+
+  const table = screen.queryByRole('table');
+  expect(table).toBeNull();
+
+  const noContainerEngine = screen.getByText('No Container Engine');
+  expect(noContainerEngine).toBeInTheDocument();
 });

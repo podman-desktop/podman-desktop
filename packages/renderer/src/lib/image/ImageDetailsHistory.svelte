@@ -4,9 +4,13 @@ import { onMount } from 'svelte';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let image: ImageInfoUI;
+interface Props {
+  image: ImageInfoUI;
+}
 
-let history: string;
+let { image }: Props = $props();
+
+let history: string | undefined = $state();
 
 onMount(async () => {
   // grab inspect result from the container

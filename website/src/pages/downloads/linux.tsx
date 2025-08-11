@@ -1,80 +1,40 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { usePluginData } from '@docusaurus/useGlobalData';
 import { faLinux } from '@fortawesome/free-brands-svg-icons';
 import { faDownload, faPaste, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import { TelemetryLink } from '@site/src/components/TelemetryLink';
+import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 import Layout from '@theme/Layout';
-import type { Dispatch, SetStateAction } from 'react';
-import React, { useEffect, useState } from 'react';
-
-async function grabFilenameForLinux(
-  setDownloadData: Dispatch<
-    SetStateAction<{
-      version: string;
-      flatpak: string;
-      amd64: string;
-      arm64: string;
-    }>
-  >,
-): Promise<void> {
-  const result = await fetch('https://api.github.com/repos/containers/podman-desktop/releases/latest');
-  const jsonContent = await result.json();
-  const {
-    tag_name,
-    name: rawName,
-    assets,
-  } = jsonContent as {
-    tag_name?: string;
-    name: string;
-    assets: Array<{ name: string; browser_download_url: string }>;
-  };
-
-  const version = (tag_name ?? rawName).replace(/^v/, '');
-
-  const flatpakAssets = assets.filter(a => a.name.endsWith('.flatpak'));
-  if (flatpakAssets.length !== 1) {
-    throw new Error('Unable to grab .flatpak');
-  }
-  const flatpakLink = flatpakAssets[0];
-
-  const armAssets = assets.filter(a => a.name.endsWith('-arm64.tar.gz'));
-  if (armAssets.length !== 1) {
-    throw new Error('Unable to grab ARM64 (.tar.gz)');
-  }
-  const armLink = armAssets[0];
-
-  const amdAssets = assets.filter(a => a.name.endsWith('.tar.gz') && !a.name.includes('arm64'));
-  if (amdAssets.length !== 1) {
-    throw new Error('Unable to grab AMD64 (.tar.gz)');
-  }
-  const amdLink = amdAssets[0];
-
-  setDownloadData({
-    version,
-    flatpak: flatpakLink.browser_download_url,
-    arm64: armLink.browser_download_url,
-    amd64: amdLink.browser_download_url,
-  });
-}
+import React from 'react';
 
 export function LinuxDownloads(): JSX.Element {
-  const [downloadData, setDownloadData] = useState({
-    version: '',
-    arm64: '',
-    amd64: '',
-    flatpak: '',
-  });
+  const {
+    latestRelease: { linux, version },
+  } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyFlathubInstructions = async (): Promise<void> => {
     await navigator.clipboard.writeText('flatpak install flathub io.podman_desktop.PodmanDesktop');
   };
-
-  useEffect(() => {
-    grabFilenameForLinux(setDownloadData).catch((err: unknown) => {
-      console.error(err);
-    });
-  }, []);
 
   return (
     <div className="basis-1/3 py-2 rounded-lg dark:text-gray-400 text-charcoal-300  bg-zinc-300/25 dark:bg-zinc-700/25 bg-blend-multiply text-center items-center">
@@ -88,12 +48,12 @@ export function LinuxDownloads(): JSX.Element {
               className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
               eventPath="download"
               eventTitle="download-linux"
-              to={downloadData.flatpak}>
+              to={linux.flatpak}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
-              Linux *.flatpak, version {downloadData.version}
+              Linux *.flatpak, version {version}
             </caption>
           </div>
           <div className="mt-4">
@@ -102,7 +62,7 @@ export function LinuxDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-linux"
-              to={downloadData.amd64}>
+              to={linux.amd64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               AMD64 binary (tar.gz)
             </TelemetryLink>
@@ -110,7 +70,7 @@ export function LinuxDownloads(): JSX.Element {
               className="underline inline-flex dark:text-white text-purple-500 hover:text-purple-200 py-2 px-6 font-semibold text-md"
               eventPath="download"
               eventTitle="download-linux"
-              to={downloadData.arm64}>
+              to={linux.arm64}>
               <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
               ARM64 binary (tar.gz)
             </TelemetryLink>

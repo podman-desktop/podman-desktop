@@ -11,7 +11,7 @@ let logs: {
   logType: LogType;
   date: Date;
   message: string;
-}[] = [];
+}[] = $state([]);
 
 onMount(async () => {
   logs = await window.getDevtoolsConsoleLogs();

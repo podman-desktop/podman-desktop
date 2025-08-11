@@ -21,6 +21,7 @@ import * as pathfs from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import * as chokidar from 'chokidar';
+import { injectable } from 'inversify';
 
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
@@ -106,6 +107,7 @@ export class FileSystemWatcherImpl implements containerDesktopAPI.FileSystemWatc
   }
 }
 
+@injectable()
 export class FilesystemMonitoring {
   createFileSystemWatcher(path: string): containerDesktopAPI.FileSystemWatcher {
     return new FileSystemWatcherImpl(path);

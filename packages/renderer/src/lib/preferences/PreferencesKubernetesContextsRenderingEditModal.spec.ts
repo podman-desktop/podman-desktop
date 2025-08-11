@@ -20,9 +20,8 @@ import '@testing-library/jest-dom/vitest';
 
 import type { Cluster, User } from '@kubernetes/client-node';
 import { Dropdown } from '@podman-desktop/ui-svelte';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { tick } from 'svelte';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { KubeContext } from '/@api/kubernetes-context';
@@ -191,18 +190,17 @@ describe('UpdateContext', () => {
       closeCallback: closeCallback,
     });
 
-    // wait until is the component rendered
-    await tick();
-
-    expect(Dropdown).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        options: [mockUser1, mockUser2].map(user => ({
-          value: user.name,
-          label: user.name,
-        })),
-      }),
-    );
+    await waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          options: [mockUser1, mockUser2].map(user => ({
+            value: user.name,
+            label: user.name,
+          })),
+        }),
+      );
+    });
   });
 
   test('dropdown value should match window#kubernetesGetClusters', async () => {
@@ -212,18 +210,17 @@ describe('UpdateContext', () => {
       closeCallback: closeCallback,
     });
 
-    // wait until is the component rendered
-    await tick();
-
-    expect(Dropdown).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        options: [mockCluster1, mockCluster2].map(cluster => ({
-          value: cluster.name,
-          label: cluster.name,
-        })),
-      }),
-    );
+    await waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          options: [mockCluster1, mockCluster2].map(cluster => ({
+            value: cluster.name,
+            label: cluster.name,
+          })),
+        }),
+      );
+    });
   });
 
   test('dropdown#onUserStateChange should update value', async () => {

@@ -234,11 +234,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   // Push the CLI tool as well (but it will do it postActivation so it does not block the activate() function)
   // Post activation
-  setTimeout(() => {
-    registerCLITool(composeDownload, detect, extensionContext).catch((error: unknown) => {
-      console.error('Error activating extension', error);
-    });
-  }, 0);
+  registerCLITool(composeDownload, detect, extensionContext).catch((error: unknown) => {
+    console.error('Error activating extension', error);
+  });
 }
 
 // Activate the CLI tool (check version, etc) and register the CLi so it does not block activation.
@@ -466,28 +464,12 @@ async function deleteFileAsAdmin(filePath: string): Promise<void> {
 
 async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
   const command = extensionApi.env.isWindows ? 'del' : 'rm';
-  const checkCommand = extensionApi.env.isWindows ? 'where.exe' : 'which';
-  let fileExistsPath = '';
-
   try {
-    const { stdout: fullPath } = await extensionApi.process.exec(checkCommand, [filePath]);
-    fileExistsPath = fullPath;
-  } catch (err) {
-    if (err && typeof err === 'object' && 'stderr' in err) {
-      console.log(err.stderr);
-    } else {
-      console.warn(`Error checking Compose ${filePath} path`, err);
-    }
-  }
-
-  if (fileExistsPath) {
-    try {
-      // Use admin privileges
-      await extensionApi.process.exec(command, [filePath], { isAdmin: true });
-    } catch (error) {
-      console.error(`Failed to uninstall '${filePath}': ${error}`);
-      throw error;
-    }
+    // Use admin privileges
+    await extensionApi.process.exec(command, [filePath], { isAdmin: true });
+  } catch (error) {
+    console.error(`Failed to uninstall '${filePath}': ${error}`);
+    throw error;
   }
 }
 

@@ -1,5 +1,15 @@
 <script lang="ts">
-export let title: string;
+import type { Snippet } from 'svelte';
+
+interface Props {
+  title: string;
+  subtitle?: Snippet;
+  actions?: Snippet;
+  header?: Snippet;
+  children?: Snippet;
+}
+
+let { title, subtitle, actions, header, children }: Props = $props();
 </script>
 
 <div class="flex flex-col min-w-full h-full" role="region" aria-label={title}>
@@ -18,17 +28,17 @@ export let title: string;
           role="heading"
           aria-level="2"
           aria-label="Subtitle">
-          <slot name="subtitle"><br /></slot>
+          {#if subtitle}{@render subtitle()}{:else}<br />{/if}
         </div>
       </div>
-      <slot name="actions" />
+      {@render actions?.()}
     </div>
 
-    <slot name="header" />
+    {@render header?.()}
   </div>
   <div class="flex flex-row min-w-full h-full px-5 py-4 overflow-y-auto" role="region" aria-label="Content">
     <div class="flex flex-col grow max-w-[905px] mx-auto">
-      <slot />
+      {@render children?.()}
     </div>
   </div>
 </div>

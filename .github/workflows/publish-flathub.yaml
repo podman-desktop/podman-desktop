@@ -124,7 +124,7 @@ jobs:
           yq -i '(.modules[].sources[] | select(.url == "*podman-desktop*refs*tags*")) += {"url":strenv(PODMAN_DESKTOP_SOURCE_URL), "sha256":strenv(PODMAN_DESKTOP_SOURCE_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
 
           # update the version of the cache for the env variable
-          sed -i -E "s|^(- export ELECTRON_CACHE=\").*(\")|\1\$(pwd)/${ELECTRON_CACHE_DIRECTORY}\2|" io.podman_desktop.PodmanDesktop.yml
+          sed -i -E 's|^( *- export ELECTRON_CACHE="\$\(\s*pwd\s*\)/)[^"]+(".*)|\1'"$ELECTRON_CACHE_DIRECTORY"'\2|' io.podman_desktop.PodmanDesktop.yml
 
         env:
           GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}

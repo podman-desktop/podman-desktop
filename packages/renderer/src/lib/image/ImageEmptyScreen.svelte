@@ -5,14 +5,16 @@ import { providerInfos } from '/@/stores/providers';
 
 import ImageIcon from '../images/ImageIcon.svelte';
 
-$: selectedProviderConnection = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .find(providerContainerConnection => providerContainerConnection.status === 'started');
+let selectedProviderConnection = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .find(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 const firstImageName = 'quay.io/podman/hello';
 const commandLine = `podman pull ${firstImageName}`;
-let pullInProgress = false;
+let pullInProgress = $state(false);
 
 async function pullFirstImage(): Promise<void> {
   if (!selectedProviderConnection) {

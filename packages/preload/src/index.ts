@@ -123,7 +123,6 @@ import type {
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 import type { IDisposable } from '../../main/src/plugin/types/disposable';
-import { Deferred } from './util/deferred';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
@@ -1527,6 +1526,47 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'isExperimentalConfigurationEnabled',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<boolean> => {
+      return ipcInvoke('experimental-configuration-manager:isExperimentalConfigurationEnabled', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'enableExperimentalConfiguration',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:enableExperimentalConfiguration', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'disableExperimentalConfiguration',
+    async (
+      key: string,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:disableExperimentalConfiguration', key, scope);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'updateExperimentalConfigurationValue',
+    async (
+      key: string,
+      value: unknown,
+      scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+    ): Promise<void> => {
+      return ipcInvoke('experimental-configuration-manager:updateExperimentalConfigurationValue', key, value, scope);
+    },
+  );
+
   contextBridge.exposeInMainWorld('getFeaturedExtensions', async (): Promise<FeaturedExtension[]> => {
     return ipcInvoke('featured:getFeaturedExtensions');
   });
@@ -1627,14 +1667,14 @@ export function initExposure(): void {
 
   const deferedHandleDialog = (): {
     id: string;
-    deferred: Deferred<containerDesktopAPI.Uri | string | string[] | undefined>;
+    deferred: PromiseWithResolvers<containerDesktopAPI.Uri | string | string[] | undefined>;
   } => {
     // generate id
     const dialogId = idOpenSaveDialog;
     idOpenSaveDialog++;
 
     // create defer object
-    const deferred = new Deferred<containerDesktopAPI.Uri | string | string[] | undefined>();
+    const deferred = Promise.withResolvers<containerDesktopAPI.Uri | string | string[] | undefined>();
 
     // store the dialogID
     openSaveDialogResponses.set(`${dialogId}`, (result: containerDesktopAPI.Uri | string | string[] | undefined) => {

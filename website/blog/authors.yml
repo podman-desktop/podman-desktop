@@ -99,3 +99,9 @@ firewall:
   title: Product Manager
   url: https://github.com/firewall
   image_url: https://github.com/firewall.png
+
+vzhukovs:
+  name: Vladyslav Zhukovskyi
+  title: Senior Software Engineer
+  url: https://github.com/vzhukovs
+  image_url: https://github.com/vzhukovs.png

@@ -8,10 +8,14 @@ import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import ActionsWrapper from './ActionsMenu.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let onPushManifest: (manifestInfo: ImageInfoUI) => void;
-export let manifest: ImageInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
+interface Props {
+  onPushManifest: (manifestInfo: ImageInfoUI) => void;
+  manifest: ImageInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+}
+
+let { onPushManifest, manifest = $bindable(), dropdownMenu = false, detailed = false }: Props = $props();
 
 const dispatch = createEventDispatcher<{ update: ImageInfoUI }>();
 

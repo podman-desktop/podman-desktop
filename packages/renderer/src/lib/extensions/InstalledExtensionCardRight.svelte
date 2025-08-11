@@ -3,7 +3,11 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import ExtensionDetailsLink from './ExtensionDetailsLink.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
 </script>
 
 <div class="relative px-5 py-2" role="region" aria-label="Extension {extension.name} right actions">

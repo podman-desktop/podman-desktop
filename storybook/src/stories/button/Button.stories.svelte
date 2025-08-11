@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
 import { faBell } from '@fortawesome/free-regular-svg-icons';
 import Button from '@podman-desktop/ui-svelte/Button';
-import { type Args, defineMeta, setTemplate, type StoryContext } from '@storybook/addon-svelte-csf';
-import { fn } from '@storybook/test';
+import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
+import { fn } from 'storybook/test';
 
 const onclickFn = fn().mockName('onclick');
 
@@ -12,16 +12,13 @@ const onclickFn = fn().mockName('onclick');
  */
 const { Story } = defineMeta({
   component: Button,
+  render: template,
   title: 'Button/Button',
   tags: ['autodocs'],
   args: {
     onclick: onclickFn,
   },
 });
-</script>
-
-<script lang="ts">
-setTemplate(template);
 </script>
 
 {#snippet template({ _children, ...args }: Args<typeof Story>, _context: StoryContext<typeof Story>)}

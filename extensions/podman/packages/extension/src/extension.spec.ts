@@ -111,10 +111,12 @@ const machineInfo: extension.MachineInfo = {
   identityPath: '/path/to/key',
 };
 
+const updateMachineProviderSettingsMock = vi.fn();
 const podmanConfiguration = {
   registryConfiguration: {
     getPlaybookScriptPath: vi.fn(),
   },
+  updateMachineProviderSettings: updateMachineProviderSettingsMock,
 } as unknown as PodmanConfiguration;
 
 const machineDefaultName = 'podman-machine-default';
@@ -128,6 +130,10 @@ const telemetryLogger: extensionApi.TelemetryLogger = {
   logUsage: vi.fn(),
   logError: vi.fn(),
 } as unknown as extensionApi.TelemetryLogger;
+
+async function waitTelemetryLoggerUsage() {
+  await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
+}
 
 const mocks = vi.hoisted(() => ({
   getPodmanLocationMacMock: vi.fn(),
@@ -382,10 +388,11 @@ beforeEach(() => {
 afterEach(async () => {
   console.error = originalConsoleError;
   await extension.deactivate();
+  vi.useRealTimers();
 });
 
 describe.each([
-  { os: 'macos', expectedProvider: VMTYPE.APPLEHV },
+  { os: 'macos', expectedProvider: VMTYPE.LIBKRUN },
   { os: 'windows-wsl', expectedProvider: VMTYPE.WSL },
   { os: 'windows-hyperv', expectedProvider: VMTYPE.HYPERV },
 ])('verify create on %s', ({ os, expectedProvider }) => {
@@ -427,12 +434,7 @@ describe.each([
         },
       },
     );
-
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
@@ -470,10 +472,7 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -512,10 +511,7 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -557,10 +553,7 @@ describe.each([
     );
     expect(console.error).not.toBeCalled();
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
@@ -738,16 +731,97 @@ describe.each([
       },
     );
 
-    // wait a call on telemetryLogger.logUsage
-    while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    await waitTelemetryLoggerUsage();
 
     expect(telemetryLogger.logUsage).toBeCalledWith(
       'podman.machine.init',
       expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
     );
   });
+});
+
+test.each([
+  { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
+  { architecture: 'arm64', expectedProvider: VMTYPE.APPLEHV },
+  { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
+])('verify create on mac from settings on %s', async ({ architecture, expectedProvider }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+    stdout: `podman version 5.4.0`,
+  } as extensionApi.RunResult);
+
+  await extension.createMachine(
+    {
+      'podman.factory.machine.cpus': '2',
+      'podman.factory.machine.image': 'path',
+      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+      'podman.factory.machine.provider': expectedProvider,
+    },
+    podmanConfiguration,
+  );
+
+  expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+    podmanCli.getPodmanCli(),
+    expect.arrayContaining([`--image`, 'path']),
+    {
+      logger: undefined,
+      token: undefined,
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: expectedProvider,
+      },
+    },
+  );
+
+  expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
+  await waitTelemetryLoggerUsage();
+
+  expect(telemetryLogger.logUsage).toBeCalledWith(
+    'podman.machine.init',
+    expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+  );
+});
+
+test.each([
+  { architecture: 'arm64', expectedProvider: VMTYPE.LIBKRUN },
+  { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
+])('verify create on mac from dashboard on %s', async ({ architecture, expectedProvider }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+    stdout: `podman version 5.4.0`,
+  } as extensionApi.RunResult);
+
+  await extension.createMachine(
+    {
+      'podman.factory.machine.cpus': '2',
+      'podman.factory.machine.image': 'path',
+      'podman.factory.machine.memory': '1048000000', // 1048MB = 999.45MiB
+      'podman.factory.machine.diskSize': '250000000000', // 250GB = 232.83GiB
+    },
+    podmanConfiguration,
+  );
+
+  expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+    podmanCli.getPodmanCli(),
+    expect.arrayContaining([`--image`, 'path']),
+    {
+      logger: undefined,
+      token: undefined,
+      env: {
+        CONTAINERS_MACHINE_PROVIDER: expectedProvider,
+      },
+    },
+  );
+
+  expect(updateMachineProviderSettingsMock).toBeCalledWith(expectedProvider);
+  await waitTelemetryLoggerUsage();
+
+  expect(telemetryLogger.logUsage).toBeCalledWith(
+    'podman.machine.init',
+    expect.objectContaining({ cpus: '2', defaultName: true, diskSize: '250000000000', imagePath: 'custom' }),
+  );
 });
 
 test('test checkDefaultMachine, if the machine running is not default, the function will prompt', async () => {
@@ -858,10 +932,7 @@ test('if a machine is successfully reporting telemetry', async () => {
     .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
   await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.start',
@@ -879,10 +950,7 @@ test('if a machine is successfully reporting an error in telemetry', async () =>
   });
   await expect(extension.startMachine(provider, podmanConfiguration, machineInfo)).rejects.toThrow(customError.message);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.start',
@@ -1419,7 +1487,7 @@ test('ensure showNotification is not called during update', async () => {
   );
 
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext);
+  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
       hasUpdate: true,
@@ -1481,6 +1549,9 @@ test('provider is registered with edit capabilities on MacOS', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, true);
 });
 
 test('display name is beautified version of the name', async () => {
@@ -1508,7 +1579,7 @@ test('display name is beautified version of the name', async () => {
   expect(registeredConnection?.name).toBe(machineDefaultName);
 });
 
-test('provider is registered without edit capabilities on Windows', async () => {
+test('provider is registered without edit capabilities on (non-HyperV) Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
@@ -1524,6 +1595,36 @@ test('provider is registered without edit capabilities on Windows', async () => 
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+});
+
+test('provider is registered with limited capabilities on (HyperV) Windows', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+  spyExecPromise.mockImplementation(() => {
+    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+  });
+  let registeredConnection: ContainerProviderConnection | undefined;
+  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+    registeredConnection = connection;
+    return Disposable.from({ dispose: () => {} });
+  });
+
+  await extension.registerProviderFor(
+    provider,
+    podmanConfiguration,
+    { ...machineInfo, vmType: VMTYPE.HYPERV },
+    'socket',
+  );
+  expect(registeredConnection).toBeDefined();
+  expect(registeredConnection?.lifecycle).toBeDefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
@@ -1542,6 +1643,9 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {
@@ -2302,7 +2406,7 @@ describe('calcPodmanMachineSetting', () => {
 
 test('checkForUpdate func should be called if there is no podman installed', async () => {
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext);
+  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
 
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue(undefined);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
@@ -2448,7 +2552,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
       'evt',
       expect.objectContaining({
@@ -2478,7 +2582,7 @@ describe('sendTelemetryRecords', () => {
       } as Record<string, unknown>,
       false,
     );
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitTelemetryLoggerUsage();
     expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
       'evt',
       expect.objectContaining({
@@ -2561,10 +2665,7 @@ test('if a machine stopped is successfully reporting telemetry', async () => {
   mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
   await extension.stopMachine(provider, machineInfo);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.stop',
@@ -2594,10 +2695,7 @@ test('if a machine stopped is successfully reporting an error in telemetry', asy
   mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
   await expect(extension.stopMachine(provider, machineInfo)).rejects.toThrow(customError.message);
 
-  // wait a call on telemetryLogger.logUsage
-  while ((telemetryLogger.logUsage as Mock).mock.calls.length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  await waitTelemetryLoggerUsage();
 
   expect(telemetryLogger.logUsage).toBeCalledWith(
     'podman.machine.stop',
@@ -2619,15 +2717,7 @@ test('activate function returns an api implementation', async () => {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
   const api = await extension.activate(contextMock);
   expect(api).toBeDefined();
   expect(typeof api.exec).toBe('function');
@@ -2637,15 +2727,7 @@ function mockExtensionForAuditTests() {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
   vi.spyOn(provider, 'setContainerProviderConnectionFactory');
   return contextMock;
 }
@@ -2682,16 +2764,7 @@ test('activate on mac register commands for setting compatibility moide ', async
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
-
+  const contextMock = getContextMock();
   // mock getSocketCompatibility
   const disableMock = vi.fn();
   const enableMock = vi.fn();
@@ -3146,15 +3219,7 @@ test('activate and autostart should not duplicate machines ', async () => {
   vi.spyOn(PodmanInstall.prototype, 'checkForUpdate').mockResolvedValue({
     hasUpdate: false,
   } as unknown as UpdateCheck);
-  const contextMock = {
-    subscriptions: [],
-    secrets: {
-      delete: vi.fn(),
-      get: vi.fn(),
-      onDidChange: vi.fn(),
-      store: vi.fn(),
-    },
-  } as unknown as extensionApi.ExtensionContext;
+  const contextMock = getContextMock();
 
   // mock getSocketCompatibility
   const disableMock = vi.fn();
@@ -3208,31 +3273,26 @@ test('activate and autostart should not duplicate machines ', async () => {
   // call the autostart method
   const promiseAutoStart = autoStartMethod?.start();
 
-  // call 100 times monitorMachines
-  for (let i = 0; i < 100; i++) {
-    extension.monitorMachines(provider, podmanConfiguration).catch(() => {});
-  }
+  vi.useFakeTimers();
+
+  const promises = Array.from({ length: 100 }).map(() => extension.monitorMachines(provider, podmanConfiguration));
 
   await promiseAutoStart;
 
   // should be only 1 but we allow some more calls (if there is not a check to check during the autostart it would be 100+ calls)
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
+
+  await vi.advanceTimersByTimeAsync(5000);
+
+  await Promise.allSettled(promises);
 });
 
 describe('macOS: tests for notifying if disguised podman socket fails / passes', () => {
   let contextMock: extensionApi.ExtensionContext;
 
   beforeEach(() => {
-    contextMock = {
-      subscriptions: [],
-      secrets: {
-        delete: vi.fn(),
-        get: vi.fn(),
-        onDidChange: vi.fn(),
-        store: vi.fn(),
-      },
-    } as unknown as extensionApi.ExtensionContext;
+    contextMock = getContextMock();
 
     // Mock the get compatibility functionality.
     // we will always assuming it's "disabled" for the tests
@@ -3253,82 +3313,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
       providerWithReadyStatus as unknown as extensionApi.Provider,
     );
-  });
-
-  test('when isDisguisedPodman is true, error message should NOT be shown', async () => {
-    // macOS only
-    vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock "isDisguisedPodman" to return true to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockImplementation(async () => true);
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Check that isDisguisedPodman was called
-    expect(isDisguisedPodman).toBeCalled();
-
-    // Check that the error message is NOT shown
-    expect(extensionApi.window.showNotification).not.toBeCalled();
-  });
-
-  test('when isDisguisedPodman is false, error message should be shown', async () => {
-    // macOS only
-    vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock "isDisguisedPodman" to return false to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockImplementation(async () => false);
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Check that isDisguisedPodman was called
-    expect(isDisguisedPodman).toBeCalled();
-
-    // Check that the error message is shown
-    expect(extensionApi.window.showNotification).toBeCalledWith({
-      title: 'Docker socket is not disguised correctly',
-      body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
-      highlight: true,
-      markdownActions:
-        ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
-      silent: true,
-      type: 'error',
-    });
-  });
-
-  test('do not show error message OR call function if on linux', async () => {
-    // linux
-    vi.mocked(extensionApi.env).isMac = false;
-    vi.mocked(extensionApi.env).isWindows = false;
-    vi.mocked(extensionApi.env).isLinux = true;
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Expect that isDisguisedPodman was NOT called
-    expect(isDisguisedPodman).not.toBeCalled();
-
-    expect(extensionApi.window.showNotification).not.toBeCalled();
-  });
-
-  test('do not show error message OR call function if on windows', async () => {
-    // windows
-    vi.mocked(extensionApi.env).isMac = false;
-    vi.mocked(extensionApi.env).isWindows = true;
-    vi.mocked(extensionApi.env).isLinux = false;
-
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Expect that isDisguisedPodman was NOT called
-    expect(isDisguisedPodman).not.toBeCalled();
-
-    expect(extensionApi.window.showNotification).not.toBeCalled();
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {
@@ -3363,15 +3347,7 @@ describe('podman-mac-helper tests', () => {
     vi.mocked(extensionApi.env).isLinux = false;
 
     // Mock the context
-    contextMock = {
-      subscriptions: [],
-      secrets: {
-        delete: vi.fn(),
-        get: vi.fn(),
-        onDidChange: vi.fn(),
-        store: vi.fn(),
-      },
-    } as unknown as extensionApi.ExtensionContext;
+    contextMock = getContextMock();
 
     // Mock the get compatibility functionality.
     // we just assume that it's false / not enabled by default to test the functionality.
@@ -3389,43 +3365,6 @@ describe('podman-mac-helper tests', () => {
     // this uses the original provider, but just replaces the ready status
     vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
       providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
-  });
-
-  test('show setup podman mac helper notification if on mac and podman-mac-helper needs running', async () => {
-    // Activate
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    await vi.waitFor(() => {
-      // Make sure showNotification contains "body" as: "The Podman Mac Helper is not set up, some features might not function optimally.", ignore everything else.
-      expect(extensionApi.window.showNotification).toBeCalledWith(
-        expect.objectContaining({
-          body: expect.stringContaining(
-            'The Podman Mac Helper is not set up, some features might not function optimally.',
-          ),
-        }),
-      );
-    });
-  });
-
-  test('set do not show configuration setting to true, make sure notification is NOT shown', async () => {
-    // Set configuration to always be true
-    // mimicking the 'doNotShow' setting being true
-    const spyGetConfiguration = vi.spyOn(config, 'get');
-    spyGetConfiguration.mockReturnValue(true);
-
-    // Activate
-    const api = await extension.activate(contextMock);
-    expect(api).toBeDefined();
-
-    // Make sure showNotification is not shown at all.
-    expect(extensionApi.window.showNotification).not.toBeCalledWith(
-      expect.objectContaining({
-        body: expect.stringContaining(
-          'The Podman Mac Helper is not set up, some features might not function optimally.',
-        ),
-      }),
     );
   });
 
@@ -3449,3 +3388,125 @@ describe('podman-mac-helper tests', () => {
     );
   });
 });
+
+const notifySetupPodmanExpectedContent = {
+  title: 'Podman needs to be set up',
+  body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+  highlight: true,
+  markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+  silent: true,
+  type: 'info',
+};
+
+describe('Check notify podman setup', () => {
+  test('show setup podman notification if not on linux with shouldCleanMachine', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    // second call to get the machine list
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: '[]',
+    } as unknown as extensionApi.RunResult);
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    await extension.updateMachines(provider, podmanConfiguration);
+
+    expect(extensionApi.window.showNotification).toBeCalledWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('show setup podman notification if on linux without Podman installed when monitoring', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+
+    // Call it twice to check the notification is only shown once
+    await extension.doMonitorProvider(provider);
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+  });
+
+  test('do not show setup podman notification if on Mac without Podman installed when monitoring', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+
+    // Call it twice to check the notification is only shown once
+    await extension.doMonitorProvider(provider);
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
+  });
+
+  test('reset the notification flag so if podman is uninstalled in future we can show the notification again', async () => {
+    vi.mocked(extensionApi.env).isLinux = true;
+
+    // No podman install
+
+    await extension.doMonitorProvider(provider);
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+
+    // Podman has been installed
+
+    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as unknown as extensionApi.RunResult);
+
+    await extension.doMonitorProvider(provider);
+
+    expect(extensionApi.window.showNotification).toHaveBeenCalledExactlyOnceWith(notifySetupPodmanExpectedContent);
+
+    // Podman has been uninstalled -> Show the notification a second time
+
+    await extension.doMonitorProvider(provider);
+    expect(extensionApi.window.showNotification).toHaveBeenCalledTimes(2);
+    expect(extensionApi.window.showNotification).toHaveBeenLastCalledWith(notifySetupPodmanExpectedContent);
+  });
+});
+
+describe('monitorProvider', () => {
+  test('should run the monitoring loop once and then stop correctly', async () => {
+    const mockDoMonitorProvider = vi.fn().mockResolvedValue(undefined);
+
+    vi.useFakeTimers();
+
+    const contextMock = getContextMock();
+    await extension.activate(contextMock);
+
+    // Start the monitor. DO NOT await it, since it's a "never-ending" loop.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    extension.monitorProvider(provider, mockDoMonitorProvider);
+
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(8000);
+
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
+
+    await extension.deactivate();
+
+    await vi.runAllTimersAsync();
+    expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
+  });
+});
+
+function getContextMock() {
+  return {
+    subscriptions: [],
+    secrets: {
+      delete: vi.fn(),
+      get: vi.fn(),
+      onDidChange: vi.fn(),
+      store: vi.fn(),
+    },
+  } as unknown as extensionApi.ExtensionContext;
+}

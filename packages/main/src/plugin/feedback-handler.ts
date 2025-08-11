@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@
  ***********************************************************************/
 
 import { shell } from 'electron';
+import { inject, injectable } from 'inversify';
 
-import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { SystemInfo } from '/@/plugin/util/sys-info.js';
 import { getSystemInfo } from '/@/plugin/util/sys-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';
 
+@injectable()
 export class FeedbackHandler {
   #systemInfo: SystemInfo;
 
-  constructor(protected extensionLoader: ExtensionLoader) {
+  constructor(@inject(ExtensionLoader) protected extensionLoader: ExtensionLoader) {
     this.#systemInfo = getSystemInfo();
   }
 

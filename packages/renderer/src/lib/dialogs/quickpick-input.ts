@@ -42,6 +42,7 @@ export interface InputBoxOptions {
   id: number;
   title?: string;
   ignoreFocusOut?: boolean;
+  password?: boolean;
 }
 
 export interface CustomPickOptions {

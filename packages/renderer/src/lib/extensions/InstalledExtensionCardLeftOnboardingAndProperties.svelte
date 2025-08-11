@@ -15,15 +15,19 @@ import { ContextKeyExpr } from '../context/contextKey';
 import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
 import { isDefaultScope, isPropertyValidInContext } from '../preferences/Util';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
 
 let onboardingsUnsubscribe: Unsubscriber | undefined;
 let onboardingEnabledUnsubscribe: Unsubscriber | undefined;
 let configurationPropertiesUnsubscribe: Unsubscriber | undefined;
 let onboardingEnabledReadable: Readable<boolean>;
-let isOnboardingEnabled = false;
+let isOnboardingEnabled = $state(false);
 
-let hasAnyConfiguration = false;
+let hasAnyConfiguration = $state(false);
 
 onMount(() => {
   configurationPropertiesUnsubscribe = configurationProperties.subscribe(properties => {

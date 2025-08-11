@@ -17,11 +17,10 @@
  ***********************************************************************/
 import type { BrowserWindow } from 'electron';
 
-import type { Deferred } from '/@/plugin/util/deferred.js';
 import { isWindows } from '/@/util.js';
 
 export class ProtocolLauncher {
-  constructor(private browserWindow: Deferred<BrowserWindow>) {}
+  constructor(private browserWindow: PromiseWithResolvers<BrowserWindow>) {}
 
   /**
    * if arg starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'

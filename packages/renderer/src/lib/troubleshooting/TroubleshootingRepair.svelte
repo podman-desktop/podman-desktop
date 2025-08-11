@@ -6,7 +6,11 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
 
-export let providers: ProviderInfo[] = [];
+interface Props {
+  providers?: ProviderInfo[];
+}
+
+let { providers = [] }: Props = $props();
 </script>
 
 <div class="flex flex-col w-full bg-[var(--pd-content-card-bg)] p-4 rounded-lg" role="region" aria-label="Repair">
