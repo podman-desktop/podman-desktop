@@ -164,6 +164,41 @@ test('expect winWSL2 preflight check return successful result if the machine has
   expect(result.successful).toBeTruthy();
 });
 
+test('expect winWSL2 preflight check return successful result if the machine has WSL2 installed and the reboot check fails with a code different from WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED and WSL_E_DEFAULT_DISTRO_NOT_FOUND', async () => {
+  vi.mocked(process.exec).mockImplementation((command, args) => {
+    if (command === 'powershell.exe') {
+      return Promise.resolve({
+        stdout: 'True',
+        stderr: '',
+        command: 'command',
+      });
+    } else {
+      return new Promise<RunResult>((resolve, reject) => {
+        if (args?.[0] === '-l') {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          reject({
+            exitCode: -1,
+            stdout: 'Windows Subsystem for Linux has no installed distributions.\nRandom error message',
+            stderr: '',
+            command: 'command',
+          });
+        } else {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          resolve({
+            stdout: 'blabla',
+            stderr: '',
+            command: 'command',
+          });
+        }
+      });
+    }
+  });
+
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
+  const result = await winWSLCheck.execute();
+  expect(result.successful).toBeTruthy();
+});
+
 test('expect winWSL2 preflight check return failure result if user do not have wsl but he is admin', async () => {
   vi.mocked(process.exec).mockImplementation(command => {
     if (command === 'powershell.exe') {

@@ -58,11 +58,12 @@ const configurationRegistry: ConfigurationRegistry = {
 } as unknown as ConfigurationRegistry;
 
 const configurationGetMock = vi.fn();
+const updateMock = vi.fn().mockImplementation(() => Promise.resolve());
 
 const configuration: Configuration = {
   get: configurationGetMock,
   has: () => true,
-  update: () => Promise.resolve(),
+  update: updateMock,
 };
 
 class TestExperimentalFeatureFeedbackHandler extends ExperimentalFeatureFeedbackHandler {
@@ -134,6 +135,50 @@ describe('init', () => {
     expect(setReminderSpy).not.toHaveBeenCalled();
 
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual(conf);
+  });
+
+  test(`should remove old configs with 'false' value`, async () => {
+    const conf = false;
+    configurationGetMock.mockReturnValue(conf);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+
+    const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
+    const saveSpy = vi.spyOn(feedbackForm, 'save');
+
+    await feedbackForm.init();
+
+    expect(setReminderSpy).not.toHaveBeenCalled();
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(saveSpy).toHaveBeenCalledWith('feat.feature1');
+    expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toBe(undefined);
+  });
+});
+
+describe('save', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+  });
+
+  test('should call update with valid data for enabled experimental config', async () => {
+    const conf = { remindAt: 123456, disabled: false };
+    vi.spyOn(feedbackForm.experimentalFeatures, 'get').mockReturnValue(conf);
+
+    await feedbackForm.save('feat.feature1');
+
+    expect(updateMock).toHaveBeenCalledTimes(1);
+    expect(updateMock).toHaveBeenCalledWith('feature1', conf);
+  });
+
+  test('should call update with empty object and then undefined for missing experimental config', async () => {
+    vi.spyOn(feedbackForm.experimentalFeatures, 'get').mockReturnValue(undefined);
+
+    await feedbackForm.save('feat.feature1');
+
+    expect(updateMock).toHaveBeenCalledTimes(2);
+    expect(updateMock).toHaveBeenNthCalledWith(1, 'feature1', {});
+    expect(updateMock).toHaveBeenNthCalledWith(2, 'feature1', undefined);
   });
 });
 

@@ -29,6 +29,8 @@ export class PodDetailsPage extends DetailsPage {
   readonly stopButton: Locator;
   readonly restartButton: Locator;
   readonly deleteButton: Locator;
+  readonly findInLogsInput: Locator;
+  readonly searchResults: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -45,6 +47,8 @@ export class PodDetailsPage extends DetailsPage {
     this.deleteButton = this.controlActions
       .getByRole('button')
       .and(this.page.getByLabel('Delete Pod', { exact: true }));
+    this.findInLogsInput = this.tabContent.getByLabel('Find');
+    this.searchResults = this.tabContent.locator('div.xterm-selection > div');
   }
 
   async getState(): Promise<string> {
@@ -85,6 +89,27 @@ export class PodDetailsPage extends DetailsPage {
       await this.deleteButton.click();
       await handleConfirmationDialog(this.page);
       return new PodsPage(this.page);
+    });
+  }
+
+  async findInLogs(text: string): Promise<void> {
+    return test.step('Find text in logs', async () => {
+      await this.activateTab(PodDetailsPage.LOGS_TAB);
+      await playExpect(this.findInLogsInput).toBeVisible();
+      await this.findInLogsInput.clear();
+      await playExpect(this.findInLogsInput).toHaveValue('');
+
+      await this.findInLogsInput.fill(text);
+      await playExpect(this.findInLogsInput).toHaveValue(text);
+    });
+  }
+
+  async getCountOfSearchResults(): Promise<number> {
+    return test.step('Get count of search results', async () => {
+      await this.activateTab(PodDetailsPage.LOGS_TAB);
+      await playExpect(this.findInLogsInput).toBeVisible();
+
+      return await this.searchResults.count();
     });
   }
 }

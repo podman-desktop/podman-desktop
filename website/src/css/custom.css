@@ -132,6 +132,7 @@ li.footer__item a svg {
 
 .navbar__item {
   font-size: 0.9em;
+  white-space: nowrap;
 }
 
 .pagination-nav {
@@ -237,4 +238,8 @@ article .markdown ol {
 }
 article .markdown ol ol {
   list-style-type: lower-roman;
+}
+.dropdown__link:hover {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
 }

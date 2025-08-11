@@ -185,6 +185,16 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect(podDetails.heading).toContainText(podToRun);
     await podDetails.activateTab('Logs');
+
+    await podDetails.findInLogs('backend');
+    await playExpect
+      .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1);
+    await podDetails.findInLogs('frontend');
+    await playExpect
+      .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1);
+
     await podDetails.activateTab('Summary');
     const row = podDetails.getPage().getByRole('table').getByRole('row');
     const nameText = await row.getByRole('cell').allInnerTexts();

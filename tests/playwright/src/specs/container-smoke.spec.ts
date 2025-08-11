@@ -30,6 +30,7 @@ const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
 const containerToRun = 'alpine-container';
 const containerList = ['first', 'second', 'third'];
+const containerStartParamsInteractive: ContainerInteractiveParams = { attachTerminal: true, interactive: true };
 const containerStartParams: ContainerInteractiveParams = { attachTerminal: false };
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
@@ -88,10 +89,12 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     let images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
     const runImage = await imageDetails.openRunImage();
-    const containers = await runImage.startContainer(containerToRun, containerStartParams);
-    await playExpect(containers.header).toBeVisible();
+    await runImage.startContainer(containerToRun, containerStartParamsInteractive);
+
+    const containers = await navigationBar.openContainers();
+    await playExpect(containers.header).toBeVisible({ timeout: 10_000 });
     await playExpect
-      .poll(async () => await containers.containerExists(containerToRun), { timeout: 15_000 })
+      .poll(async () => await containers.containerExists(containerToRun), { timeout: 30_000 })
       .toBeTruthy();
     const containerDetails = await containers.openContainersDetails(containerToRun);
     await playExpect
@@ -139,7 +142,14 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
     await containersDetails.terminalInput.press('Enter');
     await playExpect(containersDetails.terminalContent).toContainText('root');
     await playExpect(containersDetails.terminalContent).toContainText('/bin/sh');
+
+    await containersDetails.executeCommandInTty('echo "Hello World"');
+    await containersDetails.findInLogs('Hello World');
+    await playExpect
+      .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1);
   });
+
   test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
