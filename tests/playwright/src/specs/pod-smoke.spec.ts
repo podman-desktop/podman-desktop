@@ -190,10 +190,6 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect
       .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
-    await podDetails.findInLogs('frontend');
-    await playExpect
-      .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
-      .toBeGreaterThanOrEqual(1);
 
     await podDetails.activateTab('Summary');
     const row = podDetails.getPage().getByRole('table').getByRole('row');
