@@ -193,6 +193,7 @@ export class ContainerUtils {
         type: ContainerGroupInfoTypeUI.COMPOSE,
         engineId: containerInfo.engineId,
         engineType: containerInfo.engineType,
+        engineName: containerInfo.engineName,
       };
     }
 
@@ -206,6 +207,7 @@ export class ContainerUtils {
         status: (podInfo.status ?? '').toUpperCase(),
         engineId: containerInfo.engineId,
         engineType: containerInfo.engineType,
+        engineName: containerInfo.engineName,
       };
     }
 
@@ -216,6 +218,7 @@ export class ContainerUtils {
       status: (containerInfo.Status ?? '').toUpperCase(),
       engineType: containerInfo.engineType,
       id: containerInfo.Id, // since the container is standalone, let's use its ID as groupInfo#id
+      engineName: containerInfo.engineName,
     };
   }
 
@@ -244,6 +247,7 @@ export class ContainerUtils {
             status: group.status,
             engineId: group.engineId,
             engineType: group.engineType,
+            engineName: group.engineName,
             allContainersCount: 0,
             containers: [],
           });
