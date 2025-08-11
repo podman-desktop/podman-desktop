@@ -215,6 +215,7 @@ describe('QuickPickInput', () => {
     const idRequest = 123;
 
     const inputBoxOptions: InputBoxOptions = {
+      multiline: false,
       password: password,
       validate: false,
       placeHolder: 'Some placeholder',
@@ -228,10 +229,9 @@ describe('QuickPickInput', () => {
       }
     });
 
-    render(QuickPickInput, {});
-
-    const area = await screen.findByPlaceholderText('Some placeholder');
-    expect(area).toBeInTheDocument();
+    const { getByPlaceholderText } = render(QuickPickInput, {});
+    const area = getByPlaceholderText('Some placeholder');
+    expect(area).toBeInstanceOf(HTMLInputElement);
     expect(area).toHaveAttribute('type', type);
   });
 
