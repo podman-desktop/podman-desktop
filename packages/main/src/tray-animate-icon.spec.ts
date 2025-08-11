@@ -48,18 +48,26 @@ vi.mock('electron', async () => {
       createEmpty: vi.fn(() => ({
         addRepresentation: vi.fn(),
         isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
       })),
       createFromPath: vi.fn(() => ({
         addRepresentation: vi.fn(),
         isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
       })),
       createFromBuffer: vi.fn(() => ({
         addRepresentation: vi.fn(),
         isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
       })),
     },
   };
 });
+
+vi.mock('./util.js', () => ({
+  isMac: vi.fn(() => false),
+  isLinux: vi.fn(() => false),
+}));
 
 beforeEach(() => {
   testAnimatedTray = new TestAnimatedTray();
