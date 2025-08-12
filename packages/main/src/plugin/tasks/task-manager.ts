@@ -27,6 +27,7 @@ import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
+import taskManagerImage from '../../assets/tasks.Manager.webp';
 import tasksStatusbarImage from '../../assets/tasks.StatusBar.webp';
 import { ApiSenderType } from '../api.js';
 import { CommandRegistry } from '../command-registry.js';
@@ -91,6 +92,7 @@ export class TaskManager {
             type: 'object',
             experimental: {
               githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
+              image: taskManagerImage,
             },
           },
         },
