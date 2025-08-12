@@ -71,7 +71,10 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect
-      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 40_000 })
+      .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME, 40_000), { timeout: 0 })
+      .toBeTruthy();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 15_000 })
       .toBe('USED');
 
     const containersPage = await navigationBar.openContainers();
