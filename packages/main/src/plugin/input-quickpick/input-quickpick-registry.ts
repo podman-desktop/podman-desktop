@@ -71,6 +71,7 @@ export class InputQuickPickRegistry {
       prompt: options?.prompt,
       markdownDescription: options?.markdownDescription,
       multiline: options?.multiline,
+      password: options?.password,
       validate,
       ignoreFocusOut: options?.ignoreFocusOut,
     };
