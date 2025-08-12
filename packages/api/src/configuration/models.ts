@@ -28,6 +28,8 @@ import type { Event } from '../event.js';
 export interface IExperimentalConfiguration {
   // href to the discussion
   githubDiscussionLink?: string;
+  // path to image or gif
+  image?: string;
 }
 
 export type IConfigurationPropertySchemaType =
