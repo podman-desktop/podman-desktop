@@ -107,6 +107,7 @@ test('task manager init should register a configuration option', async () => {
             description: 'Show running tasks in the status bar',
             experimental: {
               githubDiscussionLink: expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions'),
+              image: expect.stringContaining('.webp'),
             },
           },
         }),
