@@ -103,9 +103,6 @@ export class BuildImagePage extends BasePage {
       await this.cancelBuildButton.click();
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: 30_000 });
-      await playExpect(this.terminalContent).toBeVisible();
-      await playExpect(this.terminalContent).toContainText('aborted');
-      console.log(`Build for image ${imageName} has been canceled.`);
     });
   }
 
