@@ -98,6 +98,8 @@ export class BuildImagePage extends BasePage {
       await playExpect(this.cancelBuildButton).toBeEnabled();
       await this.cancelBuildButton.scrollIntoViewIfNeeded();
       await this.page.waitForTimeout(cancelAfterTimeout);
+
+      await playExpect(this.cancelBuildButton).toBeVisible();
       await this.cancelBuildButton.click();
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: 30_000 });
