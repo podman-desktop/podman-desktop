@@ -145,7 +145,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       dockerfilePath,
       contextDirectory,
       [ArchitectureType.Default],
-      100,
+      20,
     );
   });
 
