@@ -133,6 +133,7 @@ $effect(() => {
   <div 
     id="carousel-cards-{containerId}" 
     role="carousel-cards-{containerId}"
+    aria-label="Carousel container"
     class="flex grow overflow-hidden relative cursor-grab select-none"
     class:cursor-grabbing={isDragging}
     onmousedown={handleMouseDown}
@@ -143,7 +144,7 @@ $effect(() => {
       class="flex gap-3 transition-transform duration-300 ease-out"
       style="transform: translateX(-{scrollPosition}px);">
       {#each cards as cardValue (cardValue)}
-        <div style="width: {cardWidth}px; flex-shrink: 0;">
+        <div class="flex grow" style="width: {cardWidth}px;">
           {@render card(cardValue)}
         </div>
       {/each}
