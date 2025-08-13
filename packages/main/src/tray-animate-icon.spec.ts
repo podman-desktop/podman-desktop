@@ -263,6 +263,219 @@ test('TRAY_ICON_STEP_COUNT constant is used correctly', () => {
   expect(mockTray.setImage).toHaveBeenCalledTimes(AnimatedTray.TRAY_ICON_STEP_COUNT + 1);
 });
 
+test('animateTrayIcon warns when tray is not set', () => {
+  const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  // Call animateTrayIcon without setting tray
+  testAnimatedTray.animateTrayIcon();
+
+  expect(consoleSpy).toHaveBeenCalledWith('Cannot animate tray icon: tray is not set');
+  consoleSpy.mockRestore();
+});
+
+test('animateTrayIcon handles errors and stops animation', () => {
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  // Clear previous calls
+  mockTray.setImage.mockClear();
+
+  // Make setImage throw an error to trigger error handling in animateTrayIcon
+  mockTray.setImage.mockImplementation(() => {
+    throw new Error('Test error during animation');
+  });
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  // Start animation which should create an interval
+  testAnimatedTray.setStatus('updating');
+
+  // The interval should be stopped after the error in animateTrayIcon
+  // The error happens during updateIcon which calls animateTrayIcon
+  // Since animateTrayIcon throws, the interval gets cleared in the catch block
+  expect(consoleSpy).toHaveBeenCalled();
+
+  consoleSpy.mockRestore();
+});
+
+test('fallback to empty icon when requested icon does not exist', async () => {
+  const { nativeImage } = vi.mocked(await import('electron'));
+
+  // Make createFromPath return empty for non-existent icon, then valid for empty icon
+  let callCount = 0;
+  vi.mocked(nativeImage.createFromPath).mockImplementation(() => {
+    callCount++;
+    if (callCount === 1) {
+      // First call (non-existent icon) returns empty
+      return {
+        addRepresentation: vi.fn(),
+        isEmpty: vi.fn(() => true),
+        setTemplateImage: vi.fn(),
+      } as unknown as ReturnType<typeof nativeImage.createFromPath>;
+    } else {
+      // Second call (empty icon) returns valid image
+      return {
+        addRepresentation: vi.fn(),
+        isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
+      } as unknown as ReturnType<typeof nativeImage.createFromPath>;
+    }
+  });
+
+  const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  const image = testAnimatedTray.createTrayImage('nonexistent');
+  expect(image).toBeDefined();
+  expect(consoleSpy).toHaveBeenCalledWith('Using fallback empty icon for: nonexistent');
+
+  consoleSpy.mockRestore();
+});
+
+test('creates minimal transparent fallback when even empty icon fails', async () => {
+  const { nativeImage } = vi.mocked(await import('electron'));
+
+  // Make all createFromPath calls return empty
+  vi.mocked(nativeImage.createFromPath).mockReturnValue({
+    addRepresentation: vi.fn(),
+    isEmpty: vi.fn(() => true),
+    setTemplateImage: vi.fn(),
+  } as unknown as ReturnType<typeof nativeImage.createFromPath>);
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  const image = testAnimatedTray.createTrayImage('nonexistent');
+  expect(image).toBeDefined();
+  expect(consoleSpy).toHaveBeenCalledWith('Created minimal transparent fallback icon');
+  expect(nativeImage.createFromBuffer).toHaveBeenCalled();
+
+  consoleSpy.mockRestore();
+});
+
+test('getIconPath returns correct paths for Linux platform', async () => {
+  const { isLinux } = vi.mocked(await import('./util.js'));
+  vi.mocked(isLinux).mockReturnValue(true);
+
+  const result = testAnimatedTray.getIconPath('default');
+  expect(result.isTemplate).toBe(false);
+  expect(result.path).toContain('Dark.png');
+});
+
+test('getIconPath returns correct paths for Mac platform', async () => {
+  const { isMac, isLinux } = vi.mocked(await import('./util.js'));
+  vi.mocked(isMac).mockReturnValue(true);
+  vi.mocked(isLinux).mockReturnValue(false);
+
+  const result = testAnimatedTray.getIconPath('default');
+  expect(result.isTemplate).toBe(true);
+  expect(result.path).toContain('Template.png');
+});
+
+test('getIconPath uses nativeTheme for Windows platform', async () => {
+  const { isLinux, isMac } = vi.mocked(await import('./util.js'));
+  const { nativeTheme } = await import('electron');
+
+  vi.mocked(isLinux).mockReturnValue(false);
+  vi.mocked(isMac).mockReturnValue(false);
+
+  // Mock shouldUseDarkColors as a getter
+  Object.defineProperty(nativeTheme, 'shouldUseDarkColors', {
+    get: vi.fn(() => true),
+    configurable: true,
+  });
+
+  const result = testAnimatedTray.getIconPath('default');
+  expect(result.isTemplate).toBe(false); // shouldUseDarkColors is true, so !true = false
+  expect(result.path).toContain('Dark.png');
+
+  // Change the mock value
+  Object.defineProperty(nativeTheme, 'shouldUseDarkColors', {
+    get: vi.fn(() => false),
+    configurable: true,
+  });
+
+  const lightResult = testAnimatedTray.getIconPath('default');
+  expect(lightResult.isTemplate).toBe(true); // shouldUseDarkColors is false, so !false = true
+  expect(lightResult.path).toContain('Template.png');
+});
+
+test('updateIcon handles errors and sets fallback', () => {
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+
+  // First set the tray (this calls updateIcon once)
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  // Clear previous calls
+  mockTray.setImage.mockClear();
+  mockTray.setToolTip.mockClear();
+
+  // Now make setImage throw on first call but succeed on second
+  mockTray.setImage
+    .mockImplementationOnce(() => {
+      throw new Error('Test error');
+    })
+    .mockImplementationOnce(() => {});
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  testAnimatedTray.setStatus('ready');
+
+  // Should have tried to set image twice (original + fallback)
+  expect(mockTray.setImage).toHaveBeenCalledTimes(2);
+  expect(consoleSpy).toHaveBeenCalledWith("Failed to update tray icon for status 'ready':", expect.any(Error));
+
+  consoleSpy.mockRestore();
+});
+
+test('updateIcon handles fallback failure gracefully', () => {
+  const mockTray = {
+    setImage: vi.fn().mockImplementation(() => {
+      throw new Error('Always fails');
+    }),
+    setToolTip: vi.fn(),
+  };
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+  testAnimatedTray.setStatus('ready');
+
+  expect(consoleSpy).toHaveBeenCalledWith('Failed to set fallback tray icon:', expect.any(Error));
+
+  consoleSpy.mockRestore();
+});
+
+test('setTemplateImage is called on macOS for template images', async () => {
+  const { isMac } = vi.mocked(await import('./util.js'));
+  const { nativeImage } = vi.mocked(await import('electron'));
+
+  vi.mocked(isMac).mockReturnValue(true);
+
+  const mockImage = {
+    addRepresentation: vi.fn(),
+    isEmpty: vi.fn(() => false),
+    setTemplateImage: vi.fn(),
+  };
+
+  vi.mocked(nativeImage.createFromPath).mockReturnValue(
+    mockImage as unknown as ReturnType<typeof nativeImage.createFromPath>,
+  );
+
+  // Clear cache to ensure fresh image creation
+  testAnimatedTray.getImageCache().clear();
+
+  // Create image with default settings (should be template on Mac)
+  testAnimatedTray.createTrayImage('default');
+
+  expect(mockImage.setTemplateImage).toHaveBeenCalledWith(true);
+});
+
 test('theme change event clears cache', async () => {
   const cache = testAnimatedTray.getImageCache();
 
