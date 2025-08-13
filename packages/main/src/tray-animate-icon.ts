@@ -110,9 +110,9 @@ export class AnimatedTray {
    *
    * @param {string} iconName - The name of the icon to retrieve the path for.
    *                            Use 'default' to indicate the base icon.
-   * @return {string} The fully resolved file path of the requested icon based on preferences.
+   * @return {{ path: string; isTemplate: boolean }} The fully resolved file path and template flag.
    */
-  protected getIconPath(iconName: string): string {
+  protected getIconPath(iconName: string): { path: string; isTemplate: boolean } {
     let name: string;
     if (iconName === 'default') {
       name = '';
@@ -120,23 +120,30 @@ export class AnimatedTray {
       name = `-${iconName}`;
     }
 
-    // Determine suffix based on user preference first, then platform defaults.
-    let suffix: string;
+    // Determine suffix and template flag based on user preference first, then platform defaults.
+    let useTemplate: boolean;
 
     // User preference takes precedence.
     if (this.color === 'light') {
-      suffix = 'Template';
+      useTemplate = true;
     } else if (this.color === 'dark') {
-      suffix = 'Dark';
+      useTemplate = false;
     } else if (isLinux()) {
-      suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
+      // Linux typically uses dark menu bars, so use light icons
+      useTemplate = false;
     } else if (isMac()) {
-      suffix = 'Template'; // macOS uses template images that adapt to the menu bar
+      // macOS uses template images that adapt to the menu bar
+      useTemplate = true;
     } else {
-      suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
+      // Windows: check system theme
+      useTemplate = !nativeTheme.shouldUseDarkColors;
     }
 
-    return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
+    const suffix = useTemplate ? 'Template' : 'Dark';
+    const isTemplate = useTemplate;
+
+    const iconPath = path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
+    return { path: iconPath, isTemplate };
   }
 
   /**
@@ -154,7 +161,7 @@ export class AnimatedTray {
       return cached;
     }
 
-    const basePath = this.getIconPath(iconName);
+    const { path: basePath, isTemplate } = this.getIconPath(iconName);
     const dir = path.dirname(basePath);
     const basename = path.basename(basePath, '.png');
     const retinaPath = path.join(dir, `${basename}@2x.png`);
@@ -192,7 +199,7 @@ export class AnimatedTray {
         console.error(`No tray icons found for: ${iconName}`);
 
         // Try to use a default empty icon as fallback.
-        const fallbackPath = this.getIconPath('empty');
+        const { path: fallbackPath } = this.getIconPath('empty');
 
         if (fs.existsSync(fallbackPath)) {
           image = nativeImage.createFromPath(fallbackPath);
@@ -212,8 +219,8 @@ export class AnimatedTray {
       image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
     }
 
-    // On macOS, mark Template images as actual template images so they adapt to the menu bar.
-    if (isMac() && basePath.includes('Template')) {
+    // On macOS, mark images as template images if explicitly specified so they adapt to the menu bar.
+    if (isMac() && isTemplate) {
       image.setTemplateImage(true);
     }
 

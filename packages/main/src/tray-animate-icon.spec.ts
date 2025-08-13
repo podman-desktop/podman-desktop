@@ -41,6 +41,10 @@ class TestAnimatedTray extends AnimatedTray {
     return super.animateTrayIcon();
   }
 
+  override getIconPath(iconName: string): { path: string; isTemplate: boolean } {
+    return super.getIconPath(iconName);
+  }
+
   // Access to private cache for testing
   getImageCache(): Map<string, Electron.NativeImage> {
     return (this as unknown as { imageCache: Map<string, Electron.NativeImage> }).imageCache;
@@ -148,4 +152,27 @@ test('animation method should call createTrayImage and setImage', () => {
   // Should have called createTrayImage with step0
   expect(createTrayImageSpy).toHaveBeenCalledWith('step0');
   expect(mockTray.setImage).toHaveBeenCalled();
+});
+
+test('getIconPath returns correct template flag based on platform and preferences', () => {
+  // Test default behavior (should use template for mac, dark for others in the mock)
+  const defaultResult = testAnimatedTray.getIconPath('default');
+  expect(defaultResult).toHaveProperty('path');
+  expect(defaultResult).toHaveProperty('isTemplate');
+  expect(typeof defaultResult.isTemplate).toBe('boolean');
+
+  // Test with light color preference
+  testAnimatedTray.setColor('light');
+  const lightResult = testAnimatedTray.getIconPath('default');
+  expect(lightResult.isTemplate).toBe(true);
+  expect(lightResult.path).toContain('Template');
+
+  // Test with dark color preference
+  testAnimatedTray.setColor('dark');
+  const darkResult = testAnimatedTray.getIconPath('default');
+  expect(darkResult.isTemplate).toBe(false);
+  expect(darkResult.path).toContain('Dark');
+
+  // Reset to default
+  testAnimatedTray.setColor('default');
 });
