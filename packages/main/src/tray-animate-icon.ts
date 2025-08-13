@@ -245,7 +245,7 @@ export class AnimatedTray {
           break;
       }
     } catch (error) {
-      console.error(`Failed to update tray icon for status '${this.status}':`, error);
+      console.error(`Failed to update tray icon for status ${this.status}:`, error);
 
       // Set a safe fallback image if updating fails to prevent blank tray icon
       try {

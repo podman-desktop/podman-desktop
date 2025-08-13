@@ -428,7 +428,7 @@ test('updateIcon handles errors and sets fallback', () => {
 
   // Should have tried to set image twice (original + fallback)
   expect(mockTray.setImage).toHaveBeenCalledTimes(2);
-  expect(consoleSpy).toHaveBeenCalledWith("Failed to update tray icon for status 'ready':", expect.any(Error));
+  expect(consoleSpy).toHaveBeenCalledWith('Failed to update tray icon for status ready:', expect.any(Error));
 
   consoleSpy.mockRestore();
 });
