@@ -32,6 +32,7 @@ export class AnimatedTray {
   private animatedInterval: NodeJS.Timeout | undefined = undefined;
   private tray: Tray | undefined = undefined;
   private color: 'default' | 'light' | 'dark' = 'default';
+  private imageCache = new Map<string, Electron.NativeImage>();
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
   constructor() {
@@ -126,17 +127,14 @@ export class AnimatedTray {
     if (this.color === 'light') {
       suffix = 'Template';
     } else if (this.color === 'dark') {
-                 suffix = 'Dark';
-               }
-           else if (isLinux()) {
-                   suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
-                 }
-           else if (isMac()) {
-                   suffix = 'Template'; // macOS uses template images that adapt to the menu bar
-                 } else {
-                   suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
-                 }
-
+      suffix = 'Dark';
+    } else if (isLinux()) {
+      suffix = 'Dark'; // Linux typically uses dark menu bars, so use light icons
+    } else if (isMac()) {
+      suffix = 'Template'; // macOS uses template images that adapt to the menu bar
+    } else {
+      suffix = nativeTheme.shouldUseDarkColors ? 'Dark' : 'Template'; // Windows: check system theme
+    }
 
     return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
   }
@@ -144,11 +142,18 @@ export class AnimatedTray {
   /**
    * Creates a tray image by loading the specified icon in normal and high resolution.
    * Falls back to a default empty icon if the specified files are not found or an error occurs.
+   * Uses an in-memory cache to avoid repeated file system operations.
    *
    * @param {string} iconName - The name of the icon file (without the path).
    * @return {Electron.NativeImage} The created tray image, including representations for normal and high resolutions.
    */
   protected createTrayImage(iconName: string): Electron.NativeImage {
+    // Check cache first to avoid repeated file I/O.
+    const cached = this.imageCache.get(iconName);
+    if (cached) {
+      return cached;
+    }
+
     const basePath = this.getIconPath(iconName);
     const dir = path.dirname(basePath);
     const basename = path.basename(basePath, '.png');
@@ -212,6 +217,9 @@ export class AnimatedTray {
       image.setTemplateImage(true);
     }
 
+    // Cache the image for future use.
+    this.imageCache.set(iconName, image);
+
     return image;
   }
 
@@ -249,6 +257,7 @@ export class AnimatedTray {
           this.tray.setToolTip('Podman Desktop is ready');
           break;
         case 'updating':
+          this.animateTrayIcon(); // Show first frame immediately
           this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
           this.tray.setToolTip('Podman Desktop: resources are being updated');
           break;

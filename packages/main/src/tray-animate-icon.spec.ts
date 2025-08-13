@@ -32,6 +32,19 @@ class TestAnimatedTray extends AnimatedTray {
   override isProd(): boolean {
     return super.isProd();
   }
+
+  override createTrayImage(iconName: string): Electron.NativeImage {
+    return super.createTrayImage(iconName);
+  }
+
+  override animateTrayIcon(): void {
+    return super.animateTrayIcon();
+  }
+
+  // Access to private cache for testing
+  getImageCache(): Map<string, Electron.NativeImage> {
+    return (this as unknown as { imageCache: Map<string, Electron.NativeImage> }).imageCache;
+  }
 }
 
 let testAnimatedTray: TestAnimatedTray;
@@ -91,4 +104,48 @@ test('valid path for icons', () => {
   const cwd = process.cwd();
   assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(cwd, AnimatedTray.MAIN_ASSETS_FOLDER));
+});
+
+test('image caching works correctly', () => {
+  const cache = testAnimatedTray.getImageCache();
+
+  // Initially cache should be empty
+  expect(cache.size).toBe(0);
+
+  // Create an image
+  const image1 = testAnimatedTray.createTrayImage('default');
+  expect(image1).toBeDefined();
+
+  // Cache should now have one entry
+  expect(cache.size).toBe(1);
+  expect(cache.has('default')).toBe(true);
+
+  // Calling again should return cached version
+  const image2 = testAnimatedTray.createTrayImage('default');
+  expect(image2).toBe(image1); // Should be the exact same object
+  expect(cache.size).toBe(1); // Cache size should not increase
+
+  // Creating a different image should add to cache
+  const image3 = testAnimatedTray.createTrayImage('error');
+  expect(image3).toBeDefined();
+  expect(cache.size).toBe(2);
+  expect(cache.has('error')).toBe(true);
+});
+
+test('animation method should call createTrayImage and setImage', () => {
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  const createTrayImageSpy = vi.spyOn(testAnimatedTray, 'createTrayImage');
+
+  // Call animation method
+  testAnimatedTray.animateTrayIcon();
+
+  // Should have called createTrayImage with step0
+  expect(createTrayImageSpy).toHaveBeenCalledWith('step0');
+  expect(mockTray.setImage).toHaveBeenCalled();
 });
