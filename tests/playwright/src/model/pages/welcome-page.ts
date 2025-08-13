@@ -53,7 +53,9 @@ export class WelcomePage extends BasePage {
       const isUpdateTest = test.info().tags.includes('@update-install');
 
       if (!isUpdateTest) {
-        await playExpect(this.startOnboarding).toBeEnabled({ timeout: 20_000 });
+        // Extensions load sequentially (faster speed but can block ui)
+        // Each extension timeout is 20s use 60s to provide a decent bufffer
+        await playExpect(this.startOnboarding).toBeEnabled({ timeout: 60_000 });
       }
 
       if (await this.telemetryConsent.isChecked()) {
