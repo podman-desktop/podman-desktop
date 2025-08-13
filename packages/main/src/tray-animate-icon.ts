@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { Tray } from 'electron';
@@ -33,7 +32,9 @@ export class AnimatedTray {
   private tray: Tray | undefined = undefined;
   private color: 'default' | 'light' | 'dark' = 'default';
   private imageCache = new Map<string, Electron.NativeImage>();
+
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
+  static readonly TRAY_ICON_STEP_COUNT = 4;
 
   constructor() {
     this.status = 'initialized';
@@ -46,7 +47,7 @@ export class AnimatedTray {
   }
 
   protected isProd(): boolean {
-    return import.meta.env.PROD;
+    return app.isPackaged;
   }
 
   /**
@@ -56,9 +57,12 @@ export class AnimatedTray {
    * @return {string} The absolute path to the assets folder.
    */
   protected getAssetsFolder(): string {
-    return this.isProd()
-      ? path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER)
-      : path.resolve(process.cwd(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    if (this.isProd()) {
+      return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    } else {
+      // Use __dirname-relative path for more reliable development asset resolution
+      return path.resolve(__dirname, '..', '..', '..', AnimatedTray.MAIN_ASSETS_FOLDER);
+    }
   }
 
   /**
@@ -74,7 +78,7 @@ export class AnimatedTray {
       return;
     }
 
-    if (this.trayIconLoopId === 4) {
+    if (this.trayIconLoopId === AnimatedTray.TRAY_ICON_STEP_COUNT) {
       this.trayIconLoopId = 0;
     }
 
@@ -102,6 +106,8 @@ export class AnimatedTray {
   // and then update the current icon
   public setColor(color: 'default' | 'light' | 'dark'): void {
     this.color = color;
+    // Clear cache when color changes as icon paths will be different
+    this.imageCache.clear();
     this.updateIcon();
   }
 
@@ -147,6 +153,17 @@ export class AnimatedTray {
   }
 
   /**
+   * Creates a cache key that includes both the icon name and current color/theme settings.
+   * This prevents cache collisions when the same icon name is used with different themes.
+   *
+   * @param {string} iconName - The name of the icon file (without the path).
+   * @return {string} A composite cache key including theme information.
+   */
+  protected createCacheKey(iconName: string): string {
+    return `${iconName}-${this.color}`;
+  }
+
+  /**
    * Creates a tray image by loading the specified icon in normal and high resolution.
    * Falls back to a default empty icon if the specified files are not found or an error occurs.
    * Uses an in-memory cache to avoid repeated file system operations.
@@ -155,79 +172,42 @@ export class AnimatedTray {
    * @return {Electron.NativeImage} The created tray image, including representations for normal and high resolutions.
    */
   protected createTrayImage(iconName: string): Electron.NativeImage {
-    // Check cache first to avoid repeated file I/O.
-    const cached = this.imageCache.get(iconName);
+    // Create a composite cache key that includes theme information
+    const cacheKey = this.createCacheKey(iconName);
+
+    // Check cache first to avoid repeated file I/O
+    const cached = this.imageCache.get(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const { path: basePath, isTemplate } = this.getIconPath(iconName);
-    const dir = path.dirname(basePath);
-    const basename = path.basename(basePath, '.png');
-    const retinaPath = path.join(dir, `${basename}@2x.png`);
+    const { path: iconPath, isTemplate } = this.getIconPath(iconName);
 
-    let image = nativeImage.createEmpty();
-    let hasLoadedImage = false;
+    // Let Electron load both 1x and @2x images automatically
+    let image = nativeImage.createFromPath(iconPath);
 
-    try {
-      // Add normal resolution (1x).
-      if (fs.existsSync(basePath)) {
-        image.addRepresentation({
-          scaleFactor: 1.0,
-          buffer: fs.readFileSync(basePath),
-        });
+    // If nothing was loaded, fall back to the empty icon
+    if (image.isEmpty() && iconName !== 'empty') {
+      const { path: emptyPath } = this.getIconPath('empty');
+      image = nativeImage.createFromPath(emptyPath);
 
-        hasLoadedImage = true;
+      if (image.isEmpty()) {
+        // If even the fallback doesn't exist, create a minimal transparent image
+        console.error('Created minimal transparent fallback icon');
+        const buffer = Buffer.alloc(16 * 16 * 4, 0); // 16x16 RGBA transparent
+        image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
       } else {
-        console.warn(`Tray icon not found at 1x resolution: ${basePath}`);
+        console.warn(`Using fallback empty icon for: ${iconName}`);
       }
-
-      // Add high resolution (2x) for retina displays.
-      if (fs.existsSync(retinaPath)) {
-        image.addRepresentation({
-          scaleFactor: 2.0,
-          buffer: fs.readFileSync(retinaPath),
-        });
-
-        hasLoadedImage = true;
-      } else {
-        console.warn(`Tray icon not found at 2x resolution: ${retinaPath}`);
-      }
-
-      // If no images were loaded, try to create a fallback.
-      if (!hasLoadedImage) {
-        console.error(`No tray icons found for: ${iconName}`);
-
-        // Try to use a default empty icon as fallback.
-        const { path: fallbackPath } = this.getIconPath('empty');
-
-        if (fs.existsSync(fallbackPath)) {
-          image = nativeImage.createFromPath(fallbackPath);
-          console.warn(`Using fallback empty icon from: ${fallbackPath}`);
-        } else {
-          // If even the fallback doesn't exist, create a minimal 16x16 transparent image.
-          // Create a properly initialized transparent buffer (16x16 RGBA with alpha=0)
-          const buffer = Buffer.alloc(16 * 16 * 4, 0); // Initialize all bytes to 0 (transparent)
-          image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
-          console.error('Created minimal transparent fallback icon');
-        }
-      }
-    } catch (error) {
-      console.error(`Error loading tray icon: ${error}`);
-
-      // Create a minimal transparent fallback image.
-      const buffer = Buffer.alloc(16 * 16 * 4, 0); // Initialize all bytes to 0 (transparent)
-      image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
     }
 
-    // On macOS, mark images as template images if explicitly specified so they adapt to the menu bar.
+    // On macOS, mark template images so they adapt to menu bar coloring
     if (isMac() && isTemplate) {
       image.setTemplateImage(true);
     }
 
-    // Cache the image for future use.
-    this.imageCache.set(iconName, image);
-
+    // Cache the image for future use with the composite key
+    this.imageCache.set(cacheKey, image);
     return image;
   }
 
@@ -272,6 +252,13 @@ export class AnimatedTray {
       }
     } catch (error) {
       console.error(`Failed to update tray icon for status '${this.status}':`, error);
+
+      // Set a safe fallback image if updating fails to prevent blank tray icon
+      try {
+        this.tray.setImage(this.createTrayImage('empty'));
+      } catch (fallbackError) {
+        console.error('Failed to set fallback tray icon:', fallbackError);
+      }
     }
   }
 
