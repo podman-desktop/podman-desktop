@@ -178,7 +178,13 @@ export class ExperimentalFeatureFeedbackHandler {
       const date = new Date();
       if (configuration.remindAt && configuration.remindAt > date.getTime()) return;
       const featureName = formatName(key);
-      const footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
+
+      let footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
+
+      const image = configurationProperties[key]?.experimental?.image;
+      if (image) {
+        footerMarkdownDescription = `:image[${featureName}]{src="${configurationProperties[key]?.experimental?.image}" title="${featureName}"}`;
+      }
       const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
 
       this.messageBox
