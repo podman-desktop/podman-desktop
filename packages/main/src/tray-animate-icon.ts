@@ -206,7 +206,8 @@ export class AnimatedTray {
           console.warn(`Using fallback empty icon from: ${fallbackPath}`);
         } else {
           // If even the fallback doesn't exist, create a minimal 16x16 transparent image.
-          const buffer = Buffer.alloc(16 * 16 * 4); // 16x16 RGBA
+          // Create a properly initialized transparent buffer (16x16 RGBA with alpha=0)
+          const buffer = Buffer.alloc(16 * 16 * 4, 0); // Initialize all bytes to 0 (transparent)
           image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
           console.error('Created minimal transparent fallback icon');
         }
@@ -215,7 +216,7 @@ export class AnimatedTray {
       console.error(`Error loading tray icon: ${error}`);
 
       // Create a minimal transparent fallback image.
-      const buffer = Buffer.alloc(16 * 16 * 4); // 16x16 RGBA
+      const buffer = Buffer.alloc(16 * 16 * 4, 0); // Initialize all bytes to 0 (transparent)
       image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
     }
 
