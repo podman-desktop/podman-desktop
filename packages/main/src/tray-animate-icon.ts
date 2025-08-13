@@ -28,8 +28,8 @@ export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
 export class AnimatedTray {
   private status: TrayIconStatus;
   private trayIconLoopId = 0;
-  private animatedInterval: NodeJS.Timeout | undefined = undefined;
-  private tray: Tray | undefined = undefined;
+  private animatedInterval?: NodeJS.Timeout;
+  private tray?: Tray;
   private color: 'default' | 'light' | 'dark' = 'default';
   private imageCache = new Map<string, Electron.NativeImage>();
 
@@ -42,6 +42,8 @@ export class AnimatedTray {
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
     nativeTheme.on('updated', () => {
+      // Theme change affects icon variant (Template/Dark); invalidate cache
+      this.imageCache.clear();
       this.updateIcon();
     });
   }
@@ -106,8 +108,7 @@ export class AnimatedTray {
   // and then update the current icon
   public setColor(color: 'default' | 'light' | 'dark'): void {
     this.color = color;
-    // Clear cache when color changes as icon paths will be different
-    this.imageCache.clear();
+    this.imageCache.clear(); // color override changes icon variant; invalidate cache to avoid stale images
     this.updateIcon();
   }
 
@@ -153,17 +154,6 @@ export class AnimatedTray {
   }
 
   /**
-   * Creates a cache key that includes both the icon name and current color/theme settings.
-   * This prevents cache collisions when the same icon name is used with different themes.
-   *
-   * @param {string} iconName - The name of the icon file (without the path).
-   * @return {string} A composite cache key including theme information.
-   */
-  protected createCacheKey(iconName: string): string {
-    return `${iconName}-${this.color}`;
-  }
-
-  /**
    * Creates a tray image by loading the specified icon in normal and high resolution.
    * Falls back to a default empty icon if the specified files are not found or an error occurs.
    * Uses an in-memory cache to avoid repeated file system operations.
@@ -172,16 +162,15 @@ export class AnimatedTray {
    * @return {Electron.NativeImage} The created tray image, including representations for normal and high resolutions.
    */
   protected createTrayImage(iconName: string): Electron.NativeImage {
-    // Create a composite cache key that includes theme information
-    const cacheKey = this.createCacheKey(iconName);
+    const { path: iconPath, isTemplate } = this.getIconPath(iconName);
 
-    // Check cache first to avoid repeated file I/O
+    // Cache per resolved variant (Template/Dark) to avoid stale images across theme/color changes
+    const cacheKey = `${iconName}:${isTemplate ? 'Template' : 'Dark'}`;
     const cached = this.imageCache.get(cacheKey);
+
     if (cached) {
       return cached;
     }
-
-    const { path: iconPath, isTemplate } = this.getIconPath(iconName);
 
     // Let Electron load both 1x and @2x images automatically
     let image = nativeImage.createFromPath(iconPath);
@@ -206,7 +195,7 @@ export class AnimatedTray {
       image.setTemplateImage(true);
     }
 
-    // Cache the image for future use with the composite key
+    // Cache the image for future use, keyed by variant
     this.imageCache.set(cacheKey, image);
     return image;
   }
@@ -245,6 +234,11 @@ export class AnimatedTray {
           this.tray.setToolTip('Podman Desktop is ready');
           break;
         case 'updating':
+          // Prewarm animation frames so interval ticks don't hit the disk
+          for (let i = 0; i < 4; i++) {
+            this.createTrayImage(`step${i}`);
+          }
+
           this.animateTrayIcon(); // Show first frame immediately
           this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
           this.tray.setToolTip('Podman Desktop: resources are being updated');

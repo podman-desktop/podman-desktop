@@ -38,11 +38,15 @@ class TestAnimatedTray extends AnimatedTray {
   }
 
   override animateTrayIcon(): void {
-    return super.animateTrayIcon();
+    super.animateTrayIcon();
   }
 
   override getIconPath(iconName: string): { path: string; isTemplate: boolean } {
     return super.getIconPath(iconName);
+  }
+
+  override updateIcon(): void {
+    super.updateIcon();
   }
 
   // Access to private cache for testing
@@ -122,7 +126,9 @@ test('image caching works correctly', () => {
 
   // Cache should now have one entry
   expect(cache.size).toBe(1);
-  expect(cache.has('default')).toBe(true);
+  const defaultVariant = testAnimatedTray.getIconPath('default').isTemplate ? 'Template' : 'Dark';
+  const defaultKey = `default:${defaultVariant}`;
+  expect(cache.has(defaultKey)).toBe(true);
 
   // Calling again should return cached version
   const image2 = testAnimatedTray.createTrayImage('default');
@@ -133,7 +139,9 @@ test('image caching works correctly', () => {
   const image3 = testAnimatedTray.createTrayImage('error');
   expect(image3).toBeDefined();
   expect(cache.size).toBe(2);
-  expect(cache.has('error')).toBe(true);
+  const errorVariant = testAnimatedTray.getIconPath('error').isTemplate ? 'Template' : 'Dark';
+  const errorKey = `error:${errorVariant}`;
+  expect(cache.has(errorKey)).toBe(true);
 });
 
 test('animation method should call createTrayImage and setImage', () => {
@@ -192,4 +200,136 @@ test('buffer creation uses proper initialization for transparency', () => {
 
   // Test that our implementation matches expected behavior
   expect(buffer).toEqual(uninitializedBuffer); // Both should be zero-filled
+});
+
+test('cache invalidation works correctly when color changes', () => {
+  const cache = testAnimatedTray.getImageCache();
+
+  // Create initial cached images
+  testAnimatedTray.createTrayImage('default');
+  testAnimatedTray.createTrayImage('error');
+  expect(cache.size).toBe(2);
+
+  // Change color should clear cache
+  testAnimatedTray.setColor('light');
+  expect(cache.size).toBe(0);
+
+  // Create new images with new color
+  testAnimatedTray.createTrayImage('default');
+  expect(cache.size).toBe(1);
+
+  // Verify the cache key includes the new variant
+  const lightVariant = testAnimatedTray.getIconPath('default').isTemplate ? 'Template' : 'Dark';
+  const lightKey = `default:${lightVariant}`;
+  expect(cache.has(lightKey)).toBe(true);
+});
+
+test('cache handles different variants correctly', () => {
+  const cache = testAnimatedTray.getImageCache();
+
+  // Test explicit color variants
+  testAnimatedTray.setColor('light');
+  testAnimatedTray.createTrayImage('default');
+  expect(cache.size).toBe(1);
+  expect(cache.has('default:Template')).toBe(true);
+
+  // Clear cache and test Dark variant
+  cache.clear();
+  testAnimatedTray.setColor('dark');
+  testAnimatedTray.createTrayImage('default');
+  expect(cache.size).toBe(1);
+  expect(cache.has('default:Dark')).toBe(true);
+});
+
+test('TRAY_ICON_STEP_COUNT constant is used correctly', () => {
+  expect(AnimatedTray.TRAY_ICON_STEP_COUNT).toBe(4);
+
+  // Verify the constant is used in animation logic
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  // Clear call count from setTray which calls updateIcon
+  mockTray.setImage.mockClear();
+
+  // Simulate animation loop to verify step count behavior
+  for (let i = 0; i < AnimatedTray.TRAY_ICON_STEP_COUNT + 1; i++) {
+    testAnimatedTray.animateTrayIcon();
+  }
+
+  // Should have wrapped around after TRAY_ICON_STEP_COUNT steps
+  expect(mockTray.setImage).toHaveBeenCalledTimes(AnimatedTray.TRAY_ICON_STEP_COUNT + 1);
+});
+
+test('theme change event clears cache', async () => {
+  const cache = testAnimatedTray.getImageCache();
+
+  // Create cached images
+  testAnimatedTray.createTrayImage('default');
+  testAnimatedTray.createTrayImage('error');
+  expect(cache.size).toBe(2);
+
+  // Simulate theme change by calling the nativeTheme 'updated' event handler
+  // Get the event handler that was registered
+  const { nativeTheme } = await import('electron');
+  const themeUpdateHandler = vi.mocked(nativeTheme.on).mock.calls.find((call: unknown[]) => call[0] === 'updated')?.[1];
+
+  if (themeUpdateHandler) {
+    themeUpdateHandler();
+    expect(cache.size).toBe(0);
+  }
+});
+
+test('error handling in updateIcon provides fallback', () => {
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+
+  // Set tray first (this will trigger one updateIcon call with 'initialized' status)
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  // Clear call count and then make setImage throw an error on first call but succeed on second
+  mockTray.setImage.mockClear();
+  let callCount = 0;
+  mockTray.setImage.mockImplementation(() => {
+    callCount++;
+    if (callCount === 1) {
+      throw new Error('Test error');
+    }
+  });
+
+  // This should trigger error handling
+  testAnimatedTray.setStatus('ready');
+
+  // Should have attempted setImage twice (original + fallback)
+  expect(mockTray.setImage).toHaveBeenCalledTimes(2);
+});
+
+test('animation prewarming loads all step frames', () => {
+  const mockTray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  };
+  testAnimatedTray.setTray(mockTray as unknown as Electron.Tray);
+
+  const createTrayImageSpy = vi.spyOn(testAnimatedTray, 'createTrayImage');
+  const cache = testAnimatedTray.getImageCache();
+
+  // Clear cache to ensure we're testing prewarming
+  cache.clear();
+
+  // Start updating status should prewarm all animation frames
+  testAnimatedTray.setStatus('updating');
+
+  // Should have prewarmed all step frames (step0, step1, step2, step3)
+  expect(createTrayImageSpy).toHaveBeenCalledWith('step0');
+  expect(createTrayImageSpy).toHaveBeenCalledWith('step1');
+  expect(createTrayImageSpy).toHaveBeenCalledWith('step2');
+  expect(createTrayImageSpy).toHaveBeenCalledWith('step3');
+
+  // Should have called createTrayImage for prewarming + first animation frame
+  expect(createTrayImageSpy).toHaveBeenCalledTimes(AnimatedTray.TRAY_ICON_STEP_COUNT + 1);
 });
