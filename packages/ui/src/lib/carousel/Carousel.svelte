@@ -9,7 +9,7 @@ interface Props<T> {
   cardWidth?: number;
   card: Snippet<[T]>;
 }
-let { cards, card, cardWidth = 350 }: Props<T> = $props();
+let { cards, card, cardWidth = 360 }: Props<T> = $props();
 
 let resizeObserver: ResizeObserver;
 let cardsContainer: HTMLElement;
@@ -144,7 +144,7 @@ $effect(() => {
       class="flex gap-3 transition-transform duration-300 ease-out"
       style="transform: translateX(-{scrollPosition}px);">
       {#each cards as cardValue (cardValue)}
-        <div class="flex grow" style="width: {cardWidth}px;">
+        <div class="flex grow min-w-[360px]">
           {@render card(cardValue)}
         </div>
       {/each}
