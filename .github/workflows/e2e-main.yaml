@@ -273,8 +273,12 @@ jobs:
             !./tests/**/traces/raw
 
   mac-update-e2e-test:
-    name: mac update e2e tests
-    runs-on: macos-15
+    name: ${{ matrix.os }} update e2e tests
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [macos-15, macos-13]
+    runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     env:
@@ -350,7 +354,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: mac-update-e2e-test
+          name: ${{ matrix.os }}-update-e2e-test
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
