@@ -236,14 +236,15 @@ jobs:
       - name: Manually set testing-prereleases as update target
         run: |
           echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
-          $updateFile = "$Env:PD_DIST_PATH/resources/app-update.yml"
+          $updateFile = "$env:PD_DIST_PATH/resources/app-update.yml"
           if (-Not (Test-Path $updateFile)) {
             Write-Error "app-update.yml not found at $updateFile"
           }
           (Get-Content $updateFile).Replace('repo: podman-desktop', 'repo: testing-prereleases') |
             Set-Content -ErrorAction Stop $updateFile
           echo "Show app-update.yml after replace..."
-          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
+          cat "$env:PD_DIST_PATH/resources/app-update.yml"
+
       - name: Run E2E Update test
         env:
           INSTALLATION_TYPE: ${{ matrix.installation }}
