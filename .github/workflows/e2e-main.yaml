@@ -57,6 +57,24 @@ on:
         - 'false'
         - 'true'
         required: false
+      update_target_owner:
+        description: 'Owner field of the update target in app-update.yml'
+        type: string
+        default: 'podman-desktop'
+        required: false
+      update_target_repo:
+        description: 'Repo field of the update target in app-update.yml'
+        type: string
+        default: 'testing-prereleases'
+        required: false
+      update_prerelease:
+        description: 'Update to the prerelease GH release'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+        default: 'true'
+        required: false
 
 permissions:
   contents: read
@@ -192,6 +210,16 @@ jobs:
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
+      - name: Set the default env. variables
+        env:
+          DEFAULT_UPDATE_TARGET_OWNER: 'podman-desktop'
+          DEFAULT_UPDATE_TARGET_REPO: 'testing-prereleases'
+          DEFAULT_UPDATE_PRERELEASE: 'true'
+        run: |
+          echo "UPDATE_TARGET_OWNER=${{ github.event.inputs.update_target_owner || env.DEFAULT_UPDATE_TARGET_OWNER }}" >> $env:GITHUB_ENV
+          echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $env:GITHUB_ENV
+          echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $env:GITHUB_ENV
+
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
@@ -217,11 +245,19 @@ jobs:
       - name: Adjust/Downgrade local podman desktop version Windows
         run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, win nsis,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
-          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
+          if ($env:UPDATE_PRERELEASE -eq 'true') {
+            $updaterFile = "packages/main/src/plugin/updater.ts"
+            if (-Not (Test-Path $updaterFile)) {
+              Write-Error "Updater file not found at $updaterFile"
+            } else {
+              Write-host "Allow Prerelease when updating, setting it inline in the code"
+              (Get-Content $updaterFile).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content $updaterFile -ErrorAction Stop
+            }
+          }
           pnpm compile:current --win nsis
           $runnerArch=$env:RUNNER_ARCH
           $unpackedPath = "dist/win-unpacked"
@@ -233,18 +269,19 @@ jobs:
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
 
-      - name: Manually set testing-prereleases as update target
+      - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
         run: |
-          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
           $updateFile = "$env:PD_DIST_PATH/resources/app-update.yml"
           if (-Not (Test-Path $updateFile)) {
             Write-Error "app-update.yml not found at $updateFile"
           }
-          (Get-Content $updateFile).Replace('repo: podman-desktop', 'repo: testing-prereleases') |
+          (Get-Content $updateFile).Replace('owner: podman-desktop', "owner: " + $env:UPDATE_TARGET_OWNER) |
+            Set-Content -ErrorAction Stop $updateFile
+          (Get-Content $updateFile).Replace('repo: podman-desktop', "repo: " + $env:UPDATE_TARGET_REPO) |
             Set-Content -ErrorAction Stop $updateFile
           echo "Show app-update.yml after replace..."
           cat "$env:PD_DIST_PATH/resources/app-update.yml"
-
+          
       - name: Run E2E Update test
         env:
           INSTALLATION_TYPE: ${{ matrix.installation }}
@@ -285,6 +322,16 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
+      - name: Set the default env. variables
+        env:
+          DEFAULT_UPDATE_TARGET_OWNER: 'podman-desktop'
+          DEFAULT_UPDATE_TARGET_REPO: 'testing-prereleases'
+          DEFAULT_UPDATE_PRERELEASE: 'true'
+        run: |
+          echo "UPDATE_TARGET_OWNER=${{ github.event.inputs.update_target_owner || env.DEFAULT_UPDATE_TARGET_OWNER }}" >> $GITHUB_ENV
+          echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $GITHUB_ENV
+          echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $GITHUB_ENV
+
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
@@ -313,10 +360,16 @@ jobs:
           actualVersion=$(jq -r '.version' package.json)
           echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, mac dmg,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          if [[  "${{ env.UPDATE_PRERELEASE }}" == "true" ]]; then
+            echo "Allow Prerelease when updating, setting it inline in the code"
+            sed -i '' '/autoUpdater.autoDownload = false;/a \
+            autoUpdater.allowPrerelease = true; \
+            ' packages/main/src/plugin/updater.ts
+          fi
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
@@ -332,6 +385,14 @@ jobs:
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
           echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
+
+      - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease"
+          sudo sed -i '' 's/owner: podman-desktop/owner: ${{ env.UPDATE_TARGET_OWNER}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          sudo sed -i '' 's/repo: podman-desktop/repo: ${{ env.UPDATE_TARGET_REPO}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
