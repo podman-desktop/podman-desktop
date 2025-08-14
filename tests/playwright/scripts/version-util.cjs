@@ -18,7 +18,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const fallBackVersion = '1.20.0';
+const FALLBACK_VERSION = process.env.FALLBACK_VERSION || '1.20.0';
 
 function parseVersion(version) {
   const parts = version.split('.');
@@ -46,7 +46,7 @@ function decreaseMinorVersion(packageJsonPath, shouldUpdate) {
   let newVersion = `${major}.${newMinor}.0`;
   if (newMinor < 0) {
     console.log(`Minor cannot be less than 0, defaults to 1.20.0`);
-    newVersion = fallBackVersion;
+    newVersion = FALLBACK_VERSION;
   }
   console.log(`Original version: ${originalVersion}`);
   console.log(`Decremented version (x.y.z): ${newVersion}`);
