@@ -76,7 +76,7 @@ export class ExperimentalFeatureFeedbackHandler {
       const parts = configurationKey.split('.');
       const firstPart = parts[0];
       const secondPart = parts[1];
-      if (!secondPart) return;
+      if (!secondPart) continue;
 
       const conf = this.#configurationRegistry.getConfiguration(firstPart).get(secondPart);
       // Configuration does not exist (feature is not enabled), or is set to false

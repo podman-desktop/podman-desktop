@@ -70,13 +70,13 @@ jobs:
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - name: Set the default env. variables
@@ -175,8 +175,8 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests - ${{ matrix.installation }}
-    runs-on: windows-2025
+    name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
+    runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:
@@ -188,16 +188,17 @@ jobs:
       fail-fast: false
       matrix:
         installation: ['vanilla', 'custom-extensions']
+        os: [windows-2025, windows-11-arm]
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -214,19 +215,35 @@ jobs:
         run: pnpm install
 
       - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
       - name: Build Podman Desktop locally with electron updater included
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
           pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
+          $updateFile = "$env:PD_DIST_PATH/resources/app-update.yml"
+          if (-Not (Test-Path $updateFile)) {
+            Write-Error "app-update.yml not found at $updateFile"
+          }
+          (Get-Content $updateFile).Replace('repo: podman-desktop', 'repo: testing-prereleases') |
+            Set-Content -ErrorAction Stop $updateFile
+          echo "Show app-update.yml after replace..."
+          cat "$env:PD_DIST_PATH/resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
@@ -250,7 +267,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: update-e2e-test-${{ matrix.installation }}
+          name: ${{ matrix.os }}-update-e2e-test-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
@@ -264,13 +281,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -288,9 +305,9 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
-          mv package.json_tmp package.json
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
+          actualVersion=$(jq -r '.version' package.json)
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
       - name: Build Podman Desktop locally with electron updater included
         env:
@@ -301,7 +318,7 @@ jobs:
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -309,6 +326,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
 
       - name: Run E2E Update test

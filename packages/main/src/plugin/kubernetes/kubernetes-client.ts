@@ -85,6 +85,7 @@ import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
+import kubernetesImage from '../../assets/kubernetes.statesExperimental.webp';
 import { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
 import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
@@ -244,6 +245,7 @@ export class KubernetesClient {
           type: 'object',
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/11424',
+            image: kubernetesImage,
           },
         },
       },

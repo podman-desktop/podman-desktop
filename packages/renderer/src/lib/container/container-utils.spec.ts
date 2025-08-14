@@ -159,6 +159,7 @@ test('container group status should be stopped when any compose container is sto
     Names: ['container1'],
     State: 'RUNNING',
     ImageID: 'sha256:dummy-sha256',
+    engineName: 'podman',
   } as unknown as ContainerInfo;
   const containerInfo2 = {
     Id: 'container2',
@@ -167,6 +168,7 @@ test('container group status should be stopped when any compose container is sto
     Names: ['container2'],
     State: 'STOPPED',
     ImageID: 'sha256:dummy-sha256',
+    engineName: 'podman',
   } as unknown as ContainerInfo;
   const groups = containerUtils.getContainerGroups([
     containerUtils.getContainerInfoUI(containerInfo),
@@ -177,6 +179,7 @@ test('container group status should be stopped when any compose container is sto
   expect(group.name).toBe(groupName);
   expect(group.type).toBe(ContainerGroupInfoTypeUI.COMPOSE);
   expect(group.status).toBe('STOPPED');
+  expect(group.engineName).toBe('podman');
 });
 
 test('container group status should be running when the pod status is running', async () => {
@@ -193,6 +196,7 @@ test('container group status should be running when the pod status is running', 
     State: 'RUNNING',
     pod: pod,
     ImageID: 'sha256:dummy-sha256',
+    engineName: 'podman',
   } as unknown as ContainerInfo;
   const containerInfo2 = {
     Id: 'container2',
@@ -201,6 +205,7 @@ test('container group status should be running when the pod status is running', 
     State: 'RUNNING',
     pod: pod,
     ImageID: 'sha256:dummy-sha256',
+    engineName: 'podman',
   } as unknown as ContainerInfo;
   const groups = containerUtils.getContainerGroups([
     containerUtils.getContainerInfoUI(containerInfo),
@@ -210,6 +215,7 @@ test('container group status should be running when the pod status is running', 
   expect(group.name).toBe(groupName);
   expect(group.type).toBe(ContainerGroupInfoTypeUI.POD);
   expect(group.status).toBe('RUNNING');
+  expect(group.engineName).toBe('podman');
 });
 
 test('container group status should be degraded when the pod status is degraded', async () => {
