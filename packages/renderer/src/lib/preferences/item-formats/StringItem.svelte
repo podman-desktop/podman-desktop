@@ -11,8 +11,9 @@ let invalidEntry = false;
 
 function onInput(event: Event): void {
   const target = event.target as HTMLInputElement;
-  if (record.id && target.value !== value)
+  if (record.id) {
     onChange(record.id, target.value).catch((_: unknown) => (invalidEntry = true));
+  }
 }
 </script>
 

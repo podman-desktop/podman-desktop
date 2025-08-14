@@ -101,7 +101,7 @@ $effect(() => {
 
 async function update(record: IConfigurationPropertyRecordedSchema): Promise<void> {
   // save the value
-  if (record.id && isEqual(currentRecord, record)) {
+  if (record.id) {
     try {
       // HACK: when setting `{}` as value we need to stringify and parse the svelte state
       let settings = recordValue;
