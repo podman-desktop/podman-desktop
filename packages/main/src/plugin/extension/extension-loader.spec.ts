@@ -2665,3 +2665,65 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
 
   expect(deactivateMock).toHaveBeenCalledOnce();
 });
+
+test('@preDestroy lifecycle: Symbol.asyncDispose should trigger complete disposal', async () => {
+  const activateMock = vi.fn().mockResolvedValue(undefined);
+  const deactivateMock = vi.fn().mockResolvedValue(undefined);
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({ get: vi.fn().mockReturnValue(1) });
+
+  const id = 'test.extension';
+
+  // Set up analyzed extension first
+  const fakeAnalyzedExtension = {
+    id: id,
+    path: 'dummy',
+    removable: false,
+    devMode: false,
+    manifest: {
+      name: 'Test Extension',
+      publisher: 'test',
+      version: '1.0.0',
+    },
+    dispose: vi.fn(), // Mock dispose method
+  };
+  extensionLoader.getAnalyzedExtensions().set(id, fakeAnalyzedExtension as any);
+
+  await extensionLoader.activateExtension(
+    {
+      id: id,
+      name: 'Test Extension',
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      manifest: {},
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    {
+      activate: activateMock,
+      deactivate: deactivateMock,
+    },
+  );
+
+  // Verify extension is activated
+  expect(extensionLoader.getActivatedExtensions().size).toEqual(1);
+  expect(extensionLoader.getAnalyzedExtensions().size).toEqual(1);
+
+  // Call Symbol.asyncDispose (this triggers @preDestroy)
+  await extensionLoader[Symbol.asyncDispose]();
+
+  // Verify @preDestroy behavior:
+  // 1. Extensions are deactivated
+  expect(deactivateMock).toHaveBeenCalledOnce();
+
+  // 2. Extension dispose method is called
+  expect(fakeAnalyzedExtension.dispose).toHaveBeenCalledOnce();
+
+  // 3. Maps are cleared (core behavior of @preDestroy)
+  expect(extensionLoader.getActivatedExtensions().size).toEqual(0);
+  expect(extensionLoader.getAnalyzedExtensions().size).toEqual(0);
+});
