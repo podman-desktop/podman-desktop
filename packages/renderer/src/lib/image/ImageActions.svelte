@@ -18,7 +18,6 @@ import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {
-  onPushImage: (imageInfo: ImageInfoUI) => void;
   onRenameImage: (imageInfo: ImageInfoUI) => void;
   image: ImageInfoUI;
   dropdownMenu?: boolean;
@@ -27,7 +26,6 @@ interface Props {
 }
 
 let {
-  onPushImage,
   onRenameImage,
   image = $bindable(),
   dropdownMenu = false,

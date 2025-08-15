@@ -75,6 +75,11 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.DEPLOY_TO_KUBE:
       router.goto(`/deploy-to-kube/${request.parameters.id}/${request.parameters.engineId}`);
       break;
+    case NavigationPage.IMAGE_PUSH:
+      router.goto(
+        `/images/push/${request.parameters.imageId}/${request.parameters.engineId}/${request.parameters.tag}/?taskId=${request.parameters.taskId}`,
+      );
+      break;
     case NavigationPage.IMAGES:
       router.goto(`/images`);
       break;
