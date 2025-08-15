@@ -1193,13 +1193,30 @@ export class PluginSystem {
     );
     this.ipcHandle(
       'container-provider-registry:pushImage',
-      async (_listener, engine: string, imageId: string, callbackId: number): Promise<void> => {
+      async (
+        _listener,
+        engine: string,
+        imageTag: string,
+        imageId: string,
+        base64RepoTag: string,
+        callbackId: number,
+        taskId: number,
+      ): Promise<void> => {
         const msgName = 'container-provider-registry:pushImage-onData';
         const task = taskManager.createTask({
-          title: `Push image '${imageId}'`,
+          title: `Push image '${imageTag}'`,
+          action: {
+            name: 'Show',
+            execute: () => {
+              navigationManager
+                .navigateToPushImageTask(imageId, engine, base64RepoTag, taskId)
+                .catch((err: unknown) => console.error(err));
+            },
+          },
         });
+
         return containerProviderRegistry
-          .pushImage(engine, imageId, (name: string, data: string) => {
+          .pushImage(engine, imageTag, (name: string, data: string) => {
             this.getWebContentsSender().send(msgName, callbackId, name, data);
           })
           .then(() => {

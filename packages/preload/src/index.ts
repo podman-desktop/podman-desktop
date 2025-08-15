@@ -462,20 +462,36 @@ export function initExposure(): void {
       }
     },
   );
-
+  type PushImageCallbackMessage = 'first-message' | 'data' | 'error' | 'end';
+  type PushImageCallback = (name: PushImageCallbackMessage, data: string) => void;
   let onDataCallbacksPushImageId = 0;
-  const onDataCallbacksPushImage = new Map<number, (name: string, data: string) => void>();
+  const onDataCallbacksPushImage = new Map<number, PushImageCallback>();
   contextBridge.exposeInMainWorld(
     'pushImage',
-    async (engine: string, imageId: string, callback: (name: string, data: string) => void): Promise<void> => {
+    async (
+      engine: string,
+      imageTag: string,
+      imageId: string,
+      base64RepoTag: string,
+      callback: PushImageCallback,
+      taskId: number,
+    ): Promise<void> => {
       onDataCallbacksPushImageId++;
       onDataCallbacksPushImage.set(onDataCallbacksPushImageId, callback);
-      return ipcInvoke('container-provider-registry:pushImage', engine, imageId, onDataCallbacksPushImageId);
+      return ipcInvoke(
+        'container-provider-registry:pushImage',
+        engine,
+        imageTag,
+        imageId,
+        base64RepoTag,
+        onDataCallbacksPushImageId,
+        taskId,
+      );
     },
   );
   ipcRenderer.on(
     'container-provider-registry:pushImage-onData',
-    (_, onDataCallbacksPushImageId: number, name: string, data: string) => {
+    (_, onDataCallbacksPushImageId: number, name: PushImageCallbackMessage, data: string) => {
       // grab callback from the map
       const callback = onDataCallbacksPushImage.get(onDataCallbacksPushImageId);
       if (callback) {
