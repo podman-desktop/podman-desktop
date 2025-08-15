@@ -524,8 +524,13 @@ async function registerCliTool(
   }
 
   kindCli.registerInstaller({
-    selectVersion: async () => {
-      const selected = await installer.promptUserForVersion();
+    selectVersion: async (latest?: boolean) => {
+      let selected: KindGithubReleaseArtifactMetadata;
+      if (latest) {
+        selected = latestAsset ?? (await installer.getLatestVersionAsset());
+      } else {
+        selected = await installer.promptUserForVersion();
+      }
       releaseToInstall = selected;
       releaseVersionToInstall = removeVersionPrefix(selected.tag);
       return releaseVersionToInstall;
