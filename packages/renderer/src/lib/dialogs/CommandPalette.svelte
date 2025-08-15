@@ -1,4 +1,7 @@
 <script lang="ts">
+import { faArrowCircleRight, faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { CloseButton, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
@@ -57,7 +60,6 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
   if (e.key === 'F1') {
     // clear the input value
-    inputValue = '';
     selectedFilteredIndex = 0;
     selectedIndex = 0;
     // toggle the display
@@ -74,7 +76,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     return;
   } else if (e.key === ESCAPE_KEY) {
     // here we toggle the display
-    display = false;
+    hideCommandPallete();
     e.preventDefault();
     return;
   }
@@ -119,7 +121,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     e.preventDefault();
   } else if (e.key === ENTER_KEY) {
     // hide the command palette
-    display = false;
+    hideCommandPallete();
 
     selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
     await executeCommand(selectedIndex);
@@ -132,6 +134,7 @@ async function executeCommand(index: number): Promise<void> {
   const commandId = commandInfoItems[index].id;
   // execute the command
   try {
+    console.log('executing');
     await window.executeCommand(commandId);
   } catch (error) {
     console.error('error executing command', error);
@@ -144,13 +147,17 @@ function handleMousedown(e: MouseEvent): void {
   }
 
   if (outerDiv && !e.defaultPrevented && e.target instanceof Node && !outerDiv.contains(e.target)) {
-    display = false;
+    hideCommandPallete();
   }
+}
+
+function hideCommandPallete(): void {
+  display = false;
 }
 
 async function clickOnItem(index: number): Promise<void> {
   // hide the command palette
-  display = false;
+  hideCommandPallete();
 
   // select the index from the cursor
   selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[index]);
@@ -159,7 +166,6 @@ async function clickOnItem(index: number): Promise<void> {
 
 async function onInputChange(): Promise<void> {
   // in case of quick pick, filter the items
-
   selectedFilteredIndex = 0;
   if (filteredCommandInfoItems.length > 0) {
     selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
@@ -170,21 +176,22 @@ async function onInputChange(): Promise<void> {
 <svelte:window on:keydown={handleKeydown} on:mousedown={handleMousedown} />
 
 {#if display}
-  <div class="fixed top-0 left-0 right-0 bottom-0 bg-[var(--pd-modal-fade)] opacity-60 h-full z-50"></div>
+  <div class="fixed top-0 left-0 right-0 bottom-0 bg-[var(--pd-modal-fade)] opacity-60 h-full z-50" style='-webkit-app-region: none;'></div>
 
   <div class="absolute m-auto left-0 right-0 z-50">
     <div class="flex justify-center items-center mt-1">
       <div
         bind:this={outerDiv}
-        class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-xs p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-sm">
-        <div class="w-full flex flex-row">
-          <input
-            bind:this={inputElement}
+        class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-lg p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-base">
+        <div class="w-full flex flex-row relative">
+          <Input
             aria-label="Command palette command input"
-            type="text"
             bind:value={inputValue}
             oninput={onInputChange}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" />
+          <CloseButton 
+            onclick={hideCommandPallete} 
+            class="absolute top-1/2 right-0 transform -translate-y-1/2"/>
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
           {#each filteredCommandInfoItems as item, i (item.id)}
@@ -197,13 +204,26 @@ async function onInputChange(): Promise<void> {
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-xs">{item.title}</div>
+                    <div class="text-base">{item.title}</div>
                   </div>
                 </div>
               </button>
             </li>
           {/each}
         </ul>
+        <div class="border-[var(--pd-global-nav-bg-border)] border-t-[1px] flex flex-row items-center px-3 pt-2 gap-4 text-sm">
+          <span class="flex items-center gap-2">
+            <Icon icon={faArrowCircleRight} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
+            To select
+          </span>
+          <div class="flex items-center gap-2">
+            <Icon icon={faArrowUp} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
+            <Icon icon={faArrowDown} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
+            To navigate
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 text-small shadow-sm shadow-b-1">esc</span>To close</div>
+        </div>
       </div>
     </div>
   </div>
