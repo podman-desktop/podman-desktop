@@ -127,7 +127,7 @@ test('Expect installed provider does not show update button if version same', as
 });
 
 test('Expect to see the initialize context error if provider installation fails', async () => {
-  vi.spyOn(window, 'initializeProvider').mockRejectedValue('error');
+  vi.mocked(window.initializeProvider).mockRejectedValue('error');
   const provider: ProviderInfo = {
     containerConnections: [],
     containerProviderConnectionCreation: false,
