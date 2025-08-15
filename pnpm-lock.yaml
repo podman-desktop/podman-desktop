@@ -1018,11 +1018,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.0.2
+        version: 3.0.2
       '@argos-ci/playwright':
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.0.4
+        version: 6.0.4
       '@playwright/test':
         specifier: 1.54.2
         version: 1.54.2
@@ -1135,17 +1135,17 @@ packages:
     resolution: {integrity: sha512-SKAD7EXoLX4u50dzTIT/ABnpD284+DnBfoJM0ZrTIav2eiiVJyknNKSznF5w118lYGnYvugTXbKMnukGPzJeOA==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/cli@3.0.0':
-    resolution: {integrity: sha512-anauK8zlXiQV/EK5QuVPNBMCneeJ32j777BGYKhE5Hx8jRZpo3Xprytc3ThBn4AEFJ5iZGAXqRe/VDUhVXKhkw==}
+  '@argos-ci/cli@3.0.2':
+    resolution: {integrity: sha512-jkpqRYbzrn4paRXU6d9jKa8jLrzh0DUwW4vwYFiwVBvlOQTOHi5YC5zKIezht1xZ5QOl9wb37U5vTe3C1SEtYQ==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@argos-ci/core@4.0.0':
-    resolution: {integrity: sha512-8MNANllQUJ4NotOIc+HO0LPaWFGt6LAW4uHBEJoLAyfhR/bLacUyWMQZcRJVXlBfb6RRajjQqJARmu92NbtpIg==}
+  '@argos-ci/core@4.0.2':
+    resolution: {integrity: sha512-pvZkyT1YRuuHFru1C6/bOSRFHKwqH6LkFeCBSHsKC8LreT3dXo+iv3NrlUoOG2UjO9VJaNwvbXJkNrQIyV0qUg==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/playwright@6.0.2':
-    resolution: {integrity: sha512-EK7zQ6XsER4R0sD60Fcpr69Y8cWbtby1GE5DEANWpVvgmg/74eHN5hQCGAyzuAtsLzxZmM4VenJ3ZZupvNss6g==}
+  '@argos-ci/playwright@6.0.4':
+    resolution: {integrity: sha512-EzCoaZwb2iKymHjbVOTlLklvnigAx6YCj2nUFzcsEAvBFSgU9MUEaM0blAJyMeAOFWH0Cc8VhelNsUxp+WKtOA==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/util@3.0.0':
@@ -1723,6 +1723,10 @@ packages:
 
   '@babel/runtime@7.28.2':
     resolution: {integrity: sha512-KHp2IflsnGywDjBWDkR9iEqiWSpc8GIi0lgTT3mOElT0PP1tG26P4tmFI2YvAdzgq9RGyoHZQEIEdZy6Ec5xCA==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.3':
+    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.25.9':
@@ -11294,8 +11298,8 @@ packages:
     resolution: {integrity: sha512-nZD7m9iCPC5g0pYmcaxogYKggSfLsdxl8of3Q/oIbqCqLLIO9IAF0GWjX1z9NZRHPiXv8Wex4yDCaZsgEw0Y8w==}
     engines: {node: '>=14.14'}
 
-  tmp@0.2.4:
-    resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
+  tmp@0.2.5:
+    resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
     engines: {node: '>=14.14'}
 
   to-regex-range@5.0.1:
@@ -12299,16 +12303,16 @@ snapshots:
 
   '@argos-ci/browser@5.0.0': {}
 
-  '@argos-ci/cli@3.0.0':
+  '@argos-ci/cli@3.0.2':
     dependencies:
-      '@argos-ci/core': 4.0.0
+      '@argos-ci/core': 4.0.2
       commander: 14.0.0
       ora: 8.2.0
       update-notifier: 7.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@4.0.0':
+  '@argos-ci/core@4.0.2':
     dependencies:
       '@argos-ci/api-client': 0.9.0
       '@argos-ci/util': 3.0.0
@@ -12316,14 +12320,14 @@ snapshots:
       debug: 4.4.1
       fast-glob: 3.3.3
       sharp: 0.34.3
-      tmp: 0.2.4
+      tmp: 0.2.5
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@6.0.2':
+  '@argos-ci/playwright@6.0.4':
     dependencies:
       '@argos-ci/browser': 5.0.0
-      '@argos-ci/core': 4.0.0
+      '@argos-ci/core': 4.0.2
       '@argos-ci/util': 3.0.0
       chalk: 5.5.0
       debug: 4.4.1
@@ -13090,6 +13094,8 @@ snapshots:
       regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.28.2': {}
+
+  '@babel/runtime@7.28.3': {}
 
   '@babel/template@7.25.9':
     dependencies:
@@ -15746,7 +15752,7 @@ snapshots:
 
   '@slorber/react-helmet-async@1.3.0(react-dom@18.3.1(react@18.2.0))(react@18.2.0)':
     dependencies:
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 18.2.0
@@ -20489,7 +20495,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23723,7 +23729,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -24876,7 +24882,7 @@ snapshots:
 
   tmp@0.2.3: {}
 
-  tmp@0.2.4: {}
+  tmp@0.2.5: {}
 
   to-regex-range@5.0.1:
     dependencies:
