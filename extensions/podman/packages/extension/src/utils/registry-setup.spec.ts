@@ -187,15 +187,15 @@ test('should work with JSON auth file and alias', async () => {
 
 test('should send a warning in console if registry auth value is invalid', async () => {
   // mock the existSync
-  const existSyncSpy = vi.spyOn(fs, 'existsSync');
-  existSyncSpy.mockReturnValue(true);
+  const existSyncMock = vi.mocked(fs.existsSync);
+  existSyncMock.mockReturnValue(true);
 
   // mock the readFile
-  const readFileSpy = vi.spyOn(fs, 'readFile') as unknown as MockedFunction<ReadFileType>;
+  const readFileMock = vi.mocked(fs.readFile) as unknown as MockedFunction<ReadFileType>;
   const auth = Buffer.from('user:password').toString('base64');
   const invalidAuth = Buffer.from('userpassword').toString('base64');
 
-  readFileSpy.mockImplementation(
+  readFileMock.mockImplementation(
     (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
       // mock the error
 
@@ -219,7 +219,7 @@ test('should send a warning in console if registry auth value is invalid', async
   await registrySetup.updateRegistries();
 
   // expect read with the correct file
-  expect(readFileSpy).toHaveBeenCalledWith(authJsonLocation, 'utf-8', expect.anything());
+  expect(readFileMock).toHaveBeenCalledWith(authJsonLocation, 'utf-8', expect.anything());
   expect(consoleWarnMock).toHaveBeenCalledWith('Invalid auth value for myinvalidregistry.io');
 });
 
@@ -254,13 +254,13 @@ test.each([
   'do not write existing registries that did not change values to auth.json',
   async ({ fileAuth, registeredRegistry, timesCalled }) => {
     // mock the existSync
-    const existSyncSpy = vi.spyOn(fs, 'existsSync');
-    existSyncSpy.mockReturnValue(true);
+    const existSyncMock = vi.mocked(fs.existsSync);
+    existSyncMock.mockReturnValue(true);
 
     // mock the readFile
-    const readFileSpy = vi.spyOn(fs, 'readFile') as unknown as MockedFunction<ReadFileType>;
+    const readFileMock = vi.mocked(fs.readFile) as unknown as MockedFunction<ReadFileType>;
 
-    readFileSpy.mockImplementation(
+    readFileMock.mockImplementation(
       (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
         // mock the error
 
@@ -283,11 +283,11 @@ test.each([
       };
     });
 
-    const writeFileSpy = vi.spyOn(fs, 'writeFile') as unknown as MockedFunction<ReadFileType>;
+    const writeFileMock = vi.mocked(fs.writeFile);
 
     await registrySetup.setup();
 
-    readFileSpy.mockImplementation(
+    readFileMock.mockImplementation(
       (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
         // mock the error
 
@@ -299,6 +299,6 @@ test.each([
 
     onRegisterRegistry?.(registeredRegistry);
 
-    await vi.waitFor(() => expect(writeFileSpy).toHaveBeenCalledTimes(timesCalled));
+    await vi.waitFor(() => expect(writeFileMock).toHaveBeenCalledTimes(timesCalled));
   },
 );
