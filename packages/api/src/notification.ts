@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
+
 type NotificationType = 'info' | 'warn' | 'error';
 
 export interface NotificationInfo {
@@ -34,6 +37,10 @@ export interface NotificationCardOptions extends NotificationInfo {
   highlight?: boolean;
   // whether or not to emit an OS notification noise when showing the notification.
   silent?: boolean;
+  // icon to display in the notification
+  icon?: IconDefinition | Component | string;
+  // icon color for custom icon
+  iconColor?: string;
 }
 
 export interface NotificationCard extends NotificationCardOptions {
