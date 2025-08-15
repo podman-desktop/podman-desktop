@@ -104,7 +104,7 @@ app.whenReady().then(
       // after configurationRegistry is loaded. Windows or Linux support only for icon color change.
       if (!isMac()) {
         const color = configurationRegistry.getConfiguration('preferences').get('TrayIconColor');
-        if (typeof color === 'string') {
+        if (typeof color === 'string' && (color === 'default' || color === 'light' || color === 'dark')) {
           animatedTray.setColor(color);
         }
       }

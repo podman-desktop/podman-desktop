@@ -19,7 +19,7 @@
 import * as path from 'node:path';
 
 import type { Tray } from 'electron';
-import { app, nativeTheme } from 'electron';
+import { app, nativeImage, nativeTheme } from 'electron';
 
 import { isLinux, isMac } from './util.js';
 
@@ -28,10 +28,13 @@ export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
 export class AnimatedTray {
   private status: TrayIconStatus;
   private trayIconLoopId = 0;
-  private animatedInterval: NodeJS.Timeout | undefined = undefined;
-  private tray: Tray | undefined = undefined;
-  private color = 'default'; // default, light, dark
+  private animatedInterval?: NodeJS.Timeout;
+  private tray?: Tray;
+  private color: 'default' | 'light' | 'dark' = 'default';
+  private imageCache = new Map<string, Electron.NativeImage>();
+
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
+  static readonly TRAY_ICON_STEP_COUNT = 4;
 
   constructor() {
     this.status = 'initialized';
@@ -39,25 +42,61 @@ export class AnimatedTray {
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
     nativeTheme.on('updated', () => {
+      // Theme change affects icon variant (Template/Dark); invalidate cache
+      this.imageCache.clear();
       this.updateIcon();
     });
   }
 
   protected isProd(): boolean {
-    return import.meta.env.PROD;
+    return app.isPackaged;
   }
 
+  /**
+   * Retrieves the path to the assets folder based on the current environment.
+   * In production, the assets folder is located within the app bundle, while in development, it is located in the project root directory.
+   *
+   * @return {string} The absolute path to the assets folder.
+   */
   protected getAssetsFolder(): string {
-    return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    if (this.isProd()) {
+      return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
+    } else {
+      // Use __dirname-relative path for more reliable development asset resolution
+      return path.resolve(__dirname, '..', '..', '..', AnimatedTray.MAIN_ASSETS_FOLDER);
+    }
   }
 
+  /**
+   * Animates the tray icon by cycling through predefined steps and updating the image displayed in the tray.
+   * If an error occurs during the animation, the animation loop will be stopped to prevent continuous failures.
+   * If the `tray` instance is not set, the method will log a warning and exit without performing any animation.
+   *
+   * @return {void} No return value.
+   */
   protected animateTrayIcon(): void {
-    if (this.trayIconLoopId === 4) {
+    if (!this.tray) {
+      console.warn('Cannot animate tray icon: tray is not set');
+      return;
+    }
+
+    if (this.trayIconLoopId === AnimatedTray.TRAY_ICON_STEP_COUNT) {
       this.trayIconLoopId = 0;
     }
-    const imagePath = this.getIconPath(`step${this.trayIconLoopId}`);
-    this.trayIconLoopId++;
-    this.tray?.setImage(imagePath);
+
+    try {
+      const image = this.createTrayImage(`step${this.trayIconLoopId}`);
+      this.tray.setImage(image);
+      this.trayIconLoopId++;
+    } catch (error) {
+      console.error(`Failed to animate tray icon at step ${this.trayIconLoopId}:`, error);
+
+      // Stop animation on error to prevent continuous failures.
+      if (this.animatedInterval) {
+        clearInterval(this.animatedInterval);
+        this.animatedInterval = undefined;
+      }
+    }
   }
 
   public setTray(tray: Tray): void {
@@ -67,45 +106,107 @@ export class AnimatedTray {
 
   // set the color of the icon if we're manually overriding the theme
   // and then update the current icon
-  public setColor(color: string): void {
+  public setColor(color: 'default' | 'light' | 'dark'): void {
     this.color = color;
+    this.imageCache.clear(); // color override changes icon variant; invalidate cache to avoid stale images
     this.updateIcon();
   }
 
-  // provide the path to the icon depending on theme and platform
-  protected getIconPath(iconName: string): string {
-    let name;
+  /**
+   * Determines the file path for an icon based on its name and user/system preferences.
+   *
+   * @param {string} iconName - The name of the icon to retrieve the path for.
+   *                            Use 'default' to indicate the base icon.
+   * @return {{ path: string; isTemplate: boolean }} The fully resolved file path and template flag.
+   */
+  protected getIconPath(iconName: string): { path: string; isTemplate: boolean } {
+    let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
       name = `-${iconName}`;
     }
-    let suffix = '';
-    // on Linux, always pickup dark icon
-    if (isLinux()) {
-      suffix = 'Dark';
+
+    // Determine suffix and template flag based on user preference first, then platform defaults.
+    let useTemplate: boolean;
+
+    // User preference takes precedence.
+    if (this.color === 'light') {
+      useTemplate = true;
+    } else if (this.color === 'dark') {
+      useTemplate = false;
+    } else if (isLinux()) {
+      // Linux typically uses dark menu bars, so use light icons
+      useTemplate = false;
     } else if (isMac()) {
-      // on Mac, always pickup template icon
-      suffix = 'Template';
+      // macOS uses template images that adapt to the menu bar
+      useTemplate = true;
     } else {
-      // check based from the theme using electron nativeTheme
-      if (nativeTheme.shouldUseDarkColors) {
-        suffix = 'Dark';
+      // Windows: check system theme
+      useTemplate = !nativeTheme.shouldUseDarkColors;
+    }
+
+    const suffix = useTemplate ? 'Template' : 'Dark';
+    const isTemplate = useTemplate;
+
+    const iconPath = path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
+    return { path: iconPath, isTemplate };
+  }
+
+  /**
+   * Creates a tray image by loading the specified icon in normal and high resolution.
+   * Falls back to a default empty icon if the specified files are not found or an error occurs.
+   * Uses an in-memory cache to avoid repeated file system operations.
+   *
+   * @param {string} iconName - The name of the icon file (without the path).
+   * @return {Electron.NativeImage} The created tray image, including representations for normal and high resolutions.
+   */
+  protected createTrayImage(iconName: string): Electron.NativeImage {
+    const { path: iconPath, isTemplate } = this.getIconPath(iconName);
+
+    // Cache per resolved variant (Template/Dark) to avoid stale images across theme/color changes
+    const cacheKey = `${iconName}:${isTemplate ? 'Template' : 'Dark'}`;
+    const cached = this.imageCache.get(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    // Let Electron load both 1x and @2x images automatically
+    let image = nativeImage.createFromPath(iconPath);
+
+    // If nothing was loaded, fall back to the empty icon
+    if (image.isEmpty() && iconName !== 'empty') {
+      const { path: emptyPath } = this.getIconPath('empty');
+      image = nativeImage.createFromPath(emptyPath);
+
+      if (image.isEmpty()) {
+        // If even the fallback doesn't exist, create a minimal transparent image
+        console.error('Created minimal transparent fallback icon');
+        const buffer = Buffer.alloc(16 * 16 * 4, 0); // 16x16 RGBA transparent
+        image = nativeImage.createFromBuffer(buffer, { width: 16, height: 16 });
       } else {
-        suffix = 'Template';
+        console.warn(`Using fallback empty icon for: ${iconName}`);
       }
     }
 
-    // Regardless what is the theme, if the user has set the color to light, we use the light icon, same as dark, etc.
-    if (this.color === 'light') {
-      suffix = 'Template';
-    } else if (this.color === 'dark') {
-      suffix = 'Dark';
+    // On macOS, mark template images so they adapt to menu bar coloring
+    if (isMac() && isTemplate) {
+      image.setTemplateImage(true);
     }
 
-    return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
+    // Cache the image for future use, keyed by variant
+    this.imageCache.set(cacheKey, image);
+    return image;
   }
 
+  /**
+   * Updates the tray icon and tooltip based on the current status of the application.
+   * The method handles different statuses such as 'initialized', 'error', 'ready', and 'updating'.
+   * It also manages any necessary icon animation intervals.
+   *
+   * @return {void} Does not return a value.
+   */
   protected updateIcon(): void {
     // do nothing until we have a tray
     if (!this.tray) {
@@ -115,29 +216,49 @@ export class AnimatedTray {
     // stop any existing interval
     if (this.animatedInterval) {
       clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
     }
-    switch (this.status) {
-      case 'initialized':
-        this.tray.setImage(this.getIconPath('empty'));
-        this.tray.setToolTip('Podman Desktop is initialized');
-        break;
-      case 'error':
-        this.tray.setImage(this.getIconPath('error'));
-        this.tray.setToolTip('Podman Desktop has an error');
-        break;
-      case 'ready':
-        this.tray.setImage(this.getIconPath('default'));
-        this.tray.setToolTip('Podman Desktop is ready');
-        break;
-      case 'updating':
-        this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
-        this.tray.setToolTip('Podman Desktop: resources are being updated');
-        break;
+
+    try {
+      switch (this.status) {
+        case 'initialized':
+          this.tray.setImage(this.createTrayImage('empty'));
+          this.tray.setToolTip('Podman Desktop is initialized');
+          break;
+        case 'error':
+          this.tray.setImage(this.createTrayImage('error'));
+          this.tray.setToolTip('Podman Desktop has an error');
+          break;
+        case 'ready':
+          this.tray.setImage(this.createTrayImage('default'));
+          this.tray.setToolTip('Podman Desktop is ready');
+          break;
+        case 'updating':
+          // Prewarm animation frames so interval ticks don't hit the disk
+          for (let i = 0; i < 4; i++) {
+            this.createTrayImage(`step${i}`);
+          }
+
+          this.animateTrayIcon(); // Show first frame immediately
+          this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
+          this.tray.setToolTip('Podman Desktop: resources are being updated');
+          break;
+      }
+    } catch (error) {
+      console.error(`Failed to update tray icon for status ${this.status}:`, error);
+
+      // Set a safe fallback image if updating fails to prevent blank tray icon
+      try {
+        this.tray.setImage(this.createTrayImage('empty'));
+      } catch (fallbackError) {
+        console.error('Failed to set fallback tray icon:', fallbackError);
+      }
     }
   }
 
-  getDefaultImage(): string {
-    return this.getIconPath('empty');
+  getDefaultImage(): Electron.NativeImage {
+    // Return a properly configured image for all platforms.
+    return this.createTrayImage('empty');
   }
 
   setStatus(status: TrayIconStatus): void {
