@@ -389,7 +389,11 @@ async function registerCliTool(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  const octokit = new Octokit();
+  const octokit = new Octokit({
+    request: {
+      fetch,
+    },
+  });
   installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokit);
 
   let binary: { path: string; version: string } | undefined = undefined;

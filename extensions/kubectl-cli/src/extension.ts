@@ -83,7 +83,11 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   handler.handleConfigurationChanges(extensionContext);
 
   // Create new classes to handle the onboarding sequence
-  const octokit = new Octokit();
+  const octokit = new Octokit({
+    request: {
+      fetch,
+    },
+  });
   const detect = new Detect(os, extensionContext.storagePath);
 
   const kubectlGitHubReleases = new KubectlGitHubReleases(octokit);
