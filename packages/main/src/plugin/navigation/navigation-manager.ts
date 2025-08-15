@@ -108,10 +108,10 @@ export class NavigationManager {
     taskId: number | undefined,
   ): Promise<void> {
     this.navigateTo({
-      page: NavigationPage.IMAGE_PUSH_TASK,
+      page: NavigationPage.IMAGE_PUSH,
       parameters: {
-        imageId,
-        engineId,
+        imageId: encodeURI(imageId),
+        engineId: encodeURI(engineId),
         tag,
         taskId,
       },

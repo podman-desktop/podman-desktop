@@ -1,40 +1,72 @@
 <script lang="ts">
 import { faCheckCircle, faCircleArrowUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
-import type { Terminal } from '@xterm/xterm';
-import { onMount, tick } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
+import { get, type Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { providerInfos } from '/@/stores/providers';
+import {
+  clonePushImageInfo,
+  createDefaultPushImageInfo,
+  getNextTaskId,
+  lastUpdatedTaskId,
+  pushImagesInfo,
+} from '/@/stores/push-images';
 
 import { imagesInfos } from '../../stores/images';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
+import { disconnectUI, eventCollect, type PushImageCallback, reconnectUI, startBuild } from './push-image-task';
 
-export let imageId: string;
-export let engineId: string;
-export let base64RepoTag: string;
+interface Props {
+  imageId: string;
+  engineId: string;
+  base64RepoTag: string;
+  taskId?: number;
+}
+
+let { imageId, engineId, base64RepoTag, taskId = $bindable(0) }: Props = $props();
 
 let image: ImageInfoUI | undefined;
-let pushInProgress = false;
-let pushFinished = false;
-let initTerminal = false;
-let logsPush: Terminal;
+let selectedImageTag = $state('');
+let imageTags: string[] = $state([]);
 
-let selectedImageTag = '';
-let imageTags: string[] = [];
+let pushImageInfo = $state(createDefaultPushImageInfo());
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 const imageUtils = new ImageUtils();
 
 onMount(async () => {
+  if (taskId && taskId !== pushImageInfo.taskId) {
+    // switching from previous push image dialog which can be finished or still running
+    if (pushImageInfo.inProgress) {
+      disconnectUI(taskId);
+    }
+    pushImageInfo.logsTerminal?.reset();
+    const pushImagesInfoMap = get(pushImagesInfo);
+    const bgPushImageInfo = pushImagesInfoMap.get(taskId);
+    if (bgPushImageInfo) {
+      bgPushImageInfo.logsTerminal = pushImageInfo.logsTerminal;
+      if (bgPushImageInfo.inProgress) {
+        pushImageInfo = bgPushImageInfo;
+      } else {
+        pushImageInfo = clonePushImageInfo(bgPushImageInfo);
+        taskId = 0;
+      }
+      reconnectUI(pushImageInfo.taskId, createCallback());
+    }
+  }
+
   const inspectInfo = await window.getImageInspect(engineId, imageId);
   imageTags = inspectInfo.RepoTags;
   if (imageTags.length > 0) {
@@ -52,55 +84,94 @@ onMount(async () => {
   }
 });
 
-async function pushImage(imageTag: string): Promise<void> {
-  gotErrorDuringPush = false;
-  initTerminal = true;
-  await tick();
-  window.dispatchEvent(new Event('resize'));
-  logsPush?.reset();
-
-  pushInProgress = true;
-
-  await window.pushImage(engineId, imageTag, callback);
+async function pushImage(): Promise<void> {
+  pushImageInfo.error = undefined;
+  pushImageInfo.logsTerminal?.reset();
+  pushImageInfo.inProgress = true;
+  pushImageInfo.finished = false;
+  pushImagesInfo.update(map => {
+    taskId = getNextTaskId();
+    startBuild(taskId, createCallback());
+    pushImageInfo.taskId = taskId;
+    return map.set(pushImageInfo.taskId, pushImageInfo);
+  });
+  return window.pushImage(
+    engineId,
+    selectedImageTag,
+    imageId,
+    base64RepoTag,
+    eventCollect.bind(undefined, taskId),
+    taskId,
+  );
 }
-
-let gotErrorDuringPush = false;
 
 async function pushImageFinished(): Promise<void> {
   router.goto('/images');
 }
-function callback(name: string, data: string): void {
-  if (name === 'first-message') {
-    // clear on the first message
-    logsPush?.clear();
-  } else if (name === 'data') {
-    // parse JSON message
-    const jsonObject = JSON.parse(data);
-    if (jsonObject.status) {
-      logsPush?.write(jsonObject.status + '\n\r');
-    }
-  } else if (name === 'error') {
-    gotErrorDuringPush = true;
-    logsPush?.write(data + '\n\r');
-  } else if (name === 'end') {
-    if (!gotErrorDuringPush) {
-      pushFinished = true;
-    }
-    pushInProgress = false;
-  }
+function createCallback(): PushImageCallback {
+  return {
+    onFirstMessage: () => pushImageInfo.logsTerminal?.clear(),
+    onData: (data: string): void => {
+      // parse JSON message
+      const jsonObject = JSON.parse(data);
+      if (jsonObject.status) {
+        pushImageInfo.logsTerminal?.write(jsonObject.status + '\n\r');
+      }
+    },
+    onError: (data: string): void => {
+      pushImageInfo.error = data;
+      pushImageInfo.logsTerminal?.write(data + '\n\r');
+    },
+    onEnd: (): void => {
+      pushImageInfo.finished = true;
+      pushImageInfo.inProgress = false;
+    },
+  };
 }
 
-let isAuthenticatedForThisImage = false;
+let isAuthenticatedForThisImage = $state(false);
+
+let pushImagesInfoUnsubscriber: Unsubscriber = pushImagesInfo.subscribe(map => {
+  if ($lastUpdatedTaskId && $lastUpdatedTaskId === taskId) {
+    // change event came from loaded page
+    if (pushImageInfo.finished) {
+      pushImageInfo = clonePushImageInfo(pushImageInfo);
+      taskId = 0;
+    }
+  }
+  if (taskId && pushImageInfo.taskId === 0) {
+    // initial loading
+    const bgBuildImageInfo = map.get(taskId);
+    if (bgBuildImageInfo?.finished) {
+      pushImageInfo = clonePushImageInfo(bgBuildImageInfo);
+      taskId = 0;
+    } else if (bgBuildImageInfo) {
+      pushImageInfo = bgBuildImageInfo;
+    }
+  }
+  $lastUpdatedTaskId = undefined;
+});
+
+onDestroy(() => {
+  pushImagesInfoUnsubscriber();
+});
 </script>
   <EngineFormPage
     title="Push image to a registry"
-    inProgress={pushInProgress}
+    inProgress={pushImageInfo.inProgress}
     showEmptyScreen={providerConnections.length === 0}>
-    <svelte:fragment slot="icon">
+     {#snippet icon()}
       <i class="fas fa-arrow-circle-down fa-2x" aria-hidden="true"></i>
-    </svelte:fragment>
-    <div slot="content" class="space-y-6">
-      <div class="w-full">
+    {/snippet}
+    {#snippet content()}
+      <div class="space-y-6">
+      <div class="w-full" >
+        <div class="flex-column">
+          <div>taskId: {taskId}</div>
+          <div>imageId: {imageId}</div>
+          <div>engineId: {engineId}</div>
+          <div>base64RepoTag: {base64RepoTag}</div>
+    </div>
         <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
         {#if isAuthenticatedForThisImage}
           <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
@@ -114,7 +185,7 @@ let isAuthenticatedForThisImage = false;
             : 'outline-[var(--pd-state-warning)]'} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
           name="imageChoice"
           bind:value={selectedImageTag}>
-          {#each imageTags as imageTag}
+          {#each imageTags as imageTag, index (index)}
             <option value={imageTag}>{imageTag}</option>
           {/each}
         </select>
@@ -128,25 +199,24 @@ let isAuthenticatedForThisImage = false;
         {/if}
       </div>
 
-      <div class="h-[185px]" hidden={initTerminal === false}>
-        <TerminalWindow class="h-full" bind:terminal={logsPush} disableStdIn />
+      <div class="h-[185px]" hidden={!pushImageInfo.inProgress && !pushImageInfo.finished}>
+        <TerminalWindow class="h-full" bind:terminal={pushImageInfo.logsTerminal} disableStdIn />
       </div>
-      {#if !pushInProgress && !pushFinished}
+      {#if !pushImageInfo.inProgress && !pushImageInfo.finished}
       <Button class="w-auto" type="secondary" on:click={pushImageFinished}>Cancel</Button>
     {/if}
-    {#if !pushFinished}
+    {#if !pushImageInfo.finished}
       <Button
         class="w-auto"
         icon={faCircleArrowUp}
         disabled={!isAuthenticatedForThisImage}
-        on:click={async (): Promise<void> => {
-          await pushImage(selectedImageTag);
-        }}
-        bind:inProgress={pushInProgress}>
+        on:click={pushImage}
+       inProgress={pushImageInfo.inProgress}>
         Push image
       </Button>
     {:else}
       <Button on:click={pushImageFinished} class="w-auto">Done</Button>
     {/if}
     </div>
+    {/snippet}
   </EngineFormPage>
