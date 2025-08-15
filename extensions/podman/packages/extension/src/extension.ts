@@ -482,16 +482,22 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
   }
 }
 
-async function isRootfulMachine(machineJSON: MachineJSON): Promise<boolean> {
+async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Promise<boolean> {
   let isRootful = false;
+  let vmType: string;
+  let machineName: string;
+  if ('name' in machineDetails) {
+    machineName = machineDetails.name;
+    vmType = machineDetails.vmType;
+  } else {
+    machineName = machineDetails.Name;
+    vmType = machineDetails.VMType;
+  }
   try {
-    const { stdout: machineInspectJson } = await execPodman(
-      ['machine', 'inspect', machineJSON.Name],
-      machineJSON.VMType,
-    );
+    const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
     const machinesInspect = JSON.parse(machineInspectJson);
     // find the machine name in the array
-    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineJSON.Name);
+    const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
     isRootful = machineInspect?.Rootful ?? false;
   } catch (error) {
     console.error('Error when checking rootful machine: ', error);
@@ -521,6 +527,7 @@ async function updateContainerConfiguration(
 ): Promise<void> {
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachine(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -529,6 +536,10 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSize', machineInfo.diskSize);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -756,13 +767,19 @@ export async function registerProviderFor(
   socketPath: string,
 ): Promise<void> {
   const isHyperVMachine = extensionApi.env.isWindows && machineInfo.vmType === VMTYPE.HYPERV;
+
   const isEditMemorySupported = extensionApi.env.isMac || isHyperVMachine;
   const isEditCPUSupported = extensionApi.env.isMac || isHyperVMachine;
   const isEditDiskSizeSupported = extensionApi.env.isMac;
+  const isEditRootfulSupported = extensionApi.env.isMac || extensionApi.env.isWindows;
+
+  const isEditSupported =
+    isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported || isEditRootfulSupported;
 
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_CPU, isEditCPUSupported);
   extensionApi.context.setValue(PODMAN_MACHINE_EDIT_DISK_SIZE, isEditDiskSizeSupported);
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_ROOTFUL, isEditRootfulSupported);
 
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
@@ -777,8 +794,8 @@ export async function registerProviderFor(
       });
     },
   };
-  //support edit only on MacOS and HyperV machines as Podman WSL is nop and generates errors
-  if (isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported) {
+  // support edit only on MacOS and Windows with limited editing capabilities for HyperV and WSL machines
+  if (isEditSupported) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
@@ -791,6 +808,9 @@ export async function registerProviderFor(
           effective = true;
         } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
           args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
+          effective = true;
+        } else if (isEditRootfulSupported && key === 'podman.machine.rootful') {
+          args.push(`--rootful=${params[key]}`);
           effective = true;
         }
       }
@@ -838,6 +858,7 @@ export async function registerProviderFor(
 
   // get configuration for this connection
   const containerConfiguration = extensionApi.configuration.getConfiguration('podman', containerProviderConnection);
+  const isRootful = await isRootfulMachine(machineInfo);
 
   // Set values for the machine
   await containerConfiguration.update('machine.cpus', machineInfo.cpus);
@@ -846,6 +867,10 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.cpusUsage', machineInfo.cpuUsage);
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
+
+  if (isRootful !== undefined) {
+    await containerConfiguration.update('machine.rootful', isRootful);
+  }
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);
@@ -1049,6 +1074,7 @@ export const PODMAN_DOCKER_COMPAT_ENABLE_KEY = 'podman.podmanDockerCompatibility
 export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
 export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
 export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
+export const PODMAN_MACHINE_EDIT_ROOTFUL = 'podman.podmanMachineEditRootfulSupported';
 
 export function initTelemetryLogger(): void {
   telemetryLogger = extensionApi.env.createTelemetryLogger();
