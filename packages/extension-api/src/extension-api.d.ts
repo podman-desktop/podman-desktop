@@ -4821,6 +4821,27 @@ declare module '@podman-desktop/api' {
     ): Disposable;
   }
 
+  export namespace net {
+    /**
+     * Finds a free port starting from the specified port.
+     * @param port The starting port number to search for a free port.
+     */
+    export function getFreePort(port: number): Promise<number>;
+
+    /**
+     * Finds a continuous range of free ports of the specified size.
+     * @param rangeSize The number of ports in the continuous range.
+     * @return A string in a format like "3000-3005".
+     */
+    export function getFreePortRange(rangeSize: number): Promise<string>;
+
+    /**
+     * Checks if the specified port is free.
+     * @param port The port number to check.
+     */
+    export function isFreePort(port: number): Promise<boolean>;
+  }
+
   export namespace navigation {
     // Navigate to the Dashboard page
     export function navigateToDashboard(): Promise<void>;
