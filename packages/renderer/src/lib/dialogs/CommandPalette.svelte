@@ -1,6 +1,6 @@
 <script lang="ts">
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { Input } from '@podman-desktop/ui-svelte';
+import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -26,12 +26,35 @@ interface Props {
   onclose?: () => void;
 }
 
+interface SearchOption {
+  text: string;
+  shortCut?: string;
+}
+
 let { display = false, onclose }: Props = $props();
 
 let outerDiv: HTMLDivElement | undefined = $state(undefined);
 let inputElement: HTMLInputElement | undefined = $state(undefined);
 let inputValue: string | undefined = $state('');
 let scrollElements: HTMLLIElement[] = $state([]);
+let searchIcon = $derived.by(() => {
+  if (searchOptionsSelectedIndex === 1) {
+    // Commands
+    return faChevronRight;
+  } else {
+    return faMagnifyingGlass;
+  }
+});
+
+let isMac: boolean = $state(false);
+let modifier: string = $derived(isMac ? '⌘ ' : 'Ctrl ');
+let searchOptions: SearchOption[] = $derived([
+  { text: 'All' },
+  { text: 'Commands', shortCut: 'F1' },
+  { text: 'Documentation', shortCut: `${modifier}K` },
+  { text: 'Go to', shortCut: `${modifier}F` },
+]);
+let searchOptionsSelectedIndex: number = $state(0);
 
 let commandInfoItems: CommandInfo[] = $state([]);
 let globalContext: ContextUI;
@@ -43,6 +66,12 @@ let filteredCommandInfoItems: CommandInfo[] = $derived(
 );
 
 let contextsUnsubscribe: Unsubscriber;
+
+onMount(async () => {
+  const platform = await window.getOsPlatform();
+
+  isMac = platform === 'darwin';
+});
 
 onMount(() => {
   contextsUnsubscribe = context.subscribe(value => {
@@ -77,6 +106,11 @@ let selectedIndex = 0;
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
   if (e.key === 'F1' || e.key === '>') {
+    // searchbar is displayed we want to go to commands
+    if (display) {
+      searchOptionsSelectedIndex = 1;
+      return;
+    }
     // clear the input value
     inputValue = '';
     selectedFilteredIndex = 0;
@@ -103,7 +137,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     return;
   }
 
-  if (e.key === ARROW_DOWN_KEY || e.key === TAB_KEY) {
+  if (e.key === ARROW_DOWN_KEY) {
     // if down key is pressed, move the index
     selectedFilteredIndex++;
     if (selectedFilteredIndex >= filteredCommandInfoItems.length) {
@@ -138,7 +172,23 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
     await executeCommand(selectedIndex);
     e.preventDefault();
+  } else if (e.key === TAB_KEY) {
+    switchSearchOption(e.shiftKey ? -1 : 1);
+    e.preventDefault();
+  } else if (e.ctrlKey || e.metaKey) {
+    if (e.key.toLowerCase() === 'k') {
+      searchOptionsSelectedIndex = 2;
+    } else if (e.key.toLowerCase() === 'f') {
+      searchOptionsSelectedIndex = 3;
+    }
+    e.preventDefault();
   }
+}
+
+function switchSearchOption(direction: 1 | -1): void {
+  const searchOptionsLength = searchOptions.length;
+  const offset = direction === 1 ? 0 : searchOptionsLength;
+  searchOptionsSelectedIndex = (searchOptionsSelectedIndex + direction + offset) % searchOptionsLength;
 }
 
 async function executeCommand(index: number): Promise<void> {
@@ -206,7 +256,7 @@ async function onAction(): Promise<void> {
       <div
         bind:this={outerDiv}
         class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-lg p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-base">
-        <div class="w-full flex flex-row relative">
+        <div class="w-full flex flex-row gap-2 items-center">
           <Input
             aria-label='Command palette command input'
             bind:value={inputValue}
@@ -216,9 +266,29 @@ async function onAction(): Promise<void> {
             on:action={onAction}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" >
             {#snippet left()}
-              <Icon icon={faChevronRight} class="pr-1"/>
+              <Icon icon={searchIcon} class="pr-1"/>
             {/snippet}
-          </Input>
+        </Input>
+        </div>
+
+        <div class="flex flex-row m-2">
+          {#each searchOptions as searchOption, index (index)}
+            <Button
+              type="tab"
+              on:click={(): void => {
+                searchOptionsSelectedIndex = index;
+              }}
+              selected={searchOptionsSelectedIndex === index}>
+              <div class="flex items-center gap-2">
+                {#if searchOption.shortCut}
+                  <div class='bg-[var(--pd-search-bar-nav-button)] rounded-sm px-0.5 shadow-sm shadow-b-1'>
+                    {searchOption.shortCut}
+                  </div>
+                {/if}
+                {searchOption.text}
+              </div>
+            </Button>
+          {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredCommandInfoItems as item, i (item.id)}
@@ -237,6 +307,16 @@ async function onAction(): Promise<void> {
             </li>
           {/each}
         </ul>
+
+        {#if filteredCommandInfoItems.length === 0}
+          <div class='flex grow items-center flex-col gap-2 py-4'>
+            <Icon icon={faMagnifyingGlass} size="5x"/>
+            <div class='text-lg font-bold'>No results matching '{inputValue}' found</div>
+            <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
+            <Button icon={faChevronRight} type='link' onclick={(): void => {console.log('Variables clicked');}}>Variables</Button>
+          </div>
+        {/if}
+
         <div class="border-[var(--pd-global-nav-bg-border)] border-t-[1px] flex flex-row items-center px-3 pt-2 gap-4 text-sm">
           <span class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
             <Icon icon={EnterIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5" size='2.2em'/>
@@ -250,6 +330,19 @@ async function onAction(): Promise<void> {
           <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
             <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>esc</div>
             To close
+          </div>
+          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>F1</div>
+            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>></div>
+            Commands
+          </div>
+          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>{modifier}K</div>
+            Docs
+          </div>
+          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>{modifier}F</div>
+            Go to
           </div>
         </div>
       </div>
