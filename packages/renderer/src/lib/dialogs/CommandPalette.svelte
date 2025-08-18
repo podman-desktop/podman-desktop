@@ -1,6 +1,6 @@
 <script lang="ts">
-import { faArrowCircleRight, faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
-import { CloseButton, Input } from '@podman-desktop/ui-svelte';
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -10,6 +10,10 @@ import { context } from '/@/stores/context';
 import type { CommandInfo } from '/@api/command-info';
 
 import type { ContextUI } from '../context/context';
+import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
+import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
+import EnterIcon from '../images/EnterIcon.svelte';
+import ESCIcon from '../images/ESCIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
 
 const ENTER_KEY = 'Enter';
@@ -20,9 +24,11 @@ const TAB_KEY = 'Tab';
 
 interface Props {
   display?: boolean;
+  onclose?: () => void;
 }
 
-let { display = false }: Props = $props();
+let { display = false, onclose }: Props = $props();
+
 let inputElement: HTMLInputElement | HTMLTextAreaElement | undefined = $state(undefined);
 let outerDiv: HTMLDivElement | undefined = $state(undefined);
 let inputValue: string | undefined = $state('');
@@ -134,7 +140,6 @@ async function executeCommand(index: number): Promise<void> {
   const commandId = commandInfoItems[index].id;
   // execute the command
   try {
-    console.log('executing');
     await window.executeCommand(commandId);
   } catch (error) {
     console.error('error executing command', error);
@@ -153,6 +158,7 @@ function handleMousedown(e: MouseEvent): void {
 
 function hideCommandPallete(): void {
   display = false;
+  onclose?.();
 }
 
 async function clickOnItem(index: number): Promise<void> {
@@ -187,24 +193,25 @@ async function onInputChange(): Promise<void> {
           <Input
             aria-label="Command palette command input"
             bind:value={inputValue}
+            clearable={true}
             oninput={onInputChange}
-            class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" />
-          <CloseButton 
-            onclick={hideCommandPallete} 
-            class="absolute top-1/2 right-0 transform -translate-y-1/2"/>
+            class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" >
+            {#snippet left()}
+              <Icon icon={faChevronRight} class="pr-1"/>
+            {/snippet}
+          </Input>
         </div>
-        <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
+        <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredCommandInfoItems as item, i (item.id)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
-                aria-label={item.title}
-                class="text-[var(--pd-dropdown-item-text)] text-left relative my-0.5 mr-2 w-full {i === selectedFilteredIndex
+                class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex
                   ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base">{item.title}</div>
+                    <div class="text-base py-[2pt]">{item.title}</div>
                   </div>
                 </div>
               </button>
@@ -212,17 +219,19 @@ async function onInputChange(): Promise<void> {
           {/each}
         </ul>
         <div class="border-[var(--pd-global-nav-bg-border)] border-t-[1px] flex flex-row items-center px-3 pt-2 gap-4 text-sm">
-          <span class="flex items-center gap-2">
-            <Icon icon={faArrowCircleRight} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
+          <span class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <Icon icon={EnterIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5" size='2.2em'/>
             To select
           </span>
-          <div class="flex items-center gap-2">
-            <Icon icon={faArrowUp} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
-            <Icon icon={faArrowDown} class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 shadow-sm shadow-b-1" size="2x"/>
+          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <Icon icon={ArrowUpIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5" size='2.2em'/>
+            <Icon icon={ArrowDownIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5" size='2.2em'/>
             To navigate
           </div>
-          <div class="flex items-center gap-2">
-            <span class="bg-[var(--pd-search-bar-nav-button)] rounded-sm p-1 text-small shadow-sm shadow-b-1">esc</span>To close</div>
+          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
+            <Icon icon={ESCIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm px-1 py-0.5" size='2.2em'/>
+            To close
+          </div>
         </div>
       </div>
     </div>

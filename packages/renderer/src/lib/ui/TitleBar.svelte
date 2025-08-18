@@ -26,7 +26,14 @@ function openCommandPallet(): void {
   if (!globalSearchbar) {
     return;
   }
-  commandPalletVisible = !commandPalletVisible;
+  commandPalletVisible = true;
+}
+
+function closeCommandPallet(): void {
+  if (!globalSearchbar) {
+    return;
+  }
+  commandPalletVisible = false;
 }
 </script>
 
@@ -72,6 +79,6 @@ function openCommandPallet(): void {
         </button>
       {/if}
     {/if}
-    <CommandPalette display={commandPalletVisible} />
+    <CommandPalette display={commandPalletVisible} onclose={closeCommandPallet}/>
   </div>
 </header>
