@@ -418,3 +418,19 @@ test('Check prune default images (not all)', async () => {
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
   await (api as unknown as LibPod).pruneAllImages(false);
 });
+
+test('check pod inspect', async () => {
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/pods/name1/json', () =>
+      HttpResponse.json({ Id: 'testId1' }, { status: 200 }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  const response = await (api as unknown as LibPod).getPodInspect('name1');
+
+  // Check that the response is correct
+  expect(response).toBeDefined();
+  expect(response.Id).toStrictEqual('testId1');
+});

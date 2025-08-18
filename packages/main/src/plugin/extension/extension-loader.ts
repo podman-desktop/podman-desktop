@@ -1275,6 +1275,9 @@ export class ExtensionLoader implements AsyncDisposable {
       listPods(): Promise<PodInfo[]> {
         return containerProviderRegistry.listPods();
       },
+      inspectPod(engineId: string, podId: string): Promise<containerDesktopAPI.PodInspectInfo> {
+        return containerProviderRegistry.getPodInspect(engineId, podId);
+      },
       stopPod(engineId: string, podId: string): Promise<void> {
         return containerProviderRegistry.stopPod(engineId, podId);
       },
