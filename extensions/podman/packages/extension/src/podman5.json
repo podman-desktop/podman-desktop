@@ -1,7 +1,7 @@
 {
   "version": "5.6.0",
   "releaseNotes": {
-    "href": "https://github.com/containers/podman/releases/tag/v5.5.2"
+    "href": "https://github.com/containers/podman/releases/tag/v5.6.0"
   },
   "platform": {
     "win32": {
