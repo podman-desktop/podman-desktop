@@ -146,7 +146,6 @@ async function executeCommand(index: number): Promise<void> {
   const commandId = commandInfoItems[index].id;
   // execute the command
   try {
-    console.log('executing');
     await window.executeCommand(commandId);
   } catch (error) {
     console.error('error executing command', error);
