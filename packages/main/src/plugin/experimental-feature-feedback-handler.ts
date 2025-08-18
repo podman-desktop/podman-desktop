@@ -25,6 +25,7 @@ import type { IDisposable } from '/@api/disposable.js';
 import { formatName } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { MessageBox } from './message-box.js';
+import { Telemetry } from './telemetry/telemetry.js';
 
 export type Timestamp = number | undefined;
 
@@ -46,6 +47,8 @@ export class ExperimentalFeatureFeedbackHandler {
     private configurationRegistry: ConfigurationRegistry,
     @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(Telemetry)
+    private telemetry: Telemetry,
   ) {
     this.#configurationRegistry = this.configurationRegistry;
   }
@@ -208,6 +211,7 @@ export class ExperimentalFeatureFeedbackHandler {
           footerMarkdownDescription: footerMarkdownDescription,
         })
         .then(response => {
+          const telemetryOptions = { option: 'Share Feedback on GitHub' };
           // Share Feedback on GitHub was selected
           if (response.response === 1) {
             shell
@@ -218,6 +222,7 @@ export class ExperimentalFeatureFeedbackHandler {
           }
           // Option from Dropdown was selected
           else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
+            telemetryOptions.option = options[response.dropdownIndex] ?? 'Unknown option';
             switch (options[response.dropdownIndex]) {
               case 'Remind me tomorrow':
                 this.setTimestamp(key, 1);
@@ -233,6 +238,7 @@ export class ExperimentalFeatureFeedbackHandler {
                 });
             }
           }
+          this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
         })
         .catch(console.error);
     });

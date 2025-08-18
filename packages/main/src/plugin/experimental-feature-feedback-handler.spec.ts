@@ -26,6 +26,7 @@ import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { ExperimentalConfiguration, Timestamp } from './experimental-feature-feedback-handler.js';
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import type { MessageBox } from './message-box.js';
+import type { Telemetry } from './telemetry/telemetry.js';
 
 vi.mock('electron', () => ({
   shell: {
@@ -61,6 +62,9 @@ const configurationRegistry: ConfigurationRegistry = {
 
 const configurationGetMock = vi.fn();
 const updateMock = vi.fn().mockImplementation(() => Promise.resolve());
+
+const telemetryTrackMock = vi.fn().mockResolvedValue({});
+const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
 
 const configuration: Configuration = {
   get: configurationGetMock,
@@ -107,7 +111,7 @@ const disableFeatureSpy = vi.spyOn(TestExperimentalFeatureFeedbackHandler.protot
 let feedbackForm: TestExperimentalFeatureFeedbackHandler;
 beforeEach(() => {
   vi.resetAllMocks();
-  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox);
+  feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox, telemetry);
 
   vi.spyOn(feedbackForm, 'save').mockImplementation(() => {
     return Promise.resolve();
@@ -280,6 +284,7 @@ describe('showFeedbackDialog', () => {
     expect(messageBox.showMessageBox).toHaveBeenCalledTimes(1);
     expect(openExternalSpy).toHaveBeenCalledWith('https://feature.link.1.com');
     expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', undefined);
+    expect(telemetry.track).toHaveBeenCalled();
   });
 
   test('should set timestamp for 1 day when user selects "Remind me tomorrow"', async () => {
@@ -296,6 +301,7 @@ describe('showFeedbackDialog', () => {
 
     expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 1);
     expect(openExternalSpy).not.toHaveBeenCalled();
+    expect(telemetry.track).toHaveBeenCalled();
   });
 
   test('should set timestamp for 2 days when user selects "Remind me in 2 days"', async () => {
@@ -312,6 +318,7 @@ describe('showFeedbackDialog', () => {
 
     expect(setTimestampSpy).toHaveBeenCalledWith('feat.feature1', 2);
     expect(openExternalSpy).not.toHaveBeenCalled();
+    expect(telemetry.track).toHaveBeenCalled();
   });
 
   test('should call disableFeature when user selects "Dont show again"', async () => {
@@ -330,6 +337,7 @@ describe('showFeedbackDialog', () => {
     expect(openExternalSpy).not.toHaveBeenCalled();
     expect(disableFeatureSpy).toBeCalledTimes(1);
     expect(disableFeatureSpy).toBeCalledWith('feat.feature1');
+    expect(telemetry.track).toHaveBeenCalled();
   });
 
   test('should NOT show a dialog if the timestamp is in the future', async () => {
@@ -340,6 +348,7 @@ describe('showFeedbackDialog', () => {
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
     expect(messageBox.showMessageBox).not.toHaveBeenCalled();
+    expect(telemetry.track).not.toHaveBeenCalled();
   });
 
   test('should NOT show dialog when is a feature disabled', async () => {
@@ -352,6 +361,7 @@ describe('showFeedbackDialog', () => {
 
     expect(setTimestampSpy).not.toHaveBeenCalled();
     expect(disableFeatureSpy).not.toHaveBeenCalled();
+    expect(telemetry.track).not.toHaveBeenCalled();
   });
 });
 
