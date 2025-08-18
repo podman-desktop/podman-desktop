@@ -15,19 +15,24 @@ const ARROW_DOWN_KEY = 'ArrowDown';
 const ARROW_UP_KEY = 'ArrowUp';
 const TAB_KEY = 'Tab';
 
-export let display = false;
-let inputElement: HTMLInputElement | HTMLTextAreaElement | undefined = undefined;
-let outerDiv: HTMLDivElement | undefined = undefined;
-let inputValue: string | undefined = '';
-let scrollElements: HTMLLIElement[] = [];
+interface Props {
+  display?: boolean;
+}
 
-let commandInfoItems: CommandInfo[] = [];
-let filteredCommandInfoItems: CommandInfo[] = [];
+let { display = false }: Props = $props();
+let inputElement: HTMLInputElement | HTMLTextAreaElement | undefined = $state(undefined);
+let outerDiv: HTMLDivElement | undefined = $state(undefined);
+let inputValue: string | undefined = $state('');
+let scrollElements: HTMLLIElement[] = $state([]);
+
+let commandInfoItems: CommandInfo[] = $state([]);
 let globalContext: ContextUI;
 
-$: filteredCommandInfoItems = commandInfoItems
-  .filter(property => isPropertyValidInContext(property.enablement, globalContext))
-  .filter(item => (inputValue ? item.title?.toLowerCase().includes(inputValue.toLowerCase()) : true));
+let filteredCommandInfoItems: CommandInfo[] = $derived(
+  commandInfoItems
+    .filter(property => isPropertyValidInContext(property.enablement, globalContext))
+    .filter(item => (inputValue ? item.title?.toLowerCase().includes(inputValue.toLowerCase()) : true)),
+);
 
 let contextsUnsubscribe: Unsubscriber;
 
@@ -45,7 +50,7 @@ onDestroy(() => {
   contextsUnsubscribe?.();
 });
 
-let selectedFilteredIndex = 0;
+let selectedFilteredIndex = $state(0);
 let selectedIndex = 0;
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
@@ -178,14 +183,15 @@ async function onInputChange(): Promise<void> {
             aria-label="Command palette command input"
             type="text"
             bind:value={inputValue}
-            on:input={onInputChange}
+            oninput={onInputChange}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" />
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col">
           {#each filteredCommandInfoItems as item, i (item.id)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
-                on:click={(): Promise<void> => clickOnItem(i)}
+                onclick={(): Promise<void> => clickOnItem(i)}
+                aria-label={item.title}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative my-0.5 mr-2 w-full {i === selectedFilteredIndex
                   ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
