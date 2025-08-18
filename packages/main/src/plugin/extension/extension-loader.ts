@@ -87,7 +87,7 @@ import { Disposable } from '../types/disposable.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
-import { getFreePort, getFreePortRange, isFreePort } from '../util/port.js';
+import { getFreePort } from '../util/port.js';
 import { ViewRegistry } from '../view-registry.js';
 import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
@@ -1547,8 +1547,6 @@ export class ExtensionLoader implements AsyncDisposable {
 
     const net: typeof containerDesktopAPI.net = {
       getFreePort,
-      getFreePortRange,
-      isFreePort,
     };
 
     const version = app.getVersion();
