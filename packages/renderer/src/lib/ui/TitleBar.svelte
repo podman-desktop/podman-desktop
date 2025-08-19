@@ -15,11 +15,9 @@ let globalSearchbar = $state(false);
 
 onMount(async () => {
   platform = await window.getOsPlatform();
-  try {
-    globalSearchbar = await window.isExperimentalConfigurationEnabled('titlebar.globalSearchbar');
-  } catch {
-    // Keep default value
-  }
+  window.events.receive('search-bar-enabled', val => {
+    if (typeof val === 'boolean') globalSearchbar = val;
+  });
 });
 
 function openCommandPallet(): void {

@@ -35,6 +35,11 @@ vi.mock('electron', () => {
   };
 });
 
+const apiSender: ApiSenderType = {
+  send: vi.fn(),
+  receive: vi.fn(),
+};
+
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
   configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories);
@@ -45,7 +50,7 @@ beforeAll(() => {
 test('Expect appearance configuration change to update native theme', async () => {
   const spyOnDidChange = vi.spyOn(configurationRegistry, 'onDidChangeConfiguration');
 
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   const spyOnUpdateNativeTheme = vi.spyOn(appearanceInit, 'updateNativeTheme');
 
   appearanceInit.init();
@@ -68,7 +73,7 @@ test('Expect appearance configuration change to update native theme', async () =
 test('Expect unrelated configuration change not to update native theme', async () => {
   const spyOnDidChange = vi.spyOn(configurationRegistry, 'onDidChangeConfiguration');
 
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   const spyOnUpdateNativeTheme = vi.spyOn(appearanceInit, 'updateNativeTheme');
 
   appearanceInit.init();
@@ -87,36 +92,82 @@ test('Expect unrelated configuration change not to update native theme', async (
   expect(spyOnUpdateNativeTheme).not.toHaveBeenCalled();
 });
 
+test('Expect appearance configuration change to update searchbar when enabled', async () => {
+  const spyOnDidChange = vi.spyOn(configurationRegistry, 'onDidChangeConfiguration');
+
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
+  const spyOnSend = vi.spyOn(apiSender, 'send');
+
+  appearanceInit.init();
+
+  expect(spyOnDidChange).toHaveBeenCalled();
+  // grab the anonymous function that is the first argument of the first call
+  const callback = spyOnDidChange.mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  // call the callback
+  callback?.({
+    key: `titlebar.${AppearanceSettings.SearchBar}`,
+    value: {},
+  } as unknown as IConfigurationChangeEvent);
+
+  // check we have called updateNativeTheme
+  expect(spyOnSend).toHaveBeenCalled();
+});
+
+test('Expect appearance configuration change to update searchbar when disabled', async () => {
+  const spyOnDidChange = vi.spyOn(configurationRegistry, 'onDidChangeConfiguration');
+
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
+  const spyOnSend = vi.spyOn(apiSender, 'send');
+
+  appearanceInit.init();
+
+  expect(spyOnDidChange).toHaveBeenCalled();
+  // grab the anonymous function that is the first argument of the first call
+  const callback = spyOnDidChange.mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  // call the callback
+  callback?.({
+    key: `titlebar.${AppearanceSettings.SearchBar}`,
+    value: undefined,
+  } as unknown as IConfigurationChangeEvent);
+
+  // check we have called updateNativeTheme
+  expect(spyOnSend).toHaveBeenCalled();
+});
+
 test('Expect native theme to be set to light', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.updateNativeTheme('light');
 
   expect(nativeTheme.themeSource).toEqual('light');
 });
 
 test('Expect native theme to be set to dark', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.updateNativeTheme('dark');
 
   expect(nativeTheme.themeSource).toEqual('dark');
 });
 
 test('Expect native theme to be set to system', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.updateNativeTheme('system');
 
   expect(nativeTheme.themeSource).toEqual('system');
 });
 
 test('Expect unknown theme to be set to system', async () => {
-  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.updateNativeTheme('unknown');
 
   expect(nativeTheme.themeSource).toEqual('system');
 });
 
 test('should register a configuration', async () => {
-  const appearanceInit = new AppearanceInit(configurationRegistry);
+  const appearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.init();
 
   expect(configurationRegistry.registerConfigurations).toBeCalled();
@@ -124,7 +175,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.id).toBe('preferences.appearance');
   expect(configurationNode?.title).toBe('Appearance');
   expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(3);
+  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(4);
   expect(configurationNode?.properties?.['preferences.zoomLevel']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
@@ -137,4 +188,8 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
     AppearanceSettings.IconAndTitle,
   );
+
+  expect(configurationNode?.properties?.['preferences.searchBar']).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.searchBar']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['preferences.searchBar']?.type).toBe('object');
 });

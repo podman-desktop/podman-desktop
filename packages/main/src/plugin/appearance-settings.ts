@@ -26,4 +26,5 @@ export enum AppearanceSettings {
   NavigationAppearance = 'navigationBarLayout',
   Icon = 'icon',
   IconAndTitle = 'icon + title',
+  SearchBar = 'searchBar',
 }

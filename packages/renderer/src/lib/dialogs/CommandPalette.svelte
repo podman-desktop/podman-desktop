@@ -13,7 +13,6 @@ import type { ContextUI } from '../context/context';
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
 import EnterIcon from '../images/EnterIcon.svelte';
-import ESCIcon from '../images/ESCIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
 
 const ENTER_KEY = 'Enter';
@@ -29,8 +28,8 @@ interface Props {
 
 let { display = false, onclose }: Props = $props();
 
-let inputElement: HTMLInputElement | HTMLTextAreaElement | undefined = $state(undefined);
 let outerDiv: HTMLDivElement | undefined = $state(undefined);
+let inputElement: HTMLInputElement | undefined = $state(undefined);
 let inputValue: string | undefined = $state('');
 let scrollElements: HTMLLIElement[] = $state([]);
 
@@ -59,24 +58,31 @@ onDestroy(() => {
   contextsUnsubscribe?.();
 });
 
+// Focus the input when the command palette becomes visible
+$effect(() => {
+  if (display && inputElement) {
+    tick()
+      .then(() => {
+        inputElement?.focus();
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to focus input box', error);
+      });
+  }
+});
+
 let selectedFilteredIndex = $state(0);
 let selectedIndex = 0;
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
-  if (e.key === 'F1') {
+  if (e.key === 'F1' || e.key === '>') {
     // clear the input value
+    inputValue = '';
     selectedFilteredIndex = 0;
     selectedIndex = 0;
     // toggle the display
     display = true;
-    tick()
-      .then(() => {
-        inputElement?.focus();
-      })
-      .catch(() => {
-        // ignore
-      });
 
     e.preventDefault();
     return;
@@ -191,8 +197,9 @@ async function onInputChange(): Promise<void> {
         class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-lg p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-base">
         <div class="w-full flex flex-row relative">
           <Input
-            aria-label="Command palette command input"
+            aria-label='Command palette command input'
             bind:value={inputValue}
+            bind:element={inputElement}
             clearable={true}
             oninput={onInputChange}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" >
@@ -229,7 +236,7 @@ async function onInputChange(): Promise<void> {
             To navigate
           </div>
           <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
-            <Icon icon={ESCIcon} class="bg-[var(--pd-action-button-bg)] rounded-sm px-1 py-0.5" size='2.2em'/>
+            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>esc</div>
             To close
           </div>
         </div>
