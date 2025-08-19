@@ -15,6 +15,8 @@ let globalSearchbar = $state(false);
 
 onMount(async () => {
   platform = await window.getOsPlatform();
+
+  globalSearchbar = await window.isExperimentalConfigurationEnabled('titleBar.searchBar');
   window.events.receive('search-bar-enabled', val => {
     if (typeof val === 'boolean') globalSearchbar = val;
   });
@@ -49,7 +51,7 @@ function closeCommandPallet(): void {
           <DesktopIcon size="18" />
         </div>
         {#if globalSearchbar}
-          <button id="Search button" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
+          <button id="Search button" class="absolute top-1/2 left-1/2 text-[color:var(--pd-global-nav-icon)] transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
             <Icon icon={faMagnifyingGlass} />Search
           </button>
         {:else}
@@ -63,7 +65,7 @@ function closeCommandPallet(): void {
           <DesktopIcon size="20" />
         </div>
         {#if globalSearchbar}
-          <button id="Search button" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
+          <button id="Search button" class="absolute top-1/2 left-1/2 text-[color:var(--pd-global-nav-icon)] transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
             <Icon icon={faMagnifyingGlass} />Search
           </button>
         {/if}
@@ -72,7 +74,7 @@ function closeCommandPallet(): void {
       </div>
     {:else if platform === 'darwin'}
       {#if globalSearchbar}
-        <button id="Search button" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
+        <button id="Search button" class="absolute top-1/2 left-1/2 text-[color:var(--pd-global-nav-icon)] transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center gap-1" style="-webkit-app-region: none;" onclick={openCommandPallet}>
           <Icon icon={faMagnifyingGlass} />Search
         </button>
       {/if}

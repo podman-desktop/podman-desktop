@@ -61,7 +61,7 @@ export class AppearanceInit {
           enum: [AppearanceSettings.IconAndTitle, AppearanceSettings.Icon],
           default: AppearanceSettings.IconAndTitle,
         },
-        [`titlebar.${AppearanceSettings.SearchBar}`]: {
+        [`titleBar.${AppearanceSettings.SearchBar}`]: {
           description: 'Show searchbar in the title bar',
           type: 'object',
           experimental: {
@@ -79,7 +79,7 @@ export class AppearanceInit {
       }
 
       if (
-        e.key === `titlebar.${AppearanceSettings.SearchBar}` &&
+        e.key === `titleBar.${AppearanceSettings.SearchBar}` &&
         (typeof e.value === 'object' || typeof e.value === 'undefined')
       ) {
         this.apiSender.send('search-bar-enabled', typeof e.value === 'object');

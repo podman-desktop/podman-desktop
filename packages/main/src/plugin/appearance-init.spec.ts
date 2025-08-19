@@ -107,7 +107,7 @@ test('Expect appearance configuration change to update searchbar when enabled', 
 
   // call the callback
   callback?.({
-    key: `titlebar.${AppearanceSettings.SearchBar}`,
+    key: `titleBar.${AppearanceSettings.SearchBar}`,
     value: {},
   } as unknown as IConfigurationChangeEvent);
 
@@ -130,7 +130,7 @@ test('Expect appearance configuration change to update searchbar when disabled',
 
   // call the callback
   callback?.({
-    key: `titlebar.${AppearanceSettings.SearchBar}`,
+    key: `titleBar.${AppearanceSettings.SearchBar}`,
     value: undefined,
   } as unknown as IConfigurationChangeEvent);
 
@@ -189,7 +189,7 @@ test('should register a configuration', async () => {
     AppearanceSettings.IconAndTitle,
   );
 
-  expect(configurationNode?.properties?.['preferences.searchBar']).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.searchBar']?.description).toBeDefined();
-  expect(configurationNode?.properties?.['preferences.searchBar']?.type).toBe('object');
+  expect(configurationNode?.properties?.['titleBar.searchBar']).toBeDefined();
+  expect(configurationNode?.properties?.['titleBar.searchBar']?.description).toBeDefined();
+  expect(configurationNode?.properties?.['titleBar.searchBar']?.type).toBe('object');
 });
