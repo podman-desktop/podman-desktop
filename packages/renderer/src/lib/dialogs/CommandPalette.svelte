@@ -183,6 +183,17 @@ async function onInputChange(): Promise<void> {
     selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
   }
 }
+
+async function onAction(): Promise<void> {
+  // When input is cleared, refocus it
+  tick()
+    .then(() => {
+      inputElement?.focus();
+    })
+    .catch((error: unknown) => {
+      console.error('Unable to focus input box', error);
+    });
+}
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:mousedown={handleMousedown} />
@@ -201,7 +212,8 @@ async function onInputChange(): Promise<void> {
             bind:value={inputValue}
             bind:element={inputElement}
             clearable={true}
-            oninput={onInputChange}
+            on:input={onInputChange}
+            on:action={onAction}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" >
             {#snippet left()}
               <Icon icon={faChevronRight} class="pr-1"/>
