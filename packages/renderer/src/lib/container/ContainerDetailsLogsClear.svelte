@@ -1,11 +1,49 @@
 <script lang="ts">
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
 import type { Terminal } from '@xterm/xterm';
+import { SvelteDate } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 
-const { terminal }: { terminal: Terminal } = $props();
+import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
-function clear(): void {
+import type { ContainerInfoUI } from './ContainerInfoUI';
+
+const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI } = $props();
+
+let clearTimestamp: string = $state('');
+let lastLog: string = '';
+
+$effect(() => {
+  if (clearTimestamp) {
+    $containerLogsClearTimestamps[container.id] = clearTimestamp;
+  }
+});
+
+async function getLastLogTimestamp(): Promise<void> {
+  await window.logsContainer({
+    engineId: container.engineId,
+    containerId: container.id,
+    callback,
+    timestamps: true,
+    tail: 1,
+  });
+}
+
+function callback(name: string, data: string): void {
+  if (name === 'data') {
+    lastLog = data;
+  }
+
+  if (lastLog) {
+    let timestamp = lastLog.split(' ', 1)[0];
+    const datenow = new SvelteDate(timestamp);
+    datenow.setSeconds(datenow.getSeconds() + 1);
+    clearTimestamp = datenow.toISOString();
+  }
+}
+
+async function clear(): Promise<void> {
+  await getLastLogTimestamp();
   terminal.clear();
 }
 </script>

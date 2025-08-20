@@ -5,6 +5,8 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { mount, onDestroy, onMount } from 'svelte';
 
+import { containerLogsClearTimestamps } from '/@/stores/container-logs';
+
 import { isMultiplexedLog } from '../stream/stream-utils';
 import NoLogIcon from '../ui/NoLogIcon.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
@@ -25,6 +27,8 @@ let logsTerminal = $state<Terminal>();
 
 // save previous container
 let refContainer: ContainerInfoUI;
+
+let lastLogTimestamp: string | undefined = $derived($containerLogsClearTimestamps[container.id] ?? undefined);
 
 // need to refresh logs when container is switched or state changes
 $effect(() => {
@@ -61,7 +65,13 @@ function callback(name: string, data: string): void {
 
 async function fetchContainerLogs(): Promise<void> {
   // grab logs of the container
-  await window.logsContainer({ engineId: container.engineId, containerId: container.id, callback });
+  console.log('>>>>>>> lasttimestamp: ' + lastLogTimestamp);
+  await window.logsContainer({
+    engineId: container.engineId,
+    containerId: container.id,
+    callback,
+    since: lastLogTimestamp,
+  });
 }
 
 function afterTerminalInit(): void {
@@ -76,6 +86,7 @@ function afterTerminalInit(): void {
     target: xtermElement,
     props: {
       terminal: logsTerminal,
+      container: container,
     },
   });
 }

@@ -2762,6 +2762,15 @@ test('container logs callback notified when messages arrive', async () => {
   });
   await containerRegistry.logsContainer({ engineId: 'podman', id: 'containerId', callback });
 
+  expect(dockerodeContainer.logs).toHaveBeenCalledWith({
+    follow: true,
+    stdout: true,
+    stderr: true,
+    abortSignal: undefined,
+    tail: undefined,
+    timestamps: undefined,
+  });
+
   setTimeout(() => {
     stream.emit('data', 'log message');
     stream.emit('end', '');

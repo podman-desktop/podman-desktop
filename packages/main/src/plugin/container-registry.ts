@@ -1685,16 +1685,27 @@ export class ContainerProviderRegistry {
     id: string;
     callback: (name: string, data: string) => void;
     abortController?: AbortController;
+    timestamps?: boolean;
+    tail?: number;
+    since?: string;
   }): Promise<void> {
     let telemetryOptions = {};
     let firstMessage = true;
     const container = this.getMatchingContainer(logsParams.engineId, logsParams.id);
+    console.log('>>>>>>>>>>>>>>>>>: ' + (logsParams.since ?? undefined));
+    const optionalParams: { [param: string]: unknown } = {};
+    if (logsParams.since) {
+      optionalParams['since'] = logsParams.since;
+    }
     container
       .logs({
         follow: true,
         stdout: true,
         stderr: true,
         abortSignal: logsParams.abortController?.signal,
+        tail: logsParams.tail,
+        timestamps: logsParams.timestamps,
+        ...optionalParams,
       })
       .then(containerStream => {
         containerStream.on('end', () => {
