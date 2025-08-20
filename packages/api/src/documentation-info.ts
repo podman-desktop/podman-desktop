@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
+
 import type { ContainerInfo } from './container-info.js';
 import type { ImageInfo } from './image-info.js';
 import type { PodInfo } from './pod-info.js';
@@ -33,13 +36,19 @@ export interface DocumentationInfo extends DocumentationBaseInfo {
 }
 
 export type GoToInfo =
-  | (PodInfo & { type: 'Pod' })
-  | (ContainerInfo & { type: 'Container' })
-  | (ImageInfo & { type: 'Image' })
-  | (VolumeInfo & { type: 'Volume' })
-  | (NavigationInfo & { type: 'Navigation' });
+  | (PodInfo & { type: 'Pod'; icon: GoToIcon })
+  | (ContainerInfo & { type: 'Container'; icon: GoToIcon })
+  | (ImageInfo & { type: 'Image'; icon: GoToIcon })
+  | (VolumeInfo & { type: 'Volume'; icon: GoToIcon })
+  | (NavigationInfo & { type: 'Navigation'; icon: GoToIcon });
 
 export interface NavigationInfo {
   name: string;
   link: string;
+}
+
+export interface GoToIcon {
+  iconImage?: string | { readonly light: string; readonly dark: string };
+  iconComponent?: Component; // Component type
+  faIcon?: IconDefinition; // IconDefinition type
 }

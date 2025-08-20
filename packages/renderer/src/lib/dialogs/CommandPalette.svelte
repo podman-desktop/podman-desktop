@@ -1,8 +1,16 @@
 <script lang="ts">
-import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUpRightFromSquare,
+  faChevronRight,
+  faFileLines,
+  faFilePen,
+  faMagnifyingGlass,
+  faTerminal,
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { onMount, tick } from 'svelte';
+import { type Component, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
@@ -70,10 +78,6 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
-let imageItems: ImageInfo[] = $state([]);
-let containerItems: ContainerInfo[] = $state([]);
-let podItems: PodInfo[] = $state([]);
-let volumeItems: VolumeInfo[] = $state([]);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
@@ -353,7 +357,7 @@ function highlightText(
     return [{ text: text ?? '', hasMatch: false }];
   }
 
-  const escapedSearchTerm = searchTerm.replace(/[/\\:]/g, '\\$&');
+  const escapedSearchTerm = searchTerm.replace(/[.\\]/g, '\\$&');
   const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
 
   return text
@@ -376,6 +380,22 @@ function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): s
   } else {
     return item.title ?? '';
   }
+}
+
+function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefinition | Component | string {
+  if (isDocItem(item)) {
+    return item.category === 'Tutorial' ? faFilePen : faFileLines;
+  } else if (isGoToItem(item)) {
+    // All goto items now have icons set in Utils
+    if (item.icon) {
+      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as
+        | IconDefinition
+        | Component
+        | string;
+    }
+  }
+  // Commands and fallback
+  return faTerminal;
 }
 </script>
 
@@ -429,6 +449,8 @@ function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): s
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
             {@const goToItem = isGoToItem(item)}
+            {@const docItem = isDocItem(item)}
+            {@const itemIcon = getIcon(item)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
@@ -437,14 +459,20 @@ function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): s
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base py-[2pt]">
-                      {#each highlightText(getTextToHighlight(item), inputValue) as part, i (i)}
-                        {#if part.hasMatch}
-                          <span class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</span>
-                        {:else}
-                          {part.text}
-                        {/if}
-                      {/each}
+                    <div class="text-base py-[2pt] flex items-center gap-1">
+                      <Icon class='w-[1.2em] h-[1.2em]' icon={itemIcon} />
+                      <span>
+                        {#each highlightText(getTextToHighlight(item), inputValue) as part, i (i)}
+                          {#if part.hasMatch}
+                            <span class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</span>
+                          {:else}
+                            {part.text}
+                          {/if}
+                        {/each}
+                      </span>
+                      {#if docItem}
+                        <Icon icon={faArrowUpRightFromSquare}/>
+                      {/if}
                     </div>
                   </div>
                 </div>

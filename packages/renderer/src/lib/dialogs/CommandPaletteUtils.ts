@@ -16,6 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import { get } from 'svelte/store';
+
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import { isDark } from '/@/stores/appearance';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo, NavigationInfo } from '/@api/documentation-info';
@@ -108,8 +115,18 @@ function extractNavigationPaths(entries: NavigationRegistryEntry[]): GoToInfo[] 
 
     // Only add actual navigation entries (type 'entry'), not groups or submenus
     if (entry.type === 'entry') {
+      let iconImage = entry.icon?.iconImage;
+      if (iconImage && typeof iconImage !== 'string') {
+        iconImage = get(isDark) ? iconImage.dark : iconImage.light;
+      }
+
       items.push({
         type: 'Navigation',
+        icon: {
+          iconComponent: entry.icon?.iconComponent,
+          faIcon: entry.icon?.faIcon?.definition,
+          iconImage: iconImage,
+        },
         ...({
           name: displayName,
           link: entry.link,
@@ -144,22 +161,22 @@ export function createGoToItems(
 
   // Add images
   images.forEach(image => {
-    items.push({ type: 'Image', ...image });
+    items.push({ type: 'Image', ...image, icon: { iconComponent: ImageIcon } });
   });
 
   // Add containers
   containers.forEach(container => {
-    items.push({ type: 'Container', ...container });
+    items.push({ type: 'Container', ...container, icon: { iconComponent: ContainerIcon } });
   });
 
   // Add pods
   pods.forEach(pod => {
-    items.push({ type: 'Pod', ...pod });
+    items.push({ type: 'Pod', ...pod, icon: { iconComponent: PodIcon } });
   });
 
   // Add volumes
   volumes.forEach(volume => {
-    items.push({ type: 'Volume', ...volume });
+    items.push({ type: 'Volume', ...volume, icon: { iconComponent: VolumeIcon } });
   });
 
   // Add navigation registry entries
