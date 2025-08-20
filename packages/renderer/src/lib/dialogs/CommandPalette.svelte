@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpRightFromSquare, faChevronRight, faFileLines, faFilePen, faMagnifyingGlass, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import type { ImageInfo, PodInfo } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
@@ -437,18 +437,24 @@ async function onAction(): Promise<void> {
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base py-[2pt]">
-                      {#if isDocItem}
-                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).title}
-                       {:else if isGoToItem}
-                        {@const goToItem = item as GoToInfo}
-                        {#if goToItem.kind === 'Navigation'}
-                          {goToItem.name}
+                    <div class="text-base py-[2pt] flex flex-row items-center">
+                      <Icon class='w-[12pt] h-[12pt]' icon={isDocItem ? item.category === 'Tutorial' ? faFilePen : faFileLines : faTerminal}/>
+                      <div class='px-1'>
+                        {#if isDocItem}
+                          {(item as DocumentationInfo).category}: {(item as DocumentationInfo).title}
+                        {:else if isGoToItem}
+                          {@const goToItem = item as GoToInfo}
+                          {#if goToItem.kind === 'Navigation'}
+                            {goToItem.name}
+                          {:else}
+                            {goToItem.kind}: {goToItem.name}
+                          {/if}
                         {:else}
-                          {goToItem.kind}: {goToItem.name}
+                          {(item as CommandInfo).title}
                         {/if}
-                      {:else}
-                        {(item as CommandInfo).title}
+                      </div>
+                      {#if isDocItem}
+                        <Icon icon={faArrowUpRightFromSquare}/>
                       {/if}
                     </div>
                   </div>
