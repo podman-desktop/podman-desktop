@@ -103,21 +103,20 @@ $effect(() => {
 let selectedFilteredIndex = $state(0);
 let selectedIndex = 0;
 
+function displaySearchBar(): void {
+  // clear the input value
+  inputValue = '';
+  selectedIndex = 0;
+  // toggle the display
+  display = true;
+}
+
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
   if (e.key === 'F1' || e.key === '>') {
-    // searchbar is displayed we want to go to commands
-    if (display) {
-      searchOptionsSelectedIndex = 1;
-      return;
-    }
-    // clear the input value
-    inputValue = '';
     selectedFilteredIndex = 0;
-    selectedIndex = 0;
-    // toggle the display
-    display = true;
-
+    searchOptionsSelectedIndex = 1;
+    displaySearchBar();
     e.preventDefault();
     return;
   } else if (e.key === ESCAPE_KEY) {
@@ -125,6 +124,15 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     hideCommandPallete();
     e.preventDefault();
     return;
+  } else if (e.ctrlKey || e.metaKey) {
+    if (e.key.toLowerCase() === 'k') {
+      searchOptionsSelectedIndex = 2;
+      displaySearchBar();
+    } else if (e.key.toLowerCase() === 'f') {
+      searchOptionsSelectedIndex = 3;
+      displaySearchBar();
+    }
+    e.preventDefault();
   }
 
   // for other keys, only check if it's being displayed
@@ -174,13 +182,6 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     e.preventDefault();
   } else if (e.key === TAB_KEY) {
     switchSearchOption(e.shiftKey ? -1 : 1);
-    e.preventDefault();
-  } else if (e.ctrlKey || e.metaKey) {
-    if (e.key.toLowerCase() === 'k') {
-      searchOptionsSelectedIndex = 2;
-    } else if (e.key.toLowerCase() === 'f') {
-      searchOptionsSelectedIndex = 3;
-    }
     e.preventDefault();
   }
 }
