@@ -4702,6 +4702,7 @@ declare module '@podman-desktop/api' {
     markdownDescription: string;
     images: ProviderImages;
     version?: string;
+    path?: string;
     extensionInfo: {
       id: string;
       label: string;
