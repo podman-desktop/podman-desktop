@@ -20,3 +20,11 @@ export interface DocumentationJsonInfo {
   name: string;
   url: string;
 }
+
+export interface DocumentationInfo {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  category: string;
+}
