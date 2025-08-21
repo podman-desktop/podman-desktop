@@ -174,7 +174,7 @@ test('left and right buttons have hover class', async () => {
   expect(rightInnerDiv).toHaveClass(/hover:bg-/);
 });
 
-test('wheel event scrolls carousel horizontally', async () => {
+test('horizontal wheel event scrolls carousel horizontally', async () => {
   render(CarouselTest);
 
   // Set narrow width so scrolling is needed
@@ -183,16 +183,16 @@ test('wheel event scrolls carousel horizontally', async () => {
   // Find the carousel container by its aria-label
   const carousel = screen.getByLabelText('Carousel container');
 
-  // Mock wheel event scrolling down (should scroll right in carousel)
-  await fireEvent.wheel(carousel, { deltaY: 100 });
+  // Mock horizontal wheel event scrolling right (should scroll right in carousel)
+  await fireEvent.wheel(carousel, { deltaX: 100, deltaY: 0 });
 
   await waitFor(() => {
     const card2 = screen.getByText('card 2');
     expect(card2).toBeVisible();
   });
 
-  // Mock wheel event scrolling up (should scroll left in carousel)
-  await fireEvent.wheel(carousel, { deltaY: -100 });
+  // Mock horizontal wheel event scrolling left (should scroll left in carousel)
+  await fireEvent.wheel(carousel, { deltaX: -100, deltaY: 0 });
 
   await waitFor(() => {
     const card1 = screen.getByText('card 1');
@@ -268,7 +268,7 @@ test('scroll position management maintains proper bounds', async () => {
   });
 });
 
-test('carousel prevents wheel event default behavior', async () => {
+test('carousel prevents horizontal wheel event default behavior', async () => {
   render(CarouselTest);
 
   // Set narrow width so scrolling is needed
@@ -276,12 +276,37 @@ test('carousel prevents wheel event default behavior', async () => {
 
   const carousel = screen.getByLabelText('Carousel container');
 
-  // Create a wheel event with preventDefault method
-  const wheelEvent = new WheelEvent('wheel', { deltaY: 100 });
+  // Create a horizontal wheel event with preventDefault method
+  const wheelEvent = new WheelEvent('wheel', { deltaX: 100, deltaY: 0 });
   const preventDefaultSpy = vi.spyOn(wheelEvent, 'preventDefault');
 
   // Trigger wheel event
   carousel.dispatchEvent(wheelEvent);
 
   expect(preventDefaultSpy).toHaveBeenCalled();
+});
+
+test('carousel does not prevent vertical wheel event default behavior', async () => {
+  render(CarouselTest);
+
+  // Set narrow width so scrolling is needed
+  callback([{ contentRect: { width: 360 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+
+  const carousel = screen.getByLabelText('Carousel container');
+
+  // Create a vertical wheel event with preventDefault method
+  const wheelEvent = new WheelEvent('wheel', { deltaX: 0, deltaY: 100 });
+  const preventDefaultSpy = vi.spyOn(wheelEvent, 'preventDefault');
+
+  // Trigger wheel event
+  carousel.dispatchEvent(wheelEvent);
+
+  // Vertical scroll should NOT prevent default behavior
+  expect(preventDefaultSpy).not.toHaveBeenCalled();
+
+  // Verify that card 1 is still visible (carousel shouldn't have scrolled)
+  await waitFor(() => {
+    const card1 = screen.getByText('card 1');
+    expect(card1).toBeVisible();
+  });
 });

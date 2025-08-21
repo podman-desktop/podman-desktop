@@ -59,9 +59,13 @@ function scrollRight(): void {
 }
 
 function handleWheel(event: WheelEvent): void {
-  event.preventDefault();
-  const scrollAmount = event.deltaY > 0 ? 100 : -100;
-  scrollToPosition(scrollPosition + scrollAmount);
+  // Check if it's a horizontal scroll event (most trackpads and some mice support this)
+  if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+    // Natural horizontal scroll
+    event.preventDefault();
+    const scrollAmount = event.deltaX > 0 ? 25 : -25;
+    scrollToPosition(scrollPosition + scrollAmount);
+  }
 }
 
 function handleMouseDown(event: MouseEvent): void {
