@@ -65,8 +65,8 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7
       electron-context-menu:
-        specifier: 4.1.0
-        version: 4.1.0
+        specifier: 4.1.1
+        version: 4.1.1
       electron-updater:
         specifier: 6.6.7
         version: 6.6.7
@@ -589,8 +589,8 @@ importers:
         specifier: ^0.9.6
         version: 0.9.6(svelte@5.38.2)
       electron-context-menu:
-        specifier: 4.1.0
-        version: 4.1.0
+        specifier: 4.1.1
+        version: 4.1.1
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6380,8 +6380,8 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  electron-context-menu@4.1.0:
-    resolution: {integrity: sha512-mvV7YAIaAvMdxqkdDDHXehe5FPyFKXOyuJqgLwXSrWRjdmDBZQREvgcphKbAVgFU5XjYG5R6PAL00+b8Q6SKqg==}
+  electron-context-menu@4.1.1:
+    resolution: {integrity: sha512-kebXha4K2DmR7zrKpO8muzXlUAdhgqQIT7DpPeT4cAKZugwCB/NbuEuT+1SDjOH9vXJYjWK2UQuFvnVw0u0lHg==}
     engines: {node: '>=18'}
 
   electron-dl@4.0.0:
@@ -18786,7 +18786,7 @@ snapshots:
       - electron-builder-squirrel-windows
       - supports-color
 
-  electron-context-menu@4.1.0:
+  electron-context-menu@4.1.1:
     dependencies:
       cli-truncate: 4.0.0
       electron-dl: 4.0.0
