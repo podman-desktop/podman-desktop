@@ -232,7 +232,6 @@ export class ColorRegistry {
     this.initGlobalNav();
     this.initSecondaryNav();
     this.initTitlebar();
-    this.initSearchBar();
     this.initContent();
     this.initInvertContent();
     this.initCardContent();
@@ -315,25 +314,6 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-selected-highlight`, {
       dark: colorPalette.purple[500],
       light: colorPalette.purple[600],
-    });
-  }
-
-  protected initSearchBar(): void {
-    const sb = 'search-bar-';
-
-    this.registerColor(`${sb}-bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[50],
-    });
-
-    this.registerColor(`${sb}nav-button`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[300],
-    });
-
-    this.registerColor(`${sb}-text`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
     });
   }
 

@@ -28,7 +28,7 @@ interface Props {
 
 interface SearchOption {
   text: string;
-  shortCut?: string;
+  shortCut?: string[];
 }
 
 let { display = false, onclose }: Props = $props();
@@ -50,9 +50,9 @@ let isMac: boolean = $state(false);
 let modifier: string = $derived(isMac ? '⌘ ' : 'Ctrl ');
 let searchOptions: SearchOption[] = $derived([
   { text: 'All' },
-  { text: 'Commands', shortCut: 'F1' },
-  { text: 'Documentation', shortCut: `${modifier}K` },
-  { text: 'Go to', shortCut: `${modifier}F` },
+  { text: 'Commands', shortCut: ['F1', '>'] },
+  { text: 'Documentation', shortCut: [`${modifier}K`] },
+  { text: 'Go to', shortCut: [`${modifier}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
 
@@ -132,7 +132,6 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       searchOptionsSelectedIndex = 3;
       displaySearchBar();
     }
-    e.preventDefault();
   }
 
   // for other keys, only check if it's being displayed
@@ -282,9 +281,11 @@ async function onAction(): Promise<void> {
               selected={searchOptionsSelectedIndex === index}>
               <div class="flex items-center gap-2">
                 {#if searchOption.shortCut}
-                  <div class='bg-[var(--pd-search-bar-nav-button)] rounded-sm px-0.5 shadow-sm shadow-b-1'>
-                    {searchOption.shortCut}
-                  </div>
+                  {#each searchOption.shortCut as shortCut, i (i)}
+                    <div class='bg-[var(--pd-search-bar-nav-button)] rounded-sm px-0.5 shadow-sm shadow-b-1'>
+                      {shortCut}
+                    </div>
+                  {/each}
                 {/if}
                 {searchOption.text}
               </div>
@@ -331,19 +332,6 @@ async function onAction(): Promise<void> {
           <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
             <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>esc</div>
             To close
-          </div>
-          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
-            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>F1</div>
-            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>></div>
-            Commands
-          </div>
-          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
-            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>{modifier}K</div>
-            Docs
-          </div>
-          <div class="flex items-center gap-2 text-[var(--pd-button-tab-text)] border-[var(--pd-button-tab-border-selected)]">
-            <div class='bg-[var(--pd-action-button-bg)] rounded-sm text-base px-1 py-0.5'>{modifier}F</div>
-            Go to
           </div>
         </div>
       </div>
