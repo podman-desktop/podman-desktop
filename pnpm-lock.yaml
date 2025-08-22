@@ -318,8 +318,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       shell-path:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@podman-desktop/api':
         specifier: workspace:*
@@ -433,8 +433,8 @@ importers:
         specifier: ^7.7.2
         version: 7.7.2
       shell-path:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@types/semver':
         specifier: ^7.7.0
@@ -4861,8 +4861,8 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
-  ansi-regex@6.1.0:
-    resolution: {integrity: sha512-7HSX4QQb4CspciLpVFwyRe79O3xsIZDDLER21kERQ71oaPodF8jL725AgJMFAYbooIqolJoRLuM81SpeUkpkvA==}
+  ansi-regex@6.2.0:
+    resolution: {integrity: sha512-TKY5pyBkHyADOPYlRT9Lx6F544mPl0vS5Ew7BJ45hA08Q+t3GjbueLliBWN3sMICk6+y7HdyxSzC4bWS8baBdg==}
     engines: {node: '>=12'}
 
   ansi-styles@3.2.1:
@@ -10564,8 +10564,8 @@ packages:
     resolution: {integrity: sha512-w3oeZ9qg/P6Lu6qqwavvMnB/bwfsz67gPB3WXmLd/n6zuh7TWQZtGa3iMEdmua0kj8rivkwl+vUjgLWlqZOMPw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  shell-path@3.0.0:
-    resolution: {integrity: sha512-HNIZ+W/3P0JuVTV03xjGqYKt3e3h0/Z4AH8TQWeth1LBtCusSjICgkdNdb3VZr6mI7ijE2AiFFpgkVMNKsALeQ==}
+  shell-path@3.1.0:
+    resolution: {integrity: sha512-s/9q9PEtcRmDTz69+cJ3yYBAe9yGrL7e46gm2bU4pQ9N48ecPK9QrGFnLwYgb4smOHskx4PL7wCNMktW2AoD+g==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   shell-quote@1.8.1:
@@ -16995,7 +16995,7 @@ snapshots:
 
   ansi-regex@5.0.1: {}
 
-  ansi-regex@6.1.0: {}
+  ansi-regex@6.2.0: {}
 
   ansi-styles@3.2.1:
     dependencies:
@@ -20236,7 +20236,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23476,7 +23476,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
 
   regexp-ast-analysis@0.7.1:
     dependencies:
@@ -23974,7 +23974,7 @@ snapshots:
       execa: 5.1.1
       strip-ansi: 7.1.0
 
-  shell-path@3.0.0:
+  shell-path@3.1.0:
     dependencies:
       shell-env: 4.0.1
 
@@ -24346,7 +24346,7 @@ snapshots:
 
   strip-ansi@7.1.0:
     dependencies:
-      ansi-regex: 6.1.0
+      ansi-regex: 6.2.0
 
   strip-bom-string@1.0.0: {}
 

@@ -169,7 +169,7 @@
   "dependencies": {
     "@octokit/rest": "^22.0.0",
     "mustache": "^4.2.0",
-    "shell-path": "^3.0.0"
+    "shell-path": "^3.1.0"
   },
   "devDependencies": {
     "@podman-desktop/api": "workspace:*",
