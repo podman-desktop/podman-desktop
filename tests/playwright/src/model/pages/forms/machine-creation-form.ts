@@ -104,12 +104,12 @@ export class MachineCreationForm extends BasePage {
       }
       if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
         await playExpect(this.providerTypeDiv).toBeVisible({ timeout: 10_000 });
-        playExpect(this.providerTypeDiv.innerText()).toContain(getDefaultVirtualizationProvider());
+        await playExpect(this.providerTypeDiv).toContainText(getDefaultVirtualizationProvider(), { ignoreCase: true });
         await this.providerTypeDiv.scrollIntoViewIfNeeded();
         await this.providerTypeDiv.click();
         await playExpect(this.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
         await this.providerTypeDropdownOption.click();
-        playExpect(this.providerTypeDiv.innerText()).toContain(virtualizationProvider);
+        await playExpect(this.providerTypeDiv).toContainText(virtualizationProvider, { ignoreCase: true });
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
