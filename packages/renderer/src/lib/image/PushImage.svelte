@@ -106,8 +106,10 @@ $effect(() => {
     //
     loadBackgroundPush();
   }
-  loadImageInfo().catch((err: unknown) => console.log(`Cannot load image info: ${err}`));
-  checkRegistryAuthConfiguration().catch((err: unknown) => console.log(`Cannot check auth configuration: ${err}`));
+  loadImageInfo()
+    .catch((err: unknown) => console.log(`Cannot load image info: ${err}`))
+    .then(() => checkRegistryAuthConfiguration())
+    .catch((err: unknown) => console.log(`Cannot check auth configuration: ${err}`));
 });
 
 async function pushImage(): Promise<void> {
