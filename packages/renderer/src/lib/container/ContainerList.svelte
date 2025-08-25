@@ -11,15 +11,12 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
-import { onDestroy, onMount } from 'svelte';
-import { type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import type { ContainerInfo } from '/@api/container-info';
 import { NavigationPage } from '/@api/navigation-page';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import { containersInfos } from '../../stores/containers';
 import { context } from '../../stores/context';
 import { podCreationHolder } from '../../stores/creation-from-containers-store';
@@ -201,7 +198,7 @@ function createPodFromContainers(): void {
   const podUtils = new PodUtils();
 
   const podCreation = {
-    name: podUtils.calculateNewPodName(pods),
+    name: podUtils.calculateNewPodName($podsInfos),
     containers: selectedContainers.map(container => {
       return { id: container.id, name: container.name, engineId: container.engineId, ports: container.ports };
     }),
@@ -213,9 +210,6 @@ function createPodFromContainers(): void {
   // redirect to pod creation page
   router.goto('/pod-create-from-containers');
 }
-
-let podUnsubscribe: Unsubscriber;
-let pods: PodInfo[];
 
 let currentContainers = $derived.by(() => {
   const viewContributions = $viewsContributions.filter(view => view.viewId === CONTAINER_LIST_VIEW);
@@ -280,19 +274,6 @@ let containerGroups = $derived.by(() => {
   });
 
   return computedContainerGroups;
-});
-
-onMount(async () => {
-  podUnsubscribe = podsInfos.subscribe(podInfos => {
-    pods = podInfos;
-  });
-});
-
-onDestroy(() => {
-  // unsubscribe from the store
-  if (podUnsubscribe) {
-    podUnsubscribe();
-  }
 });
 
 function toggleCreateContainer(): void {
