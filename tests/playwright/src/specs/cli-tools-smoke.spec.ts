@@ -56,28 +56,34 @@ toolsToTest.forEach(tool => {
           .toBeFalsy();
       });
 
-      //Test is expected to fail until https://github.com/podman-desktop/podman-desktop/issues/13696 is resolved
-      test.fail(`Install ${tool} -> downgrade -> uninstall`, async () => {
-        test.setTimeout(120_000);
+      test.fail(
+        `Install ${tool} -> downgrade -> uninstall`,
+        { annotation: { type: 'issue', description: 'https://github.com/podman-desktop/podman-desktop/issues/13696' } },
+        async () => {
+          test.setTimeout(120_000);
 
-        await cliToolsPage.installTool(tool);
-        await cliToolsPage.downgradeTool(tool);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
-          .toBeFalsy();
-      });
+          await cliToolsPage.installTool(tool);
+          await cliToolsPage.downgradeTool(tool);
+          await cliToolsPage.uninstallTool(tool);
+          await playExpect
+            .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
+            .toBeFalsy();
+        },
+      );
 
-      //Test is expected to fail until https://github.com/podman-desktop/podman-desktop/issues/13696 is resolved
-      test.fail(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
-        test.setTimeout(120_000);
+      test.fail(
+        `Install old version of ${tool} -> upgrade -> uninstall`,
+        { annotation: { type: 'issue', description: 'https://github.com/podman-desktop/podman-desktop/issues/13696' } },
+        async () => {
+          test.setTimeout(120_000);
 
-        await cliToolsPage.installToolWithSecondLatestVersion(tool);
-        await cliToolsPage.updateTool(tool);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
-          .toBeFalsy();
-      });
+          await cliToolsPage.installToolWithSecondLatestVersion(tool);
+          await cliToolsPage.updateTool(tool);
+          await cliToolsPage.uninstallTool(tool);
+          await playExpect
+            .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
+            .toBeFalsy();
+        },
+      );
     });
 });
