@@ -1,26 +1,20 @@
 <script lang="ts">
 import { faCheckCircle, faCircleArrowUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import { get, type Unsubscriber } from 'svelte/store';
+import type { Terminal } from '@xterm/xterm';
+import { onDestroy } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { providerInfos } from '/@/stores/providers';
-import {
-  clonePushImageInfo,
-  createDefaultPushImageInfo,
-  getNextTaskId,
-  lastUpdatedTaskId,
-  pushImagesInfo,
-} from '/@/stores/push-images';
 
 import { imagesInfos } from '../../stores/images';
+import type { PushImageCallback } from '../../stores/push-images.svelte';
+import { getNextTaskId, getPushImageInfo, PushImageInfo } from '../../stores/push-images.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
-import { disconnectUI, eventCollect, type PushImageCallback, reconnectUI, startBuild } from './push-image-task';
 
 interface Props {
   imageId: string;
@@ -29,13 +23,14 @@ interface Props {
   taskId?: number;
 }
 
-let { imageId, engineId, base64RepoTag, taskId = $bindable(0) }: Props = $props();
+let { imageId, engineId, base64RepoTag, taskId = 0 }: Props = $props();
 
 let image: ImageInfoUI | undefined;
 let selectedImageTag = $state('');
 let imageTags: string[] = $state([]);
 
-let pushImageInfo = $state(createDefaultPushImageInfo());
+let pushImageInfo = $state(new PushImageInfo());
+let logsTerminal: Terminal | undefined = $state();
 
 let providerConnections = $derived(
   $providerInfos
@@ -46,27 +41,47 @@ let providerConnections = $derived(
 
 const imageUtils = new ImageUtils();
 
-onMount(async () => {
-  if (taskId && taskId !== pushImageInfo.taskId) {
-    // switching from previous push image dialog which can be finished or still running
-    if (pushImageInfo.inProgress) {
-      disconnectUI(taskId);
-    }
-    pushImageInfo.logsTerminal?.reset();
-    const pushImagesInfoMap = get(pushImagesInfo);
-    const bgPushImageInfo = pushImagesInfoMap.get(taskId);
-    if (bgPushImageInfo) {
-      bgPushImageInfo.logsTerminal = pushImageInfo.logsTerminal;
-      if (bgPushImageInfo.inProgress) {
-        pushImageInfo = bgPushImageInfo;
-      } else {
-        pushImageInfo = clonePushImageInfo(bgPushImageInfo);
-        taskId = 0;
-      }
-      reconnectUI(pushImageInfo.taskId, createCallback());
-    }
-  }
+function createCallback(): PushImageCallback {
+  return {
+    onFirstMessage: (): void => {
+      logsTerminal?.clear();
+      window.dispatchEvent(new Event('resize'));
+    },
+    onData: (data: string): void => {
+      logsTerminal?.write(data + '\n\r');
+    },
+    onError: (data: string): void => {
+      logsTerminal?.write(data + '\n\r');
+    },
+    onEnd: (): void => {
+      pushImageInfo.disconnectUI();
+    },
+  };
+}
 
+function loadBackgroundPush(): void {
+  // switching from previous push image dialog which can be finished or still running
+  if (pushImageInfo.inProgress) {
+    pushImageInfo.disconnectUI();
+  }
+  logsTerminal?.reset();
+  const bgPushImageInfo = getPushImageInfo(taskId);
+  if (bgPushImageInfo) {
+    if (bgPushImageInfo.inProgress) {
+      pushImageInfo = bgPushImageInfo;
+    } else {
+      pushImageInfo.inProgress = $state.snapshot(bgPushImageInfo.inProgress);
+      pushImageInfo.finished = $state.snapshot(bgPushImageInfo.finished);
+      pushImageInfo.error = $state.snapshot(bgPushImageInfo.error);
+      pushImageInfo.taskId = $state.snapshot(bgPushImageInfo.taskId);
+      pushImageInfo.replay = $state.snapshot(bgPushImageInfo.replay);
+    }
+    pushImageInfo.connectUI(createCallback());
+    logsTerminal?.write(pushImageInfo.replay);
+  }
+}
+
+async function loadImageInfo(): Promise<void> {
   const inspectInfo = await window.getImageInspect(engineId, imageId);
   imageTags = inspectInfo.RepoTags;
   if (imageTags.length > 0) {
@@ -76,102 +91,62 @@ onMount(async () => {
   if (imageInfo) {
     image = imageUtils.getImageInfoUI(imageInfo, base64RepoTag, []);
   }
+}
+
+async function checkRegistryAuthConfiguration(): Promise<void> {
   if (image) {
     window
       .hasAuthconfigForImage(image.name)
       .then(result => (isAuthenticatedForThisImage = result))
       .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageId}`, err));
   }
+}
+$effect(() => {
+  if (taskId && taskId !== pushImageInfo.taskId) {
+    //
+    loadBackgroundPush();
+  }
+  loadImageInfo().catch((err: unknown) => console.log(`Cannot load image info: ${err}`));
+  checkRegistryAuthConfiguration().catch((err: unknown) => console.log(`Cannot check auth configuration: ${err}`));
 });
 
 async function pushImage(): Promise<void> {
-  pushImageInfo.error = undefined;
-  pushImageInfo.logsTerminal?.reset();
-  pushImageInfo.inProgress = true;
-  pushImageInfo.finished = false;
-  pushImagesInfo.update(map => {
-    taskId = getNextTaskId();
-    startBuild(taskId, createCallback());
-    pushImageInfo.taskId = taskId;
-    return map.set(pushImageInfo.taskId, pushImageInfo);
-  });
-  return window.pushImage(
-    engineId,
-    selectedImageTag,
-    imageId,
-    base64RepoTag,
-    eventCollect.bind(undefined, taskId),
-    taskId,
-  );
+  logsTerminal?.reset();
+  pushImageInfo.connectUI(createCallback());
+  return pushImageInfo.pushImage(engineId, selectedImageTag, imageId, base64RepoTag, getNextTaskId());
 }
 
 async function pushImageFinished(): Promise<void> {
   router.goto('/images');
 }
-function createCallback(): PushImageCallback {
-  return {
-    onFirstMessage: () => pushImageInfo.logsTerminal?.clear(),
-    onData: (data: string): void => {
-      // parse JSON message
-      const jsonObject = JSON.parse(data);
-      if (jsonObject.status) {
-        pushImageInfo.logsTerminal?.write(jsonObject.status + '\n\r');
-      }
-    },
-    onError: (data: string): void => {
-      pushImageInfo.error = data;
-      pushImageInfo.logsTerminal?.write(data + '\n\r');
-    },
-    onEnd: (): void => {
-      pushImageInfo.finished = true;
-      pushImageInfo.inProgress = false;
-    },
-  };
-}
 
 let isAuthenticatedForThisImage = $state(false);
 
-let pushImagesInfoUnsubscriber: Unsubscriber = pushImagesInfo.subscribe(map => {
-  if ($lastUpdatedTaskId && $lastUpdatedTaskId === taskId) {
-    // change event came from loaded page
-    if (pushImageInfo.finished) {
-      pushImageInfo = clonePushImageInfo(pushImageInfo);
-      taskId = 0;
-    }
-  }
-  if (taskId && pushImageInfo.taskId === 0) {
-    // initial loading
-    const bgBuildImageInfo = map.get(taskId);
-    if (bgBuildImageInfo?.finished) {
-      pushImageInfo = clonePushImageInfo(bgBuildImageInfo);
-      taskId = 0;
-    } else if (bgBuildImageInfo) {
-      pushImageInfo = bgBuildImageInfo;
-    }
-  }
-  $lastUpdatedTaskId = undefined;
+onDestroy(() => {
+  pushImageInfo.disconnectUI();
 });
 
-onDestroy(() => {
-  pushImagesInfoUnsubscriber();
-});
+function onInit(): void {
+  logsTerminal?.write(pushImageInfo.replay);
+}
 </script>
-  <EngineFormPage
-    title="Push image to a registry"
-    inProgress={pushImageInfo.inProgress}
-    showEmptyScreen={providerConnections.length === 0}>
-     {#snippet icon()}
-      <i class="fas fa-arrow-circle-down fa-2x" aria-hidden="true"></i>
-    {/snippet}
-    {#snippet content()}
-      <div class="space-y-6">
-      <div class="w-full" >
+
+<EngineFormPage
+  title="Push image to a registry"
+  inProgress={pushImageInfo.inProgress}
+  showEmptyScreen={providerConnections.length === 0}>
+  {#snippet icon()}
+    <i class="fas fa-arrow-circle-down fa-2x" aria-hidden="true"></i>
+  {/snippet}
+  {#snippet content()}
+    <div class="space-y-6">
+      <div class="w-full">
         <div class="flex-column">
           <div>taskId: {taskId}</div>
           <div>imageId: {imageId}</div>
           <div>engineId: {engineId}</div>
           <div>base64RepoTag: {base64RepoTag}</div>
-    </div>
+        </div>
         <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
         {#if isAuthenticatedForThisImage}
           <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
@@ -200,23 +175,23 @@ onDestroy(() => {
       </div>
 
       <div class="h-[185px]" hidden={!pushImageInfo.inProgress && !pushImageInfo.finished}>
-        <TerminalWindow class="h-full" bind:terminal={pushImageInfo.logsTerminal} disableStdIn />
+        <TerminalWindow class="h-full" on:init={onInit} bind:terminal={logsTerminal} disableStdIn />
       </div>
       {#if !pushImageInfo.inProgress && !pushImageInfo.finished}
-      <Button class="w-auto" type="secondary" on:click={pushImageFinished}>Cancel</Button>
-    {/if}
-    {#if !pushImageInfo.finished}
-      <Button
-        class="w-auto"
-        icon={faCircleArrowUp}
-        disabled={!isAuthenticatedForThisImage}
-        on:click={pushImage}
-       inProgress={pushImageInfo.inProgress}>
-        Push image
-      </Button>
-    {:else}
-      <Button on:click={pushImageFinished} class="w-auto">Done</Button>
-    {/if}
+        <Button class="w-auto" type="secondary" on:click={pushImageFinished}>Cancel</Button>
+      {/if}
+      {#if !pushImageInfo.finished}
+        <Button
+          class="w-auto"
+          icon={faCircleArrowUp}
+          disabled={!isAuthenticatedForThisImage}
+          on:click={pushImage}
+          inProgress={pushImageInfo.inProgress}>
+          Push image
+        </Button>
+      {:else}
+        <Button on:click={pushImageFinished} class="w-auto">Done</Button>
+      {/if}
     </div>
-    {/snippet}
-  </EngineFormPage>
+  {/snippet}
+</EngineFormPage>

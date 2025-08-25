@@ -77,7 +77,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       break;
     case NavigationPage.IMAGE_PUSH:
       router.goto(
-        `/images/push/${request.parameters.imageId}/${request.parameters.engineId}/${request.parameters.tag}/?taskId=${request.parameters.taskId}`,
+        `/image/push/${request.parameters.imageId}/${request.parameters.engineId}/${request.parameters.tag}/?taskId=${request.parameters.taskId}`,
       );
       break;
     case NavigationPage.IMAGES:
