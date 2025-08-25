@@ -1149,7 +1149,7 @@ export class PluginSystem {
         const task = taskManager.createTask({
           title: `Push image '${imageTag}'`,
           action: {
-            name: 'Show',
+            name: 'Go to task >',
             execute: () => {
               navigationManager
                 .navigateToPushImageTask(imageId, engine, base64RepoTag, taskId)
