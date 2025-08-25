@@ -77,7 +77,7 @@ async function renameImage(imageInfo: ImageInfoUI): Promise<void> {
 }
 
 function openPushImagePage(image: ImageInfoUI): void {
-  router.goto(`/images/push/${image.id}/${image.engineId}/${image.base64RepoTag}`);
+  router.goto(`/image/push/${image.id}/${image.engineId}/${image.base64RepoTag}`);
 }
 
 async function showLayersImage(): Promise<void> {
