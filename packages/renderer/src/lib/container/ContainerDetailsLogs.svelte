@@ -65,7 +65,6 @@ function callback(name: string, data: string): void {
 
 async function fetchContainerLogs(): Promise<void> {
   // grab logs of the container
-  console.log('>>>>>>> lasttimestamp: ' + lastLogTimestamp);
   await window.logsContainer({
     engineId: container.engineId,
     containerId: container.id,

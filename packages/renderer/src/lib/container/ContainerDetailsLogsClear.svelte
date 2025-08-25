@@ -11,7 +11,6 @@ import type { ContainerInfoUI } from './ContainerInfoUI';
 const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI } = $props();
 
 let clearTimestamp: string = $state('');
-let lastLog: string = '';
 
 $effect(() => {
   if (clearTimestamp) {
@@ -30,6 +29,7 @@ async function getLastLogTimestamp(): Promise<void> {
 }
 
 function callback(name: string, data: string): void {
+  let lastLog = '';
   if (name === 'data') {
     lastLog = data;
   }

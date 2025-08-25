@@ -20,9 +20,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
+import { get } from 'svelte/store';
 import { expect, test, vi } from 'vitest';
 
+import { containerLogsClearTimestamps } from '/@/stores/container-logs';
+
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
+import type { ContainerInfoUI } from './ContainerInfoUI';
 
 vi.mock('@xterm/xterm', () => {
   const writeMock = vi.fn();
@@ -34,10 +38,15 @@ vi.mock('@xterm/xterm', () => {
   };
 });
 
+const container: ContainerInfoUI = {
+  id: 'foo',
+  engineId: 'enginerFoo',
+} as unknown as ContainerInfoUI;
+
 test('expect clear button is working', async () => {
   const terminal = new Terminal();
 
-  render(ContainerDetailsLogsClear, { terminal });
+  render(ContainerDetailsLogsClear, { terminal, container });
 
   // expect the button to clear
   const clearButton = screen.getByRole('button', { name: 'Clear logs' });
@@ -47,5 +56,19 @@ test('expect clear button is working', async () => {
   await fireEvent.click(clearButton);
 
   // check we have called the clear function
-  await waitFor(() => expect(terminal.clear).toHaveBeenCalled());
+  await waitFor(() => {
+    expect(terminal.clear).toHaveBeenCalled();
+    expect(window.logsContainer).toHaveBeenCalledWith({
+      engineId: container.engineId,
+      containerId: container.id,
+      callback: expect.any(Function),
+      timestamps: true,
+      tail: 1,
+    });
+  });
+
+  const callback = vi.mocked(window.logsContainer).mock.calls[0][0].callback;
+
+  callback('data', '2025-07-31T17:10:34-04:00 some log message');
+  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T21:10:35.000Z');
 });

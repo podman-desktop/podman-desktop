@@ -1692,7 +1692,6 @@ export class ContainerProviderRegistry {
     let telemetryOptions = {};
     let firstMessage = true;
     const container = this.getMatchingContainer(logsParams.engineId, logsParams.id);
-    console.log('>>>>>>>>>>>>>>>>>: ' + (logsParams.since ?? undefined));
     const optionalParams: { [param: string]: unknown } = {};
     if (logsParams.since) {
       optionalParams['since'] = logsParams.since;
