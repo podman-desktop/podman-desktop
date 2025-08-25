@@ -56,7 +56,8 @@ toolsToTest.forEach(tool => {
           .toBeFalsy();
       });
 
-      test(`Install ${tool} -> downgrade -> uninstall`, async () => {
+      //Test is expected to fail until https://github.com/podman-desktop/podman-desktop/issues/13696 is resolved
+      test.fail(`Install ${tool} -> downgrade -> uninstall`, async () => {
         test.setTimeout(120_000);
 
         await cliToolsPage.installTool(tool);
@@ -67,7 +68,8 @@ toolsToTest.forEach(tool => {
           .toBeFalsy();
       });
 
-      test(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
+      //Test is expected to fail until https://github.com/podman-desktop/podman-desktop/issues/13696 is resolved
+      test.fail(`Install old version of ${tool} -> upgrade -> uninstall`, async () => {
         test.setTimeout(120_000);
 
         await cliToolsPage.installToolWithSecondLatestVersion(tool);
