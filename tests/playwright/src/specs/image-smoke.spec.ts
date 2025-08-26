@@ -20,6 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ArchitectureType } from '../model/core/platforms';
+import { ImageState } from '../model/core/states';
 import { ImageDetailsPage } from '../model/pages/image-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { untagImagesFromPodman } from '../utility/operations';
@@ -57,7 +58,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
       .toBeTruthy();
 
-    playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
+    playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe(ImageState.Unused);
   });
 
   test('Pull image from search results', async ({ navigationBar }) => {

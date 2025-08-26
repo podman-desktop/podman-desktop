@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementState } from '../model/core/states';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { createPodmanMachineFromCLI, deletePodmanMachine } from '../utility/operations';
 import { isLinux } from '../utility/platform';
@@ -61,7 +62,7 @@ test.describe
       const dashboardPage = await navigationBar.openDashboard();
       await playExpect(dashboardPage.podmanInitilizeAndStartButton).toBeEnabled({ timeout: 60000 });
       await dashboardPage.podmanInitilizeAndStartButton.click();
-      await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', { timeout: 300000 });
+      await playExpect(dashboardPage.podmanStatusLabel).toHaveText(ResourceElementState.Running, { timeout: 300000 });
     });
 
     test('Clean Up Podman Machine', async ({ page }) => {

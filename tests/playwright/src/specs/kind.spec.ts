@@ -20,7 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ResourceElementActions } from '../model/core/operations';
-import { ContainerState, ResourceElementState } from '../model/core/states';
+import { ContainerState, ExtensionState, ResourceElementState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -109,7 +109,7 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         await playExpect
           .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10000 })
           .toBeTruthy();
-        await playExpect(kindExtension.status).toHaveText('ACTIVE');
+        await playExpect(kindExtension.status).toHaveText(ExtensionState.Active);
         await kindExtension.disableExtension();
         await navigationBar.openSettings();
         await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeFalsy();

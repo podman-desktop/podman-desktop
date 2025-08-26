@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerState } from '../model/core/states';
+import { ContainerState, ImageState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
 import { ContainersPage } from '../model/pages/containers-page';
 import { ImageDetailsPage } from '../model/pages/image-details-page';
@@ -102,7 +102,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
       .toContain(ContainerState.Running);
 
     images = await navigationBar.openImages();
-    playExpect(await images.getCurrentStatusOfImage(imageToPull)).toBe('USED');
+    playExpect(await images.getCurrentStatusOfImage(imageToPull)).toBe(ImageState.Used);
   });
 
   test('Test navigation between pages', async ({ navigationBar }) => {
@@ -237,7 +237,7 @@ test.describe.serial('Verification of container creation workflow', { tag: '@smo
       .toContain(ContainerState.Running);
 
     images = await navigationBar.openImages();
-    playExpect(await images.getCurrentStatusOfImage(imageToPull)).toBe('USED');
+    playExpect(await images.getCurrentStatusOfImage(imageToPull)).toBe(ImageState.Used);
 
     //delete it from containers page
     await navigationBar.openContainers();

@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementState } from '../model/core/states';
 import { DockerCompatibilityPage } from '../model/pages/docker-compatibility-page';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -70,7 +71,9 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     const podmanMachineDetails = new PodmanMachineDetails(page, defaultMachine);
     await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStopButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 50_000 });
+    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+      timeout: 50_000,
+    });
 
     const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
     await playExpect
@@ -81,7 +84,9 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await settingsBar.openTabPage(ResourcesPage);
     await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 50_000 });
+    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+      timeout: 50_000,
+    });
 
     await settingsBar.openTabPage(DockerCompatibilityPage);
     await playExpect
