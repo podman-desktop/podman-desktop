@@ -5,19 +5,19 @@ import { handleNavigation } from '/@/navigation';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 import { NavigationPage } from '/@api/navigation-page';
 
-import type { RecommendedRegistry } from '../../../../main/src/plugin/recommendations/recommendations-api';
 import FeaturedExtensionDownload from '../featured/FeaturedExtensionDownload.svelte';
 
-export let imageError: string | undefined;
+interface Props {
+  imageError?: string;
+  imageName?: string;
+}
 
-export let imageName: string | undefined;
-
-let recommendedRegistriesToInstall: RecommendedRegistry[] = [];
-let registriesFilteredByIds: RecommendedRegistry[] = [];
-
-$: registriesFilteredByIds = $recommendedRegistries.filter(reg => imageName?.includes(reg.id));
-$: recommendedRegistriesToInstall = registriesFilteredByIds.filter(registry =>
-  registry.errors.some(registryMatchingError => imageError?.includes(registryMatchingError)),
+let { imageError, imageName }: Props = $props();
+let registriesFilteredByIds = $derived($recommendedRegistries.filter(reg => imageName?.includes(reg.id)));
+let recommendedRegistriesToInstall = $derived(
+  registriesFilteredByIds.filter(registry =>
+    registry.errors.some(registryMatchingError => imageError?.includes(registryMatchingError)),
+  ),
 );
 
 function goToAuthPage(): void {
