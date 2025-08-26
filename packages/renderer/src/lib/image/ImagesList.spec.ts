@@ -701,3 +701,37 @@ test('Expect to see empty page and no table when no container engine is running'
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
 });
+
+// Mock the layout service
+vi.mock('../layout/layout-service', () => ({
+  createLayoutCallbacks: vi.fn().mockReturnValue({
+    onLoad: vi.fn().mockResolvedValue([]),
+    onSave: vi.fn().mockResolvedValue(undefined),
+    onReset: vi.fn().mockResolvedValue([]),
+  }),
+}));
+
+describe('Image layout management', () => {
+  test('should create layout callbacks with correct parameters', async () => {
+    const { createLayoutCallbacks } = await import('../layout/layout-service');
+    const mockCreateLayoutCallbacks = vi.mocked(createLayoutCallbacks);
+
+    const { container } = render(ImagesList, {
+      props: {
+        searchTerm: '',
+      },
+    });
+
+    // Verify createLayoutCallbacks was called with correct parameters
+    expect(mockCreateLayoutCallbacks).toHaveBeenCalledWith('image', [
+      'Status',
+      'Name',
+      'Environment',
+      'Age',
+      'Size',
+      'Actions',
+    ]);
+
+    expect(container).toBeInTheDocument();
+  });
+});

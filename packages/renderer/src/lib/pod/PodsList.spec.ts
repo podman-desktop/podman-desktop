@@ -27,7 +27,7 @@ import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
@@ -603,4 +603,31 @@ test('Expect to see empty page and no table when no container engine is running'
 
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
+});
+
+// Mock the layout service
+vi.mock('../layout/layout-service', () => ({
+  createLayoutCallbacks: vi.fn().mockReturnValue({
+    onLoad: vi.fn().mockResolvedValue([]),
+    onSave: vi.fn().mockResolvedValue(undefined),
+    onReset: vi.fn().mockResolvedValue([]),
+  }),
+}));
+
+describe('Pod layout management', () => {
+  test('should create layout callbacks with correct parameters', async () => {
+    const { createLayoutCallbacks } = await import('../layout/layout-service');
+    const mockCreateLayoutCallbacks = vi.mocked(createLayoutCallbacks);
+
+    const { container } = render(PodsList, {
+      props: {
+        searchTerm: '',
+      },
+    });
+
+    // Verify createLayoutCallbacks was called with correct parameters
+    expect(mockCreateLayoutCallbacks).toHaveBeenCalledWith('pod', ['Status', 'Name', 'Containers', 'Age', 'Actions']);
+
+    expect(container).toBeInTheDocument();
+  });
 });

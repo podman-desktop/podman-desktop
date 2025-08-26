@@ -33,6 +33,7 @@ import type { LayoutEditItem } from './layouts/LayoutEditor';
 import LayoutManager from './layouts/LayoutEditor.svelte';
 import NavPage from './layouts/NavPage.svelte';
 import Page from './layouts/Page.svelte';
+import type { LayoutEditItem } from './layouts/types';
 import Link from './link/Link.svelte';
 import Modal from './modal/Modal.svelte';
 import LinearProgress from './progress/LinearProgress.svelte';

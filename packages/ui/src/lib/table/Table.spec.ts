@@ -22,7 +22,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, test, vi } from 'vitest';
 
-import { Table } from '/@/lib';
+import { Table, TableColumn } from '/@/lib';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
 
@@ -487,5 +487,85 @@ describe('Table#collapsed', () => {
 
     const foo2ExpandBtn = within(foo2).getByRole('button', { name: 'Collapse Row' });
     expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('should initialize with async/await pattern on mount', async () => {
+    const onLoadLayout = vi.fn().mockResolvedValue([
+      { id: 'Name', label: 'Name', enabled: true, order: 0 },
+      { id: 'Age', label: 'Age', enabled: false, order: 1 },
+    ]);
+    const onSaveLayout = vi.fn().mockResolvedValue(undefined);
+    const onResetLayout = vi.fn().mockResolvedValue([]);
+
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: {},
+      },
+      data: [],
+      enableLayoutConfiguration: true,
+      layoutCallbacks: {
+        onLoad: onLoadLayout,
+        onSave: onSaveLayout,
+        onReset: onResetLayout,
+      },
+    });
+
+    // Wait for mount and async initialization
+    await tick();
+
+    expect(onLoadLayout).toHaveBeenCalled();
+  });
+
+  test('should show layout management UI when layoutCallbacks provided', async () => {
+    const layoutCallbacks = {
+      onLoad: vi.fn().mockResolvedValue([]),
+      onSave: vi.fn().mockResolvedValue(undefined),
+      onReset: vi.fn().mockResolvedValue([]),
+    };
+
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: { selectable: true },
+      },
+      data: [],
+      enableLayoutConfiguration: true,
+      layoutCallbacks,
+    });
+
+    await tick();
+
+    // Should have 5 headers: expansion(1) + checkbox(1) + columns(2) + layout(1)
+    const headers = await screen.findAllByRole('columnheader');
+    expect(headers.length).toBe(5);
+
+    // Should have layout management button
+    const layoutButton = screen.getByTitle('Configure Columns');
+    expect(layoutButton).toBeInTheDocument();
+  });
+
+  test('should not show layout management UI when no layoutCallbacks', async () => {
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: { selectable: true },
+      },
+      data: [],
+      // No layoutCallbacks provided
+    });
+
+    await tick();
+
+    // Should have 4 headers: expansion(1) + checkbox(1) + columns(2)
+    const headers = await screen.findAllByRole('columnheader');
+    expect(headers.length).toBe(4);
+
+    // Should not have layout management button
+    const layoutButton = screen.queryByTitle('Configure Columns');
+    expect(layoutButton).not.toBeInTheDocument();
   });
 });
