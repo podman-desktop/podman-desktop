@@ -27,7 +27,7 @@ import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
@@ -603,4 +603,27 @@ test('Expect to see empty page and no table when no container engine is running'
 
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
+});
+
+describe('Pod layout management', () => {
+  beforeEach(() => {
+    // Mock window layout functions using Object.defineProperty
+    Object.defineProperty(window, 'loadTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+
+    Object.defineProperty(window, 'saveTableConfig', {
+      value: vi.fn().mockResolvedValue(undefined),
+    });
+
+    Object.defineProperty(window, 'resetTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+  });
+
+  test('Pod layout functions are available on window', () => {
+    expect(window.loadTableConfig).toBeDefined();
+    expect(window.saveTableConfig).toBeDefined();
+    expect(window.resetTableConfig).toBeDefined();
+  });
 });

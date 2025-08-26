@@ -3,6 +3,7 @@ import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons
 import {
   Button,
   FilteredEmptyScreen,
+  type LayoutEditItem,
   NavPage,
   Table,
   TableColumn,
@@ -48,6 +49,22 @@ import ContainerEmptyScreen from './ContainerEmptyScreen.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerGroupInfoUI, type ContainerInfoUI } from './ContainerInfoUI';
 
 const containerUtils = new ContainerUtils();
+
+// Container layout management functions
+async function loadContainerLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.loadTableConfig('container', availableColumns)) || [];
+}
+
+async function saveContainerLayout(items: LayoutEditItem[]): Promise<void> {
+  await window.saveTableConfig('container', items);
+}
+
+async function resetContainerLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.resetTableConfig('container', availableColumns)) || [];
+}
+
 let openChoiceModal = false;
 let enginesList: EngineInfoUI[];
 
@@ -529,6 +546,11 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           row={row}
           defaultSortColumn="Name"
           key={key}
+          layoutCallbacks={{
+            onLoad: loadContainerLayout,
+            onSave: saveContainerLayout,
+            onReset: resetContainerLayout,
+          }}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
       {/if}

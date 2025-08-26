@@ -3,6 +3,7 @@ import { faPieChart, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-i
 import {
   Button,
   FilteredEmptyScreen,
+  type LayoutEditItem,
   NavPage,
   Table,
   TableColumn,
@@ -42,6 +43,21 @@ $: providerConnections = $providerInfos
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
 const volumeUtils = new VolumeUtils();
+
+// Volume layout management functions
+async function loadVolumeLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.loadTableConfig('volume', availableColumns)) || [];
+}
+
+async function saveVolumeLayout(items: LayoutEditItem[]): Promise<void> {
+  await window.saveTableConfig('volume', items);
+}
+
+async function resetVolumeLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.resetTableConfig('volume', availableColumns)) || [];
+}
 
 let volumesUnsubscribe: Unsubscriber;
 onMount(async () => {
@@ -227,6 +243,11 @@ const row = new TableRow<VolumeInfoUI>({
         columns={columns}
         row={row}
         defaultSortColumn="Name"
+        layoutCallbacks={{
+          onLoad: loadVolumeLayout,
+          onSave: saveVolumeLayout,
+          onReset: resetVolumeLayout,
+        }}
         on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
       </Table>
     {/if}

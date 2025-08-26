@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import type { LayoutEditItem } from '@podman-desktop/ui-svelte';
 import {
   Button,
   FilteredEmptyScreen,
@@ -267,6 +268,21 @@ const columns = [
   }),
 ];
 
+// Image layout management functions
+async function loadImageLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.loadTableConfig('image', availableColumns)) || [];
+}
+
+async function saveImageLayout(items: LayoutEditItem[]): Promise<void> {
+  await window.saveTableConfig('image', items);
+}
+
+async function resetImageLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.resetTableConfig('image', availableColumns)) || [];
+}
+
 const row = new TableRow<ImageInfoUI>({
   // If it is a manifest, it is not selectable (no delete functionality yet)
   selectable: (image): boolean => image.status === 'UNUSED' && !image.isManifest,
@@ -339,6 +355,11 @@ const row = new TableRow<ImageInfoUI>({
         columns={columns}
         row={row}
         defaultSortColumn="Age"
+        layoutCallbacks={{
+          onLoad: loadImageLayout,
+          onSave: saveImageLayout,
+          onReset: resetImageLayout,
+        }}
         on:update={(): ImageInfoUI[] => (images = images)}>
       </Table>
     {/if}

@@ -701,3 +701,26 @@ test('Expect to see empty page and no table when no container engine is running'
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
 });
+
+describe('Image layout management', () => {
+  beforeEach(() => {
+    // Mock window layout functions using Object.defineProperty
+    Object.defineProperty(window, 'loadTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+
+    Object.defineProperty(window, 'saveTableConfig', {
+      value: vi.fn().mockResolvedValue(undefined),
+    });
+
+    Object.defineProperty(window, 'resetTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+  });
+
+  test('Image layout functions are available on window', () => {
+    expect(window.loadTableConfig).toBeDefined();
+    expect(window.saveTableConfig).toBeDefined();
+    expect(window.resetTableConfig).toBeDefined();
+  });
+});

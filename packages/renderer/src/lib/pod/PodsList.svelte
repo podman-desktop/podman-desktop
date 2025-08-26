@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { LayoutEditItem } from '@podman-desktop/ui-svelte';
 import {
   Button,
   FilteredEmptyScreen,
@@ -152,6 +153,21 @@ const columns = [
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),
 ];
 
+// Pod layout management functions
+async function loadPodLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.loadTableConfig('pod', availableColumns)) || [];
+}
+
+async function savePodLayout(items: LayoutEditItem[]): Promise<void> {
+  await window.saveTableConfig('pod', items);
+}
+
+async function resetPodLayout(): Promise<LayoutEditItem[]> {
+  const availableColumns = columns.map(col => col.title);
+  return (await window.resetTableConfig('pod', availableColumns)) || [];
+}
+
 const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 </script>
 
@@ -248,6 +264,11 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
         columns={columns}
         row={row}
         defaultSortColumn="Name"
+        layoutCallbacks={{
+          onLoad: loadPodLayout,
+          onSave: savePodLayout,
+          onReset: resetPodLayout,
+        }}
         on:update={(): PodInfoUI[] => (pods = pods)}>
       </Table>
     {/if}

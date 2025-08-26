@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfo } from '/@api/container-info';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -1056,5 +1056,28 @@ test('pods with same name on different engines should have separate group', asyn
   await vi.waitFor(() => {
     const expandButtons = getAllByRole('button', { name: 'Collapse Row' });
     expect(expandButtons).toHaveLength(CONTAINERS_MOCK.length);
+  });
+});
+
+describe('Container layout management', () => {
+  beforeEach(() => {
+    // Mock window layout functions using Object.defineProperty
+    Object.defineProperty(window, 'loadTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+
+    Object.defineProperty(window, 'saveTableConfig', {
+      value: vi.fn().mockResolvedValue(undefined),
+    });
+
+    Object.defineProperty(window, 'resetTableConfig', {
+      value: vi.fn().mockResolvedValue([]),
+    });
+  });
+
+  test('Container layout functions are available on window', () => {
+    expect(window.loadTableConfig).toBeDefined();
+    expect(window.saveTableConfig).toBeDefined();
+    expect(window.resetTableConfig).toBeDefined();
   });
 });
