@@ -124,9 +124,37 @@ function onToggle(keyItem: string): void {
 }
 </script>
 
-{#snippet RowGroup(object: T)}
+{#snippet RowItem(object: T, itemKey: string)}
+  {#if row.info.selectable}
+    <div class="whitespace-nowrap place-self-center" role="cell">
+      <Checkbox
+        title="Toggle {kind}"
+        checked={selected.has(itemKey)}
+        disabled={!row.info.selectable(object)}
+        disabledTooltip={row.info.disabledText}
+        onclick={onChecked.bind(undefined, object)} />
+    </div>
+  {/if}
+  {#each columns as column, index (index)}
+    {@const Render = column.info.renderer}
+    <div
+      class="whitespace-nowrap {column.info.align === 'right'
+                ? 'justify-self-end'
+                : column.info.align === 'center'
+                  ? 'justify-self-center'
+                  : 'justify-self-start'} self-center {column.info.overflow === true
+                ? ''
+                : 'overflow-hidden'} max-w-full py-1.5"
+      role="cell">
+      {#if column.info.renderer}
+        <Render object={column.info.renderMapping ? column.info.renderMapping(object) : object}/>
+      {/if}
+    </div>
+  {/each}
+{/snippet}
+
+{#snippet RowGroup(object: T, itemKey: string)}
   {@const children = row.info.children?.(object) ?? []}
-  {@const itemKey = key(object)}
   <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
     <div
       class="grid grid-table gap-x-0.5 min-h-[48px] hover:bg-[var(--pd-content-card-hover-bg)]"
@@ -149,70 +177,21 @@ function onToggle(keyItem: string): void {
           </button>
         {/if}
       </div>
-      {#if row.info.selectable}
-        <div class="whitespace-nowrap place-self-center" role="cell">
-          <Checkbox
-            title="Toggle {kind}"
-            checked={selected.has(itemKey)}
-            disabled={!row.info.selectable(object)}
-            disabledTooltip={row.info.disabledText}
-            onclick={onChecked.bind(undefined, object)} />
-        </div>
-      {/if}
-      {#each columns as column, index (index)}
-        {@const Render = column.info.renderer}
-        <div
-          class="whitespace-nowrap {column.info.align === 'right'
-                ? 'justify-self-end'
-                : column.info.align === 'center'
-                  ? 'justify-self-center'
-                  : 'justify-self-start'} self-center {column.info.overflow === true
-                ? ''
-                : 'overflow-hidden'} max-w-full py-1.5"
-          role="cell">
-          {#if column.info.renderer}
-            <Render object={column.info.renderMapping ? column.info.renderMapping(object) : object}/>
-          {/if}
-        </div>
-      {/each}
+      <!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
+      {@render RowItem(object, itemKey)}
     </div>
 
     <!-- Child objects -->
     {#if !collapsed.has(itemKey) && children.length > 0}
       {#each children as child, i (child)}
-        {@const childKey = key(child)}
         <div
           class="grid grid-table gap-x-0.5 hover:bg-[var(--pd-content-card-hover-bg)]"
           class:rounded-b-lg={i === children.length - 1}
           role="row"
           aria-label={label(child)}>
           <div class="whitespace-nowrap justify-self-start" role="cell"></div>
-          {#if row.info.selectable}
-            <div class="whitespace-nowrap place-self-center" role="cell">
-              <Checkbox
-                title="Toggle {kind}"
-                checked={selected.has(childKey)}
-                disabled={!row.info.selectable(child)}
-                disabledTooltip={row.info.disabledText}
-                onclick={onChecked.bind(undefined, child)} />
-            </div>
-          {/if}
-          {#each columns as column, index (index)}
-            {@const Render = column.info.renderer}
-            <div
-              class="whitespace-nowrap {column.info.align === 'right'
-                    ? 'justify-self-end'
-                    : column.info.align === 'center'
-                      ? 'justify-self-center'
-                      : 'justify-self-start'} self-center {column.info.overflow === true
-                    ? ''
-                    : 'overflow-hidden'} max-w-full py-1.5"
-              role="cell">
-              {#if column.info.renderer}
-                <Render object={column.info.renderMapping ? column.info.renderMapping(object) : object}/>
-              {/if}
-            </div>
-          {/each}
+          <!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
+          {@render RowItem(child, key(child))}
         </div>
       {/each}
     {/if}
@@ -273,7 +252,7 @@ function onToggle(keyItem: string): void {
   <div role="rowgroup">
     {#each sortedData as object (object)}
       <!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
-      {@render RowGroup(object)}
+      {@render RowGroup(object, key(object))}
     {/each}
   </div>
 </div>
