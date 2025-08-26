@@ -140,7 +140,7 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.dropDownDialog).toBeVisible();
 
       if (!version) {
-        version = await this.getSecondLatestVersionNumber();
+        version = await this.getFirstVersionFromList();
       }
 
       await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
@@ -175,7 +175,7 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
-  private async getSecondLatestVersionNumber(): Promise<string> {
+  private async getFirstVersionFromList(): Promise<string> {
     return await this.dropDownDialog.getByRole('button').first().innerText();
   }
 }

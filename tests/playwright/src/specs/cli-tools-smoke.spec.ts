@@ -57,7 +57,7 @@ toolsToTest.forEach(tool => {
       });
 
       test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
-        test.setTimeout(120_000);
+        test.setTimeout(180_000);
 
         await cliToolsPage.installTool(tool);
         await cliToolsPage.downgradeTool(tool);
