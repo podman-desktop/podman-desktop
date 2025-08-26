@@ -28,7 +28,7 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, deletePodmanMachine } from '../utility/operations';
+import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
@@ -69,6 +69,7 @@ test.afterAll(async ({ runner }) => {
   test.setTimeout(120_000);
 
   if (test.info().status === 'failed') {
+    await resetPodmanMachinesFromCLI();
     await createPodmanMachineFromCLI();
   }
 
@@ -83,6 +84,7 @@ test.describe
           dashboardPage = await navigationBar.openDashboard();
           await playExpect(dashboardPage.mainPage).toBeVisible();
           await playExpect(dashboardPage.notificationsBox).toBeVisible();
+
           notificationPodmanSetup = dashboardPage.notificationsBox
             .getByRole('region', { name: 'id:' })
             .filter({ hasText: 'Podman needs to be set up' });
