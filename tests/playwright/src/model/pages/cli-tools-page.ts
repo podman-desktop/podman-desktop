@@ -89,17 +89,10 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
-  public async installTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
+  public async installTool(toolName: string, timeout = 60_000): Promise<this> {
     return test.step(`Install ${toolName}`, async () => {
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
-      await playExpect(this.dropDownDialog).toBeVisible();
-      if (!version) {
-        version = await this.getLatestVersionNumber();
-      }
-
-      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
-      await this.getVersionSelectionButton(version).click();
 
       const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
       try {
@@ -109,39 +102,12 @@ export class CLIToolsPage extends SettingsPage {
         console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
       }
 
-      await playExpect
-        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
-        .toContain(version);
+      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBeTruthy();
       return this;
     });
   }
 
-  public async installToolWithSecondLatestVersion(toolName: string, timeout = 60_000): Promise<this> {
-    return test.step(`Install ${toolName} with second latest version`, async () => {
-      await playExpect(this.getInstallButton(toolName)).toBeEnabled();
-      await this.getInstallButton(toolName).click();
-      await playExpect(this.dropDownDialog).toBeVisible();
-
-      const version = await this.getSecondLatestVersionNumber();
-      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
-      await this.getVersionSelectionButton(version).click();
-
-      const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
-      try {
-        await playExpect(confirmationDialog).toBeVisible();
-        await handleConfirmationDialog(this.page, toolName);
-      } catch {
-        console.log(`Dialog for tool ${toolName} was not visible. Proceeding.`);
-      }
-
-      await playExpect
-        .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
-        .toContain(version);
-      return this;
-    });
-  }
-
-  public async uninstallTool(toolName: string): Promise<this> {
+  public async uninstallTool(toolName: string, timeout = 60_000): Promise<this> {
     return test.step(`Uninstall ${toolName}`, async () => {
       if ((await this.getUninstallButton(toolName).count()) === 0) {
         console.log(`Tool ${toolName} is not installed`);
@@ -151,6 +117,8 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.getUninstallButton(toolName)).toBeEnabled();
       await this.getUninstallButton(toolName).click();
       await handleConfirmationDialog(this.page, 'Uninstall');
+
+      await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBeFalsy();
       return this;
     });
   }
@@ -207,11 +175,7 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
-  private async getLatestVersionNumber(): Promise<string> {
-    return await this.dropDownDialog.getByRole('button').first().innerText();
-  }
-
   private async getSecondLatestVersionNumber(): Promise<string> {
-    return await this.dropDownDialog.getByRole('button').nth(1).innerText();
+    return await this.dropDownDialog.getByRole('button').first().innerText();
   }
 }
