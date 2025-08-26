@@ -12,7 +12,7 @@ interface Props {
   imageName?: string;
 }
 
-let { imageError, imageName }: Props = $props();
+let { imageError = $bindable(), imageName }: Props = $props();
 let registriesFilteredByIds = $derived($recommendedRegistries.filter(reg => imageName?.includes(reg.id)));
 let recommendedRegistriesToInstall = $derived(
   registriesFilteredByIds.filter(registry =>
