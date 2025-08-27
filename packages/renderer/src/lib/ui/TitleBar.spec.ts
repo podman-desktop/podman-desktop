@@ -28,28 +28,31 @@ import TitleBar from './TitleBar.svelte';
 
 const getOsPlatformMock = vi.fn();
 const isExperimentalConfigurationEnabledMock = vi.fn();
-let searchBarEventHandler: ((val: boolean) => void) | null = null;
+const eventHandlers = new Map<string, (value: unknown) => void>();
 
 beforeAll(() => {
-  (window as any).getOsPlatform = getOsPlatformMock;
-  (window as any).isExperimentalConfigurationEnabled = isExperimentalConfigurationEnabledMock;
-  (window.events as unknown) = {
-    receive: (channel: string, func: (val: boolean) => void): void => {
-      if (channel === 'search-bar-enabled') {
-        searchBarEventHandler = func;
-      }
+  Object.defineProperty(window, 'getOsPlatform', { value: getOsPlatformMock });
+  Object.defineProperty(window, 'isExperimentalConfigurationEnabled', {
+    value: isExperimentalConfigurationEnabledMock,
+  });
+  Object.defineProperty(window, 'events', {
+    value: {
+      receive: (channel: string, func: (value: unknown) => void): void => {
+        eventHandlers.set(channel, func);
+      },
     },
-  };
+  });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-  searchBarEventHandler = null;
+  eventHandlers.clear();
 });
 
-function triggerSearchBarEvent(enabled: boolean): void {
-  if (searchBarEventHandler) {
-    searchBarEventHandler(enabled);
+function triggerEvent(channel: string, value: unknown): void {
+  const handler = eventHandlers.get(channel);
+  if (handler) {
+    handler(value);
   }
 }
 
@@ -109,10 +112,10 @@ describe('macOS', () => {
 
     // Wait for event handler registration
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(true);
+    triggerEvent('search-bar-enabled', true);
     await tick();
 
     const searchButton = screen.queryByText('Search');
@@ -125,10 +128,10 @@ describe('macOS', () => {
 
     // Wait for event handler registration
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(false);
+    triggerEvent('search-bar-enabled', false);
     await tick();
 
     const searchButton = screen.queryByText('Search');
@@ -184,10 +187,10 @@ describe('linux', () => {
     await waitRender({});
 
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(false);
+    triggerEvent('search-bar-enabled', false);
     await tick();
 
     const title = screen.queryByText('Podman Desktop');
@@ -202,10 +205,10 @@ describe('linux', () => {
     await waitRender({});
 
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(true);
+    triggerEvent('search-bar-enabled', true);
     await tick();
 
     const searchButton = screen.queryByText('Search');
@@ -265,10 +268,10 @@ describe('Windows', () => {
     await waitRender({});
 
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(false);
+    triggerEvent('search-bar-enabled', false);
     await tick();
 
     const title = screen.queryByText('Podman Desktop');
@@ -283,10 +286,10 @@ describe('Windows', () => {
     await waitRender({});
 
     await vi.waitFor(() => {
-      expect(searchBarEventHandler).toBeTruthy();
+      expect(eventHandlers.get('search-bar-enabled')).toBeTruthy();
     });
 
-    triggerSearchBarEvent(true);
+    triggerEvent('search-bar-enabled', true);
     await tick();
 
     const searchButton = screen.queryByText('Search');
