@@ -67,10 +67,10 @@ export class ResourcesPage extends SettingsPage {
     return test.step(`Verify Podman Provider is ${virtualizationProvider}`, async () => {
       await playExpect(this.heading).toBeVisible();
       const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
-      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+      await playExpect.poll(async () => await machineCard.doesResourceElementExist(), { timeout: 15_000 }).toBeTruthy();
 
       await machineCard.connectionType.scrollIntoViewIfNeeded();
-      playExpect(await machineCard.connectionType.innerText()).toContain(virtualizationProvider);
+      await playExpect(machineCard.connectionType).toContainText(virtualizationProvider);
     });
   }
 }

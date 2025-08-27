@@ -39,7 +39,7 @@ export function getDefaultVirtualizationProvider(): PodmanVirtualizationProvider
   }
 
   if (isMac) {
-    return PodmanVirtualizationProviders.AppleHV;
+    return PodmanVirtualizationProviders.LibKrun;
   }
 
   return PodmanVirtualizationProviders.Native;
