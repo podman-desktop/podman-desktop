@@ -25,16 +25,13 @@ import { ApiSenderType } from '../api.js';
 @injectable()
 export class DocumentationService {
   private documentation: DocumentationInfo[] = [];
-  private isInitialized = false;
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {}
 
-  async init(): Promise<void> {
-    if (this.isInitialized) return;
-
+  async fetchDocumentation(): Promise<void> {
     try {
       const [docsContent, tutorialContent] = await Promise.all([
         this.fetchPageContent('https://podman-desktop.io/docs/intro'),
@@ -51,21 +48,15 @@ export class DocumentationService {
       // Fallback to predefined documentation if fetching fails
       this.documentation = this.getFallbackDocumentation();
     }
-
-    this.isInitialized = true;
   }
 
   async getDocumentationItems(): Promise<DocumentationInfo[]> {
-    if (!this.isInitialized) {
-      await this.init();
-    }
+    await this.fetchDocumentation();
     return this.documentation;
   }
 
   async refreshDocumentation(): Promise<void> {
-    // Simply re-initialize
-    this.isInitialized = false;
-    await this.init();
+    await this.fetchDocumentation();
     this.apiSender.send('documentation-updated');
   }
 
