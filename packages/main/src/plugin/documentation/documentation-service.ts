@@ -16,20 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { DocumentationInfo } from '/@api/documentation-info.js';
 
 import { ApiSenderType } from '../api.js';
 
 @injectable()
-export class DocumentationService {
+export class DocumentationService implements AsyncDisposable {
   private documentation: DocumentationInfo[] = [];
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {}
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.dispose();
+  }
+
+  dispose(): void {
+    this.documentation = [];
+  }
 
   async fetchDocumentation(): Promise<void> {
     try {

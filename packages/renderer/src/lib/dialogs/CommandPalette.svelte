@@ -133,26 +133,11 @@ $effect(() => {
 
   if (display && documentationItems.length === 0 && !isLoadingDocumentation) {
     isLoadingDocumentation = true;
-    // Load documentation items with error handling
-    try {
-      window
-        .getDocumentationItems()
-        .then((items: DocumentationInfo[]) => {
-          documentationItems = items;
-        })
-        .catch((error: unknown) => {
-          console.error('Failed to load documentation items:', error);
-          // Fallback to empty array
-          documentationItems = [];
-        })
-        .finally(() => {
-          isLoadingDocumentation = false;
-        });
-    } catch (error: unknown) {
-      console.error('Failed to load documentation items:', error);
-      documentationItems = [];
-      isLoadingDocumentation = false;
-    }
+    window
+      .getDocumentationItems()
+      .then(items => (documentationItems = items))
+      .catch((error: unknown) => console.error('Failed to load documentation items:', error))
+      .finally(() => (isLoadingDocumentation = false));
   }
 });
 

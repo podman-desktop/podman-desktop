@@ -16,10 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import { DocumentationService } from '/@/plugin/documentation/documentation-service.js';
+
+const originalConsoleError = console.error;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  console.error = vi.fn();
+});
+
+afterEach(() => {
+  console.error = originalConsoleError;
+});
 
 // Mock fetch globally
 const mockFetch = vi.fn();
