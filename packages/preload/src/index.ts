@@ -115,6 +115,7 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
+import type { Feature } from '../../main/src/plugin/explore-features/explore-features-api';
 import type { CatalogExtension } from '../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
 import type {
@@ -2522,6 +2523,14 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('listGuides', async (): Promise<Guide[]> => {
     return ipcInvoke('learning-center:listGuides');
+  });
+
+  contextBridge.exposeInMainWorld('listFeatures', async (): Promise<Feature[]> => {
+    return ipcInvoke('explore-features:listFeatures');
+  });
+
+  contextBridge.exposeInMainWorld('closeFeatureCard', async (featureId: string): Promise<void> => {
+    return ipcInvoke('explore-features:closeFeatureCard', featureId);
   });
 
   contextBridge.exposeInMainWorld('contextCollectAllValues', async (): Promise<Record<string, unknown>> => {

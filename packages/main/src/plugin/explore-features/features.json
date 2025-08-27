@@ -1,0 +1,44 @@
+{
+  "features": [
+    {
+      "id": "start-a-container",
+      "title": "Start a Container",
+      "description": "With Podman Desktop, you can start a container from an image on your container engine. You can interact with the running container by using the terminal or by opening your browser to the exposed ports.",
+      "buttonIcon": "fas fa-circle-plus",
+      "buttonTitle": "Create Container",
+      "buttonLink": "/containers",
+      "tutorialLink": "",
+      "learnMore": ""
+    },
+    {
+      "id": "explore-kubernetes",
+      "title": "Explore Kubernetes",
+      "description": "Podman Desktop and Podman have many features allowing easy migration from containers to Kubernetes. Inspect, configure, and orchestrate your pods, services, and deployments with ease.",
+      "buttonIcon": "kube-icon",
+      "buttonTitle": "Manage Kubernetes",
+      "buttonLink": "/kubernetes/dashboard",
+      "tutorialLink": "",
+      "learnMore": ""
+    },
+    {
+      "id": "install-extensions",
+      "title": "Install Extensions",
+      "description": "Installing an extension is a great way to expand the capabilities of Podman Desktop. You have the option to install an extension from the catalog or a custom extension of your choice.",
+      "buttonIcon": "fas fa-book-open",
+      "buttonTitle": "Open Catatlog",
+      "buttonLink": "/extensions",
+      "tutorialLink": "",
+      "learnMore": ""
+    },
+    {
+      "id": "manage-docker",
+      "title": "Manage Docker",
+      "description": "With Podman Desktop, you can configure a Docker-compatible environment using the Settings page. After configuration, your Docker tools are directed to use Podman enginer and your Compose application can be run using the Podman CLI.",
+      "buttonIcon": "",
+      "buttonTitle": "Manage Compatibility",
+      "buttonLink": "/preferences/docker-compatibility",
+      "tutorialLink": "",
+      "learnMore": ""
+    }
+  ]
+}
