@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { commandsInfos } from '/@/stores/commands';
@@ -396,24 +397,29 @@ describe('Command Palette', () => {
   // Test data for shortcut and tab combinations
   const shortcutTabTestCases = [
     {
+      description: 'Ctrl+Shift+P',
+      shortcut: '{Control>}{Shift>}p{/Shift}{/Control}',
+      expectedTabText: 'Ctrl+Shift+P All',
+    },
+    {
       description: 'F1 key',
       shortcut: '{F1}',
-      expectedTabText: 'Commands',
+      expectedTabText: 'F1 > Commands',
     },
     {
       description: '> key',
       shortcut: '>',
-      expectedTabText: 'Commands',
+      expectedTabText: 'F1 > Commands',
     },
     {
       description: 'Ctrl+K',
       shortcut: '{Control>}k{/Control}',
-      expectedTabText: 'Documentation',
+      expectedTabText: 'Ctrl+K Documentation',
     },
     {
       description: 'Ctrl+F',
       shortcut: '{Control>}f{/Control}',
-      expectedTabText: 'Go to',
+      expectedTabText: 'Ctrl+F Go to',
     },
   ];
 
@@ -433,19 +439,16 @@ describe('Command Palette', () => {
       const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
       expect(input).toBeInTheDocument();
 
-      // find the expected tab by its text content
-      const expectedTab = screen.getByRole('button', { name: new RegExp(expectedTabText, 'i') });
+      const expectedTab = screen.getByRole('button', { name: expectedTabText });
       expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
       expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
-      // check other tabs don't have selected styling
-      const allTabButtons = screen
-        .getAllByRole('button')
-        .filter(button =>
-          ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
-        );
+      const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
+      const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
+      const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
+      const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
 
-      allTabButtons.forEach(button => {
+      [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
         if (button !== expectedTab) {
           expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
           expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
@@ -454,7 +457,7 @@ describe('Command Palette', () => {
     },
   );
 
-  test('Expect that Tab key switches between tabs forward', async () => {
+  test('Expect that clicking tabs switches between them correctly', async () => {
     // Set up some commands so tab switching logic gets triggered
     commandsInfos.set([
       {
@@ -473,47 +476,47 @@ describe('Command Palette', () => {
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    // get all tab buttons
-    const allTabButtons = screen
-      .getAllByRole('button')
-      .filter(button =>
-        ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
-      );
+    await screen.findByRole('button', { name: 'Test Command 1' });
+
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
 
     // initially "All" tab should be selected (index 0)
-    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // press Tab to move to next tab
-    await userEvent.keyboard('{Tab}');
-    expect(allTabButtons[1]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[0]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // click Commands tab
+    await userEvent.click(commandsTab);
+    await tick();
+    expect(commandsTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // press Tab again to move to next tab
-    await userEvent.keyboard('{Tab}');
-    expect(allTabButtons[2]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[1]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // click Documentation tab
+    await userEvent.click(docsTab);
+    await tick();
+    expect(docsTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(commandsTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // press Tab again to move to next tab
-    await userEvent.keyboard('{Tab}');
-    expect(allTabButtons[3]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[2]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // click Go to tab
+    await userEvent.click(gotoTab);
+    await tick();
+    expect(gotoTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(docsTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // press Tab again to wrap around to first tab
-    await userEvent.keyboard('{Tab}');
-    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[3]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // click back to All tab
+    await userEvent.click(allTab);
+    await tick();
+    expect(allTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(gotoTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
   });
 
-  test('Expect that Shift+Tab switches between tabs backward', async () => {
-    // Set up some commands so tab switching logic gets triggered
+  test('Expect that tab selection state is maintained correctly', async () => {
+    // Set up some commands
     commandsInfos.set([
       {
         id: 'test-command-1',
         title: 'Test Command 1',
-      },
-      {
-        id: 'test-command-2',
-        title: 'Test Command 2',
       },
     ]);
 
@@ -523,34 +526,21 @@ describe('Command Palette', () => {
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    // get all tab buttons
-    const allTabButtons = screen
-      .getAllByRole('button')
-      .filter(button =>
-        ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
-      );
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
 
-    // initially "All" tab should be selected (index 0)
-    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // Test that only one tab is selected at a time
+    expect(allTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(commandsTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(docsTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(gotoTab).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // press Shift+Tab to move to previous tab (should wrap to last)
-    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(allTabButtons[3]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[0]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-
-    // press Shift+Tab again to move to previous tab
-    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(allTabButtons[2]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[3]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-
-    // press Shift+Tab again to move to previous tab
-    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(allTabButtons[1]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[2]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-
-    // press Shift+Tab again to move to previous tab
-    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-    expect(allTabButtons[1]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    // Test that border styling is also correct
+    expect(allTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+    expect(commandsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+    expect(docsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+    expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
   });
 });

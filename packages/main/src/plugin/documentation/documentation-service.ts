@@ -16,20 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { DocumentationInfo } from '/@api/documentation-info.js';
 
 import { ApiSenderType } from '../api.js';
 
 @injectable()
-export class DocumentationService {
+export class DocumentationService implements AsyncDisposable {
   private documentation: DocumentationInfo[] = [];
+  private isInitialized = false;
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {}
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.dispose();
+  }
+
+  dispose(): void {
+    this.documentation = [];
+    this.isInitialized = false;
+  }
 
   async fetchDocumentation(): Promise<void> {
     try {
@@ -43,19 +54,24 @@ export class DocumentationService {
       } else {
         throw new Error('Failed to fetch documentation content');
       }
+      this.isInitialized = true;
     } catch (error) {
       console.error('Failed to fetch documentation at startup:', error);
       // Fallback to predefined documentation if fetching fails
       this.documentation = this.getFallbackDocumentation();
+      this.isInitialized = true;
     }
   }
 
   async getDocumentationItems(): Promise<DocumentationInfo[]> {
-    await this.fetchDocumentation();
+    if (!this.isInitialized) {
+      await this.fetchDocumentation();
+    }
     return this.documentation;
   }
 
   async refreshDocumentation(): Promise<void> {
+    this.isInitialized = false; // Force re-fetch
     await this.fetchDocumentation();
     this.apiSender.send('documentation-updated');
   }
