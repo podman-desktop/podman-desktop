@@ -162,6 +162,7 @@ import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExperimentalConfigurationManager } from './experimental-configuration-manager.js';
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
+import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -719,6 +720,10 @@ export class PluginSystem {
     container.bind<RecommendationsRegistry>(RecommendationsRegistry).toSelf().inSingletonScope();
     const recommendationsRegistry = container.get<RecommendationsRegistry>(RecommendationsRegistry);
     recommendationsRegistry.init();
+
+    container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
+    const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
+    exploreFeatures.init();
 
     // do not wait
     featured.init().catch((e: unknown) => {
@@ -3003,6 +3008,14 @@ export class PluginSystem {
 
     this.ipcHandle('learning-center:listGuides', async () => {
       return downloadGuideList();
+    });
+
+    this.ipcHandle('explore-features:listFeatures', async () => {
+      return exploreFeatures.downloadFeaturesList();
+    });
+
+    this.ipcHandle('explore-features:closeFeatureCard', async (_listener, featureId: string): Promise<void> => {
+      return exploreFeatures.closeFeatureCard(featureId);
     });
 
     this.ipcHandle(
