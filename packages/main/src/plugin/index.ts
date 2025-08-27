@@ -735,7 +735,6 @@ export class PluginSystem {
 
     container.bind<DocumentationService>(DocumentationService).toSelf().inSingletonScope();
     const documentationService = container.get<DocumentationService>(DocumentationService);
-    await documentationService.init();
 
     container.bind<Featured>(Featured).toSelf().inSingletonScope();
     const featured = container.get<Featured>(Featured);
