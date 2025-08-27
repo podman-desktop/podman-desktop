@@ -62,6 +62,7 @@ let searchOptionsSelectedIndex: number = $state(0);
 
 let commandInfoItems: CommandInfo[] = $state([]);
 let documentationItems: DocumentationInfo[] = $state([]);
+let isLoadingDocumentation = $state(false);
 let globalContext: ContextUI;
 
 // Keep backward compatibility with existing variable name
@@ -101,16 +102,6 @@ let contextsUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
-
-  // Load documentation items with error handling
-  try {
-    documentationItems = await window.getDocumentationItems();
-  } catch (error) {
-    console.error('Failed to load documentation items:', error);
-    // Fallback to empty array
-    documentationItems = [];
-  }
-
   isMac = platform === 'darwin';
 });
 
@@ -138,6 +129,30 @@ $effect(() => {
       .catch((error: unknown) => {
         console.error('Unable to focus input box', error);
       });
+  }
+
+  if (display && documentationItems.length === 0 && !isLoadingDocumentation) {
+    isLoadingDocumentation = true;
+    // Load documentation items with error handling
+    try {
+      window
+        .getDocumentationItems()
+        .then((items: DocumentationInfo[]) => {
+          documentationItems = items;
+        })
+        .catch((error: unknown) => {
+          console.error('Failed to load documentation items:', error);
+          // Fallback to empty array
+          documentationItems = [];
+        })
+        .finally(() => {
+          isLoadingDocumentation = false;
+        });
+    } catch (error: unknown) {
+      console.error('Failed to load documentation items:', error);
+      documentationItems = [];
+      isLoadingDocumentation = false;
+    }
   }
 });
 
