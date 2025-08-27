@@ -53,9 +53,11 @@ const features: Record<string, IConfigurationPropertyRecordedSchema> = {
   feature4: { title: 'feat.feature3', parentId: 'parent3' },
 };
 
+const registerConfigurationsMock = vi.fn();
+
 const configurationRegistry: ConfigurationRegistry = {
   onDidChangeConfiguration: vi.fn(),
-  registerConfigurations: vi.fn(),
+  registerConfigurations: registerConfigurationsMock,
   getConfigurationProperties: vi.fn(),
   getConfiguration: vi.fn(),
 } as unknown as ConfigurationRegistry;
@@ -119,6 +121,30 @@ beforeEach(() => {
 });
 
 describe('init', () => {
+  test('should register feedback dialog configuration', async () => {
+    configurationGetMock.mockReturnValue({});
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+
+    await feedbackForm.init();
+
+    expect(registerConfigurationsMock).toHaveBeenCalledTimes(1);
+    expect(registerConfigurationsMock).toHaveBeenCalledWith([
+      {
+        id: 'preferences',
+        title: 'Feedback dialog',
+        type: 'object',
+        properties: {
+          'feedback.dialog': {
+            description: 'Show feedback dialog for experimental features',
+            type: 'boolean',
+            default: true,
+          },
+        },
+      },
+    ]);
+  });
+
   test('should setup reminders on first run', async () => {
     configurationGetMock.mockReturnValue({});
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
@@ -263,6 +289,7 @@ describe('showFeedbackDialog', () => {
     vi.useFakeTimers();
     const MOCK_NOW = new Date('2025-01-01T12:00:00.000Z');
     vi.setSystemTime(MOCK_NOW);
+    configurationGetMock.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -274,6 +301,7 @@ describe('showFeedbackDialog', () => {
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
       return Promise.resolve();
     });
@@ -292,6 +320,7 @@ describe('showFeedbackDialog', () => {
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 0 });
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
       return Promise.resolve();
     });
@@ -309,6 +338,7 @@ describe('showFeedbackDialog', () => {
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
       return Promise.resolve();
     });
@@ -326,6 +356,7 @@ describe('showFeedbackDialog', () => {
     const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 2 });
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
       return Promise.resolve();
     });
@@ -344,6 +375,7 @@ describe('showFeedbackDialog', () => {
     const futureTimestamp = new Date('2100-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: futureTimestamp, disabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
@@ -355,10 +387,27 @@ describe('showFeedbackDialog', () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
     const existingTimestamps = { remindAt: pastTimestamp, disabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
 
+    expect(setTimestampSpy).not.toHaveBeenCalled();
+    expect(disableFeatureSpy).not.toHaveBeenCalled();
+    expect(telemetry.track).not.toHaveBeenCalled();
+  });
+
+  test('should NOT show dialog when feedback is globally disabled', async () => {
+    const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    configurationGetMock.mockReturnValue(false);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+
+    feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
+    await feedbackForm.showFeedbackDialog();
+
+    expect(messageBox.showMessageBox).not.toHaveBeenCalled();
     expect(setTimestampSpy).not.toHaveBeenCalled();
     expect(disableFeatureSpy).not.toHaveBeenCalled();
     expect(telemetry.track).not.toHaveBeenCalled();

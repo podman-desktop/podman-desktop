@@ -19,7 +19,7 @@
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
 import { formatName } from '../util.js';
@@ -76,6 +76,21 @@ export class ExperimentalFeatureFeedbackHandler {
   }
 
   async init(): Promise<void> {
+    const feedbackConfiguration: IConfigurationNode = {
+      id: 'preferences',
+      title: 'Feedback dialog',
+      type: 'object',
+      properties: {
+        ['feedback.dialog']: {
+          description: 'Show feedback dialog for experimental features',
+          type: 'boolean',
+          default: true,
+        },
+      },
+    };
+
+    this.#disposables.push(this.configurationRegistry.registerConfigurations([feedbackConfiguration]));
+
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
     for (const configurationKey in configurationProperties) {
       if (!configurationProperties[configurationKey]?.experimental?.githubDiscussionLink) {
@@ -171,15 +186,20 @@ export class ExperimentalFeatureFeedbackHandler {
    */
   protected async showFeedbackDialog(): Promise<void> {
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
+    const feedbackEnabled = this.#configurationRegistry.getConfiguration('feedback').get<boolean>('dialog', true);
+    if (!feedbackEnabled) {
+      return;
+    }
+
     // Go through all experimental features (in this point we should have all properties set)
-    this.experimentalFeatures.forEach((configuration: ExperimentalConfiguration, key: string) => {
+    for (const [key, configuration] of this.experimentalFeatures) {
       const featureGitHubLink = configurationProperties[key]?.experimental?.githubDiscussionLink;
       // If the feature does not have a link or the dialog is disabled
-      if (!featureGitHubLink || configuration.disabled) return;
+      if (!featureGitHubLink || configuration.disabled) continue;
 
       // Compare timestamp of each experimental feature
       const date = new Date();
-      if (configuration.remindAt && configuration.remindAt > date.getTime()) return;
+      if (configuration.remindAt && configuration.remindAt > date.getTime()) continue;
       const featureName = formatName(key);
 
       let footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
@@ -210,37 +230,33 @@ export class ExperimentalFeatureFeedbackHandler {
           defaultId: 1,
           footerMarkdownDescription: footerMarkdownDescription,
         })
-        .then(response => {
-          const telemetryOptions = { option: 'Share Feedback on GitHub' };
-          // Share Feedback on GitHub was selected
-          if (response.response === 1) {
-            shell
-              .openExternal(featureGitHubLink)
-              .then(() => {})
-              .catch(console.error);
-            this.setTimestamp(key, undefined);
-          }
-          // Option from Dropdown was selected
-          else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
-            telemetryOptions.option = options[response.dropdownIndex] ?? 'Unknown option';
-            switch (options[response.dropdownIndex]) {
-              case 'Remind me tomorrow':
-                this.setTimestamp(key, 1);
-                break;
-              case 'Remind me in 2 days':
-                this.setTimestamp(key, 2);
-                break;
-              case `Don't show again`:
-              default:
-                // Set all of the experimental features to disabled
-                this.experimentalFeatures.forEach((_t, k) => {
-                  this.disableFeature(k);
-                });
+        .then(async response => {
+          if (response) {
+            const telemetryOptions = { option: 'Share Feedback on GitHub' };
+            // Share Feedback on GitHub was selected
+            if (response.response === 1) {
+              await shell.openExternal(featureGitHubLink);
+              this.setTimestamp(key, undefined);
             }
+            // Option from Dropdown was selected
+            else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
+              telemetryOptions.option = options[response.dropdownIndex] ?? 'Unknown option';
+              switch (options[response.dropdownIndex]) {
+                case 'Remind me tomorrow':
+                  this.setTimestamp(key, 1);
+                  break;
+                case 'Remind me in 2 days':
+                  this.setTimestamp(key, 2);
+                  break;
+                case `Don't show again`:
+                default:
+                  this.disableFeature(key);
+              }
+            }
+            this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
           }
-          this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
         })
         .catch(console.error);
-    });
+    }
   }
 }
