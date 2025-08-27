@@ -68,9 +68,9 @@ export class ResourcesPage extends SettingsPage {
       await playExpect(this.heading).toBeVisible();
       const machineCard = new ResourceConnectionCardPage(this.page, 'podman', machineName);
       await playExpect.poll(async () => await machineCard.doesResourceElementExist(), { timeout: 15_000 }).toBeTruthy();
-
-      await machineCard.connectionType.scrollIntoViewIfNeeded();
-      await playExpect(machineCard.connectionType).toContainText(virtualizationProvider);
+      await playExpect(machineCard.card.getByLabel(machineName).getByLabel('Connection Type')).toContainText(
+        virtualizationProvider,
+      );
     });
   }
 }
