@@ -146,13 +146,7 @@ export abstract class MainPage extends BasePage {
   async uncheckAllRows(): Promise<void> {
     return test.step(`Uncheck all rows on ${this.title} page`, async () => {
       try {
-        await playExpect(this.rowTable).toBeVisible();
-        const controlRow = this.rowTable.getByRole('row').first();
-        await playExpect(controlRow).toBeAttached();
-        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
-        await playExpect(checkboxColumnHeader).toBeAttached();
-        const toggle = checkboxColumnHeader.getByTitle('Toggle all');
-        await playExpect(toggle).toBeAttached();
+        const toggle = await this.getToggleLocator();
 
         if ((await toggle.innerHTML()).includes('pd-input-checkbox-indeterminate')) {
           await toggle.click();
@@ -175,13 +169,7 @@ export abstract class MainPage extends BasePage {
   async checkAllRows(): Promise<void> {
     return test.step(`Checks all rows on ${this.title} page`, async () => {
       try {
-        await playExpect(this.rowTable).toBeVisible();
-        const controlRow = this.rowTable.getByRole('row').first();
-        await playExpect(controlRow).toBeAttached();
-        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
-        await playExpect(checkboxColumnHeader).toBeAttached();
-        const toggle = checkboxColumnHeader.getByTitle('Toggle all');
-        await playExpect(toggle).toBeAttached();
+        const toggle = await this.getToggleLocator();
 
         if ((await toggle.innerHTML()).includes('pd-input-checkbox-unchecked')) {
           await toggle.click();
@@ -195,5 +183,17 @@ export abstract class MainPage extends BasePage {
         throw err;
       }
     });
+  }
+
+  private async getToggleLocator(): Promise<Locator> {
+    await playExpect(this.rowTable).toBeVisible();
+    const controlRow = this.rowTable.getByRole('row').first();
+    await playExpect(controlRow).toBeAttached();
+    const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
+    await playExpect(checkboxColumnHeader).toBeAttached();
+    const toggle = checkboxColumnHeader.getByTitle('Toggle all');
+    await playExpect(toggle).toBeAttached();
+
+    return toggle;
   }
 }
