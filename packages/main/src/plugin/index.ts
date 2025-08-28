@@ -196,6 +196,7 @@ import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
 import { PAGE_EVENT_TYPE, Telemetry } from './telemetry/telemetry.js';
+import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
@@ -720,6 +721,8 @@ export class PluginSystem {
     const recommendationsRegistry = container.get<RecommendationsRegistry>(RecommendationsRegistry);
     recommendationsRegistry.init();
 
+    container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
+
     // do not wait
     featured.init().catch((e: unknown) => {
       console.error('Unable to initialized the featured extensions', e);
@@ -744,6 +747,7 @@ export class PluginSystem {
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);
     const authentication = container.get<AuthenticationImpl>(AuthenticationImpl);
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
+    const tempFileService = container.get<TempFileService>(TempFileService);
 
     container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
     const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
@@ -961,6 +965,12 @@ export class PluginSystem {
         return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
       },
     );
+    this.ipcHandle('temp-file-service:createTempKubeFile', async (_listener, content: string): Promise<string> => {
+      return tempFileService.createTempKubeFile(content);
+    });
+    this.ipcHandle('temp-file-service:removeTempFile', async (_listener, filePath: string): Promise<void> => {
+      return tempFileService.removeTempFile(filePath);
+    });
     this.ipcHandle(
       'container-provider-registry:startContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
