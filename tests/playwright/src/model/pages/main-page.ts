@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { type Locator, type Page, test } from '@playwright/test';
+import { expect as playExpect } from '@playwright/test';
 
 import { waitUntil } from '../../utility/wait';
 import { BasePage } from './base-page';
@@ -37,6 +38,7 @@ export abstract class MainPage extends BasePage {
   readonly heading: Locator;
   readonly noContainerEngineHeading: Locator;
   readonly noImagesHeading: Locator;
+  readonly rowTable: Locator;
 
   constructor(page: Page, title: string) {
     super(page);
@@ -60,6 +62,7 @@ export abstract class MainPage extends BasePage {
       name: `No ${this.title}`,
       exact: true,
     });
+    this.rowTable = this.content.getByRole('table');
   }
 
   /**
@@ -79,16 +82,12 @@ export abstract class MainPage extends BasePage {
     });
   }
 
-  async getTable(): Promise<Locator> {
-    return this.content.getByRole('table');
-  }
-
   async rowsAreVisible(): Promise<boolean> {
     return await this.page.getByRole('row').first().isVisible();
   }
 
   async getAllTableRows(): Promise<Locator[]> {
-    return await (await this.getTable()).getByRole('row').all();
+    return await this.rowTable.getByRole('row').all();
   }
 
   async getRowsFromTableByStatus(status: string): Promise<Locator[]> {
@@ -141,6 +140,58 @@ export abstract class MainPage extends BasePage {
     return test.step(`Wait for row with name: ${name} to be deleted`, async () => {
       await waitUntil(async () => (await this.getRowByName(name)) === undefined, { timeout: timeout });
       return true;
+    });
+  }
+
+  async uncheckAllRows(): Promise<void> {
+    return test.step(`Uncheck all rows on ${this.title} page`, async () => {
+      try {
+        await playExpect(this.rowTable).toBeVisible();
+        const controlRow = this.rowTable.getByRole('row').first();
+        await playExpect(controlRow).toBeAttached();
+        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
+        await playExpect(checkboxColumnHeader).toBeAttached();
+        const toggle = checkboxColumnHeader.getByTitle('Toggle all');
+        await playExpect(toggle).toBeAttached();
+
+        if ((await toggle.innerHTML()).includes('pd-input-checkbox-indeterminate')) {
+          await toggle.click();
+        }
+
+        if ((await toggle.innerHTML()).includes('pd-input-checkbox-checked')) {
+          await toggle.click();
+        }
+
+        await playExpect
+          .poll(async () => await toggle.innerHTML(), { timeout: 15_000 })
+          .toContain('pd-input-checkbox-unchecked');
+      } catch (err) {
+        console.log(`Exception caught on ${this.title} page when checking cells for unchecking with message: ${err}`);
+      }
+    });
+  }
+
+  async checkAllRows(): Promise<void> {
+    return test.step(`Checks all rows on ${this.title} page`, async () => {
+      try {
+        await playExpect(this.rowTable).toBeVisible();
+        const controlRow = this.rowTable.getByRole('row').first();
+        await playExpect(controlRow).toBeAttached();
+        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
+        await playExpect(checkboxColumnHeader).toBeAttached();
+        const toggle = checkboxColumnHeader.getByTitle('Toggle all');
+        await playExpect(toggle).toBeAttached();
+
+        if ((await toggle.innerHTML()).includes('pd-input-checkbox-unchecked')) {
+          await toggle.click();
+        }
+
+        await playExpect
+          .poll(async () => toggle.innerHTML(), { timeout: 15_000 })
+          .toContain('pd-input-checkbox-checked');
+      } catch (err) {
+        console.log(`Exception caught on containers page when checking cells with message: ${err}`);
+      }
     });
   }
 }

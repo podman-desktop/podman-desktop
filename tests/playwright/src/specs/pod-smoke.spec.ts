@@ -348,7 +348,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
         await playExpect
           .poll(async () => containersPage.containerExists(containerNames[i]), { timeout: 15_000 })
           .toBeTruthy();
-        await containersPage.uncheckAllContainers();
+        await containersPage.uncheckAllRows();
         const createPodPage = await containersPage.openCreatePodPage(Array.of(containerNames[i]));
         const podsPage = await createPodPage.createPod(podNames[i]);
         await playExpect(podsPage.heading).toBeVisible({ timeout: 60_000 });
