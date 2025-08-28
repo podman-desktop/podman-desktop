@@ -167,6 +167,7 @@ export abstract class MainPage extends BasePage {
           .toContain('pd-input-checkbox-unchecked');
       } catch (err) {
         console.log(`Exception caught on ${this.title} page when checking cells for unchecking with message: ${err}`);
+        throw err;
       }
     });
   }
@@ -191,6 +192,7 @@ export abstract class MainPage extends BasePage {
           .toContain('pd-input-checkbox-checked');
       } catch (err) {
         console.log(`Exception caught on containers page when checking cells with message: ${err}`);
+        throw err;
       }
     });
   }
