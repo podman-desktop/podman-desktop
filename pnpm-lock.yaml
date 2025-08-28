@@ -1018,11 +1018,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^3.0.5
-        version: 3.0.5
+        specifier: ^3.0.6
+        version: 3.0.6
       '@argos-ci/playwright':
-        specifier: ^6.1.2
-        version: 6.1.2
+        specifier: ^6.1.3
+        version: 6.1.3
       '@playwright/test':
         specifier: 1.55.0
         version: 1.55.0
@@ -1135,17 +1135,17 @@ packages:
     resolution: {integrity: sha512-SKAD7EXoLX4u50dzTIT/ABnpD284+DnBfoJM0ZrTIav2eiiVJyknNKSznF5w118lYGnYvugTXbKMnukGPzJeOA==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/cli@3.0.5':
-    resolution: {integrity: sha512-B+fnmQ3ho43j0CXTKYgKSO7tKkTQqlVQo6+Z2ngk7mdJH9eZ06EiWPhBIQEPVEzHzVtZM4dD6vPtlb793/y0Xg==}
+  '@argos-ci/cli@3.0.6':
+    resolution: {integrity: sha512-IaxoID7rVkiuGVUFvq8bE7LP8rlyhCSOCFOt2p52xc4MELsNGE7JUTAG6wjcwBmLJUr/wgCapBM+qsQadNgH/Q==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@argos-ci/core@4.1.1':
-    resolution: {integrity: sha512-Y1gD6QfcaFRx8lLmxU2vfbmijuk8xIfV+PAQ6HvMeZ6jQNARD1ghwpcEQdeInbgSTl+XSzeztUInlFLz4MrFqw==}
+  '@argos-ci/core@4.1.2':
+    resolution: {integrity: sha512-DSw3QNLmlvwGiYIMXvi+kqJMiZm2KLN5H9xchfUH1Lu/adjR3X9L7c6/OD9HFdCmRoLZ7RQ+jYo4VLV31cn4zw==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/playwright@6.1.2':
-    resolution: {integrity: sha512-qGE28YDCDRcI7aR6EZPjZ9/omZITLKe6/9nPSkRI3iKBC/5iuDxhSk/3dYa7oQx9bp6wsGsetVT8GEJcct4IXg==}
+  '@argos-ci/playwright@6.1.3':
+    resolution: {integrity: sha512-IQMM3jVKGkmbF0UN2iCVmNX1Vb8lScXMQcNAs0pZs1QETidSQ0URdE3bn1cBT9kLPeNK/TF5J1qQBtwlUXaU8A==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/util@3.1.0':
@@ -8002,6 +8002,10 @@ packages:
     resolution: {integrity: sha512-YKBKVkKhty7s8rxddb40oOkuP0NbaeXrQvLin6QMHL7Ypiy2RW9LwOVrVgZRyOrhQlayMd9t+D8yDy8MKFTSDQ==}
     engines: {node: '>= 18.0.0'}
 
+  isbinaryfile@5.0.5:
+    resolution: {integrity: sha512-vh9MWXjhhblwrHlt/yutrubDuBD01kKFscyVndE2/VEeEU5aAizrzuWAsEaCjo997k+IluhN6C4jgxfS69SCIw==}
+    engines: {node: '>= 18.0.0'}
+
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -12162,16 +12166,16 @@ snapshots:
 
   '@argos-ci/browser@5.0.0': {}
 
-  '@argos-ci/cli@3.0.5':
+  '@argos-ci/cli@3.0.6':
     dependencies:
-      '@argos-ci/core': 4.1.1
+      '@argos-ci/core': 4.1.2
       commander: 14.0.0
       ora: 8.2.0
       update-notifier: 7.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@4.1.1':
+  '@argos-ci/core@4.1.2':
     dependencies:
       '@argos-ci/api-client': 0.11.0
       '@argos-ci/util': 3.1.0
@@ -12183,10 +12187,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@6.1.2':
+  '@argos-ci/playwright@6.1.3':
     dependencies:
       '@argos-ci/browser': 5.0.0
-      '@argos-ci/core': 4.1.1
+      '@argos-ci/core': 4.1.2
       '@argos-ci/util': 3.1.0
       chalk: 5.6.0
       debug: 4.4.1
@@ -17058,7 +17062,7 @@ snapshots:
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
-      isbinaryfile: 5.0.4
+      isbinaryfile: 5.0.5
       js-yaml: 4.1.0
       json5: 2.2.3
       lazy-val: 1.0.5
@@ -20800,6 +20804,8 @@ snapshots:
   isbinaryfile@4.0.10: {}
 
   isbinaryfile@5.0.4: {}
+
+  isbinaryfile@5.0.5: {}
 
   isexe@2.0.0: {}
 
