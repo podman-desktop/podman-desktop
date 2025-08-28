@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -81,6 +81,9 @@ vi.mock('tinro', () => {
 const playKubeMock = vi.fn();
 
 // fake the window.events object
+const createTempKubeFileMock = vi.fn();
+const removeTempFileMock = vi.fn();
+
 beforeAll(() => {
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
@@ -95,10 +98,9 @@ beforeAll(() => {
   });
   Object.defineProperty(window, 'openDialog', { value: vi.fn().mockResolvedValue(['Containerfile']) });
   Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'kubernetesGetCurrentContextName', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'kubernetesGetCurrentNamespace', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'kubernetesListNamespaces', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'playKube', { value: playKubeMock });
+  Object.defineProperty(window, 'createTempKubeFile', { value: createTempKubeFileMock });
+  Object.defineProperty(window, 'removeTempFile', { value: removeTempFileMock });
 });
 
 function setup(): void {
@@ -201,7 +203,7 @@ test('expect done button is there at the end and redirects to pods', async () =>
   expect(router.goto).toHaveBeenCalledWith(`/pods`);
 });
 
-test('expect runtime boxes have the correct selection borders', async () => {
+test('expect workflow selection boxes have the correct selection borders', async () => {
   playKubeMock.mockResolvedValue({
     Pods: [],
   });
@@ -209,69 +211,203 @@ test('expect runtime boxes have the correct selection borders', async () => {
   setup();
   render(KubePlayYAML, {});
 
-  // check the current borders
+  // check the current borders - Podman should be selected by default
   const podmanOption = screen.getByText('Podman container engine');
   expect(podmanOption).toBeInTheDocument();
   expect(podmanOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
   expect(podmanOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
 
-  const kubeOption = screen.getByText('Kubernetes cluster');
-  expect(kubeOption).toBeInTheDocument();
-  expect(kubeOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
-  expect(kubeOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border)]');
+  const customOption = screen.getByText('Create file from scratch');
+  expect(customOption).toBeInTheDocument();
+  expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
+  expect(customOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border)]');
 
-  // now switch selection to Kubernetes
-  await userEvent.click(kubeOption);
+  // now switch selection to Create file from scratch
+  await userEvent.click(customOption);
 
   // and expect opposite selection borders
   expect(podmanOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
   expect(podmanOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border)]');
 
-  expect(kubeOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
-  expect(kubeOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
+  expect(customOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
+  expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
 });
 
-test('build checkbox should be disabled by default', async () => {
-  setup();
-  const { getByRole } = render(KubePlayYAML, {});
+describe('Build options', () => {
+  test('checkbox should be disabled by default', async () => {
+    setup();
+    const { getByRole } = render(KubePlayYAML, {});
 
-  const checkbox = await vi.waitFor(() => {
-    const element = getByRole('checkbox', { name: 'Enable build' });
-    expect(element).toBeInstanceOf(HTMLInputElement);
-    return element;
+    const checkbox = await vi.waitFor(() => {
+      const element = getByRole('checkbox', { name: 'Enable build' });
+      expect(element).toBeInstanceOf(HTMLInputElement);
+      return element;
+    });
+
+    expect(checkbox).not.toBeChecked();
   });
 
-  expect(checkbox).not.toBeChecked();
+  test('enabled build option propagates to playKube call', async () => {
+    setup();
+    const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+    // Enable build
+    const checkbox = getByRole('checkbox', { name: 'Enable build' });
+    await userEvent.click(checkbox);
+
+    // Select file and play
+    const browseButton = getByLabelText('browse');
+    await userEvent.click(browseButton);
+
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    await userEvent.click(playButton);
+
+    expect(window.playKube).toHaveBeenCalledWith(
+      'Containerfile',
+      expect.anything(),
+      expect.objectContaining({ build: true }),
+    );
+  });
 });
 
-test('build checkbox checked should propagate to window#kubePlay', async () => {
-  setup();
-  const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+describe('Custom YAML mode', () => {
+  test('shows Monaco editor when selected', async () => {
+    setup();
+    render(KubePlayYAML, {});
 
-  const checkbox = await vi.waitFor(() => {
-    const element = getByRole('checkbox', { name: 'Enable build' });
-    expect(element).toBeInstanceOf(HTMLInputElement);
-    return element;
+    // Initially, Monaco editor should not be visible
+    expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+
+    // Click on "Create file from scratch" option
+    const customOption = screen.getByText('Create file from scratch');
+    await userEvent.click(customOption);
+
+    // Now Monaco editor should be visible
+    expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
   });
 
-  // check
-  await userEvent.click(checkbox);
+  test('play button is disabled when no content provided', async () => {
+    setup();
+    render(KubePlayYAML, {});
 
-  const browseButton = getByLabelText('browse');
-  expect(browseButton).toBeInTheDocument();
+    const customOption = screen.getByText('Create file from scratch');
+    await userEvent.click(customOption);
+
+    const playButton = screen.getByRole('button', { name: 'Play Custom YAML' });
+    expect(playButton).toBeDisabled();
+  });
+
+  test('button text changes to "Play Custom YAML"', async () => {
+    setup();
+    render(KubePlayYAML, {});
+
+    // Initially should show "Play"
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+
+    // Switch to custom mode
+    const customOption = screen.getByText('Create file from scratch');
+    await userEvent.click(customOption);
+
+    // Button text should change
+    expect(screen.getByRole('button', { name: 'Play Custom YAML' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+  });
+
+  test('editor content clears when switching back to file mode', async () => {
+    setup();
+    render(KubePlayYAML, {});
+
+    // Switch to custom mode
+    const customOption = screen.getByText('Create file from scratch');
+    await userEvent.click(customOption);
+
+    // Monaco editor should be visible
+    expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
+
+    // Switch back to file mode
+    const fileOption = screen.getByText('Podman container engine');
+    await userEvent.click(fileOption);
+
+    // Monaco editor should be hidden again
+    expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+  });
+});
+
+test('file mode: does not attempt temp file cleanup', async () => {
+  playKubeMock.mockResolvedValue({ Pods: [] });
+
+  setup();
+  render(KubePlayYAML, {});
+
+  // Stay in file mode and select a file
+  const browseButton = screen.getByLabelText('browse');
   await userEvent.click(browseButton);
 
-  // Simulate clicking the "Play" button
+  // Click play button
   const playButton = screen.getByRole('button', { name: 'Play' });
-  expect(playButton).toBeInTheDocument();
   await userEvent.click(playButton);
 
-  // ensure the play kube function was called with the appropriate options
-  expect(window.playKube).toHaveBeenCalledWith(
-    'Containerfile',
-    expect.anything(),
-    expect.objectContaining({
-      build: true,
-    }),
-  );
+  // Verify playKube was called with the selected file
+  expect(playKubeMock).toHaveBeenCalledWith('Containerfile', expect.anything(), expect.anything());
+
+  // Verify no temp file operations occurred
+  expect(createTempKubeFileMock).not.toHaveBeenCalled();
+  expect(removeTempFileMock).not.toHaveBeenCalled();
+});
+
+test('custom YAML mode: button text changes to "Play Custom YAML"', async () => {
+  setup();
+  render(KubePlayYAML, {});
+
+  // Initially should show "Play"
+  expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+
+  // Switch to custom mode
+  const customOption = screen.getByText('Create file from scratch');
+  await userEvent.click(customOption);
+
+  // Button text should change
+  expect(screen.getByRole('button', { name: 'Play Custom YAML' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+});
+
+test('switching between modes clears custom content', async () => {
+  setup();
+  render(KubePlayYAML, {});
+
+  // Switch to custom mode
+  const customOption = screen.getByText('Create file from scratch');
+  await userEvent.click(customOption);
+
+  // Monaco editor should be visible
+  expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
+
+  // Switch back to file mode
+  const fileOption = screen.getByText('Podman container engine');
+  await userEvent.click(fileOption);
+
+  // Monaco editor should be hidden again
+  expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+});
+
+test('validation: play button disabled when no file selected in file mode', async () => {
+  setup();
+  render(KubePlayYAML, {});
+
+  // In file mode with no file selected, button should be disabled
+  const playButton = screen.getByRole('button', { name: 'Play' });
+  expect(playButton).toBeDisabled();
+});
+
+test('validation: play button enabled when file is selected in file mode', async () => {
+  setup();
+  render(KubePlayYAML, {});
+
+  // Simulate selecting a file
+  const browseButton = screen.getByLabelText('browse');
+  await userEvent.click(browseButton);
+
+  // Play button should now be enabled
+  const playButton = screen.getByRole('button', { name: 'Play' });
+  expect(playButton).not.toBeDisabled();
 });

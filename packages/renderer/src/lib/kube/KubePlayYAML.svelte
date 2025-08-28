@@ -7,9 +7,8 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 let providerUnsubscribe: Unsubscriber;
 
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
-import type { V1NamespaceList } from '@kubernetes/client-node/dist/api';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import { Button, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -30,31 +29,45 @@ let runError = '';
 let kubeBuild: boolean = false;
 let runWarning = '';
 let kubernetesYamlFilePath: string | undefined = undefined;
+let customYamlContent: string = '';
+let editorKey: number = 0;
 let hasInvalidFields = true;
-
-$: hasInvalidFields = kubernetesYamlFilePath === undefined;
-
-let defaultContextName: string | undefined;
-let currentNamespace: string | undefined;
-let allNamespaces: V1NamespaceList;
 
 let playKubeResultRaw: string;
 let playKubeResultJSON: unknown;
 let playKubeResult: { Pods?: unknown[] } | undefined = undefined;
 
-let userChoice: 'podman' | 'kubernetes' = 'podman';
+let userChoice: 'podman' | 'custom' = 'podman';
 
 let providers: ProviderInfo[] = [];
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
+let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
+
 $: providerConnections = providers
   .map(provider => provider.containerConnections)
   .flat()
   // keep only podman providers as it is not supported by docker
   .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
+
+$: hasInvalidFields =
+  (userChoice === 'podman' && kubernetesYamlFilePath === undefined) ||
+  (userChoice === 'custom' && customYamlContent.trim() === '') ||
+  !selectedProvider;
+
 $: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
 $: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
+
+// Reset editor when switching modes to ensure fresh start
+let previousUserChoice: 'podman' | 'custom' = 'podman';
+$: if (userChoice !== previousUserChoice) {
+  editorKey++;
+  previousUserChoice = userChoice;
+  if (userChoice !== 'custom') {
+    // Clear custom content when switching away
+    customYamlContent = '';
+  }
+}
 
 const kubeFileDialogOptions: OpenDialogOptions = {
   title: 'Select a .yaml file to play',
@@ -79,11 +92,23 @@ async function playKubeFile(): Promise<void> {
   runStarted = true;
   runFinished = false;
   runError = '';
-  if (kubernetesYamlFilePath && selectedProvider) {
-    // depending on the user choice, do podman or kubernetes
-    if (userChoice === 'podman') {
+
+  let tempFilePath: string | undefined = undefined;
+
+  try {
+    let yamlFilePath: string;
+
+    if (userChoice === 'custom') {
+      // Create a temporary file with the custom YAML content
+      tempFilePath = await window.createTempKubeFile(customYamlContent);
+      yamlFilePath = tempFilePath;
+    } else {
+      yamlFilePath = kubernetesYamlFilePath!;
+    }
+
+    if (yamlFilePath && selectedProvider) {
       try {
-        const result = await window.playKube(kubernetesYamlFilePath, selectedProvider, {
+        const result = await window.playKube(yamlFilePath, selectedProvider, {
           build: kubeBuild,
         });
 
@@ -131,21 +156,18 @@ async function playKubeFile(): Promise<void> {
         runError = String(error);
         console.error('error playing kube file', error);
       }
-    } else if (userChoice === 'kubernetes') {
-      if (!defaultContextName) {
-        runError = 'No default context found';
-        return;
-      }
-      if (!currentNamespace) {
-        runError = 'No current namespace found';
-        return;
-      }
+    }
+  } catch (error: unknown) {
+    runError = String(error);
+    console.error('error creating temporary file or playing kube', error);
+  } finally {
+    // Always cleanup temp file if one was created
+    if (tempFilePath && userChoice === 'custom') {
       try {
-        await window.kubernetesCreateResourcesFromFile(defaultContextName, kubernetesYamlFilePath, currentNamespace);
-        runFinished = true;
+        await window.removeTempFile(tempFilePath);
       } catch (error) {
-        runError = String(error);
-        console.error('error playing kube file', error);
+        console.warn('Failed to cleanup temporary file:', error);
+        // Don't show this error to the user as it's not critical
       }
     }
   }
@@ -156,22 +178,6 @@ onMount(async () => {
   providerUnsubscribe = providerInfos.subscribe(value => {
     providers = value;
   });
-
-  // grab default context
-  defaultContextName = await window.kubernetesGetCurrentContextName();
-
-  // grab current namespace
-  currentNamespace = await window.kubernetesGetCurrentNamespace();
-
-  // check that the variable is set to a value, otherwise set to default namespace
-  currentNamespace ??= 'default';
-
-  // grab all the namespaces (will be useful to provide a drop-down to select the namespace)
-  try {
-    allNamespaces = await window.kubernetesListNamespaces();
-  } catch (error) {
-    console.debug('Not able to list all namespaces, probably a permission error', error);
-  }
 });
 
 onDestroy(() => {
@@ -203,36 +209,21 @@ function goBackToPodsPage(): void {
       <div hidden={runStarted}>
         <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
           >Kubernetes YAML file</label>
-        <FileInput
-          name="containerFilePath"
-          id="containerFilePath"
-          readonly
-          required
-          bind:value={kubernetesYamlFilePath}
-          placeholder="Select a .yaml file to play"
-          options={kubeFileDialogOptions}
-          class="w-full p-2" />
+       
       </div>
-
-      <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
-        <div>Enable build</div>
-      </Checkbox>
-
-      <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Runtime</div>
 
       <div class="flex flex-col">
         <button
           hidden={providerConnections.length === 0}
-          class:border-2={defaultContextName}
           class="rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
           aria-label="Podman Container Engine Runtime"
           aria-pressed={userChoice === 'podman' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'podman'}
           on:click={(): void => {
-            userChoice = 'podman';
-          }}>
-          <div class="flex flex-row align-middle items-center">
+             userChoice = 'podman';
+           }}>
+          <div class="flex flex-row align-middle items-center pb-2">
             <div
               class="text-2xl"
               class:text-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
@@ -246,6 +237,15 @@ function goBackToPodsPage(): void {
               Podman container engine
             </div>
           </div>
+          <FileInput
+            name="containerFilePath"
+            id="containerFilePath"
+            readonly
+            required
+            bind:value={kubernetesYamlFilePath}
+            placeholder="Select a .yaml file to play"
+            options={kubeFileDialogOptions}
+            class="w-full p-2" />
           <div hidden={runStarted}>
             {#if providerConnections.length > 1}
               <label
@@ -258,7 +258,7 @@ function goBackToPodsPage(): void {
                 id="providerChoice"
                 name="providerChoice"
                 bind:value={selectedProvider}
-                disabled={userChoice === 'kubernetes'}
+                disabled={userChoice === 'custom'}
                 connections={providerConnections}/>
             {/if}
             {#if providerConnections.length === 1 && selectedProviderConnection}
@@ -266,71 +266,57 @@ function goBackToPodsPage(): void {
             {/if}
           </div>
         </button>
+
         <button
-          hidden={!defaultContextName}
           class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-          aria-label="Kubernetes Cluster Runtime"
-          aria-pressed={userChoice === 'kubernetes' ? 'true' : 'false'}
-          class:border-[var(--pd-content-card-border-selected)]={userChoice === 'kubernetes'}
-          class:border-[var(--pd-content-card-border)]={userChoice !== 'kubernetes'}
+          aria-label="Create file from scratch"
+          aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
+          class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
+          class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
           on:click={(): void => {
-            userChoice = 'kubernetes';
-          }}>
+             userChoice = 'custom';
+           }}>
           <div class="flex flex-row align-middle items-center">
             <div
               class="text-2xl"
-              class:text-[var(--pd-content-card-border-selected)]={userChoice === 'kubernetes'}
-              class:text-[var(--pd-content-card-border)]={userChoice !== 'kubernetes'}>
+              class:text-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
+              class:text-[var(--pd-content-card-border)]={userChoice !== 'custom'}>
               <Fa icon={faCircleCheck} />
             </div>
             <div
               class="pl-2"
-              class:text-[var(--pd-content-card-text)]={userChoice === 'kubernetes'}
-              class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'kubernetes'}>
-              Kubernetes cluster
+              class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
+              class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
+              Create file from scratch
             </div>
           </div>
-
-          {#if defaultContextName}
-            <div class="pt-2">
-              <label
-                for="contextToUse"
-                class="block mb-1 text-sm font-bold"
-                class:text-[var(--pd-content-card-header-text)]={userChoice === 'kubernetes'}
-                class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'kubernetes'}
-                >Kubernetes Context:</label>
-              <Input
-                disabled={userChoice === 'podman'}
-                bind:value={defaultContextName}
-                aria-label="Default Kubernetes Context"
-                name="defaultContextName"
-                id="defaultContextName"
-                readonly
-                required />
-            </div>
-          {/if}
-
-          {#if allNamespaces}
-            <div class="pt-2">
-              <label
-                for="namespaceToUse"
-                class="block mb-1 text-sm font-medium"
-                class:text-[var(--pd-content-card-header-text)]={userChoice === 'kubernetes'}
-                class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'kubernetes'}
-                >Kubernetes namespace:</label>
-              <Dropdown
-                disabled={userChoice === 'podman'}
-                ariaLabel="Kubernetes Namespace"
-                name="namespaceChoice"
-                bind:value={currentNamespace}
-                options={allNamespaces.items.map(namespace => ({
-                  label: namespace.metadata?.name ?? '',
-                  value: namespace.metadata?.name ?? '',
-                }))}>
-              </Dropdown>
-            </div>
-          {/if}
         </button>
+      </div>
+
+      <!-- Monaco Editor for custom YAML content -->
+      {#if userChoice === 'custom'}
+        <div class="space-y-3">
+          <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
+            Custom Kubernetes YAML Content
+          </label>
+          <div id="custom-yaml-editor" class="h-[400px] border">
+            {#key editorKey}
+              <MonacoEditor 
+                readOnly={false} 
+                language="yaml" 
+                on:contentChange={(e): void => {
+                  customYamlContent = e.detail;
+                }} />
+            {/key}
+          </div>
+        </div>
+      {/if}
+
+      <div >
+        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Build options</div>
+        <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
+          <div>Enable build</div>
+        </Checkbox>
       </div>
 
       {#if !runFinished}
@@ -340,7 +326,7 @@ function goBackToPodsPage(): void {
           class="w-full"
           inProgress={runStarted}
           icon={KubePlayIcon}>
-          Play
+          {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
         </Button>
       {/if}
       {#if runStarted}
