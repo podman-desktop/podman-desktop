@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,52 +102,6 @@ describe('Command Palette', () => {
 
     // now, press the ⬇️ key
     await userEvent.keyboard('{ArrowDown}');
-
-    // expect we've scrolled
-    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
-
-    // check the class selected is no longer on the first item
-    expect(firstItem).not.toHaveClass('selected');
-
-    // but on the second one
-    const secondItem = screen.getByRole('button', { name: commandTitle2 });
-    // check the class selected is on this item
-    expect(secondItem).toHaveClass('selected');
-
-    // click on the item
-    await userEvent.click(secondItem);
-
-    expect(window.executeCommand).toBeCalledWith('my-command-2');
-  });
-
-  test('Check tab key', async () => {
-    const commandTitle1 = 'My command 1';
-    const commandTitle2 = 'My command 2';
-
-    commandsInfos.set([
-      {
-        id: 'my-command-1',
-        title: commandTitle1,
-      },
-      {
-        id: 'my-command-2',
-        title: commandTitle2,
-      },
-    ]);
-
-    render(CommandPalette, { display: true });
-
-    // check we have the command palette input field
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
-
-    // grab first item
-    const firstItem = screen.getByRole('button', { name: commandTitle1 });
-    // check the class selected is on this item
-    expect(firstItem).toHaveClass('selected');
-
-    // now, press the Tab key
-    await userEvent.keyboard('{Tab}');
 
     // expect we've scrolled
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
@@ -374,5 +328,166 @@ describe('Command Palette', () => {
     await userEvent.keyboard('{Enter}');
 
     expect(window.executeCommand).toBeCalledWith('my-command-enabled-1');
+  });
+
+  // Test data for shortcut and tab combinations
+  const shortcutTabTestCases = [
+    {
+      description: 'F1 key',
+      shortcut: '{F1}',
+      expectedTabText: 'Commands',
+    },
+    {
+      description: '> key',
+      shortcut: '>',
+      expectedTabText: 'Commands',
+    },
+    {
+      description: 'Ctrl+K',
+      shortcut: '{Control>}k{/Control}',
+      expectedTabText: 'Documentation',
+    },
+    {
+      description: 'Ctrl+F',
+      shortcut: '{Control>}f{/Control}',
+      expectedTabText: 'Go to',
+    },
+  ];
+
+  test.each(shortcutTabTestCases)(
+    'Expect that $description opens command palette with $expectedTabText tab selected',
+    async ({ shortcut, expectedTabText }) => {
+      render(CommandPalette);
+
+      // check command palette is not displayed initially
+      const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+      expect(inputBefore).not.toBeInTheDocument();
+
+      // press the shortcut
+      await userEvent.keyboard(shortcut);
+
+      // check command palette is now displayed
+      const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+      expect(input).toBeInTheDocument();
+
+      // find the expected tab by its text content
+      const expectedTab = screen.getByRole('button', { name: new RegExp(expectedTabText, 'i') });
+      expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+      expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+
+      // check other tabs don't have selected styling
+      const allTabButtons = screen
+        .getAllByRole('button')
+        .filter(button =>
+          ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
+        );
+
+      allTabButtons.forEach(button => {
+        if (button !== expectedTab) {
+          expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+          expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+        }
+      });
+    },
+  );
+
+  test('Expect that Tab key switches between tabs forward', async () => {
+    // Set up some commands so tab switching logic gets triggered
+    commandsInfos.set([
+      {
+        id: 'test-command-1',
+        title: 'Test Command 1',
+      },
+      {
+        id: 'test-command-2',
+        title: 'Test Command 2',
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    // check command palette is displayed
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(input).toBeInTheDocument();
+
+    // get all tab buttons
+    const allTabButtons = screen
+      .getAllByRole('button')
+      .filter(button =>
+        ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
+      );
+
+    // initially "All" tab should be selected (index 0)
+    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Tab to move to next tab
+    await userEvent.keyboard('{Tab}');
+    expect(allTabButtons[1]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[0]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Tab again to move to next tab
+    await userEvent.keyboard('{Tab}');
+    expect(allTabButtons[2]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[1]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Tab again to move to next tab
+    await userEvent.keyboard('{Tab}');
+    expect(allTabButtons[3]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[2]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Tab again to wrap around to first tab
+    await userEvent.keyboard('{Tab}');
+    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[3]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+  });
+
+  test('Expect that Shift+Tab switches between tabs backward', async () => {
+    // Set up some commands so tab switching logic gets triggered
+    commandsInfos.set([
+      {
+        id: 'test-command-1',
+        title: 'Test Command 1',
+      },
+      {
+        id: 'test-command-2',
+        title: 'Test Command 2',
+      },
+    ]);
+
+    render(CommandPalette, { display: true });
+
+    // check command palette is displayed
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(input).toBeInTheDocument();
+
+    // get all tab buttons
+    const allTabButtons = screen
+      .getAllByRole('button')
+      .filter(button =>
+        ['All', 'Commands', 'Documentation', 'Go to'].some(tabName => button.textContent?.includes(tabName)),
+      );
+
+    // initially "All" tab should be selected (index 0)
+    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Shift+Tab to move to previous tab (should wrap to last)
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(allTabButtons[3]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[0]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Shift+Tab again to move to previous tab
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(allTabButtons[2]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[3]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Shift+Tab again to move to previous tab
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(allTabButtons[1]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[2]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+
+    // press Shift+Tab again to move to previous tab
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(allTabButtons[0]).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(allTabButtons[1]).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
   });
 });
