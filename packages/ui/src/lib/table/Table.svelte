@@ -13,6 +13,7 @@ import { onMount, tick } from 'svelte';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 import Icon from '../icons/Icon.svelte';
+import LayoutManager, { type LayoutEditItem } from '../layouts/LayoutManager.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
 
@@ -29,6 +30,33 @@ export let collapsed: string[] = [];
  * By default, it will use the object name property
  */
 export let key: (object: T) => string = item => item.name ?? String(item);
+
+let columnItems: LayoutEditItem[] = [];
+let isInitialized = false;
+
+// Initialize or update column config when columns change
+$: if (!isInitialized || columnItems.length === 0) {
+  columnItems = columns.map((col, index) => {
+    // Check if we already have config for this column
+    const existingConfig = columnItems.find(config => config.id === col.title);
+    return (
+      existingConfig ?? {
+        id: col.title,
+        label: col.title,
+        enabled: true,
+        order: index,
+      }
+    );
+  });
+  isInitialized = true;
+}
+
+// Computed visible columns based on configuration
+$: visibleColumns = columnItems
+  .filter(item => item.enabled)
+  .sort((a, b) => a.order - b.order)
+  .map(item => columns.find(col => col.title === item.id)!)
+  .filter(Boolean);
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
@@ -149,11 +177,11 @@ $: {
     columnWidths.push('32px');
   }
 
-  // custom columns
-  columns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
+  // custom columns (use visible columns)
+  visibleColumns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
 
-  // final spacer
-  columnWidths.push('5px');
+  // Always include space for settings icon (32px)
+  columnWidths.push('32px');
 
   gridTemplateColumns = columnWidths.join(' ');
 }
@@ -185,6 +213,16 @@ function toggleChildren(name: string | undefined): void {
   // trigger Svelte update
   collapsed = collapsed;
 }
+
+// Reset columns to default state
+function resetColumns(): void {
+  columnItems = columns.map((col, index) => ({
+    id: col.title,
+    label: col.title,
+    enabled: true,
+    order: index,
+  }));
+}
 </script>
 
 <div
@@ -195,7 +233,7 @@ function toggleChildren(name: string | undefined): void {
   aria-label={kind}
   bind:this={tableHtmlDivElement}>
   <!-- Table header -->
-  <div role="rowgroup">
+  <div role="rowgroup" class="relative">
     <div
       class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
       role="row">
@@ -210,7 +248,7 @@ function toggleChildren(name: string | undefined): void {
             on:click={toggleAll} />
         </div>
       {/if}
-      {#each columns as column, index (index)}
+      {#each visibleColumns as column, index (index)}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
@@ -236,6 +274,20 @@ function toggleChildren(name: string | undefined): void {
             >{/if}
         </div>
       {/each}
+      <!-- Empty space for settings -->
+      <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
+    </div>
+    
+    <!-- Settings - absolutely positioned, always on right -->
+    <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
+      <LayoutManager
+        bind:items={columnItems}
+        title="Configure Columns"
+        enableReorder={true}
+        enableToggle={true}
+        onReset={resetColumns}
+        resetButtonLabel="Reset to default"
+      />
     </div>
   </div>
   <!-- Table body -->
@@ -275,7 +327,7 @@ function toggleChildren(name: string | undefined): void {
                 on:click={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
-          {#each columns as column, index (index)}
+          {#each visibleColumns as column, index (index)}
             <div
               class="whitespace-nowrap {column.info.align === 'right'
                 ? 'justify-self-end'
@@ -312,7 +364,7 @@ function toggleChildren(name: string | undefined): void {
                     disabledTooltip={row.info.disabledText} />
                 </div>
               {/if}
-              {#each columns as column, index (index)}
+              {#each visibleColumns as column, index (index)}
                 <div
                   class="whitespace-nowrap {column.info.align === 'right'
                     ? 'justify-self-end'
