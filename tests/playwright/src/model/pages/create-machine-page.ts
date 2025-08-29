@@ -19,6 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { PodmanVirtualizationProviders } from '../core/types';
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { ResourcesPage } from './resources-page';
@@ -39,13 +40,26 @@ export class CreateMachinePage extends BasePage {
 
   async createMachine(
     machineName: string,
-    { isRootful = true, enableUserNet = false, startNow = true, setAsDefault = true },
+    {
+      isRootful = true,
+      enableUserNet = false,
+      startNow = true,
+      setAsDefault = true,
+      virtualizationProvider,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      setAsDefault?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
+    },
   ): Promise<ResourcesPage> {
     return test.step(`Create Podman Machine: ${machineName}`, async () => {
       await this.machineCreationForm.setupAndCreateMachine(machineName, {
         isRootful,
         enableUserNet,
         startNow,
+        virtualizationProvider,
       });
 
       const successfulCreationMessage = this.page.getByText('Successful operation');
