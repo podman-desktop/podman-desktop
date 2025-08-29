@@ -149,10 +149,6 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   expect(browseButton).toBeInTheDocument();
   await userEvent.click(browseButton);
 
-  // Simulate selecting a runtime
-  const runtimeOption = screen.getByText('Podman container engine');
-  expect(runtimeOption).toBeInTheDocument();
-
   // Simulate clicking the "Play" button
   const playButton = screen.getByRole('button', { name: 'Play' });
   expect(playButton).toBeInTheDocument();
@@ -181,10 +177,6 @@ test('expect done button is there at the end and redirects to pods', async () =>
   expect(browseButton).toBeInTheDocument();
   await userEvent.click(browseButton);
 
-  // Simulate selecting a runtime
-  const runtimeOption = screen.getByText('Podman container engine');
-  expect(runtimeOption).toBeInTheDocument();
-
   // Simulate clicking the "Play" button
   const playButton = screen.getByRole('button', { name: 'Play' });
   expect(playButton).toBeInTheDocument();
@@ -211,12 +203,6 @@ test('expect workflow selection boxes have the correct selection borders', async
   setup();
   render(KubePlayYAML, {});
 
-  // check the current borders - Podman should be selected by default
-  const podmanOption = screen.getByText('Podman container engine');
-  expect(podmanOption).toBeInTheDocument();
-  expect(podmanOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
-  expect(podmanOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
-
   const customOption = screen.getByText('Create file from scratch');
   expect(customOption).toBeInTheDocument();
   expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
@@ -224,10 +210,6 @@ test('expect workflow selection boxes have the correct selection borders', async
 
   // now switch selection to Create file from scratch
   await userEvent.click(customOption);
-
-  // and expect opposite selection borders
-  expect(podmanOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
-  expect(podmanOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border)]');
 
   expect(customOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
   expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
@@ -324,10 +306,6 @@ describe('Custom YAML mode', () => {
     // Monaco editor should be visible
     expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
 
-    // Switch back to file mode
-    const fileOption = screen.getByText('Podman container engine');
-    await userEvent.click(fileOption);
-
     // Monaco editor should be hidden again
     expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
   });
@@ -381,10 +359,6 @@ test('switching between modes clears custom content', async () => {
 
   // Monaco editor should be visible
   expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
-
-  // Switch back to file mode
-  const fileOption = screen.getByText('Podman container engine');
-  await userEvent.click(fileOption);
 
   // Monaco editor should be hidden again
   expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();

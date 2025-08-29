@@ -215,7 +215,7 @@ function goBackToPodsPage(): void {
       <div class="flex flex-col">
         <button
           hidden={providerConnections.length === 0}
-          class="rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
+          class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
           aria-label="Podman Container Engine Runtime"
           aria-pressed={userChoice === 'podman' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
@@ -223,29 +223,23 @@ function goBackToPodsPage(): void {
           on:click={(): void => {
              userChoice = 'podman';
            }}>
-          <div class="flex flex-row align-middle items-center pb-2">
+          <div class="flex flex-row align-middle items-center">
             <div
-              class="text-2xl"
+              class="text-2xl pr-2"
               class:text-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
               class:text-[var(--pd-content-card-border)]={userChoice !== 'podman'}>
               <Fa icon={faCircleCheck} />
             </div>
-            <div
-              class="pl-2"
-              class:text-[var(--pd-content-card-text)]={userChoice === 'podman'}
-              class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'podman'}>
-              Podman container engine
-            </div>
+            <FileInput
+              name="containerFilePath"
+              id="containerFilePath"
+              readonly
+              required
+              bind:value={kubernetesYamlFilePath}
+              placeholder="Select a .yaml file to play"
+              options={kubeFileDialogOptions}
+              class="w-full p-2" />
           </div>
-          <FileInput
-            name="containerFilePath"
-            id="containerFilePath"
-            readonly
-            required
-            bind:value={kubernetesYamlFilePath}
-            placeholder="Select a .yaml file to play"
-            options={kubeFileDialogOptions}
-            class="w-full p-2" />
           <div hidden={runStarted}>
             {#if providerConnections.length > 1}
               <label
