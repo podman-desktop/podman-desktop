@@ -124,10 +124,13 @@ Kubernetes questions & development:
 
 ### Social networks
 
-- [Follow us on Mastodon](https://fosstodon.org/@podmandesktop)
-- [Follow us on Bluesky](https://bsky.app/profile/podman-desktop.io)
-- [Follow us on X](https://x.com/podmandesktop)
-- [Follow us on LinkedIn](https://www.linkedin.com/company/podman-desktop)
+[![Discord](https://img.shields.io/badge/discord-7289da.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/x5GzFF6QH4)
+[![X/Twitter](https://img.shields.io/badge/X/twitter-18a1d6.svg?style=for-the-badge&logo=X&logoColor=white)](https://x.com/podmandesktop)
+[![GitHub Discussions](https://img.shields.io/badge/discussions-grey.svg?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/podman-desktop/podman-desktop/discussions)
+[![Linkedin](https://img.shields.io/badge/linkedin-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/company/podman-desktop)
+[![Mastodon](https://img.shields.io/badge/mastodon-6364ff?style=for-the-badge&logo=mastodon&logoColor=white)](https://fosstodon.org/@podmandesktop)
+[![Bluesky](https://img.shields.io/badge/bluesky-1283FE.svg?style=for-the-badge&logo=Bluesky&logoColor=white)](https://bsky.app/profile/podman-desktop.io)
+
 
 ### Adopters
 
