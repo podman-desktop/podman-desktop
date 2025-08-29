@@ -18,8 +18,9 @@
 
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import * as path from 'node:path';
 
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Directories } from './directories.js';
 
@@ -52,32 +53,118 @@ afterEach(() => {
   process.env = originalProcessEnv;
 });
 
-test('should use default path', async () => {
-  directories = new TestDirectories();
-  const result = directories.getDesktopAppHomeDir();
+describe('Linux/Unix systems (XDG)', () => {
+  beforeEach(() => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+  });
 
-  // desktop app home dir should start with user's home dir
-  expect(result.startsWith(os.homedir())).toBeTruthy();
+  test('should use XDG directories by default', async () => {
+    // Mock no existing default configuration to trigger XDG usage
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
-  // should ends with the default path
-  expect(result.endsWith(Directories.XDG_DATA_DIRECTORY)).toBeTruthy();
+    directories = new TestDirectories();
+
+    const dataDir = directories.getDataDirectory();
+    const configDir = directories.getConfigurationDirectory();
+    const desktopAppHomeDir = directories.getDesktopAppHomeDir();
+
+    // Should follow XDG Base Directory Specification
+    expect(configDir).toEqual(path.resolve(os.homedir(), '.config', 'containers', 'podman-desktop'));
+    expect(dataDir).toEqual(path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop'));
+
+    // desktopAppHomeDir should point to data directory for backward compatibility
+    expect(desktopAppHomeDir).toEqual(dataDir);
+  });
+
+  test('should respect custom XDG environment variables set by user', async () => {
+    const customDataHome = '/custom/data/home';
+    const customConfigHome = '/custom/config/home';
+
+    // Mock no existing default configuration to trigger XDG usage
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+    // Mock XDG environment variables using vi.stubEnv
+    vi.stubEnv('XDG_DATA_HOME', customDataHome);
+    vi.stubEnv('XDG_CONFIG_HOME', customConfigHome);
+
+    directories = new TestDirectories();
+
+    const dataDir = directories.getDataDirectory();
+    const configDir = directories.getConfigurationDirectory();
+
+    // should use custom XDG paths
+    expect(dataDir).toEqual(path.resolve(customDataHome, 'containers', 'podman-desktop'));
+    expect(configDir).toEqual(path.resolve(customConfigHome, 'containers', 'podman-desktop'));
+  });
+
+  test('should use default directory structure when PODMAN_DESKTOP_HOME_DIR is set by user', async () => {
+    const wantedDirectory = '/fake-directory';
+
+    // add the env variable
+    process.env[Directories.PODMAN_DESKTOP_HOME_DIR] = wantedDirectory;
+
+    directories = new TestDirectories();
+    const result = directories.getDesktopAppHomeDir();
+
+    // should be the directory provided as env var
+    expect(result).toEqual(wantedDirectory);
+  });
+
+  test('should use default structure when existing configuration is detected on Linux', async () => {
+    // Mock existing default configuration to trigger default structure usage
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+
+    directories = new TestDirectories();
+
+    const dataDir = directories.getDataDirectory();
+    const configDir = directories.getConfigurationDirectory();
+    const desktopAppHomeDir = directories.getDesktopAppHomeDir();
+
+    // Should use default structure when configuration exists
+    const baseDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop');
+    expect(dataDir).toEqual(baseDir);
+    expect(configDir).toEqual(path.resolve(baseDir, 'configuration'));
+    expect(desktopAppHomeDir).toEqual(dataDir);
+  });
 });
 
-test('should override default path', async () => {
-  const wantedDirectory = '/fake-directory';
+describe.each(['win32', 'darwin'])('Non-Linux systems (%s) default directory structure', platform => {
+  beforeEach(() => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue(platform as NodeJS.Platform);
+  });
 
-  // add the env variable
-  process.env[Directories.PODMAN_DESKTOP_HOME_DIR] = wantedDirectory;
+  test('should use default directory structure', async () => {
+    directories = new TestDirectories();
 
-  directories = new TestDirectories();
-  const result = directories.getDesktopAppHomeDir();
+    const dataDir = directories.getDataDirectory();
+    const configDir = directories.getConfigurationDirectory();
+    const desktopAppHomeDir = directories.getDesktopAppHomeDir();
 
-  // desktop app home dir should not start anymore with user's home dir
-  expect(result.startsWith(os.homedir())).toBeFalsy();
+    // Non-Linux should use default structure
+    const baseDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop');
+    expect(dataDir).toEqual(baseDir);
+    expect(configDir).toEqual(path.resolve(baseDir, 'configuration'));
 
-  // should not ends with the default path
-  expect(result.endsWith(Directories.XDG_DATA_DIRECTORY)).toBeFalsy();
+    // desktopAppHomeDir should be same as data directory
+    expect(desktopAppHomeDir).toEqual(dataDir);
+  });
 
-  // should be the directory provided as env var
-  expect(result).toEqual(wantedDirectory);
+  test('should override default path', async () => {
+    const wantedDirectory = '/fake-directory';
+
+    // add the env variable
+    process.env[Directories.PODMAN_DESKTOP_HOME_DIR] = wantedDirectory;
+
+    directories = new TestDirectories();
+    const result = directories.getDesktopAppHomeDir();
+
+    // desktop app home dir should not start anymore with user's home dir
+    expect(result.startsWith(os.homedir())).toBeFalsy();
+
+    // should not ends with the default path
+    expect(result.endsWith(Directories.XDG_DATA_DIRECTORY)).toBeFalsy();
+
+    // should be the directory provided as env var
+    expect(result).toEqual(wantedDirectory);
+  });
 });
