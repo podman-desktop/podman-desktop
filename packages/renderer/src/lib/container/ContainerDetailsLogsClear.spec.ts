@@ -20,8 +20,9 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
+import { tick } from 'svelte';
 import { get } from 'svelte/store';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
@@ -36,6 +37,10 @@ vi.mock('@xterm/xterm', () => {
       .fn()
       .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: writeMock, clear: vi.fn(), dispose: vi.fn() }),
   };
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
 const container: ContainerInfoUI = {
@@ -69,6 +74,48 @@ test('expect clear button is working', async () => {
 
   const callback = vi.mocked(window.logsContainer).mock.calls[0][0].callback;
 
-  callback('data', '2025-07-31T17:10:34-04:00 some log message');
-  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T21:10:35.000Z');
+  callback('data', '2025-07-31T18:10:34Z some log message');
+  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T18:10:35.000Z');
+});
+
+test('expect containerLogsClearTimestamps change only when callback is executed for the first time after clicking the clear button', async () => {
+  const terminal = new Terminal();
+
+  render(ContainerDetailsLogsClear, { terminal, container });
+
+  // expect the button to clear
+  const clearButton = screen.getByRole('button', { name: 'Clear logs' });
+  expect(clearButton).toBeInTheDocument();
+
+  // click the button
+  await fireEvent.click(clearButton);
+
+  // check we have called the clear function
+  await waitFor(() => {
+    expect(terminal.clear).toHaveBeenCalled();
+    expect(window.logsContainer).toHaveBeenCalledWith({
+      engineId: container.engineId,
+      containerId: container.id,
+      callback: expect.any(Function),
+      timestamps: true,
+      tail: 1,
+    });
+  });
+
+  const callback = vi.mocked(window.logsContainer).mock.calls[0][0].callback;
+
+  // first callback after clear button click should work
+  callback('data', '2025-07-31T17:10:35-04:00 some log message');
+  await tick();
+  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T21:10:36.000Z');
+
+  // if the callback is executed again wihtout the clear button clicked, it shouldn't make any changes to the store
+  callback('data', '2025-07-31T19:39:40-04:00 some log message 2');
+  await tick();
+  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T21:10:36.000Z');
+
+  await fireEvent.click(clearButton);
+  callback('data', '2025-07-31T19:45:19-04:00 some log message 3');
+  await tick();
+  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T23:45:20.000Z');
 });

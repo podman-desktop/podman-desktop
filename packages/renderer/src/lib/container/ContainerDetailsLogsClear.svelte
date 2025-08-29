@@ -12,6 +12,8 @@ const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI 
 
 let clearTimestamp: string = $state('');
 
+let lastLog = false;
+
 $effect(() => {
   if (clearTimestamp) {
     $containerLogsClearTimestamps[container.id] = clearTimestamp;
@@ -19,6 +21,7 @@ $effect(() => {
 });
 
 async function getLastLogTimestamp(): Promise<void> {
+  lastLog = true;
   await window.logsContainer({
     engineId: container.engineId,
     containerId: container.id,
@@ -29,13 +32,9 @@ async function getLastLogTimestamp(): Promise<void> {
 }
 
 function callback(name: string, data: string): void {
-  let lastLog = '';
-  if (name === 'data') {
-    lastLog = data;
-  }
-
-  if (lastLog) {
-    let timestamp = lastLog.split(' ', 1)[0];
+  if (name === 'data' && data && lastLog) {
+    lastLog = false;
+    let timestamp = data.split(' ', 1)[0];
     const datenow = new SvelteDate(timestamp);
     datenow.setSeconds(datenow.getSeconds() + 1);
     clearTimestamp = datenow.toISOString();
