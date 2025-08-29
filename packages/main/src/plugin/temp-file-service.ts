@@ -16,18 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
+import { unlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-import { injectable } from 'inversify';
+import { injectable, preDestroy } from 'inversify';
 
 /**
  * Service for managing temporary files (YAML, configuration files, etc.)
  */
 @injectable()
-export class TempFileService {
+export class TempFileService implements AsyncDisposable {
   private tempFiles: Set<string> = new Set();
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.cleanup();
+  }
 
   /**
    * Creates a temporary file with the provided content
@@ -37,11 +42,11 @@ export class TempFileService {
    * @returns The path to the created temporary file
    */
   async createTempFile(content: string, prefix: string = 'temp', extension: string = '.yaml'): Promise<string> {
-    const tempDir = os.tmpdir();
+    const tempDir = tmpdir();
     const tempFileName = `${prefix}-${Date.now()}${extension}`;
-    const tempFilePath = path.join(tempDir, tempFileName);
+    const tempFilePath = join(tempDir, tempFileName);
 
-    await fs.promises.writeFile(tempFilePath, content, 'utf-8');
+    await writeFile(tempFilePath, content, 'utf-8');
 
     // Track the temporary file for cleanup
     this.tempFiles.add(tempFilePath);
@@ -65,7 +70,7 @@ export class TempFileService {
   async removeTempFile(filePath: string): Promise<void> {
     try {
       if (this.tempFiles.has(filePath)) {
-        await fs.promises.unlink(filePath);
+        await unlink(filePath);
         this.tempFiles.delete(filePath);
       }
     } catch (error: unknown) {
