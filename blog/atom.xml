@@ -9,6 +9,99 @@
     <icon>https://podman-desktop.io/img/favicon.ico</icon>
     <rights>Copyright © 2025 Podman Desktop</rights>
     <entry>
+        <title type="html"><![CDATA[Simplifying container and AI development on RHEL 10]]></title>
+        <id>https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10</id>
+        <link href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10"/>
+        <updated>2025-08-25T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Simplifying container and AI development on RHEL 10 with Podman Desktop]]></summary>
+        <content type="html"><![CDATA[<p>In the ever-evolving world of containerization and AI, developers require tools that are designed for seamless integration into their daily workflows. Podman and its graphical tool, Podman Desktop, have emerged as promising tools for building applications on different platforms, including Red Hat Enterprise Linux (RHEL) 10.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="podman-the-foundation">Podman: The foundation<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#podman-the-foundation" class="hash-link" aria-label="Direct link to Podman: The foundation" title="Direct link to Podman: The foundation">​</a></h2>
+<p>Podman offers an efficient way to interact with containers and Kubernetes. It is fast and light-weight and operates with a daemonless architecture. Podman supports rootless containers, allowing you to restrict privileges without compromising functionality. Developers can pull, build, and push images, run and debug containers, and efficiently work with Kubernetes. Podman integrates smoothly with systemd, offering basic container orchestration capabilities like pod management and Quadlet systemd generation.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="podman-desktop-a-crucial-component-for-developers-on-rhel">Podman Desktop: A crucial component for developers on RHEL<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#podman-desktop-a-crucial-component-for-developers-on-rhel" class="hash-link" aria-label="Direct link to Podman Desktop: A crucial component for developers on RHEL" title="Direct link to Podman Desktop: A crucial component for developers on RHEL">​</a></h2>
+<p>Podman Desktop significantly enhances the Podman experience by providing a user-friendly interface that simplifies container and Kubernetes management. It provides a streamlined experience for building, running, and managing containers and pods. It also offers robust Kubernetes integration, enabling you to create local clusters with tools like Kind and Minikube.
+Podman Desktop simplifies the local development environment by tackling challenges like complexity, skill gaps, and inconsistencies between local and production deployments. It provides a simple onboarding process, guiding developers to move from individual applications to containers, pods, and finally to Kubernetes.</p>
+<p>Podman Desktop provides the <a href="https://podman-desktop.io/docs/migrating-from-docker">Docker compatibility</a> feature to support Dockerfiles and Compose, which minimizes the need for configuration changes. It allows for easy migration from Docker to Podman and even lets you run <code>docker</code> commands that Podman interprets.
+Podman is included with a RHEL subscription. When you install Podman Desktop from the RHEL extensions repository, Podman Desktop detects Podman and runs it to provide a simplified integration between these two tools. For developers building applications on RHEL, the integration is beneficial in providing:</p>
+<ul>
+<li>Standardized container environment: Use a consistent set of tools and practices, simplifying management and deployment of containers in production.</li>
+<li>Cross-platform consistency: Enjoy a familiar experience across Windows, macOS, and RHEL.</li>
+<li>Support for several RHEL extensions: A variety of extensions available within Podman Desktop to enhance RHEL developer workflows with key functionalities:<!-- -->
+<ul>
+<li><a href="https://github.com/podman-desktop/extension-bootc" target="_blank" rel="noopener noreferrer">Bootable Container</a>: Create bootable container images for bare metal, AWS, and other environments. For more details, refer to this <a href="https://developers.redhat.com/learn/rhel/build-and-run-bootable-container-image-image-mode-rhel-and-podman-desktop" target="_blank" rel="noopener noreferrer">learning path</a>.</li>
+<li><a href="https://github.com/redhat-developer/podman-desktop-rhel-ext" target="_blank" rel="noopener noreferrer">RHEL VMs</a>: Easily run and manage RHEL VMs from a macOS or Windows environment.</li>
+<li><a href="https://github.com/redhat-developer/podman-desktop-redhat-lightspeed-ext" target="_blank" rel="noopener noreferrer">RHEL Lightspeed</a>: An AI assistant that simplifies Linux administration and management. It enables interaction with RHEL using plain language and provides recommendations for troubleshooting and tuning.</li>
+<li><a href="https://github.com/redhat-developer/podman-desktop-redhat-account-ext" target="_blank" rel="noopener noreferrer">Red Hat Authentication</a>: Streamline authentication to Red Hat, access the Red Hat container registry, and register Linux VMs, often through a no-cost Red Hat developer subscription.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="podman-ai-lab-simplifying-the-ai-developer-workflow-on-rhel">Podman AI Lab: Simplifying the AI developer workflow on RHEL<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#podman-ai-lab-simplifying-the-ai-developer-workflow-on-rhel" class="hash-link" aria-label="Direct link to Podman AI Lab: Simplifying the AI developer workflow on RHEL" title="Direct link to Podman AI Lab: Simplifying the AI developer workflow on RHEL">​</a></h2>
+<p>The Podman AI Lab extension is helpful for AI developers working within the RHEL ecosystem. It empowers you to run Large Language Models (LLMs) locally, simplifying the development and debugging of AI-enabled applications directly on your machine. This approach offers several benefits, including data privacy, cost control, and the ability to test and debug applications in a local environment. The extension simplifies the AI application development workflow by providing:</p>
+<ul>
+<li>A curated catalog of open-source models available for downloading.</li>
+<li>A playground environment for experimenting with models and customizing prompts.</li>
+<li>A recipe catalog with sample AI use cases.</li>
+<li>An integration with LlamaStack from your local environment, run containerized distributions, and access LlamaStack APIs.</li>
+<li>Code snippets for various languages and frameworks, simplifying the infusion of AI into your applications.</li>
+<li>An inference server to serve models locally with an OpenAI-compatible API.</li>
+</ul>
+<p>This enables developers to easily get started with generative AI and integrate models into their applications.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="availability-and-installation-on-rhel-10">Availability and installation on RHEL 10<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#availability-and-installation-on-rhel-10" class="hash-link" aria-label="Direct link to Availability and installation on RHEL 10" title="Direct link to Availability and installation on RHEL 10">​</a></h2>
+<p>With Podman Desktop availability in the RHEL extensions repository channel, you can easily download and use it. This repository is a curated collection of modern developer tools, open-source libraries, and specialized utilities, ensuring reliable, up-to-date, and Red Hat-signed software.
+For installation, you need a RHEL 10 machine that is registered with the subscription manager using either your <a href="https://docs.redhat.com/en/documentation/subscription_central/1-latest/html/getting_started_with_rhel_system_registration/basic-reg-rhel-cli#proc-reg-rhel-rhc-username_" target="_blank" rel="noopener noreferrer">account details</a> or an <a href="https://docs.redhat.com/en/documentation/subscription_central/1-latest/html/getting_started_with_rhel_system_registration/basic-reg-rhel-cli#proc-reg-rhel-rhc-act-key_" target="_blank" rel="noopener noreferrer">activation key</a>.</p>
+<p>The installation and verification procedure includes:</p>
+<ol>
+<li>
+<p>Open a terminal, and enable the RHEL extensions repository:</p>
+<div class="language-sh codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_D5yF"><pre tabindex="0" class="prism-code language-sh codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token plain">$ </span><span class="token function" style="color:rgb(80, 250, 123)">sudo</span><span class="token plain"> subscription-manager repos </span><span class="token parameter variable" style="color:rgb(189, 147, 249);font-style:italic">--enable</span><span class="token plain"> rhel-10-for-</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">$(</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">arch</span><span class="token variable" style="color:rgb(189, 147, 249);font-style:italic">)</span><span class="token plain">-extensions-rpms</span><br></span></code></pre><div class="buttonGroup_aaMX"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_z5j7" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_FoOz"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_L0B6"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+</li>
+<li>
+<p>Enter your password when prompted.</p>
+</li>
+<li>
+<p>Install Podman Desktop:</p>
+<div class="language-sh codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_D5yF"><pre tabindex="0" class="prism-code language-sh codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token plain">$ </span><span class="token function" style="color:rgb(80, 250, 123)">sudo</span><span class="token plain"> dnf </span><span class="token function" style="color:rgb(80, 250, 123)">install</span><span class="token plain"> podman-desktop</span><br></span></code></pre><div class="buttonGroup_aaMX"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_z5j7" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_FoOz"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_L0B6"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+</li>
+<li>
+<p>Enter <code>y</code> to confirm the installed size.</p>
+</li>
+<li>
+<p>Enter <code>y</code> to import the GPG key and complete the installation.</p>
+</li>
+<li>
+<p>Enter Podman Desktop in the search box at the top of your home screen, and click the application to open it.</p>
+</li>
+<li>
+<p>Follow the prompts to complete a quick onboarding process with the application.
+<img decoding="async" loading="lazy" alt="Screenshot of Podman Desktop on RHEL 10" src="https://podman-desktop.io/assets/images/podman-desktop-availability-on-rhel-10-aba50337caedc54961caf8565cec3fb6.png" width="2272" height="1362" class="img_SS3x"></p>
+</li>
+<li>
+<p>Run basic tasks, such as:</p>
+<ul>
+<li><a href="https://podman-desktop.io/docs/containers/starting-a-container">Start a container</a></li>
+<li><a href="https://podman-desktop.io/docs/kubernetes/creating-a-kube-cluster">Create a Kubernetes cluster</a></li>
+</ul>
+</li>
+</ol>
+<h3 class="anchor anchorWithStickyNavbar_JmGV" id="important-note-on-support">Important note on support<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#important-note-on-support" class="hash-link" aria-label="Direct link to Important note on support" title="Direct link to Important note on support">​</a></h3>
+<p>Podman Desktop is an open-source community project. While Podman itself has supported options on RHEL, the support model for Podman Desktop for Red Hat customers falls under <a href="https://source.redhat.com/groups/public/cooperative_community_support" target="_blank" rel="noopener noreferrer"><em>Cooperative Community Support</em></a>. This means it is intended for non-production support and only offers benefits from community contributions, though with no or limited Service Level Agreements (SLAs). Entitled customers can use this level of support to raise non-production queries and open tickets for more complex issues.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="get-involved-your-feedback-matters">Get involved: Your feedback matters!<a href="https://podman-desktop.io/blog/podman-desktop-availability-on-rhel10#get-involved-your-feedback-matters" class="hash-link" aria-label="Direct link to Get involved: Your feedback matters!" title="Direct link to Get involved: Your feedback matters!">​</a></h2>
+<p>Podman Desktop is an evolving project, and your feedback is crucial for its continued development and improvement. We encourage you to:</p>
+<ul>
+<li>Provide feedback: Share your experiences and suggestions for shaping the future of the project. Use the Share your feedback icon in the taskbar to give quick feedback.</li>
+<li>Create issues: If you encounter a bug or have a feature request, please create an issue on the <a href="https://github.com/podman-desktop/podman-desktop/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</li>
+<li>Join the community: Engage with fellow developers and maintainers, ask questions, and share your knowledge. You can find us on <a href="https://github.com/podman-desktop/podman-desktop" target="_blank" rel="noopener noreferrer">GitHub</a> and contribute to <a href="https://podman-desktop.io/community" target="_blank" rel="noopener noreferrer">community discussions</a>.</li>
+</ul>
+<p>For more information, visit <a href="https://podman.io/" target="_blank" rel="noopener noreferrer">Podman</a> and <a href="https://podman-desktop.io/" target="_blank" rel="noopener noreferrer">Podman Desktop</a>. Dive in, explore, and help us continue to build a robust and user-friendly experience for container and AI development on RHEL 10!</p>]]></content>
+        <author>
+            <name>Shipra Singh</name>
+            <uri>https://github.com/shipsing</uri>
+        </author>
+        <category label="podman-desktop" term="podman-desktop"/>
+        <category label="podman" term="podman"/>
+        <category label="rhel10" term="rhel10"/>
+        <category label="installation" term="installation"/>
+    </entry>
+    <entry>
         <title type="html"><![CDATA[Podman Desktop 1.21 Release]]></title>
         <id>https://podman-desktop.io/blog/podman-desktop-release-1.21</id>
         <link href="https://podman-desktop.io/blog/podman-desktop-release-1.21"/>
@@ -3274,61 +3367,5 @@ release we received pull requests from the following people:</p>
         <category label="podman-desktop" term="podman-desktop"/>
         <category label="release" term="release"/>
         <category label="kubernetes" term="kubernetes"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Introduction to Podman Desktop extensions]]></title>
-        <id>https://podman-desktop.io/blog/extensions-introduction</id>
-        <link href="https://podman-desktop.io/blog/extensions-introduction"/>
-        <updated>2024-10-29T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Learn how to create and customize your own extension for Podman Desktop]]></summary>
-        <content type="html"><![CDATA[<p><img decoding="async" loading="lazy" alt="programming" src="https://podman-desktop.io/assets/images/programming-1923c2fcee3941601e7ed222868ca6e2.png" width="1216" height="832" class="img_SS3x"></p>
-<p>Extensions are a powerful tool to customize and extend the functionality of Podman Desktop. Whether you want to add new container management features, streamline current workflows, or create custom UI elements specific to your tech stack, building extensions allows you to tailor the Podman Desktop experience to your specific needs.</p>
-<p>In this guide, we'll introduce how you can build your own Podman Desktop extension, with links to detailed documentation that covers each part of the process.</p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="introduction-to-extensions">Introduction to extensions<a href="https://podman-desktop.io/blog/extensions-introduction#introduction-to-extensions" class="hash-link" aria-label="Direct link to Introduction to extensions" title="Direct link to Introduction to extensions">​</a></h2>
-<p>Extensions are abundant in Podman Desktop and can be found in the <strong>Extensions -&gt; Catalog</strong> section.</p>
-<p><img decoding="async" loading="lazy" alt="extension catalog" src="https://podman-desktop.io/assets/images/extension-catalog-8deddd045f1962b11c4940adb67075a8.png" width="1162" height="812" class="img_SS3x"></p>
-<p>Each extension expands on Podman Desktop, such as providing <a href="https://github.com/containers/podman-desktop-extension-minikube" target="_blank" rel="noopener noreferrer">Kubernetes development clusters with Minikube</a> or even <a href="https://github.com/containers/podman-desktop-extension-layers-explorer" target="_blank" rel="noopener noreferrer">analyzing your image layers</a>.</p>
-<p>Below is an example of the <a href="https://github.com/containers/podman-desktop-extension-layers-explorer" target="_blank" rel="noopener noreferrer">layers explorer extension</a> and how it integrates into Podman Desktop:</p>
-<p><img decoding="async" loading="lazy" alt="layers_explorer" src="https://podman-desktop.io/assets/images/layers_explorer-77d579b2b326abd827d0a4b387c81eaf.png" width="1101" height="746" class="img_SS3x"></p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="getting-started-with-your-project">Getting started with your project<a href="https://podman-desktop.io/blog/extensions-introduction#getting-started-with-your-project" class="hash-link" aria-label="Direct link to Getting started with your project" title="Direct link to Getting started with your project">​</a></h2>
-<p>The first step in creating your extension is setting up the project environment. To learn how to configure the project and add basic components, check out the <strong><a href="https://podman-desktop.io/docs/extensions/templates">Templates for creating an extension</a></strong> guide, which walks you through initializing your project from an official template.</p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="adding-ui-components">Adding UI components<a href="https://podman-desktop.io/blog/extensions-introduction#adding-ui-components" class="hash-link" aria-label="Direct link to Adding UI components" title="Direct link to Adding UI components">​</a></h2>
-<p>One of the most common tasks when creating an extension is adding a user interface. Whether it’s adding buttons, panels, or icons, UI components help make your extension more interactive and accessible. Adding a UI component is totally optional and an extension can be ran without UI components. Learn more about this in the <strong><a href="https://podman-desktop.io/docs/extensions/developing/adding-ui-components">Adding UI components</a></strong> documentation, where you’ll find instructions on creating and integrating components into the application’s UI.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="working-with-icons">Working with icons<a href="https://podman-desktop.io/blog/extensions-introduction#working-with-icons" class="hash-link" aria-label="Direct link to Working with icons" title="Direct link to Working with icons">​</a></h3>
-<p>Icons are a great way to make your extension more visually unique. You can learn how to add and style custom icons by following the <strong><a href="https://podman-desktop.io/docs/extensions/developing/adding-icons">Adding icons</a></strong> documentation.</p>
-<p>Below is an example of how the <a href="https://github.com/containers/podman-desktop-extension-bootc" target="_blank" rel="noopener noreferrer">bootc extension</a> added icons to the image list within Podman Desktop:</p>
-<p><img decoding="async" loading="lazy" alt="icons" src="https://podman-desktop.io/assets/images/icons-028efaf19e6ee9bd9d80663291e769d2.png" width="650" height="303" class="img_SS3x"></p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="menus-and-navigation">Menus and navigation<a href="https://podman-desktop.io/blog/extensions-introduction#menus-and-navigation" class="hash-link" aria-label="Direct link to Menus and navigation" title="Direct link to Menus and navigation">​</a></h3>
-<p>Extensions often integrate with existing menus and navigation to offer users easy access to new commands and features. If you want to add items to the context menu, explore the <strong><a href="https://podman-desktop.io/docs/extensions/developing/menu">Menu configuration</a></strong> documentation, which explains how to add commands to menus and control when they are displayed using When Clauses.</p>
-<p>Below is an example of how the <a href="https://github.com/containers/podman-desktop-extension-bootc" target="_blank" rel="noopener noreferrer">bootc extension</a> added a new menu command to image list:</p>
-<p><img decoding="async" loading="lazy" alt="menus" src="https://podman-desktop.io/assets/images/menus-5ad42625f5a4db388f5132fa7f80191d.png" width="338" height="335" class="img_SS3x"></p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="adding-and-configuring-commands">Adding and configuring commands<a href="https://podman-desktop.io/blog/extensions-introduction#adding-and-configuring-commands" class="hash-link" aria-label="Direct link to Adding and configuring commands" title="Direct link to Adding and configuring commands">​</a></h2>
-<p>Commands are the backbone of most extensions, allowing users to interact with the application and trigger specific actions.</p>
-<p>If you need to define and register custom commands, the <strong><a href="https://podman-desktop.io/docs/extensions/developing/commands">Commands</a></strong> guide will show you how to create commands that respond to user actions or input, and tie them into your extension’s workflow.</p>
-<p>You can also configure these commands to appear in different contexts. Check out the <strong><a href="https://podman-desktop.io/docs/extensions/developing/when-clause-context">When clause Contexts</a></strong> documentation to learn more about restricting commands to specific scenarios.</p>
-<p>Commands are heavily influenced by <a href="https://code.visualstudio.com/api/extension-guides/command" target="_blank" rel="noopener noreferrer">VS Code commands</a> and can be configured similarly. See our <a href="https://podman-desktop.io/docs/extensions/developing/commands">commands guide</a> for more information.</p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="setting-up-onboarding-workflows">Setting up onboarding workflows<a href="https://podman-desktop.io/blog/extensions-introduction#setting-up-onboarding-workflows" class="hash-link" aria-label="Direct link to Setting up onboarding workflows" title="Direct link to Setting up onboarding workflows">​</a></h2>
-<p>Creating a smooth onboarding experience is essential to help users get started with your extension. This includes steps for CLI binary installations or other initial setup values.</p>
-<p>You can provide guidance, tutorials, or initial setup steps using the <strong><a href="https://podman-desktop.io/docs/extensions/developing/onboarding-workflow">Onboarding workflow</a></strong> guide.</p>
-<p>Below is an example of how the <a href="https://github.com/containers/podman-desktop/tree/main/extensions/compose" target="_blank" rel="noopener noreferrer">built-in compose extension</a> adds onboarding for the compose CLI binary installation:</p>
-<p><img decoding="async" loading="lazy" alt="compose" src="https://podman-desktop.io/assets/images/compose-cdb352311ae2e5b0a11abed0c453cad0.png" width="1089" height="732" class="img_SS3x"></p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="configuration-settings">Configuration settings<a href="https://podman-desktop.io/blog/extensions-introduction#configuration-settings" class="hash-link" aria-label="Direct link to Configuration settings" title="Direct link to Configuration settings">​</a></h2>
-<p>Once you’ve built your components and commands, you may want to setup configuration settings for advanced usage of your extension.</p>
-<p>The <strong><a href="https://podman-desktop.io/docs/extensions/developing/config">Configuration</a></strong> documentation outlines the configuration file structure and how to link everything together to use user-specific values.</p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="publishing-your-extension">Publishing your extension<a href="https://podman-desktop.io/blog/extensions-introduction#publishing-your-extension" class="hash-link" aria-label="Direct link to Publishing your extension" title="Direct link to Publishing your extension">​</a></h2>
-<p>Publishing enables users to install your extension, you can compile your extension into a container image for users to easily consume. Follow the <strong><a href="https://podman-desktop.io/docs/extensions/publish">Publishing</a></strong> guide to learn how to distribute your extension.</p>
-<h2 class="anchor anchorWithStickyNavbar_JmGV" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/extensions-introduction#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion">​</a></h2>
-<p>Creating an extension opens up endless possibilities to customize Podman Desktop to your specific needs.</p>
-<p>It is also easy to package and publish your extension for others to use.</p>
-<p>Have fun exploring our documentation on how to create an extension and happy coding!</p>]]></content>
-        <author>
-            <name>Charlie Drage</name>
-            <uri>https://github.com/cdrage</uri>
-        </author>
-        <category label="podman-desktop" term="podman-desktop"/>
-        <category label="release" term="release"/>
-        <category label="podman" term="podman"/>
-        <category label="extension" term="extension"/>
-        <category label="plugin" term="plugin"/>
     </entry>
 </feed>
