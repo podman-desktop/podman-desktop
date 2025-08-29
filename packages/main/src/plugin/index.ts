@@ -84,6 +84,7 @@ import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
+import type { DocumentationInfo } from '/@api/documentation-info.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
@@ -207,6 +208,7 @@ import { TaskConnectionUtils } from './util/task-connection-utils.js';
 import { ViewRegistry } from './view-registry.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
+import { DocumentationService } from './documentation/documentation-service.js';
 
 // workaround for ESM
 const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
@@ -719,6 +721,10 @@ export class PluginSystem {
     container.bind<ExtensionsCatalog>(ExtensionsCatalog).toSelf().inSingletonScope();
     const extensionsCatalog = container.get<ExtensionsCatalog>(ExtensionsCatalog);
     extensionsCatalog.init();
+
+    container.bind<DocumentationService>(DocumentationService).toSelf().inSingletonScope();
+    const documentationService = container.get<DocumentationService>(DocumentationService);
+
     container.bind<Featured>(Featured).toSelf().inSingletonScope();
     const featured = container.get<Featured>(Featured);
 
@@ -2091,6 +2097,14 @@ export class PluginSystem {
 
     this.ipcHandle('catalog:refreshExtensions', async (): Promise<void> => {
       return extensionsCatalog.refreshCatalog();
+    });
+
+    this.ipcHandle('documentation:getItems', async (): Promise<DocumentationInfo[]> => {
+      return documentationService.getDocumentationItems();
+    });
+
+    this.ipcHandle('documentation:refresh', async (): Promise<void> => {
+      return documentationService.refreshDocumentation();
     });
 
     this.ipcHandle('commands:getCommandPaletteCommands', async (): Promise<CommandInfo[]> => {

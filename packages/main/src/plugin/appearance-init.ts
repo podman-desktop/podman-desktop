@@ -21,13 +21,19 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
+import { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
+const SEARCHBAR_FULL_KEY = `titleBar.${AppearanceSettings.SearchBar}`;
 
 @injectable()
 export class AppearanceInit {
-  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
+  constructor(
+    @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
+    @inject(ApiSenderType)
+    private apiSender: ApiSenderType,
+  ) {}
 
   init(): void {
     const appearanceConfiguration: IConfigurationNode = {
@@ -56,6 +62,13 @@ export class AppearanceInit {
           enum: [AppearanceSettings.IconAndTitle, AppearanceSettings.Icon],
           default: AppearanceSettings.IconAndTitle,
         },
+        [SEARCHBAR_FULL_KEY]: {
+          description: 'Show searchbar in the title bar',
+          type: 'object',
+          experimental: {
+            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/13674',
+          },
+        },
       },
     };
 
@@ -64,6 +77,10 @@ export class AppearanceInit {
     this.configurationRegistry.onDidChangeConfiguration(async e => {
       if (e.key === APPEARANCE_FULL_KEY && typeof e.value === 'string') {
         this.updateNativeTheme(e.value);
+      }
+
+      if (e.key === SEARCHBAR_FULL_KEY && (typeof e.value === 'object' || typeof e.value === 'undefined')) {
+        this.apiSender.send('search-bar-enabled', typeof e.value === 'object');
       }
     });
   }

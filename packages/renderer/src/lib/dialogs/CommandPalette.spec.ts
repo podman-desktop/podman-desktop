@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -28,6 +28,10 @@ import { context } from '/@/stores/context';
 import CommandPalette from './CommandPalette.svelte';
 
 const receiveFunctionMock = vi.fn();
+const executeCommandMock = vi.fn();
+const openExternalMock = vi.fn();
+const getOsPlatformMock = vi.fn();
+const getDocumentationItemsMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 
@@ -35,6 +39,27 @@ beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
   };
+
+  // mock window methods using Object.defineProperty for proper mocking
+  Object.defineProperty(window, 'executeCommand', {
+    value: executeCommandMock,
+  });
+
+  Object.defineProperty(window, 'openExternal', {
+    value: openExternalMock,
+  });
+
+  Object.defineProperty(window, 'getOsPlatform', {
+    value: getOsPlatformMock,
+  });
+
+  Object.defineProperty(window, 'getDocumentationItems', {
+    value: getDocumentationItemsMock,
+  });
+
+  // Set default return values
+  getOsPlatformMock.mockResolvedValue('linux');
+  getDocumentationItemsMock.mockResolvedValue([]);
 
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -91,17 +116,28 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
-    // check we have the command palette input field
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
+    // Wait for component to initialize and items to be rendered
+    await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+
+    // Switch to Commands mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
+
+    // Wait for items to appear
+    await screen.findByRole('button', { name: commandTitle1 });
+    await screen.findByRole('button', { name: commandTitle2 });
 
     // grab first item
     const firstItem = screen.getByRole('button', { name: commandTitle1 });
     // check the class selected is on this item
     expect(firstItem).toHaveClass('selected');
 
-    // now, press the ⬇️ key
-    await userEvent.keyboard('{ArrowDown}');
+    // Focus the input to ensure keydown events are handled
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.click(input);
+
+    // now, press the ⬇️ key using fireEvent
+    await fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // expect we've scrolled
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
@@ -117,53 +153,29 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(window.executeCommand).toBeCalledWith('my-command-2');
+    expect(executeCommandMock).toHaveBeenCalledWith('my-command-2');
   });
 
-  test('Check tab key', async () => {
-    const commandTitle1 = 'My command 1';
-    const commandTitle2 = 'My command 2';
-
-    commandsInfos.set([
-      {
-        id: 'my-command-1',
-        title: commandTitle1,
-      },
-      {
-        id: 'my-command-2',
-        title: commandTitle2,
-      },
-    ]);
-
+  test('Check tab key switches search options', async () => {
     render(CommandPalette, { display: true });
 
     // check we have the command palette input field
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    // grab first item
-    const firstItem = screen.getByRole('button', { name: commandTitle1 });
-    // check the class selected is on this item
-    expect(firstItem).toHaveClass('selected');
+    // Check initial state - "All" should be selected (has selected styling)
+    const allButton = screen.getByRole('button', { name: /All/ });
+    expect(allButton).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
     // now, press the Tab key
     await userEvent.keyboard('{Tab}');
 
-    // expect we've scrolled
-    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+    // Check that "Commands" is now selected
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    expect(commandsButton).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
 
-    // check the class selected is no longer on the first item
-    expect(firstItem).not.toHaveClass('selected');
-
-    // but on the second one
-    const secondItem = screen.getByRole('button', { name: commandTitle2 });
-    // check the class selected is on this item
-    expect(secondItem).toHaveClass('selected');
-
-    // click on the item
-    await userEvent.click(secondItem);
-
-    expect(window.executeCommand).toBeCalledWith('my-command-2');
+    // Check that "All" is no longer selected
+    expect(allButton).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
   });
 
   test('Check keyup ⬆️', async () => {
@@ -188,17 +200,28 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
-    // check we have the command palette input field
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
+    // Wait for component to initialize and items to be rendered
+    const input = await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+
+    // Switch to Commands mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
+
+    // Wait for all items to appear
+    await screen.findByRole('button', { name: commandTitle1 });
+    await screen.findByRole('button', { name: commandTitle2 });
+    await screen.findByRole('button', { name: commandTitle3 });
 
     // grab first item
     const firstItem = screen.getByRole('button', { name: commandTitle1 });
     // check the class selected is on this item
     expect(firstItem).toHaveClass('selected');
 
-    // now, press the ⬆️ key
-    await userEvent.keyboard('{ArrowUp}');
+    // Focus the input to ensure keydown events are handled
+    await userEvent.click(input);
+
+    // now, press the ⬆️ key using fireEvent
+    await fireEvent.keyDown(window, { key: 'ArrowUp' });
 
     // expect we've scrolled
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
@@ -211,8 +234,8 @@ describe('Command Palette', () => {
     // check the class selected is on this item
     expect(lastItem).toHaveClass('selected');
 
-    // now, press the ⬆️ key again
-    await userEvent.keyboard('{ArrowUp}');
+    // now, press the ⬆️ key again using fireEvent
+    await fireEvent.keyDown(window, { key: 'ArrowUp' });
 
     // but on the second one
     const secondItem = screen.getByRole('button', { name: commandTitle2 });
@@ -222,7 +245,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(window.executeCommand).toBeCalledWith('my-command-2');
+    expect(executeCommandMock).toHaveBeenCalledWith('my-command-2');
   });
 
   test('Check Enter key', async () => {
@@ -242,19 +265,28 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
-    // check we have the command palette input field
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
+    // Wait for component to initialize and items to be rendered
+    const input = await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+
+    // Switch to Commands mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
+
+    // Wait for items to appear
+    await screen.findByRole('button', { name: commandTitle1 });
 
     // grab first item
     const firstItem = screen.getByRole('button', { name: commandTitle1 });
     // check the class selected is on this item
     expect(firstItem).toHaveClass('selected');
 
-    // now, press the Enter key
-    await userEvent.keyboard('{Enter}');
+    // Focus the input to ensure keydown events are handled
+    await userEvent.click(input);
 
-    expect(window.executeCommand).toBeCalledWith('my-command-1');
+    // now, press the Enter key using fireEvent
+    await fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(executeCommandMock).toHaveBeenCalledWith('my-command-1');
   });
 
   test('Check filtering', async () => {
@@ -285,8 +317,8 @@ describe('Command Palette', () => {
     render(CommandPalette, { display: true });
 
     // check we have the command palette input field
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
+    const filterInput = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(filterInput).toBeInTheDocument();
 
     // Check items are displayed
     const item0 = screen.getByRole('button', { name: commandTitle0 });
@@ -299,7 +331,7 @@ describe('Command Palette', () => {
     expect(item3).toBeInTheDocument();
 
     // now enter the text 'My '
-    await userEvent.type(input, 'My ');
+    await userEvent.type(filterInput, 'My ');
 
     // check only command 1 and 2 are displayed
     const searchingItem0 = screen.queryByRole('button', { name: commandTitle0 });
@@ -311,10 +343,13 @@ describe('Command Palette', () => {
     const searchingItem3 = screen.queryByRole('button', { name: commandTitle3 });
     expect(searchingItem3).not.toBeInTheDocument();
 
-    // now, press the Enter key
-    await userEvent.keyboard('{Enter}');
+    // Focus the input to ensure keydown events are handled
+    await userEvent.click(filterInput);
 
-    expect(window.executeCommand).toBeCalledWith('my-command-1');
+    // now, press the Enter key using fireEvent
+    await fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(executeCommandMock).toHaveBeenCalledWith('my-command-1');
   });
 
   test('Check enablement', async () => {
@@ -370,9 +405,13 @@ describe('Command Palette', () => {
     const item3 = screen.getByRole('button', { name: commandTitle3 });
     expect(item3).toBeInTheDocument();
 
-    // now, press the Enter key
-    await userEvent.keyboard('{Enter}');
+    // Focus the input to ensure keydown events are handled
+    const enablementInput = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    await userEvent.click(enablementInput);
 
-    expect(window.executeCommand).toBeCalledWith('my-command-enabled-1');
+    // now, press the Enter key using fireEvent
+    await fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(executeCommandMock).toHaveBeenCalledWith('my-command-enabled-1');
   });
 });

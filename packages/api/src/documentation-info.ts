@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum AppearanceSettings {
-  SectionName = 'preferences',
-  Appearance = 'appearance',
-  LightEnumValue = 'light',
-  DarkEnumValue = 'dark',
-  SystemEnumValue = 'system',
-  ZoomLevel = 'zoomLevel',
-  NavigationAppearance = 'navigationBarLayout',
-  Icon = 'icon',
-  IconAndTitle = 'icon + title',
-  SearchBar = 'searchBar',
+export interface DocumentationInfo {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  category: string;
 }
