@@ -37,13 +37,12 @@ export class TempFileService implements AsyncDisposable {
   /**
    * Creates a temporary file with the provided content
    * @param content The content to write to the temporary file
-   * @param prefix Optional prefix for the filename (default: 'temp')
-   * @param extension Optional file extension (default: '.yaml')
+   * @param extension Optional file extension (default: 'yaml')
    * @returns The path to the created temporary file
    */
-  async createTempFile(content: string, prefix: string = 'temp', extension: string = '.yaml'): Promise<string> {
+  async createTempFile(content: string, extension: string = 'yaml'): Promise<string> {
     const tempDir = tmpdir();
-    const tempFileName = `${prefix}-${Date.now()}${extension}`;
+    const tempFileName = `temp-${new Date().getTime()}.${extension}`;
     const tempFilePath = join(tempDir, tempFileName);
 
     await writeFile(tempFilePath, content, 'utf-8');
@@ -52,15 +51,6 @@ export class TempFileService implements AsyncDisposable {
     this.tempFiles.add(tempFilePath);
 
     return tempFilePath;
-  }
-
-  /**
-   * Creates a temporary Kubernetes YAML file with the provided content
-   * @param content The YAML content to write to the temporary file
-   * @returns The path to the created temporary file
-   */
-  async createTempKubeFile(content: string): Promise<string> {
-    return this.createTempFile(content, 'kube', '.yaml');
   }
 
   /**

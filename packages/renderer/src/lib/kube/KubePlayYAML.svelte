@@ -93,14 +93,14 @@ async function playKubeFile(): Promise<void> {
   runFinished = false;
   runError = '';
 
-  let tempFilePath: string | undefined = undefined;
+  let tempFilePath: string = '';
 
   try {
     let yamlFilePath: string;
 
     if (userChoice === 'custom') {
       // Create a temporary file with the custom YAML content
-      tempFilePath = await window.createTempKubeFile(customYamlContent);
+      tempFilePath = await window.createTempFile(customYamlContent);
       yamlFilePath = tempFilePath;
     } else {
       yamlFilePath = kubernetesYamlFilePath!;
