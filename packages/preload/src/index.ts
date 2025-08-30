@@ -375,8 +375,8 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('createTempKubeFile', async (content: string): Promise<string> => {
-    return ipcInvoke('temp-file-service:createTempKubeFile', content);
+  contextBridge.exposeInMainWorld('createTempFile', async (content: string): Promise<string> => {
+    return ipcInvoke('temp-file-service:createTempFile', content);
   });
 
   contextBridge.exposeInMainWorld('removeTempFile', async (filePath: string): Promise<void> => {

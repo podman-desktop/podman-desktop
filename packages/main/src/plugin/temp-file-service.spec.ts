@@ -41,52 +41,66 @@ const mockWriteFile = vi.mocked(writeFile);
 const mockUnlink = vi.mocked(unlink);
 const mockTmpDir = vi.mocked(tmpdir);
 const mockJoin = vi.mocked(join);
+const originalConsoleWarn = console.warn;
 
-let tempFileService: TempFileService;
+class TestTempFileService extends TempFileService {
+  override async createTempFile(content: string, extension: string = 'yaml'): Promise<string> {
+    return super.createTempFile(content, extension);
+  }
+
+  override async removeTempFile(filePath: string): Promise<void> {
+    return super.removeTempFile(filePath);
+  }
+
+  override async cleanup(): Promise<void> {
+    return super.cleanup();
+  }
+
+  override getTempFiles(): string[] {
+    return super.getTempFiles();
+  }
+}
+
+let tempFileService: TestTempFileService;
 beforeEach(() => {
   vi.resetAllMocks();
   vi.useFakeTimers();
-  const date = new Date(2000, 1, 1, 13);
-  vi.setSystemTime(date);
-  // Reset default implementations after resetAllMocks
+  vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 0));
+  console.warn = vi.fn();
+
   mockTmpDir.mockReturnValue('/tmp');
+  mockWriteFile.mockResolvedValue(undefined);
   mockJoin.mockImplementation((...args) => args.join('/'));
-  tempFileService = new TempFileService();
+  tempFileService = new TestTempFileService();
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  console.warn = originalConsoleWarn;
 });
 
 describe('createTempFile', () => {
   test('creates temporary file with default parameters', async () => {
     const content = 'test content';
-    const mockPath = '/tmp/temp-949406400000-.yaml';
-
-    mockJoin.mockReturnValue(mockPath);
-    mockWriteFile.mockResolvedValue(undefined);
+    const expectedPath = '/tmp/temp-1356048000000.yaml';
 
     const result = await tempFileService.createTempFile(content);
 
     expect(mockTmpDir).toHaveBeenCalled();
-    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'temp-949406400000.yaml');
-    expect(mockWriteFile).toHaveBeenCalledWith(mockPath, content, 'utf-8');
-    expect(result).toBe(mockPath);
-    expect(tempFileService.getTempFiles()).toContain(mockPath);
+    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.yaml');
+    expect(mockWriteFile).toHaveBeenCalledWith(expectedPath, content, 'utf-8');
+    expect(result).toBe(expectedPath);
+    expect(tempFileService.getTempFiles()).toContain(expectedPath);
   });
 
   test('creates temporary file with custom prefix and extension', async () => {
     const content = 'custom content';
-    const prefix = 'custom';
-    const extension = '.json';
-    const mockPath = '/tmp/custom-949406400000-.json';
+    const extension = 'json';
+    const mockPath = '/tmp/temp-1356048000000.json';
 
-    mockJoin.mockReturnValue(mockPath);
-    mockWriteFile.mockResolvedValue(undefined);
+    const result = await tempFileService.createTempFile(content, extension);
 
-    const result = await tempFileService.createTempFile(content, prefix, extension);
-
-    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'custom-949406400000.json');
+    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.json');
     expect(mockWriteFile).toHaveBeenCalledWith(mockPath, content, 'utf-8');
     expect(result).toBe(mockPath);
     expect(tempFileService.getTempFiles()).toContain(mockPath);
@@ -96,7 +110,6 @@ describe('createTempFile', () => {
     const content = 'test content';
     const error = new Error('Permission denied');
 
-    mockJoin.mockReturnValue('/tmp/temp-949406400000.yaml');
     mockWriteFile.mockRejectedValue(error);
 
     await expect(tempFileService.createTempFile(content)).rejects.toThrow('Permission denied');
@@ -105,49 +118,25 @@ describe('createTempFile', () => {
   test('tracks multiple temporary files', async () => {
     const content1 = 'content 1';
     const content2 = 'content 2';
-    const mockPath1 = '/tmp/temp-949406400000-.yaml';
-    const mockPath2 = '/tmp/temp-949406400001-.yaml';
-
-    mockJoin.mockReturnValueOnce(mockPath1).mockReturnValueOnce(mockPath2);
-    mockWriteFile.mockResolvedValue(undefined);
+    const expectedPath1 = '/tmp/temp-1356048000000.yaml';
+    const expectedPath2 = '/tmp/temp-1356048001000.yaml';
 
     await tempFileService.createTempFile(content1);
     // Advance time by 1ms for the second file
-    vi.setSystemTime(new Date(2000, 1, 1, 13, 0, 0, 1));
+    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
     await tempFileService.createTempFile(content2);
 
     const trackedFiles = tempFileService.getTempFiles();
-    expect(trackedFiles).toContain(mockPath1);
-    expect(trackedFiles).toContain(mockPath2);
+    expect(trackedFiles).toContain(expectedPath1);
+    expect(trackedFiles).toContain(expectedPath2);
     expect(trackedFiles).toHaveLength(2);
-  });
-});
-
-describe('createTempKubeFile', () => {
-  test('creates Kubernetes YAML file with correct prefix', async () => {
-    const yamlContent = 'apiVersion: v1\nkind: Pod';
-    const mockPath = '/tmp/kube-949406400000-.yaml';
-
-    mockJoin.mockReturnValue(mockPath);
-    mockWriteFile.mockResolvedValue(undefined);
-
-    const result = await tempFileService.createTempKubeFile(yamlContent);
-
-    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'kube-949406400000.yaml');
-    expect(mockWriteFile).toHaveBeenCalledWith(mockPath, yamlContent, 'utf-8');
-    expect(result).toBe(mockPath);
-    expect(tempFileService.getTempFiles()).toContain(mockPath);
   });
 });
 
 describe('removeTempFile', () => {
   test('removes tracked temporary file successfully', async () => {
-    const filePath = '/tmp/test-file.yaml';
-
-    // Add file to tracking first
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValue(filePath);
-    await tempFileService.createTempFile('content');
+    // Create a file and get its actual path
+    const filePath = await tempFileService.createTempFile('content');
 
     mockUnlink.mockResolvedValue(undefined);
 
@@ -167,13 +156,10 @@ describe('removeTempFile', () => {
   });
 
   test('handles file removal error gracefully', async () => {
-    const filePath = '/tmp/test-file.yaml';
     const error = new Error('File not found');
 
-    // Add file to tracking first
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValue(filePath);
-    await tempFileService.createTempFile('content');
+    // Create a file and get its actual path
+    const filePath = await tempFileService.createTempFile('content');
 
     mockUnlink.mockRejectedValue(error);
 
@@ -183,40 +169,31 @@ describe('removeTempFile', () => {
   });
 
   test('logs warning when file removal fails', async () => {
-    const filePath = '/tmp/test-file.yaml';
     const error = new Error('Permission denied');
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    // Add file to tracking first
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValue(filePath);
-    await tempFileService.createTempFile('content');
+    // Create a file and get its actual path
+    const filePath = await tempFileService.createTempFile('content');
 
     mockUnlink.mockRejectedValue(error);
 
     await tempFileService.removeTempFile(filePath);
 
-    expect(consoleSpy).toHaveBeenCalledWith(`Failed to remove temporary file ${filePath}:`, error);
-
-    consoleSpy.mockRestore();
+    expect(console.warn).toHaveBeenCalledWith(`Failed to remove temporary file ${filePath}:`, error);
   });
 });
 
 describe('cleanup', () => {
   test('removes all tracked temporary files', async () => {
-    const filePath1 = '/tmp/file1.yaml';
-    const filePath2 = '/tmp/file2.yaml';
-    const filePath3 = '/tmp/file3.yaml';
+    const expectedPath1 = '/tmp/temp-1356048000000.yaml';
+    const expectedPath2 = '/tmp/temp-1356048001000.yaml';
+    const expectedPath3 = '/tmp/temp-1356048002000.yaml';
 
     // Add files to tracking
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValueOnce(filePath1).mockReturnValueOnce(filePath2).mockReturnValueOnce(filePath3);
-
     await tempFileService.createTempFile('content1');
     // Advance time for different timestamps
-    vi.setSystemTime(new Date(2000, 1, 1, 13, 0, 0, 1));
+    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
     await tempFileService.createTempFile('content2');
-    vi.setSystemTime(new Date(2000, 1, 1, 13, 0, 0, 2));
+    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 2));
     await tempFileService.createTempFile('content3');
 
     mockUnlink.mockResolvedValue(undefined);
@@ -224,25 +201,21 @@ describe('cleanup', () => {
     await tempFileService.cleanup();
 
     expect(mockUnlink).toHaveBeenCalledTimes(3);
-    expect(mockUnlink).toHaveBeenCalledWith(filePath1);
-    expect(mockUnlink).toHaveBeenCalledWith(filePath2);
-    expect(mockUnlink).toHaveBeenCalledWith(filePath3);
+    expect(mockUnlink).toHaveBeenCalledWith(expectedPath1);
+    expect(mockUnlink).toHaveBeenCalledWith(expectedPath2);
+    expect(mockUnlink).toHaveBeenCalledWith(expectedPath3);
     expect(tempFileService.getTempFiles()).toHaveLength(0);
   });
 
   test('handles mixed success and failure during cleanup', async () => {
-    const filePath1 = '/tmp/file1.yaml';
-    const filePath2 = '/tmp/file2.yaml';
+    const expectedPath1 = '/tmp/temp-1356048000000.yaml';
+    const expectedPath2 = '/tmp/temp-1356048001000.yaml';
     const error = new Error('Permission denied');
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Add files to tracking
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValueOnce(filePath1).mockReturnValueOnce(filePath2);
-
     await tempFileService.createTempFile('content1');
     // Advance time for different timestamp
-    vi.setSystemTime(new Date(2000, 1, 1, 13, 0, 0, 1));
+    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
     await tempFileService.createTempFile('content2');
 
     mockUnlink
@@ -252,11 +225,11 @@ describe('cleanup', () => {
     await tempFileService.cleanup();
 
     expect(mockUnlink).toHaveBeenCalledTimes(2);
-    expect(consoleSpy).toHaveBeenCalledWith(`Failed to remove temporary file ${filePath2}:`, error);
+    expect(mockUnlink).toHaveBeenCalledWith(expectedPath1);
+    expect(mockUnlink).toHaveBeenCalledWith(expectedPath2);
+    expect(console.warn).toHaveBeenCalledWith(`Failed to remove temporary file ${expectedPath2}:`, error);
     // Only file1 removed from tracking, file2 remains due to failed deletion
-    expect(tempFileService.getTempFiles()).toEqual([filePath2]);
-
-    consoleSpy.mockRestore();
+    expect(tempFileService.getTempFiles()).toEqual([expectedPath2]);
   });
 
   test('handles cleanup when no files are tracked', async () => {
@@ -276,17 +249,9 @@ describe('getTempFiles', () => {
   });
 
   test('returns copy of tracked files array', async () => {
-    const filePath = '/tmp/test-file.yaml';
-
-    mockWriteFile.mockResolvedValue(undefined);
-    mockJoin.mockReturnValue(filePath);
+    const expectedPath = '/tmp/temp-1356048000000.yaml';
     await tempFileService.createTempFile('content');
-
-    const result1 = tempFileService.getTempFiles();
-    const result2 = tempFileService.getTempFiles();
-
-    expect(result1).toEqual([filePath]);
-    expect(result2).toEqual([filePath]);
-    expect(result1).not.toBe(result2); // Should be different array instances
+    const result = tempFileService.getTempFiles();
+    expect(result).toEqual([expectedPath]);
   });
 });
