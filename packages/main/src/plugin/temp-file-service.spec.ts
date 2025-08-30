@@ -61,7 +61,7 @@ afterEach(() => {
 describe('createTempFile', () => {
   test('creates temporary file with default parameters', async () => {
     const content = 'test content';
-    const mockPath = '/tmp/temp-949406400000-.yaml';
+    const mockPath = '/tmp/temp-949410000000-.yaml';
 
     mockJoin.mockReturnValue(mockPath);
     mockWriteFile.mockResolvedValue(undefined);
@@ -79,7 +79,7 @@ describe('createTempFile', () => {
     const content = 'custom content';
     const prefix = 'custom';
     const extension = '.json';
-    const mockPath = '/tmp/custom-949406400000-.json';
+    const mockPath = '/tmp/custom-949410000000-.json';
 
     mockJoin.mockReturnValue(mockPath);
     mockWriteFile.mockResolvedValue(undefined);
