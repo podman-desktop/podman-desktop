@@ -18,6 +18,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
@@ -275,7 +276,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const cloneConfig = { ...this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE) };
     // for each key being already the default value, remove the entry
     Object.keys(cloneConfig)
-      .filter(key => JSON.stringify(cloneConfig[key]) === JSON.stringify(this.configurationProperties[key]?.default))
+      .filter(key => isDeepStrictEqual(cloneConfig[key], this.configurationProperties[key]?.default))
       .filter(key => this.configurationProperties[key]?.type !== 'markdown')
       .forEach(key => {
         delete cloneConfig[key];
