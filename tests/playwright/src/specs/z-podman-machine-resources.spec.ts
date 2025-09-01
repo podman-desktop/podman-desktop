@@ -122,8 +122,12 @@ test.afterEach(async ({}, testInfo) => {
   if (testInfo.status !== testInfo.expectedStatus) {
     console.log(`Test "${testInfo.title}" has status ${testInfo.status}... Performing podman machine cleanup`);
 
-    await resetPodmanMachinesFromCLI();
-    await createPodmanMachineFromCLI();
+    try {
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+    } catch (error) {
+      console.log('Error occurred while resetting podman machines', error);
+    }
   }
 });
 
