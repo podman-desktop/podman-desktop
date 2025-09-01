@@ -89,11 +89,6 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(120_000);
 
   try {
-    if (test.info().status === 'failed') {
-      await resetPodmanMachinesFromCLI();
-      await createPodmanMachineFromCLI();
-    }
-
     const settingsBar = await navigationBar.openSettings();
     await settingsBar.resourcesTab.click();
 
@@ -119,6 +114,16 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
     );
   } finally {
     await runner.close();
+  }
+});
+
+// eslint-disable-next-line no-empty-pattern
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.status !== testInfo.expectedStatus) {
+    console.log(`Test "${testInfo.title}" has status ${testInfo.status}... Performing podman machine cleanup`);
+
+    await resetPodmanMachinesFromCLI();
+    await createPodmanMachineFromCLI();
   }
 });
 
