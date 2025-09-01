@@ -34,9 +34,9 @@ export class ResourcesPage extends SettingsPage {
     return (await this.resourceCardLocatorGenerator(resourceCardAriaLabel).count()) > 0;
   }
 
-  public async goToCreateNewResourcePage(resourceCardAriaLabel: string, newResourceName: string = ''): Promise<void> {
+  public async goToCreateNewResourcePage(resourceCardAriaLabel: string, newResourceName = ''): Promise<void> {
     if (!(await this.resourceCardIsVisible(resourceCardAriaLabel))) {
-      throw new Error(`Resource card with label ${resourceCardAriaLabel} is not available`);
+      throw new Error(`Resource card with label "${resourceCardAriaLabel}" is not available`);
     }
 
     const buttonName = newResourceName || resourceCardAriaLabel;
