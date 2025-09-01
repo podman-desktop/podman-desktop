@@ -30,21 +30,22 @@ export class ResourcesPage extends SettingsPage {
     this.featuredProviderResources = this.content.getByRole('region', { name: 'Featured Provider Resources' });
   }
 
-  public async resourceCardIsVisible(resourceLabel: string): Promise<boolean> {
-    return (await this.resourceCardLocatorGenerator(resourceLabel).count()) > 0;
+  public async resourceCardIsVisible(resourceCardAriaLabel: string): Promise<boolean> {
+    return (await this.resourceCardLocatorGenerator(resourceCardAriaLabel).count()) > 0;
   }
 
-  public async goToCreateNewResourcePage(resourceLabel: string): Promise<void> {
-    if (!(await this.resourceCardIsVisible(resourceLabel))) {
-      throw new Error(`Resource card with label ${resourceLabel} is not available`);
+  public async goToCreateNewResourcePage(resourceCardAriaLabel: string, newResourceName: string = ''): Promise<void> {
+    if (!(await this.resourceCardIsVisible(resourceCardAriaLabel))) {
+      throw new Error(`Resource card with label ${resourceCardAriaLabel} is not available`);
     }
 
-    await this.resourceCardLocatorGenerator(resourceLabel)
-      .getByRole('button', { name: `Create new ${resourceLabel}` })
+    const buttonName = newResourceName || resourceCardAriaLabel;
+    await this.resourceCardLocatorGenerator(resourceCardAriaLabel)
+      .getByRole('button', { name: `Create new ${buttonName}` })
       .click();
   }
 
-  private resourceCardLocatorGenerator(resourceLabel: string): Locator {
-    return this.content.getByRole('region', { name: resourceLabel, exact: true });
+  private resourceCardLocatorGenerator(resourceCardAriaLabel: string): Locator {
+    return this.content.getByRole('region', { name: resourceCardAriaLabel, exact: true });
   }
 }
