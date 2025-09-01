@@ -179,7 +179,9 @@ export class CLIToolsPage extends SettingsPage {
     if (!currentVersion) {
       return this.dropDownDialog.getByRole('button').first().innerText();
     } else {
-      return this.dropDownDialog.getByRole('button').filter({ hasNotText: currentVersion }).first().innerText();
+      const versionSplitInParts = currentVersion.split(' ');
+      const versionNumber = versionSplitInParts[versionSplitInParts.length - 1];
+      return this.dropDownDialog.getByRole('button').filter({ hasNotText: versionNumber }).first().innerText();
     }
   }
 }
