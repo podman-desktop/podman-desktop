@@ -47,12 +47,13 @@ let searchIcon = $derived.by(() => {
 });
 
 let isMac: boolean = $state(false);
-let modifier: string = $derived(isMac ? '⌘ ' : 'Ctrl ');
+let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
+let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
 let searchOptions: SearchOption[] = $derived([
-  { text: 'All' },
+  { text: 'All', shortCut: [`${modifierC}${modifierS}P`] },
   { text: 'Commands', shortCut: ['F1', '>'] },
-  { text: 'Documentation', shortCut: [`${modifier}K`] },
-  { text: 'Go to', shortCut: [`${modifier}F`] },
+  { text: 'Documentation', shortCut: [`${modifierC}K`] },
+  { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
 
@@ -125,7 +126,10 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     e.preventDefault();
     return;
   } else if (e.ctrlKey || e.metaKey) {
-    if (e.key.toLowerCase() === 'k') {
+    if (e.shiftKey && e.key.toLowerCase() === 'p') {
+      searchOptionsSelectedIndex = 0;
+      displaySearchBar();
+    } else if (e.key.toLowerCase() === 'k') {
       searchOptionsSelectedIndex = 2;
       displaySearchBar();
     } else if (e.key.toLowerCase() === 'f') {
@@ -275,6 +279,7 @@ async function onAction(): Promise<void> {
           {#each searchOptions as searchOption, index (index)}
             <Button
               type="tab"
+              class="focus:outline-hidden"
               on:click={(): void => {
                 searchOptionsSelectedIndex = index;
               }}
