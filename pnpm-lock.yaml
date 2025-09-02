@@ -68,8 +68,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       electron-updater:
-        specifier: 6.6.7
-        version: 6.6.7
+        specifier: 6.6.8
+        version: 6.6.8
       electron-util:
         specifier: ^0.18.1
         version: 0.18.1
@@ -5232,8 +5232,8 @@ packages:
     resolution: {integrity: sha512-2/egrNDDnRaxVwK3A+cJq6UOlqOdedGA7JPqCeJjN2Zjk1/QB/6QUi3b714ScIGS7HafFXTyzJEOr5b44I3kvQ==}
     engines: {node: '>=12.0.0'}
 
-  builder-util-runtime@9.3.3:
-    resolution: {integrity: sha512-8AE+77tdJ9XTsK96e55EXJR+ZEK54r8rb0BS8PbEXw57tOX0EWV4BluGW3xkIn+Xvbp+bmQ8gECa15wlcEQxlg==}
+  builder-util-runtime@9.4.0:
+    resolution: {integrity: sha512-omkpaKbutPYqC0nwLEeGq540xND1YPhfVzwT6CFyCFzxhNDt/X+fykr17Yo3jxiuwI3zaAnY/1tKFoRN+FeHhg==}
     engines: {node: '>=12.0.0'}
 
   builder-util@25.1.7:
@@ -6451,8 +6451,8 @@ packages:
   electron-to-chromium@1.5.190:
     resolution: {integrity: sha512-k4McmnB2091YIsdCgkS0fMVMPOJgxl93ltFzaryXqwip1AaxeDqKCGLxkXODDA5Ab/D+tV5EL5+aTx76RvLRxw==}
 
-  electron-updater@6.6.7:
-    resolution: {integrity: sha512-pqV0ORdUkouyUTg9X3cTCRxFXnP+DaW1cfyMIucIDhv82NcDmSxrK8chcna93kK2nwzyzcI03/NAZmuS60zwXg==}
+  electron-updater@6.6.8:
+    resolution: {integrity: sha512-n8FeXRc7Q7BBweS85+H5h4/uzBz8hSSOYhDnwOumpbIhYdPk9EEzWLKDyoArMyf4RebywqWBUE96QDn9TETRhQ==}
 
   electron-util@0.18.1:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
@@ -7999,8 +7999,8 @@ packages:
     resolution: {integrity: sha512-YKBKVkKhty7s8rxddb40oOkuP0NbaeXrQvLin6QMHL7Ypiy2RW9LwOVrVgZRyOrhQlayMd9t+D8yDy8MKFTSDQ==}
     engines: {node: '>= 18.0.0'}
 
-  isbinaryfile@5.0.5:
-    resolution: {integrity: sha512-vh9MWXjhhblwrHlt/yutrubDuBD01kKFscyVndE2/VEeEU5aAizrzuWAsEaCjo997k+IluhN6C4jgxfS69SCIw==}
+  isbinaryfile@5.0.6:
+    resolution: {integrity: sha512-I+NmIfBHUl+r2wcDd6JwE9yWje/PIVY/R5/CmV8dXLZd5K+L9X2klAOwfAHNnondLXkbHyTAleQAWonpTJBTtw==}
     engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
@@ -17056,7 +17056,7 @@ snapshots:
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
-      isbinaryfile: 5.0.5
+      isbinaryfile: 5.0.6
       js-yaml: 4.1.0
       json5: 2.2.3
       lazy-val: 1.0.5
@@ -17528,7 +17528,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  builder-util-runtime@9.3.3:
+  builder-util-runtime@9.4.0:
     dependencies:
       debug: 4.4.1
       sax: 1.4.1
@@ -18939,9 +18939,9 @@ snapshots:
 
   electron-to-chromium@1.5.190: {}
 
-  electron-updater@6.6.7:
+  electron-updater@6.6.8:
     dependencies:
-      builder-util-runtime: 9.3.3
+      builder-util-runtime: 9.4.0
       fs-extra: 10.1.0
       js-yaml: 4.1.0
       lazy-val: 1.0.5
@@ -19814,7 +19814,7 @@ snapshots:
   fs-extra@10.1.0:
     dependencies:
       graceful-fs: 4.2.11
-      jsonfile: 6.1.0
+      jsonfile: 6.2.0
       universalify: 2.0.1
 
   fs-extra@11.2.0:
@@ -19839,7 +19839,7 @@ snapshots:
     dependencies:
       at-least-node: 1.0.0
       graceful-fs: 4.2.11
-      jsonfile: 6.1.0
+      jsonfile: 6.2.0
       universalify: 2.0.1
 
   fs-minipass@2.1.0:
@@ -20799,7 +20799,7 @@ snapshots:
 
   isbinaryfile@5.0.4: {}
 
-  isbinaryfile@5.0.5: {}
+  isbinaryfile@5.0.6: {}
 
   isexe@2.0.0: {}
 
