@@ -49,7 +49,7 @@ import type { ContainerProviderRegistry } from '../container-registry.js';
 import { Context } from '../context/context.js';
 import type { CustomPickRegistry } from '../custompick/custompick-registry.js';
 import type { DialogRegistry } from '../dialog-registry.js';
-import type { Directories } from '../directories.js';
+import type { DirectoryProvider } from '../directory-provider.js';
 import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { IconRegistry } from '../icon-registry.js';
 import type { ImageCheckerImpl } from '../image-checker.js';
@@ -226,7 +226,7 @@ const directories = {
   getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
   getExtensionsStorageDirectory: () => '/fake-extensions-storage-directory',
   getSafeStorageDirectory: () => '/fake-safe-storage-directory',
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 
 const exec = new Exec(proxy);
 

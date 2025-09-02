@@ -150,7 +150,8 @@ import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
 import { DialogRegistry } from './dialog-registry.js';
-import { Directories } from './directories.js';
+import type { DirectoryProvider } from './directory-provider.js';
+import { DirectoryProviderFactory } from './directory-provider-factory.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
 import { DockerDesktopInstallation } from './docker-extension/docker-desktop-installation.js';
 import { DockerPluginAdapter } from './docker-extension/docker-plugin-adapter.js';
@@ -461,7 +462,13 @@ export class PluginSystem {
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
-    container.bind<Directories>(Directories).toSelf().inSingletonScope();
+    container
+      .bind<DirectoryProvider>('DirectoryProvider')
+      .toDynamicValue(() => {
+        const factory = new DirectoryProviderFactory();
+        return factory.create();
+      })
+      .inSingletonScope();
     container.bind<StatusBarRegistry>(StatusBarRegistry).toSelf().inSingletonScope();
     container.bind<SafeStorageRegistry>(SafeStorageRegistry).toSelf().inSingletonScope();
 
@@ -738,7 +745,7 @@ export class PluginSystem {
     const contributionManager = container.get<ContributionManager>(ContributionManager);
     const iconRegistry = container.get<IconRegistry>(IconRegistry);
     const onboardingRegistry = container.get<OnboardingRegistry>(OnboardingRegistry);
-    const directories = container.get<Directories>(Directories);
+    const directories = container.get<DirectoryProvider>('DirectoryProvider');
     const context = container.get<Context>(Context);
     const inputQuickPickRegistry = container.get<InputQuickPickRegistry>(InputQuickPickRegistry);
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);

@@ -25,7 +25,7 @@ import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { Directories } from './directories.js';
+import type { DirectoryProvider } from './directory-provider.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
 let configurationRegistry: ConfigurationRegistry;
@@ -37,7 +37,7 @@ const cpSync = vi.spyOn(fs, 'cpSync');
 const getConfigurationDirectoryMock = vi.fn();
 const directories = {
   getConfigurationDirectory: getConfigurationDirectoryMock,
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 const apiSender = {
   send: vi.fn(),
 } as unknown as ApiSenderType;

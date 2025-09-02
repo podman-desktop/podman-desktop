@@ -25,7 +25,7 @@ import type { IConfigurationNode } from '/@api/configuration/models.js';
 
 import { AutostartEngine } from './autostart-engine.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { Directories } from './directories.js';
+import type { DirectoryProvider } from './directory-provider.js';
 import type { ProviderRegistry } from './provider-registry.js';
 
 let configurationRegistry: ConfigurationRegistry;
@@ -44,7 +44,7 @@ beforeEach(() => {
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories);
+  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as DirectoryProvider);
   providerRegistry = {} as unknown as ProviderRegistry;
   autostartEngine = new AutostartEngine(configurationRegistry, providerRegistry);
   configurationRegistry.registerConfigurations = mockRegisterConfiguration;

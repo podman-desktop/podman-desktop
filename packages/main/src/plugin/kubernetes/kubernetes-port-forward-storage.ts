@@ -18,7 +18,7 @@
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { Directories } from '/@/plugin/directories.js';
+import type { DirectoryProvider } from '/@/plugin/directory-provider.js';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
 
 /**
@@ -93,7 +93,7 @@ export class PreferenceFolderBasedStorage implements FileBasedStorage {
    * Creates an instance of PreferenceFolderBasedStorage.
    * @param directories - The directories instance.
    */
-  constructor(private directories: Directories) {}
+  constructor(private directories: DirectoryProvider) {}
 
   /**
    * Gets the storage path.

@@ -31,7 +31,7 @@ import type { ApiSenderType } from './api.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import type { ComposeObject, DockerExtensionMetadata } from './contribution-manager.js';
 import { ContributionManager } from './contribution-manager.js';
-import type { Directories } from './directories.js';
+import type { DirectoryProvider } from './directory-provider.js';
 import type { Proxy } from './proxy.js';
 import type { IDisposable } from './types/disposable.js';
 import { Exec } from './util/exec.js';
@@ -93,7 +93,7 @@ const directories = {
   getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
   getExtensionsStorageDirectory: () => '/fake-extensions-storage-directory',
   getContributionStorageDir: () => '/fake-contribution-storage-directory',
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 
 const proxy = {
   isEnabled: vi.fn().mockReturnValue(false),

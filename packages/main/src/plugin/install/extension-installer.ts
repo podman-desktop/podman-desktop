@@ -25,7 +25,7 @@ import type { IpcMainEvent } from 'electron';
 import { ipcMain } from 'electron';
 import * as tarFs from 'tar-fs';
 
-import type { Directories } from '/@/plugin/directories.js';
+import type { DirectoryProvider } from '/@/plugin/directory-provider.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -45,7 +45,7 @@ export class ExtensionInstaller {
     private imageRegistry: ImageRegistry,
     private extensionCatalog: ExtensionsCatalog,
     private telemetry: Telemetry,
-    private directories: Directories,
+    private directories: DirectoryProvider,
     contributionManager: ContributionManager,
   ) {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);

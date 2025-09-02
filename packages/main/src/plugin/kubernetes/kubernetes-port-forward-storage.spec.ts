@@ -21,7 +21,7 @@ import * as path from 'node:path';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { Directories } from '/@/plugin/directories.js';
+import type { DirectoryProvider } from '/@/plugin/directory-provider.js';
 import {
   ConfigManagementService,
   FileBasedConfigStorage,
@@ -62,7 +62,7 @@ describe('PreferenceFolderBasedStorage', () => {
   const baseDirectory = `${process.cwd()}${path.sep}mock${path.sep}config${path.sep}directory`;
   const mockDirectories = {
     getConfigurationDirectory: vi.fn().mockReturnValue(baseDirectory),
-  } as unknown as Directories;
+  } as unknown as DirectoryProvider;
 
   test('should initialize storage correctly', async () => {
     const storage = new PreferenceFolderBasedStorage(mockDirectories);

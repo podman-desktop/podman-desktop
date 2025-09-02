@@ -31,7 +31,7 @@ import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import type { ApiSenderType } from '../api.js';
 import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
+import type { DirectoryProvider } from '../directory-provider.js';
 import type { ImageRegistry } from '../image-registry.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import { ExtensionInstaller } from './extension-installer.js';
@@ -86,7 +86,7 @@ const telemetryMock = {
 const directories = {
   getPluginsDirectory: vi.fn(),
   getContributionStorageDir: vi.fn(),
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 
 const contributionManager = {} as unknown as ContributionManager;
 

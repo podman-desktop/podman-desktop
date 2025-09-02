@@ -37,7 +37,7 @@ import type { NotificationCardOptions } from '/@api/notification.js';
 
 import { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
-import { Directories } from './directories.js';
+import type { DirectoryProvider } from './directory-provider.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
 
@@ -62,8 +62,8 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
-    @inject(Directories)
-    private directories: Directories,
+    @inject('DirectoryProvider')
+    private directories: DirectoryProvider,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];

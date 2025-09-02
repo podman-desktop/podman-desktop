@@ -31,7 +31,7 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 import type { ApiSenderType } from '../api.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
+import type { DirectoryProvider } from '../directory-provider.js';
 import { DockerDesktopInstallation } from './docker-desktop-installation.js';
 
 let dockerDesktopInstallation: TestDockerDesktopInstallation;
@@ -59,7 +59,7 @@ const directories = {
   getPluginsDirectory: () => '/fake-plugins-directory',
   getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
   getContributionStorageDir: () => '/fake-contribution-storage-directory',
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 
 const apiSender: ApiSenderType = {
   send: vi.fn(),

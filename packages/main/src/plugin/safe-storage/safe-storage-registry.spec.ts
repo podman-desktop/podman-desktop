@@ -22,7 +22,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { safeStorage } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { type Directories } from '/@/plugin/directories.js';
+import type { DirectoryProvider } from '/@/plugin/directory-provider.js';
 
 import type { SecretStorageChangeEvent } from './safe-storage-registry.js';
 import { SafeStorageRegistry } from './safe-storage-registry.js';
@@ -41,7 +41,7 @@ let safeStorageRegistry: SafeStorageRegistry;
 
 const directories = {
   getSafeStorageDirectory: () => '/fake-safe-storage-directory',
-} as unknown as Directories;
+} as unknown as DirectoryProvider;
 
 beforeEach(() => {
   safeStorageRegistry = new SafeStorageRegistry(directories);

@@ -52,7 +52,7 @@ import { ContainerProviderRegistry } from '../container-registry.js';
 import { Context } from '../context/context.js';
 import { CustomPickRegistry } from '../custompick/custompick-registry.js';
 import { DialogRegistry } from '../dialog-registry.js';
-import { Directories } from '../directories.js';
+import type { DirectoryProvider } from '../directory-provider.js';
 import { Emitter } from '../events/emitter.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import { IconRegistry } from '../icon-registry.js';
@@ -183,8 +183,8 @@ export class ExtensionLoader implements AsyncDisposable {
     private viewRegistry: ViewRegistry,
     @inject(Context)
     private context: Context,
-    @inject(Directories)
-    directories: Directories,
+    @inject('DirectoryProvider')
+    directories: DirectoryProvider,
     @inject(Exec)
     private exec: Exec,
     @inject(KubeGeneratorRegistry)
