@@ -94,7 +94,7 @@ describe('LegacyDirectories', () => {
 
       // Should NOT use default path
       expect(dataDir).not.toContain(os.homedir());
-      expect(dataDir).not.toContain('.local/share');
+      expect(dataDir).not.toContain(path.join('.local', 'share'));
 
       // Should use custom path exactly
       expect(dataDir).toBe(customPath);

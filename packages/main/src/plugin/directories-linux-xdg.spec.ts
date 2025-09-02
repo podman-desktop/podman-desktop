@@ -69,7 +69,7 @@ describe('LinuxXDGDirectories', () => {
       // Key XDG principle: config ≠ data
       expect(configDir).not.toBe(dataDir);
       expect(configDir).toContain('.config');
-      expect(dataDir).toContain('.local/share');
+      expect(dataDir).toContain(path.join('.local', 'share'));
     });
 
     test('should place all data-related directories under data directory', () => {
