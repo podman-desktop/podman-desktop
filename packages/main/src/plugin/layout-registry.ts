@@ -16,37 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
+import { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-registry-info.js';
 
-export interface SavedColumnConfig {
-  id: string;
-  enabled: boolean;
-}
-
-export interface LayoutEditItem {
-  id: string;
-  label: string;
-  enabled: boolean;
-  originalOrder: number;
-}
-
-// Table defaults registry - can be set by each table component
+// Table defaults registry - hardcoded fallbacks, can be overridden by components
 const TABLE_DEFAULTS: Record<string, string[]> = {
-  container: ['Status', 'Name', 'Environment', 'Image', 'Uptime', 'Actions'],
-  image: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
-  pod: ['Status', 'Name', 'Containers', 'Age', 'Actions'],
-  volume: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
   dashboard: ['release-notes', 'extension-banners', 'learning-center', 'providers'],
+  container: ['Status', 'Name', 'Environment', 'Image', 'Uptime', 'Actions'],
+  pod: ['Status', 'Name', 'Containers', 'Age', 'Actions'],
+  image: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
+  volume: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
 };
 
 @injectable()
-export class LayoutManager {
+export class LayoutRegistry implements AsyncDisposable {
   #disposables: IDisposable[] = [];
 
   constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.dispose();
+  }
 
   init(): void {
     const layoutConfiguration: IConfigurationNode = {
@@ -87,7 +81,7 @@ export class LayoutManager {
       },
     };
 
-    this.configurationRegistry.registerConfigurations([layoutConfiguration]);
+    this.#disposables.push(this.configurationRegistry.registerConfigurations([layoutConfiguration]));
   }
 
   dispose(): void {
@@ -95,55 +89,50 @@ export class LayoutManager {
     this.#disposables = [];
   }
 
-  // Set custom defaults for a table type (called from ContainerList, ImagesList, etc.)
-  setTableDefaults(tableKind: string, columnNames: string[]): void {
-    TABLE_DEFAULTS[tableKind] = columnNames;
-  }
-
-  // Get default configuration for a table type
-  getDefaultTableConfig(tableKind: string): SavedColumnConfig[] {
-    const defaults = TABLE_DEFAULTS[tableKind] ?? [];
+  // Get default configuration for a layout kind
+  getDefaultLayoutConfig(layoutKind: string): SavedLayoutConfig[] {
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? [];
     return defaults.map(name => ({ id: name, enabled: true }));
   }
 
-  // Load table configuration (with fallback to defaults)
-  async loadTableConfig(tableKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
+  // Load layout configuration (with fallback to defaults)
+  async loadLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
     try {
       const config = this.configurationRegistry.getConfiguration('layout');
-      const savedConfig = config.get<SavedColumnConfig[]>(`${tableKind}`, []);
+      const savedConfig = config.get<SavedLayoutConfig[]>(`${layoutKind}`, []);
 
       if (!savedConfig || !Array.isArray(savedConfig)) {
-        return this.createDefaultLayoutItems(tableKind, availableColumns);
+        return this.createDefaultLayoutItems(layoutKind, availableColumns);
       }
 
-      return this.mergeConfigWithAvailableColumns(tableKind, savedConfig, availableColumns);
+      return this.mergeConfigWithAvailableColumns(layoutKind, savedConfig, availableColumns);
     } catch (error: unknown) {
-      console.warn(`Failed to load table config for ${tableKind}:`, error);
-      return this.createDefaultLayoutItems(tableKind, availableColumns);
+      console.warn(`Failed to load layout config for ${layoutKind}:`, error);
+      return this.createDefaultLayoutItems(layoutKind, availableColumns);
     }
   }
 
-  // Save table configuration
-  async saveTableConfig(tableKind: string, items: LayoutEditItem[]): Promise<void> {
-    const configToSave: SavedColumnConfig[] = items.map(item => ({ id: item.id, enabled: item.enabled }));
+  // Save layout configuration
+  async saveLayoutConfig(layoutKind: string, items: LayoutEditItem[]): Promise<void> {
+    const configToSave: SavedLayoutConfig[] = items.map(item => ({ id: item.id, enabled: item.enabled }));
 
     const config = this.configurationRegistry.getConfiguration('layout');
-    await config.update(`${tableKind}`, configToSave);
+    await config.update(`${layoutKind}`, configToSave);
   }
 
-  // Reset table to defaults
-  async resetTableConfig(tableKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
+  // Reset layout to defaults
+  async resetLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
     const config = this.configurationRegistry.getConfiguration('layout');
-    await config.update(`${tableKind}`, undefined);
-    return this.createDefaultLayoutItems(tableKind, availableColumns);
+    await config.update(`${layoutKind}`, undefined);
+    return this.createDefaultLayoutItems(layoutKind, availableColumns);
   }
 
   // Helper: Create default layout items
-  private createDefaultLayoutItems(tableKind: string, availableColumns: string[]): LayoutEditItem[] {
-    const defaults = TABLE_DEFAULTS[tableKind] ?? availableColumns;
+  private createDefaultLayoutItems(layoutKind: string, availableColumns: string[]): LayoutEditItem[] {
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
     return defaults.map((colName, index) => ({
       id: colName,
-      label: this.getColumnLabel(tableKind, colName),
+      label: this.getColumnLabel(layoutKind, colName),
       enabled: true,
       originalOrder: index,
     }));
@@ -152,28 +141,26 @@ export class LayoutManager {
   // Helper: Get proper label for column (dashboard sections have different labels)
   private getColumnLabel(tableKind: string, columnId: string): string {
     if (tableKind === 'dashboard') {
-      const labelMap: Record<string, string> = {
-        'release-notes': 'Release Notes',
-        'extension-banners': 'Extension Banners',
-        'learning-center': 'Learning Center',
-        providers: 'Providers',
-      };
-      return labelMap[columnId] ?? columnId;
+      // Transform kebab-case to Title Case (e.g., 'release-notes' -> 'Release Notes')
+      return columnId
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
     }
     return columnId;
   }
 
   // Helper: Merge saved config with available columns
   private mergeConfigWithAvailableColumns(
-    tableKind: string,
-    savedConfig: SavedColumnConfig[],
+    layoutKind: string,
+    savedConfig: SavedLayoutConfig[],
     availableColumns: string[],
   ): LayoutEditItem[] {
     const savedIds = new Set(savedConfig.map(item => item.id));
     const mergedItems: LayoutEditItem[] = [];
 
     // Get default order to determine originalOrder for each column
-    const defaults = TABLE_DEFAULTS[tableKind] ?? availableColumns;
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
     const getOriginalOrder = (id: string): number => {
       const index = defaults.indexOf(id);
       return index >= 0 ? index : defaults.length; // Put unknown items at the end
@@ -184,7 +171,7 @@ export class LayoutManager {
       if (availableColumns.includes(savedItem.id)) {
         mergedItems.push({
           id: savedItem.id,
-          label: this.getColumnLabel(tableKind, savedItem.id),
+          label: this.getColumnLabel(layoutKind, savedItem.id),
           enabled: savedItem.enabled,
           originalOrder: getOriginalOrder(savedItem.id),
         });
@@ -197,7 +184,7 @@ export class LayoutManager {
       .forEach(newCol => {
         mergedItems.push({
           id: newCol,
-          label: this.getColumnLabel(tableKind, newCol),
+          label: this.getColumnLabel(layoutKind, newCol),
           enabled: true,
           originalOrder: getOriginalOrder(newCol),
         });
@@ -206,7 +193,7 @@ export class LayoutManager {
     return mergedItems;
   }
 
-  parseConfiguration(layout: string[]): SavedColumnConfig[] {
+  parseConfiguration(layout: string[]): SavedLayoutConfig[] {
     return layout.map(item => ({
       id: item,
       enabled: true,
