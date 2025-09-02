@@ -16,19 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Writable, writable } from 'svelte/store';
+import type { ListOrganizerItem, TablePersistence } from '@podman-desktop/ui-svelte';
 
-import type { TablePersistenceCallbacks } from './table';
+/**
+ * Podman Desktop storage persistence implementation that uses the main process
+ * window API for storing table layout configurations.
+ */
+export class PodmanDesktopStoragePersist implements TablePersistence {
+  async load(kind: string, columnNames: string[]): Promise<ListOrganizerItem[]> {
+    return await window.loadListConfig(kind, columnNames);
+  }
 
-export const tablePersistenceCallbacks = setup();
+  async save(kind: string, items: ListOrganizerItem[]): Promise<void> {
+    await window.saveListConfig(kind, items);
+  }
 
-export function setup(): Writable<TablePersistenceCallbacks | undefined> {
-  const store = writable<TablePersistenceCallbacks | undefined>();
-
-  window.addEventListener('table-persistence:setup', (event: Event) => {
-    const customEvent = event as CustomEvent;
-    tablePersistenceCallbacks.set(customEvent.detail as TablePersistenceCallbacks);
-  });
-
-  return store;
+  async reset(kind: string, columnNames: string[]): Promise<ListOrganizerItem[]> {
+    return await window.resetListConfig(kind, columnNames);
+  }
 }

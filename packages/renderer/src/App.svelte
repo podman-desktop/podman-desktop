@@ -2,7 +2,7 @@
 import './app.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-import { tablePersistenceCallbacks } from '@podman-desktop/ui-svelte';
+import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
@@ -119,7 +119,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 });
 
 // Initialize table persistence callbacks immediately
-tablePersistenceCallbacks.set(new PodmanDesktopStoragePersist());
+tablePersistence.storage = new PodmanDesktopStoragePersist();
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
