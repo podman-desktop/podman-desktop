@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { resolve } from 'node:path';
 
 import { isLinux } from '/@/util.js';
 
@@ -28,20 +28,22 @@ import { isLinux } from '/@/util.js';
  * 1. No custom directory override is set (PODMAN_DESKTOP_HOME_DIR)
  * 2. No existing legacy configuration is detected
  */
-export function shouldUseXDGDirectories(): boolean {
-  // Only consider XDG on Linux
-  if (!isLinux()) {
-    return false;
-  }
+export class DirectoryStrategy {
+  shouldUseXDGDirectories(): boolean {
+    // Only consider XDG on Linux
+    if (!isLinux()) {
+      return false;
+    }
 
-  // If user has set custom directory, use legacy
-  // biome-ignore lint/complexity/useLiteralKeys: <PODMAN_DESKTOP_HOME_DIR comes from an index signature>
-  if (process.env['PODMAN_DESKTOP_HOME_DIR']) {
-    return false;
-  }
+    // If user has set custom directory, use legacy
+    // biome-ignore lint/complexity/useLiteralKeys: <PODMAN_DESKTOP_HOME_DIR comes from an index signature>
+    if (process.env['PODMAN_DESKTOP_HOME_DIR']) {
+      return false;
+    }
 
-  // If legacy configuration already exists, keep using it to avoid breaking existing setups
-  const defaultDataPath = path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop');
-  const configPath = path.resolve(defaultDataPath, 'configuration');
-  return !fs.existsSync(configPath);
+    // If legacy configuration already exists, keep using it to avoid breaking existing setups
+    const defaultDataPath = resolve(homedir(), '.local', 'share', 'containers', 'podman-desktop');
+    const configPath = resolve(defaultDataPath, 'configuration');
+    return !existsSync(configPath);
+  }
 }

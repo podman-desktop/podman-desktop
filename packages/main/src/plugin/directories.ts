@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+export const Directories = Symbol.for('Directories');
 export interface Directories {
   getConfigurationDirectory(): string;
   getPluginsDirectory(): string;

@@ -150,7 +150,7 @@ import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
 import { DialogRegistry } from './dialog-registry.js';
-import type { Directories } from './directories.js';
+import { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
 import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
@@ -203,7 +203,7 @@ import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
 import { Troubleshooting } from './troubleshooting.js';
 import type { IDisposable } from './types/disposable.js';
-import { shouldUseXDGDirectories } from './util/directory-strategy.js';
+import { DirectoryStrategy } from './util/directory-strategy.js';
 import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
 import { TaskConnectionUtils } from './util/task-connection-utils.js';
@@ -464,10 +464,11 @@ export class PluginSystem {
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
-    if (shouldUseXDGDirectories()) {
-      container.bind<Directories>('Directories').to(LinuxXDGDirectories).inSingletonScope();
+    const directoryStrategy = new DirectoryStrategy();
+    if (directoryStrategy.shouldUseXDGDirectories()) {
+      container.bind<Directories>(Directories).to(LinuxXDGDirectories).inSingletonScope();
     } else {
-      container.bind<Directories>('Directories').to(LegacyDirectories).inSingletonScope();
+      container.bind<Directories>(Directories).to(LegacyDirectories).inSingletonScope();
     }
     container.bind<StatusBarRegistry>(StatusBarRegistry).toSelf().inSingletonScope();
     container.bind<SafeStorageRegistry>(SafeStorageRegistry).toSelf().inSingletonScope();
@@ -745,7 +746,7 @@ export class PluginSystem {
     const contributionManager = container.get<ContributionManager>(ContributionManager);
     const iconRegistry = container.get<IconRegistry>(IconRegistry);
     const onboardingRegistry = container.get<OnboardingRegistry>(OnboardingRegistry);
-    const directories = container.get<Directories>('Directories');
+    const directories = container.get<Directories>(Directories);
     const context = container.get<Context>(Context);
     const inputQuickPickRegistry = container.get<InputQuickPickRegistry>(InputQuickPickRegistry);
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);

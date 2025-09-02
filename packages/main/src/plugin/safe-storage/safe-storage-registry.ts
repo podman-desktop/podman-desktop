@@ -23,7 +23,7 @@ import path from 'node:path';
 import { safeStorage } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import type { Directories } from '/@/plugin/directories.js';
+import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
@@ -38,7 +38,7 @@ export class SafeStorageRegistry {
 
   #extensionStorage: SafeStorage | undefined;
 
-  constructor(@inject('Directories') directories: Directories) {
+  constructor(@inject(Directories) directories: Directories) {
     this.#directories = directories;
   }
 

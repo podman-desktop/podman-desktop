@@ -16,23 +16,32 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
+import { existsSync } from 'node:fs';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as util from '/@/util.js';
+import { isLinux } from '/@/util.js';
 
-import { shouldUseXDGDirectories } from './directory-strategy.js';
+import { DirectoryStrategy } from './directory-strategy.js';
+
+// Mock the external modules
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+}));
+
+vi.mock('/@/util.js', () => ({
+  isLinux: vi.fn(),
+}));
 
 const originalProcessEnv = process.env;
 
+let strategy: DirectoryStrategy;
+
 beforeEach(() => {
-  // Reset environment variables to clean state
+  // Reset environment variables
   process.env = { ...originalProcessEnv };
 
-  // Mock file system
-  vi.mock('node:fs');
-  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+  strategy = new DirectoryStrategy();
 });
 
 afterEach(() => {
@@ -42,35 +51,39 @@ afterEach(() => {
 
 describe('shouldUseXDGDirectories', () => {
   describe('Linux platform', () => {
-    beforeEach(() => {
-      vi.spyOn(util, 'isLinux').mockReturnValue(true);
+    test('should return true when no legacy config exists and no custom env var is set', async () => {
+      vi.mocked(isLinux).mockReturnValue(true);
+
+      expect(strategy.shouldUseXDGDirectories()).toBe(true);
     });
 
-    test('should return true when no legacy config exists and no custom env var is set', () => {
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      expect(shouldUseXDGDirectories()).toBe(true);
-    });
+    test('should return false when PODMAN_DESKTOP_HOME_DIR is set', async () => {
+      vi.mocked(isLinux).mockReturnValue(true);
 
-    test('should return false when PODMAN_DESKTOP_HOME_DIR is set', () => {
+      const existSyncSpy = vi.mocked(existsSync);
+      existSyncSpy.mockImplementation(() => false);
+
       // biome-ignore lint/complexity/useLiteralKeys: <PODMAN_DESKTOP_HOME_DIR comes from an index signature>
       process.env['PODMAN_DESKTOP_HOME_DIR'] = '/custom/path';
 
-      expect(shouldUseXDGDirectories()).toBe(false);
+      expect(strategy.shouldUseXDGDirectories()).toBe(false);
     });
 
-    test('should return false when existing configuration is detected', () => {
-      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    test('should return false when existing configuration is detected', async () => {
+      vi.mocked(isLinux).mockReturnValue(true);
 
-      expect(shouldUseXDGDirectories()).toBe(false);
+      const existSyncSpy = vi.mocked(existsSync);
+      existSyncSpy.mockImplementation(() => true);
+
+      expect(strategy.shouldUseXDGDirectories()).toBe(false);
     });
   });
 
   describe('Non-Linux platforms', () => {
-    test('should always return false', () => {
-      vi.spyOn(util, 'isLinux').mockReturnValue(false);
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+    test('should always return false', async () => {
+      vi.mocked(isLinux).mockReturnValue(false);
 
-      expect(shouldUseXDGDirectories()).toBe(false);
+      expect(strategy.shouldUseXDGDirectories()).toBe(false);
     });
   });
 });
