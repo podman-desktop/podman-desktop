@@ -37,7 +37,7 @@ import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
-import type { DirectoryProvider } from './directory-provider.js';
+import type { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -320,11 +320,11 @@ test('configurationRegistry propagated', async () => {
   const apiSenderMock = {} as unknown as ApiSenderType;
   const directoriesMock = {
     getConfigurationDirectory: vi.fn().mockReturnValue(tmpdir()),
-  } as unknown as DirectoryProvider;
+  } as unknown as Directories;
   const notifications: NotificationCardOptions[] = [];
 
   inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
-  inversifyContainer.bind<DirectoryProvider>('DirectoryProvider').toConstantValue(directoriesMock);
+  inversifyContainer.bind<Directories>('Directories').toConstantValue(directoriesMock);
 
   const configurationRegistry = pluginSystem.initConfigurationRegistry(
     inversifyContainer,

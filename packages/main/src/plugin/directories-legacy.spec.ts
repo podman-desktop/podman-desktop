@@ -22,8 +22,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
-import type { DirectoryProvider } from './directory-provider.js';
 
 const originalProcessEnv = process.env;
 
@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 describe('LegacyDirectories', () => {
-  let provider: DirectoryProvider;
+  let provider: Directories;
 
   describe('Default Directory Structure', () => {
     beforeEach(() => {

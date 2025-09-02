@@ -20,10 +20,9 @@ import * as fs from 'node:fs';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as util from '../util.js';
-import { LegacyDirectories } from './directories-legacy.js';
-import { LinuxXDGDirectories } from './directories-linux-xdg.js';
-import { DirectoryProviderFactory } from './directory-provider-factory.js';
+import * as util from '/@/util.js';
+
+import { shouldUseXDGDirectories } from './directory-strategy.js';
 
 const originalProcessEnv = process.env;
 
@@ -34,7 +33,6 @@ beforeEach(() => {
   // Mock file system
   vi.mock('node:fs');
   vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-  vi.spyOn(fs, 'mkdirSync').mockImplementation(() => '');
 });
 
 afterEach(() => {
@@ -42,64 +40,37 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('DirectoryProviderFactory', () => {
-  let factory: DirectoryProviderFactory;
-
-  beforeEach(() => {
-    factory = new DirectoryProviderFactory();
-  });
-
-  describe('For Linux platform', () => {
+describe('shouldUseXDGDirectories', () => {
+  describe('Linux platform', () => {
     beforeEach(() => {
       vi.spyOn(util, 'isLinux').mockReturnValue(true);
     });
 
-    test('should use XDG when no legacy config exists and no custom env var is set', () => {
+    test('should return true when no legacy config exists and no custom env var is set', () => {
       vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-
-      const provider = factory.create();
-
-      expect(provider).toBeInstanceOf(LinuxXDGDirectories);
+      expect(shouldUseXDGDirectories()).toBe(true);
     });
 
-    test('should use Legacy when PODMAN_DESKTOP_HOME_DIR is set', () => {
+    test('should return false when PODMAN_DESKTOP_HOME_DIR is set', () => {
       // biome-ignore lint/complexity/useLiteralKeys: <PODMAN_DESKTOP_HOME_DIR comes from an index signature>
       process.env['PODMAN_DESKTOP_HOME_DIR'] = '/custom/path';
 
-      const provider = factory.create();
-
-      expect(provider).toBeInstanceOf(LegacyDirectories);
+      expect(shouldUseXDGDirectories()).toBe(false);
     });
 
-    test('should use Legacy when existing configuration is detected', () => {
-      // Simulate existing legacy configuration
+    test('should return false when existing configuration is detected', () => {
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
-      const provider = factory.create();
-
-      expect(provider).toBeInstanceOf(LegacyDirectories);
+      expect(shouldUseXDGDirectories()).toBe(false);
     });
   });
 
-  describe('Decision Logic - Non-Linux Platforms', () => {
-    test('should always use legacy strategy without existing config', () => {
+  describe('Non-Linux platforms', () => {
+    test('should always return false', () => {
       vi.spyOn(util, 'isLinux').mockReturnValue(false);
-
       vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
-      const provider = factory.create();
-
-      expect(provider).toBeInstanceOf(LegacyDirectories);
-    });
-
-    test('should use Legacy strategy with existing config', () => {
-      vi.spyOn(util, 'isLinux').mockReturnValue(false);
-
-      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-
-      const provider = factory.create();
-
-      expect(provider).toBeInstanceOf(LegacyDirectories);
+      expect(shouldUseXDGDirectories()).toBe(false);
     });
   });
 });

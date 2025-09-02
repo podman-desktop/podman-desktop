@@ -22,7 +22,7 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import * as util from '../util.js';
 import { CloseBehavior } from './close-behavior.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type { DirectoryProvider } from './directory-provider.js';
+import type { Directories } from './directories.js';
 
 vi.mock('./util', () => {
   return {
@@ -34,7 +34,7 @@ let closeBehavior: CloseBehavior;
 let configurationRegistry: ConfigurationRegistry;
 
 beforeEach(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as DirectoryProvider);
+  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories);
   closeBehavior = new CloseBehavior(configurationRegistry);
 });
 

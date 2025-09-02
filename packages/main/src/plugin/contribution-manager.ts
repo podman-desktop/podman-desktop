@@ -28,7 +28,7 @@ import type { ContributionInfo } from '/@api/contribution-info.js';
 import { isMac, isUnixLike, isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { ContainerProviderRegistry } from './container-registry.js';
-import type { DirectoryProvider } from './directory-provider.js';
+import type { Directories } from './directories.js';
 import { Exec } from './util/exec.js';
 import { getFreePort } from './util/port.js';
 
@@ -92,8 +92,8 @@ export class ContributionManager {
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
-    @inject('DirectoryProvider')
-    private directories: DirectoryProvider,
+    @inject('Directories')
+    private directories: Directories,
     @inject(ContainerProviderRegistry)
     private containerRegistry: ContainerProviderRegistry,
     @inject(Exec)

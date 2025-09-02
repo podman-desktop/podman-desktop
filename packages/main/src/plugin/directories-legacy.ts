@@ -22,7 +22,7 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
-import type { DirectoryProvider } from './directory-provider.js';
+import type { Directories } from './directories.js';
 
 /**
  * Directory provider that uses the traditional/legacy directory structure
@@ -30,7 +30,7 @@ import type { DirectoryProvider } from './directory-provider.js';
  * Used for Windows, macOS, and Linux systems with existing configurations
  */
 @injectable()
-export class LegacyDirectories implements DirectoryProvider {
+export class LegacyDirectories implements Directories {
   static readonly XDG_DATA_DIRECTORY = `.local${path.sep}share${path.sep}containers${path.sep}podman-desktop`;
   static readonly PODMAN_DESKTOP_HOME_DIR = 'PODMAN_DESKTOP_HOME_DIR';
 

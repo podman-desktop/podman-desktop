@@ -21,8 +21,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { Directories } from './directories.js';
 import { LinuxXDGDirectories } from './directories-linux-xdg.js';
-import type { DirectoryProvider } from './directory-provider.js';
 
 const originalProcessEnv = process.env;
 
@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 describe('LinuxXDGDirectories', () => {
-  let provider: DirectoryProvider;
+  let provider: Directories;
 
   describe('Default XDG Paths', () => {
     beforeEach(() => {

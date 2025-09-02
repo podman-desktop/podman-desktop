@@ -21,14 +21,14 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
-import type { DirectoryProvider } from './directory-provider.js';
+import type { Directories } from './directories.js';
 
 /**
  * Directory provider that follows XDG Base Directory Specification for Linux
  * This implementation separates configuration and data directories according to XDG standards
  */
 @injectable()
-export class LinuxXDGDirectories implements DirectoryProvider {
+export class LinuxXDGDirectories implements Directories {
   private readonly configurationDirectory: string;
   private readonly dataDirectory: string;
   private readonly pluginsDirectory: string;
