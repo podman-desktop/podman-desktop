@@ -19,11 +19,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-manager-info.js';
 
-import type { LayoutEditItem, SavedColumnConfig } from './layout-manager.js';
-import { LayoutManager } from './layout-manager.js';
+import { LayoutRegistry } from './layout-registry.js';
 
-let layoutManager: LayoutManager;
+let layoutRegistry: LayoutRegistry;
 let mockConfigurationRegistry: IConfigurationRegistry;
 let mockConfiguration: {
   get: ReturnType<typeof vi.fn>;
@@ -31,6 +31,7 @@ let mockConfiguration: {
 };
 
 beforeEach(() => {
+  vi.clearAllMocks();
   mockConfiguration = {
     get: vi.fn(),
     update: vi.fn(),
@@ -41,12 +42,15 @@ beforeEach(() => {
     getConfiguration: vi.fn().mockReturnValue(mockConfiguration),
   } as unknown as IConfigurationRegistry;
 
-  layoutManager = new LayoutManager(mockConfigurationRegistry);
+  layoutRegistry = new LayoutRegistry(mockConfigurationRegistry);
 });
 
-describe('LayoutManager', () => {
-  test('should initialize configuration on init', () => {
-    layoutManager.init();
+describe('LayoutRegistry', () => {
+  test('should auto-register layout configuration when loading for the first time', async () => {
+    const columnNames = ['Status', 'Name', 'Actions'];
+    mockConfiguration.get.mockReturnValue([]);
+
+    await layoutRegistry.loadLayoutConfig('container', columnNames);
 
     expect(mockConfigurationRegistry.registerConfigurations).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -54,70 +58,64 @@ describe('LayoutManager', () => {
         title: 'Layout',
         type: 'object',
         properties: expect.objectContaining({
-          'layout.dashboard': expect.any(Object),
-          'layout.container': expect.any(Object),
-          'layout.pod': expect.any(Object),
-          'layout.image': expect.any(Object),
-          'layout.volume': expect.any(Object),
+          'layout.container': expect.objectContaining({
+            description: 'Preferred layout of columns for container',
+            type: 'array',
+            hidden: true,
+          }),
         }),
       }),
     ]);
   });
 
-  test('should set table defaults', () => {
-    const columnNames = ['Status', 'Name', 'Custom'];
-    layoutManager.setTableDefaults('custom', columnNames);
-
-    const defaultConfig = layoutManager.getDefaultTableConfig('custom');
-    expect(defaultConfig).toEqual([
-      { id: 'Status', enabled: true },
-      { id: 'Name', enabled: true },
-      { id: 'Custom', enabled: true },
-    ]);
+  test('should return empty defaults for unknown table types', () => {
+    const defaultConfig = layoutRegistry.getDefaultLayoutConfig('unknown');
+    expect(defaultConfig).toEqual([]);
   });
 
-  test('should get default table config for known table types', () => {
-    const containerConfig = layoutManager.getDefaultTableConfig('container');
+  test('should get default table config after auto-registration via load', async () => {
+    // Auto-register container layout by calling load
+    mockConfiguration.get.mockReturnValue([]);
+    await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions']);
+
+    const containerConfig = layoutRegistry.getDefaultLayoutConfig('container');
     expect(containerConfig).toEqual([
       { id: 'Status', enabled: true },
       { id: 'Name', enabled: true },
-      { id: 'Environment', enabled: true },
-      { id: 'Image', enabled: true },
-      { id: 'Uptime', enabled: true },
       { id: 'Actions', enabled: true },
     ]);
 
-    const imageConfig = layoutManager.getDefaultTableConfig('image');
+    // Auto-register image layout by calling load
+    await layoutRegistry.loadLayoutConfig('image', ['Status', 'Name', 'Actions']);
+
+    const imageConfig = layoutRegistry.getDefaultLayoutConfig('image');
     expect(imageConfig).toEqual([
       { id: 'Status', enabled: true },
       { id: 'Name', enabled: true },
-      { id: 'Environment', enabled: true },
-      { id: 'Age', enabled: true },
-      { id: 'Size', enabled: true },
       { id: 'Actions', enabled: true },
     ]);
   });
 
   test('should load table config with saved configuration', async () => {
-    const savedConfig: SavedColumnConfig[] = [
+    const savedConfig: SavedLayoutConfig[] = [
       { id: 'Name', enabled: true },
       { id: 'Status', enabled: false },
     ];
     mockConfiguration.get.mockReturnValue(savedConfig);
 
-    const result = await layoutManager.loadTableConfig('container', ['Status', 'Name', 'Actions']);
+    const result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions']);
 
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
+      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 2 },
     ]);
   });
 
   test('should load table config with fallback to defaults when no saved config', async () => {
     mockConfiguration.get.mockReturnValue([]);
 
-    const result = await layoutManager.loadTableConfig('container', ['Status', 'Name']);
+    const result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name']);
 
     expect(result).toEqual([
       { id: 'Status', label: 'Status', enabled: true, originalOrder: 0 },
@@ -132,16 +130,13 @@ describe('LayoutManager', () => {
 
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const result = await layoutManager.loadTableConfig('container', ['Status', 'Name']);
+    const result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions']);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to load table config for container:', expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to load layout config for container:', expect.any(Error));
     expect(result).toEqual([
       { id: 'Status', label: 'Status', enabled: true, originalOrder: 0 },
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
-      { id: 'Environment', label: 'Environment', enabled: true, originalOrder: 2 },
-      { id: 'Image', label: 'Image', enabled: true, originalOrder: 3 },
-      { id: 'Uptime', label: 'Uptime', enabled: true, originalOrder: 4 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
+      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 2 },
     ]);
 
     consoleSpy.mockRestore();
@@ -153,7 +148,7 @@ describe('LayoutManager', () => {
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
     ];
 
-    await layoutManager.saveTableConfig('container', items);
+    await layoutRegistry.saveLayoutConfig('container', items);
 
     expect(mockConfiguration.update).toHaveBeenCalledWith('container', [
       { id: 'Name', enabled: true },
@@ -162,49 +157,36 @@ describe('LayoutManager', () => {
   });
 
   test('should reset table configuration', async () => {
-    const result = await layoutManager.resetTableConfig('container', ['Status', 'Name']);
+    const result = await layoutRegistry.resetLayoutConfig('container', ['Status', 'Name', 'Actions']);
 
     expect(mockConfiguration.update).toHaveBeenCalledWith('container', undefined);
     expect(result).toEqual([
       { id: 'Status', label: 'Status', enabled: true, originalOrder: 0 },
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
-      { id: 'Environment', label: 'Environment', enabled: true, originalOrder: 2 },
-      { id: 'Image', label: 'Image', enabled: true, originalOrder: 3 },
-      { id: 'Uptime', label: 'Uptime', enabled: true, originalOrder: 4 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
-    ]);
-  });
-
-  test('should handle dashboard labels correctly', async () => {
-    const result = await layoutManager.loadTableConfig('dashboard', ['release-notes', 'providers']);
-
-    expect(result).toEqual([
-      { id: 'release-notes', label: 'Release Notes', enabled: true, originalOrder: 0 },
-      { id: 'extension-banners', label: 'Extension Banners', enabled: true, originalOrder: 1 },
-      { id: 'learning-center', label: 'Learning Center', enabled: true, originalOrder: 2 },
-      { id: 'providers', label: 'Providers', enabled: true, originalOrder: 3 },
+      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 2 },
     ]);
   });
 
   test('should merge configuration correctly with new columns', async () => {
-    const savedConfig: SavedColumnConfig[] = [
+    const savedConfig: SavedLayoutConfig[] = [
       { id: 'Name', enabled: true },
       { id: 'Status', enabled: false },
     ];
     mockConfiguration.get.mockReturnValue(savedConfig);
 
-    const result = await layoutManager.loadTableConfig('container', ['Status', 'Name', 'NewColumn']);
+    const result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions', 'NewColumn']);
 
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
-      { id: 'NewColumn', label: 'NewColumn', enabled: true, originalOrder: 6 },
+      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 2 },
+      { id: 'NewColumn', label: 'NewColumn', enabled: true, originalOrder: 3 },
     ]);
   });
 
   test('should parse configuration correctly', () => {
     const layout = ['item1', 'item2', 'item3'];
-    const result = layoutManager.parseConfiguration(layout);
+    const result = layoutRegistry.parseConfiguration(layout);
 
     expect(result).toEqual([
       { id: 'item1', enabled: true },
@@ -216,29 +198,29 @@ describe('LayoutManager', () => {
   test('should handle invalid saved config gracefully', async () => {
     // Test with null saved config
     mockConfiguration.get.mockReturnValue(null);
-    let result = await layoutManager.loadTableConfig('container', ['Status', 'Name']);
-    expect(result).toHaveLength(6); // Should fallback to defaults
+    let result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions']);
+    expect(result).toHaveLength(3); // Should fallback to defaults
 
     // Test with non-array saved config
     mockConfiguration.get.mockReturnValue('invalid');
-    result = await layoutManager.loadTableConfig('container', ['Status', 'Name']);
-    expect(result).toHaveLength(6); // Should fallback to defaults
+    result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Actions']);
+    expect(result).toHaveLength(3); // Should fallback to defaults
   });
 
   test('should handle unknown table types', () => {
-    const config = layoutManager.getDefaultTableConfig('unknown');
+    const config = layoutRegistry.getDefaultLayoutConfig('unknown');
     expect(config).toEqual([]);
   });
 
   test('should filter out unavailable columns from saved config', async () => {
-    const savedConfig: SavedColumnConfig[] = [
+    const savedConfig: SavedLayoutConfig[] = [
       { id: 'Name', enabled: true },
       { id: 'RemovedColumn', enabled: true },
       { id: 'Status', enabled: false },
     ];
     mockConfiguration.get.mockReturnValue(savedConfig);
 
-    const result = await layoutManager.loadTableConfig('container', ['Status', 'Name']);
+    const result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name']);
 
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
