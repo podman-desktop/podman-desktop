@@ -5,6 +5,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import { isDark } from '/@/stores/appearance';
 import { commandsInfos } from '/@/stores/commands';
 import { context } from '/@/stores/context';
 import type { CommandInfo } from '/@api/command-info';
@@ -13,6 +14,8 @@ import type { ContextUI } from '../context/context';
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
 import EnterIcon from '../images/EnterIcon.svelte';
+import NotFoundDarkIcon from '../images/NotFoundDarkIcon.svelte';
+import NotFoundLightIcon from '../images/NotFoundLightIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
 
 const ENTER_KEY = 'Enter';
@@ -59,6 +62,7 @@ let searchOptionsSelectedIndex: number = $state(0);
 
 let commandInfoItems: CommandInfo[] = $state([]);
 let globalContext: ContextUI;
+let isDarkTheme = $state(false);
 
 let filteredCommandInfoItems: CommandInfo[] = $derived(
   commandInfoItems
@@ -67,6 +71,7 @@ let filteredCommandInfoItems: CommandInfo[] = $derived(
 );
 
 let contextsUnsubscribe: Unsubscriber;
+let themeUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
@@ -78,6 +83,9 @@ onMount(() => {
   contextsUnsubscribe = context.subscribe(value => {
     globalContext = value;
   });
+  themeUnsubscribe = isDark.subscribe(value => {
+    isDarkTheme = value;
+  });
   // subscribe to the commands
   return commandsInfos.subscribe(infos => {
     commandInfoItems = infos;
@@ -86,6 +94,7 @@ onMount(() => {
 
 onDestroy(() => {
   contextsUnsubscribe?.();
+  themeUnsubscribe?.();
 });
 
 // Focus the input when the command palette becomes visible
@@ -317,7 +326,7 @@ async function onAction(): Promise<void> {
 
         {#if filteredCommandInfoItems.length === 0}
           <div class='flex grow items-center flex-col gap-2 py-4'>
-            <Icon icon={faMagnifyingGlass} size="5x"/>
+            <Icon icon={isDarkTheme ? NotFoundDarkIcon : NotFoundLightIcon} />
             <div class='text-lg font-bold'>No results matching '{inputValue}' found</div>
             <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
             <Button icon={faChevronRight} type='link' onclick={(): void => {console.log('Variables clicked');}}>Variables</Button>
