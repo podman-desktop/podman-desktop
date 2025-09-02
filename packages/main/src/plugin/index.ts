@@ -178,6 +178,8 @@ import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
 import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
+import type { LayoutEditItem } from './layout-manager.js';
+import { LayoutManager } from './layout-manager.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
@@ -701,6 +703,10 @@ export class PluginSystem {
     container.bind<PinRegistry>(PinRegistry).toSelf().inSingletonScope();
     const pinRegistry = container.get<PinRegistry>(PinRegistry);
     pinRegistry.init();
+
+    container.bind<LayoutManager>(LayoutManager).toSelf().inSingletonScope();
+    const layoutManager = container.get<LayoutManager>(LayoutManager);
+    layoutManager.init();
 
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
 
@@ -1984,6 +1990,42 @@ export class PluginSystem {
       'authentication-provider-registry:requestAuthenticationProviderSignIn',
       async (_listener, requestId: string): Promise<void> => {
         await authentication.executeSessionRequest(requestId);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-manager:loadTableConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<LayoutEditItem[]> => {
+        return layoutManager.loadTableConfig(key, availableColumns);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-manager:saveTableConfig',
+      async (_listener: Electron.IpcMainInvokeEvent, key: string, items: LayoutEditItem[]): Promise<void> => {
+        return layoutManager.saveTableConfig(key, items);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-manager:resetTableConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<LayoutEditItem[]> => {
+        return layoutManager.resetTableConfig(key, availableColumns);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-manager:setTableDefaults',
+      async (_listener: Electron.IpcMainInvokeEvent, key: string, columnNames: string[]): Promise<void> => {
+        return layoutManager.setTableDefaults(key, columnNames);
       },
     );
 

@@ -122,6 +122,7 @@ import type {
   KubernetesGeneratorArgument,
   KubernetesGeneratorSelector,
 } from '../../main/src/plugin/kubernetes/kube-generator-registry';
+import type { LayoutEditItem } from '../../main/src/plugin/layout-manager';
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 import type { IDisposable } from '../../main/src/plugin/types/disposable';
@@ -2511,6 +2512,28 @@ export function initExposure(): void {
       return ipcInvoke('image-files:getFilesystemLayers', id, image, cancellationToken);
     },
   );
+
+  contextBridge.exposeInMainWorld(
+    'loadTableConfig',
+    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
+      return ipcInvoke('layout-manager:loadTableConfig', kind, availableColumns);
+    },
+  );
+
+  contextBridge.exposeInMainWorld('saveTableConfig', async (kind: string, items: LayoutEditItem[]): Promise<void> => {
+    return ipcInvoke('layout-manager:saveTableConfig', kind, items);
+  });
+
+  contextBridge.exposeInMainWorld(
+    'resetTableConfig',
+    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
+      return ipcInvoke('layout-manager:resetTableConfig', kind, availableColumns);
+    },
+  );
+
+  contextBridge.exposeInMainWorld('setTableDefaults', async (kind: string, columnNames: string[]): Promise<void> => {
+    return ipcInvoke('layout-manager:setTableDefaults', kind, columnNames);
+  });
 
   contextBridge.exposeInMainWorld('listGuides', async (): Promise<Guide[]> => {
     return ipcInvoke('learning-center:listGuides');
