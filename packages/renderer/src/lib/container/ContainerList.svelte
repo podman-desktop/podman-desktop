@@ -393,7 +393,7 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       <div class="inline-flex space-x-2">
         <Button
           on:click={(): Promise<void> =>
-           runSelectedContainers()}
+          runSelectedContainers()}
           aria-label="Run selected containers and pods"
           title="Run {selectedItemsNumber} selected items"
           inProgress={bulkRunInProgress}
@@ -462,6 +462,7 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           row={row}
           defaultSortColumn="Name"
           key={key}
+          enableLayoutConfiguration={true}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
       {/if}

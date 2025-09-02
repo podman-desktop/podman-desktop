@@ -227,6 +227,7 @@ const row = new TableRow<VolumeInfoUI>({
         columns={columns}
         row={row}
         defaultSortColumn="Name"
+        enableLayoutConfiguration={true}
         on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
       </Table>
     {/if}
