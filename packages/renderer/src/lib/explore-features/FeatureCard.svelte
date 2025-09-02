@@ -14,7 +14,11 @@ interface Props {
 let { feature, closeFeature }: Props = $props();
 
 async function openLearnMore(): Promise<void> {
-  await window.openExternal(feature.learnMore);
+  if (feature.learnMore) await window.openExternal(feature.learnMore);
+}
+
+async function openTutorial(): Promise<void> {
+  if (feature.tutorialLink) await window.openExternal(feature.tutorialLink);
 }
 
 async function closeCard(): Promise<void> {
@@ -26,7 +30,7 @@ async function closeCard(): Promise<void> {
 <div
   class="flex flex-col flex-1 relative bg-[var(--pd-content-card-carousel-card-bg)] pb-4 rounded-lg hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] w-[360px] h-[400px]">
   <CloseButton onclick={closeCard} class="absolute right-2 top-2 text-[var(--pd-content-card-carousel-card-bg)]"/>
-  <img src={`${feature.img}`} class="w-full max-h-[40%] object-cover rounded-t-sm" alt={feature.id} />
+  <img src={feature.img} class="w-full max-h-[40%] object-cover rounded-t-sm" alt={feature.id} />
   <div class="p-4 flex flex-col h-full">
     <div class="pt-4 text-nowrap text-[var(--pd-content-card-carousel-card-header-text)] font-semibold">
       {feature.title}
@@ -36,10 +40,10 @@ async function closeCard(): Promise<void> {
       <Link class="pt-4" onclick={openLearnMore}>Learn more <Icon icon={faUpRightFromSquare}/></Link>
     {/if}
     <div class="flex flex-row justify-start items-end flex-1 pt-4 gap-2">
-      <Button type="primary" icon={feature.buttonIcon} on:click={(): void => router.goto(feature.buttonLink)} title={feature.buttonTitle}
+      <Button type="primary" icon={feature.buttonIcon} onclick={(): void => router.goto(feature.buttonLink)} title={feature.buttonTitle}
         >{feature.buttonTitle}</Button>
       {#if feature.tutorialLink}
-        <Button type="secondary" icon={faCirclePlay} title="Watch tutorial">Watch Tutorial</Button>
+        <Button type="secondary" icon={faCirclePlay} onclick={openTutorial} title="Watch Tutorial">Watch Tutorial</Button>
       {/if}
     </div>
   </div>

@@ -23,8 +23,8 @@ export interface Feature {
   buttonIcon: string;
   buttonTitle: string;
   buttonLink: string;
-  tutorialLink: string;
-  learnMore: string;
+  tutorialLink?: string;
+  learnMore?: string;
   img?: string;
   show?: boolean;
 }
