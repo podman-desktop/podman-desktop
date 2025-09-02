@@ -23,7 +23,7 @@ const listener: EventListener = (obj: object) => {
 const CONFIGURATION_KEY = 'exploreFeatures.expanded';
 
 onMount(async () => {
-  features = (await window.listFeatures()).filter(feature => feature.show);
+  features = (await window.listFeatures()).filter(feature => feature.show ?? true);
 
   onDidChangeConfiguration.addEventListener(CONFIGURATION_KEY, listener);
   expanded = (await window.getConfigurationValue<boolean>(CONFIGURATION_KEY)) ?? true;
@@ -47,13 +47,14 @@ function featureClosed(featureId: string): void {
   <FeatureCard feature={feature} closeFeature={featureClosed} />
 {/snippet}
 
-
-<div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
-  <Expandable bind:initialized bind:expanded onclick={toggle}>
-    <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
-    {#snippet title()}<div class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Explore Featues</div>{/snippet}
-    <div class="pt-2">
-      <Carousel cards={features} {card} />
-    </div>
-  </Expandable>
-</div>
+{#if features.length > 0}
+  <div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
+    <Expandable bind:initialized bind:expanded onclick={toggle}>
+      <!-- eslint-disable-next-line sonarjs/no-unused-vars -->
+      {#snippet title()}<div class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Explore Features</div>{/snippet}
+      <div class="pt-2">
+        <Carousel cards={features} {card} />
+      </div>
+    </Expandable>
+  </div>
+{/if}
