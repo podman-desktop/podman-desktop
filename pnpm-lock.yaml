@@ -219,8 +219,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 37.4.0
-        version: 37.4.0
+        specifier: 38.0.0
+        version: 38.0.0
       electron-builder:
         specifier: 26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
@@ -574,8 +574,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 37.4.0
-        version: 37.4.0
+        specifier: 38.0.0
+        version: 38.0.0
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(jiti@2.5.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.10.5(@types/node@24.3.0)(typescript@5.8.3))(terser@5.36.0)(tsx@4.20.5)(yaml@2.8.1)
@@ -906,8 +906,8 @@ importers:
         specifier: ^22
         version: 22.18.0
       electron:
-        specifier: 37.4.0
-        version: 37.4.0
+        specifier: 38.0.0
+        version: 38.0.0
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -6458,8 +6458,8 @@ packages:
     resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
     engines: {node: '>=18'}
 
-  electron@37.4.0:
-    resolution: {integrity: sha512-HhsSdWowE5ODOeWNc/323Ug2C52mq/TqNBG+4uMeOA3G2dMXNc/nfyi0RYu1rJEgiaJLEjtHveeZZaYRYFsFCQ==}
+  electron@38.0.0:
+    resolution: {integrity: sha512-egljptiPJqbL/oamFCEY+g3RNeONWTVxZSGeyLqzK8xq106JhzuxnhJZ3sxt4DzJFaofbGyGJA37Oe9d+gVzYw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -7999,8 +7999,8 @@ packages:
     resolution: {integrity: sha512-YKBKVkKhty7s8rxddb40oOkuP0NbaeXrQvLin6QMHL7Ypiy2RW9LwOVrVgZRyOrhQlayMd9t+D8yDy8MKFTSDQ==}
     engines: {node: '>= 18.0.0'}
 
-  isbinaryfile@5.0.5:
-    resolution: {integrity: sha512-vh9MWXjhhblwrHlt/yutrubDuBD01kKFscyVndE2/VEeEU5aAizrzuWAsEaCjo997k+IluhN6C4jgxfS69SCIw==}
+  isbinaryfile@5.0.6:
+    resolution: {integrity: sha512-I+NmIfBHUl+r2wcDd6JwE9yWje/PIVY/R5/CmV8dXLZd5K+L9X2klAOwfAHNnondLXkbHyTAleQAWonpTJBTtw==}
     engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
@@ -17056,7 +17056,7 @@ snapshots:
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
-      isbinaryfile: 5.0.5
+      isbinaryfile: 5.0.6
       js-yaml: 4.1.0
       json5: 2.2.3
       lazy-val: 1.0.5
@@ -18957,7 +18957,7 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@37.4.0:
+  electron@38.0.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.18.0
@@ -20799,7 +20799,7 @@ snapshots:
 
   isbinaryfile@5.0.4: {}
 
-  isbinaryfile@5.0.5: {}
+  isbinaryfile@5.0.6: {}
 
   isexe@2.0.0: {}
 
