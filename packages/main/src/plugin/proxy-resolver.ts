@@ -69,6 +69,10 @@ export function getOptions(proxy: Proxy, secure: boolean, certificates: Certific
   const proxyUrl = getProxyUrl(proxy, secure);
   if (proxyUrl) {
     options.agent = createProxyAgent(secure, proxyUrl, certificates);
+  } else {
+    options.agent = new https.Agent({
+      ca: certificates.getAllCertificates(),
+    });
   }
   return options;
 }

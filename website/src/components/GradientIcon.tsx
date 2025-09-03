@@ -8,7 +8,7 @@ interface GradientIconProps {
 }
 
 // By default we cannot "gradient" the icons because they are not SVGs, so we use a workaround
-export default function GradientIcon({ icon, size = 12, className = '' }: GradientIconProps): JSX.Element {
+export default function GradientIcon({ icon, size = 12, className = '' }: Readonly<GradientIconProps>): JSX.Element {
   return (
     <div
       className={`inline-block bg-gradient-to-r from-sky-600 to-purple-600 ${className}`}
