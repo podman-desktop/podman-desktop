@@ -20,7 +20,7 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
-import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
+import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
 import type { PodmanVirtualizationProviders } from '../../core/types';
 import { BasePage } from '../base-page';
@@ -35,8 +35,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
-  readonly providerTypeDiv: Locator;
-  readonly providerTypeDropdownOption: Locator;
+  providerType: Locator;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -61,8 +60,7 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
-    this.providerTypeDiv = this.podmanMachineConfiguration.getByLabel('Provider Type');
-    this.providerTypeDropdownOption = this.getProviderTypeDropdownOption(getVirtualizationProvider() ?? '');
+    this.providerType = this.getProviderType(getDefaultVirtualizationProvider() ?? '');
 
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
@@ -73,8 +71,10 @@ export class MachineCreationForm extends BasePage {
    * @param providerName - The name of the provider to get the option for (e.g. 'hyperv', 'wsl', 'default GPU enabled (LibKrun)', 'Apple HyperVisor')
    * @returns The provider type option locator for the given provider name.
    */
-  getProviderTypeDropdownOption(providerName: string): Locator {
-    return this.providerTypeDiv.getByRole('button', { name: providerName, exact: false }); //not case-sensitive due to windows options
+  getProviderType(providerName: string): Locator {
+    return this.podmanMachineConfiguration
+      .getByLabel('Provider Type')
+      .getByRole('button', { name: providerName, exact: false }); //not case-sensitive due to windows options
   }
 
   async setupAndCreateMachine(
@@ -103,18 +103,33 @@ export class MachineCreationForm extends BasePage {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
       }
       if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
-        await playExpect(this.providerTypeDiv).toBeVisible({ timeout: 10_000 });
-        await playExpect(this.providerTypeDiv).toContainText(getDefaultVirtualizationProvider(), { ignoreCase: true });
-        await this.providerTypeDiv.scrollIntoViewIfNeeded();
-        await this.providerTypeDiv.click();
-        await playExpect(this.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
-        await this.providerTypeDropdownOption.click();
-        await playExpect(this.providerTypeDiv).toContainText(virtualizationProvider, { ignoreCase: true });
+        await this.selectProviderType(virtualizationProvider);
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
       await playExpect(this.createMachineButton).toBeEnabled();
       await this.createMachineButton.click();
+    });
+  }
+
+  async selectProviderType(newProviderType: PodmanVirtualizationProviders): Promise<void> {
+    return test.step(`Select provider type: ${newProviderType}`, async () => {
+      // Get the current provider type text
+      await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
+      const currentProviderText = await this.providerType.innerText();
+
+      // Only proceed if the new provider type is different from the current one
+      if (newProviderType !== currentProviderText) {
+        // Click the current provider to open the dropdown
+        await this.providerType.scrollIntoViewIfNeeded();
+        await this.providerType.click();
+
+        // Select the new provider option
+        this.providerType = this.getProviderType(newProviderType);
+        await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
+        await playExpect(this.providerType).toContainText(newProviderType, { ignoreCase: true });
+        await this.providerType.click();
+      }
     });
   }
 
