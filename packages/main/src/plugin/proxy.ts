@@ -18,7 +18,7 @@
 
 import type { Event, ProxySettings } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
-import { ProxyAgent } from 'undici';
+import { Agent, ProxyAgent } from 'undici';
 
 import { Certificates } from '/@/plugin/certificates.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
@@ -205,11 +205,22 @@ export class Proxy {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const _me = this;
     globalThis.fetch = function (url: URL | RequestInfo, opts?: object): Promise<Response> {
-      const proxyurl = getProxyUrl(_me, asURL(url).protocol === 'https:');
+      const urlObj = asURL(url);
+      const proxyurl = getProxyUrl(_me, urlObj.protocol === 'https:');
       if (proxyurl) {
         opts = {
           ...opts,
           dispatcher: new ProxyAgent({ uri: proxyurl, proxyTls: { ca: _me.certificates.getAllCertificates() } }),
+        };
+      } else if (urlObj.protocol === 'https') {
+        // configure certificates
+        opts = {
+          ...opts,
+          dispatcher: new Agent({
+            connect: {
+              ca: _me.certificates.getAllCertificates(),
+            },
+          }),
         };
       }
 
