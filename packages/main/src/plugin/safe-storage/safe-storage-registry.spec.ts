@@ -22,7 +22,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { safeStorage } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { Directories } from '/@/plugin/directories.js';
+import { type Directories } from '/@/plugin/directories.js';
 
 import type { SecretStorageChangeEvent } from './safe-storage-registry.js';
 import { SafeStorageRegistry } from './safe-storage-registry.js';
