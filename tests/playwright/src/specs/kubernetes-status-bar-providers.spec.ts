@@ -30,6 +30,7 @@ import {
   ensureCliInstalled,
   handleConfirmationDialog,
   setStatusBarProvidersFeature,
+  verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
@@ -109,12 +110,13 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     const podmanResources = new ResourceConnectionCardPage(page, 'podman');
     await podmanResources.createButton.click();
     const createMachinePage = new CreateMachinePage(page);
-    const resourcesPage = await createMachinePage.createMachine(newMachineName, {
+    await createMachinePage.createMachine(newMachineName, {
       startNow: true,
       setAsDefault: false,
       virtualizationProvider: getVirtualizationProvider(),
     });
-    await resourcesPage.verifyVirtualizationProvider(
+    await verifyVirtualizationProvider(
+      podmanResources,
       newMachineName,
       getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
     );

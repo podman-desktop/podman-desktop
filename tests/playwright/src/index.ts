@@ -28,6 +28,7 @@ export * from './utility/fixtures';
 export * from './utility/kubernetes';
 export * from './utility/operations';
 export * from './utility/platform';
+export * from './utility/provider';
 export * from './utility/wait';
 
 // exports Podman Desktop Page Object Module

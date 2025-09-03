@@ -29,6 +29,7 @@ import {
   deletePodmanMachine,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
+  verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
@@ -165,7 +166,10 @@ test.describe
         await podmanMachineCreatePage.goBackButton.click();
       });
 
-      await resourcesPage.verifyVirtualizationProvider(
+      await playExpect(resourcesPage.heading).toBeVisible();
+      const podmanResources = new ResourceConnectionCardPage(page, 'podman');
+      await verifyVirtualizationProvider(
+        podmanResources,
         ROOTLESS_PODMAN_MACHINE_VISIBLE,
         getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
       );

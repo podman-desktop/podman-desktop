@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { isMac, isWindows } from '..';
 import { PodmanVirtualizationProviders } from '../model/core/types';
+import { isMac, isWindows } from './platform';
 
 export const envProvider = process.env.CONTAINERS_MACHINE_PROVIDER;
 

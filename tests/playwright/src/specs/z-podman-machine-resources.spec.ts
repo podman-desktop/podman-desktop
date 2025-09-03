@@ -31,6 +31,7 @@ import {
   deletePodmanMachineFromCLI,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
+  verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
@@ -175,11 +176,13 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
           startNow: false,
           virtualizationProvider: getVirtualizationProvider(),
         });
-        await resourcePage.verifyVirtualizationProvider(
+        await verifyVirtualizationProvider(
+          podmanResources,
           PODMAN_MACHINE_NAME,
           getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
         );
 
+        await playExpect(resourcePage.heading).toBeVisible();
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
         playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
         playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
