@@ -16,11 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect as playExpect, type Locator, type Page, test } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
-import { getDefaultVirtualizationProvider } from '/@/utility/provider';
-
-import type { PodmanVirtualizationProviders } from '../core/types';
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { OnboardingPage } from './onboarding-page';
 
@@ -40,25 +37,5 @@ export class PodmanOnboardingPage extends OnboardingPage {
     this.machineCreationForm = new MachineCreationForm(this.page);
     this.podmanMachineShowLogsButton = this.mainPage.getByRole('button', { name: 'Show Logs' });
     this.goBackButton = this.page.getByRole('button', { name: 'Go back to resources' });
-  }
-
-  public async specifyVirtualizationProvider(
-    virtualizationProvider: PodmanVirtualizationProviders | undefined,
-  ): Promise<void> {
-    return test.step(`Set Podman Provider to be ${virtualizationProvider}`, async () => {
-      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
-        await playExpect(this.machineCreationForm.providerTypeDiv).toBeVisible({ timeout: 10_000 });
-        await playExpect(this.machineCreationForm.providerTypeDiv).toContainText(getDefaultVirtualizationProvider(), {
-          ignoreCase: true,
-        });
-        await this.machineCreationForm.providerTypeDiv.scrollIntoViewIfNeeded();
-        await this.machineCreationForm.providerTypeDiv.click();
-        await playExpect(this.machineCreationForm.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
-        await this.machineCreationForm.providerTypeDropdownOption.click();
-        await playExpect(this.machineCreationForm.providerTypeDiv).toContainText(virtualizationProvider, {
-          ignoreCase: true,
-        });
-      }
-    });
   }
 }

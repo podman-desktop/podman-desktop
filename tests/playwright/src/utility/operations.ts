@@ -27,6 +27,7 @@ import { ResourceElementState } from '../model/core/states';
 import type { PodmanVirtualizationProviders } from '../model/core/types';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import { ExperimentalPage } from '../model/pages/experimental-page';
+import type { MachineCreationForm } from '../model/pages/forms/machine-creation-form';
 import { PreferencesPage } from '../model/pages/preferences-page';
 import { RegistriesPage } from '../model/pages/registries-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
@@ -35,6 +36,7 @@ import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { isLinux, isMac, isWindows } from './platform';
+import { getDefaultVirtualizationProvider } from './provider';
 import { waitUntil, waitWhile } from './wait';
 
 /**
@@ -501,6 +503,37 @@ export async function readFileInVolumeFromCLI(volumeName: string, fileName: stri
       return output.toString();
     } catch (error) {
       throw new Error(`Error reading file: ${fileName} in volume: ${volumeName} from CLI: ${error}`);
+    }
+  });
+}
+
+/**
+ * Specifies the virtualization provider for a Podman machine during creation through the onboarding page.
+ * This method selects the specified virtualization provider from the dropdown if it differs from the default.
+ * If no provider is specified or it matches the default, no action is taken.
+ *
+ * @param machineCreationForm - The machine creation form page object containing UI elements
+ * @param virtualizationProvider - The virtualization provider to select (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV, etc.), or undefined to use default
+ * @returns A Promise that resolves when the provider selection is complete
+ * @throws Will throw an error if the provider dropdown is not accessible or the specified provider is not available
+ */
+export async function specifyVirtualizationProvider(
+  machineCreationForm: MachineCreationForm,
+  virtualizationProvider: PodmanVirtualizationProviders | undefined,
+): Promise<void> {
+  return test.step(`Set Podman Provider to be ${virtualizationProvider}`, async () => {
+    if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
+      await playExpect(machineCreationForm.providerTypeDiv).toBeVisible({ timeout: 10_000 });
+      await playExpect(machineCreationForm.providerTypeDiv).toContainText(getDefaultVirtualizationProvider(), {
+        ignoreCase: true,
+      });
+      await machineCreationForm.providerTypeDiv.scrollIntoViewIfNeeded();
+      await machineCreationForm.providerTypeDiv.click();
+      await playExpect(machineCreationForm.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
+      await machineCreationForm.providerTypeDropdownOption.click();
+      await playExpect(machineCreationForm.providerTypeDiv).toContainText(virtualizationProvider, {
+        ignoreCase: true,
+      });
     }
   });
 }
