@@ -19,15 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import PasswordStringItem from './PasswordStringItem.svelte';
-
-beforeAll(() => {
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
-});
 
 test('Ensure HTMLInputElement', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
@@ -41,8 +37,7 @@ test('Ensure HTMLInputElement', async () => {
   render(PasswordStringItem, { record, value: '' });
   const input = screen.getByLabelText('password input-standard-record');
   expect(input).toBeInTheDocument();
-
-  expect(input instanceof HTMLInputElement).toBe(true);
+  expect(input).toBeInstanceOf(HTMLInputElement);
 });
 
 test('Ensure HTMLInputElement readonly', async () => {
