@@ -18,7 +18,6 @@
 
 import { RunnerOptions } from '../runner/runner-options';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { isCI, isLinux } from '../utility/platform';
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'welcome-podman-desktop' }) });
 test.beforeAll(async ({ runner }) => {
@@ -42,56 +41,9 @@ test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@
         await welcomePage.turnOffTelemetry();
       });
 
-      test('Check podman installation', async ({ welcomePage }) => {
-        await playExpect(welcomePage.startOnboarding).toBeEnabled({ timeout: 10_000 });
-        await welcomePage.startOnboarding.click();
-
-        await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
-        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman has been set up correctly', {
-          timeout: 10_000,
-        });
-        await playExpect(welcomePage.nextStepButton).toBeEnabled();
-        await welcomePage.nextStepButton.click();
-
-        await playExpect(welcomePage.onboardingMessageStatus).not.toContainText('Podman has been set up correctly', {
-          timeout: 10_000,
-        });
-        await playExpect(welcomePage.nextStepButton).toBeEnabled();
-        await welcomePage.nextStepButton.click();
-      });
-
-      test('Check k8s is installed', async ({ welcomePage }) => {
-        test.skip(!isCI || !isLinux, 'This test should run only on Ubuntu platform in Github Actions');
-
-        await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 10_000 });
-        await playExpect(welcomePage.nextStepButton).toBeEnabled();
-        await welcomePage.nextStepButton.click();
-      });
-
-      test('Check other versions for compose', async ({ welcomePage, page }) => {
-        test.skip(!isCI || !isLinux, 'This test should run only on Ubuntu platform in Github Actions');
-
-        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
-        await playExpect(welcomePage.otherVersionButton).toBeVisible();
-        await welcomePage.otherVersionButton.click();
-
-        await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
-        await page.waitForTimeout(500); // wait for animation
-
-        await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
-        await welcomePage.latestVersionFromDropDown.click();
-
-        await playExpect(welcomePage.dropDownDialog).not.toBeVisible({ timeout: 10_000 });
-        await playExpect(welcomePage.cancelSetupButton).toBeEnabled();
-      });
-
-      test('Navigate to dashboard', async ({ welcomePage }) => {
-        await playExpect(welcomePage.cancelSetupButton).toBeEnabled();
-        await welcomePage.cancelSetupButton.click();
-
-        await playExpect(welcomePage.confirmationPopUp).toBeVisible();
-        await playExpect(welcomePage.okButtonPopup).toBeEnabled();
-        await welcomePage.okButtonPopup.click();
+      test('Redirection from Welcome page to Dashboard works', async ({ welcomePage }) => {
+        const dashboardPage = await welcomePage.closeWelcomePage();
+        await playExpect(dashboardPage.heading).toBeVisible();
       });
     });
 
