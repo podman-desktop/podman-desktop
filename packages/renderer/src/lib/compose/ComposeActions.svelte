@@ -138,8 +138,7 @@ if (dropdownMenu) {
   enabled={!compose.actionInProgress}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'STARTING'}
-  icon={faPlay}
-  iconOffset="pl-[0.15rem]" />
+  icon={faPlay} />
 
 <ListItemButtonIcon
   title="Stop Compose"

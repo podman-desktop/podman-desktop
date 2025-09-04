@@ -10,21 +10,12 @@ interface Props {
   action: string;
   icon: IconDefinition;
   state?: ILoadingStatus;
-  leftPosition: string;
   color?: 'primary' | 'secondary';
   tooltip?: string;
   clickAction: () => Promise<void> | void;
 }
 
-const {
-  action,
-  icon,
-  state,
-  leftPosition,
-  color = 'secondary',
-  tooltip = capitalize(action),
-  clickAction,
-}: Props = $props();
+const { action, icon, state, color = 'secondary', tooltip = capitalize(action), clickAction }: Props = $props();
 
 const disable = $derived.by(() => {
   if (state?.inProgress || state?.status === 'unsupported') {
@@ -62,10 +53,6 @@ const style = $derived(
   <button aria-label={capitalize(action)} class="px-2.5 py-2 {style}" onclick={clickAction} disabled={disable}>
     <LoadingIcon
       icon={icon}
-      loadingWidthClass="w-6"
-      loadingHeightClass="h-6"
-      positionTopClass="top-0.5"
-      positionLeftClass={leftPosition}
       loading={loading} />
   </button>
 </Tooltip>

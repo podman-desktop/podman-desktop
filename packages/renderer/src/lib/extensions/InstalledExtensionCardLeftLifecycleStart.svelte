@@ -26,5 +26,5 @@ async function startExtension(): Promise<void> {
     action="start"
     icon={faPlay}
     state={{ status: extension.state, inProgress }}
-    leftPosition="left-[0.15rem]" />
+    />
 {/if}

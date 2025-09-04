@@ -178,7 +178,6 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                   }
                 }}
                 icon={faCircleArrowDown}
-                leftPosition="left-[0.25rem]"
                 state={cliToolInstallStatus}
                 color="primary"
                 tooltip={`Install ${cliTool.displayName}`} />
@@ -194,7 +193,6 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                   }
                 }}
                 icon={faCircleArrowUp}
-                leftPosition="left-[0.25rem]"
                 state={cliToolUpdateStatus}
                 color="primary"
                 tooltip={!cliTool.canUpdate
@@ -214,7 +212,6 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
                   }
                 }}
                 icon={faTrash}
-                leftPosition="left-[0.25rem]"
                 state={cliToolUninstallStatus}
                 color="secondary"
                 tooltip={`Uninstall ${cliTool.displayName}`} />
