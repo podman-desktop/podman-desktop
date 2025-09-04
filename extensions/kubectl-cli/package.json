@@ -152,7 +152,7 @@
     "shell-path": "^3.1.0"
   },
   "devDependencies": {
-    "@types/semver": "^7.7.0",
+    "@types/semver": "^7.7.1",
     "adm-zip": "^0.5.16",
     "byline": "^5.0.0",
     "copyfiles": "^2.4.1",

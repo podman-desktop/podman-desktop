@@ -185,7 +185,7 @@
     "@docker/extension-api-client-types": "0.4.2",
     "@kubernetes/client-node": "^1.3.0",
     "@segment/analytics-node": "^2.3.0",
-    "@types/semver": "^7.7.0",
+    "@types/semver": "^7.7.1",
     "@types/stream-json": "^1.7.8",
     "@types/winreg": "^1.2.36",
     "adm-zip": "^0.5.16",
