@@ -167,7 +167,7 @@ test.describe
       });
 
       await playExpect(resourcesPage.heading).toBeVisible();
-      const podmanResources = new ResourceConnectionCardPage(page, 'podman');
+      const podmanResources = new ResourceConnectionCardPage(page, 'podman', ROOTLESS_PODMAN_MACHINE_VISIBLE);
       await verifyVirtualizationProvider(
         podmanResources,
         ROOTLESS_PODMAN_MACHINE_VISIBLE,
