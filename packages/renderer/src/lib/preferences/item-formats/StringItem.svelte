@@ -11,8 +11,9 @@ let invalidEntry = false;
 
 function onInput(event: Event): void {
   const target = event.target as HTMLInputElement;
-  if (record.id && target.value !== value)
+  if (record.id && target.value !== value) {
     onChange(record.id, target.value).catch((_: unknown) => (invalidEntry = true));
+  }
 }
 </script>
 
@@ -21,7 +22,7 @@ function onInput(event: Event): void {
   class="grow"
   name={record.id}
   placeholder={record.placeholder}
-  bind:value={value}
+  value={value}
   readonly={!!record.readonly}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}

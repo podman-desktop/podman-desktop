@@ -33,6 +33,8 @@ import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { type IDisposable } from '/@/plugin/types/disposable.js';
 import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
+import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
+
 const mockKubeConfig = {
   makeApiClient: vi.fn(),
 };
@@ -55,7 +57,9 @@ const apiSender: ApiSenderType = {} as unknown as ApiSenderType;
 const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;
 const fileSystemMonitoring: FilesystemMonitoring = new FilesystemMonitoring();
 const telemetry: Telemetry = {} as unknown as Telemetry;
-
+const experimentalConfigurationManager: ExperimentalConfigurationManager = {
+  isExperimentalConfigurationEnabled: vi.fn(),
+} as unknown as ExperimentalConfigurationManager;
 vi.mock('@kubernetes/client-node', async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await vi.importActual<typeof import('@kubernetes/client-node')>('@kubernetes/client-node');
@@ -166,7 +170,13 @@ describe('PortForwardConnectionService', () => {
 
   beforeEach(() => {
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
+      new KubernetesClient(
+        apiSender,
+        configurationRegistry,
+        fileSystemMonitoring,
+        telemetry,
+        experimentalConfigurationManager,
+      ),
     );
     global.fetch = vi.fn();
     mockKubeConfig.makeApiClient.mockImplementation(api => {
@@ -240,7 +250,13 @@ describe('PortForwardConnectionService', () => {
     );
 
     service = new TestablePortForwardConnectionService(
-      new KubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry),
+      new KubernetesClient(
+        apiSender,
+        configurationRegistry,
+        fileSystemMonitoring,
+        telemetry,
+        experimentalConfigurationManager,
+      ),
     );
 
     const createdServer = service.createServer(forwardSetup as never);

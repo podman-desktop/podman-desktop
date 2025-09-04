@@ -11,6 +11,9 @@
 [![FOSSA License Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=license)
 [![FOSSA Security Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpodman-desktop%2Fpodman-desktop?ref=badge_shield&issueType=security)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-podmandesktop-blue.svg?logo=linkedin)](https://www.linkedin.com/company/podman-desktop/)
+[![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=podman-desktop-podman-desktop)](https://insights.linuxfoundation.org/project/podman-desktop-podman-desktop)
+[![LFX Contributors](https://insights.linuxfoundation.org/api/badge/contributors?project=podman-desktop-podman-desktop)](https://insights.linuxfoundation.org/project/podman-desktop-podman-desktop)
+[![LFX Active Contributors](https://insights.linuxfoundation.org/api/badge/active-contributors?project=podman-desktop-podman-desktop)](https://insights.linuxfoundation.org/project/podman-desktop-podman-desktop)
 
 <p align="center">
   <img alt="Podman Desktop" src="/website/static/img/features/manage-containers.webp">

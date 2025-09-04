@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ExtensionState } from '../model/core/states';
 import type { DashboardPage } from '../model/pages/dashboard-page';
 import type { ExtensionDetailsPage } from '../model/pages/extension-details-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
@@ -25,8 +26,6 @@ import { expect as playExpect, test } from '../utility/fixtures';
 const extensionLabel = 'podman-desktop.podman';
 const extensionLabelName = 'podman';
 const extensionHeading = 'podman';
-const PODMAN_EXTENSION_STATUS_ACTIVE: string = 'ACTIVE';
-const PODMAN_EXTENSION_STATUS_DISABLED: string = 'DISABLED';
 const SETTINGS_NAVBAR_PREFERENCES_PODMAN_EXTENSION: string = 'Extension: Podman';
 
 let dashboardPage: DashboardPage;
@@ -88,9 +87,9 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
   // --------------------------
 
   if (enabled) {
-    await playExpect(extensionStatusLabel).toContainText(PODMAN_EXTENSION_STATUS_ACTIVE, { timeout: 20_000 });
+    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Active, { timeout: 20_000 });
   } else {
-    await playExpect(extensionStatusLabel).toContainText(PODMAN_EXTENSION_STATUS_DISABLED, { timeout: 20_000 });
+    await playExpect(extensionStatusLabel).toContainText(ExtensionState.Disabled, { timeout: 20_000 });
   }
   // always present and visible
   const extensionsPageAfter = await navigationBar.openExtensions();
@@ -108,7 +107,7 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
     await playExpect(podmanExtensionPage.disableButton).toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(PODMAN_EXTENSION_STATUS_ACTIVE)).toBeVisible();
+    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Active)).toBeVisible();
   } else {
     await playExpect(podmanExtensionPage.enableButton).toBeVisible({
       timeout: 10_000,
@@ -116,7 +115,7 @@ async function verifyPodmanExtensionStatus(enabled: boolean): Promise<void> {
     await playExpect(podmanExtensionPage.disableButton).not.toBeVisible({
       timeout: 10_000,
     });
-    await playExpect(podmanExtensionPage.status.getByText(PODMAN_EXTENSION_STATUS_DISABLED)).toBeVisible();
+    await playExpect(podmanExtensionPage.status.getByText(ExtensionState.Disabled)).toBeVisible();
   }
 
   // expand Settings -> Preferences menu

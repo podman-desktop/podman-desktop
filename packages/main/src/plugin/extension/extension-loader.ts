@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { ColorRegistry } from '/@/plugin/color-registry.js';
 import {
@@ -87,6 +87,7 @@ import { Disposable } from '../types/disposable.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
+import { getFreePort } from '../util/port.js';
 import { ViewRegistry } from '../view-registry.js';
 import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
@@ -116,7 +117,7 @@ export interface AnalyzedExtensionWithApi extends AnalyzedExtension {
  * Handle the loading of an extension
  */
 @injectable()
-export class ExtensionLoader {
+export class ExtensionLoader implements AsyncDisposable {
   private moduleLoader: ModuleLoader;
 
   protected activatedExtensions = new Map<string, ActivatedExtension>();
@@ -220,6 +221,21 @@ export class ExtensionLoader {
     this.extensionsStorageDirectory = directories.getExtensionsStorageDirectory();
     this.moduleLoader = new ModuleLoader(require('node:module'), this.analyzedExtensions);
     this.extensionDevelopmentFolder.onNeedToLoadExension(extension => this.loadExtension(extension));
+  }
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.stopAllExtensions();
+
+    // clear maps
+    this.activatedExtensions.clear();
+    this.analyzedExtensions.clear();
+    this.reloadInProgressExtensions.clear();
+    this.extensionState.clear();
+    this.extensionStateErrors.clear();
+
+    // clear emitter
+    this._onDidChange.dispose();
   }
 
   mapError(err: unknown): ExtensionError | undefined {
@@ -1259,6 +1275,9 @@ export class ExtensionLoader {
       listPods(): Promise<PodInfo[]> {
         return containerProviderRegistry.listPods();
       },
+      inspectPod(engineId: string, podId: string): Promise<containerDesktopAPI.PodInspectInfo> {
+        return containerProviderRegistry.getPodInspect(engineId, podId);
+      },
       stopPod(engineId: string, podId: string): Promise<void> {
         return containerProviderRegistry.stopPod(engineId, podId);
       },
@@ -1529,6 +1548,10 @@ export class ExtensionLoader {
       },
     };
 
+    const net: typeof containerDesktopAPI.net = {
+      getFreePort,
+    };
+
     const version = app.getVersion();
 
     return <typeof containerDesktopAPI>{
@@ -1564,6 +1587,7 @@ export class ExtensionLoader {
       imageChecker,
       navigation,
       RepositoryInfoParser,
+      net,
     };
   }
 

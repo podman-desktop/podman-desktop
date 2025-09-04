@@ -67,3 +67,10 @@ $ exit
 ```
 
 7. Run the `exit` command to exit the Podman machine.
+
+8. Optional: Reboot the Podman machine.
+
+```sh
+$ podman machine stop <machine_name>
+$ podman machine start <machine_name>
+```

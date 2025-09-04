@@ -6,9 +6,13 @@ import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let image: ImageInfoUI;
+interface Props {
+  image: ImageInfoUI;
+}
 
-let inspectDetails: string;
+let { image }: Props = $props();
+
+let inspectDetails: string | undefined = $state();
 
 onMount(async () => {
   // grab inspect result from the container

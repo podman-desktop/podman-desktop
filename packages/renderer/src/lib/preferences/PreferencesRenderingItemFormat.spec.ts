@@ -197,9 +197,27 @@ test('Expect a fileinput when record is type string and format file', async () =
   expect(readOnlyInput).toBeInTheDocument();
   expect(readOnlyInput instanceof HTMLInputElement).toBe(true);
   expect((readOnlyInput as HTMLInputElement).placeholder).toBe(record.placeholder);
-  expect((readOnlyInput as HTMLInputElement).readOnly).toBeTruthy();
+  // readOnly by default is false now
+  expect((readOnlyInput as HTMLInputElement).readOnly).toBeFalsy();
   const input = screen.getByLabelText('browse');
   expect(input).toBeInTheDocument();
+});
+
+test('Expect a fileinput with readonly being true, to show readOnly in element', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    title: 'record',
+    parentId: 'parent.record',
+    placeholder: 'Example: text',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+    readonly: true,
+  };
+  await awaitRender(record, {});
+  const readOnlyInput = screen.getByLabelText('record-description');
+  expect(readOnlyInput).toBeInTheDocument();
+  expect(readOnlyInput instanceof HTMLInputElement).toBe(true);
+  expect((readOnlyInput as HTMLInputElement).readOnly).toBe(true);
 });
 
 test('Expect an editable text fileinput when record is type string and format file', async () => {

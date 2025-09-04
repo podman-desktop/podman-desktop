@@ -64,7 +64,7 @@ Podman Desktop requires [Podman Engine](https://docs.podman.io/en/latest/index.h
 2. Run the command mentioned below.
 
    ```sh
-   brew install podman-desktop
+   brew install --cask podman-desktop
    ```
 
    Homebrew will also install the Podman Engine along with the Podman Desktop application, in case you don't have it installed yet.

@@ -20,6 +20,7 @@ import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 
+import { ResourceElementState } from '../model/core/states';
 import type { DashboardPage } from '../model/pages/dashboard-page';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
@@ -27,8 +28,8 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, deletePodmanMachine } from '../utility/operations';
-import { isLinux, isMac } from '../utility/platform';
+import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
+import { isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const PODMAN_MACHINE_STARTUP_TIMEOUT: number = 360_000;
@@ -68,16 +69,12 @@ test.afterAll(async ({ runner }) => {
   test.setTimeout(120_000);
 
   if (test.info().status === 'failed') {
+    await resetPodmanMachinesFromCLI();
     await createPodmanMachineFromCLI();
   }
 
   await runner.close();
 });
-
-test.skip(
-  isMac,
-  'Skip this test suite on MacOS until issue https://github.com/podman-desktop/podman-desktop/issues/12334 is fixed',
-);
 
 test.describe
   .serial('Podman Machine verification', () => {
@@ -87,6 +84,7 @@ test.describe
           dashboardPage = await navigationBar.openDashboard();
           await playExpect(dashboardPage.mainPage).toBeVisible();
           await playExpect(dashboardPage.notificationsBox).toBeVisible();
+
           notificationPodmanSetup = dashboardPage.notificationsBox
             .getByRole('region', { name: 'id:' })
             .filter({ hasText: 'Podman needs to be set up' });
@@ -203,25 +201,35 @@ test.describe
 
             test('Podman machine operations - STOP', async ({ page }) => {
               const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
-              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 60_000 });
+              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+                timeout: 60_000,
+              });
               await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
               await podmanMachineDetails.podmanMachineStopButton.click();
-              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 60_000 });
+              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+                timeout: 60_000,
+              });
             });
 
             test('Podman machine operations - START', async ({ page }) => {
               const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
               await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
               await podmanMachineDetails.podmanMachineStartButton.click();
-              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+                timeout: 90_000,
+              });
             });
 
             test('Podman machine operations - RESTART', async ({ page }) => {
               const podmanMachineDetails = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME);
               await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
               await podmanMachineDetails.podmanMachineRestartButton.click();
-              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 60_000 });
-              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+                timeout: 60_000,
+              });
+              await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+                timeout: 90_000,
+              });
             });
           });
       });

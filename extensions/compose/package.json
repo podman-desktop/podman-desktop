@@ -2,7 +2,7 @@
   "name": "compose",
   "displayName": "Compose",
   "description": "Install Compose binary to work with Podman",
-  "version": "1.21.0-next",
+  "version": "1.22.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -169,14 +169,14 @@
   "dependencies": {
     "@octokit/rest": "^22.0.0",
     "mustache": "^4.2.0",
-    "shell-path": "^3.0.0"
+    "shell-path": "^3.1.0"
   },
   "devDependencies": {
     "@podman-desktop/api": "workspace:*",
     "@types/mustache": "^4.2.6",
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
-    "vite": "^7.0.6",
+    "vite": "^7.1.4",
     "vitest": "^3.2.4"
   }
 }

@@ -19,6 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 import type { KubernetesResources } from '../core/types';
+import { KubernetesDashboardPage } from './kubernetes-dashboard-page';
 import { KubernetesResourcePage } from './kubernetes-resource-page';
 
 export class KubernetesBar {
@@ -46,6 +47,12 @@ export class KubernetesBar {
       default:
         return new KubernetesResourcePage(this.page, kubernetesResource);
     }
+  }
+
+  public async openKubernetesDashboardPage(): Promise<KubernetesDashboardPage> {
+    const dashboardLink = this.kubernetesNavBar.getByRole('link', { name: 'Dashboard', exact: true });
+    await dashboardLink.click();
+    return new KubernetesDashboardPage(this.page);
   }
 
   public getSettingsNavBarTabLocator(name: string): Locator {

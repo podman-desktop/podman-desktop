@@ -33,7 +33,7 @@ export function MacOSDownloads(): JSX.Element {
   } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   const copyBrewInstructions = async (): Promise<void> => {
-    await navigator.clipboard.writeText('brew install podman-desktop');
+    await navigator.clipboard.writeText('brew install --cask podman-desktop');
   };
 
   return (
@@ -109,7 +109,7 @@ export function MacOSDownloads(): JSX.Element {
                 <div className="dark:bg-charcoal-800/50 bg-zinc-300/50 p-1 truncate">
                   <p className="text-xl dark:text-purple-200 text-purple-600">
                     <FontAwesomeIcon size="xs" icon={faTerminal} className="mx-2 mt-3" />
-                    brew install podman-desktop
+                    brew install --cask podman-desktop
                     <button title="Copy To Clipboard" className="mr-2 p-1">
                       {' '}
                       <FontAwesomeIcon

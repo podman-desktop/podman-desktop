@@ -30,6 +30,7 @@ export class ContainersPage extends MainPage {
   readonly createContainerButton: Locator;
   readonly playKubernetesYAMLButton: Locator;
   readonly pruneConfirmationButton: Locator;
+  readonly runAllContainersButton: Locator;
 
   constructor(page: Page) {
     super(page, 'containers');
@@ -45,6 +46,7 @@ export class ContainersPage extends MainPage {
     this.pruneConfirmationButton = this.page.getByRole('button', {
       name: 'Yes',
     });
+    this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
   }
 
   async openContainersDetails(name: string): Promise<ContainerDetailsPage> {
@@ -121,35 +123,6 @@ export class ContainersPage extends MainPage {
     return this.getRowByName(name);
   }
 
-  async uncheckAllContainers(): Promise<void> {
-    return test.step('Uncheck all containers', async () => {
-      let containersTable;
-      try {
-        containersTable = await this.getTable();
-        await playExpect(containersTable).toBeVisible();
-        const controlRow = containersTable.getByRole('row').first();
-        await playExpect(controlRow).toBeAttached();
-        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
-        await playExpect(checkboxColumnHeader).toBeAttached();
-        const containersToggle = checkboxColumnHeader.getByTitle('Toggle all');
-        await playExpect(containersToggle).toBeAttached();
-        // <svg> cannot be resolved using getByRole('img') ; const containersToggleSvg = containersToggle.getByRole('img');
-
-        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-indeterminate')) {
-          await containersToggle.click();
-        }
-
-        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-checked')) {
-          await containersToggle.click();
-        }
-
-        playExpect(await containersToggle.innerHTML()).toContain('pd-input-checkbox-unchecked');
-      } catch (err) {
-        console.log(`Exception caught on containers page when checking cells for unchecking with message: ${err}`);
-      }
-    });
-  }
-
   async containerExists(name: string): Promise<boolean> {
     return (await this.getContainerRowByName(name)) !== undefined;
   }
@@ -183,5 +156,13 @@ export class ContainersPage extends MainPage {
       return image;
     }
     return '';
+  }
+
+  async startAllContainers(): Promise<ContainersPage> {
+    return test.step('Start all containers', async () => {
+      await this.checkAllRows();
+      await this.runAllContainersButton.click();
+      return this;
+    });
   }
 }

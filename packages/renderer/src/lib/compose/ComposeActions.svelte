@@ -28,6 +28,12 @@ onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_COMPOSE);
 });
 
+let hideStartForStop = false;
+let hideStopForStart = false;
+
+$: someNeedStart = compose.containers?.some(c => c.state !== 'RUNNING');
+$: someNeedStop = compose.containers?.some(c => c.state === 'RUNNING');
+
 function inProgress(inProgress: boolean, state?: string): void {
   compose.actionInProgress = inProgress;
   // reset error when starting task
@@ -59,6 +65,7 @@ function handleError(errorMessage: string): void {
 }
 
 async function startCompose(): Promise<void> {
+  hideStopForStart = !someNeedStop;
   inProgress(true, 'STARTING');
   try {
     await window.startContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -69,6 +76,7 @@ async function startCompose(): Promise<void> {
   }
 }
 async function stopCompose(): Promise<void> {
+  hideStartForStop = !someNeedStart;
   inProgress(true, 'STOPPING');
   try {
     await window.stopContainersByLabel(compose.engineId, composeLabel, compose.name);
@@ -122,7 +130,12 @@ if (dropdownMenu) {
 <ListItemButtonIcon
   title="Start Compose"
   onClick={startCompose}
-  hidden={compose.status === 'RUNNING' || compose.status === 'STOPPING'}
+  hidden={
+    !compose.actionInProgress
+      ? !someNeedStart
+      : (compose.status === 'STOPPING' && hideStartForStop)
+  }
+  enabled={!compose.actionInProgress}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'STARTING'}
   icon={faPlay}
@@ -131,8 +144,13 @@ if (dropdownMenu) {
 <ListItemButtonIcon
   title="Stop Compose"
   onClick={stopCompose}
-  hidden={!(compose.status === 'RUNNING' || compose.status === 'STOPPING')}
+  hidden={
+    !compose.actionInProgress
+      ? !someNeedStop
+      : (compose.status === 'STARTING' && hideStopForStart)
+  }
   detailed={detailed}
+  enabled={!compose.actionInProgress}
   inProgress={compose.actionInProgress && compose.status === 'STOPPING'}
   icon={faStop} />
 

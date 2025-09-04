@@ -5,9 +5,13 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import LoadingIconButton from '../ui/LoadingIconButton.svelte';
 
-export let extension: CombinedExtensionInfoUI;
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
 
-let inProgress = false;
+let { extension }: Props = $props();
+
+let inProgress = $state(false);
 
 async function deleteExtension(): Promise<void> {
   inProgress = true;

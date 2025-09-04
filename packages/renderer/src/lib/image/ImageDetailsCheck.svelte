@@ -62,7 +62,7 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
       error: '',
     };
     window
-      .imageCheck(provider.info.id, imageInfo, cancellableTokenId)
+      .imageCheck(provider.info.id, $state.snapshot(imageInfo), cancellableTokenId)
       .then(_result => {
         // we test if it is still running, as it could have been marked as 'canceled'
         if (provider.state === 'running') {

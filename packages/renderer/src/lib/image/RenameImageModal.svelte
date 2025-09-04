@@ -6,22 +6,19 @@ import { router } from 'tinro';
 import Dialog from '../dialogs/Dialog.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-export let closeCallback: () => void;
-export let detailed = false;
-export let imageInfoToRename: ImageInfoUI;
-
-let imageName = '';
-let imageTag = '';
-
-let imageNameErrorMessage = '';
-let imageTagErrorMessage = '';
-
-$: {
-  imageNameErrorMessage = imageName === '' ? 'Please enter a value' : '';
+interface Props {
+  closeCallback: () => void;
+  detailed?: boolean;
+  imageInfoToRename: ImageInfoUI;
 }
-$: {
-  imageTagErrorMessage = imageTag === '' ? 'Please enter a value' : '';
-}
+
+let { closeCallback, detailed = false, imageInfoToRename }: Props = $props();
+
+let imageName = $state('');
+let imageTag = $state('');
+
+let imageNameErrorMessage = $derived(imageName === '' ? 'Please enter a value' : '');
+let imageTagErrorMessage = $derived(imageTag === '' ? 'Please enter a value' : '');
 
 onMount(async () => {
   if (imageInfoToRename.name !== '<none>') {
@@ -67,44 +64,48 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
 
 <Dialog
   title="Edit Image"
-  on:close={closeCallback}>
-  <div slot="content" class="w-full">
-    <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Name</label>
-    <Input
-      bind:value={imageName}
-      name="imageName"
-      id="imageName"
-      placeholder="Enter image name (e.g. quay.io/namespace/my-image-name)"
-      aria-invalid={imageNameErrorMessage !== ''}
-      aria-label="imageName"
-      required />
-    {#if imageNameErrorMessage}
-      <ErrorMessage error={imageNameErrorMessage} />
-    {/if}
+  onclose={closeCallback}>
+  {#snippet content()}
+    <div  class="w-full">
+      <label for="imageName" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Name</label>
+      <Input
+        bind:value={imageName}
+        name="imageName"
+        id="imageName"
+        placeholder="Enter image name (e.g. quay.io/namespace/my-image-name)"
+        aria-invalid={imageNameErrorMessage !== ''}
+        aria-label="imageName"
+        required />
+      {#if imageNameErrorMessage}
+        <ErrorMessage error={imageNameErrorMessage} />
+      {/if}
 
-    <label for="imageTag" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Tag</label>
-    <Input
-      bind:value={imageTag}
-      name="imageTag"
-      id="imageTag"
-      placeholder="Enter image tag (e.g. latest)"
-      aria-invalid={imageTagErrorMessage !== ''}
-      aria-label="imageTag"
-      required />
-    {#if imageTagErrorMessage}
-      <ErrorMessage error={imageTagErrorMessage} />
-    {/if}
-  </div>
-  <svelte:fragment slot="buttons">
-    <Button
-      class="pcol-start-3"
-      type="link"
-      on:click={closeCallback}>Cancel</Button>
-    <Button
-      class="col-start-4"
-      disabled={disableSave(imageName, imageTag)}
-      on:click={async (): Promise<void> => {
-        await renameImage(imageName, imageTag);
-      }}>Save</Button>
-  </svelte:fragment>
+      <label for="imageTag" class="block my-2 text-sm font-bold text-[var(--pd-modal-text)]">Image Tag</label>
+      <Input
+        bind:value={imageTag}
+        name="imageTag"
+        id="imageTag"
+        placeholder="Enter image tag (e.g. latest)"
+        aria-invalid={imageTagErrorMessage !== ''}
+        aria-label="imageTag"
+        required />
+      {#if imageTagErrorMessage}
+        <ErrorMessage error={imageTagErrorMessage} />
+      {/if}
+    </div>
+  {/snippet}
+  {#snippet buttons()}
+  
+      <Button
+        class="pcol-start-3"
+        type="link"
+        on:click={closeCallback}>Cancel</Button>
+      <Button
+        class="col-start-4"
+        disabled={disableSave(imageName, imageTag)}
+        on:click={async (): Promise<void> => {
+          await renameImage(imageName, imageTag);
+        }}>Save</Button>
+    
+  {/snippet}
 </Dialog>

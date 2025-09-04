@@ -25,6 +25,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { PodInspectInfo } from '/@/plugin/api/pod-info.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
@@ -165,7 +166,9 @@ const progress: ProgressImpl = {
 
 const statusBarRegistry: StatusBarRegistry = {} as unknown as StatusBarRegistry;
 
-const kubernetesClient: KubernetesClient = {} as unknown as KubernetesClient;
+const kubernetesClient: KubernetesClient = {
+  dispose: vi.fn(),
+} as unknown as KubernetesClient;
 
 const fileSystemMonitoring: FilesystemMonitoring = {} as unknown as FilesystemMonitoring;
 
@@ -186,6 +189,7 @@ const containerProviderRegistry: ContainerProviderRegistry = {
   podmanListImages: vi.fn(),
   listInfos: vi.fn(),
   pullImage: vi.fn(),
+  getPodInspect: vi.fn(),
 } as unknown as ContainerProviderRegistry;
 
 const inputQuickPickRegistry: InputQuickPickRegistry = {} as unknown as InputQuickPickRegistry;
@@ -275,6 +279,7 @@ const extensionWatcher = {
   monitor: vi.fn(),
   untrack: vi.fn(),
   stop: vi.fn(),
+  dispose: vi.fn(),
   reloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
@@ -2194,6 +2199,21 @@ describe('containerEngine', async () => {
     // the signal should be marked as aborted
     expect(controller?.signal.aborted).toBeTruthy();
   });
+
+  test('inspectPod', async () => {
+    const pod: PodInspectInfo = {
+      Id: 'podId',
+    } as PodInspectInfo;
+    vi.mocked(containerProviderRegistry.getPodInspect).mockResolvedValue(pod);
+    const api = createApi();
+
+    expect(api).toBeDefined();
+
+    const inspect = await api.containerEngine.inspectPod('engineId', 'podId');
+    expect(inspect).toEqual(pod);
+
+    expect(containerProviderRegistry.getPodInspect).toHaveBeenCalledWith('engineId', 'podId');
+  });
 });
 
 describe('extensionContext', async () => {
@@ -2623,4 +2643,42 @@ describe('loadDevelopmentFolderExtensions', () => {
 
     consoleErrorSpy.mockRestore();
   });
+});
+
+test('ExtensionLoader async dispose should stop all extensions', async () => {
+  const activateMock = vi.fn().mockResolvedValue(undefined);
+  const deactivateMock = vi.fn().mockResolvedValue(undefined);
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({ get: vi.fn().mockReturnValue(1) });
+
+  const id = 'extension.id';
+  await extensionLoader.activateExtension(
+    {
+      id: id,
+      name: 'id',
+      path: 'dummy',
+      api: {} as typeof containerDesktopAPI,
+      mainPath: '',
+      removable: false,
+      devMode: false,
+      manifest: {},
+      subscriptions: [],
+      readme: '',
+      dispose: vi.fn(),
+    },
+    {
+      activate: activateMock,
+      deactivate: deactivateMock,
+    },
+  );
+
+  const extensions = extensionLoader.getActivatedExtensions();
+  expect(extensions.size).toEqual(1);
+
+  expect(activateMock).toHaveBeenCalledOnce();
+  expect(deactivateMock).not.toHaveBeenCalled();
+
+  await extensionLoader[Symbol.asyncDispose]();
+
+  expect(deactivateMock).toHaveBeenCalledOnce();
 });

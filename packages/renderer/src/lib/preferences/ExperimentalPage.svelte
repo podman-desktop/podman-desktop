@@ -25,6 +25,8 @@ function update(propertyId: string, value: unknown): void {
     values[propertyId] = false;
   } else if (typeof value === 'boolean') {
     values[propertyId] = value;
+  } else if (typeof value === 'object') {
+    values[propertyId] = true;
   }
 }
 
@@ -43,8 +45,15 @@ async function onCheckedAll(event: { detail: boolean }): Promise<void> {
   try {
     for (const property of experimental) {
       if (!property.id) continue;
+      const enabled = await window.isExperimentalConfigurationEnabled(property.id, property.scope);
+      // If is the feature enabled and we want to enable all, enable only those that are not enabled yet
+      // If is the feature disabled and we want to disable all, disable only those that are not disabled yet
+      if (event.detail === enabled) {
+        continue;
+      }
 
-      await window.updateConfigurationValue(property.id, event.detail, property.scope);
+      const settings = event.detail ? {} : undefined;
+      await window.updateExperimentalConfigurationValue(property.id, settings, property.scope);
     }
   } finally {
     loading = false;

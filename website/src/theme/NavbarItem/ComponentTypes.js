@@ -7,10 +7,11 @@ import { GitHubStarsButton } from '@site/src/components/GitHubStarsButton';
 export default {
   ...ComponentTypes,
   'custom-telemetryLink': props => (
-    <TelemetryLink {...props} className="navbar__item navbar__link">
+    <TelemetryLink {...props} className={props.mobile ? 'menu__link' : 'navbar__item navbar__link'}>
       Downloads
     </TelemetryLink>
   ),
   'custom-downloadButton': () => <HeaderDownloadButton className="navbar__item navbar__link" />,
-  'custom-githubStarsButton': () => <GitHubStarsButton className="navbar__item navbar__link" />,
+  // passing mobile as property
+  'custom-githubStarsButton': props => <GitHubStarsButton mobile={props.mobile} />,
 };

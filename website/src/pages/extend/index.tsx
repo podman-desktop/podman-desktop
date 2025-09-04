@@ -1,6 +1,13 @@
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import { faBook, faCertificate, faCloudArrowDown, faGears, faRocket } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBook,
+  faCertificate,
+  faCloudArrowDown,
+  faGears,
+  faPalette,
+  faRocket,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
@@ -42,6 +49,10 @@ export default function Home(): JSX.Element {
                 <li>
                   <FontAwesomeIcon icon={faGears} className="mr-2" />
                   <a href={useBaseUrl('/api')}>API Reference</a>
+                </li>
+                <li>
+                  <FontAwesomeIcon icon={faPalette} className="mr-2" />
+                  <a href={useBaseUrl('/storybook')}>Storybook</a>
                 </li>
               </ul>
             </div>

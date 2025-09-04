@@ -557,12 +557,12 @@ export class ColorRegistry {
 
     this.registerColor(`${ct}card-carousel-card-bg`, {
       dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[200],
+      light: colorPalette.gray[100],
     });
 
     this.registerColor(`${ct}card-carousel-card-hover-bg`, {
       dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[100],
+      light: colorPalette.gray[200],
     });
 
     this.registerColor(`${ct}card-carousel-card-header-text`, {
@@ -591,7 +591,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-border`, {
-      dark: colorPalette.charcoal[700],
+      dark: colorPalette.charcoal[800],
       light: colorPalette.gray[200],
     });
 

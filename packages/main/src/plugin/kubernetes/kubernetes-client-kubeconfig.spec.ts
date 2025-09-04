@@ -21,6 +21,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '../api.js';
 import type { ConfigurationRegistry } from '../configuration-registry.js';
+import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import { KubernetesClient } from './kubernetes-client.js';
@@ -57,6 +58,9 @@ describe('context tests', () => {
   let client: TestKubernetesClient;
 
   const apiSendMock = vi.fn();
+  const experimentalConfigurationManager: ExperimentalConfigurationManager = {
+    isExperimentalConfigurationEnabled: vi.fn(),
+  } as unknown as ExperimentalConfigurationManager;
 
   function createClient(): TestKubernetesClient {
     const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;
@@ -69,7 +73,13 @@ describe('context tests', () => {
       receive: vi.fn(),
     };
 
-    const client = new TestKubernetesClient(apiSender, configurationRegistry, fileSystemMonitoring, telemetry);
+    const client = new TestKubernetesClient(
+      apiSender,
+      configurationRegistry,
+      fileSystemMonitoring,
+      telemetry,
+      experimentalConfigurationManager,
+    );
 
     client.setUsers(originalUsers);
     client.setClusters(originalClusters);

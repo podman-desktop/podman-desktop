@@ -11,6 +11,7 @@
   --toastContainerBottom: 1rem;
   --toastContainerLeft: auto;
   --toastBackground: var(--pd-modal-bg);
+  --toastBarHeight: 3px;
 }
 </style>
 

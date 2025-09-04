@@ -21,96 +21,91 @@ import { splitSpacesHandlingDoubleQuotes } from '../string/string';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import FileInput from '../ui/FileInput.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
-import type { ImageInfoUI } from './ImageInfoUI';
 
 interface PortInfo {
   port: string;
   error: string;
 }
 
-let image: ImageInfoUI;
-
 let imageInspectInfo: ImageInspectInfo;
 
-let containerName = '';
-let containerNameError = '';
+let containerName = $state('');
+let containerNameError = $state('');
 
-let command = '';
+let command = $state('');
 
-let entrypoint = '';
+let entrypoint = $state('');
 
-let containerPortMapping: PortInfo[];
-let exposedPorts: string[] = [];
-let createError: string | undefined = undefined;
-let restartPolicyName = '';
-let restartPolicyMaxRetryCount = 1;
+let containerPortMapping = $state<PortInfo[]>([]);
+let exposedPorts = $state<string[]>([]);
+let createError = $state<string>();
+let restartPolicyName = $state('');
+let restartPolicyMaxRetryCount = $state(1);
 let onPortInputTimeout: NodeJS.Timeout;
 
 // initialize with empty array
-let environmentVariables: { key: string; value: string }[] = [{ key: '', value: '' }];
-let environmentFiles: string[] = [''];
-let volumeMounts: { source: string; target: string }[] = [{ source: '', target: '' }];
-let hostContainerPortMappings: { hostPort: PortInfo; containerPort: string }[] = [];
-let devices: { host: string; container: string; read: boolean; write: boolean; mknod: boolean }[] = [
+let environmentVariables = $state<{ key: string; value: string }[]>([{ key: '', value: '' }]);
+let environmentFiles = $state<string[]>(['']);
+let volumeMounts = $state<{ source: string; target: string }[]>([{ source: '', target: '' }]);
+let hostContainerPortMappings = $state<{ hostPort: PortInfo; containerPort: string }[]>([]);
+let devices = $state<{ host: string; container: string; read: boolean; write: boolean; mknod: boolean }[]>([
   { host: '', container: '', read: false, write: false, mknod: false },
-];
+]);
 
-let invalidName = false;
-let invalidPorts = false;
-let invalidFields: boolean = false;
-$: invalidFields = invalidName || invalidPorts;
+let invalidName = $state(false);
+let invalidPorts = $state(false);
+let invalidFields = $derived(invalidName || invalidPorts);
 
 // auto remove the container on exit
-let autoRemove = false;
+let autoRemove = $state(false);
 
 // privileged moade
-let privileged = false;
+let privileged = $state(false);
 
 // read-only moade
-let readOnly = false;
+let readOnly = $state(false);
 
 // security options
-let securityOpts: string[] = [''];
+let securityOpts = $state<string[]>(['']);
 
 // Kernel capabilities
-let capAdds: string[] = [''];
-let capDrops: string[] = [''];
+let capAdds = $state<string[]>(['']);
+let capDrops = $state<string[]>(['']);
 
 // user namespace
-let userNamespace: string | undefined = undefined;
+let userNamespace = $state<string>();
 
 // hostname;
-let hostname: string | undefined = undefined;
+let hostname = $state<string>();
 
 // dns servers
-let dnsServers: string[] = [''];
+let dnsServers = $state<string[]>(['']);
 
 // extra hosts
-let extraHosts: { host: string; ip: string }[] = [{ host: '', ip: '' }];
+let extraHosts: { host: string; ip: string }[] = $state([{ host: '', ip: '' }]);
 
 // networking mode
-let networkingMode = 'bridge';
+let networkingMode = $state('bridge');
 // user defined network if user choose a pre-defined network
-let networkingModeUserNetwork = '';
+let networkingModeUserNetwork = $state('');
 // container defined network if user choose a pre-defined container
-let networkingModeUserContainer = '';
+let networkingModeUserContainer = $state('');
 
 // tty
-let useTty = true;
-let useInteractive = true;
+let useTty = $state(true);
+let useInteractive = $state(true);
 
-let runUser: string | undefined = undefined;
-let dataReady = false;
+let runUser = $state<string>();
+let dataReady = $state(false);
 
-let imageDisplayName = '';
+let imageDisplayName = $state('');
 
-let engineNetworks: NetworkInspectInfo[] = [];
-let engineContainers: ContainerInfoUI[] = [];
+let engineNetworks = $state<NetworkInspectInfo[]>([]);
+let engineContainers = $state<ContainerInfoUI[]>([]);
+
+const image = $runImageInfo;
 
 onMount(async () => {
-  // grab current value
-  image = $runImageInfo;
-
   if (!image) {
     // go back to image list
     router.goto('/images/');
@@ -796,12 +791,12 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Environment files:</label>
               <!-- Display the list of existing environment files -->
-              {#each environmentFiles as environmentFile, index (index)}
+              {#each environmentFiles as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="filePath.{index}"
                     placeholder="Environment file containing KEY=VALUE items"
-                    bind:value={environmentFile}
+                    bind:value={environmentFiles[index]}
                     options={envDialogOptions}
                     aria-label="environmentFile.{index}" />
                   <Button
@@ -948,10 +943,10 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Security options (security-opt):</label>
               <!-- Display the list of existing security options -->
-              {#each securityOpts as securityOpt, index (index)}
+              {#each securityOpts as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input
-                    bind:value={securityOpt}
+                    bind:value={securityOpts[index]}
                     placeholder="Enter a security option (Ex. seccomp=/path/to/profile.json)"
                     class="ml-2" />
 
@@ -978,9 +973,9 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Add to the container (CapAdd):</label>
               <!-- Display the list of existing capAdd -->
-              {#each capAdds as capAdd, index (index)}
+              {#each capAdds as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={capAdd} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
+                  <Input bind:value={capAdds[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
                   <Button
                     type="link"
@@ -995,9 +990,9 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Drop from the container (CapDrop):</label>
               <!-- Display the list of existing capDrop -->
-              {#each capDrops as capDrop, index (index)}
+              {#each capDrops as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={capDrop} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
+                  <Input bind:value={capDrops[index]} placeholder="Enter a kernel capability (Ex. SYS_ADMIN)" class="ml-4" />
 
                   <Button
                     type="link"
@@ -1036,9 +1031,9 @@ const envDialogOptions: OpenDialogOptions = {
                 class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Custom DNS server(s):</label>
 
-              {#each dnsServers as dnsServer, index (index)}
+              {#each dnsServers as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
-                  <Input bind:value={dnsServer} placeholder="IP Address" class="ml-2" />
+                  <Input bind:value={dnsServers[index]} placeholder="IP Address" class="ml-2" />
 
                   <Button
                     type="link"

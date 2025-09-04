@@ -27,25 +27,23 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 
 beforeEach(() => {
   vi.resetAllMocks();
-  // mock false by default
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  // mock false by default (not enabled)
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
 });
 
 const DUMMY_CONFIG: IConfigurationPropertyRecordedSchema = {
   id: 'dummy-config',
   title: 'Dummy Config',
-  default: false,
   parentId: 'preferences.potatoes',
-  type: 'boolean',
+  type: 'object',
   scope: CONFIGURATION_DEFAULT_SCOPE,
 };
 
 const EXPERIMENTAL_CONFIG: IConfigurationPropertyRecordedSchema = {
   id: 'dummy-experimental-config',
   title: 'Dummy Experimental Config',
-  default: false,
   parentId: 'preferences.potatoes',
-  type: 'boolean',
+  type: 'object',
   scope: CONFIGURATION_DEFAULT_SCOPE,
   experimental: {
     githubDiscussionLink: '',
@@ -92,13 +90,17 @@ test('Enable all should update all configuration', async () => {
 
   await vi.waitFor(() => {
     for (const configuration of generated) {
-      expect(window.updateConfigurationValue).toHaveBeenCalledWith(configuration.id, true, configuration.scope);
+      expect(window.updateExperimentalConfigurationValue).toHaveBeenCalledWith(
+        configuration.id,
+        {},
+        configuration.scope,
+      );
     }
   });
 });
 
 test('all value checked should check the enable all', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
 
   const { container } = render(ExperimentalPage, {
     properties: [EXPERIMENTAL_CONFIG],
@@ -111,7 +113,7 @@ test('all value checked should check the enable all', async () => {
     return enableAll as HTMLInputElement;
   });
 
-  expect(window.getConfigurationValue).toHaveBeenCalledWith(EXPERIMENTAL_CONFIG.id, EXPERIMENTAL_CONFIG.scope);
+  expect(window.updateExperimentalConfigurationValue).not.toBeCalled();
 
   await vi.waitFor(() => {
     expect(enableAll).toBeChecked();

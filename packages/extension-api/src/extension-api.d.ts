@@ -1752,6 +1752,14 @@ declare module '@podman-desktop/api' {
      * this notification will be highlighted to the user so it draws attention
      */
     highlight?: boolean;
+    /**
+     * icon to display in the notification
+     */
+    icon?: string;
+    /**
+     * icon color for custom icon
+     */
+    iconColor?: string;
   }
 
   /**
@@ -2656,6 +2664,73 @@ declare module '@podman-desktop/api' {
     Namespace: string;
     Networks: string[];
     Status: string;
+  }
+
+  interface PodInspectInfo {
+    engineId: string;
+    engineName: string;
+    /**
+     * ID of the pod.
+     */
+    Id: string;
+    /**
+     * The name of the pod.
+     */
+    Name: string;
+    /**
+     * The time when the pod was created.
+     */
+    Created: string;
+    /**
+     * The current state of the pod.
+     */
+    State: 'Running' | 'Exited' | string;
+    /**
+     * Containers gives a brief summary of all containers in the pod and their current status.
+     */
+    Containers: PodContainerInfo[];
+    /**
+     * The exit policy of the pod when the last container exits.
+     */
+    ExitPolicy: 'continue' | 'stop';
+    /**
+     * Hostname that the pod will set.
+     */
+    Hostname: string;
+    /**
+     * RestartPolicy of the pod.
+     */
+    RestartPolicy: string;
+    /**
+     * Set of key-value labels that have been applied to the pod.
+     */
+    Labels: { [key: string]: string };
+    /**
+     * the ID of the pod's infra container, if one is present.
+     */
+    InfraContainerID?: string;
+    /**
+     * Contains the configuration of the pod's infra container.
+     */
+    InfraConfig: {
+      /**
+       * DNSOption is a set of DNS options that will be used by the infra container's resolv.conf and shared with the remainder of the pod.
+       */
+      DNSOption?: Array<string>;
+      /**
+       * DNSSearch is a set of DNS search domains that will be used by the infra container's resolv.conf and shared with the remainder of the pod.
+       */
+      DNSSearch?: Array<string>;
+      /**
+       * DNSServer is a set of DNS Servers that will be used by the infra container's resolv.conf and shared with the remainder of the pod.
+       */
+      DNSServer?: Array<string>;
+      PortBindings?: HostConfigPortBinding;
+      /**
+       * List of networks the pod will join.
+       */
+      Networks?: Array<string>;
+    };
   }
 
   interface AuthConfig {
@@ -4003,10 +4078,13 @@ declare module '@podman-desktop/api' {
       target: { engineId: string },
       overrideParameters: PodmanContainerCreateOptions,
     ): Promise<{ Id: string; Warnings: string[] }>;
+
+    // Pod related methods
     export function startPod(engineId: string, podId: string): Promise<void>;
     export function listPods(): Promise<PodInfo[]>;
     export function stopPod(engineId: string, podId: string): Promise<void>;
     export function removePod(engineId: string, podId: string): Promise<void>;
+    export function inspectPod(engineId: string, podId: string): Promise<PodInspectInfo>;
 
     // Manifest related methods
     export function createManifest(options: ManifestCreateOptions): Promise<{ engineId: string; Id: string }>;
@@ -4674,7 +4752,7 @@ declare module '@podman-desktop/api' {
   }
 
   export interface CliToolInstaller {
-    selectVersion: () => Promise<string>;
+    selectVersion: (latest?: boolean) => Promise<string>;
     doInstall: (logger: Logger) => Promise<void>;
     doUninstall: (logger: Logger) => Promise<void>;
   }
@@ -4702,6 +4780,7 @@ declare module '@podman-desktop/api' {
     markdownDescription: string;
     images: ProviderImages;
     version?: string;
+    path?: string;
     extensionInfo: {
       id: string;
       label: string;
@@ -4811,6 +4890,14 @@ declare module '@podman-desktop/api' {
       imageCheckerProvider: ImageCheckerProvider,
       metadata?: ImageCheckerProviderMetadata,
     ): Disposable;
+  }
+
+  export namespace net {
+    /**
+     * Finds a free port starting from the specified port and returns it.
+     * @param port The starting port number to search for a free port.
+     */
+    export function getFreePort(port: number): Promise<number>;
   }
 
   export namespace navigation {

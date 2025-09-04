@@ -36,6 +36,8 @@ export class RunImagePage extends BasePage {
   readonly containerEntryPointInput: Locator;
   readonly containerComamndInput: Locator;
   readonly containerAddCustomPortMappingButton: Locator;
+  readonly volumeNameInput: Locator;
+  readonly volumeContainerPath: Locator;
 
   constructor(page: Page, name: string) {
     super(page);
@@ -56,6 +58,8 @@ export class RunImagePage extends BasePage {
     this.containerEntryPointInput = page.getByLabel('Entrypoint');
     this.containerComamndInput = page.getByLabel('Command');
     this.containerAddCustomPortMappingButton = page.getByLabel('Add custom port mapping', { exact: true });
+    this.volumeNameInput = page.getByPlaceholder('Path on the host');
+    this.volumeContainerPath = page.getByPlaceholder('Path inside the container');
   }
 
   async activateTab(name: string): Promise<void> {
@@ -99,6 +103,15 @@ export class RunImagePage extends BasePage {
         await this.activateTab('Basic');
         await playExpect(this.containerNameInput).toBeVisible();
         await this.containerNameInput.fill(customName);
+      }
+
+      if (optionalParams?.attachVolumeName !== undefined && optionalParams?.attachVolumePath !== undefined) {
+        //
+        await this.activateTab('Basic');
+        await playExpect(this.volumeNameInput).toBeVisible();
+        await playExpect(this.volumeContainerPath).toBeVisible();
+        await this.volumeNameInput.pressSequentially(optionalParams.attachVolumeName, { delay: 10 });
+        await this.volumeContainerPath.pressSequentially(optionalParams.attachVolumePath, { delay: 10 });
       }
 
       if (optionalParams?.attachTerminal !== undefined) {

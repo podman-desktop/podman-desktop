@@ -62,6 +62,7 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
 
     await playYamlPage.playYaml(POD_YAML_PATH, true);
     await playExpect(podsPage.heading).toBeVisible();
+    await playExpect.poll(async () => await podsPage.podExists(POD_NAME), { timeout: 40_000 }).toBeTruthy();
     const podDetails = await podsPage.openPodDetails(POD_NAME);
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
@@ -69,7 +70,12 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
   test('Verify that the deployed pod container uses the localhost image', async ({ page, navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
-    await playExpect.poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME)).toBe('USED');
+    await playExpect
+      .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME, 40_000), { timeout: 0 })
+      .toBeTruthy();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 15_000 })
+      .toBe(ImageState.Used);
 
     const containersPage = await navigationBar.openContainers();
     await playExpect(containersPage.heading).toBeVisible();

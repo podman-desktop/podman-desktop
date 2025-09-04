@@ -4,11 +4,15 @@ import { Button, ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-export let providerContainerEngine: ProviderContainerConnectionInfo;
+interface Props {
+  providerContainerEngine: ProviderContainerConnectionInfo;
+}
 
-let listContainersResult = '';
-let listInProgress = false;
-let listError = '';
+let { providerContainerEngine }: Props = $props();
+
+let listContainersResult = $state('');
+let listInProgress = $state(false);
+let listError = $state('');
 
 async function grabContainers(): Promise<void> {
   const start = performance.now();
@@ -16,7 +20,7 @@ async function grabContainers(): Promise<void> {
   listError = '';
   listContainersResult = '...Waiting for response...';
   try {
-    const result = await window.listContainersFromEngine(providerContainerEngine);
+    const result = await window.listContainersFromEngine($state.snapshot(providerContainerEngine));
     listContainersResult = `Responded: ${result.length} containers`;
   } catch (e) {
     listError = String(e);

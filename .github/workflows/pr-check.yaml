@@ -38,14 +38,14 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -88,14 +88,14 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -137,14 +137,14 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -177,13 +177,13 @@ jobs:
     name: build website
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -214,13 +214,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -248,13 +248,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -278,13 +278,13 @@ jobs:
       matrix:
         os: [windows-2025, ubuntu-24.04, macos-15]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -305,7 +305,7 @@ jobs:
         # publish codecov report if linux
       - name: publish codecov report
         if: ${{ matrix.os=='ubuntu-24.04' }}
-        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
+        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -317,7 +317,7 @@ jobs:
       matrix:
         mode: [production, development]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Update podman to 5.x
         run: |
@@ -364,7 +364,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -411,7 +411,7 @@ jobs:
       pnpm_lock_changed: ${{ steps.pnpm_changed.outputs.PNPM_LOCK_CHANGED }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 2
 
@@ -429,20 +429,24 @@ jobs:
           fi
 
   win-update-e2e-test:
-    name: win update e2e tests
+    name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -451,19 +455,30 @@ jobs:
         run: pnpm install
 
       - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally with electron updater included, allow prereleases
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
           pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
+          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml").Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
 
       - name: Run E2E Update test
         run: |
@@ -484,29 +499,32 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: win-update-e2e-test
+          name: ${{ matrix.os }}-update-e2e-test
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
 
-
   mac-update-e2e-test:
-    name: mac update e2e tests
+    name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [macos-15, macos-13]
+    runs-on: ${{ matrix.os }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -514,22 +532,27 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
-          mv package.json_tmp package.json
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
+          actualVersion=$(jq -r '.version' package.json)
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally and allow prereleases on update
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          echo "Allow Prerelease when updating, setting it inline in the code"
+          sed -i '' '/autoUpdater.autoDownload = false;/a \
+          autoUpdater.allowPrerelease = true; \
+          ' packages/main/src/plugin/updater.ts
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -537,7 +560,14 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease"
+          sudo sed -i '' 's/repo: podman-desktop/repo: testing-prereleases/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
@@ -560,7 +590,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: mac-update-e2e-test
+          name: ${{ matrix.os}}-update-e2e-test
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw

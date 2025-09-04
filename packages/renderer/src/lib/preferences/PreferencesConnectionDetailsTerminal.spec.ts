@@ -231,7 +231,7 @@ test('terminal active/ restarts connection after stopping and starting a provide
     () => {
       expect(shellInProviderConnectionMock).toHaveBeenCalledTimes(3);
       expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(2);
-      expect(shellInProviderConnectionResizeMock).toHaveBeenCalledTimes(2);
+      expect(shellInProviderConnectionResizeMock).toHaveBeenCalledTimes(3);
     },
     { timeout: 2000 },
   );

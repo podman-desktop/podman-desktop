@@ -54,7 +54,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe.serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {
   test('Update is offered automatically on startup', async ({ welcomePage }) => {
-    await playExpect(updateAvailableDialog).toBeVisible();
+    await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
     const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
     await playExpect(updateNowButton).toBeVisible();
     const doNotshowButton = updateAvailableDialog.getByRole('button', { name: `Don't show again` });

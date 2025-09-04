@@ -328,3 +328,51 @@ describe('should be notified when a configuration is updated', async () => {
     expect(config.get('myKey')).toBe('myValue');
   });
 });
+
+test('should remove the object configuration if value is equal to default one', async () => {
+  const node: IConfigurationNode = {
+    id: 'custom',
+    title: 'Test Object Property',
+    properties: {
+      'test.prop': {
+        description: 'test property',
+        type: 'array',
+        default: [
+          { label: 'foo', value: 1 },
+          { label: 'bar', value: 2 },
+        ],
+      },
+    },
+  };
+
+  const writeFileSync = vi.spyOn(fs, 'writeFileSync');
+
+  configurationRegistry.registerConfigurations([node]);
+
+  await configurationRegistry.updateConfigurationValue('test.prop', [
+    { label: 'bar', value: 1 },
+    { label: 'foo', value: 2 },
+  ]);
+  let value = configurationRegistry.getConfiguration('test').get('prop');
+  expect(value).toEqual([
+    { label: 'bar', value: 1 },
+    { label: 'foo', value: 2 },
+  ]);
+
+  // Should remove the value from config file
+  await configurationRegistry.updateConfigurationValue('test.prop', [
+    { label: 'foo', value: 1 },
+    { label: 'bar', value: 2 },
+  ]);
+  value = configurationRegistry.getConfiguration('test').get('prop');
+  expect(value).toEqual([
+    { label: 'foo', value: 1 },
+    { label: 'bar', value: 2 },
+  ]);
+
+  expect(writeFileSync).toHaveBeenNthCalledWith(
+    2,
+    expect.anything(),
+    expect.stringContaining(JSON.stringify({}, undefined, 2)),
+  );
+});

@@ -9,7 +9,7 @@ let isExperimental: boolean = $state(false);
 
 onMount(async () => {
   try {
-    isExperimental = (await window.getConfigurationValue<boolean>('kubernetes.statesExperimental')) ?? false;
+    isExperimental = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
   } catch {
     // keep default value
   }

@@ -22,12 +22,14 @@ function onChangeFileInput(value: string): void {
 </script>
 
 <div class="w-full flex">
+  <!-- By default, we set 'readonly' to FALSE unless explicitly defined within
+   .record of the schema. This allows edits to the fileinput. -->
   <FileInput
     id="input-standard-{record.id}"
     name={record.id}
     bind:value={value}
     onChange={onChangeFileInput}
-    readonly={record.readonly ?? true}
+    readonly={record.readonly ?? false}
     clearable={true}
     placeholder={record.placeholder}
     options={dialogOptions}
