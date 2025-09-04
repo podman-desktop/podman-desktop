@@ -1,7 +1,10 @@
 <script lang="ts">
 import PasswordInput from './PasswordInput.svelte';
 
-export let onSubmit: (event: Event) => void;
+interface Props {
+  onSubmit: (event: Event) => void;
+}
+const { onSubmit }: Props = $props();
 </script>
 
 <form on:submit={onSubmit}>
