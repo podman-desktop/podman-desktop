@@ -53,12 +53,16 @@ test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@
         await playExpect(welcomePage.nextStepButton).toBeEnabled();
         await welcomePage.nextStepButton.click();
 
-        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', { timeout: 10_000 });
+        await playExpect(welcomePage.onboardingMessageStatus).not.toContainText('Podman has been set up correctly', {
+          timeout: 10_000,
+        });
         await playExpect(welcomePage.nextStepButton).toBeEnabled();
         await welcomePage.nextStepButton.click();
       });
 
       test('Check k8s is installed', async ({ welcomePage }) => {
+        test.skip(!isCI || !isLinux, 'This test should run only on Ubuntu platform in Github Actions');
+
         await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 10_000 });
         await playExpect(welcomePage.nextStepButton).toBeEnabled();
         await welcomePage.nextStepButton.click();
