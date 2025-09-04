@@ -40,9 +40,35 @@ test.describe('Basic e2e verification of podman desktop start', { tag: '@smoke' 
       await welcomePage.turnOffTelemetry();
     });
 
-    test('Redirection from Welcome page to Dashboard works', async ({ welcomePage }) => {
-      const dashboardPage = await welcomePage.closeWelcomePage();
-      await playExpect(dashboardPage.heading).toBeVisible();
+    test('Check podman installation', async ({ welcomePage }) => {
+      await playExpect(welcomePage.startOnboarding).toBeEnabled({ timeout: 10_000 });
+      await welcomePage.startOnboarding.click();
+
+      await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+      await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman has been set up correctly', {
+        timeout: 10_000,
+      });
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+
+      await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', { timeout: 10_000 });
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+    });
+
+    test('Check k8s other versions download button', async ({ welcomePage }) => {
+      await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
+      await playExpect(welcomePage.otherVersionButton).toBeVisible();
+
+      await welcomePage.otherVersionButton.click();
+      await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
+      await playExpect(welcomePage.latestVersionFromDropDown).toBeVisible();
+      await welcomePage.latestVersionFromDropDown.click();
+
+      await playExpect(welcomePage.cancelSetupButton).toBeVisible();
+      await welcomePage.cancelSetupButton.click();
+      await playExpect(welcomePage.confirmationPopUp).toBeVisible();
+      await welcomePage.okButtonPopup.click();
     });
   });
 
