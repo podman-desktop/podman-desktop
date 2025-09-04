@@ -6,6 +6,7 @@ import Fa from 'svelte-fa';
 
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
+import { isMultiplexedLog } from '../stream/stream-utils';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI } = $props();
@@ -32,9 +33,14 @@ async function getLastLogTimestamp(): Promise<void> {
 }
 
 function callback(name: string, data: string): void {
+  let timestamp: string;
   if (name === 'data' && data && lastLog) {
     lastLog = false;
-    let timestamp = data.split(' ', 1)[0];
+    if (isMultiplexedLog(data)) {
+      timestamp = data.substring(8).split(' ', 1)[0];
+    } else {
+      timestamp = data.split(' ', 1)[0];
+    }
     const datenow = new SvelteDate(timestamp);
     datenow.setSeconds(datenow.getSeconds() + 1);
     clearTimestamp = datenow.toISOString();
