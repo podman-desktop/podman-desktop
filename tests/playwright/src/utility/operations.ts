@@ -523,17 +523,22 @@ export async function specifyVirtualizationProvider(
 ): Promise<void> {
   return test.step(`Set Podman Provider to be ${virtualizationProvider}`, async () => {
     if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
-      await playExpect(machineCreationForm.providerTypeDiv).toBeVisible({ timeout: 10_000 });
-      await playExpect(machineCreationForm.providerTypeDiv).toContainText(getDefaultVirtualizationProvider(), {
-        ignoreCase: true,
-      });
-      await machineCreationForm.providerTypeDiv.scrollIntoViewIfNeeded();
-      await machineCreationForm.providerTypeDiv.click();
-      await playExpect(machineCreationForm.providerTypeDropdownOption).toBeVisible({ timeout: 10_000 });
-      await machineCreationForm.providerTypeDropdownOption.click();
-      await playExpect(machineCreationForm.providerTypeDiv).toContainText(virtualizationProvider, {
-        ignoreCase: true,
-      });
+      // Get the current provider type text
+      await playExpect(machineCreationForm.providerType).toBeVisible({ timeout: 10_000 });
+      const currentProviderText = await machineCreationForm.providerType.innerText();
+
+      // Only proceed if the new provider type is different from the current one
+      if (virtualizationProvider !== currentProviderText) {
+        // Click the current provider to open the dropdown
+        await machineCreationForm.providerType.scrollIntoViewIfNeeded();
+        await machineCreationForm.providerType.click();
+
+        // Select the new provider option
+        machineCreationForm.providerType = machineCreationForm.getProviderType(virtualizationProvider);
+        await playExpect(machineCreationForm.providerType).toBeVisible({ timeout: 10_000 });
+        await playExpect(machineCreationForm.providerType).toContainText(virtualizationProvider, { ignoreCase: true });
+        await machineCreationForm.providerType.click();
+      }
     }
   });
 }
