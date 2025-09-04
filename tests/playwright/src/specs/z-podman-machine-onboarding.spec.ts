@@ -29,12 +29,7 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import {
-  createPodmanMachineFromCLI,
-  deletePodmanMachine,
-  resetPodmanMachinesFromCLI,
-  specifyVirtualizationProvider,
-} from '../utility/operations';
+import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -148,7 +143,7 @@ test.describe
           await playExpect(podmanOnboardingPage.machineCreationForm.rootPriviledgesCheckbox).toBeChecked();
           await playExpect(podmanOnboardingPage.machineCreationForm.startNowCheckbox).toBeChecked();
 
-          await specifyVirtualizationProvider(podmanOnboardingPage.machineCreationForm, getVirtualizationProvider());
+          await podmanOnboardingPage.machineCreationForm.specifyVirtualizationProvider(getVirtualizationProvider());
 
           if (os.platform() === 'win32' && getVirtualizationProvider() !== PodmanVirtualizationProviders.HyperV) {
             await playExpect(podmanOnboardingPage.machineCreationForm.userModeNetworkingCheckbox).not.toBeChecked({

@@ -19,7 +19,6 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { specifyVirtualizationProvider } from '/@/utility/operations';
 import { isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
@@ -104,7 +103,7 @@ export class MachineCreationForm extends BasePage {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
       }
       if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
-        await specifyVirtualizationProvider(this, virtualizationProvider);
+        await this.specifyVirtualizationProvider(virtualizationProvider);
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
@@ -118,6 +117,40 @@ export class MachineCreationForm extends BasePage {
       if (desiredState !== (await checkbox.isChecked())) {
         await checkbox.locator('..').click();
         playExpect(await checkbox.isChecked()).toBe(desiredState);
+      }
+    });
+  }
+
+  /**
+   * Specifies the virtualization provider for a Podman machine during creation through the onboarding page.
+   * This method selects the specified virtualization provider from the dropdown if it differs from the default.
+   * If no provider is specified or it matches the default, no action is taken.
+   *
+   * @param virtualizationProvider - The virtualization provider to select (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV, etc.), or undefined to use default
+   * @returns A Promise that resolves when the provider selection is complete
+   * @throws Will throw an error if the provider dropdown is not accessible or the specified provider is not available
+   */
+  async specifyVirtualizationProvider(
+    virtualizationProvider: PodmanVirtualizationProviders | undefined,
+  ): Promise<void> {
+    return test.step(`Set Podman Provider to ${virtualizationProvider ?? getDefaultVirtualizationProvider()}`, async () => {
+      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
+        // Get the current provider type text
+        await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
+        const currentProviderText = await this.providerType.innerText();
+
+        // Only proceed if the new provider type is different from the current one
+        if (virtualizationProvider !== currentProviderText) {
+          // Click the current provider to open the dropdown
+          await this.providerType.scrollIntoViewIfNeeded();
+          await this.providerType.click();
+
+          // Select the new provider option
+          this.providerType = this.getProviderType(virtualizationProvider);
+          await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
+          await playExpect(this.providerType).toContainText(virtualizationProvider, { ignoreCase: true });
+          await this.providerType.click();
+        }
       }
     });
   }
