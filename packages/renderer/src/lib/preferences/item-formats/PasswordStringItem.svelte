@@ -1,13 +1,16 @@
 <script lang="ts">
+import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
-import PasswordInput from '../../ui/PasswordInput.svelte';
+interface Props {
+  record: IConfigurationPropertyRecordedSchema;
+  value: string | undefined;
+  onChange: (id: string, value: string) => Promise<void>;
+}
 
-export let record: IConfigurationPropertyRecordedSchema;
-export let value: string | undefined;
-export let onChange = async (_id: string, _value: string): Promise<void> => {};
+let { record, value, onChange }: Props = $props();
 
-let invalidEntry = false;
+let invalidEntry = $state(false);
 
 function onInput(event: Event): void {
   const target = event.target as HTMLInputElement;
