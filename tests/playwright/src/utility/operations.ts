@@ -521,7 +521,7 @@ export async function specifyVirtualizationProvider(
   machineCreationForm: MachineCreationForm,
   virtualizationProvider: PodmanVirtualizationProviders | undefined,
 ): Promise<void> {
-  return test.step(`Set Podman Provider to be ${virtualizationProvider}`, async () => {
+  return test.step(`Set Podman Provider to ${virtualizationProvider ?? getDefaultVirtualizationProvider()}`, async () => {
     if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
       // Get the current provider type text
       await playExpect(machineCreationForm.providerType).toBeVisible({ timeout: 10_000 });
