@@ -5,6 +5,7 @@ import { createEventDispatcher, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 export let id: string;
+export let name: string | undefined = undefined;
 export let password: string | undefined = undefined;
 export let passwordHidden: boolean = true;
 export let readonly: boolean = false;
@@ -31,7 +32,7 @@ async function onShowHide(event: MouseEvent): Promise<void> {
 <Input
   class={$$props.class ?? ''}
   id="password-{id}"
-  name="password-{id}"
+  name={name ?? `password-${id}`}
   placeholder="password"
   bind:value={password}
   aria-label="password {id}"

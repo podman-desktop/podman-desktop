@@ -58,3 +58,20 @@ test('clicking show/hide button does not submit form', async () => {
   await fireEvent.click(submitButton);
   expect(handleSubmit).toHaveBeenCalledTimes(1);
 });
+
+test('check specific name is applied', async () => {
+  const name = 'my-special-password';
+  render(PasswordInput, { id: 'foo', name: name });
+
+  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  expect(input).toBeInTheDocument();
+  expect(input.name).toBe(name);
+});
+
+test('check default name is set if not specified', async () => {
+  render(PasswordInput, { id: 'foo' });
+
+  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  expect(input).toBeInTheDocument();
+  expect(input.name).toBe('password-foo');
+});
