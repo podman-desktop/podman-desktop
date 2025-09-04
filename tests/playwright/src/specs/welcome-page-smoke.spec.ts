@@ -28,59 +28,61 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe('Basic e2e verification of podman desktop start', { tag: '@smoke' }, () => {
-  test.describe('Welcome page handling', () => {
-    test('Check the Welcome page is displayed', async ({ welcomePage }) => {
-      await playExpect(welcomePage.welcomeMessage).toBeVisible();
-    });
-
-    test('Telemetry checkbox is present, set to true, consent can be changed', async ({ welcomePage }) => {
-      await playExpect(welcomePage.telemetryConsent).toBeVisible();
-      await playExpect(welcomePage.telemetryConsent).toBeChecked();
-      await welcomePage.turnOffTelemetry();
-    });
-
-    test('Check podman installation', async ({ welcomePage }) => {
-      await playExpect(welcomePage.startOnboarding).toBeEnabled({ timeout: 10_000 });
-      await welcomePage.startOnboarding.click();
-
-      await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
-      await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman has been set up correctly', {
-        timeout: 10_000,
+test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@smoke' }, () => {
+  test.describe
+    .serial('Welcome page handling', () => {
+      test('Check the Welcome page is displayed', async ({ welcomePage }) => {
+        await playExpect(welcomePage.welcomeMessage).toBeVisible();
       });
-      await playExpect(welcomePage.nextStepButton).toBeEnabled();
-      await welcomePage.nextStepButton.click();
 
-      await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', { timeout: 10_000 });
-      await playExpect(welcomePage.nextStepButton).toBeEnabled();
-      await welcomePage.nextStepButton.click();
+      test('Telemetry checkbox is present, set to true, consent can be changed', async ({ welcomePage }) => {
+        await playExpect(welcomePage.telemetryConsent).toBeVisible();
+        await playExpect(welcomePage.telemetryConsent).toBeChecked();
+        await welcomePage.turnOffTelemetry();
+      });
+
+      test('Check podman installation', async ({ welcomePage }) => {
+        await playExpect(welcomePage.startOnboarding).toBeEnabled({ timeout: 10_000 });
+        await welcomePage.startOnboarding.click();
+
+        await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman has been set up correctly', {
+          timeout: 10_000,
+        });
+        await playExpect(welcomePage.nextStepButton).toBeEnabled();
+        await welcomePage.nextStepButton.click();
+
+        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', { timeout: 10_000 });
+        await playExpect(welcomePage.nextStepButton).toBeEnabled();
+        await welcomePage.nextStepButton.click();
+      });
+
+      test('Check k8s other versions download button', async ({ welcomePage }) => {
+        await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
+        await playExpect(welcomePage.otherVersionButton).toBeVisible();
+
+        await welcomePage.otherVersionButton.click();
+        await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
+        await playExpect(welcomePage.latestVersionFromDropDown).toBeVisible();
+        await welcomePage.latestVersionFromDropDown.click();
+
+        await playExpect(welcomePage.cancelSetupButton).toBeVisible();
+        await welcomePage.cancelSetupButton.click();
+        await playExpect(welcomePage.confirmationPopUp).toBeVisible();
+        await welcomePage.okButtonPopup.click();
+      });
     });
 
-    test('Check k8s other versions download button', async ({ welcomePage }) => {
-      await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
-      await playExpect(welcomePage.otherVersionButton).toBeVisible();
-
-      await welcomePage.otherVersionButton.click();
-      await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
-      await playExpect(welcomePage.latestVersionFromDropDown).toBeVisible();
-      await welcomePage.latestVersionFromDropDown.click();
-
-      await playExpect(welcomePage.cancelSetupButton).toBeVisible();
-      await welcomePage.cancelSetupButton.click();
-      await playExpect(welcomePage.confirmationPopUp).toBeVisible();
-      await welcomePage.okButtonPopup.click();
+  test.describe
+    .serial('Navigation Bar test', () => {
+      test('Verify navigation items are visible', async ({ navigationBar }) => {
+        await playExpect(navigationBar.navigationLocator).toBeVisible();
+        await playExpect(navigationBar.dashboardLink).toBeVisible();
+        await playExpect(navigationBar.imagesLink).toBeVisible();
+        await playExpect(navigationBar.podsLink).toBeVisible();
+        await playExpect(navigationBar.containersLink).toBeVisible();
+        await playExpect(navigationBar.volumesLink).toBeVisible();
+        await playExpect(navigationBar.settingsLink).toBeVisible();
+      });
     });
-  });
-
-  test.describe('Navigation Bar test', () => {
-    test('Verify navigation items are visible', async ({ navigationBar }) => {
-      await playExpect(navigationBar.navigationLocator).toBeVisible();
-      await playExpect(navigationBar.dashboardLink).toBeVisible();
-      await playExpect(navigationBar.imagesLink).toBeVisible();
-      await playExpect(navigationBar.podsLink).toBeVisible();
-      await playExpect(navigationBar.containersLink).toBeVisible();
-      await playExpect(navigationBar.volumesLink).toBeVisible();
-      await playExpect(navigationBar.settingsLink).toBeVisible();
-    });
-  });
 });
