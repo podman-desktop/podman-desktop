@@ -64,17 +64,20 @@ test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@
         await welcomePage.nextStepButton.click();
       });
 
-      test('Check other versions for compose', async ({ welcomePage }) => {
+      test('Check other versions for compose', async ({ welcomePage, page }) => {
         test.skip(!isCI || !isLinux, 'This test should run only on Ubuntu platform in Github Actions');
 
         await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
         await playExpect(welcomePage.otherVersionButton).toBeVisible();
-
         await welcomePage.otherVersionButton.click();
+
         await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
+        await page.waitForTimeout(500); // wait for animation
+
         await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
         await welcomePage.latestVersionFromDropDown.click();
 
+        await playExpect(welcomePage.dropDownDialog).not.toBeVisible({ timeout: 10_000 });
         await playExpect(welcomePage.cancelSetupButton).toBeEnabled();
       });
 
