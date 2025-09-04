@@ -57,8 +57,14 @@ test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@
         await welcomePage.nextStepButton.click();
       });
 
-      test('Check k8s other versions download button', async ({ welcomePage }) => {
-        await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
+      test('Check k8s is installed', async ({ welcomePage }) => {
+        await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 10_000 });
+        await playExpect(welcomePage.nextStepButton).toBeEnabled();
+        await welcomePage.nextStepButton.click();
+      });
+
+      test('Check other versions for compose', async ({ welcomePage }) => {
+        await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
         await playExpect(welcomePage.otherVersionButton).toBeVisible();
 
         await welcomePage.otherVersionButton.click();
