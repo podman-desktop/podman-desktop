@@ -16,10 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-// Re-export layout types for the UI package
-export interface LayoutEditItem {
-  id: string;
-  label: string;
-  enabled: boolean;
-  originalOrder: number;
+import LearningCenter from '../../lib/learning-center/LearningCenter.svelte';
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+
+export function createLearningCenter(): DashboardPageRegistryEntry {
+  return {
+    id: 'learning-center',
+    originalOrder: 2,
+    component: LearningCenter,
+  };
 }

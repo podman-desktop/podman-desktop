@@ -1,92 +1,199 @@
 <script lang="ts">
-import { type LayoutEditItem, LayoutEditor, NavPage } from '@podman-desktop/ui-svelte';
+import { LayoutEditor, NavPage, tablePersistenceCallbacks } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
-import ProviderConfiguring from '/@/lib/dashboard/ProviderConfiguring.svelte';
-import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
-import type { LayoutCallbacks } from '/@api/layout-registry-info';
+import type { LayoutEditItem } from '/@api/layout-registry-info';
 
 import { providerInfos } from '../../stores/providers';
 import ExploreFeatures from '../explore-features/ExploreFeatures.svelte';
 import LearningCenter from '../learning-center/LearningCenter.svelte';
 import NotificationsBox from './NotificationsBox.svelte';
-import ProviderConfigured from './ProviderConfigured.svelte';
-import type { InitializationContext } from './ProviderInitUtils';
-import { DoNothingMode } from './ProviderInitUtils';
-import ProviderInstalled from './ProviderInstalled.svelte';
-import ProviderNotInstalled from './ProviderNotInstalled.svelte';
-import ProviderReady from './ProviderReady.svelte';
-import ProviderStarting from './ProviderStarting.svelte';
-import ProviderStopped from './ProviderStopped.svelte';
-import ReleaseNotesBox from './ReleaseNotesBox.svelte';
 
-const providerInitContexts = new SvelteMap<string, InitializationContext>();
-
-// Dashboard default sections
-const defaultSections = ['release-notes', 'extension-banners', 'learning-center', 'providers'];
-
-// Dashboard section configuration managed by layout service
-let dashboardSections: LayoutEditItem[] = [];
+// Dashboard section configuration managed by dashboard page registry
+let dashboardSections = $state<LayoutEditItem[]>([]);
+let dashboardOrdering = new SvelteMap<string, number>();
 let isInitialized = false;
-let layoutCallbacks: LayoutCallbacks;
+let isLoading = false;
+let isResetting = false;
 
-onMount(async () => {
-  // Create layout callbacks and load configuration
-  layoutCallbacks = createLayoutCallbacks('dashboard', defaultSections);
+// Initialize default dashboard configuration
+function getDefaultDashboardItems(): LayoutEditItem[] {
+  return $dashboardPageRegistry.map((entry, index) => ({
+    id: entry.id,
+    label: entry.id, // Layout-registry will handle formatting
+    enabled: true,
+    originalOrder: index,
+  }));
+}
 
-  // Load dashboard configuration using layout service
-  dashboardSections = await layoutCallbacks.onLoad();
-  isInitialized = true;
-});
+// Initialize dashboard configuration
+async function initializeDashboard(): Promise<void> {
+  if (isInitialized || isLoading) return;
 
-// Save configuration whenever dashboardSections changes (after initialization)
-$: if (isInitialized && dashboardSections.length > 0 && layoutCallbacks) {
-  layoutCallbacks.onSave(dashboardSections).catch((error: unknown) => {
-    console.error('Failed to save dashboard configuration:', error);
+  isLoading = true;
+  try {
+    // Initialize dashboard page registry first
+    await fetchDashboardPageRegistries();
+
+    if ($dashboardPageRegistry.length > 0) {
+      const loadedItems = await loadDashboardConfiguration();
+      dashboardSections = loadedItems;
+    }
+    isInitialized = true;
+  } catch (error: unknown) {
+    console.error('Failed to load dashboard configuration:', error);
+    // Fallback to default configuration
+    dashboardSections = getDefaultDashboardItems();
+    isInitialized = true;
+  } finally {
+    isLoading = false;
+  }
+}
+
+// Load configuration from settings (like Table.svelte does)
+async function loadDashboardConfiguration(): Promise<LayoutEditItem[]> {
+  if ($tablePersistenceCallbacks) {
+    const sectionNames = getDefaultSectionNames();
+    const loadedItems = await $tablePersistenceCallbacks.load('dashboard', sectionNames);
+
+    if (loadedItems.length > 0) {
+      // Ensure loaded items have proper originalOrder from defaults if missing
+      const defaultItems = getDefaultDashboardItems();
+      const items = loadedItems.map((item: LayoutEditItem) => ({
+        ...item,
+        originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      }));
+
+      // Build ordering map from loaded items
+      // Check if items are in a different order than their original order
+      const isReordered = items.some((item: LayoutEditItem, index: number) => item.originalOrder !== index);
+      if (isReordered) {
+        const ordering = new SvelteMap<string, number>();
+        items.forEach((item: LayoutEditItem, index: number) => {
+          ordering.set(item.id, index);
+        });
+        dashboardOrdering = ordering;
+      } else {
+        dashboardOrdering.clear();
+      }
+
+      return items;
+    }
+  }
+  return getDefaultDashboardItems();
+}
+
+// Get ordered dashboard sections based on current ordering
+function getOrderedDashboardSections(): LayoutEditItem[] {
+  if (dashboardOrdering.size === 0) {
+    return [...dashboardSections].sort((a, b) => a.originalOrder - b.originalOrder);
+  }
+  return [...dashboardSections].sort((a, b) => {
+    const aOrder = dashboardOrdering.get(a.id) ?? a.originalOrder;
+    const bOrder = dashboardOrdering.get(b.id) ?? b.originalOrder;
+    return aOrder - bOrder;
   });
 }
 
+// Save configuration (like Table.svelte does)
+async function saveDashboardConfiguration(): Promise<void> {
+  if ($tablePersistenceCallbacks) {
+    const orderedItems = getOrderedDashboardSections();
+    await $tablePersistenceCallbacks.save('dashboard', orderedItems);
+  }
+}
+
+// Initialize dashboard on mount
+onMount(async () => {
+  await initializeDashboard();
+});
+
+// Save configuration whenever dashboardSections or ordering changes
+$effect(() => {
+  if (isInitialized && !isResetting && dashboardSections.length > 0) {
+    // Convert back to registry entries and update the registry
+    const orderedSections = getOrderedDashboardSections();
+    const updatedEntries = convertFromLayoutEditItems(orderedSections, $dashboardPageRegistry);
+    dashboardPageRegistry.set(updatedEntries);
+
+    // Save using the persistence callbacks (system handles default value filtering)
+    saveDashboardConfiguration().catch((error: unknown) => {
+      console.error('Failed to save dashboard configuration:', error);
+    });
+  }
+});
+
 // Reset function for dashboard layout
 async function resetDashboardLayout(): Promise<void> {
-  if (layoutCallbacks) {
-    dashboardSections = await layoutCallbacks.onReset();
+  if ($tablePersistenceCallbacks) {
+    try {
+      // Set resetting flag to prevent automatic saving during reset
+      isResetting = true;
+
+      // Get default section names from the registry (in original order)
+      const defaultSections = getDefaultSectionNames();
+
+      // Reset using the persistence callbacks (clears saved config)
+      dashboardSections = await $tablePersistenceCallbacks.reset('dashboard', defaultSections);
+      dashboardOrdering.clear();
+
+      // Reset the registry to default state
+      await resetDashboardPageRegistries();
+
+      // Ensure the registry reflects the reset state
+      if ($dashboardPageRegistry.length > 0) {
+        const updatedEntries = convertFromLayoutEditItems(dashboardSections, $dashboardPageRegistry);
+        dashboardPageRegistry.set(updatedEntries);
+      }
+    } finally {
+      // Always clear the resetting flag
+      isResetting = false;
+    }
   }
 }
 
-// Helper function to check if a section should be visible
-function isSectionVisible(sectionId: string): boolean {
-  const item = dashboardSections.find(item => item.id === sectionId);
-  return item?.enabled ?? true;
+// Handle dashboard order changes from LayoutEditor
+function handleDashboardOrderChange(newOrdering: Map<string, number>): void {
+  dashboardOrdering = new SvelteMap(newOrdering);
 }
 
-$: sortedSections = dashboardSections.filter(item => item.enabled);
-$: providersNotInstalled = $providerInfos.filter(provider => provider.status === 'not-installed');
-$: providersInstalled = $providerInfos.filter(provider => provider.status === 'installed');
-$: providersConfiguring = $providerInfos.filter(provider => provider.status === 'configuring');
-$: providersConfigured = $providerInfos.filter(provider => provider.status === 'configured');
-$: providersReady = $providerInfos.filter(provider => provider.status === 'ready' || provider.status === 'started');
-$: providersStarting = $providerInfos.filter(provider => provider.status === 'starting');
-$: providersStopped = $providerInfos.filter(provider => provider.status === 'stopped');
-
-function getInitializationContext(id: string): InitializationContext {
-  let context: InitializationContext | undefined = providerInitContexts.get(id);
-
-  if (!context) {
-    context = { mode: DoNothingMode };
-    providerInitContexts.set(id, context);
-  }
-  return context;
+// Handle dashboard section toggle changes from LayoutEditor
+function handleDashboardToggle(itemId: string, enabled: boolean): void {
+  dashboardSections = dashboardSections.map(item => (item.id === itemId ? { ...item, enabled } : item));
 }
+
+// Filter and sort dashboard registry items based on LayoutEditor configuration
+let sortedDashboardRegistry = $derived.by(() => {
+  // Get ordered sections inline to ensure reactivity
+  const orderedSections =
+    dashboardOrdering.size === 0
+      ? [...dashboardSections].sort((a, b) => a.originalOrder - b.originalOrder)
+      : [...dashboardSections].sort((a, b) => {
+          const aOrder = dashboardOrdering.get(a.id) ?? a.originalOrder;
+          const bOrder = dashboardOrdering.get(b.id) ?? b.originalOrder;
+          return aOrder - bOrder;
+        });
+
+  const result = orderedSections
+    .filter(section => section.enabled)
+    .map(section => $dashboardPageRegistry.find(item => item.id === section.id))
+    .filter((item): item is DashboardPageRegistryEntry => item?.component !== undefined);
+
+  return result;
+});
 </script>
 
 <NavPage searchEnabled={false} title="Dashboard">
   {#snippet additionalActions()}
     <LayoutEditor
-      bind:items={dashboardSections}
+      items={dashboardSections}
+      ordering={dashboardOrdering}
       title="Configure Dashboard Sections"
       enableReorder={true}
       enableToggle={true}
+      onOrderChange={handleDashboardOrderChange}
+      onToggle={handleDashboardToggle}
       onReset={resetDashboardLayout}
       resetButtonLabel="Reset Layout"
     />
@@ -108,72 +215,10 @@ function getInitializationContext(id: string): InitializationContext {
           {/each}
         {/if}
 
-        <!-- Render sections in the order specified by layout configuration -->
-        {#each sortedSections as section (section.id)}
-          {#if section.id === 'release-notes' && isSectionVisible('release-notes')}
-            <ReleaseNotesBox />
-          {:else if section.id === 'extension-banners' && isSectionVisible('extension-banners')}
-            <ExtensionBanners />
-          {:else if section.id === 'learning-center' && isSectionVisible('learning-center')}
-            <LearningCenter />
-          {:else if section.id === 'providers' && isSectionVisible('providers')}
-            <!-- Consolidated Providers Section - showing all provider states grouped together -->
-            
-            <!-- Ready Providers (highest priority) -->
-            {#if providersReady.length > 0}
-              {#each providersReady as providerReady (providerReady.internalId)}
-                <ProviderReady provider={providerReady} />
-              {/each}
-            {/if}
-            
-            <!-- Starting Providers -->
-            {#if providersStarting.length > 0}
-              {#each providersStarting as providerStarting (providerStarting.internalId)}
-                <ProviderStarting provider={providerStarting} />
-              {/each}
-            {/if}
-            
-            <!-- Configuring Providers -->
-            {#if providersConfiguring.length > 0}
-              {#each providersConfiguring as providerConfiguring (providerConfiguring.internalId)}
-                <ProviderConfiguring
-                  provider={providerConfiguring}
-                  initializationContext={getInitializationContext(providerConfiguring.internalId)} />
-              {/each}
-            {/if}
-            
-            <!-- Configured Providers -->
-            {#if providersConfigured.length > 0}
-              {#each providersConfigured as providerConfigured (providerConfigured.internalId)}
-                <ProviderConfigured
-                  provider={providerConfigured}
-                  initializationContext={getInitializationContext(providerConfigured.internalId)} />
-              {/each}
-            {/if}
-            
-            <!-- Installed Providers -->
-            {#if providersInstalled.length > 0}
-              {#each providersInstalled as providerInstalled (providerInstalled.internalId)}
-                <ProviderInstalled
-                  provider={providerInstalled}
-                  initializationContext={getInitializationContext(providerInstalled.internalId)} />
-              {/each}
-            {/if}
-            
-            <!-- Not Installed Providers -->
-            {#if providersNotInstalled.length > 0}
-              {#each providersNotInstalled as providerNotInstalled (providerNotInstalled.internalId)}
-                <ProviderNotInstalled provider={providerNotInstalled} />
-              {/each}
-            {/if}
-            
-            <!-- Stopped Providers -->
-            {#if providersStopped.length > 0}
-              {#each providersStopped as providerStopped (providerStopped.internalId)}
-                <ProviderStopped provider={providerStopped} />
-              {/each}
-            {/if}
-          {/if}
+        <!-- Render sections dynamically using the dashboard registry (same pattern as navigation) -->
+        {#each sortedDashboardRegistry as dashboardRegistryItem (dashboardRegistryItem.id)}
+          <!-- svelte-ignore svelte_component_deprecated -->
+          <svelte:component this={dashboardRegistryItem.component} />
         {/each}
       </div>
     </div>

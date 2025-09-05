@@ -16,17 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { describe, expect, test } from 'vitest';
+import ExtensionBanners from '../../lib/recommendation/ExtensionBanners.svelte';
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
 
-import { createLayoutCallbacks } from './layout-service';
-
-describe('createLayoutCallbacks', () => {
-  test('should return object with callback functions', () => {
-    const callbacks = createLayoutCallbacks('test', ['col1', 'col2']);
-
-    expect(callbacks).toBeDefined();
-    expect(callbacks.onLoad).toBeInstanceOf(Function);
-    expect(callbacks.onSave).toBeInstanceOf(Function);
-    expect(callbacks.onReset).toBeInstanceOf(Function);
-  });
-});
+export function createExtensionBanners(): DashboardPageRegistryEntry {
+  return {
+    id: 'extension-banners',
+    originalOrder: 1,
+    component: ExtensionBanners,
+  };
+}

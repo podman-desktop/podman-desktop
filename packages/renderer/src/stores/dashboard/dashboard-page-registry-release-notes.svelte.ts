@@ -16,22 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { LayoutCallbacks, LayoutEditItem } from '/@api/layout-registry-info';
+import ReleaseNotesBox from '../../lib/dashboard/ReleaseNotesBox.svelte';
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
 
-/**
- * Create standardized layout callbacks for a given kind and column names
- * This centralizes the callback logic so each component doesn't duplicate it
- */
-export function createLayoutCallbacks(kind: string, columnNames: string[]): LayoutCallbacks {
+export function createReleaseNotesBox(): DashboardPageRegistryEntry {
   return {
-    onLoad: async (): Promise<LayoutEditItem[]> => {
-      return (await window.loadLayoutConfig(kind, columnNames)) ?? [];
-    },
-    onSave: async (items: LayoutEditItem[]): Promise<void> => {
-      await window.saveLayoutConfig(kind, items);
-    },
-    onReset: async (): Promise<LayoutEditItem[]> => {
-      return (await window.resetLayoutConfig(kind, columnNames)) ?? [];
-    },
+    id: 'release-notes',
+    originalOrder: 0,
+    component: ReleaseNotesBox,
   };
 }

@@ -152,10 +152,6 @@ const columns = [
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),
 ];
 
-// Create layout callbacks immediately
-const columnNames = columns.map(col => col.title);
-const layoutCallbacks = createLayoutCallbacks('pod', columnNames);
-
 const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 </script>
 
@@ -253,7 +249,6 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
         row={row}
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
-        layoutCallbacks={layoutCallbacks}
         on:update={(): PodInfoUI[] => (pods = pods)}>
       </Table>
     {/if}

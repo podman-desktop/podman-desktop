@@ -10,13 +10,15 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { onMount, tick } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 import Icon from '../icons/Icon.svelte';
+import type { LayoutEditItem } from '../layouts/LayoutEditor';
 import LayoutEditor from '../layouts/LayoutEditor.svelte';
-import type { LayoutEditItem } from '../layouts/types';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
+import { tablePersistenceCallbacks } from './table-persistence-store';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,15 +34,10 @@ export let collapsed: string[] = [];
  */
 export let key: (object: T) => string = item => item.name ?? String(item);
 
-interface LayoutCallbacks {
-  onLoad: () => Promise<LayoutEditItem[]>;
-  onSave: (items: LayoutEditItem[]) => Promise<void>;
-  onReset: () => Promise<LayoutEditItem[]>;
-}
 export let enableLayoutConfiguration: boolean = false;
-export let layoutCallbacks: LayoutCallbacks | undefined = undefined;
 
 let columnItems: LayoutEditItem[] = [];
+let columnOrdering = new SvelteMap<string, number>();
 let isInitialized = false;
 let isLoading = false;
 
@@ -60,7 +57,7 @@ async function initializeColumns(): Promise<void> {
 
   isLoading = true;
   try {
-    if (enableLayoutConfiguration && layoutCallbacks) {
+    if (enableLayoutConfiguration) {
       const loadedItems = await loadColumnConfiguration();
       columnItems = loadedItems;
     } else {
@@ -82,43 +79,95 @@ onMount(async () => {
   await initializeColumns();
 });
 
-// Load configuration (use callbacks if provided, otherwise use defaults)
+// Load configuration
 async function loadColumnConfiguration(): Promise<LayoutEditItem[]> {
-  if (enableLayoutConfiguration && layoutCallbacks) {
-    const loadedItems = await layoutCallbacks.onLoad();
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    const loadedItems = await $tablePersistenceCallbacks.load(
+      kind,
+      columns.map(col => col.title),
+    );
 
-    // Ensure loaded items have proper originalOrder from defaults if missing
-    const defaultItems = getDefaultColumnItems();
-    return loadedItems.map((item: LayoutEditItem) => ({
-      ...item,
-      originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
-    }));
+    if (loadedItems.length > 0) {
+      // Ensure loaded items have proper originalOrder from defaults if missing
+      const defaultItems = getDefaultColumnItems();
+      const items = loadedItems.map((item: LayoutEditItem) => ({
+        ...item,
+        originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      }));
+
+      // Build ordering map from loaded items
+      // Check if items are in a different order than their original order
+      const isReordered = items.some((item, index) => item.originalOrder !== index);
+      if (isReordered) {
+        const ordering = new SvelteMap<string, number>();
+        items.forEach((item, index) => {
+          ordering.set(item.id, index);
+        });
+        columnOrdering = ordering;
+      } else {
+        columnOrdering.clear();
+      }
+
+      return items;
+    }
   }
   return getDefaultColumnItems();
 }
 
-// Save configuration (use callbacks if provided)
-async function saveColumnConfiguration(items: LayoutEditItem[]): Promise<void> {
-  if (enableLayoutConfiguration && layoutCallbacks) {
-    await layoutCallbacks.onSave(items);
+// Save configuration
+async function saveColumnConfiguration(): Promise<void> {
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    // Create ordered items based on current state
+    const orderedItems = getOrderedColumns();
+    await $tablePersistenceCallbacks.save(kind, orderedItems);
   }
 }
 
-// Save configuration whenever columnItems changes (after initialization)
+// Get ordered columns based on current ordering
+function getOrderedColumns(): LayoutEditItem[] {
+  if (columnOrdering.size === 0) {
+    return [...columnItems].sort((a, b) => a.originalOrder - b.originalOrder);
+  }
+  return [...columnItems].sort((a, b) => {
+    const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
+    const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
+    return aOrder - bOrder;
+  });
+}
+
+// Save configuration whenever columnItems or ordering changes (after initialization)
 $: if (isInitialized && columnItems.length > 0) {
-  saveColumnConfiguration(columnItems).catch((error: unknown) => {
+  columnOrdering;
+  saveColumnConfiguration().catch((error: unknown) => {
     console.error('Failed to save column configuration:', error);
   });
 }
 
 // Computed visible columns based on configuration
-$: visibleColumns =
-  columnItems.length > 0
-    ? columnItems
-        .filter(item => item.enabled)
-        .map(item => columns.find(col => col.title === item.id)!)
-        .filter(Boolean)
-    : columns; // Fallback to all columns when not yet initialized
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+$: visibleColumns = ((): Column<T, any>[] => {
+  if (columnItems.length === 0) {
+    // Fallback to all columns when not yet initialized
+    return columns;
+  }
+
+  // Get ordered columns inline to ensure reactivity
+  const orderedColumns =
+    columnOrdering.size === 0
+      ? [...columnItems].sort((a, b) => a.originalOrder - b.originalOrder)
+      : [...columnItems].sort((a, b) => {
+          const aOrder = columnOrdering.get(a.id) ?? a.originalOrder;
+          const bOrder = columnOrdering.get(b.id) ?? b.originalOrder;
+          return aOrder - bOrder;
+        });
+
+  const result = orderedColumns
+    .filter(item => item.enabled)
+    .map(item => columns.find(col => col.title === item.id)!)
+    .filter(Boolean);
+
+  return result;
+})();
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
@@ -242,7 +291,7 @@ $: {
   // custom columns
   visibleColumns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
 
-  if (enableLayoutConfiguration && layoutCallbacks) {
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
     // Add space for settings icon in header (32px)
     columnWidths.push('32px');
   } else {
@@ -281,18 +330,34 @@ function toggleChildren(name: string | undefined): void {
   collapsed = collapsed;
 }
 
+// Handle column order changes from LayoutEditor
+function handleColumnOrderChange(newOrdering: SvelteMap<string, number>): void {
+  columnOrdering = newOrdering;
+}
+
+// Handle column toggle changes from LayoutEditor
+function handleColumnToggle(itemId: string, enabled: boolean): void {
+  columnItems = columnItems.map(item => (item.id === itemId ? { ...item, enabled } : item));
+}
+
 // Reset columns to default state and clear saved configuration
 async function resetColumns(): Promise<void> {
   try {
-    if (enableLayoutConfiguration && layoutCallbacks) {
-      columnItems = await layoutCallbacks.onReset();
+    if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+      columnItems = await $tablePersistenceCallbacks.reset(
+        kind,
+        columns.map(col => col.title),
+      );
+      columnOrdering.clear();
     } else {
       columnItems = getDefaultColumnItems();
+      columnOrdering.clear();
     }
   } catch (error) {
     console.error('Failed to reset column configuration:', error);
     // Fallback to default configuration
     columnItems = getDefaultColumnItems();
+    columnOrdering.clear();
   }
 }
 </script>
@@ -347,19 +412,22 @@ async function resetColumns(): Promise<void> {
         </div>
       {/each}
       <!-- Empty space for settings - only when layout configuration is enabled -->
-      {#if enableLayoutConfiguration && layoutCallbacks}
+      {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
         <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
       {/if}
     </div>
     
     <!-- Settings - only show when layout configuration is enabled -->
-    {#if enableLayoutConfiguration && layoutCallbacks}
+    {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
         <LayoutEditor
-          bind:items={columnItems}
+          items={columnItems}
+          ordering={columnOrdering}
           title="Configure Columns"
           enableReorder={true}
           enableToggle={true}
+          onOrderChange={handleColumnOrderChange}
+          onToggle={handleColumnToggle}
           onReset={resetColumns}
           resetButtonLabel="Reset to default"
         />
@@ -412,7 +480,7 @@ async function resetColumns(): Promise<void> {
                   : 'justify-self-start'} self-center {column.info.overflow === true
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
-              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && layoutCallbacks}
+              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component
@@ -450,7 +518,7 @@ async function resetColumns(): Promise<void> {
                       : 'justify-self-start'} self-center {column.info.overflow === true
                     ? ''
                     : 'overflow-hidden'} max-w-full py-1.5"
-                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && layoutCallbacks}
+                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
                   role="cell">
                   {#if column.info.renderer}
                     <svelte:component
