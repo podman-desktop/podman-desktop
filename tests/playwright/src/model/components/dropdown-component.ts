@@ -106,8 +106,16 @@ export class DropdownComponent {
         await playExpect(optionButton).toBeVisible({ timeout: 10_000 });
         await optionButton.click();
 
-        // Verify the selection was applied
-        await playExpect(this.hiddenInput).toHaveValue(optionValue, { timeout: 5_000 });
+        // Verify the selection was applied (case-insensitive due to windows options)
+        await playExpect
+          .poll(
+            async () => {
+              const actualValue = await this.hiddenInput.inputValue();
+              return actualValue.toLowerCase();
+            },
+            { timeout: 5_000 },
+          )
+          .toBe(optionValue.toLowerCase());
       }
     });
   }
