@@ -37,7 +37,7 @@ async function closeCard(): Promise<void> {
     </div>
     <p class="pt-4 text-[var(--pd-content-card-carousel-card-text)]">{feature.description}</p>
     {#if feature.learnMore}
-      <Link class="pt-4" onclick={openLearnMore}>Learn more <Icon icon={faUpRightFromSquare}/></Link>
+      <Link class="flex flex-row w-fit" onclick={openLearnMore}>Learn more <Icon class="ml-1 self-center" icon={faUpRightFromSquare}/></Link>
     {/if}
     <div class="flex flex-row justify-start items-end flex-1 pt-4 gap-2">
       <Button type="primary" icon={feature.buttonIcon} onclick={(): void => router.goto(feature.buttonLink)} title={feature.buttonTitle}

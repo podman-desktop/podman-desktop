@@ -8,7 +8,7 @@
       "buttonTitle": "Create Container",
       "buttonLink": "/containers",
       "tutorialLink": "",
-      "learnMore": ""
+      "learnMore": "https://podman-desktop.io/docs/containers/starting-a-container"
     },
     {
       "id": "explore-kubernetes",
@@ -18,7 +18,7 @@
       "buttonTitle": "Manage Kubernetes",
       "buttonLink": "/kubernetes/dashboard",
       "tutorialLink": "",
-      "learnMore": ""
+      "learnMore": "https://podman-desktop.io/docs/kubernetes"
     },
     {
       "id": "install-extensions",
@@ -28,7 +28,7 @@
       "buttonTitle": "Open Catatlog",
       "buttonLink": "/extensions",
       "tutorialLink": "",
-      "learnMore": ""
+      "learnMore": "https://podman-desktop.io/docs/extensions/install"
     },
     {
       "id": "manage-docker",
@@ -38,7 +38,7 @@
       "buttonTitle": "Manage Compatibility",
       "buttonLink": "/preferences/docker-compatibility",
       "tutorialLink": "",
-      "learnMore": ""
+      "learnMore": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility"
     }
   ]
 }
