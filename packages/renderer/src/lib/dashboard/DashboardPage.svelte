@@ -1,14 +1,12 @@
 <script lang="ts">
-import { type LayoutEditItem, LayoutEditor, NavPage } from '@podman-desktop/ui-svelte';
+import { type LayoutEditItem, LayoutEditor, NavPage, tablePersistenceCallbacks } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import ProviderConfiguring from '/@/lib/dashboard/ProviderConfiguring.svelte';
 import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
-import type { LayoutCallbacks } from '/@api/layout-registry-info';
 
 import { providerInfos } from '../../stores/providers';
-import { createLayoutCallbacks } from '../layout/layout-service';
 import LearningCenter from '../learning-center/LearningCenter.svelte';
 import NotificationsBox from './NotificationsBox.svelte';
 import ProviderConfigured from './ProviderConfigured.svelte';
@@ -29,28 +27,26 @@ const defaultSections = ['release-notes', 'extension-banners', 'learning-center'
 // Dashboard section configuration managed by layout service
 let dashboardSections: LayoutEditItem[] = [];
 let isInitialized = false;
-let layoutCallbacks: LayoutCallbacks;
 
 onMount(async () => {
-  // Create layout callbacks and load configuration
-  layoutCallbacks = createLayoutCallbacks('dashboard', defaultSections);
-
-  // Load dashboard configuration using layout service
-  dashboardSections = await layoutCallbacks.onLoad();
-  isInitialized = true;
+  // Load dashboard configuration using the global persistence store
+  if ($tablePersistenceCallbacks) {
+    dashboardSections = await $tablePersistenceCallbacks.load('dashboard', defaultSections);
+    isInitialized = true;
+  }
 });
 
 // Save configuration whenever dashboardSections changes (after initialization)
-$: if (isInitialized && dashboardSections.length > 0 && layoutCallbacks) {
-  layoutCallbacks.onSave(dashboardSections).catch((error: unknown) => {
+$: if (isInitialized && dashboardSections.length > 0 && $tablePersistenceCallbacks) {
+  $tablePersistenceCallbacks.save('dashboard', dashboardSections).catch((error: unknown) => {
     console.error('Failed to save dashboard configuration:', error);
   });
 }
 
 // Reset function for dashboard layout
 async function resetDashboardLayout(): Promise<void> {
-  if (layoutCallbacks) {
-    dashboardSections = await layoutCallbacks.onReset();
+  if ($tablePersistenceCallbacks) {
+    dashboardSections = await $tablePersistenceCallbacks.reset('dashboard', defaultSections);
   }
 }
 

@@ -489,13 +489,21 @@ describe('Table#collapsed', () => {
     expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
   });
 
-  test('should initialize with async/await pattern on mount', async () => {
-    const onLoadLayout = vi.fn().mockResolvedValue([
-      { id: 'Name', label: 'Name', enabled: true, order: 0 },
-      { id: 'Age', label: 'Age', enabled: false, order: 1 },
+  test('should initialize with async/await pattern on mount when tablePersistenceCallbacks available', async () => {
+    const mockLoad = vi.fn().mockResolvedValue([
+      { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
+      { id: 'Age', label: 'Age', enabled: false, originalOrder: 1 },
     ]);
-    const onSaveLayout = vi.fn().mockResolvedValue(undefined);
-    const onResetLayout = vi.fn().mockResolvedValue([]);
+    const mockSave = vi.fn().mockResolvedValue(undefined);
+    const mockReset = vi.fn().mockResolvedValue([]);
+
+    // Mock the tablePersistenceCallbacks store
+    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
+    tablePersistenceCallbacks.set({
+      load: mockLoad,
+      save: mockSave,
+      reset: mockReset,
+    });
 
     render(Table, {
       kind: 'test',
@@ -505,25 +513,24 @@ describe('Table#collapsed', () => {
       },
       data: [],
       enableLayoutConfiguration: true,
-      layoutCallbacks: {
-        onLoad: onLoadLayout,
-        onSave: onSaveLayout,
-        onReset: onResetLayout,
-      },
     });
 
     // Wait for mount and async initialization
     await tick();
 
-    expect(onLoadLayout).toHaveBeenCalled();
+    expect(mockLoad).toHaveBeenCalled();
   });
 
-  test('should show layout management UI when layoutCallbacks provided', async () => {
-    const layoutCallbacks = {
-      onLoad: vi.fn().mockResolvedValue([]),
-      onSave: vi.fn().mockResolvedValue(undefined),
-      onReset: vi.fn().mockResolvedValue([]),
+  test('should show layout management UI when tablePersistenceCallbacks available', async () => {
+    const mockCallbacks = {
+      load: vi.fn().mockResolvedValue([]),
+      save: vi.fn().mockResolvedValue(undefined),
+      reset: vi.fn().mockResolvedValue([]),
     };
+
+    // Mock the tablePersistenceCallbacks store
+    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
+    tablePersistenceCallbacks.set(mockCallbacks);
 
     render(Table, {
       kind: 'test',
@@ -533,7 +540,6 @@ describe('Table#collapsed', () => {
       },
       data: [],
       enableLayoutConfiguration: true,
-      layoutCallbacks,
     });
 
     await tick();
@@ -547,7 +553,11 @@ describe('Table#collapsed', () => {
     expect(layoutButton).toBeInTheDocument();
   });
 
-  test('should not show layout management UI when no layoutCallbacks', async () => {
+  test('should not show layout management UI when no tablePersistenceCallbacks', async () => {
+    // Mock the tablePersistenceCallbacks store as undefined
+    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
+    tablePersistenceCallbacks.set(undefined);
+
     render(Table, {
       kind: 'test',
       columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
@@ -555,7 +565,7 @@ describe('Table#collapsed', () => {
         info: { selectable: true },
       },
       data: [],
-      // No layoutCallbacks provided
+      enableLayoutConfiguration: true,
     });
 
     await tick();

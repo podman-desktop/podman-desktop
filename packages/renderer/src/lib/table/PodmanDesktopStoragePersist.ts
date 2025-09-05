@@ -16,22 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { LayoutCallbacks, LayoutEditItem } from '/@api/layout-registry-info';
+import type { LayoutEditItem, TablePersistenceCallbacks } from '@podman-desktop/ui-svelte';
 
 /**
- * Create standardized layout callbacks for a given kind and column names
- * This centralizes the callback logic so each component doesn't duplicate it
+ * Podman Desktop storage persistence implementation that uses the main process
+ * window API for storing table layout configurations.
  */
-export function createLayoutCallbacks(kind: string, columnNames: string[]): LayoutCallbacks {
-  return {
-    onLoad: async (): Promise<LayoutEditItem[]> => {
-      return (await window.loadLayoutConfig(kind, columnNames)) ?? [];
-    },
-    onSave: async (items: LayoutEditItem[]): Promise<void> => {
-      await window.saveLayoutConfig(kind, items);
-    },
-    onReset: async (): Promise<LayoutEditItem[]> => {
-      return (await window.resetLayoutConfig(kind, columnNames)) ?? [];
-    },
-  };
+export class PodmanDesktopStoragePersist implements TablePersistenceCallbacks {
+  async load(kind: string, columnNames: string[]): Promise<LayoutEditItem[]> {
+    return await window.loadLayoutConfig(kind, columnNames);
+  }
+
+  async save(kind: string, items: LayoutEditItem[]): Promise<void> {
+    await window.saveLayoutConfig(kind, items);
+  }
+
+  async reset(kind: string, columnNames: string[]): Promise<LayoutEditItem[]> {
+    return await window.resetLayoutConfig(kind, columnNames);
+  }
 }

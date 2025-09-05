@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { describe, expect, test } from 'vitest';
+import { type Writable, writable } from 'svelte/store';
 
-import { createLayoutCallbacks } from './layout-service';
+import type { TablePersistenceCallbacks } from './table';
 
-describe('createLayoutCallbacks', () => {
-  test('should return object with callback functions', () => {
-    const callbacks = createLayoutCallbacks('test', ['col1', 'col2']);
+export const tablePersistenceCallbacks = setup();
 
-    expect(callbacks).toBeDefined();
-    expect(callbacks.onLoad).toBeInstanceOf(Function);
-    expect(callbacks.onSave).toBeInstanceOf(Function);
-    expect(callbacks.onReset).toBeInstanceOf(Function);
+export function setup(): Writable<TablePersistenceCallbacks | undefined> {
+  const store = writable<TablePersistenceCallbacks | undefined>();
+
+  window.addEventListener('table-persistence:setup', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    tablePersistenceCallbacks.set(customEvent.detail as TablePersistenceCallbacks);
   });
-});
+
+  return store;
+}
