@@ -146,6 +146,16 @@ vi.mock('electron', async () => {
     nativeTheme: {
       on: vi.fn(),
     },
+    nativeImage: {
+      createFromPath: vi.fn(() => ({
+        isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
+      })),
+      createFromBuffer: vi.fn(() => ({
+        isEmpty: vi.fn(() => false),
+        setTemplateImage: vi.fn(),
+      })),
+    },
     Menu: {
       buildFromTemplate: vi.fn(),
       getApplicationMenu: vi.fn(),
