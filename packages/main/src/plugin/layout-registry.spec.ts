@@ -31,6 +31,7 @@ let mockConfiguration: {
 };
 
 beforeEach(() => {
+  vi.clearAllMocks();
   mockConfiguration = {
     get: vi.fn(),
     update: vi.fn(),
@@ -45,8 +46,11 @@ beforeEach(() => {
 });
 
 describe('LayoutRegistry', () => {
-  test('should initialize configuration on init', () => {
-    layoutRegistry.init();
+  test('should auto-register layout configuration when loading for the first time', async () => {
+    const columnNames = ['Status', 'Name', 'Actions'];
+    mockConfiguration.get.mockReturnValue([]);
+
+    await layoutRegistry.loadLayoutConfig('container', columnNames);
 
     expect(mockConfigurationRegistry.registerConfigurations).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -54,11 +58,11 @@ describe('LayoutRegistry', () => {
         title: 'Layout',
         type: 'object',
         properties: expect.objectContaining({
-          'layout.dashboard': expect.any(Object),
-          'layout.container': expect.any(Object),
-          'layout.pod': expect.any(Object),
-          'layout.image': expect.any(Object),
-          'layout.volume': expect.any(Object),
+          'layout.container': expect.objectContaining({
+            description: 'Preferred layout of columns for container',
+            type: 'array',
+            hidden: true,
+          }),
         }),
       }),
     ]);
@@ -69,7 +73,11 @@ describe('LayoutRegistry', () => {
     expect(defaultConfig).toEqual([]);
   });
 
-  test('should get default table config for known table types', () => {
+  test('should get default table config after auto-registration via load', async () => {
+    // Auto-register container layout by calling load
+    mockConfiguration.get.mockReturnValue([]);
+    await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name', 'Environment', 'Image', 'Uptime', 'Actions']);
+
     const containerConfig = layoutRegistry.getDefaultLayoutConfig('container');
     expect(containerConfig).toEqual([
       { id: 'Status', enabled: true },
@@ -79,6 +87,9 @@ describe('LayoutRegistry', () => {
       { id: 'Uptime', enabled: true },
       { id: 'Actions', enabled: true },
     ]);
+
+    // Auto-register image layout by calling load
+    await layoutRegistry.loadLayoutConfig('image', ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions']);
 
     const imageConfig = layoutRegistry.getDefaultLayoutConfig('image');
     expect(imageConfig).toEqual([
@@ -103,7 +114,7 @@ describe('LayoutRegistry', () => {
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
+      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 2 },
     ]);
   });
 
@@ -131,10 +142,6 @@ describe('LayoutRegistry', () => {
     expect(result).toEqual([
       { id: 'Status', label: 'Status', enabled: true, originalOrder: 0 },
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
-      { id: 'Environment', label: 'Environment', enabled: true, originalOrder: 2 },
-      { id: 'Image', label: 'Image', enabled: true, originalOrder: 3 },
-      { id: 'Uptime', label: 'Uptime', enabled: true, originalOrder: 4 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
     ]);
 
     consoleSpy.mockRestore();
@@ -161,21 +168,6 @@ describe('LayoutRegistry', () => {
     expect(result).toEqual([
       { id: 'Status', label: 'Status', enabled: true, originalOrder: 0 },
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
-      { id: 'Environment', label: 'Environment', enabled: true, originalOrder: 2 },
-      { id: 'Image', label: 'Image', enabled: true, originalOrder: 3 },
-      { id: 'Uptime', label: 'Uptime', enabled: true, originalOrder: 4 },
-      { id: 'Actions', label: 'Actions', enabled: true, originalOrder: 5 },
-    ]);
-  });
-
-  test('should handle dashboard labels correctly', async () => {
-    const result = await layoutRegistry.loadLayoutConfig('dashboard', ['release-notes', 'providers']);
-
-    expect(result).toEqual([
-      { id: 'release-notes', label: 'Release Notes', enabled: true, originalOrder: 0 },
-      { id: 'extension-banners', label: 'Extension Banners', enabled: true, originalOrder: 1 },
-      { id: 'learning-center', label: 'Learning Center', enabled: true, originalOrder: 2 },
-      { id: 'providers', label: 'Providers', enabled: true, originalOrder: 3 },
     ]);
   });
 
@@ -191,7 +183,7 @@ describe('LayoutRegistry', () => {
     expect(result).toEqual([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 1 },
       { id: 'Status', label: 'Status', enabled: false, originalOrder: 0 },
-      { id: 'NewColumn', label: 'NewColumn', enabled: true, originalOrder: 6 },
+      { id: 'NewColumn', label: 'NewColumn', enabled: true, originalOrder: 2 },
     ]);
   });
 
@@ -210,12 +202,12 @@ describe('LayoutRegistry', () => {
     // Test with null saved config
     mockConfiguration.get.mockReturnValue(null);
     let result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name']);
-    expect(result).toHaveLength(6); // Should fallback to defaults
+    expect(result).toHaveLength(2); // Should fallback to defaults
 
     // Test with non-array saved config
     mockConfiguration.get.mockReturnValue('invalid');
     result = await layoutRegistry.loadLayoutConfig('container', ['Status', 'Name']);
-    expect(result).toHaveLength(6); // Should fallback to defaults
+    expect(result).toHaveLength(2); // Should fallback to defaults
   });
 
   test('should handle unknown table types', () => {

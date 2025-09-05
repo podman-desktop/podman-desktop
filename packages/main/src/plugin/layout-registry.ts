@@ -22,14 +22,8 @@ import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configura
 import type { IDisposable } from '/@api/disposable.js';
 import { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-registry-info.js';
 
-// Table defaults registry - hardcoded fallbacks, can be overridden by components
-const TABLE_DEFAULTS: Record<string, string[]> = {
-  dashboard: ['release-notes', 'extension-banners', 'learning-center', 'providers'],
-  container: ['Status', 'Name', 'Environment', 'Image', 'Uptime', 'Actions'],
-  pod: ['Status', 'Name', 'Containers', 'Age', 'Actions'],
-  image: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
-  volume: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
-};
+// Dynamic layout registry - populated by frontend components during initialization
+const REGISTERED_LAYOUTS: Record<string, string[]> = {};
 
 @injectable()
 export class LayoutRegistry implements AsyncDisposable {
@@ -42,48 +36,6 @@ export class LayoutRegistry implements AsyncDisposable {
     this.dispose();
   }
 
-  init(): void {
-    const layoutConfiguration: IConfigurationNode = {
-      id: 'preferences',
-      title: 'Layout',
-      type: 'object',
-      properties: {
-        ['layout.dashboard']: {
-          description: 'Preferred layout of dashboard sections',
-          type: 'array',
-          default: this.parseConfiguration(TABLE_DEFAULTS['dashboard'] ?? []),
-          hidden: true,
-        },
-        ['layout.container']: {
-          description: 'Preferred layout of columns for containers',
-          type: 'array',
-          default: this.parseConfiguration(TABLE_DEFAULTS['container'] ?? []),
-          hidden: true,
-        },
-        ['layout.pod']: {
-          description: 'Preferred layout of columns for pods',
-          type: 'array',
-          default: this.parseConfiguration(TABLE_DEFAULTS['pod'] ?? []),
-          hidden: true,
-        },
-        ['layout.image']: {
-          description: 'Preferred layout of columns for images',
-          type: 'array',
-          default: this.parseConfiguration(TABLE_DEFAULTS['image'] ?? []),
-          hidden: true,
-        },
-        ['layout.volume']: {
-          description: 'Preferred layout of columns for volumes',
-          type: 'array',
-          default: this.parseConfiguration(TABLE_DEFAULTS['volume'] ?? []),
-          hidden: true,
-        },
-      },
-    };
-
-    this.#disposables.push(this.configurationRegistry.registerConfigurations([layoutConfiguration]));
-  }
-
   dispose(): void {
     this.#disposables.forEach(disposable => disposable.dispose());
     this.#disposables = [];
@@ -91,13 +43,35 @@ export class LayoutRegistry implements AsyncDisposable {
 
   // Get default configuration for a layout kind
   getDefaultLayoutConfig(layoutKind: string): SavedLayoutConfig[] {
-    const defaults = TABLE_DEFAULTS[layoutKind] ?? [];
+    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? [];
     return defaults.map(name => ({ id: name, enabled: true }));
   }
 
   // Load layout configuration (with fallback to defaults)
   async loadLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
     try {
+      // Auto-register the layout if not already registered
+      if (!REGISTERED_LAYOUTS[layoutKind]) {
+        REGISTERED_LAYOUTS[layoutKind] = availableColumns;
+
+        // Register the configuration with the configuration registry
+        const layoutConfiguration: IConfigurationNode = {
+          id: 'preferences',
+          title: 'Layout',
+          type: 'object',
+          properties: {
+            [`layout.${layoutKind}`]: {
+              description: `Preferred layout of columns for ${layoutKind}`,
+              type: 'array',
+              default: this.parseConfiguration(availableColumns),
+              hidden: true,
+            },
+          },
+        };
+
+        this.#disposables.push(this.configurationRegistry.registerConfigurations([layoutConfiguration]));
+      }
+
       const config = this.configurationRegistry.getConfiguration('layout');
       const savedConfig = config.get<SavedLayoutConfig[]>(`${layoutKind}`, []);
 
@@ -129,7 +103,7 @@ export class LayoutRegistry implements AsyncDisposable {
 
   // Helper: Create default layout items
   private createDefaultLayoutItems(layoutKind: string, availableColumns: string[]): LayoutEditItem[] {
-    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
+    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? availableColumns;
     return defaults.map((colName, index) => ({
       id: colName,
       label: this.getColumnLabel(layoutKind, colName),
@@ -160,7 +134,7 @@ export class LayoutRegistry implements AsyncDisposable {
     const mergedItems: LayoutEditItem[] = [];
 
     // Get default order to determine originalOrder for each column
-    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
+    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? availableColumns;
     const getOriginalOrder = (id: string): number => {
       const index = defaults.indexOf(id);
       return index >= 0 ? index : defaults.length; // Put unknown items at the end

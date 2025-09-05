@@ -17,6 +17,7 @@ import LayoutEditor from '../layouts/LayoutEditor.svelte';
 import type { LayoutEditItem } from '../layouts/types';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
+import { tablePersistenceCallbacks } from './table-persistence-store';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,13 +33,7 @@ export let collapsed: string[] = [];
  */
 export let key: (object: T) => string = item => item.name ?? String(item);
 
-interface LayoutCallbacks {
-  onLoad: () => Promise<LayoutEditItem[]>;
-  onSave: (items: LayoutEditItem[]) => Promise<void>;
-  onReset: () => Promise<LayoutEditItem[]>;
-}
 export let enableLayoutConfiguration: boolean = false;
-export let layoutCallbacks: LayoutCallbacks | undefined = undefined;
 
 let columnItems: LayoutEditItem[] = [];
 let isInitialized = false;
@@ -60,7 +55,7 @@ async function initializeColumns(): Promise<void> {
 
   isLoading = true;
   try {
-    if (enableLayoutConfiguration && layoutCallbacks) {
+    if (enableLayoutConfiguration) {
       const loadedItems = await loadColumnConfiguration();
       columnItems = loadedItems;
     } else {
@@ -82,25 +77,30 @@ onMount(async () => {
   await initializeColumns();
 });
 
-// Load configuration (use callbacks if provided, otherwise use defaults)
+// Load configuration
 async function loadColumnConfiguration(): Promise<LayoutEditItem[]> {
-  if (enableLayoutConfiguration && layoutCallbacks) {
-    const loadedItems = await layoutCallbacks.onLoad();
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    const loadedItems = await $tablePersistenceCallbacks.load(
+      kind,
+      columns.map(col => col.title),
+    );
 
-    // Ensure loaded items have proper originalOrder from defaults if missing
-    const defaultItems = getDefaultColumnItems();
-    return loadedItems.map((item: LayoutEditItem) => ({
-      ...item,
-      originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
-    }));
+    if (loadedItems.length > 0) {
+      // Ensure loaded items have proper originalOrder from defaults if missing
+      const defaultItems = getDefaultColumnItems();
+      return loadedItems.map((item: LayoutEditItem) => ({
+        ...item,
+        originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      }));
+    }
   }
   return getDefaultColumnItems();
 }
 
-// Save configuration (use callbacks if provided)
+// Save configuration
 async function saveColumnConfiguration(items: LayoutEditItem[]): Promise<void> {
-  if (enableLayoutConfiguration && layoutCallbacks) {
-    await layoutCallbacks.onSave(items);
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    await $tablePersistenceCallbacks.save(kind, items);
   }
 }
 
@@ -242,7 +242,7 @@ $: {
   // custom columns
   visibleColumns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
 
-  if (enableLayoutConfiguration && layoutCallbacks) {
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
     // Add space for settings icon in header (32px)
     columnWidths.push('32px');
   } else {
@@ -284,8 +284,11 @@ function toggleChildren(name: string | undefined): void {
 // Reset columns to default state and clear saved configuration
 async function resetColumns(): Promise<void> {
   try {
-    if (enableLayoutConfiguration && layoutCallbacks) {
-      columnItems = await layoutCallbacks.onReset();
+    if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+      columnItems = await $tablePersistenceCallbacks.reset(
+        kind,
+        columns.map(col => col.title),
+      );
     } else {
       columnItems = getDefaultColumnItems();
     }
@@ -347,13 +350,13 @@ async function resetColumns(): Promise<void> {
         </div>
       {/each}
       <!-- Empty space for settings - only when layout configuration is enabled -->
-      {#if enableLayoutConfiguration && layoutCallbacks}
+      {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
         <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
       {/if}
     </div>
     
     <!-- Settings - only show when layout configuration is enabled -->
-    {#if enableLayoutConfiguration && layoutCallbacks}
+    {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
         <LayoutEditor
           bind:items={columnItems}
@@ -412,7 +415,7 @@ async function resetColumns(): Promise<void> {
                   : 'justify-self-start'} self-center {column.info.overflow === true
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
-              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && layoutCallbacks}
+              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component
@@ -450,7 +453,7 @@ async function resetColumns(): Promise<void> {
                       : 'justify-self-start'} self-center {column.info.overflow === true
                     ? ''
                     : 'overflow-hidden'} max-w-full py-1.5"
-                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && layoutCallbacks}
+                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
                   role="cell">
                   {#if column.info.renderer}
                     <svelte:component
