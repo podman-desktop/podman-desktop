@@ -23,6 +23,7 @@ const ESCAPE_KEY = 'Escape';
 const ARROW_DOWN_KEY = 'ArrowDown';
 const ARROW_UP_KEY = 'ArrowUp';
 const TAB_KEY = 'Tab';
+const F1 = 'F1';
 
 interface Props {
   display?: boolean;
@@ -54,7 +55,7 @@ let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
 let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
 let searchOptions: SearchOption[] = $derived([
   { text: 'All', shortCut: [`${modifierC}${modifierS}P`] },
-  { text: 'Commands', shortCut: ['F1', '>'] },
+  { text: 'Commands', shortCut: [`${F1}`, '>'] },
   { text: 'Documentation', shortCut: [`${modifierC}K`] },
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
@@ -123,7 +124,7 @@ function displaySearchBar(): void {
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
   // toggle display using F1 or ESC keys
-  if (e.key === 'F1' || e.key === '>') {
+  if (e.key === `${F1}` || e.key === '>') {
     selectedFilteredIndex = 0;
     searchOptionsSelectedIndex = 1;
     displaySearchBar();
@@ -138,12 +139,15 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     if (e.shiftKey && e.key.toLowerCase() === 'p') {
       searchOptionsSelectedIndex = 0;
       displaySearchBar();
+      e.preventDefault();
     } else if (e.key.toLowerCase() === 'k') {
       searchOptionsSelectedIndex = 2;
       displaySearchBar();
+      e.preventDefault();
     } else if (e.key.toLowerCase() === 'f') {
       searchOptionsSelectedIndex = 3;
       displaySearchBar();
+      e.preventDefault();
     }
   }
 
