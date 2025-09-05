@@ -510,22 +510,20 @@ export async function readFileInVolumeFromCLI(volumeName: string, fileName: stri
  * This method checks that the machine card exists and displays the correct connection type.
  *
  * @param resourceConnectionCardPage - The resource connection card page to verify
- * @param machineName - The name of the machine to verify
  * @param virtualizationProvider - The expected virtualization provider type (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV...)
  * @returns A Promise that resolves when the verification is complete
  * @throws Will throw an error if the expected virtualization provider is not found or doesn't match
  */
 export async function verifyVirtualizationProvider(
   resourceConnectionCardPage: ResourceConnectionCardPage,
-  machineName: string,
   virtualizationProvider: PodmanVirtualizationProviders,
 ): Promise<void> {
   return test.step(`Verify Podman Provider is ${virtualizationProvider}`, async () => {
     await playExpect
       .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
       .toBeTruthy();
-    await playExpect(
-      resourceConnectionCardPage.card.getByLabel(machineName).getByLabel('Connection Type'),
-    ).toContainText(virtualizationProvider);
+    await playExpect(resourceConnectionCardPage.card.getByLabel('Connection Type')).toContainText(
+      virtualizationProvider,
+    );
   });
 }

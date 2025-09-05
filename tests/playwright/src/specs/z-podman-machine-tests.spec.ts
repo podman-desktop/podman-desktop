@@ -170,7 +170,6 @@ test.describe
       const podmanResources = new ResourceConnectionCardPage(page, 'podman', ROOTLESS_PODMAN_MACHINE_VISIBLE);
       await verifyVirtualizationProvider(
         podmanResources,
-        ROOTLESS_PODMAN_MACHINE_VISIBLE,
         getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
       );
     });

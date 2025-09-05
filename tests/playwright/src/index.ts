@@ -93,3 +93,6 @@ export * from './model/pages/troubleshooting-page';
 export * from './model/pages/welcome-page';
 export * from './model/workbench/navigation';
 export * from './model/workbench/status-bar';
+
+// export components
+export * from './model/components/dropdown-component';

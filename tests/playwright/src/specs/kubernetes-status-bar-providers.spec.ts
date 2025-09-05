@@ -115,11 +115,6 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
       setAsDefault: false,
       virtualizationProvider: getVirtualizationProvider(),
     });
-    await verifyVirtualizationProvider(
-      podmanResources,
-      newMachineName,
-      getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
-    );
 
     const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
     playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
@@ -128,6 +123,8 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
         (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
       { timeout: 30_000, sendError: true },
     );
+
+    await verifyVirtualizationProvider(machineCard, getVirtualizationProvider() ?? getDefaultVirtualizationProvider());
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 

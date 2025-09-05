@@ -176,14 +176,13 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
           startNow: false,
           virtualizationProvider: getVirtualizationProvider(),
         });
-        await verifyVirtualizationProvider(
-          podmanResources,
-          PODMAN_MACHINE_NAME,
-          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
-        );
 
         await playExpect(resourcePage.heading).toBeVisible();
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+        await verifyVirtualizationProvider(
+          machineCard,
+          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+        );
         playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
         playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
       });

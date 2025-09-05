@@ -22,6 +22,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import { isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
+import { DropdownComponent } from '../../components/dropdown-component';
 import type { PodmanVirtualizationProviders } from '../../core/types';
 import { BasePage } from '../base-page';
 
@@ -35,7 +36,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
-  providerType: Locator;
+  readonly providerTypeDropdown: DropdownComponent;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -60,21 +61,10 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
-    this.providerType = this.getProviderType(getDefaultVirtualizationProvider() ?? '');
+    this.providerTypeDropdown = new DropdownComponent(page, 'Provider Type');
 
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
-  }
-
-  /**
-   * Get the provider type option locator for the given provider name.
-   * @param providerName - The name of the provider to get the option for (e.g. 'hyperv', 'wsl', 'default GPU enabled (LibKrun)', 'Apple HyperVisor')
-   * @returns The provider type option locator for the given provider name.
-   */
-  getProviderType(providerName: string): Locator {
-    return this.podmanMachineConfiguration
-      .getByLabel('Provider Type')
-      .getByRole('button', { name: providerName, exact: false }); //not case-sensitive due to windows options
   }
 
   async setupAndCreateMachine(
@@ -134,22 +124,20 @@ export class MachineCreationForm extends BasePage {
     virtualizationProvider: PodmanVirtualizationProviders | undefined,
   ): Promise<void> {
     return test.step(`Set Podman Provider to ${virtualizationProvider ?? getDefaultVirtualizationProvider()}`, async () => {
-      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
-        // Get the current provider type text
-        await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
-        const currentProviderText = await this.providerType.innerText();
+      if (virtualizationProvider) {
+        // Wait for the dropdown to be ready
+        await this.providerTypeDropdown.waitForReady();
+
+        // Get the current provider value to check if change is needed
+        const currentProviderValue = await this.providerTypeDropdown.getCurrentDisplayText();
 
         // Only proceed if the new provider type is different from the current one
-        if (virtualizationProvider !== currentProviderText) {
-          // Click the current provider to open the dropdown
-          await this.providerType.scrollIntoViewIfNeeded();
-          await this.providerType.click();
+        if (virtualizationProvider !== currentProviderValue) {
+          // Select the new provider option using the dropdown component
+          await this.providerTypeDropdown.selectOption(virtualizationProvider, virtualizationProvider, false);
 
-          // Select the new provider option
-          this.providerType = this.getProviderType(virtualizationProvider);
-          await playExpect(this.providerType).toBeVisible({ timeout: 10_000 });
-          await playExpect(this.providerType).toContainText(virtualizationProvider, { ignoreCase: true });
-          await this.providerType.click();
+          // Verify the selection was applied
+          await this.providerTypeDropdown.verifyState(virtualizationProvider, virtualizationProvider);
         }
       }
     });
