@@ -23,6 +23,7 @@ import { IConfigurationNode } from '/@api/configuration/models.js';
 import { ConfigurationRegistry } from '../configuration-registry.js';
 import { ContainerProviderRegistry } from '../container-registry.js';
 import { ExtensionLoader } from '../extension/extension-loader.js';
+import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
 import { ProviderRegistry } from '../provider-registry.js';
 import { Feature } from './explore-features-api.js';
 import featuresJson from './features.json' with { type: 'json' };
@@ -44,6 +45,8 @@ export class ExploreFeatures {
     private configurationRegistry: ConfigurationRegistry,
     @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
+    @inject(KubernetesClient)
+    private kubernetesClient: KubernetesClient,
   ) {
     this.images['start-a-container'] = startAContainer;
     this.images['explore-kubernetes'] = exploreKubernetes;
@@ -61,27 +64,28 @@ export class ExploreFeatures {
       feature.img = this.images[feature.id];
       return feature;
     });
-    // TODO: re-add return this.checkShowRequirements(featuresJson.features);
-    return featuresJson.features;
+    return this.checkShowRequirements(featuresJson.features);
   }
 
   private async checkShowRequirements(features: Feature[]): Promise<Feature[]> {
     const containerList = await this.containerProviderRegistry.listContainers();
     const extensionList = await this.extensionLoader.listExtensions();
     const providerList = this.providerRegistry.getProviderInfos();
+    const contextsStateList = this.kubernetesClient.getContextsGeneralState();
     features.forEach(feature => {
       if (feature.show && feature.id === 'start-a-container') {
-        feature.show = containerList.length <= 0;
-        console.log('start a container ' + feature.show);
+        feature.show = containerList.length === 0;
       } else if (feature.show && feature.id === 'explore-kubernetes') {
-        feature.show = !providerList.find(provider => provider.kubernetesConnections.length > 0);
-        console.log('kubernetes ' + feature.show);
+        let reachableContexts = 0;
+        contextsStateList.forEach(context => {
+          if (context.reachable) reachableContexts++;
+        });
+        feature.show =
+          !providerList.find(provider => provider.kubernetesConnections.length > 0) && reachableContexts === 0;
       } else if (feature.show && feature.id === 'install-extensions') {
-        feature.show = extensionList.length <= 0;
-        console.log('extensions ' + feature.show);
+        feature.show = extensionList.length === 0;
       } else if (feature.show && feature.id === 'manage-docker') {
         feature.show = !this.configurationRegistry.getConfiguration('dockerCompatibility').get<boolean>('enabled');
-        console.log('docker ' + feature.show);
       }
     });
 
@@ -112,8 +116,8 @@ export class ExploreFeatures {
         },
         ['exploreFeatures.hiddenFeatures']: {
           type: 'array',
-          hidden: true,
           default: [],
+          hidden: true,
         },
       },
     };
