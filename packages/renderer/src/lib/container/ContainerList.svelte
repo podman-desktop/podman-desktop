@@ -29,7 +29,6 @@ import Dialog from '../dialogs/Dialog.svelte';
 import Prune from '../engine/Prune.svelte';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import SolidPodIcon from '../images/SolidPodIcon.svelte';
-import { createLayoutCallbacks } from '../layout/layout-service';
 import { PodUtils } from '../pod/pod-utils';
 import { CONTAINER_LIST_VIEW } from '../view/views';
 import { ContainerUtils } from './container-utils';
@@ -361,10 +360,6 @@ const columns = [
   }),
 ];
 
-// Create layout callbacks immediately
-const columnNames = columns.map(col => col.title);
-const layoutCallbacks = createLayoutCallbacks('container', columnNames);
-
 const row = new TableRow<ContainerGroupInfoUI | ContainerInfoUI>({
   selectable: (_container): boolean => true,
   children: (object): ContainerInfoUI[] => {
@@ -468,7 +463,6 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           defaultSortColumn="Name"
           key={key}
           enableLayoutConfiguration={true}
-          layoutCallbacks={layoutCallbacks}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
       {/if}

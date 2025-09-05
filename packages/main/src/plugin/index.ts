@@ -702,7 +702,6 @@ export class PluginSystem {
 
     container.bind<LayoutRegistry>(LayoutRegistry).toSelf().inSingletonScope();
     const layoutRegistry = container.get<LayoutRegistry>(LayoutRegistry);
-    layoutRegistry.init();
 
     container.bind<PinRegistry>(PinRegistry).toSelf().inSingletonScope();
     const pinRegistry = container.get<PinRegistry>(PinRegistry);

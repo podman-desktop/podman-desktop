@@ -22,7 +22,6 @@ import type { EngineInfoUI } from '../engine/EngineInfoUI';
 import Prune from '../engine/Prune.svelte';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import VolumeIcon from '../images/VolumeIcon.svelte';
-import { createLayoutCallbacks } from '../layout/layout-service';
 import { VolumeUtils } from './volume-utils';
 import VolumeColumnActions from './VolumeColumnActions.svelte';
 import VolumeColumnEnvironment from './VolumeColumnEnvironment.svelte';
@@ -170,9 +169,6 @@ const columns = [
   new TableColumn<VolumeInfoUI>('Actions', { align: 'right', renderer: VolumeColumnActions, overflow: true }),
 ];
 
-const columnNames = columns.map(col => col.title);
-const layoutCallbacks = createLayoutCallbacks('volume', columnNames);
-
 const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
@@ -232,7 +228,6 @@ const row = new TableRow<VolumeInfoUI>({
         row={row}
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
-        layoutCallbacks={layoutCallbacks}
         on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
       </Table>
     {/if}
