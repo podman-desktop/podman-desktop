@@ -33,14 +33,6 @@ export default function ThreeMillion(): JSX.Element {
         <meta name="twitter:image" content="https://podman-desktop.io/img/3million-celebration.jpg" />
       </Head>
 
-      <div
-        style={{
-          margin: 0,
-          padding: 0,
-          overflow: 'hidden',
-          minHeight: '100vh',
-        }}></div>
-
       <Layout
         title="3,000,000"
         description="Celebrate 3,000,000 downloads of Podman Desktop! Thank you to everyone who provides feedback and helps us improve."
