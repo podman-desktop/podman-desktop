@@ -20,7 +20,10 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { isWindows } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
+import { DropdownComponent } from '../../components/dropdown-component';
+import type { PodmanVirtualizationProviders } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -33,6 +36,7 @@ export class MachineCreationForm extends BasePage {
   readonly podmanMachineDiskSize: Locator;
   readonly rootPriviledgesCheckbox: Locator;
   readonly userModeNetworkingCheckbox: Locator;
+  readonly providerTypeDropdown: DropdownComponent;
   readonly startNowCheckbox: Locator;
   readonly createMachineButton: Locator;
 
@@ -57,6 +61,8 @@ export class MachineCreationForm extends BasePage {
     this.userModeNetworkingCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', {
       name: 'User mode networking',
     });
+    this.providerTypeDropdown = new DropdownComponent(page, 'Provider Type');
+
     this.startNowCheckbox = this.podmanMachineConfiguration.getByRole('checkbox', { name: 'Start the machine now' });
     this.createMachineButton = this.podmanMachineConfiguration.getByRole('button', { name: 'Create' });
   }
@@ -67,13 +73,15 @@ export class MachineCreationForm extends BasePage {
       isRootful = true,
       enableUserNet = false,
       startNow = true,
+      virtualizationProvider,
     }: {
       isRootful?: boolean;
       enableUserNet?: boolean;
       startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
     } = {},
   ): Promise<void> {
-    return test.step(`Create Podman Machine: ${machineName} with settings ${isRootful}, ${enableUserNet} and ${startNow}`, async () => {
+    return test.step(`Create Podman Machine '${machineName}' with settings: ${isRootful ? 'rootful' : 'rootless'}, ${enableUserNet ? 'usernet enabled' : 'usernet disabled'}, ${startNow ? 'startnow enabled' : 'startnow disabled'}${virtualizationProvider ? ', and ' + virtualizationProvider : ''}`, async () => {
       await playExpect(this.podmanMachineConfiguration).toBeVisible({
         timeout: 10_000,
       });
@@ -83,6 +91,9 @@ export class MachineCreationForm extends BasePage {
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
       if (isWindows) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
+      }
+      if (virtualizationProvider && virtualizationProvider !== getDefaultVirtualizationProvider()) {
+        await this.specifyVirtualizationProvider(virtualizationProvider);
       }
       await this.ensureCheckboxState(startNow, this.startNowCheckbox);
 
@@ -96,6 +107,38 @@ export class MachineCreationForm extends BasePage {
       if (desiredState !== (await checkbox.isChecked())) {
         await checkbox.locator('..').click();
         playExpect(await checkbox.isChecked()).toBe(desiredState);
+      }
+    });
+  }
+
+  /**
+   * Specifies the virtualization provider for a Podman machine during creation through the onboarding page.
+   * This method selects the specified virtualization provider from the dropdown if it differs from the default.
+   * If no provider is specified or it matches the default, no action is taken.
+   *
+   * @param virtualizationProvider - The virtualization provider to select (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV, etc.), or undefined to use default
+   * @returns A Promise that resolves when the provider selection is complete
+   * @throws Will throw an error if the provider dropdown is not accessible or the specified provider is not available
+   */
+  async specifyVirtualizationProvider(
+    virtualizationProvider: PodmanVirtualizationProviders | undefined,
+  ): Promise<void> {
+    return test.step(`Set Podman Provider to ${virtualizationProvider ?? getDefaultVirtualizationProvider()}`, async () => {
+      if (virtualizationProvider) {
+        // Wait for the dropdown to be ready
+        await this.providerTypeDropdown.waitForReady();
+
+        // Get the current provider value to check if change is needed
+        const currentProviderValue = await this.providerTypeDropdown.getCurrentDisplayText();
+
+        // Only proceed if the new provider type is different from the current one
+        if (virtualizationProvider !== currentProviderValue) {
+          // Select the new provider option using the dropdown component
+          await this.providerTypeDropdown.selectOption(virtualizationProvider, virtualizationProvider, false);
+
+          // Verify the selection was applied
+          await this.providerTypeDropdown.verifyState(virtualizationProvider, virtualizationProvider);
+        }
       }
     });
   }

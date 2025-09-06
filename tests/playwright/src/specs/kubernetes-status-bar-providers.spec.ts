@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { ResourceElementState } from '../model/core/states';
+import { PodmanVirtualizationProviders } from '../model/core/types';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -29,8 +30,10 @@ import {
   ensureCliInstalled,
   handleConfirmationDialog,
   setStatusBarProvidersFeature,
+  verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
 const podmanProviderName = 'Podman';
@@ -95,6 +98,10 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
   });
   test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
     test.skip(isLinux, 'Not creating new machine on Linux');
+    test.skip(
+      getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
+      'Podman Desktop is not able to have 2 HyperV machines running at the same time',
+    );
     test.setTimeout(350_000);
 
     //Create a new machine
@@ -103,7 +110,11 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     const podmanResources = new ResourceConnectionCardPage(page, 'podman');
     await podmanResources.createButton.click();
     const createMachinePage = new CreateMachinePage(page);
-    await createMachinePage.createMachine(newMachineName, { startNow: true, setAsDefault: false });
+    await createMachinePage.createMachine(newMachineName, {
+      startNow: true,
+      setAsDefault: false,
+      virtualizationProvider: getVirtualizationProvider(),
+    });
 
     const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
     playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
@@ -112,6 +123,8 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
         (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
       { timeout: 30_000, sendError: true },
     );
+
+    await verifyVirtualizationProvider(machineCard, getVirtualizationProvider() ?? getDefaultVirtualizationProvider());
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 

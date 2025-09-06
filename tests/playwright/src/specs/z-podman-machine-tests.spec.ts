@@ -29,8 +29,10 @@ import {
   deletePodmanMachine,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
+  verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const DEFAULT_PODMAN_MACHINE = 'Podman Machine';
@@ -53,7 +55,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
 
   try {
     if (test.info().status === 'failed') {
@@ -72,7 +74,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.describe
   .serial(`Podman machine switching validation `, () => {
-    test.describe.configure({ timeout: 120_000 });
+    test.describe.configure({ timeout: 180_000 });
 
     test('Check data for available Podman Machine and stop machine', async ({ page, navigationBar }) => {
       await test.step('Open resources page', async () => {
@@ -158,12 +160,18 @@ test.describe
           isRootful: false,
           enableUserNet: true,
           startNow: false,
+          virtualizationProvider: getVirtualizationProvider(),
         });
         await playExpect(podmanMachineCreatePage.goBackButton).toBeEnabled({ timeout: 180_000 });
         await podmanMachineCreatePage.goBackButton.click();
       });
 
       await playExpect(resourcesPage.heading).toBeVisible();
+      const podmanResources = new ResourceConnectionCardPage(page, 'podman', ROOTLESS_PODMAN_MACHINE_VISIBLE);
+      await verifyVirtualizationProvider(
+        podmanResources,
+        getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+      );
     });
 
     test('Switch to rootless podman machine', async ({ page }) => {
