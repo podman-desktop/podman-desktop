@@ -130,7 +130,7 @@ export default function Home(): JSX.Element {
           <h1 className="title-font sm:text-3xl text-2xl lg:text-5xl mb-10 font-medium text-charcoal-300 dark:text-white">
             Linux Downloads
           </h1>
-          <main className="h-screen">
+          <main className="min-h-screen">
             <LinuxDownloads />
           </main>
         </div>
