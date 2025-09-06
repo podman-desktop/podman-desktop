@@ -116,13 +116,14 @@ const config = {
         to: 'win-ca/roots.exe',
       });
       // add podman installer
-      context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-*.exe');
-    }
-    if (context.arch === Arch.x64 && context.electronPlatformName === 'win32') {
-      context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-x64.zst');
-    }
-    if (context.arch === Arch.arm64 && context.electronPlatformName === 'win32') {
-      context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-arm64.zst');
+      if (context.arch === Arch.x64) {
+        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-*-amd64.exe');
+        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-x64.zst');
+      }
+      if (context.arch === Arch.arm64) {
+        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-*-arm64.exe');
+        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-arm64.zst');
+      }
     }
   },
   afterPack: async context => {

@@ -17,6 +17,7 @@
  ********************************************************************/
 
 import fs from 'node:fs';
+import { arch } from 'node:os';
 import path from 'node:path';
 
 import type { ExtensionContext, InstallCheck, RunError, TelemetryLogger } from '@podman-desktop/api';
@@ -70,7 +71,10 @@ export class WinInstaller extends BaseInstaller {
   install(): Promise<boolean> {
     return window.withProgress({ location: ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      const setupPath = path.resolve(getAssetsFolder(), `podman-${getBundledPodmanVersion()}-setup.exe`);
+      let setupPath = path.resolve(getAssetsFolder(), `podman-${getBundledPodmanVersion()}-setup.exe`);
+      if (arch() === 'arm64') {
+        setupPath = path.resolve(getAssetsFolder(), `podman-installer-windows-arm64.exe`);
+      }
       try {
         if (fs.existsSync(setupPath)) {
           try {
