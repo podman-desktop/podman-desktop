@@ -29,6 +29,8 @@ import NumberInput from './inputs/NumberInput.svelte';
 import SearchInput from './inputs/SearchInput.svelte';
 import DetailsPage from './layouts/DetailsPage.svelte';
 import FormPage from './layouts/FormPage.svelte';
+import type { LayoutEditItem } from './layouts/LayoutEditor';
+import LayoutManager from './layouts/LayoutEditor.svelte';
 import NavPage from './layouts/NavPage.svelte';
 import Page from './layouts/Page.svelte';
 import Link from './link/Link.svelte';
@@ -47,7 +49,7 @@ import Table from './table/Table.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType };
+export type { ButtonType, LayoutEditItem };
 export {
   Button,
   Carousel,
@@ -62,6 +64,7 @@ export {
   FilteredEmptyScreen,
   FormPage,
   Input,
+  LayoutManager,
   LinearProgress,
   Link,
   Modal,
