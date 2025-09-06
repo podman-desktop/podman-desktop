@@ -30,6 +30,7 @@ import type { ContextUI } from '../context/context';
 import type { EngineInfoUI } from '../engine/EngineInfoUI';
 import Prune from '../engine/Prune.svelte';
 import ImageIcon from '../images/ImageIcon.svelte';
+import { createLayoutCallbacks } from '../layout/layout-service';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '../view/views';
 import { ImageUtils } from './image-utils';
 import ImageColumnActions from './ImageColumnActions.svelte';
@@ -267,6 +268,10 @@ const columns = [
   }),
 ];
 
+// Create layout callbacks immediately
+const columnNames = columns.map(col => col.title);
+const layoutCallbacks = createLayoutCallbacks('image', columnNames);
+
 const row = new TableRow<ImageInfoUI>({
   // If it is a manifest, it is not selectable (no delete functionality yet)
   selectable: (image): boolean => image.status === 'UNUSED' && !image.isManifest,
@@ -339,6 +344,8 @@ const row = new TableRow<ImageInfoUI>({
         columns={columns}
         row={row}
         defaultSortColumn="Age"
+        enableLayoutConfiguration={true}
+        layoutCallbacks={layoutCallbacks}
         on:update={(): ImageInfoUI[] => (images = images)}>
       </Table>
     {/if}
