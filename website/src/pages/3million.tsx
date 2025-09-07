@@ -1,9 +1,13 @@
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import Head from '@docusaurus/Head';
-import Spline from '@splinetool/react-spline';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import React from 'react';
 
 export default function ThreeMillion(): JSX.Element {
+  const celebrationImageUrl = useBaseUrl('/img/3million-celebration.jpg');
+  const splineSceneUrl = useBaseUrl('/spline/scene.splinecode');
+
   return (
     <>
       <Head>
@@ -13,7 +17,8 @@ export default function ThreeMillion(): JSX.Element {
           content="Celebrate 3,000,000 downloads of Podman Desktop! Thank you to everyone who provides feedback and helps us improve."
         />
 
-        <meta property="og:image" content="https://podman-desktop.io/img/3million-celebration.jpg" />
+        <meta property="og:image" content={`https://podman-desktop.io${celebrationImageUrl}`} />
+        <meta property="og:image:alt" content="Podman Desktop celebrates 3,000,000 downloads" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:title" content="3,000,000 &times; Podman Desktop" />
@@ -31,7 +36,10 @@ export default function ThreeMillion(): JSX.Element {
           name="twitter:description"
           content="Celebrate 3,000,000 downloads of Podman Desktop! Thank you to everyone who provides feedback and helps us improve."
         />
-        <meta name="twitter:image" content="https://podman-desktop.io/img/3million-celebration.jpg" />
+        <meta name="twitter:image" content={`https://podman-desktop.io${celebrationImageUrl}`} />
+        <meta name="twitter:image:alt" content="Podman Desktop celebrates 3,000,000 downloads" />
+
+        <link rel="canonical" href="https://podman-desktop.io/3million" />
       </Head>
 
       <Layout
@@ -53,7 +61,27 @@ export default function ThreeMillion(): JSX.Element {
             left: 0,
             zIndex: 1000,
           }}>
-          <Spline scene="/spline/scene.splinecode" />
+          <BrowserOnly fallback={<div>Loading...</div>}>
+            {() => {
+              const [Spline, setSpline] = React.useState(null);
+
+              React.useEffect(() => {
+                import('@splinetool/react-spline')
+                  .then(module => {
+                    setSpline(() => module.default);
+                  })
+                  .catch((error: unknown) => {
+                    console.error('Failed to load Spline component:', error);
+                  });
+              }, []);
+
+              if (!Spline) {
+                return <div>Loading&hellip;</div>;
+              }
+
+              return <Spline scene={splineSceneUrl} />;
+            }}
+          </BrowserOnly>
         </div>
       </Layout>
     </>
