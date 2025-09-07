@@ -4,10 +4,17 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import React from 'react';
 
+declare module 'react' {
+  interface IntrinsicElements {
+    'spline-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      url?: string;
+    };
+  }
+}
+
 export default function ThreeMillion(): JSX.Element {
   const celebrationImageUrl = useBaseUrl('/img/3million-celebration.jpg');
   const splineSceneUrl = useBaseUrl('/spline/scene.splinecode');
-  const Spline = React.lazy(() => import('@splinetool/react-spline'));
 
   return (
     <>
@@ -41,6 +48,11 @@ export default function ThreeMillion(): JSX.Element {
         <meta name="twitter:image:alt" content="Podman Desktop celebrates 3,000,000 downloads" />
 
         <link rel="canonical" href="https://podman-desktop.io/3million" />
+
+        <script
+          type="module"
+          crossOrigin="anonymous"
+          src="https://unpkg.com/@splinetool/viewer@1.10.56/build/spline-viewer.js"></script>
       </Head>
 
       <Layout
@@ -63,11 +75,9 @@ export default function ThreeMillion(): JSX.Element {
             zIndex: 1000,
           }}>
           <BrowserOnly fallback={<div>Loading...</div>}>
-            {() => (
-              <React.Suspense fallback={<div>Loading&hellip;</div>}>
-                <Spline scene={splineSceneUrl} />
-              </React.Suspense>
-            )}
+            {() => {
+              return <spline-viewer url={splineSceneUrl} />;
+            }}
           </BrowserOnly>
         </div>
       </Layout>
