@@ -7,6 +7,7 @@ import React from 'react';
 export default function ThreeMillion(): JSX.Element {
   const celebrationImageUrl = useBaseUrl('/img/3million-celebration.jpg');
   const splineSceneUrl = useBaseUrl('/spline/scene.splinecode');
+  const Spline = React.lazy(() => import('@splinetool/react-spline'));
 
   return (
     <>
@@ -62,25 +63,11 @@ export default function ThreeMillion(): JSX.Element {
             zIndex: 1000,
           }}>
           <BrowserOnly fallback={<div>Loading...</div>}>
-            {() => {
-              const [Spline, setSpline] = React.useState(null);
-
-              React.useEffect(() => {
-                import('@splinetool/react-spline')
-                  .then(module => {
-                    setSpline(() => module.default);
-                  })
-                  .catch((error: unknown) => {
-                    console.error('Failed to load Spline component:', error);
-                  });
-              }, []);
-
-              if (!Spline) {
-                return <div>Loading&hellip;</div>;
-              }
-
-              return <Spline scene={splineSceneUrl} />;
-            }}
+            {() => (
+              <React.Suspense fallback={<div>Loading&hellip;</div>}>
+                <Spline scene={splineSceneUrl} />
+              </React.Suspense>
+            )}
           </BrowserOnly>
         </div>
       </Layout>
