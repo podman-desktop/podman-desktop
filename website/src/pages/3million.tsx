@@ -52,7 +52,8 @@ export default function ThreeMillion(): JSX.Element {
         <script
           type="module"
           crossOrigin="anonymous"
-          src="https://unpkg.com/@splinetool/viewer@1.10.56/build/spline-viewer.js"></script>
+          src="https://unpkg.com/@splinetool/viewer@1.10.56/build/spline-viewer.js"
+        />
       </Head>
 
       <Layout
