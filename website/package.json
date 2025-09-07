@@ -38,7 +38,9 @@
     "prism-react-renderer": "^2.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-player": "^3.3.2"
+    "react-player": "^3.3.2",
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "^1.10.56"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.7.0",

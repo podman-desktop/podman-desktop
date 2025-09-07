@@ -1,4 +1,5 @@
 import Head from '@docusaurus/Head';
+import Spline from '@splinetool/react-spline';
 import Layout from '@theme/Layout';
 import React from 'react';
 
@@ -52,13 +53,7 @@ export default function ThreeMillion(): JSX.Element {
             left: 0,
             zIndex: 1000,
           }}>
-          <iframe
-            src="https://my.spline.design/particles-enV3SNBPzPLQSpMKANed913N/"
-            title="3 Million Downloads celebration animation"
-            frameBorder={0}
-            width="100%"
-            height="100%"
-            loading="eager"></iframe>
+          <Spline scene="/spline/scene.splinecode" />
         </div>
       </Layout>
     </>
