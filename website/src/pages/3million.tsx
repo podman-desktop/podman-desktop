@@ -48,10 +48,12 @@ export default function ThreeMillion(): JSX.Element {
         <meta name="twitter:image:alt" content="Podman Desktop celebrates 3,000,000 downloads" />
 
         <link rel="canonical" href="https://podman-desktop.io/3million" />
+        <link rel="preconnect" href="https://unpkg.com" crossOrigin="" />
 
         <script
           type="module"
           crossOrigin="anonymous"
+          integrity="<fill-with-SHA384>"
           src="https://unpkg.com/@splinetool/viewer@1.10.56/build/spline-viewer.js"
         />
       </Head>
@@ -65,7 +67,8 @@ export default function ThreeMillion(): JSX.Element {
         <div
           style={{
             width: '100vw',
-            height: '100vh',
+            height: '100dvh',
+            minHeight: '100vh',
             backgroundColor: '#000000',
             display: 'flex',
             alignItems: 'center',
@@ -73,7 +76,7 @@ export default function ThreeMillion(): JSX.Element {
             position: 'fixed',
             top: 0,
             left: 0,
-            zIndex: 1000,
+            zIndex: 'var(--ifm-z-index-overlay, 9999)',
           }}>
           <BrowserOnly fallback={<div>Loading...</div>}>
             {() => {
