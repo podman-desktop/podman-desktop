@@ -24,7 +24,6 @@ import { arch } from 'node:os';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable, provider as apiProvider } from '@podman-desktop/api';
-import type { ReadFileOptions } from 'ssh2';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -203,22 +202,6 @@ beforeEach(() => {
   vi.resetAllMocks();
   extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
-  vi.mocked(fs).readFile.mockImplementation(
-    (
-      _path: fs.PathOrFileDescriptor,
-      _optionsOrCallback?:
-        | ReadFileOptions
-        | ((err: NodeJS.ErrnoException | null, data: Buffer) => void)
-        | BufferEncoding,
-      callback?: (err: NodeJS.ErrnoException | null, data: string) => void,
-    ) => {
-      // Handle callback-based overloads
-      if (typeof callback === 'function') {
-        // readFile(path, options, callback)
-        callback(null, '');
-      }
-    },
-  );
   extension.initTelemetryLogger();
 });
 
