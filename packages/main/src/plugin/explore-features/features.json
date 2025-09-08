@@ -25,7 +25,7 @@
       "title": "Install Extensions",
       "description": "Installing an extension is a great way to expand the capabilities of Podman Desktop. You have the option to install an extension from the catalog or a custom extension of your choice.",
       "buttonIcon": "fas fa-book-open",
-      "buttonTitle": "Open Catatlog",
+      "buttonTitle": "Open Catalog",
       "buttonLink": "/extensions",
       "tutorialLink": "",
       "learnMore": "https://podman-desktop.io/docs/extensions/install"
@@ -33,7 +33,7 @@
     {
       "id": "manage-docker",
       "title": "Manage Docker",
-      "description": "With Podman Desktop, you can configure a Docker-compatible environment using the Settings page. After configuration, your Docker tools are directed to use Podman enginer and your Compose application can be run using the Podman CLI.",
+      "description": "With Podman Desktop, you can configure a Docker-compatible environment using the Settings page. After configuration, your Docker tools are directed to use the Podman engine and your Compose application can be run using the Podman CLI.",
       "buttonIcon": "",
       "buttonTitle": "Manage Compatibility",
       "buttonLink": "/preferences/docker-compatibility",
