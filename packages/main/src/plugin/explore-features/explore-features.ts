@@ -69,7 +69,7 @@ export class ExploreFeatures {
 
   private async checkShowRequirements(features: Feature[]): Promise<Feature[]> {
     const containerList = await this.containerProviderRegistry.listContainers();
-    const extensionList = await this.extensionLoader.listExtensions();
+    const installedExtensionList = (await this.extensionLoader.listExtensions()).filter(ext => ext.removable);
     const providerList = this.providerRegistry.getProviderInfos();
     const contextsStateList = this.kubernetesClient.getContextsGeneralState();
     features.forEach(feature => {
@@ -83,7 +83,7 @@ export class ExploreFeatures {
         feature.show =
           !providerList.find(provider => provider.kubernetesConnections.length > 0) && reachableContexts === 0;
       } else if (feature.show && feature.id === 'install-extensions') {
-        feature.show = extensionList.length === 0;
+        feature.show = installedExtensionList.length === 0;
       } else if (feature.show && feature.id === 'manage-docker') {
         feature.show = !this.configurationRegistry.getConfiguration('dockerCompatibility').get<boolean>('enabled');
       }
