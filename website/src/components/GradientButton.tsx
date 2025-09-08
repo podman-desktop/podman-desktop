@@ -14,7 +14,7 @@ export default function GradientButton({
   children,
   className = '',
   solid = false,
-}: Readonly<GradientButtonProps>): JSX.Element {
+}: GradientButtonProps): JSX.Element {
   const outerClasses = solid
     ? 'w-fit z-10 relative'
     : 'p-[2px] rounded border-gradient bg-gradient-to-r from-sky-500 to-purple-500 w-fit z-10 relative';
