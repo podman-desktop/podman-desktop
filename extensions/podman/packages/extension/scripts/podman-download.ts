@@ -75,7 +75,10 @@ export class PodmanDownload {
     podmanJSON: {
       version: string;
       platform: {
-        win32: { version: string; fileName: string };
+        win32: {
+          version: string;
+          arch: { x64: { fileName: string }; arm64: { fileName: string } };
+        };
         darwin: {
           version: string;
           arch: { x64: { fileName: string }; arm64: { fileName: string }; universal?: { fileName: string } };
@@ -98,11 +101,17 @@ export class PodmanDownload {
 
     if (this.#platform === 'win32') {
       const tagVersion = podmanJSON.platform.win32.version;
-      const downloadName = podmanJSON.platform.win32.fileName;
+      const downloadName = podmanJSON.platform.win32.arch.x64.fileName;
       this.#artifactsToDownload.push({
         version: tagVersion,
-        downloadName,
+        downloadName: downloadName,
         artifactName: `podman-${this.#podmanVersion}-setup.exe`,
+      });
+      const downloadNameArm64 = podmanJSON.platform.win32.arch.arm64.fileName;
+      this.#artifactsToDownload.push({
+        version: tagVersion,
+        downloadName: downloadNameArm64,
+        artifactName: 'podman-installer-windows-arm64.exe',
       });
     } else if (this.#platform === 'darwin') {
       const tagVersion = podmanJSON.platform.darwin.version;
