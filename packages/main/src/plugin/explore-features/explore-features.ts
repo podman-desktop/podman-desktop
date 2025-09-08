@@ -76,12 +76,9 @@ export class ExploreFeatures {
       if (feature.show && feature.id === 'start-a-container') {
         feature.show = containerList.length === 0;
       } else if (feature.show && feature.id === 'explore-kubernetes') {
-        let reachableContexts = 0;
-        contextsStateList.forEach(context => {
-          if (context.reachable) reachableContexts++;
-        });
         feature.show =
-          !providerList.find(provider => provider.kubernetesConnections.length > 0) && reachableContexts === 0;
+          !providerList.find(provider => provider.kubernetesConnections.length > 0) &&
+          !contextsStateList.values().some(context => context.reachable);
       } else if (feature.show && feature.id === 'install-extensions') {
         feature.show = installedExtensionList.length === 0;
       } else if (feature.show && feature.id === 'manage-docker') {
