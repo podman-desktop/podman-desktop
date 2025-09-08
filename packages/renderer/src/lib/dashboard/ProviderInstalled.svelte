@@ -9,7 +9,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../../../../main/src/plugin/terminal-theme';
+import { getTerminalTheme } from '../terminal/terminal-theme';
 import Steps from '../ui/Steps.svelte';
 import PreflightChecks from './PreflightChecks.svelte';
 import ProviderCard from './ProviderCard.svelte';
