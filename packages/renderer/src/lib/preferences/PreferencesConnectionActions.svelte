@@ -161,8 +161,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
               clickAction={(): Promise<void> => startConnectionProvider(provider, connection)}
               action="start"
               icon={faPlay}
-              state={connectionStatus}
-              leftPosition="left-[0.1rem]" />
+              state={connectionStatus} />
           </div>
         {/if}
         {#if connection.lifecycleMethods.includes('start') && connection.lifecycleMethods.includes('stop')}
@@ -171,7 +170,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             action="restart"
             icon={faRotateRight}
             state={connectionStatus}
-            leftPosition="left-[0.25rem]" />
+            />
         {/if}
         {#if connection.lifecycleMethods.includes('stop')}
           <LoadingIconButton
@@ -179,7 +178,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             action="stop"
             icon={faStop}
             state={connectionStatus}
-            leftPosition="left-[0.12rem]" />
+            />
         {/if}
         {#if connection.lifecycleMethods.includes('edit')}
           <LoadingIconButton
@@ -187,7 +186,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             action="edit"
             icon={faEdit}
             state={connectionStatus}
-            leftPosition="left-[0.12rem]" />
+            />
         {/if}
         {#if connection.lifecycleMethods.includes('delete')}
           <LoadingIconButton
@@ -195,7 +194,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             action="delete"
             icon={faTrash}
             state={connectionStatus}
-            leftPosition="left-[0.15rem]" />
+            />
         {/if}
         <div class="mr-2 text-sm">
           {@render advanced_actions?.()}

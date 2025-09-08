@@ -17,7 +17,6 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
-import { faCircleExclamation, faCircleInfo, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -70,17 +69,14 @@ test('Test info notification style and icon', () => {
   const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const iconTitle = getByTitle('Notification icon', { exact: false });
-  const icon = iconTitle.parentElement;
-  // check icon shape
-  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
-  const faIconPath = faCircleInfo.icon[4]; // index 4 is the actual path as per FA IconDefinition
-  expect(pdIconPath).toBe(faIconPath);
+  const icon = getByTitle('Notification icon', { exact: false });
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-info)]');
-  // check icon title contains the text from nested title element
-  expect(iconTitle.textContent).toBe('Notification icon - info');
-  // check region top border
+  // check icon shape
+  expect(icon).toHaveClass('fa-info-circle');
+  // check icon title
+  expect(icon.title).toBe('Notification icon - info');
+  // check top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-info)]');
 });
 
@@ -95,17 +91,14 @@ test('Test warning notification style and icon', () => {
   const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const iconTitle = getByTitle('Notification icon', { exact: false });
-  const icon = iconTitle.parentElement;
-  // check icon shape
-  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
-  const faIconPath = faExclamationTriangle.icon[4]; // index 4 is the actual path as per FA IconDefinition
-  expect(pdIconPath).toBe(faIconPath);
+  const icon = getByTitle('Notification icon', { exact: false });
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-warning)]');
+  // check icon shape
+  expect(icon).toHaveClass('fa-exclamation-triangle');
   // check icon title
-  expect(iconTitle.textContent).toBe('Notification icon - warn');
-  // check region top border
+  expect(icon.title).toBe('Notification icon - warn');
+  // check top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-warning)]');
 });
 
@@ -120,16 +113,55 @@ test('Test error notification style and icon', () => {
   const { getByTitle } = render(NotificationCardItem, {
     notification,
   });
-  const iconTitle = getByTitle('Notification icon', { exact: false });
-  const icon = iconTitle.parentElement;
-  // check icon shape
-  const pdIconPath = icon?.querySelector('path')?.getAttribute('d');
-  const faIconPath = faCircleExclamation.icon[4]; // index 4 is the actual path as per FA IconDefinition
-  expect(pdIconPath).toBe(faIconPath);
+  const icon = getByTitle('Notification icon', { exact: false });
   // check icon color
   expect(icon).toHaveClass('text-[var(--pd-state-error)]');
+  // check icon shape
+  expect(icon).toHaveClass('fa-circle-exclamation');
   // check icon title
-  expect(iconTitle.textContent).toBe('Notification icon - error');
-  // check region top border
+  expect(icon.title).toBe('Notification icon - error');
+  // check top border
+  expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-error)]');
+});
+
+test('Test notification with custom icon, default color', () => {
+  const notification: NotificationCard = {
+    id: 1,
+    extensionId: 'extension',
+    title: 'Info notification title',
+    body: 'Info notification description',
+    type: 'info',
+    icon: 'fas fa-refresh',
+  };
+  const { getByTitle } = render(NotificationCardItem, {
+    notification,
+  });
+  const icon = getByTitle('Notification icon', { exact: false });
+  // check that custom icon is used instead of the default
+  expect(icon).toHaveClass('fa-refresh');
+  // check that default color is used
+  expect(icon).toHaveClass('text-[var(--pd-state-info)]');
+  // check top border
+  expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-info)]');
+});
+test('Test notification with custom icon, custom color', () => {
+  const notification: NotificationCard = {
+    id: 1,
+    extensionId: 'extension',
+    title: 'Error notification title',
+    body: 'Error notification description',
+    type: 'error',
+    icon: 'fas fa-refresh',
+    iconColor: 'text-red-600',
+  };
+  const { getByTitle } = render(NotificationCardItem, {
+    notification,
+  });
+  const icon = getByTitle('Notification icon', { exact: false });
+  // check that custom icon is used instead of the default
+  expect(icon).toHaveClass('fa-refresh');
+  // check that custom color is applied instead of the default
+  expect(icon).toHaveClass('text-red-600');
+  // check top border
   expect(screen.getByRole('region', { name: 'id: 1' })).toHaveClass('border-[var(--pd-state-error)]');
 });

@@ -10,15 +10,14 @@ import { saveImagesInfo } from '/@/stores/save-images-store';
 import { Uri } from '../uri/Uri';
 import type { ImageInfoUI } from './ImageInfoUI';
 
-let imagesToSave: ImageInfoUI[];
-let saveError: string = '';
+let imagesToSave = $state<ImageInfoUI[]>([]);
+let saveError: string = $state('');
 
-let outputPath: string | undefined = undefined;
-let singleItemMode = false;
-let invalidOutputPath = true;
-let inProgress = false;
-let saveDisabled = false;
-$: saveDisabled = !outputPath || imagesToSave.length === 0;
+let outputPath: string | undefined = $state(undefined);
+let singleItemMode = $state(false);
+let invalidOutputPath = $state(true);
+let inProgress = $state(false);
+let saveDisabled = $derived(!outputPath || imagesToSave.length === 0);
 
 onMount(async () => {
   imagesToSave = $saveImagesInfo;

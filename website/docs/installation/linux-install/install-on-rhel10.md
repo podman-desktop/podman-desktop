@@ -13,7 +13,7 @@ You can use the subscription manager package to install Podman Desktop on a Red 
 #### Prerequisites
 
 - A RHEL 10 machine.
-- Register with the subscription manager using either your [account details](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_basic_system_settings/assembly_registering-the-system-and-managing-subscriptions_configuring-basic-system-settings#registering-a-system-by-using-the-command-line_assembly_registering-the-system-and-managing-subscriptions) or the [activation key](https://docs.redhat.com/en/documentation/subscription_central/1-latest/html/getting_started_with_rhel_system_registration/basic-reg-rhel-cli#proc-reg-rhel-rhc-act-key_).
+- Register with the subscription manager using either your [account details](https://docs.redhat.com/en/documentation/subscription_central/1-latest/html/getting_started_with_rhel_system_registration/basic-reg-rhel-cli#proc-reg-rhel-rhc-username_) or an [activation key](https://docs.redhat.com/en/documentation/subscription_central/1-latest/html/getting_started_with_rhel_system_registration/basic-reg-rhel-cli#proc-reg-rhel-rhc-act-key_).
 
 #### Procedure
 

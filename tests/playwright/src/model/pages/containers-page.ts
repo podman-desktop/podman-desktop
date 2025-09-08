@@ -123,60 +123,6 @@ export class ContainersPage extends MainPage {
     return this.getRowByName(name);
   }
 
-  async uncheckAllContainers(): Promise<void> {
-    return test.step('Uncheck all containers', async () => {
-      let containersTable;
-      try {
-        containersTable = await this.getTable();
-        await playExpect(containersTable).toBeVisible();
-        const controlRow = containersTable.getByRole('row').first();
-        await playExpect(controlRow).toBeAttached();
-        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
-        await playExpect(checkboxColumnHeader).toBeAttached();
-        const containersToggle = checkboxColumnHeader.getByTitle('Toggle all');
-        await playExpect(containersToggle).toBeAttached();
-        // <svg> cannot be resolved using getByRole('img') ; const containersToggleSvg = containersToggle.getByRole('img');
-
-        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-indeterminate')) {
-          await containersToggle.click();
-        }
-
-        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-checked')) {
-          await containersToggle.click();
-        }
-
-        playExpect(await containersToggle.innerHTML()).toContain('pd-input-checkbox-unchecked');
-      } catch (err) {
-        console.log(`Exception caught on containers page when checking cells for unchecking with message: ${err}`);
-      }
-    });
-  }
-
-  async checkAllContainers(): Promise<void> {
-    return test.step('Checks all containers', async () => {
-      try {
-        const containersTable = await this.getTable();
-        await playExpect(containersTable).toBeVisible();
-        const controlRow = containersTable.getByRole('row').first();
-        await playExpect(controlRow).toBeAttached();
-        const checkboxColumnHeader = controlRow.getByRole('columnheader').nth(1);
-        await playExpect(checkboxColumnHeader).toBeAttached();
-        const containersToggle = checkboxColumnHeader.getByTitle('Toggle all');
-        await playExpect(containersToggle).toBeAttached();
-
-        if ((await containersToggle.innerHTML()).includes('pd-input-checkbox-unchecked')) {
-          await containersToggle.click();
-        }
-
-        await playExpect
-          .poll(async () => containersToggle.innerHTML(), { timeout: 15_000 })
-          .toContain('pd-input-checkbox-checked');
-      } catch (err) {
-        console.log(`Exception caught on containers page when checking cells with message: ${err}`);
-      }
-    });
-  }
-
   async containerExists(name: string): Promise<boolean> {
     return (await this.getContainerRowByName(name)) !== undefined;
   }
@@ -214,7 +160,7 @@ export class ContainersPage extends MainPage {
 
   async startAllContainers(): Promise<ContainersPage> {
     return test.step('Start all containers', async () => {
-      await this.checkAllContainers();
+      await this.checkAllRows();
       await this.runAllContainersButton.click();
       return this;
     });

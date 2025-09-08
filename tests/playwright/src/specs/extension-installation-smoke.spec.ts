@@ -133,7 +133,7 @@ for (const {
             extensionFullLabel,
             extensionFullName,
           );
-          await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15000 });
+          await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15_000 });
         });
 
         test('Extension is active and there are not errors', async () => {
@@ -144,7 +144,7 @@ for (const {
             extensionFullName,
           );
           await playExpect(extensionPage.heading).toBeVisible();
-          await playExpect(extensionPage.status).toHaveText(ExtensionState.Active);
+          await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 15_000 });
           // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
           const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
           // we would like to propagate the error's stack trace into test failure message
@@ -199,7 +199,7 @@ for (const {
               );
 
               await extensionPage.enableExtension();
-              await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10000 });
+              await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10_000 });
 
               // check that dashboard card provider is hidden/shown
               if (extensionDashboardProvider && extensionDashboardStatus) {

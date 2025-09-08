@@ -18,7 +18,12 @@
 
 import type { RequestOptions } from 'node:http';
 
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
+import type {
+  HostConfigPortBinding,
+  ManifestCreateOptions,
+  ManifestInspectInfo,
+  ManifestPushOptions,
+} from '@podman-desktop/api';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
 import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
@@ -62,6 +67,16 @@ export interface PodInspectInfo {
   SharedNamespaces: string[];
   State: string;
   volumes_from: string[];
+  ExitPolicy: 'continue' | 'stop';
+  RestartPolicy: string;
+  Labels: { [key: string]: string };
+  InfraConfig: {
+    DNSOption?: Array<string>;
+    DNSSearch?: Array<string>;
+    DNSServer?: Array<string>;
+    PortBindings?: HostConfigPortBinding;
+    Networks?: Array<string>;
+  };
 }
 
 export interface PlayKubePodInfo {

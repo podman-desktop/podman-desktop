@@ -18,6 +18,7 @@
 
 import type { Locator } from '@playwright/test';
 
+import { ResourceElementState } from '../model/core/states';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
@@ -103,7 +104,9 @@ test.describe
           await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeVisible();
           await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeVisible();
           await playExpect(podmanMachineDetails.podmanMachineDeleteButton).toBeVisible();
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 60_000 });
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+            timeout: 60_000,
+          });
         });
 
         await test.step('Check terminal tab for podman machine', async () => {
@@ -119,7 +122,9 @@ test.describe
         await test.step('Stop default podman machine', async () => {
           await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
           await podmanMachineDetails.podmanMachineStopButton.click();
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 60_000 });
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+            timeout: 60_000,
+          });
           await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
           await podmanMachineDetails.logsTab.click();
           await playExpect(
@@ -177,7 +182,7 @@ test.describe
         const podmanMachineDetails = new PodmanMachineDetails(page, ROOTLESS_PODMAN_MACHINE);
         await test.step('Ensure rootless podman machine is OFF', async () => {
           await playExpect(podmanMachineDetails.podmanMachineName).toBeVisible();
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF');
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off);
         });
 
         await test.step('Start rootless podman machine', async () => {
@@ -188,7 +193,9 @@ test.describe
           await handleConfirmationDialog(page, 'Podman', true, 'Yes');
           await handleConfirmationDialog(page, 'Podman', true, 'OK');
 
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+            timeout: 90_000,
+          });
           await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
           await podmanMachineDetails.logsTab.click();
           await playExpect(
@@ -199,8 +206,12 @@ test.describe
         await test.step('Restart rootless podman machine', async () => {
           await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
           await podmanMachineDetails.podmanMachineRestartButton.click();
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 90_000 });
-          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+            timeout: 90_000,
+          });
+          await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+            timeout: 90_000,
+          });
           await playExpect(podmanMachineDetails.logsTab).toBeEnabled();
           await podmanMachineDetails.logsTab.click();
           await playExpect(
@@ -214,13 +225,15 @@ test.describe
       const podmanMachineDetails = new PodmanMachineDetails(page, ROOTLESS_PODMAN_MACHINE);
       await test.step('Ensure rootless podman machine is RUNNING', async () => {
         await playExpect(podmanMachineDetails.podmanMachineName).toBeVisible();
-        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING');
+        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running);
       });
 
       await test.step('Stop rootless podman machine', async () => {
         await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
         await podmanMachineDetails.podmanMachineStopButton.click();
-        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 60_000 });
+        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+          timeout: 60_000,
+        });
       });
     });
 
@@ -261,12 +274,18 @@ test.describe
           podmanMachineDetails.tabContent.getByText('Machine "podman-machine-default" started successfully').first(),
         ).toBeVisible({ timeout: 30_000 });
 
-        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+          timeout: 90_000,
+        });
 
         await playExpect(podmanMachineDetails.podmanMachineRestartButton).toBeEnabled();
         await podmanMachineDetails.podmanMachineRestartButton.click();
-        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 90_000 });
-        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 90_000 });
+        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+          timeout: 90_000,
+        });
+        await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+          timeout: 90_000,
+        });
       });
     });
 

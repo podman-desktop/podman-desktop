@@ -23,25 +23,31 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
-let logsPull: Terminal;
-let pullError = '';
-let pullInProgress = false;
-let pullFinished = false;
+let logsPull = $state<Terminal>();
+let pullError = $state('');
+let pullInProgress = $state(false);
+let pullFinished = $state(false);
 let shortnameImages: string[] = [];
-let podmanFQN = '';
-let usePodmanFQN = false;
-let isValidName = true;
-let searchResult: TypeaheadItem[] = [];
-let sortResults: ((a: string, b: string) => number) | undefined;
+let podmanFQN = $state('');
+let usePodmanFQN = $state(false);
+let isValidName = $state(true);
+let searchResult = $state<TypeaheadItem[]>([]);
+let sortResults = $state<(a: string, b: string) => number>();
 
-export let imageToPull: string | undefined = undefined;
+interface Props {
+  imageToPull?: string;
+}
 
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let { imageToPull = $bindable() }: Props = $props();
 
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
+let providerConnections = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
+
+let selectedProviderConnection = $state<ProviderContainerConnectionInfo>();
 
 const lineNumberPerId = new SvelteMap<string, number>();
 let lineIndex = 0;
@@ -51,7 +57,8 @@ async function resolveShortname(): Promise<void> {
     return;
   }
   if (imageToPull && !imageToPull.includes('/')) {
-    shortnameImages = (await window.resolveShortnameImage(selectedProviderConnection, imageToPull)) ?? [];
+    shortnameImages =
+      (await window.resolveShortnameImage($state.snapshot(selectedProviderConnection), imageToPull)) ?? [];
     // not a shortname
   } else {
     podmanFQN = '';
@@ -86,26 +93,28 @@ function callback(event: PullEvent): void {
     lineIndexToWrite = lineIndex;
   }
 
-  if (event.status) {
-    // move cursor to the home
-    logsPull.write(`\u001b[${lineIndexToWrite};0H`);
-    // erase the line
-    logsPull.write('\u001B[2K');
-    // do we have id ?
-    if (event.id) {
-      logsPull.write(`${event.id}: `);
+  if (logsPull) {
+    if (event.status) {
+      // move cursor to the home
+      logsPull.write(`\u001b[${lineIndexToWrite};0H`);
+      // erase the line
+      logsPull.write('\u001B[2K');
+      // do we have id ?
+      if (event.id) {
+        logsPull.write(`${event.id}: `);
+      }
+      logsPull.write(event.status);
+      // do we have progress ?
+      if (event.progress && event.progress !== '') {
+        logsPull.write(event.progress);
+      } else if (event?.progressDetail?.current && event?.progressDetail?.total) {
+        logsPull.write(` ${Math.round((event.progressDetail.current / event.progressDetail.total) * 100)}%`);
+      }
+      // write end of line
+      logsPull.write('\n\r');
+    } else if (event.error) {
+      logsPull.write(event.error.replaceAll('\n', '\n\r') + '\n\r');
     }
-    logsPull.write(event.status);
-    // do we have progress ?
-    if (event.progress && event.progress !== '') {
-      logsPull.write(event.progress);
-    } else if (event?.progressDetail?.current && event?.progressDetail?.total) {
-      logsPull.write(` ${Math.round((event.progressDetail.current / event.progressDetail.total) * 100)}%`);
-    }
-    // write end of line
-    logsPull.write('\n\r');
-  } else if (event.error) {
-    logsPull.write(event.error.replaceAll('\n', '\n\r') + '\n\r');
   }
 }
 
@@ -130,12 +139,13 @@ async function pullImage(): Promise<void> {
 
   pullInProgress = true;
   try {
+    const selectedProviderConnectionSnapshot = $state.snapshot(selectedProviderConnection);
     if (podmanFQN) {
       usePodmanFQN
-        ? await window.pullImage(selectedProviderConnection, podmanFQN.trim(), callback)
-        : await window.pullImage(selectedProviderConnection, `docker.io/${imageToPull.trim()}`, callback);
+        ? await window.pullImage(selectedProviderConnectionSnapshot, podmanFQN.trim(), callback)
+        : await window.pullImage(selectedProviderConnectionSnapshot, `docker.io/${imageToPull.trim()}`, callback);
     } else {
-      await window.pullImage(selectedProviderConnection, imageToPull.trim(), callback);
+      await window.pullImage(selectedProviderConnectionSnapshot, imageToPull.trim(), callback);
     }
     pullInProgress = false;
     pullFinished = true;
@@ -159,8 +169,8 @@ onMount(() => {
   selectedProviderConnection ??= providerConnections.length > 0 ? providerConnections[0] : undefined;
 });
 
-let imageNameInvalid: string | undefined = undefined;
-let imageNameIsInvalid = imageToPull === undefined || imageToPull.trim() === '';
+let imageNameInvalid = $state<string>();
+let imageNameIsInvalid = $state(imageToPull === undefined || imageToPull.trim() === '');
 function validateImageName(image: string): void {
   if (image === undefined || image.trim() === '') {
     imageNameIsInvalid = true;
@@ -212,7 +222,7 @@ async function searchImages(value: string): Promise<string[]> {
   return result;
 }
 
-let latestTagMessage: string | undefined = undefined;
+let latestTagMessage = $state<string>();
 async function searchLatestTag(): Promise<void> {
   if (imageNameIsInvalid || !imageToPull) {
     latestTagMessage = undefined;

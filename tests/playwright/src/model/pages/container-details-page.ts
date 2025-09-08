@@ -112,7 +112,8 @@ export class ContainerDetailsPage extends DetailsPage {
     await this.activateTab(ContainerDetailsPage.TERMINAL_TAB);
 
     await playExpect(this.terminalInput).toBeVisible();
-    await this.terminalInput.pressSequentially(command);
+    await this.page.waitForTimeout(500); // Wait for terminal to be ready
+    await this.terminalInput.pressSequentially(command, { delay: 10 });
     await this.terminalInput.press('Enter');
   }
 

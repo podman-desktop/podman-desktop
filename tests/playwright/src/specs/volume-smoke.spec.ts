@@ -159,7 +159,11 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
 
     //start a container from the image (generates 4 new volumes)
     const imageDetails = await images.openImageDetails(imageToPull);
+    await playExpect(imageDetails.heading).toBeVisible({ timeout: 10_000 });
+
     const runImage = await imageDetails.openRunImage();
+    await playExpect(runImage.heading).toBeVisible({ timeout: 10_000 });
+
     let containers = await runImage.startContainer(containerToRun, containerStartParams);
     await playExpect(containers.header).toBeVisible({ timeout: 60_000 });
     await playExpect
@@ -167,7 +171,6 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
         timeout: 60_000,
       })
       .toBeTruthy();
-    await containers.startContainer(containerToRun);
 
     //check that four volumes are created (in addition to the existing ones)
     volumesPage = await navigationBar.openVolumes();

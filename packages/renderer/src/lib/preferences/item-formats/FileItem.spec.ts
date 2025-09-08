@@ -142,3 +142,36 @@ test('Ensure there is a clear button for the input', async () => {
   expect(inputField).toBeInTheDocument();
   expect((inputField as HTMLInputElement).value).toBe('');
 });
+
+test('By default when creating, expect FileItem to be editable / NOT have readonly', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+  };
+
+  render(FileItem, { record, value: '' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect((input as HTMLInputElement).readOnly).toBe(false);
+});
+
+test('If FileItem has readonly = true, then expect readonly to show in the element', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+    readonly: true,
+  };
+
+  render(FileItem, { record, value: '' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect((input as HTMLInputElement).readOnly).toBe(true);
+});

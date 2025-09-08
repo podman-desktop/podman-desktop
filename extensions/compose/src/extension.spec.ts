@@ -383,12 +383,9 @@ describe('registerCLITool', () => {
     );
   });
 
-  test('after selecting the version to be installed it should download compose', async () => {
+  test('doInstall should download and install latest version', async () => {
     vi.mocked(detectMock.checkSystemWideDockerCompose).mockResolvedValue(false);
     vi.mocked(detectMock.getStoragePath).mockResolvedValue('');
-    vi.mocked(composeDownloadMock.promptUserForVersion).mockResolvedValue({
-      tag: 'v1.0.0',
-    } as unknown as ComposeGithubReleaseArtifactMetadata);
 
     let installer: extensionApi.CliToolInstaller | undefined;
     vi.mocked(cliToolMock.registerInstaller).mockImplementation(mInstaller => {
@@ -402,7 +399,11 @@ describe('registerCLITool', () => {
       expect(installer).toBeDefined();
     });
 
-    await installer?.selectVersion();
+    vi.mocked(composeDownloadMock.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v1.0.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+
+    await installer?.selectVersion(true);
 
     await installer?.doInstall({} as unknown as Logger);
     expect(composeDownloadMock.download).toHaveBeenCalledWith({

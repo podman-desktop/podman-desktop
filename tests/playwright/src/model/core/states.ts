@@ -74,3 +74,8 @@ export enum ImageState {
   Used = 'USED',
   Unused = 'UNUSED',
 }
+
+export enum TaskState {
+  Canceled = 'canceled',
+  Success = 'success',
+}

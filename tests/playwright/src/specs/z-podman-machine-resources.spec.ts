@@ -89,11 +89,6 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   test.setTimeout(120_000);
 
   try {
-    if (test.info().status === 'failed') {
-      await resetPodmanMachinesFromCLI();
-      await createPodmanMachineFromCLI();
-    }
-
     const settingsBar = await navigationBar.openSettings();
     await settingsBar.resourcesTab.click();
 
@@ -122,6 +117,25 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   }
 });
 
+// eslint-disable-next-line no-empty-pattern
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.status !== testInfo.expectedStatus) {
+    console.log(`Test "${testInfo.title}" has status ${testInfo.status}... Performing podman machine cleanup`);
+
+    try {
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+    } catch (error) {
+      console.log('Error occurred while resetting podman machines', error);
+    }
+  }
+});
+
+test.skip(
+  isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
+  'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
+);
+
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
   test.afterAll(async () => {
     test.setTimeout(60_000);
@@ -130,18 +144,12 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
     }
   });
 
-  test.skip(
-    isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
-    'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
-  );
-
-  test.skip(
-    PODMAN_MACHINE_NAME === 'podman-machine-user-networking' && !isWindows,
-    'Testing user networking machine only on Windows',
-  );
-
   test.describe
     .serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, () => {
+      test.skip(
+        PODMAN_MACHINE_NAME === 'podman-machine-user-networking' && !isWindows,
+        'Testing user networking machine only on Windows',
+      );
       test('Create machine through Resources page', async ({ page, navigationBar }) => {
         test.setTimeout(200_000);
 

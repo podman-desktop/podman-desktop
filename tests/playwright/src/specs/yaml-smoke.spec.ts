@@ -19,6 +19,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { ImageState } from '../model/core/states';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteImage, deletePod } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -84,10 +85,10 @@ test.describe.serial(`Play yaml file to pull images and create pod for app ${pod
       await playExpect.poll(async () => await imagesPage.waitForImageExists(frontendImage)).toBeTruthy();
       await playExpect
         .poll(async () => await imagesPage.getCurrentStatusOfImage(backendImage), { timeout: 15_000 })
-        .toBe('UNUSED');
+        .toBe(ImageState.Unused);
       await playExpect
         .poll(async () => await imagesPage.getCurrentStatusOfImage(frontendImage), { timeout: 15_000 })
-        .toBe('UNUSED');
+        .toBe(ImageState.Unused);
     });
 
     await test.step(`Deleting image ${backendImage}`, async () => {

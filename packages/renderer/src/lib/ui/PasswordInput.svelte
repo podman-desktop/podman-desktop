@@ -5,6 +5,7 @@ import { createEventDispatcher, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 export let id: string;
+export let name: string | undefined = undefined;
 export let password: string | undefined = undefined;
 export let passwordHidden: boolean = true;
 export let readonly: boolean = false;
@@ -18,7 +19,9 @@ onMount(() => {
 });
 
 // show/hide if the parent doesn't override
-async function onShowHide(): Promise<void> {
+async function onShowHide(event: MouseEvent): Promise<void> {
+  // avoid to propagate event
+  event.preventDefault();
   if (dispatch('toggleShowHide', { cancelable: true })) {
     passwordHidden = !passwordHidden;
     element.type = passwordHidden ? 'password' : 'text';
@@ -29,7 +32,7 @@ async function onShowHide(): Promise<void> {
 <Input
   class={$$props.class ?? ''}
   id="password-{id}"
-  name="password-{id}"
+  name={name ?? `password-${id}`}
   placeholder="password"
   bind:value={password}
   aria-label="password {id}"

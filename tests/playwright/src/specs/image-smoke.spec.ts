@@ -19,6 +19,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { ArchitectureType } from '../model/core/platforms';
+import { ImageState } from '../model/core/states';
 import { ImageDetailsPage } from '../model/pages/image-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { untagImagesFromPodman } from '../utility/operations';
@@ -56,7 +58,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
       .toBeTruthy();
 
-    playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
+    playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe(ImageState.Unused);
   });
 
   test('Pull image from search results', async ({ navigationBar }) => {
@@ -128,6 +130,24 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       .poll(async () => await imagesPage.waitForImageDelete(helloContainer, 60_000), { timeout: 0 })
       .toBeTruthy();
     playExpect(await imagesPage.waitForImageExists('quay.io/podman/hi')).toBe(true);
+  });
+
+  test('Cancel build image', async ({ navigationBar }) => {
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
+    const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
+    const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+
+    await buildImagePage.cancelBuild(
+      'cancel-build-image-test',
+      dockerfilePath,
+      contextDirectory,
+      [ArchitectureType.Default],
+      20,
+    );
   });
 
   test('Build image', async ({ navigationBar }) => {

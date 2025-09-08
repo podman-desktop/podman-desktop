@@ -28,8 +28,6 @@ test('Expect default size', async () => {
   const icon = faPlayCircle;
   const loadingWidthClass = 'w-10';
   const loadingHeightClass = 'h-10';
-  const positionTopClass = '';
-  const positionLeftClass = '';
   const loading = true;
   const iconSize = undefined;
   render(LoadingIcon, {
@@ -37,8 +35,6 @@ test('Expect default size', async () => {
     iconSize,
     loadingHeightClass,
     loadingWidthClass,
-    positionTopClass,
-    positionLeftClass,
     loading,
   });
   const loadingIcon = screen.getByRole('img', { hidden: true, name: '' });
@@ -52,8 +48,6 @@ test('Expect specified size', async () => {
   const icon = faPlayCircle;
   const loadingWidthClass = 'w-10';
   const loadingHeightClass = 'h-10';
-  const positionTopClass = '';
-  const positionLeftClass = '';
   const loading = true;
   const iconSize = '2x';
   render(LoadingIcon, {
@@ -61,8 +55,6 @@ test('Expect specified size', async () => {
     iconSize,
     loadingHeightClass,
     loadingWidthClass,
-    positionTopClass,
-    positionLeftClass,
     loading,
   });
   const loadingIcon = screen.getByRole('img', { hidden: true, name: '' });

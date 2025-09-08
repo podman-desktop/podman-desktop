@@ -63,7 +63,6 @@ test.each(['start', 'restart', 'stop', 'delete', 'update'])('action $action in p
       inProgress: true,
       status: 'unknown',
     },
-    leftPosition: '',
     icon: faPlayCircle,
     clickAction: vi.fn(),
   });
@@ -226,7 +225,6 @@ test.each([
     action: action,
     state: state,
     color: color,
-    leftPosition: '',
     icon: faPlayCircle,
     clickAction: vi.fn(),
   });

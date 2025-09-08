@@ -30,6 +30,7 @@ export class BuildImagePage extends BasePage {
   readonly imageNameInput: Locator;
   readonly buildButton: Locator;
   readonly doneButton: Locator;
+  readonly cancelBuildButton: Locator;
   readonly containerFilePathButton: Locator;
   readonly platformRegion: Locator;
   readonly arm64Button: Locator;
@@ -38,6 +39,7 @@ export class BuildImagePage extends BasePage {
   readonly amd64checkbox: Locator;
   readonly archMoreOptionsButton: Locator;
   readonly archLessOptionsButton: Locator;
+  readonly terminalContent: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -49,6 +51,7 @@ export class BuildImagePage extends BasePage {
     this.imageNameInput = page.getByPlaceholder('my-custom-image');
     this.buildButton = page.getByRole('button', { name: 'Build', exact: true });
     this.doneButton = page.getByRole('button', { name: 'Done' });
+    this.cancelBuildButton = page.getByRole('button', { name: 'Cancel' });
     this.containerFilePathButton = page.getByRole('button', { name: 'Browse...' }).first();
     this.platformRegion = page.getByRole('region', {
       name: 'Build Platform Options',
@@ -59,6 +62,7 @@ export class BuildImagePage extends BasePage {
     this.amd64checkbox = this.platformRegion.getByLabel('Intel and AMD x86_64 systems');
     this.archMoreOptionsButton = this.platformRegion.getByRole('button', { name: 'Show more options' });
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
+    this.terminalContent = page.locator('.xterm-rows');
   }
 
   async buildImage(
@@ -69,30 +73,7 @@ export class BuildImagePage extends BasePage {
     timeout = 120000,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
-      if (!containerFilePath) {
-        throw Error(`Path to containerfile is incorrect or not provided!`);
-      }
-
-      await this.containerFilePathInput.fill(containerFilePath);
-
-      if (contextDirectory) await this.buildContextDirectoryInput.fill(contextDirectory);
-      if (imageName) {
-        await this.imageNameInput.clear();
-        await this.imageNameInput.pressSequentially(imageName, { delay: 50 });
-      }
-
-      if (!archType.includes(ArchitectureType.Default)) {
-        await this.uncheckDefaultCheckbox();
-        await this.showAllArchOptions();
-
-        for (const architecture of archType) {
-          await this.checkArchCheckbox(architecture);
-        }
-      }
-
-      await playExpect(this.buildButton).toBeEnabled();
-      await this.buildButton.scrollIntoViewIfNeeded();
-      await this.buildButton.click();
+      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
       await this.validateBuildLogs();
@@ -101,6 +82,27 @@ export class BuildImagePage extends BasePage {
       console.log(`Image ${imageName} has been built successfully!`);
 
       return new ImagesPage(this.page);
+    });
+  }
+
+  async cancelBuild(
+    imageName: string,
+    containerFilePath: string,
+    contextDirectory: string,
+    archType: string[] = [ArchitectureType.Default],
+    cancelAfterTimeout = 200,
+  ): Promise<void> {
+    return test.step(`Starting and canceling build for image ${imageName}`, async () => {
+      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType);
+
+      await playExpect(this.cancelBuildButton).toBeEnabled();
+      await this.cancelBuildButton.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(cancelAfterTimeout);
+
+      await playExpect(this.cancelBuildButton).toBeVisible();
+      await this.cancelBuildButton.click();
+
+      await playExpect(this.doneButton).toBeEnabled({ timeout: 30_000 });
     });
   }
 
@@ -169,5 +171,37 @@ export class BuildImagePage extends BasePage {
         await playExpect.poll(async () => logRow.textContent()).not.toContain('Error');
       }),
     );
+  }
+
+  private async fillBuildImageForm(
+    imageName: string,
+    containerFilePath: string,
+    contextDirectory: string,
+    archType: string[] = [ArchitectureType.Default],
+  ): Promise<void> {
+    if (!containerFilePath) {
+      throw Error(`Path to containerfile is incorrect or not provided!`);
+    }
+
+    await this.containerFilePathInput.fill(containerFilePath);
+
+    if (contextDirectory) await this.buildContextDirectoryInput.fill(contextDirectory);
+    if (imageName) {
+      await this.imageNameInput.clear();
+      await this.imageNameInput.pressSequentially(imageName, { delay: 50 });
+    }
+
+    if (!archType.includes(ArchitectureType.Default)) {
+      await this.uncheckDefaultCheckbox();
+      await this.showAllArchOptions();
+
+      for (const architecture of archType) {
+        await this.checkArchCheckbox(architecture);
+      }
+    }
+
+    await playExpect(this.buildButton).toBeEnabled();
+    await this.buildButton.scrollIntoViewIfNeeded();
+    await this.buildButton.click();
   }
 }
