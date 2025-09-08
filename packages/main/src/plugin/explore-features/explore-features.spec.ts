@@ -101,7 +101,7 @@ const extensionInfoMock: ExtensionInfo = {
   description: '',
   displayName: 'Extension Mock',
   publisher: '',
-  removable: false,
+  removable: true,
   devMode: false,
   version: '',
   state: '',
