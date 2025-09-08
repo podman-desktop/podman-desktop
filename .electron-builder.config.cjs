@@ -80,6 +80,7 @@ const config = {
   npmRebuild: false,
   beforePack: async context => {
     const DEFAULT_ASSETS = [];
+    const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
 
     // universal build, add both pkg files
@@ -90,23 +91,23 @@ const config = {
     ) {
       context.packager.config.extraResources = DEFAULT_ASSETS;
       context.packager.config.extraResources.push(
-        'extensions/podman/packages/extension/assets/podman-installer-macos-universal*.pkg',
+        `${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-universal*.pkg`,
       );
       return;
     }
 
     if (context.arch === Arch.arm64 && context.electronPlatformName === 'darwin') {
       context.packager.config.extraResources.push(
-        'extensions/podman/packages/extension/assets/podman-installer-macos-aarch64-*.pkg',
+        `${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-aarch64-*.pkg`,
       );
-      context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-arm64.zst');
+      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
     }
 
     if (context.arch === Arch.x64 && context.electronPlatformName === 'darwin') {
       context.packager.config.extraResources.push(
-        'extensions/podman/packages/extension/assets/podman-installer-macos-amd64-*.pkg',
+        `${PODMAN_EXTENSION_ASSETS}/podman-installer-macos-amd64-*.pkg`,
       );
-      context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-x64.zst');
+      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-x64.zst`);
     }
 
     if (context.electronPlatformName === 'win32') {
@@ -117,12 +118,12 @@ const config = {
       });
       // add podman installer
       if (context.arch === Arch.x64) {
-        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-*-amd64.exe');
-        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-x64.zst');
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-*-setup.exe`);
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-x64.zst`);
       }
       if (context.arch === Arch.arm64) {
-        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-*-arm64.exe');
-        context.packager.config.extraResources.push('extensions/podman/packages/extension/assets/podman-image-arm64.zst');
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-arm64.exe`);
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
       }
     }
   },

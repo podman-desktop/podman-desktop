@@ -31,7 +31,7 @@ import { WinMemoryCheck } from '../checks/win-memory-check';
 import { WinVersionCheck } from '../checks/win-version-check';
 import { WSLVersionCheck } from '../checks/wsl-version-check';
 import { WSL2Check } from '../checks/wsl2-check';
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
+import podman5Json from '../podman5.json';
 import { getAssetsFolder } from '../utils/util';
 import { BaseInstaller } from './base-installer';
 
@@ -71,10 +71,11 @@ export class WinInstaller extends BaseInstaller {
   install(): Promise<boolean> {
     return window.withProgress({ location: ProgressLocation.APP_ICON }, async progress => {
       progress.report({ increment: 5 });
-      let setupPath = path.resolve(getAssetsFolder(), `podman-${getBundledPodmanVersion()}-setup.exe`);
-      if (arch() === 'arm64') {
-        setupPath = path.resolve(getAssetsFolder(), `podman-installer-windows-arm64.exe`);
-      }
+      const fileName =
+        arch() === 'arm64'
+          ? podman5Json.platform.win32.arch.arm64.fileName
+          : podman5Json.platform.win32.arch.x64.fileName;
+      const setupPath = path.resolve(getAssetsFolder(), `${fileName}`);
       try {
         if (fs.existsSync(setupPath)) {
           try {
