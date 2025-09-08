@@ -3,7 +3,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { GitHubMetadata } from '@site/src/plugins/github-metadata';
 
-export function GitHubStarsButton({ mobile = false }: Readonly<{ readonly mobile?: boolean }>): JSX.Element {
+export function GitHubStarsButton({ mobile = false }: { readonly mobile?: boolean }): JSX.Element {
   const { stargazersCount } = usePluginData('docusaurus-plugin-github-metadata') as GitHubMetadata;
 
   return (
