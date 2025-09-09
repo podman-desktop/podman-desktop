@@ -107,7 +107,7 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: redat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
+        uses: redhat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e_testenv_prepare_composite_action@13e2c57c759137bfc1f437f221967461e8a98e2a
