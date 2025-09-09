@@ -536,9 +536,7 @@ async function updateContainerConfiguration(
   await containerConfiguration.update('machine.diskSize', machineInfo.diskSize);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
-  if (isRootful !== undefined) {
-    await containerConfiguration.update('machine.rootful', isRootful);
-  }
+  await containerConfiguration.update('machine.rootful', isRootful);
 }
 
 function calcMacosSocketPath(machineName: string): string {
@@ -864,9 +862,7 @@ export async function registerProviderFor(
   await containerConfiguration.update('machine.memoryUsage', machineInfo.memoryUsage);
   await containerConfiguration.update('machine.diskSizeUsage', machineInfo.diskUsage);
 
-  if (isRootful !== undefined) {
-    await containerConfiguration.update('machine.rootful', isRootful);
-  }
+  await containerConfiguration.update('machine.rootful', isRootful);
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);
