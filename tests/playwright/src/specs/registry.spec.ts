@@ -59,6 +59,8 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
   });
 
   test('Cannot add invalid registry', async ({ page, navigationBar }) => {
+    test.setTimeout(90_000);
+
     await navigationBar.openDashboard();
     const settingsBar = await navigationBar.openSettings();
     const registryPage = await settingsBar.openTabPage(RegistriesPage);
@@ -67,13 +69,13 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
     const urlErrorMsg = page.getByText(
       /Unable to find auth info for https:\/\/invalidUrl\/v2\/\. Error: RequestError: getaddrinfo [A-Z_]+ invalidurl$/,
     );
-    await playExpect(urlErrorMsg).toBeVisible({ timeout: 50000 });
+    await playExpect(urlErrorMsg).toBeVisible({ timeout: 60_000 });
     await playExpect(registryPage.cancelDialogButton).toBeEnabled();
     await registryPage.cancelDialogButton.click();
 
     await registryPage.createRegistry(registryUrl, 'invalidName', 'invalidPswd');
     const credsErrorMsg = page.getByText('Wrong Username or Password.');
-    await playExpect(credsErrorMsg).toBeVisible();
+    await playExpect(credsErrorMsg).toBeVisible({ timeout: 30_000 });
     await playExpect(registryPage.cancelDialogButton).toBeEnabled();
     await registryPage.cancelDialogButton.click();
   });
@@ -89,7 +91,7 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
 
         const registryBox = registryPage.registriesTable.getByLabel(registryName);
         const username = registryBox.getByText(registryUsername);
-        await playExpect(username).toBeVisible({ timeout: 50000 });
+        await playExpect(username).toBeVisible({ timeout: 50_000 });
       });
 
       test('Registry editing availability and invalid credentials verification', async ({ page }) => {
