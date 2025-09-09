@@ -72,8 +72,8 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
 
     if ((await rateLimitExceededLocator.count()) > 0) {
       // we have hit the rate limit, we cannot continue, exit the test suite
-      console.log('Rate limit exceeded, cannot continue with compose onboarding tests');
-      return;
+      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
+      test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
     }
 
     await welcomePage.otherVersionButton.click();
