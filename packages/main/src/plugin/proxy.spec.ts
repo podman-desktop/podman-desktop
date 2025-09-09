@@ -16,18 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import EventEmitter from 'node:events';
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 import { createProxy, type ProxyServer } from 'proxy';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ensureURL, Proxy } from '/@/plugin/proxy.js';
 import { ProxyState } from '/@api/proxy.js';
 
+import type { ApiSenderType } from './api.js';
+import { Directories } from './directories.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
+import type { IDisposable } from './types/disposable.js';
 
 const URL = 'https://podman-desktop.io';
 
@@ -41,33 +45,23 @@ const certificates: Certificates = {
   getAllCertificates: vi.fn(),
 } as unknown as Certificates;
 
-function getConfigurationRegistry(
-  enabled: number,
-  http: string | undefined,
-  https: string | undefined,
-  no: string | undefined,
-): ConfigurationRegistry {
-  const get = vi.fn().mockImplementation(name => {
-    if (name === 'enabled') {
-      return enabled;
-    } else if (name === 'http') {
-      return http;
-    } else if (name === 'https') {
-      return https;
-    } else if (name === 'no') {
-      return no;
-    } else {
-      return '';
-    }
-  });
-  return {
-    registerConfigurations: vi.fn(),
-    onDidChangeConfiguration: vi.fn(),
-    getConfiguration: vi.fn().mockReturnValue({
-      get: get,
-      update: vi.fn(),
-    }),
-  } as unknown as ConfigurationRegistry;
+const apiEmitter = new EventEmitter();
+
+const apiSender: ApiSenderType = {
+  send: function (channel: string, data?: unknown): void {
+    apiEmitter.emit(channel, data);
+  },
+  receive: function (channel: string, func: (...args: unknown[]) => void): IDisposable {
+    apiEmitter.on(channel, func);
+    return {
+      dispose: function (): void {
+        apiEmitter.removeAllListeners();
+      },
+    };
+  },
+};
+function getConfigurationRegistry(): ConfigurationRegistry {
+  return new ConfigurationRegistry(apiSender, new Directories());
 }
 
 async function buildProxy(): Promise<ProxyServer> {
@@ -77,24 +71,30 @@ async function buildProxy(): Promise<ProxyServer> {
   });
 }
 
-test('fetch without proxy', async () => {
-  const configurationRegistry = getConfigurationRegistry(ProxyState.PROXY_DISABLED, undefined, undefined, undefined);
-  const proxy = new Proxy(configurationRegistry, certificates);
+let proxy: Proxy | undefined;
+let configurationRegistry: ConfigurationRegistry;
+
+beforeAll(async () => {
+  configurationRegistry = getConfigurationRegistry();
+  proxy = new Proxy(configurationRegistry, certificates);
   await proxy.init();
+});
+
+test('fetch without proxy', async () => {
+  await proxy?.setState(ProxyState.PROXY_DISABLED);
   await fetch(URL);
 });
 
 test('fetch with http proxy', async () => {
   const proxyServer = await buildProxy();
   const address = proxyServer.address() as AddressInfo;
-  const configurationRegistry = getConfigurationRegistry(
-    ProxyState.PROXY_MANUAL,
-    `127.0.0.1:${address.port}`,
-    undefined,
-    undefined,
-  );
-  const proxy = new Proxy(configurationRegistry, certificates);
-  await proxy.init();
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpsProxy: `127.0.0.1:${address.port}`,
+    httpProxy: undefined,
+    noProxy: undefined,
+  });
+
   let connectDone = false;
   proxyServer.on('connect', () => (connectDone = true));
   await fetch(URL);
@@ -102,42 +102,38 @@ test('fetch with http proxy', async () => {
 });
 
 test('check change from manual to system without proxy send event', async () => {
-  const configurationRegistry = getConfigurationRegistry(
-    ProxyState.PROXY_MANUAL,
-    `127.0.0.1:8080`,
-    undefined,
-    undefined,
-  );
-  const proxy = new Proxy(configurationRegistry, certificates);
-  await proxy.init();
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: `127.0.0.1:8080`,
+    httpsProxy: undefined,
+    noProxy: undefined,
+  });
   const stateListener = vi.fn();
   const settingsListener = vi.fn();
-  proxy.onDidStateChange(stateListener);
-  proxy.onDidUpdateProxy(settingsListener);
-  await proxy.setState(ProxyState.PROXY_SYSTEM);
+  proxy?.onDidStateChange(stateListener);
+  proxy?.onDidUpdateProxy(settingsListener);
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
   expect(stateListener).toHaveBeenCalledWith(false);
   expect(settingsListener).not.toHaveBeenCalled();
 });
 
 test('check change from manual to system with proxy send event', async () => {
-  const configurationRegistry = getConfigurationRegistry(
-    ProxyState.PROXY_MANUAL,
-    `127.0.0.1:8080`,
-    undefined,
-    undefined,
-  );
-  const proxy = new Proxy(configurationRegistry, certificates);
-  await proxy.init();
+  await proxy?.setState(ProxyState.PROXY_MANUAL);
+  await proxy?.setProxy({
+    httpProxy: `127.0.0.1:8080`,
+    httpsProxy: undefined,
+    noProxy: undefined,
+  });
   const stateListener = vi.fn();
   const settingsListener = vi.fn();
-  proxy.onDidStateChange(stateListener);
-  proxy.onDidUpdateProxy(settingsListener);
+  proxy?.onDidStateChange(stateListener);
+  proxy?.onDidUpdateProxy(settingsListener);
   vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
     httpProxy: 'https://127.0.0.1:8081',
     httpsProxy: undefined,
     noProxy: undefined,
   });
-  await proxy.setState(ProxyState.PROXY_SYSTEM);
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
   expect(stateListener).toHaveBeenCalledWith(true);
   expect(settingsListener).toHaveBeenCalledWith({ httpProxy: 'https://127.0.0.1:8081' });
 });
