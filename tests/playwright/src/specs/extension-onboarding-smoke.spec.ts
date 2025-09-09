@@ -20,9 +20,18 @@ import { RunnerOptions } from '../runner/runner-options';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { isCI, isLinux } from '../utility/platform';
 
+let rateLimitReachedFlag = false;
+
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
-test.beforeAll(async ({ runner }) => {
+test.beforeAll(async ({ runner, page }) => {
   runner.setVideoAndTraceName('compose-onboarding');
+
+  page.on('console', msg => {
+    if (msg.text().includes('API rate limit exceeded')) {
+      console.log('Rate limit flag triggered!');
+      rateLimitReachedFlag = true;
+    }
+  });
 });
 
 test.afterAll(async ({ runner }) => {
@@ -70,7 +79,7 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     const rateLimitExceededText = '${onboardingContext}';
     const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
 
-    if ((await rateLimitExceededLocator.count()) > 0) {
+    if ((await rateLimitExceededLocator.count()) > 0 || rateLimitReachedFlag) {
       // we have hit the rate limit, we cannot continue, exit the test suite
       test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
       test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
