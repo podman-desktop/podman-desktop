@@ -83,6 +83,8 @@ import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
+import { NavigationPage } from '/@api/navigation-page';
+import type { NavigationRequest } from '/@api/navigation-request';
 import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
 import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding';
@@ -213,6 +215,12 @@ export function initExposure(): void {
   // Handle protocol to install extensions by delegating to the renderer process
   ipcRenderer.on('podman-desktop-protocol:install-extension', (_, extensionId: string) => {
     apiSender.send('install-extension:from-id', extensionId);
+  });
+
+  ipcRenderer.on('podman-desktop-protocol:open-experimental-features', () => {
+    apiSender.send('navigate', {
+      page: NavigationPage.EXPERIMENTAL_FEATURES,
+    } as NavigationRequest<NavigationPage.EXPERIMENTAL_FEATURES>);
   });
 
   contextBridge.exposeInMainWorld('clearTasks', async (): Promise<void> => {
@@ -1326,9 +1334,12 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('selectCliToolVersionToInstall', async (id: string): Promise<string> => {
-    return ipcInvoke('cli-tool-registry:selectCliToolVersionToInstall', id);
-  });
+  contextBridge.exposeInMainWorld(
+    'selectCliToolVersionToInstall',
+    async (id: string, latest = true): Promise<string> => {
+      return ipcInvoke('cli-tool-registry:selectCliToolVersionToInstall', id, latest);
+    },
+  );
 
   contextBridge.exposeInMainWorld(
     'installCliTool',

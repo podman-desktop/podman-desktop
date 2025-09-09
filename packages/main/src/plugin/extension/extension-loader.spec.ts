@@ -25,6 +25,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { PodInspectInfo } from '/@/plugin/api/pod-info.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
@@ -188,6 +189,7 @@ const containerProviderRegistry: ContainerProviderRegistry = {
   podmanListImages: vi.fn(),
   listInfos: vi.fn(),
   pullImage: vi.fn(),
+  getPodInspect: vi.fn(),
 } as unknown as ContainerProviderRegistry;
 
 const inputQuickPickRegistry: InputQuickPickRegistry = {} as unknown as InputQuickPickRegistry;
@@ -2196,6 +2198,21 @@ describe('containerEngine', async () => {
 
     // the signal should be marked as aborted
     expect(controller?.signal.aborted).toBeTruthy();
+  });
+
+  test('inspectPod', async () => {
+    const pod: PodInspectInfo = {
+      Id: 'podId',
+    } as PodInspectInfo;
+    vi.mocked(containerProviderRegistry.getPodInspect).mockResolvedValue(pod);
+    const api = createApi();
+
+    expect(api).toBeDefined();
+
+    const inspect = await api.containerEngine.inspectPod('engineId', 'podId');
+    expect(inspect).toEqual(pod);
+
+    expect(containerProviderRegistry.getPodInspect).toHaveBeenCalledWith('engineId', 'podId');
   });
 });
 

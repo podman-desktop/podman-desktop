@@ -16,19 +16,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
+import { formatName } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
+import { MessageBox } from './message-box.js';
+import { Telemetry } from './telemetry/telemetry.js';
 
 export type Timestamp = number | undefined;
+
 export interface ExperimentalConfiguration {
   remindAt: Timestamp;
   disabled: boolean;
 }
 
+type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
 const DAYS_TO_MS = 24 * 60 * 60 * 1_000;
 
 @injectable()
@@ -39,6 +45,10 @@ export class ExperimentalFeatureFeedbackHandler {
   constructor(
     @inject(ConfigurationRegistry)
     private configurationRegistry: ConfigurationRegistry,
+    @inject(MessageBox)
+    private messageBox: MessageBox,
+    @inject(Telemetry)
+    private telemetry: Telemetry,
   ) {
     this.#configurationRegistry = this.configurationRegistry;
   }
@@ -46,14 +56,17 @@ export class ExperimentalFeatureFeedbackHandler {
   protected async save(key: string): Promise<void> {
     // If conf does not exist, the feature is not enabled
     const conf = this.experimentalFeatures.get(key);
-    if (conf) {
-      const parts = key.split('.');
-      const firstPart = parts[0];
-      const secondPart = parts[1];
-      if (secondPart) {
-        const configuration = this.#configurationRegistry.getConfiguration(firstPart);
-        await configuration?.update(secondPart, conf);
+    const parts = key.split('.');
+    const firstPart = parts[0];
+    const secondPart = parts[1];
+    const configuration = this.#configurationRegistry.getConfiguration(firstPart);
+    if (secondPart) {
+      // HACK for features that are set as disabled with false (old config)
+      // temporarily enable them and immediately disable, to remove them
+      if (conf === undefined) {
+        await configuration?.update(secondPart, {});
       }
+      await configuration?.update(secondPart, conf);
     }
   }
 
@@ -63,6 +76,21 @@ export class ExperimentalFeatureFeedbackHandler {
   }
 
   async init(): Promise<void> {
+    const feedbackConfiguration: IConfigurationNode = {
+      id: 'preferences',
+      title: 'Feedback dialog',
+      type: 'object',
+      properties: {
+        ['feedback.dialog']: {
+          description: 'Show feedback dialog for experimental features',
+          type: 'boolean',
+          default: true,
+        },
+      },
+    };
+
+    this.#disposables.push(this.configurationRegistry.registerConfigurations([feedbackConfiguration]));
+
     const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
     for (const configurationKey in configurationProperties) {
       if (!configurationProperties[configurationKey]?.experimental?.githubDiscussionLink) {
@@ -73,11 +101,15 @@ export class ExperimentalFeatureFeedbackHandler {
       const parts = configurationKey.split('.');
       const firstPart = parts[0];
       const secondPart = parts[1];
-      if (!secondPart) return;
+      if (!secondPart) continue;
 
       const conf = this.#configurationRegistry.getConfiguration(firstPart).get(secondPart);
-      // Configuration does not exist (feature is not enabled)
+      // Configuration does not exist (feature is not enabled), or is set to false
       if (!conf) {
+        if (typeof conf === 'boolean') {
+          // Remove the feature if has value false using logic in save
+          await this.save(configurationKey);
+        }
         continue;
       }
 
@@ -101,6 +133,7 @@ export class ExperimentalFeatureFeedbackHandler {
       }
     }
     // When are all features set, show dialog
+    await this.showFeedbackDialog();
   }
 
   /**
@@ -145,6 +178,85 @@ export class ExperimentalFeatureFeedbackHandler {
       this.save(id).catch((e: unknown) =>
         console.error(`Got error when saving timestamps for experimental features: ${e}`),
       );
+    }
+  }
+
+  /**
+   * Goes through each enabled experimental feature and shows dialog if current timestamp is greater than stored value
+   */
+  protected async showFeedbackDialog(): Promise<void> {
+    const configurationProperties = this.#configurationRegistry.getConfigurationProperties();
+    const feedbackEnabled = this.#configurationRegistry.getConfiguration('feedback').get<boolean>('dialog', true);
+    if (!feedbackEnabled) {
+      return;
+    }
+
+    // Go through all experimental features (in this point we should have all properties set)
+    for (const [key, configuration] of this.experimentalFeatures) {
+      const featureGitHubLink = configurationProperties[key]?.experimental?.githubDiscussionLink;
+      // If the feature does not have a link or the dialog is disabled
+      if (!featureGitHubLink || configuration.disabled) continue;
+
+      // Compare timestamp of each experimental feature
+      const date = new Date();
+      if (configuration.remindAt && configuration.remindAt > date.getTime()) continue;
+      const featureName = formatName(key);
+
+      let footerMarkdownDescription: string = `:button[fa-thumbs-up]{command=openExternal args='["${featureGitHubLink}"]'} :button[fa-thumbs-down]{command=openExternal args='["${featureGitHubLink}"]'}`;
+
+      const image = configurationProperties[key]?.experimental?.image;
+      if (image) {
+        footerMarkdownDescription = `:image[${featureName}]{src="${configurationProperties[key]?.experimental?.image}" title="${featureName}"}`;
+      }
+      const options: RemindOption[] = ['Remind me tomorrow', 'Remind me in 2 days', `Don't show again`];
+
+      this.messageBox
+        .showMessageBox({
+          title: `Share Your Feedback`,
+          message: `We are testing something new!\n\nHow's your experience so far with [${featureName}](${featureGitHubLink})? Let us know on GitHub!`,
+          type: `info`,
+          buttons: [
+            {
+              heading: 'Remind me later',
+              buttons: options,
+              type: 'dropdownButton',
+            },
+            {
+              label: 'Share Feedback on GitHub',
+              icon: 'fas fa-arrow-up-right-from-square',
+              type: 'iconButton',
+            },
+          ],
+          defaultId: 1,
+          footerMarkdownDescription: footerMarkdownDescription,
+        })
+        .then(async response => {
+          if (response) {
+            const telemetryOptions = { option: 'Share Feedback on GitHub' };
+            // Share Feedback on GitHub was selected
+            if (response.response === 1) {
+              await shell.openExternal(featureGitHubLink);
+              this.setTimestamp(key, undefined);
+            }
+            // Option from Dropdown was selected
+            else if (response.response === 0 && typeof response.dropdownIndex === 'number') {
+              telemetryOptions.option = options[response.dropdownIndex] ?? 'Unknown option';
+              switch (options[response.dropdownIndex]) {
+                case 'Remind me tomorrow':
+                  this.setTimestamp(key, 1);
+                  break;
+                case 'Remind me in 2 days':
+                  this.setTimestamp(key, 2);
+                  break;
+                case `Don't show again`:
+                default:
+                  this.disableFeature(key);
+              }
+            }
+            this.telemetry.track('experimentalFeatureFeedback', telemetryOptions);
+          }
+        })
+        .catch(console.error);
     }
   }
 }

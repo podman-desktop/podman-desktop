@@ -296,12 +296,7 @@ export async function getVolumeNameForContainer(page: Page, containerName: strin
   });
 }
 
-export async function ensureCliInstalled(
-  page: Page,
-  resourceName: string,
-  timeout = 60_000,
-  version = '',
-): Promise<void> {
+export async function ensureCliInstalled(page: Page, resourceName: string, timeout = 60_000): Promise<void> {
   return test.step(`Ensure ${resourceName} CLI is installed`, async () => {
     const cliToolsPage = new CLIToolsPage(page);
     await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
@@ -309,7 +304,7 @@ export async function ensureCliInstalled(
     await playExpect(cliToolsPage.getToolRow(resourceName)).toBeVisible({ timeout: 10_000 });
 
     if (!(await cliToolsPage.getCurrentToolVersion(resourceName))) {
-      await cliToolsPage.installTool(resourceName, version, timeout);
+      await cliToolsPage.installTool(resourceName, timeout);
     }
 
     await playExpect

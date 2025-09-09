@@ -49,6 +49,7 @@ export interface NavigationParameters {
   [NavigationPage.CLI_TOOLS]: never;
   [NavigationPage.EDIT_CONTAINER_CONNECTION]: { provider: string; name: string };
   [NavigationPage.PROVIDER_TASK]: { internalId: string; taskId: number | undefined };
+  [NavigationPage.EXPERIMENTAL_FEATURES]: never;
 }
 
 // the parameters property is optional when the NavigationParameters say it is

@@ -20,6 +20,8 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
+import statusbarImage from '../../assets/statusbarProviders.showProviders.webp';
+
 @injectable()
 export class StatusbarProvidersInit {
   constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
@@ -36,6 +38,7 @@ export class StatusbarProvidersInit {
           default: import.meta.env.DEV ? {} : undefined,
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10802',
+            image: statusbarImage,
           },
         },
       },

@@ -13,16 +13,15 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 
-let archivesToLoad: string[] = [];
-let loadError: string = '';
+let archivesToLoad = $state<string[]>([]);
+let loadError = $state<string>('');
 
 let providers: ProviderInfo[] = [];
-let providerConnections: ProviderContainerConnectionInfo[] = [];
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
-let inProgress = false;
+let providerConnections = $state<ProviderContainerConnectionInfo[]>([]);
+let selectedProvider = $state<ProviderContainerConnectionInfo>();
+let inProgress = $state(false);
 
-let loadDisabled = false;
-$: loadDisabled = !selectedProvider || archivesToLoad.length === 0;
+let loadDisabled = $derived(!selectedProvider || archivesToLoad.length === 0);
 
 onMount(async () => {
   providers = get(providerInfos);
@@ -104,9 +103,9 @@ async function loadImages(): Promise<void> {
         <div class="flex flex-col grow pl-2">Image Archives</div>
       </div>
     {/if}
-    {#each archivesToLoad as archiveToLoad, index (index)}
+    {#each archivesToLoad as _, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
-        <Input bind:value={archiveToLoad} aria-label="archive path" readonly={true} />
+        <Input bind:value={archivesToLoad[index]} aria-label="archive path" readonly={true} />
         <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} />
       </div>
     {/each}

@@ -21,7 +21,7 @@ import type { ContainerInteractiveParams } from '../model/core/types';
 import { ContainerDetailsPage } from '../model/pages/container-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '../utility/operations';
-import { isCI, isWindows } from '../utility/platform';
+import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
@@ -159,7 +159,11 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
 
     //start a container from the image (generates 4 new volumes)
     const imageDetails = await images.openImageDetails(imageToPull);
+    await playExpect(imageDetails.heading).toBeVisible({ timeout: 10_000 });
+
     const runImage = await imageDetails.openRunImage();
+    await playExpect(runImage.heading).toBeVisible({ timeout: 10_000 });
+
     let containers = await runImage.startContainer(containerToRun, containerStartParams);
     await playExpect(containers.header).toBeVisible({ timeout: 60_000 });
     await playExpect
@@ -167,7 +171,6 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
         timeout: 60_000,
       })
       .toBeTruthy();
-    await containers.startContainer(containerToRun);
 
     //check that four volumes are created (in addition to the existing ones)
     volumesPage = await navigationBar.openVolumes();
@@ -213,7 +216,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
   });
 
   test('Create volume on the system mapped into container', async ({ navigationBar, page }) => {
-    test.skip(!!isCI && isWindows, 'Skipped on Windows due to file system issues');
+    test.skip(!!isWindows, 'Skipped on Windows due to file system issues');
     //create a new volume
     let volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();

@@ -12,6 +12,7 @@ import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import Markdown from '../markdown/Markdown.svelte';
+import PasswordStringItem from './item-formats/PasswordStringItem.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
 
 interface Props {
@@ -227,6 +228,11 @@ function numberItemValue(): number {
         onChange={onChange} />
     {:else if record.enum && record.enum.length > 0}
       <EnumItem record={record} value={typeof givenValue === 'string' ? givenValue : recordValue} onChange={onChange} />
+    {:else if record.format === 'password'}
+      <PasswordStringItem
+        record={record}
+        value={typeof givenValue === 'string' ? givenValue : recordValue}
+        onChange={onChange} />
     {:else}
       <StringItem
         record={record}

@@ -20,5 +20,4 @@ async function viewAction(): Promise<void> {
   title="View action"
   onClick={viewAction}
   hidden={!task?.action}
-  icon={faEye}
-  iconOffset="pl-[0.15rem]" />
+  icon={faEye} />

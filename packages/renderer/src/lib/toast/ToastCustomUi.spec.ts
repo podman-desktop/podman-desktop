@@ -18,13 +18,22 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { Spinner } from '@podman-desktop/ui-svelte';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { toast } from '@zerodevx/svelte-toast';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { TaskInfo } from '/@api/taskInfo';
 
 import ToastCustomUi from './ToastCustomUi.svelte';
+
+vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    Spinner: vi.fn(),
+  };
+});
 
 const started = new Date().getTime();
 const onpop = vi.fn();
@@ -60,11 +69,15 @@ const FAILURE_TASK: TaskInfo = {
   cancellable: false,
 };
 
-beforeAll(() => {
-  Object.defineProperty(window, 'executeTask', {
-    value: vi.fn(),
-  });
-});
+const CANCELED_TASK: TaskInfo = {
+  id: '1',
+  name: 'Canceled Task 1',
+  state: 'completed',
+  status: 'canceled',
+  started,
+  action: 'canceled action',
+  cancellable: true,
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -80,21 +93,15 @@ test('Check with in-progress', async () => {
     toastId,
     onpop,
   });
+
   // expect the in-progress is used
   const status = screen.getByRole('status', { name: 'in-progress' });
   expect(status).toBeInTheDocument();
+  expect(Spinner).toHaveBeenCalled();
 
   // expect name is there
-  const name = screen.getAllByText(IN_PROGRESS_TASK.name);
-  expect(name).lengthOf(2);
-
-  // should have an action and can click on it
-  const action = screen.getByRole('link', { name: 'Task action' });
-  expect(action).toBeInTheDocument();
-  await fireEvent.click(action);
-
-  // expect we have been calling the method
-  expect(window.executeTask).toHaveBeenCalledWith(IN_PROGRESS_TASK.id);
+  const name = screen.getByText(IN_PROGRESS_TASK.name);
+  expect(name).toBeInTheDocument();
 
   // expect we can close the toast
   const close = screen.getByRole('button', { name: 'Close' });
@@ -115,21 +122,14 @@ test('Check with success', async () => {
     toastId,
     onpop,
   });
-  // expect the in-progress is used
+  // expect the success status is used
   const status = screen.getByRole('status', { name: 'success' });
   expect(status).toBeInTheDocument();
+  expect(status.children[0]).toHaveClass('text-[var(--pd-state-success)]');
 
   // expect name is there
-  const name = screen.getAllByText(SUCCESS_TASK.name);
-  expect(name).lengthOf(2);
-
-  // should have an action and can click on it
-  const action = screen.getByRole('link', { name: 'Success action' });
-  expect(action).toBeInTheDocument();
-  await fireEvent.click(action);
-
-  // expect we have been calling the method
-  expect(window.executeTask).toHaveBeenCalledWith(SUCCESS_TASK.id);
+  const name = screen.getByText(SUCCESS_TASK.name);
+  expect(name).toBeInTheDocument();
 
   // expect we can close the toast
   const close = screen.getByRole('button', { name: 'Close' });
@@ -150,25 +150,46 @@ test('Check with failure', async () => {
     toastId,
     onpop,
   });
-  // expect the in-progress is used
+  // expect the failure status is used
   const status = screen.getByRole('status', { name: 'failure' });
   expect(status).toBeInTheDocument();
+  expect(status.children[0]).toHaveClass('text-[var(--pd-state-error)]');
 
   // expect name is there
-  const name = screen.getByText(FAILURE_TASK.name);
+  const name = screen.getByText(`Error ${FAILURE_TASK.name}`);
   expect(name).toBeInTheDocument();
 
   // expect error to be displayed
   const error = screen.getByText(failureTaskError);
   expect(error).toBeInTheDocument();
 
-  // should have an action and can click on it
-  const action = screen.getByRole('link', { name: 'failure action' });
-  expect(action).toBeInTheDocument();
-  await fireEvent.click(action);
+  // expect we can close the toast
+  const close = screen.getByRole('button', { name: 'Close' });
+  expect(close).toBeInTheDocument();
+  await fireEvent.click(close);
+  expect(onpop).toHaveBeenCalled();
 
-  // expect we have been calling the method
-  expect(window.executeTask).toHaveBeenCalledWith(FAILURE_TASK.id);
+  expect(toastPopSpy).toHaveBeenCalledWith(toastId);
+});
+
+test('Check with cancel', async () => {
+  // spy pop method on toast
+  const toastPopSpy = vi.spyOn(toast, 'pop');
+  const toastId = 1234;
+
+  render(ToastCustomUi, {
+    taskInfo: CANCELED_TASK,
+    toastId,
+    onpop,
+  });
+  // expect the failure status is used
+  const status = screen.getByRole('status', { name: 'canceled' });
+  expect(status).toBeInTheDocument();
+  expect(status.children[0]).toHaveClass('text-[var(--pd-state-warning)]');
+
+  // expect name is there
+  const name = screen.getByText(`Canceled ${CANCELED_TASK.name}`);
+  expect(name).toBeInTheDocument();
 
   // expect we can close the toast
   const close = screen.getByRole('button', { name: 'Close' });

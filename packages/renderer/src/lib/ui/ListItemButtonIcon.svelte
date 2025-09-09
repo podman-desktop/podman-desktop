@@ -3,12 +3,12 @@ import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { DropdownMenu, isFontAwesomeIcon } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 
 import { context as storeContext } from '/@/stores/context';
 
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
+import LoadingIcon from './LoadingIcon.svelte';
 
 interface Props {
   title: string;
@@ -21,7 +21,6 @@ interface Props {
   menu?: boolean;
   detailed?: boolean;
   inProgress?: boolean;
-  iconOffset?: string;
   tooltip?: string;
   contextUI?: ContextUI;
 }
@@ -37,15 +36,9 @@ let {
   menu = false,
   detailed = false,
   inProgress = false,
-  iconOffset = '',
   tooltip = '',
   contextUI,
 }: Props = $props();
-
-let positionLeftClass = $state('left-1');
-if (detailed) positionLeftClass = 'left-2';
-let positionTopClass = $state('top-1');
-if (detailed) positionTopClass = '[0.2rem]';
 
 let globalContext: ContextUI;
 let contextsUnsubscribe: Unsubscriber;
@@ -136,13 +129,10 @@ const styleClass = $derived(
     class:inline-flex={!hidden}
     disabled={!enabled}>
     {#if fontAwesomeIcon}
-      <Fa class="h-4 w-4 {iconOffset}" icon={fontAwesomeIcon} />
+      <LoadingIcon
+        icon={fontAwesomeIcon}
+        loading={inProgress}
+      />
     {/if}
-
-    <div
-      aria-label="spinner"
-      class="w-6 h-6 rounded-full animate-spin border border-solid border-[var(--pd-action-button-spinner)] border-t-transparent absolute {positionTopClass} {positionLeftClass}"
-      class:hidden={!inProgress}>
-    </div>
   </button>
 {/if}

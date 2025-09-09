@@ -146,8 +146,7 @@ if (dropdownMenu) {
   hidden={pod.status === 'RUNNING' || pod.status === 'STOPPING'}
   detailed={detailed}
   inProgress={pod.actionInProgress && pod.status === 'STARTING'}
-  icon={faPlay}
-  iconOffset="pl-[0.15rem]" />
+  icon={faPlay} />
 <ListItemButtonIcon
   title="Stop Pod"
   onClick={stopPod}

@@ -87,6 +87,7 @@ import { Disposable } from '../types/disposable.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
+import { getFreePort } from '../util/port.js';
 import { ViewRegistry } from '../view-registry.js';
 import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
@@ -1274,6 +1275,9 @@ export class ExtensionLoader implements AsyncDisposable {
       listPods(): Promise<PodInfo[]> {
         return containerProviderRegistry.listPods();
       },
+      inspectPod(engineId: string, podId: string): Promise<containerDesktopAPI.PodInspectInfo> {
+        return containerProviderRegistry.getPodInspect(engineId, podId);
+      },
       stopPod(engineId: string, podId: string): Promise<void> {
         return containerProviderRegistry.stopPod(engineId, podId);
       },
@@ -1544,6 +1548,10 @@ export class ExtensionLoader implements AsyncDisposable {
       },
     };
 
+    const net: typeof containerDesktopAPI.net = {
+      getFreePort,
+    };
+
     const version = app.getVersion();
 
     return <typeof containerDesktopAPI>{
@@ -1579,6 +1587,7 @@ export class ExtensionLoader implements AsyncDisposable {
       imageChecker,
       navigation,
       RepositoryInfoParser,
+      net,
     };
   }
 

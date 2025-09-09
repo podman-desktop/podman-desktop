@@ -540,12 +540,6 @@ export class PluginSystem {
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
 
-    container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
-    const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
-      ExperimentalFeatureFeedbackHandler,
-    );
-    await experimentalFeatureFeedbackHandler.init();
-
     // Don't show the tray icon options on Mac
     if (!isMac()) {
       container.bind<TrayIconColor>(TrayIconColor).toSelf().inSingletonScope();
@@ -750,6 +744,12 @@ export class PluginSystem {
     const customPickRegistry = container.get<CustomPickRegistry>(CustomPickRegistry);
     const authentication = container.get<AuthenticationImpl>(AuthenticationImpl);
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
+
+    container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
+    const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
+      ExperimentalFeatureFeedbackHandler,
+    );
+    await experimentalFeatureFeedbackHandler.init();
 
     await this.setupSecurityRestrictionsOnLinks(messageBox);
 
@@ -1607,8 +1607,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'cli-tool-registry:selectCliToolVersionToInstall',
-      async (_listener, id: string): Promise<string> => {
-        return cliToolRegistry.selectCliToolVersionToInstall(id);
+      async (_listener, id: string, latest = true): Promise<string> => {
+        return cliToolRegistry.selectCliToolVersionToInstall(id, latest);
       },
     );
 
@@ -1621,7 +1621,7 @@ export class PluginSystem {
 
         // create task
         const task = taskManager.createTask({
-          title: `Installing ${tool.name} to v${versionToInstall}`,
+          title: `Installing ${tool.name} ${versionToInstall ? 'v' + versionToInstall : 'latest'}`,
           action: {
             name: 'goto task >',
             execute: (): void => {

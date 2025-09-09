@@ -57,6 +57,24 @@ on:
         - 'false'
         - 'true'
         required: false
+      update_target_owner:
+        description: 'Owner field of the update target in app-update.yml'
+        type: string
+        default: 'podman-desktop'
+        required: false
+      update_target_repo:
+        description: 'Repo field of the update target in app-update.yml'
+        type: string
+        default: 'testing-prereleases'
+        required: false
+      update_prerelease:
+        description: 'Update to the prerelease GH release'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+        default: 'true'
+        required: false
 
 permissions:
   contents: read
@@ -70,13 +88,13 @@ jobs:
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - name: Set the default env. variables
@@ -100,7 +118,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -143,8 +161,8 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests - ${{ matrix.installation }}
-    runs-on: windows-2025
+    name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
+    runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:
@@ -156,16 +174,27 @@ jobs:
       fail-fast: false
       matrix:
         installation: ['vanilla', 'custom-extensions']
+        os: [windows-2025, windows-11-arm]
         exclude:
         - installation: ${{ (github.event.inputs.update_with_extensions && github.event.inputs.update_with_extensions == 'true') && 'N/A' || 'custom-extensions' }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set the default env. variables
+        env:
+          DEFAULT_UPDATE_TARGET_OWNER: 'podman-desktop'
+          DEFAULT_UPDATE_TARGET_REPO: 'testing-prereleases'
+          DEFAULT_UPDATE_PRERELEASE: 'true'
+        run: |
+          echo "UPDATE_TARGET_OWNER=${{ github.event.inputs.update_target_owner || env.DEFAULT_UPDATE_TARGET_OWNER }}" >> $env:GITHUB_ENV
+          echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $env:GITHUB_ENV
+          echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $env:GITHUB_ENV
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -173,7 +202,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -182,20 +211,45 @@ jobs:
         run: pnpm install
 
       - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, win nsis,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          if ($env:UPDATE_PRERELEASE -eq 'true') {
+            $updaterFile = "packages/main/src/plugin/updater.ts"
+            if (-Not (Test-Path $updaterFile)) {
+              Write-Error "Updater file not found at $updaterFile"
+            } else {
+              Write-host "Allow Prerelease when updating, setting it inline in the code"
+              (Get-Content $updaterFile).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content $updaterFile -ErrorAction Stop
+            }
+          }
           pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
           echo $path
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
 
+      - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
+        run: |
+          $updateFile = "$env:PD_DIST_PATH/resources/app-update.yml"
+          if (-Not (Test-Path $updateFile)) {
+            Write-Error "app-update.yml not found at $updateFile"
+          }
+          (Get-Content $updateFile).Replace('owner: podman-desktop', "owner: " + $env:UPDATE_TARGET_OWNER) |
+            Set-Content -ErrorAction Stop $updateFile
+          (Get-Content $updateFile).Replace('repo: podman-desktop', "repo: " + $env:UPDATE_TARGET_REPO) |
+            Set-Content -ErrorAction Stop $updateFile
+          echo "Show app-update.yml after replace..."
+          cat "$env:PD_DIST_PATH/resources/app-update.yml"
+          
       - name: Run E2E Update test
         env:
           INSTALLATION_TYPE: ${{ matrix.installation }}
@@ -218,27 +272,41 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: update-e2e-test-${{ matrix.installation }}
+          name: ${{ matrix.os }}-update-e2e-test-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
 
   mac-update-e2e-test:
-    name: mac update e2e tests
-    runs-on: macos-15
+    name: ${{ matrix.os }} update e2e tests
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [macos-15, macos-13]
+    runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set the default env. variables
+        env:
+          DEFAULT_UPDATE_TARGET_OWNER: 'podman-desktop'
+          DEFAULT_UPDATE_TARGET_REPO: 'testing-prereleases'
+          DEFAULT_UPDATE_PRERELEASE: 'true'
+        run: |
+          echo "UPDATE_TARGET_OWNER=${{ github.event.inputs.update_target_owner || env.DEFAULT_UPDATE_TARGET_OWNER }}" >> $GITHUB_ENV
+          echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $GITHUB_ENV
+          echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $GITHUB_ENV
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
@@ -246,7 +314,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: 'pnpm'
@@ -256,20 +324,26 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
-          mv package.json_tmp package.json
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
+          actualVersion=$(jq -r '.version' package.json)
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, mac dmg,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          if [[  "${{ env.UPDATE_PRERELEASE }}" == "true" ]]; then
+            echo "Allow Prerelease when updating, setting it inline in the code"
+            sed -i '' '/autoUpdater.autoDownload = false;/a \
+            autoUpdater.allowPrerelease = true; \
+            ' packages/main/src/plugin/updater.ts
+          fi
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -277,7 +351,16 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
+
+      - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease"
+          sudo sed -i '' 's/owner: podman-desktop/owner: ${{ env.UPDATE_TARGET_OWNER}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          sudo sed -i '' 's/repo: podman-desktop/repo: ${{ env.UPDATE_TARGET_REPO}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
 
       - name: Run E2E Update test
         env:
@@ -300,7 +383,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: mac-update-e2e-test
+          name: ${{ matrix.os }}-update-e2e-test
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw

@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { TaskState } from '../model/core/states';
 import { CommandPalette } from '../model/pages/command-palette';
 import { ExperimentalPage } from '../model/pages/experimental-page';
 import { SettingsBar } from '../model/pages/settings-bar';
@@ -62,6 +63,6 @@ test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
     const tasksPage = await statusBar.openTasksPage();
     await playExpect(tasksPage.heading).toBeVisible();
     await tasksPage.cancelLatestTask();
-    await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain('canceled');
+    await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
   });
 });

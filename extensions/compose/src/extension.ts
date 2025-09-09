@@ -371,8 +371,13 @@ async function registerCLITool(
   );
 
   composeCliToolInstallerDisposable = composeCliTool.registerInstaller({
-    selectVersion: async () => {
-      const selected = await composeDownload.promptUserForVersion();
+    selectVersion: async (latest?: boolean) => {
+      let selected: ComposeGithubReleaseArtifactMetadata;
+      if (latest) {
+        selected = latestVersionAsset ?? (await composeDownload.getLatestVersionAsset());
+      } else {
+        selected = await composeDownload.promptUserForVersion();
+      }
       releaseToInstall = selected;
       releaseVersionToInstall = removeVersionPrefix(selected.tag);
       return releaseVersionToInstall;

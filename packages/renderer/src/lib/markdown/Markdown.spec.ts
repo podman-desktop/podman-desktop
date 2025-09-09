@@ -123,6 +123,36 @@ describe('Custom link', () => {
       '<a data-command="example.onboarding.command.checkRequirements">Name of the link</a>',
     );
   });
+
+  test('expect a tags to be renderer as working links', async () => {
+    await waitRender({ markdown: '- **important info**: some more info. <a href="/some/link">click here to test</a>' });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML('<a href="/some/link">click here to test</a>');
+  });
+});
+
+describe('Custom image', () => {
+  test('Expect image to be rendered as a image without attributes', async () => {
+    await waitRender({ markdown: ':image[Name of the image]{src=path/to/image.png}' });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML(
+      '<img src="path/to/image.png" alt="Name of the image" class="max-w-full h-auto rounded-md shadow-md block transition-shadow duration-300" loading="lazy"/>',
+    );
+  });
+
+  test('Expect image to be rendered as a image with all attributes', async () => {
+    await waitRender({
+      markdown: ':image[Name of the image]{src=path/to/image.png title="Image title" width="300" height="200"}',
+    });
+    const markdownImage = screen.getByRole('img');
+    expect(markdownImage).toBeInTheDocument();
+    expect(markdownImage).toHaveAttribute('alt', 'Name of the image');
+    expect(markdownImage).toHaveAttribute('height', '200');
+    expect(markdownImage).toHaveAttribute('width', '300');
+    expect(markdownImage).toHaveAttribute('title', 'Image title');
+  });
 });
 
 describe('Custom warnings', () => {

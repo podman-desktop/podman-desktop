@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
@@ -75,4 +76,25 @@ test('Ensure HTMLInputElement readonly', async () => {
   const input = screen.getByLabelText('record-description');
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBeTruthy();
+});
+
+test('Ensure that after typing into the input, that onChange is called each time', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+  };
+
+  // We "mock" the rejected value since catch() ends up invalidEntry = true anyways.
+  const onChange = vi.fn().mockRejectedValue(new Error('foo'));
+  render(StringItem, { record, value: '', onChange });
+
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+
+  // Ensure it's been called 9 times as "new value" is 6 characters
+  await userEvent.type(input, 'foobar');
+  expect(onChange).toHaveBeenCalledTimes(6);
 });

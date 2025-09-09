@@ -21,31 +21,31 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import LegacyDialogSpec from './LegacyDialogSpec.svelte';
+import DialogSpec from './DialogSpec.svelte';
 
 test('Expect icon is defined', async () => {
-  render(LegacyDialogSpec);
+  render(DialogSpec);
 
   const element = screen.getByLabelText('icon');
   expect(element).toBeInTheDocument();
 });
 
 test('Expect content is defined', async () => {
-  render(LegacyDialogSpec);
+  render(DialogSpec);
 
   const element = screen.getByLabelText('content');
   expect(element).toBeInTheDocument();
 });
 
 test('Expect validation is defined', async () => {
-  render(LegacyDialogSpec);
+  render(DialogSpec);
 
   const element = screen.getByLabelText('validation');
   expect(element).toBeInTheDocument();
 });
 
 test('Expect buttons is defined', async () => {
-  render(LegacyDialogSpec);
+  render(DialogSpec);
 
   const element = screen.getByLabelText('buttons');
   expect(element).toBeInTheDocument();

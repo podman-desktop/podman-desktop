@@ -83,7 +83,7 @@ async function importContainers(): Promise<void> {
   for (const containerImage of containersToImport) {
     try {
       await window.importContainer({
-        provider: selectedProvider,
+        provider: $state.snapshot(selectedProvider),
         archivePath: containerImage.imagePath,
         imageTag: containerImage.nameWhenImporting,
       });

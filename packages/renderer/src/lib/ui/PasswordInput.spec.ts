@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { expect, test, vi } from 'vitest';
 
 import PasswordInput from './PasswordInput.svelte';
+import PasswordInputTest from './PasswordInputTest.svelte';
 
 function renderInput(password: string, readonly: boolean, onClick?: any): void {
   render(PasswordInput, { password: password, readonly: readonly, onClick: onClick });
@@ -37,4 +38,40 @@ test('Expect basic styling', async () => {
   expect(element).toBeInTheDocument();
   expect(element).toHaveAttribute('aria-label', 'show/hide');
   expect(element).toHaveClass('cursor-pointer');
+});
+
+test('clicking show/hide button does not submit form', async () => {
+  const handleSubmit = vi.fn(e => e.preventDefault());
+
+  render(PasswordInputTest, { onSubmit: handleSubmit });
+
+  const showHideButton = screen.getByRole('button', { name: /show\/hide/i });
+  const submitButton = screen.getByText('Submit');
+
+  // Click the show/hide button
+  await fireEvent.click(showHideButton);
+
+  // Form should NOT have been submitted
+  expect(handleSubmit).not.toHaveBeenCalled();
+
+  // Clicking the real submit button should call the handler
+  await fireEvent.click(submitButton);
+  expect(handleSubmit).toHaveBeenCalledTimes(1);
+});
+
+test('check specific name is applied', async () => {
+  const name = 'my-special-password';
+  render(PasswordInput, { id: 'foo', name: name });
+
+  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  expect(input).toBeInTheDocument();
+  expect(input.name).toBe(name);
+});
+
+test('check default name is set if not specified', async () => {
+  render(PasswordInput, { id: 'foo' });
+
+  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  expect(input).toBeInTheDocument();
+  expect(input.name).toBe('password-foo');
 });

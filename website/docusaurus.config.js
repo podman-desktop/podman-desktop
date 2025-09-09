@@ -346,6 +346,7 @@ const config = {
       'docusaurus-plugin-typedoc',
       {
         id: 'api',
+        docsPath: 'api',
         plugin: ['typedoc-plugin-markdown'],
         entryPoints: [resolve('../packages/extension-api/src/extension-api.d.ts')],
         out: 'api',

@@ -16,6 +16,7 @@ let markdownDescription: string | undefined = '';
 let currentId = 0;
 let title: string | undefined = '';
 let multiline = false;
+let password = false;
 
 let validationEnabled = false;
 let validationError: string | undefined = '';
@@ -44,6 +45,7 @@ const showInputCallback = (inputCallpackParameter: unknown): void => {
   placeHolder = options?.placeHolder;
   title = options?.title;
   currentId = options?.id ?? 0;
+  password = options?.password ?? false;
   if (options?.prompt) {
     prompt = `${options.prompt} (${DEFAULT_PROMPT})`;
   } else {
@@ -333,7 +335,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
             <input
               bind:this={inputElement}
               on:input={onInputChange}
-              type="text"
+              type={password ? 'password' : 'text'}
               bind:value={inputValue}
               class="px-1 w-full text-[var(--pd-input-select-hover-text)] border {validationError
                 ? 'border-[var(--pd-input-field-stroke-error)]'

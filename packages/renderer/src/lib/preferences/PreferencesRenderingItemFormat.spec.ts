@@ -197,9 +197,27 @@ test('Expect a fileinput when record is type string and format file', async () =
   expect(readOnlyInput).toBeInTheDocument();
   expect(readOnlyInput instanceof HTMLInputElement).toBe(true);
   expect((readOnlyInput as HTMLInputElement).placeholder).toBe(record.placeholder);
-  expect((readOnlyInput as HTMLInputElement).readOnly).toBeTruthy();
+  // readOnly by default is false now
+  expect((readOnlyInput as HTMLInputElement).readOnly).toBeFalsy();
   const input = screen.getByLabelText('browse');
   expect(input).toBeInTheDocument();
+});
+
+test('Expect a fileinput with readonly being true, to show readOnly in element', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    title: 'record',
+    parentId: 'parent.record',
+    placeholder: 'Example: text',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+    readonly: true,
+  };
+  await awaitRender(record, {});
+  const readOnlyInput = screen.getByLabelText('record-description');
+  expect(readOnlyInput).toBeInTheDocument();
+  expect(readOnlyInput instanceof HTMLInputElement).toBe(true);
+  expect((readOnlyInput as HTMLInputElement).readOnly).toBe(true);
 });
 
 test('Expect an editable text fileinput when record is type string and format file', async () => {
@@ -457,4 +475,30 @@ test('Expect boolean record to be updated from checked to not checked', async ()
 
   // checkbox should not be checked anymore
   await vi.waitFor(() => expect(checkbox).not.toBeChecked());
+});
+
+test('Expect a password input when record is type string and format is password', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    format: 'password',
+    type: 'string',
+  };
+  await awaitRender(record, {});
+  const passwordInput = screen.getByLabelText('password input-standard-record');
+  expect(passwordInput).toBeInTheDocument();
+  expect(passwordInput).toBeInstanceOf(HTMLInputElement);
+
+  // enter the value foobar from keyboard
+  await userEvent.click(passwordInput);
+  await userEvent.keyboard('foobar');
+
+  // check that the typed value is hidden
+  expect(passwordInput).toHaveAttribute('type', 'password');
+
+  // check that the name is properly set and the value too
+  expect(passwordInput).toHaveAttribute('name', 'record');
+  expect(passwordInput).toHaveValue('foobar');
 });

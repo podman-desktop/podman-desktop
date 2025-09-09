@@ -1,16 +1,39 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
+import CommandPalette from '../dialogs/CommandPalette.svelte';
 import DesktopIcon from '../images/DesktopIcon.svelte';
 import WindowControlButtons from '../window-control-buttons/ControlButtons.svelte';
+import SearchButton from './SearchButton.svelte';
 
-let platform: string;
+let platform: string = $state('');
 
 const title = 'Podman Desktop';
+let commandPalletVisible = $state(false);
+let globalSearchbar = $state(false);
 
 onMount(async () => {
   platform = await window.getOsPlatform();
+
+  globalSearchbar = await window.isExperimentalConfigurationEnabled('titleBar.searchBar');
+  window.events.receive('search-bar-enabled', val => {
+    if (typeof val === 'boolean') globalSearchbar = val;
+  });
 });
+
+function openCommandPallet(): void {
+  if (!globalSearchbar) {
+    return;
+  }
+  commandPalletVisible = true;
+}
+
+function closeCommandPallet(): void {
+  if (!globalSearchbar) {
+    return;
+  }
+  commandPalletVisible = false;
+}
 </script>
 
 <header
@@ -26,7 +49,11 @@ onMount(async () => {
         <div class="absolute left-[10px] top-[10px]">
           <DesktopIcon size="18" />
         </div>
-        <div class="flex flex-1 justify-center text-base select-none text-[color:var(--pd-titlebar-text)]">{title}</div>
+        {#if globalSearchbar}
+          <SearchButton onclick={openCommandPallet}/>
+        {:else}
+          <div class="flex flex-1 justify-center text-base select-none text-[color:var(--pd-titlebar-text)]">{title}</div>
+        {/if}
         <WindowControlButtons platform={platform} />
       </div>
     {:else if platform === 'win32'}
@@ -34,9 +61,17 @@ onMount(async () => {
         <div class="absolute left-[7px] top-[7px]">
           <DesktopIcon size="20" />
         </div>
+        {#if globalSearchbar}
+          <SearchButton onclick={openCommandPallet}/>
+        {/if}
         <div class="ml-[35px] text-left text-base leading-3 text-[color:var(--pd-titlebar-text)]">{title}</div>
         <WindowControlButtons platform={platform} />
       </div>
+    {:else if platform === 'darwin'}
+      {#if globalSearchbar}
+        <SearchButton onclick={openCommandPallet}/>
+      {/if}
     {/if}
+    <CommandPalette display={commandPalletVisible} onclose={closeCommandPallet}/>
   </div>
 </header>

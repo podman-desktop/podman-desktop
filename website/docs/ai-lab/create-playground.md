@@ -6,9 +6,9 @@ keywords: [podman desktop, podman, ai, llm, generative ai]
 tags: [ai, llm, generative ai]
 ---
 
-# Starting an inference server for a model
+# Creating a playground
 
-The integrated Playground environments allow for experimenting with available models in a local environment. An intuitive user prompt helps in exploring the capabilities and accuracy of various models and aids in finding the best model for the use case at hand. The Playground interface further allows for parameterizing models to further optimize the settings and attributes of each model.
+The integrated playground environments allow for experimenting with available models in a local environment. An intuitive user prompt helps in exploring the capabilities and accuracy of various models and aids in finding the best model for the use case. The playground interface allows for parameterizing models to optimize the settings and attributes of each model.
 
 #### Prerequisites
 

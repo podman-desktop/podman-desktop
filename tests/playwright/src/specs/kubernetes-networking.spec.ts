@@ -125,68 +125,6 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
-  test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
-    test('Prepare deployment on the cluster', async ({ page, navigationBar }) => {
-      test.setTimeout(120_000);
-      //Pull image
-      let imagesPage = await navigationBar.openImages();
-      const pullImagePage = await imagesPage.openPullImage();
-      imagesPage = await pullImagePage.pullImage(PULL_IMAGE_NAME);
-      await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_NAME, 10_000)).toBeTruthy();
-
-      //Push image to the cluster
-      const imageDetailPage = await imagesPage.openImageDetails(IMAGE_NAME);
-      await imageDetailPage.pushImageToKindCluster();
-
-      //Create container
-      imagesPage = await navigationBar.openImages();
-      await imagesPage.startContainerWithImage(IMAGE_NAME, CONTAINER_NAME);
-      const containersPage = await navigationBar.openContainers();
-      await playExpect
-        .poll(async () => containersPage.containerExists(CONTAINER_NAME), { timeout: 15_000 })
-        .toBeTruthy();
-      await containersPage.openContainersDetails(CONTAINER_NAME);
-
-      //Deploy pod to the cluster
-      await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, POD_NAME);
-    });
-
-    test('Create port forwarding configuration', async ({ page }) => {
-      //Open pod details and create port forwarding configuration
-      await configurePortForwarding(page, KubernetesResources.Pods, POD_NAME);
-    });
-
-    test('Verify new local port response', async () => {
-      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE);
-    });
-
-    test('Verify Kubernetes port forwarding page', async ({ page }) => {
-      await verifyPortForwardingConfiguration(page, CONTAINER_NAME, LOCAL_PORT, REMOTE_PORT);
-    });
-
-    test('Delete configuration', async ({ page }) => {
-      await deleteKubernetesResource(page, KubernetesResources.PortForwarding, CONTAINER_NAME);
-    });
-
-    test('Verify UI components after removal', async ({ page, navigationBar }) => {
-      //Verify Kubernetes port forwarding page
-      const noForwardingsMessage = page.getByText('No port forwarding configured');
-      await playExpect(noForwardingsMessage).toBeVisible();
-
-      //Verify Pod details page
-      const kubernetesBar = await navigationBar.openKubernetes();
-      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
-      await playExpect.poll(async () => kubernetesPodsPage.getRowByName(POD_NAME), { timeout: 15_000 }).toBeTruthy();
-      const podDetailPage = await kubernetesPodsPage.openResourceDetails(POD_NAME, KubernetesResources.Pods);
-      await podDetailPage.activateTab('Summary');
-      const forwardButton = page.getByRole('button', { name: `Forward...` });
-      await playExpect(forwardButton).toBeVisible();
-    });
-
-    test('Verify link response after removal', async () => {
-      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE); //expect to contain to pass until #11210 is resolved
-    });
-  });
   test.describe
     .serial('Ingress routing workflow verification', () => {
       test('Check Ingress controller pods status', async ({ page }) => {
@@ -252,4 +190,67 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
         await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
       });
     });
+
+  test.describe.serial('Port forwarding workflow verification', { tag: '@k8s_e2e' }, () => {
+    test('Prepare deployment on the cluster', async ({ page, navigationBar }) => {
+      test.setTimeout(120_000);
+      //Pull image
+      let imagesPage = await navigationBar.openImages();
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(PULL_IMAGE_NAME);
+      await playExpect.poll(async () => imagesPage.waitForImageExists(IMAGE_NAME, 10_000)).toBeTruthy();
+
+      //Push image to the cluster
+      const imageDetailPage = await imagesPage.openImageDetails(IMAGE_NAME);
+      await imageDetailPage.pushImageToKindCluster();
+
+      //Create container
+      imagesPage = await navigationBar.openImages();
+      await imagesPage.startContainerWithImage(IMAGE_NAME, CONTAINER_NAME);
+      const containersPage = await navigationBar.openContainers();
+      await playExpect
+        .poll(async () => containersPage.containerExists(CONTAINER_NAME), { timeout: 15_000 })
+        .toBeTruthy();
+      await containersPage.openContainersDetails(CONTAINER_NAME);
+
+      //Deploy pod to the cluster
+      await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, POD_NAME);
+    });
+
+    test('Create port forwarding configuration', async ({ page }) => {
+      //Open pod details and create port forwarding configuration
+      await configurePortForwarding(page, KubernetesResources.Pods, POD_NAME);
+    });
+
+    test('Verify new local port response', async () => {
+      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE);
+    });
+
+    test('Verify Kubernetes port forwarding page', async ({ page }) => {
+      await verifyPortForwardingConfiguration(page, CONTAINER_NAME, LOCAL_PORT, REMOTE_PORT);
+    });
+
+    test('Delete configuration', async ({ page }) => {
+      await deleteKubernetesResource(page, KubernetesResources.PortForwarding, CONTAINER_NAME);
+    });
+
+    test('Verify UI components after removal', async ({ page, navigationBar }) => {
+      //Verify Kubernetes port forwarding page
+      const noForwardingsMessage = page.getByText('No port forwarding configured');
+      await playExpect(noForwardingsMessage).toBeVisible();
+
+      //Verify Pod details page
+      const kubernetesBar = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+      await playExpect.poll(async () => kubernetesPodsPage.getRowByName(POD_NAME), { timeout: 15_000 }).toBeTruthy();
+      const podDetailPage = await kubernetesPodsPage.openResourceDetails(POD_NAME, KubernetesResources.Pods);
+      await podDetailPage.activateTab('Summary');
+      const forwardButton = page.getByRole('button', { name: `Forward...` });
+      await playExpect(forwardButton).toBeVisible();
+    });
+
+    test('Verify link response after removal', async () => {
+      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE); //expect to contain to pass until #11210 is resolved
+    });
+  });
 });

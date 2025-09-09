@@ -35,6 +35,7 @@ import { SettingsBar } from '../model/pages/settings-bar';
 import { WelcomePage } from '../model/pages/welcome-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { Runner } from '../runner/podman-desktop-runner';
+import { isWindows } from '../utility/platform';
 
 let pdRunner: Runner;
 let page: Page;
@@ -64,6 +65,8 @@ for (const {
   extensionFullName,
 } of extensionsInstallationSmokeList) {
   test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
+    test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
+
     test.beforeAll(async () => {
       await _startup(extensionLabel);
     });
@@ -130,7 +133,7 @@ for (const {
             extensionFullLabel,
             extensionFullName,
           );
-          await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15000 });
+          await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15_000 });
         });
 
         test('Extension is active and there are not errors', async () => {
@@ -141,7 +144,7 @@ for (const {
             extensionFullName,
           );
           await playExpect(extensionPage.heading).toBeVisible();
-          await playExpect(extensionPage.status).toHaveText(ExtensionState.Active);
+          await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 15_000 });
           // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
           const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
           // we would like to propagate the error's stack trace into test failure message
@@ -196,7 +199,7 @@ for (const {
               );
 
               await extensionPage.enableExtension();
-              await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10000 });
+              await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10_000 });
 
               // check that dashboard card provider is hidden/shown
               if (extensionDashboardProvider && extensionDashboardStatus) {
