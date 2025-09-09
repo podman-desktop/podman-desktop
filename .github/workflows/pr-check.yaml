@@ -324,7 +324,7 @@ jobs:
         uses: redhat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
 
       - name: Setup testenv using external action
-        uses: podman-desktop/e2e/.github/actions/pde2e_testenv_prepare_composite_action@13e2c57c759137bfc1f437f221967461e8a98e2a
+        uses: podman-desktop/e2e/.github/actions/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         name: Install pnpm
