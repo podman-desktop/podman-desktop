@@ -206,13 +206,14 @@ export class Proxy {
     const _me = this;
     globalThis.fetch = function (url: URL | RequestInfo, opts?: object): Promise<Response> {
       const urlObj = asURL(url);
-      const proxyurl = getProxyUrl(_me, urlObj.protocol === 'https:');
+      const isHttps = urlObj.protocol === 'https:';
+      const proxyurl = getProxyUrl(_me, isHttps);
       if (proxyurl) {
         opts = {
           ...opts,
           dispatcher: new ProxyAgent({ uri: proxyurl, proxyTls: { ca: _me.certificates.getAllCertificates() } }),
         };
-      } else if (urlObj.protocol === 'https') {
+      } else if (isHttps) {
         // configure certificates
         opts = {
           ...opts,
