@@ -1,7 +1,7 @@
 # Contributing to Podman Desktop
 
 <p align="center">
-  <img alt="Podman Desktop" src="https://raw.githubusercontent.com/containers/podman-desktop/media/screenshot.png">
+  <img alt="Podman Desktop" src="https://raw.githubusercontent.com/podman-desktop/podman-desktop/media/screenshot.png">
 </p>
 
 We'd love to have you join the community! Below summarizes the processes
@@ -23,7 +23,7 @@ that we follow.
 ## Reporting Issues
 
 Before opening an issue, check the backlog of
-[open issues](https://github.com/containers/podman-desktop/issues)
+[open issues](https://github.com/podman-desktop/podman-desktop/issues)
 to see if someone else has already reported it.
 
 If so, feel free to add
@@ -55,7 +55,7 @@ See the [extension documentation](https://podman-desktop.io/docs/extensions) on 
 
 Often issues will be assigned to someone, to be worked on at a later time.
 
-If you are a member of the [Containers](https://github.com/containers) organization,
+If you are a member of the [Podman Desktop](https://github.com/podman-desktop) organization,
 self-assign the issue with the `status/in-progress` label.
 
 If you can not set the label: add a quick comment in the issue asking that
@@ -184,7 +184,7 @@ pnpm test:e2e:smoke
 pnpm test:e2e:extension
 ```
 
-You can find more specific options on the [package.json](https://github.com/containers/podman-desktop/blob/main/package.json) file, under 'scripts'.
+You can find more specific options on the [package.json](https://github.com/podman-desktop/podman-desktop/blob/main/package.json) file, under 'scripts'.
 
 However, there are some things that you have to take into account:
 
@@ -192,7 +192,7 @@ However, there are some things that you have to take into account:
   - Remove `settings.json` from `~/.local/share/containers/podman-desktop/configuration/` or,
   - Remove the objects with keys `"welcome.version"` and `"telemetry.*"` from the file, if you do not want to lose your settings
 - Some of the tests can only be executed in certain operating systems. If your execution is skipping a test, this is very likely the reason why.
-- If you want to execute the tests outside of the repository, you can find a setup guide in this [README](https://github.com/containers/podman-desktop/tree/main/tests/playwright#podman-desktop-playwright-tests).
+- If you want to execute the tests outside of the repository, you can find a setup guide in this [README](https://github.com/podman-desktop/podman-desktop/tree/main/tests/playwright#podman-desktop-playwright-tests).
 
 Finally, after executing the E2E tests, you can check the results in your browser with:
 
@@ -364,13 +364,13 @@ All pull requests and branch-merges automatically run:
 - Unit test (Linux)
 - E2E tests (Linux, triggered by PR check, do not prevent merging of the PR in case of instability)
 
-You can follow these jobs in Github Actions https://github.com/containers/podman-desktop/actions
+You can follow these jobs in Github Actions https://github.com/podman-desktop/podman-desktop/actions
 
 ## Communication
 
-For bugs/feature requests please [file issues](https://github.com/containers/podman-desktop/issues/new/choose)
+For bugs/feature requests please [file issues](https://github.com/podman-desktop/podman-desktop/issues/new/choose)
 
-Discussions are possible using Github Discussions https://github.com/containers/podman-desktop/discussions/
+Discussions are possible using Github Discussions https://github.com/podman-desktop/podman-desktop/discussions/
 
 ## Code Architecture
 
@@ -417,13 +417,13 @@ If you're unsure where to add code (renderer, UI, extensions, plugins) see the b
 
 ### UI colors
 
-Colors in Podman Desktop are now managed by a [`color-registry.ts`](https://github.com/containers/podman-desktop/blob/main/packages/main/src/plugin/color-registry.ts) file in order to easily switch between light and dark mode.
+Colors in Podman Desktop are now managed by a [`color-registry.ts`](https://github.com/podman-desktop/podman-desktop/blob/main/packages/main/src/plugin/color-registry.ts) file in order to easily switch between light and dark mode.
 
 When contributing a UI component to Podman Desktop that is colorized, you must go through some steps to figure out what color to use and how to reference it.
 
 Steps:
 
-1. Open the [`color-registry.ts`](https://github.com/containers/podman-desktop/blob/main/packages/main/src/plugin/color-registry.ts) file.
+1. Open the [`color-registry.ts`](https://github.com/podman-desktop/podman-desktop/blob/main/packages/main/src/plugin/color-registry.ts) file.
 2. Figure out which color category from the `initColors()` function.
 3. Use the referenced color with the format `[var(--pd-<color>)]`
 
@@ -450,7 +450,7 @@ Each sprint a new "Triage manager" will be assigned.
 
 Your responsibilities include:
 
-- Reviewing the [status/need-triage](https://github.com/containers/podman-desktop/issues?q=is%3Aopen+is%3Aissue+label%3Astatus%2Fneed-triage) label on new issues. As a maintainer, you will need to categorize these issues under the correct [area labels](https://github.com/containers/podman-desktop/labels?q=area%2F). Once categorized, remove the `status/need-triage` label and apply the appropriate area label.
+- Reviewing the [status/need-triage](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aopen+is%3Aissue+label%3Astatus%2Fneed-triage) label on new issues. As a maintainer, you will need to categorize these issues under the correct [area labels](https://github.com/podman-desktop/podman-desktop/labels?q=area%2F). Once categorized, remove the `status/need-triage` label and apply the appropriate area label.
 - Evaluating the severity of new issues. If an issue is classified as "critical" or "high priority" and requires immediate attention, tag a maintainer in the issue and notify them via the public community channel.
 - Identifying issues that are simple to resolve and marking them as "good first issue," thereby encouraging newcomers to contribute to the project.
 - Evaluating any stale / lingering pull requests and pinging the respective contributors. If the pull request has been opened for an extensive amount of time, ping someone to contact the contributor / push any changes required to get it merged in. If there is no communication / the pull request is stale, close them.

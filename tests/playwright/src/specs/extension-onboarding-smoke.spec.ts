@@ -63,9 +63,19 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await welcomePage.nextStepButton.click();
   });
 
-  test('Check other versions for compose', async ({ welcomePage }) => {
+  test('Check other versions for compose', async ({ welcomePage, page }) => {
     await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
     await playExpect(welcomePage.otherVersionButton).toBeVisible();
+
+    const rateLimitExceededText = '${onboardingContext}';
+    const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
+
+    if ((await rateLimitExceededLocator.count()) > 0) {
+      // we have hit the rate limit, we cannot continue, exit the test suite
+      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
+      test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
+    }
+
     await welcomePage.otherVersionButton.click();
 
     await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
