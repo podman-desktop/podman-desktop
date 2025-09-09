@@ -177,7 +177,7 @@
     "typescript": "5.9.2",
     "typescript-eslint": "^8.43.0",
     "validator": "^13.15.15",
-    "vite": "^7.1.4",
+    "vite": "^7.1.5",
     "vitest": "^3.2.4",
     "xvfb-maybe": "^0.2.1"
   },
