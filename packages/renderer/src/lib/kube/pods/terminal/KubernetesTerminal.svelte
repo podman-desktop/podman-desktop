@@ -5,10 +5,10 @@ import { type IDisposable, Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 
 import { TerminalSettings } from '../../../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../../../../../../main/src/plugin/terminal-theme';
 
 export let podName: string;
 export let containerName: string;

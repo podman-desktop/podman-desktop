@@ -11,7 +11,7 @@ import { router } from 'tinro';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../../../../main/src/plugin/terminal-theme';
+import { getTerminalTheme } from '../terminal/terminal-theme';
 import NoLogIcon from '../ui/NoLogIcon.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
