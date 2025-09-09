@@ -20,7 +20,10 @@ function Hero(): JSX.Element {
         <div className="text-center lg:w-3/4 w-full bg-hero-pattern bg-no-repeat bg-center">
           <div className="bg-white/30 dark:bg-transparent">
             <div className="relative">
-              <img className="absolute -scale-x-100 right-0 -top-23 w-22 " src="img/3MBanner/party-seal.png" />
+              <img
+                className="absolute -scale-x-100 right-0 -top-23 w-22 animate-float"
+                src="img/3MBanner/party-seal.png"
+              />
               <img
                 className="absolute -right-8 -top-30 w-22 rotate-6  z-10 animate-float"
                 src="img/3MBanner/heart-balloon.png"
@@ -30,7 +33,10 @@ function Hero(): JSX.Element {
               </h1>
             </div>
             <div className="relative">
-              <img className="absolute left-[15px] -top-[150px] w-30 " src="img/3MBanner/seal-with-party-horn.png" />
+              <img
+                className="absolute left-[15px] -top-[150px] w-30 animate-float-diagonal"
+                src="img/3MBanner/seal-with-party-horn.png"
+              />
               <p className="text-base font-bold leading-[1.9rem] md:text-lg md:leading-[1.9rem] mt-[88px]">
                 The best free and open source tool for developers to work with containers and Kubernetes. Simplify
                 container management, streamline Kubernetes workflows, and transition from local development to
