@@ -4,11 +4,6 @@ import { createEventDispatcher } from 'svelte';
 import Button from '../button/Button.svelte';
 import EmptyScreen from './EmptyScreen.svelte';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let icon: any;
-export let kind: string;
-export let searchTerm: string;
-
 const dispatch = createEventDispatcher();
 
 const defaultOnResetFilter = (): void => {
@@ -16,7 +11,15 @@ const defaultOnResetFilter = (): void => {
     searchTerm = '';
   }
 };
-export let onResetFilter: () => void = defaultOnResetFilter;
+interface Props {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+  kind: string;
+  searchTerm: string;
+  onResetFilter?: () => void;
+}
+
+let { icon, kind, searchTerm = $bindable(), onResetFilter = defaultOnResetFilter }: Props = $props();
 
 function doResetFilter(): void {
   // reset only if onResetFilter is provided
@@ -26,7 +29,7 @@ function doResetFilter(): void {
   onResetFilter();
 }
 
-$: filter = searchTerm && searchTerm.length > 20 ? 'filter' : `'${searchTerm}'`;
+let filter = $derived(searchTerm && searchTerm.length > 20 ? 'filter' : `'${searchTerm}'`);
 </script>
 
 <EmptyScreen
