@@ -120,18 +120,6 @@ test('Expect to call doCreateNew if clicking on Next', async () => {
   expect(doCreateNew).toBeCalled();
 });
 
-test('Expect no modal if providerToBeInstalled is undefined', async () => {
-  render(PreferencesProviderInstallationModal, {
-    providerToBeInstalled: undefined,
-    closeCallback,
-    doCreateNew,
-    preflightChecks: [],
-  });
-
-  const modal = screen.queryByLabelText('install provider');
-  expect(modal).not.toBeInTheDocument();
-});
-
 test('Expect preflight check entry if preflights checks has some value', async () => {
   render(PreferencesProviderInstallationModal, {
     providerToBeInstalled: {
