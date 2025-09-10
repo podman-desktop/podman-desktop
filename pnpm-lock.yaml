@@ -67,8 +67,8 @@ importers:
         specifier: 6.6.8
         version: 6.6.8
       electron-util:
-        specifier: ^0.18.1
-        version: 0.18.1
+        specifier: ^1.0.0
+        version: 1.0.0
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -6374,9 +6374,9 @@ packages:
   electron-updater@6.6.8:
     resolution: {integrity: sha512-n8FeXRc7Q7BBweS85+H5h4/uzBz8hSSOYhDnwOumpbIhYdPk9EEzWLKDyoArMyf4RebywqWBUE96QDn9TETRhQ==}
 
-  electron-util@0.18.1:
-    resolution: {integrity: sha512-Ew1h+lDYUlGUnOQNDRo87dJDPW4R7MK2PTLbzb4nHnbFEMytTlPjxFgTfZieq1pGIdhSrDWINtXNhvp6lUEH1Q==}
-    engines: {node: '>=18'}
+  electron-util@1.0.0:
+    resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
+    engines: {node: '>=20'}
 
   electron@38.0.0:
     resolution: {integrity: sha512-egljptiPJqbL/oamFCEY+g3RNeONWTVxZSGeyLqzK8xq106JhzuxnhJZ3sxt4DzJFaofbGyGJA37Oe9d+gVzYw==}
@@ -18601,7 +18601,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-util@0.18.1:
+  electron-util@1.0.0:
     dependencies:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
