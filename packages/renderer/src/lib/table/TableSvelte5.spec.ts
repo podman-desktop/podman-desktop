@@ -36,9 +36,9 @@ type Person = {
 };
 
 const PARENTS: Array<Person> = [
-  { id: 1, name: 'John', age: 57, hobby: 'Skydiving' },
-  { id: 2, name: 'Henry', age: 27, hobby: 'Cooking' },
-  { id: 3, name: 'Charlie', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3600000 },
+  { id: 1, name: 'Albert', age: 57, hobby: 'Skydiving' },
+  { id: 2, name: 'Bernard', age: 27, hobby: 'Cooking' },
+  { id: 3, name: 'Charlotte', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3600000 },
 ];
 
 const CHILDREN: Record<number, Array<Person>> = {
@@ -135,9 +135,69 @@ describe('column header', () => {
   });
 });
 
+describe('data', () => {
+  test('expect all data to be rendered', () => {
+    const { getAllByRole } = render(TableSvelte5<Person>, {
+      kind: 'persons',
+      data: PARENTS,
+      row: SIMPLE_ROW,
+      columns: COLUMNS,
+      key,
+      label,
+    });
+
+    const groups = getAllByRole('rowgroup');
+    assert(groups.length === 2, 'table should have two row groups');
+
+    const [, body] = groups;
+
+    const labels = new Set<string>(
+      within(body)
+        .getAllByRole('row')
+        .map(row => row.getAttribute('aria-label'))
+        .filter((label): label is string => label !== undefined),
+    );
+
+    PARENTS.forEach(person => {
+      expect(labels.has(label(person))).toBeTruthy();
+    });
+  });
+});
+
 describe('sorting', () => {
+  function assertTableSorted(
+    table: HTMLElement,
+    data: Array<Person>,
+    column: TableColumn<any, any>,
+    order: 'ascending' | 'descending',
+  ): void {
+    assert(column.info.comparator, 'column should have comparator');
+
+    const groups = within(table).getAllByRole('rowgroup');
+    assert(groups.length === 2, 'table should have two row groups');
+
+    const [, body] = groups;
+
+    const rowItems = within(body)
+      .getAllByRole('row')
+      .map(row => data.find(person => label(person) === row.getAttribute('aria-label')))
+      .filter((person): person is Person => person !== undefined);
+
+    expect(rowItems).toHaveLength(data.length);
+
+    for (let i = 0; i < rowItems.length - 1; i++) {
+      if (order === 'ascending') {
+        // Ascending => smallest to largest, 0 to 9, and/or A to Z
+        expect(column.info.comparator(rowItems[i], rowItems[i + 1])).toBeLessThan(0);
+      } else {
+        // Descending => largest to smallest, 9 to 0, and/or Z to A
+        expect(column.info.comparator(rowItems[i], rowItems[i + 1])).toBeGreaterThan(0);
+      }
+    }
+  }
+
   test.each<TableColumn<any, any>>(COLUMNS)('should default sort by column $title', async column => {
-    const { getByRole } = render(TableSvelte5<Person>, {
+    const { getByRole, container } = render(TableSvelte5<Person>, {
       kind: 'persons',
       data: PARENTS,
       row: SIMPLE_ROW,
@@ -153,6 +213,15 @@ describe('sorting', () => {
       expect(header).not.toHaveClass('cursor-pointer');
       return; // test stop here as no comparator provided
     }
+
+    await vi.waitFor(() => {
+      assertTableSorted(
+        container,
+        PARENTS,
+        column,
+        column.info.initialOrder !== 'descending' ? 'ascending' : 'descending',
+      );
+    });
 
     expect(header).toHaveClass('cursor-pointer');
     const image = within(header).getByRole('img');
@@ -180,7 +249,7 @@ describe('sorting', () => {
     async column => {
       assert(column.info.comparator, 'column should have comparator');
 
-      const { getByRole } = render(TableSvelte5<Person>, {
+      const { getByRole, container } = render(TableSvelte5<Person>, {
         kind: 'persons',
         data: PARENTS,
         row: SIMPLE_ROW,
@@ -199,25 +268,42 @@ describe('sorting', () => {
       // click on sort
       await fireEvent.click(header);
 
-      // wait for icon to change
+      // wait for the data to be properly sorted
       await vi.waitFor(() => {
-        switch (column.info.initialOrder) {
-          case 'ascending':
-          case undefined:
-            expect(image).toHaveClass('fa-sort-up');
-            expect(image).not.toHaveClass('fa-sort-down');
-            break;
-          case 'descending':
-            expect(image).toHaveClass('fa-sort-down');
-            expect(image).not.toHaveClass('fa-sort-up');
-            break;
-          default:
-            throw new Error(`Unexpected initial order: ${column.info.initialOrder}`);
-        }
+        assertTableSorted(
+          container,
+          PARENTS,
+          column,
+          column.info.initialOrder !== 'descending' ? 'ascending' : 'descending',
+        );
       });
+
+      switch (column.info.initialOrder) {
+        case 'ascending':
+        case undefined:
+          expect(image).toHaveClass('fa-sort-up');
+          expect(image).not.toHaveClass('fa-sort-down');
+          break;
+        case 'descending':
+          expect(image).toHaveClass('fa-sort-down');
+          expect(image).not.toHaveClass('fa-sort-up');
+          break;
+        default:
+          throw new Error(`Unexpected initial order: ${column.info.initialOrder}`);
+      }
 
       // click to invert sorting order
       await fireEvent.click(header);
+
+      // wait for the data to be properly sorted
+      await vi.waitFor(() => {
+        assertTableSorted(
+          container,
+          PARENTS,
+          column,
+          column.info.initialOrder !== 'descending' ? 'descending' : 'ascending',
+        );
+      });
 
       // wait for icon to be inverted
       await vi.waitFor(() => {

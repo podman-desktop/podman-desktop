@@ -66,25 +66,37 @@ let gridTemplateColumns: string = $derived.by(() => {
 });
 
 let selectedAllCheckboxes = $derived(data.every(object => selected.has(key(object))));
-let sortCol: TableColumn<T, unknown> | undefined = $state(
+
+/**
+ * Sorting states
+ */
+let sortColumn: TableColumn<T, unknown> | undefined = $state(
   defaultSortColumn ? columns.find(column => column.title === defaultSortColumn) : undefined,
 );
-let sortAscending: boolean = $state(false);
+let sortAscending: boolean | undefined = $state(undefined);
 
 let sortedData: Array<T> = $derived.by(() => {
-  let comparator = sortCol?.info?.comparator;
+  let comparator = sortColumn?.info?.comparator;
   if (!comparator) {
     return data;
   }
 
-  if (!sortAscending) {
-    // we're already sorted, switch to reverse order
+  let ascending: boolean;
+  if (sortAscending === undefined) {
+    // default sorting should uses initial order
+    ascending = sortColumn?.info.initialOrder !== 'descending';
+  } else {
+    ascending = sortAscending;
+  }
+
+  if (!ascending) {
     let comparatorTemp = comparator;
     comparator = (a, b): number => -comparatorTemp(a, b);
   }
 
   // do not sort in place
-  return data.toSorted(comparator);
+  const sorted = data.toSorted(comparator);
+  return sorted;
 });
 
 /**
@@ -107,11 +119,11 @@ function onChecked(object: T, checked: boolean): void {
 }
 
 function sort(column: TableColumn<T, unknown>): void {
-  if (sortCol === column) {
+  if (sortColumn === column) {
     sortAscending = !sortAscending;
   } else {
     sortAscending = column.info.initialOrder ? column.info.initialOrder !== 'descending' : true;
-    sortCol = column;
+    sortColumn = column;
   }
 }
 
@@ -239,12 +251,12 @@ function onToggle(keyItem: string): void {
           </div>
           {#if column.info.comparator}
             <i class="fas pl-0.5"
-              class:fa-sort={sortCol !== column}
-              class:fa-sort-up={sortCol === column && sortAscending}
-              class:fa-sort-down={sortCol === column && !sortAscending}
-              class:text-[var(--pd-table-header-unsorted)]={sortCol !== column}
+              class:fa-sort={sortColumn !== column}
+              class:fa-sort-up={sortColumn === column && sortAscending}
+              class:fa-sort-down={sortColumn === column && !sortAscending}
+              class:text-[var(--pd-table-header-unsorted)]={sortColumn !== column}
               role="img"
-              aria-label={sortCol !== column ? 'Not sorted' : sortAscending ? 'Sorted ascending' : 'Sorted descending'}
+              aria-label={sortColumn !== column ? 'Not sorted' : sortAscending ? 'Sorted ascending' : 'Sorted descending'}
             ></i>
           {/if}
         </div>
