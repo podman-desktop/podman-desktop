@@ -279,8 +279,44 @@ describe('collapsed', () => {
       const row = getByRole('row', { name: label(person) });
 
       // Ensure the button has aria-expanded="false"
-      const collapseBtn = within(row).getByRole('button');
+      const collapseBtn = within(row).getByRole('button', { name: 'Expand Row' });
       expect(collapseBtn).toHaveAttribute('aria-expanded', 'false');
+    },
+  );
+
+  test.each<Person>(PARENTS.filter(person => (ADVANCED_ROW.info.children?.(person) ?? []).length > 0))(
+    'collapsed and expand row $id should properly update collapsed prop',
+    async person => {
+      const collapsed = new SvelteSet<string>();
+      assert(collapsed.size === 0, 'collapsed set should be empty');
+
+      const { getByRole } = render(TableSvelte5<Person>, {
+        kind: 'persons',
+        data: PARENTS,
+        row: ADVANCED_ROW,
+        columns: COLUMNS,
+        key,
+        label,
+        // Specify collapsed set
+        collapsed: collapsed,
+      });
+
+      const row = getByRole('row', { name: label(person) });
+      const collapseBtn = within(row).getByRole('button', { name: 'Collapse Row' });
+
+      await fireEvent.click(collapseBtn);
+
+      // wait until store update
+      await vi.waitUntil(() => {
+        return collapsed.has(key(person));
+      });
+
+      await fireEvent.click(collapseBtn);
+
+      // wait until store update
+      await vi.waitUntil(() => {
+        return !collapsed.has(key(person));
+      });
     },
   );
 });
@@ -340,6 +376,43 @@ describe('selected', () => {
       }
     });
   });
+
+  test.each<Person>(PARENTS.filter(person => ADVANCED_ROW.info.selectable?.(person)))(
+    'select and unselect row $id should properly update selected prop',
+    async person => {
+      const selected = new SvelteSet<string>();
+      assert(selected.size === 0, 'selected set should be empty');
+
+      const { getByRole } = render(TableSvelte5<Person>, {
+        kind: 'persons',
+        data: PARENTS,
+        row: ADVANCED_ROW,
+        columns: COLUMNS,
+        key,
+        label,
+        selected: selected,
+      });
+
+      const row = getByRole('row', { name: label(person) });
+      const checkbox = within(row).getByRole('checkbox');
+
+      await fireEvent.click(checkbox);
+
+      // wait until store update
+      await vi.waitUntil(() => {
+        // ensure EACH children is selected
+        return selected.has(key(person)) && (CHILDREN[person.id] ?? []).every(child => selected.has(key(child)));
+      });
+
+      await fireEvent.click(checkbox);
+
+      // wait until store update
+      await vi.waitUntil(() => {
+        // ensure EACH children is unselected
+        return !selected.has(key(person)) && (CHILDREN[person.id] ?? []).every(child => !selected.has(key(child)));
+      });
+    },
+  );
 });
 
 describe('grid', () => {
