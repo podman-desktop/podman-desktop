@@ -1,4 +1,4 @@
-summary: Execute all Playwright end-to-end test, excluding those related to Kubernetes.
+summary: Execute smoke Playwright end-to-end tests.
 tag:
   - smoke
 duration: 2h

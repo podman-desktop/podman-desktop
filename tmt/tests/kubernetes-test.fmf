@@ -1,4 +1,4 @@
-summary: Execute all Playwright end-to-end test, excluding those related to Kubernetes.
+summary: Execute Kubernetes-specific Playwright end-to-end tests.
 tag:
   - kubernetes
 duration: 2h
