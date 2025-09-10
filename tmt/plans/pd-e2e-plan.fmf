@@ -1,0 +1,93 @@
+summary: | 
+  This plan provisions a test environment for running Playwright end-to-end tests against the Podman Desktop application. 
+  It installs all required system dependencies, including GUI libraries, 
+  sets up Node.js with pnpm, and starts Podman rootless service.
+
+discover:
+    how: fmf
+
+execute:
+    how: tmt 
+
+provision: 
+  hardware: 
+    memory: ">= 16 GB"
+    cpu: 
+      cores: ">= 4"
+    disk:
+      - size: ">= 20 GB"
+
+environment:
+  TEST_PODMAN_MACHINE: true
+  SKIP_COMPOSE_ONBOARDING_TEST: true
+
+
+prepare:
+  - name: Install required packages
+    how: shell
+    script: |
+      sudo dnf update -y
+      sudo dnf install -y \
+        git nodejs npm xorg-x11-server-Xvfb \
+        nss nspr atk at-spi2-atk cups libXcomposite libXdamage libXfixes libXrandr cairo pango alsa-lib \
+        gcc-c++ gtk3 passt jq
+      sudo npm install -g pnpm
+      echo "NodeJS version: $(node -v)"
+      echo "npm version: $(npm -v)"
+      echo "pnpm Version: $(pnpm --version)"
+  
+  - name: Install podman  
+    how: shell
+    script: | 
+      bash $TMT_TREE/tmt/scripts/install-podman.sh
+
+  - name: Enable and start Podman rootless service
+    how: shell
+    script: |
+      systemctl --user enable podman.socket
+      systemctl --user start podman.socket
+
+/e2e: 
+  summary: Execute all Playwright E2E tests, excluding those related to Kubernetes.
+  prepare+:
+    - name: Install Docker Compose CLI
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+  discover+: 
+    filter: 'tag:e2e'
+
+/smoke: 
+  summary: Execute smoke Playwright E2E tests.
+  prepare+:
+    - name: Install Docker Compose CLI
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+  discover+: 
+    filter: 'tag:smoke'
+
+/kubernetes:
+  summary: Execute Kubernetes Playwright E2E tests.
+  prepare+:
+    - name: Install Kind CLI 
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-kind.sh
+    - name: Install Kubectl
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-kubectl.sh
+  discover+: 
+    filter: 'tag:kubernetes'
+
+/all: 
+  summary: Execute all Playwright E2E tests.
+  prepare+:
+    - name: Install Docker Compose CLI
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+    - name: Install Kind CLI 
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-kind.sh
+    - name: Install Kubectl
+      how: shell
+      script: bash $TMT_TREE/tmt/scripts/install-kubectl.sh
+  discover+: 
+    filter: 'tag:all'

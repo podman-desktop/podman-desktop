@@ -1,0 +1,145 @@
+# Copyright (C) 2025 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: PD E2E Testing Farm
+
+on:
+  push:
+    branches: [main]
+    
+  workflow_dispatch:
+    inputs:
+      fork:
+        default: 'podman-desktop'
+        description: 'Podman Desktop repo fork'
+        type: string
+        required: true
+      branch:
+        default: 'main'
+        description: 'Podman Desktop repo branch'
+        type: string
+        required: true
+      podman_version:
+        default: 'nightly'
+        description: 'Podman version to install (e.g., "5.5.2", "5.6.0~rc1"). Use "latest" for stable or "nightly" for the latest development build.'
+        type: string
+        required: true
+      npm_target:
+        description: npm tests target
+        type: choice
+        default: 'all'
+        options:
+          - e2e
+          - kubernetes
+          - smoke
+          - all
+
+jobs:
+  pd-e2e-testing-farm-ci:
+    timeout-minutes: 90
+    name: pd-e2e-testing-farm-ci
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora-version: ['Fedora-41', 'Fedora-42']
+    steps:
+      - name: Set the default env. variables
+        env:
+          DEFAULT_NPM_TARGET: 'all'
+          DEFAULT_FORK: 'podman-desktop'
+          DEFAULT_BRANCH: 'main'
+          DEFAULT_PODMAN_VERSION: 'nightly'
+        run: |
+          echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
+          echo "FORK=${{ github.event.inputs.fork || env.DEFAULT_FORK }}" >> $GITHUB_ENV
+          echo "BRANCH=${{ github.event.inputs.branch || env.DEFAULT_BRANCH }}" >> $GITHUB_ENV
+          echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_PODMAN_VERSION }}" >> $GITHUB_ENV
+
+      - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
+        id: run-e2e-tf
+        uses: sclorg/testing-farm-as-github-action@v4
+        with:
+          api_key: ${{ secrets.TF_TOKEN }}
+          create_github_summary: "false"
+          compose: ${{ matrix.fedora-version }}
+          tmt_plan_filter: 'name:/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'
+          variables: FORK=${{ env.FORK }};BRANCH=${{ env.BRANCH }};COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }}
+
+      - name: Extract Testing Farm work ID and base URL
+        if: always()
+        run: |
+          TF_ARTIFACTS_URL="${{ steps.run-e2e-tf.outputs.test_log_url }}"
+          TF_DEFAULT_JUNIT_DEFAULT="${TF_ARTIFACTS_URL}/results-junit.xml"
+          curl -o results-junit.xml "$TF_DEFAULT_JUNIT_DEFAULT"
+
+          TF_WORK_ID=$(grep -o 'work-${{ env.NPM_TARGET }}[^/"]*' results-junit.xml | head -1)
+
+          echo "TF_WORK_ID=$TF_WORK_ID" >> $GITHUB_ENV
+          echo "TF_ARTIFACTS_URL=$TF_ARTIFACTS_URL" >> $GITHUB_ENV
+
+      - name: Download Playwright JUnit report from Testing Farm
+        if: always()
+        run: |
+          TF_PLAYWRIGHT_JUNIT_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}/execute/data/guest/default-0/tmt/tests/${{ env.NPM_TARGET }}-test-1/data/junit-results.xml"
+          curl -o playwright-junit-results.xml "$TF_PLAYWRIGHT_JUNIT_URL"
+
+      - name: Publish test report to PR
+        if: always()
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/playwright-junit-results.xml'
+
+      - name: Download test artifacts from Testing Farm
+        if: failure()
+        run: |
+          mkdir -p results
+
+          TF_TEST_DATA_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}/execute/data/guest/default-0/tmt/tests/${{ env.NPM_TARGET }}-test-1/data"
+          TF_TRACES_URL="${TF_TEST_DATA_URL}/traces/"
+          TF_VIDEOS_URL="${TF_TEST_DATA_URL}/videos/"
+
+          echo "Downloading traces"
+          wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=10 \
+            --reject "index.html*" \
+            --directory-prefix=results \
+            "$TF_TRACES_URL"
+
+          echo "Downloading videos"
+          wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=10 \
+            --reject "index.html*" \
+            --directory-prefix=results \
+            "$TF_VIDEOS_URL"
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testing-farm-artifacts-${{ matrix.fedora-version }}
+          path: results/*

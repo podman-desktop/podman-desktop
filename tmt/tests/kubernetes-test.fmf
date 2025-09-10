@@ -1,0 +1,13 @@
+summary: Execute all Playwright end-to-end test, excluding those related to Kubernetes.
+tag:
+  - kubernetes
+duration: 2h
+result: custom
+framework: shell
+test: |
+  set +e
+  cd $TMT_TREE
+  pnpm install
+  pnpm test:e2e:k8s
+  EXIT_CODE=$?
+  bash "$TMT_TREE/tmt/scripts/create-results.sh" "$EXIT_CODE" "k8s"
