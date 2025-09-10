@@ -1,0 +1,13 @@
+summary: Execute all Playwright E2E tests.
+tag:
+  - all
+duration: 2h
+result: custom
+framework: shell
+test: |
+  set +e
+  cd $TMT_TREE
+  pnpm install
+  pnpm test:e2e:all
+  EXIT_CODE=$?
+  bash "$TMT_TREE/tmt/scripts/create-results.sh" "$EXIT_CODE" "all"
