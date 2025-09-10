@@ -209,7 +209,6 @@ function onToggle(keyItem: string): void {
     <div
       class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
       role="row">
-      <div class="whitespace-nowrap justify-self-start" role="columnheader"></div>
       {#if row.info.selectable}
         <div class="whitespace-nowrap place-self-center" role="columnheader">
           <Checkbox
@@ -232,18 +231,22 @@ function onToggle(keyItem: string): void {
               : 'justify-self-start'} self-center select-none"
           class:cursor-pointer={column.info.comparator}
           onclick={sort.bind(undefined, column)}
-          role="columnheader">
+          role="columnheader"
+          aria-label={column.title}
+        >
           <div class="overflow-hidden text-ellipsis">
             {column.title}
           </div>
-          {#if column.info.comparator}<i
-            class="fas pl-0.5"
-            class:fa-sort={sortCol !== column}
-            class:fa-sort-up={sortCol === column && sortAscending}
-            class:fa-sort-down={sortCol === column && !sortAscending}
-            class:text-[var(--pd-table-header-unsorted)]={sortCol !== column}
-            aria-hidden="true"></i
-          >{/if}
+          {#if column.info.comparator}
+            <i class="fas pl-0.5"
+              class:fa-sort={sortCol !== column}
+              class:fa-sort-up={sortCol === column && sortAscending}
+              class:fa-sort-down={sortCol === column && !sortAscending}
+              class:text-[var(--pd-table-header-unsorted)]={sortCol !== column}
+              role="img"
+              aria-label={sortCol !== column ? 'Not sorted' : sortAscending ? 'Sorted ascending' : 'Sorted descending'}
+            ></i>
+          {/if}
         </div>
       {/each}
     </div>
