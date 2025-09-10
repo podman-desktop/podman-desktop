@@ -71,7 +71,7 @@ jobs:
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
         id: run-e2e-tf
-        uses: sclorg/testing-farm-as-github-action@v4.1.0
+        uses: sclorg/testing-farm-as-github-action@f3a3927
         with:
           api_key: ${{ secrets.TF_TOKEN }}
           create_github_summary: "false"
