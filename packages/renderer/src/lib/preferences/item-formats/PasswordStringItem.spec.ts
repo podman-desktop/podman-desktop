@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
@@ -34,7 +34,7 @@ test('Ensure HTMLInputElement', async () => {
     type: 'string',
   };
 
-  render(PasswordStringItem, { record, value: '' });
+  render(PasswordStringItem, { record, value: '', onChange: vi.fn() });
   const input = screen.getByLabelText('password input-standard-record');
   expect(input).toBeInTheDocument();
   expect(input).toBeInstanceOf(HTMLInputElement);
@@ -51,7 +51,7 @@ test('Ensure HTMLInputElement readonly', async () => {
     readonly: true,
   };
 
-  render(PasswordStringItem, { record, value: '' });
+  render(PasswordStringItem, { record, value: '', onChange: vi.fn() });
   const input = screen.getByLabelText('password input-standard-record');
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBeTruthy();

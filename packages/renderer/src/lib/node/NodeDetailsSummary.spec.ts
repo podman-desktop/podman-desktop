@@ -72,7 +72,7 @@ beforeEach(() => {
 });
 
 test('Expect to render node details when node data is available', async () => {
-  render(NodeDetailsSummary, { node: node });
+  render(NodeDetailsSummary, { node: node, events: [] });
 
   expect(screen.getByText('node-01')).toBeInTheDocument();
   expect(screen.getByText('provider-123')).toBeInTheDocument();
@@ -80,7 +80,7 @@ test('Expect to render node details when node data is available', async () => {
 });
 
 test('Expect to show error message when there is a kube error', async () => {
-  render(NodeDetailsSummary, { node: node, kubeError: kubeError });
+  render(NodeDetailsSummary, { node: node, kubeError: kubeError, events: [] });
 
   const errorMessage = screen.getByText(kubeError);
   expect(errorMessage).toBeInTheDocument();

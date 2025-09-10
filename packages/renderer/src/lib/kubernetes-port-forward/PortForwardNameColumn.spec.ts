@@ -52,10 +52,11 @@ test('name should be visible', () => {
 
   const { getByText } = render(PodNameColumn, {
     object: {
+      id: '',
       name: 'dummy-pod-name',
       namespace: 'dummy-ns',
       kind: WorkloadKind.POD,
-      mapping: DUMMY_MAPPING,
+      forward: DUMMY_MAPPING,
     },
   });
 
@@ -77,7 +78,8 @@ test('click on name should redirect to pod page', async () => {
       name: 'dummy-pod-name',
       namespace: 'dummy-ns',
       kind: WorkloadKind.POD,
-      mapping: DUMMY_MAPPING,
+      id: '',
+      forward: DUMMY_MAPPING,
     },
   });
 

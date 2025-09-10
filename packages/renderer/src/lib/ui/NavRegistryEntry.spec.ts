@@ -50,7 +50,7 @@ test('Expect entry is rendered', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta });
+  render(NavRegistryEntry, { entry, meta, iconWithTitle: false });
 
   const content = screen.queryByLabelText('Item1');
   expect(content).toBeInTheDocument();
@@ -69,7 +69,7 @@ test('Expect hidden entry is not rendered', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta });
+  render(NavRegistryEntry, { entry, meta, iconWithTitle: false });
 
   const content = screen.queryByLabelText('Item1');
   expect(content).not.toBeInTheDocument();
@@ -108,7 +108,7 @@ test('Expect entry to not have title by default', async () => {
     type: 'entry',
   };
   const meta = { url: '/test' } as TinroRouteMeta;
-  render(NavRegistryEntry, { entry, meta });
+  render(NavRegistryEntry, { entry, meta, iconWithTitle: false });
 
   const content = screen.queryByLabelText('Item1 title');
   expect(content).not.toBeInTheDocument();

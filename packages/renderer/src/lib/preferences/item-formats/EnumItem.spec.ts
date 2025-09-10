@@ -38,14 +38,14 @@ test('Enum without default', async () => {
     enum: ['hello', 'world'],
   };
 
-  render(EnumItem, { record });
+  render(EnumItem, { record, value: undefined });
   const input = screen.getByLabelText('record-description');
   expect(input).toBeInTheDocument();
   expect(input).toHaveTextContent('hello');
 });
 
 test('Enum with default', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { default: string } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',

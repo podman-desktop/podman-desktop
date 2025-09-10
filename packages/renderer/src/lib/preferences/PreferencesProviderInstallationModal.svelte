@@ -8,7 +8,7 @@ import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 import IconImage from '../appearance/IconImage.svelte';
 
 interface Props {
-  providerToBeInstalled: { provider: ProviderInfo; displayName: string };
+  providerToBeInstalled: { provider: ProviderInfo; displayName: string } | undefined;
   preflightChecks: CheckStatus[];
   closeCallback: () => void;
   doCreateNew: (provider: ProviderInfo, displayName: string) => void;

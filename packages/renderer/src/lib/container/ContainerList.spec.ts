@@ -62,7 +62,9 @@ beforeEach(() => {
   };
 });
 
-async function waitRender(customProperties: object): Promise<RenderResult<Component<ComponentProps<ContainerList>>>> {
+async function waitRender(
+  customProperties: object,
+): Promise<RenderResult<Component<ComponentProps<typeof ContainerList>>>> {
   const result = render(ContainerList, { ...customProperties });
   await tick();
   return result;

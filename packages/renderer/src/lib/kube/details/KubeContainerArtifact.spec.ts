@@ -24,6 +24,7 @@ import { readable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state'; // Adjust the import path as necessary
+import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import KubeContainerArtifact from './KubeContainerArtifact.svelte';
 
@@ -54,7 +55,10 @@ beforeEach(() => {
 });
 
 test('Container artifact renders with correct values', async () => {
-  render(KubeContainerArtifact, { artifact: fakeContainer });
+  render(KubeContainerArtifact, {
+    kind: WorkloadKind.POD,
+    artifact: fakeContainer,
+  });
 
   // Check if basic container info is displayed
   expect(screen.getByText('Name')).toBeInTheDocument();

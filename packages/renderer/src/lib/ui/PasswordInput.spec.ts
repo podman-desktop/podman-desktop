@@ -27,7 +27,7 @@ import PasswordInput from './PasswordInput.svelte';
 import PasswordInputTest from './PasswordInputTest.svelte';
 
 function renderInput(password: string, readonly: boolean, onClick?: any): void {
-  render(PasswordInput, { password: password, readonly: readonly, onClick: onClick });
+  render(PasswordInput, { id: '', password: password, readonly: readonly, onClick: onClick });
 }
 
 test('Expect basic styling', async () => {

@@ -26,7 +26,7 @@ import Dialog from './Dialog.svelte';
 
 test('dialog should be visible and have basic styling', async () => {
   const title = 'A dialog';
-  render(Dialog, { title: title });
+  render(Dialog, { title: title, onclose: vi.fn() });
 
   const bg = screen.getByLabelText('fade-bg');
   expect(bg).toBeDefined();

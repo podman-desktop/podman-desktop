@@ -30,7 +30,7 @@ beforeAll(() => {
 });
 
 test('Checkbox checked', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { default: boolean } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',
@@ -48,7 +48,7 @@ test('Checkbox checked', async () => {
 });
 
 test('Checkbox no default', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { default?: boolean } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',
@@ -65,7 +65,7 @@ test('Checkbox no default', async () => {
 });
 
 test('Expect to see the checkbox disabled / unable to press when readonly is passed into record', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { default: boolean } = {
     title: 'my boolean property',
     id: 'myid',
     parentId: '',
@@ -82,7 +82,7 @@ test('Expect to see the checkbox disabled / unable to press when readonly is pas
 });
 
 test('Expect to see checkbox not checked if default is false', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { default: boolean } = {
     title: 'my boolean property',
     id: 'myid',
     parentId: '',

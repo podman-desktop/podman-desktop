@@ -302,7 +302,7 @@ describe('includeExtensionInfo', () => {
   });
 });
 
-test.each(['bug', 'feature'])('Expect %s to have specific telemetry track events', async category => {
+test.each<FeedbackCategory>(['bug', 'feature'])('Expect %s to have specific telemetry track events', async category => {
   const { title, description, preview } = renderGitHubIssueFeedback({
     category: category,
     onCloseForm: vi.fn(),
@@ -320,7 +320,7 @@ test.each(['bug', 'feature'])('Expect %s to have specific telemetry track events
   );
 });
 
-test.each(['bug', 'feature'])(
+test.each<FeedbackCategory>(['bug', 'feature'])(
   'Expect %s to have specific telemetry track events with error if the preview on GitHub fails',
   async category => {
     vi.mocked(window.previewOnGitHub).mockRejectedValue('error: unable to preview on GitHub');

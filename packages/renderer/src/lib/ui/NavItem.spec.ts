@@ -21,6 +21,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import type { TinroRouteMeta } from 'tinro';
 import { expect, test } from 'vitest';
 
 import NavItem from './NavItem.svelte';
@@ -144,7 +145,7 @@ test('Expect that counter is rendered', async () => {
   const href = '/href';
   let counter = 0;
 
-  const result = render(NavItem, { counter, tooltip, href, meta: { url: '/test' } });
+  const result = render(NavItem, { counter, tooltip, href, meta: { url: '/test' } as TinroRouteMeta });
 
   const element = screen.getByLabelText(tooltip);
   expect(element).toBeInTheDocument();
@@ -157,7 +158,7 @@ test('Expect that counter is rendered', async () => {
   counter = 4;
 
   // check tooltip is working if counter is updated
-  render(NavItem, { counter, tooltip, href, meta: { url: '/test' } });
+  render(NavItem, { counter, tooltip, href, meta: { url: '/test' } as TinroRouteMeta });
 
   // get div with label tooltip
   const element2 = screen.getByLabelText('Foo');

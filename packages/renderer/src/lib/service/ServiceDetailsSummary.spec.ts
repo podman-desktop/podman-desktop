@@ -65,7 +65,7 @@ test('Expect basic rendering', async () => {
   kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
   kubernetesReadNamespacedServiceMock.mockResolvedValue(service);
 
-  render(ServiceDetailsSummary, { service: service });
+  render(ServiceDetailsSummary, { service: service, events: [] });
 
   expect(screen.getByText('my-service')).toBeInTheDocument();
 });
@@ -74,7 +74,7 @@ test('Check more properties', async () => {
   kubernetesGetCurrentNamespaceMock.mockResolvedValue('default');
   kubernetesReadNamespacedServiceMock.mockResolvedValue(undefined);
 
-  render(ServiceDetailsSummary, { service: service });
+  render(ServiceDetailsSummary, { service: service, events: [] });
 
   expect(screen.getByText('my-service')).toBeInTheDocument();
   expect(screen.getByText('default')).toBeInTheDocument();
