@@ -100,7 +100,7 @@
     "typecheck:extensions:registries": "tsc --noEmit --project extensions/registries",
     "typecheck:extensions:kubectl-cli": "tsc --noEmit --project extensions/kubectl-cli",
     "typecheck": "pnpm run typecheck:main && pnpm run typecheck:preload && pnpm run typecheck:ui && pnpm run typecheck:renderer && pnpm run typecheck:preload-dd-extension && pnpm run typecheck:preload-webview && pnpm run typecheck:extensions && pnpm run typecheck:extension-api",
-    "website:build": "pnpm run storybook:build && cd website && pnpm run docusaurus clear && pnpm run docusaurus build --no-minify",
+    "website:build": "pnpm run storybook:build && cd website && pnpm run docusaurus clear && pnpm run docusaurus build",
     "website:prod": "pnpm run website:build && cd website/build && pnpm serve",
     "website:dev": "pnpm run storybook:build && cd website && pnpm run docusaurus start",
     "website:screenshots": "cd website-argos && pnpm run screenshot",
