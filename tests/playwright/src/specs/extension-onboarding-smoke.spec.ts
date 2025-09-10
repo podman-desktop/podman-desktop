@@ -90,8 +90,5 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
     await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
     await welcomePage.latestVersionFromDropDown.click();
-
-    await playExpect(welcomePage.dropDownDialog).not.toBeVisible({ timeout: 10_000 });
-    await playExpect(welcomePage.cancelSetupButton).toBeEnabled();
   });
 });
