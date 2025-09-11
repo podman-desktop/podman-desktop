@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.1007fdbc.css">
-<script src="/assets/js/runtime~main.0fcc884e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.d494773f.js" defer="defer"></script>
 <script src="/assets/js/main.69426475.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -42,28 +42,36 @@
 <div class="language-shell-session codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-shell-session codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token command shell-symbol important">$</span><span class="token command"> </span><span class="token command bash language-bash">LIMA_INSTANCE=&lt;name&gt; lima sudo crictl images</span><br></span></code></pre></div></div>
 <p>You can also create a pod that uses the loaded image:</p>
 <ol>
-<li>Create a <code>verify_my_image.yaml</code> Kubernetes YAML file on your workstation.
-Replace the placeholders:</li>
-</ol>
+<li>
+<p>Create a <code>verify_my_image.yaml</code> Kubernetes YAML file on your workstation.
+Replace the placeholders:</p>
 <ul>
 <li>Pod <code>name</code> and container <code>name</code> values must consist of lowercase alphanumeric characters, &#x27;-&#x27;, or &#x27;.&#x27;, and must start and end with an alphanumeric character.</li>
 <li>Container <code>image</code> value is the image you pushed. You can click the name of the image to check its name and tag.</li>
 </ul>
 <div class="language-yaml codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-yaml codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token key atrule">apiVersion</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> v1</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain"></span><span class="token key atrule">kind</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> Pod</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain"></span><span class="token key atrule">metadata</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  </span><span class="token key atrule">name</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> &lt;verify</span><span class="token punctuation" style="color:rgb(248, 248, 242)">-</span><span class="token plain">my</span><span class="token punctuation" style="color:rgb(248, 248, 242)">-</span><span class="token plain">image</span><span class="token punctuation" style="color:rgb(248, 248, 242)">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain"></span><span class="token key atrule">spec</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">  </span><span class="token key atrule">containers</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">    </span><span class="token punctuation" style="color:rgb(248, 248, 242)">-</span><span class="token plain"> </span><span class="token key atrule">name</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> &lt;my</span><span class="token punctuation" style="color:rgb(248, 248, 242)">-</span><span class="token plain">image</span><span class="token punctuation" style="color:rgb(248, 248, 242)">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">      </span><span class="token key atrule">image</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> &lt;my_image</span><span class="token punctuation" style="color:rgb(248, 248, 242)">&gt;</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain">&lt;my_tag</span><span class="token punctuation" style="color:rgb(248, 248, 242)">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">      </span><span class="token key atrule">imagePullPolicy</span><span class="token punctuation" style="color:rgb(248, 248, 242)">:</span><span class="token plain"> Never</span><br></span></code></pre></div></div>
-<ol>
-<li>Go to <strong>Pods</strong> from the left navigation pane.</li>
-<li>Click <strong>Play Kubernetes YAML</strong> and provide the following details:</li>
-</ol>
+</li>
+<li>
+<p>Go to <strong>Pods</strong> from the left navigation pane.</p>
+</li>
+<li>
+<p>Click <strong>Play Kubernetes YAML</strong> and provide the following details:</p>
 <ul>
 <li><strong>Kubernetes YAML file</strong>: select your <code>verify_my_image.yaml</code> file.</li>
 <li>Set <strong>Runtime</strong> to <strong>Kubernetes cluster</strong>.</li>
 </ul>
-<ol>
-<li>Click <strong>Play</strong>.
-<img decoding="async" loading="lazy" alt="play a Kubernetes YAML" src="/assets/images/create-pod-from-kube-yaml-388270f1deafd46c623e428fa6c3c286.png" width="1758" height="1278" class="img_SS3x"></li>
-<li>Click <strong>Done</strong>.</li>
-<li>View the created pod <code>verify-my-image</code> on the same page. The pod <strong>STATUS</strong> is <strong>RUNNING</strong>.
-<img decoding="async" loading="lazy" alt="play a Kubernetes YAML" src="/assets/images/verify-my-image-pod-running-5726f4e99f3ec7d395b5614dc7277d79.png" width="1878" height="506" class="img_SS3x"></li>
+</li>
+<li>
+<p>Click <strong>Play</strong>.
+<img decoding="async" loading="lazy" alt="play a Kubernetes YAML" src="/assets/images/create-pod-from-kube-yaml-388270f1deafd46c623e428fa6c3c286.png" width="1758" height="1278" class="img_SS3x"></p>
+</li>
+<li>
+<p>Click <strong>Done</strong>.</p>
+</li>
+<li>
+<p>Go to <strong>Kubernetes &gt; Pods</strong>, and view the created pod <code>verify-my-image</code>. The pod <strong>STATUS</strong> is <strong>RUNNING</strong>.
+<img decoding="async" loading="lazy" alt="play a Kubernetes YAML" src="/assets/images/verify-my-image-pod-running-d9a4e07d18df0daa642a7646289ed36d.png" width="2208" height="454" class="img_SS3x"></p>
+</li>
 </ol></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-tags-row"><div class="col"><b>Tags:</b><ul class="tags_Ow0B padding--none margin-left--sm"><li class="tag_DFxh"><a rel="tag" class="tag_otG2 tagRegular_s0E1" href="/docs/tags/pushing-an-image">pushing-an-image</a></li><li class="tag_DFxh"><a rel="tag" class="tag_otG2 tagRegular_s0E1" href="/docs/tags/lima">lima</a></li></ul></div></div><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/podman-desktop/podman-desktop/tree/main/website/docs/lima/pushing-an-image-to-lima.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_bHB7" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_ydrU"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/lima/customizing"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Customizing Lima instance</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs/openshift"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">OpenShift</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_XG6w thin-scrollbar theme-doc-toc-desktop"></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/installation">Installing Podman Desktop</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/migrating-from-docker">Migrating from Docker</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/kubernetes">Working with Kubernetes</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/troubleshooting">Troubleshooting</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/podman-desktop/podman-desktop" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPrP"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://discord.com/invite/x5GzFF6QH4" target="_blank" rel="noopener noreferrer" class="footer__link-item">Chat (bridged): #podman-desktop on Discord<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPrP"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://github.com/podman-desktop/podman-desktop#communication" target="_blank" rel="noopener noreferrer" class="footer__link-item">Other ways to Communicate<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPrP"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://github.com/orgs/podman-desktop/projects/4/views/3" target="_blank" rel="noopener noreferrer" class="footer__link-item">Current Sprint<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPrP"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">
           <div class="flex flex-col items-start text-left gap-4">
             <div class="w-96 mt-8 mb-8">
