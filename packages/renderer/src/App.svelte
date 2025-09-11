@@ -118,7 +118,7 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
-  <main class="flex flex-col w-screen h-screen overflow-hidden">
+  <main class="flex flex-col w-full h-full overflow-hidden">
     <IconsStyle />
     <Appearance />
     <TitleBar />

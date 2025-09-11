@@ -3,6 +3,7 @@ import { onDestroy, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
 import App from './App.svelte';
+import Borders from './Borders.svelte';
 import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
 import { lastPage } from './stores/breadcrumb';
@@ -88,13 +89,18 @@ window.events.receive('starting-extensions', (value: unknown) => {
 
 <ColorsStyle />
 
-{#if !systemReady}
-  <main class="flex flex-row w-screen h-screen justify-center" style="-webkit-app-region: drag;">
-    <div class="flex flex-col justify-center">
-      <SealRocket />
-      <h1 class="text-center text-xl">Initializing...</h1>
-    </div>
-  </main>
-{:else}
-  <App />
-{/if}
+<div class="relative w-screen h-screen">
+  <Borders />
+  <div class="w-[calc(100%-5px)] h-[calc(100%-5px)] z-10 absolute top-[5px] left-[5px]">
+    {#if !systemReady}
+      <main class="flex flex-row w-screen h-screen justify-center" style="-webkit-app-region: drag;">
+        <div class="flex flex-col justify-center">
+          <SealRocket />
+          <h1 class="text-center text-xl">Initializing...</h1>
+        </div>
+      </main>
+    {:else}
+      <App />
+    {/if}
+  </div>
+</div>
