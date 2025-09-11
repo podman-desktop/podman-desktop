@@ -22,9 +22,16 @@ import '@testing-library/jest-dom/vitest';
 
 import { faRocket } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import { expect, test, vi } from 'vitest';
 
 import Link from './Link.svelte';
+
+const SNIPPET_MOCK = createRawSnippet(() => {
+  return {
+    render: (): string => 'hello',
+  };
+});
 
 test('Check link styling', async () => {
   render(Link);
@@ -38,7 +45,7 @@ test('Check link styling', async () => {
 });
 
 test('Check icon styling', async () => {
-  render(Link, { icon: faRocket });
+  render(Link, { icon: faRocket, children: SNIPPET_MOCK });
 
   // check for the fa SVG child
   const link = screen.getByRole('link', { hidden: true });
@@ -50,7 +57,7 @@ test('Check icon styling', async () => {
 
 test('Check on:click action', async () => {
   const clickMock = vi.fn();
-  render(Link, { onclick: clickMock });
+  render(Link, { onclick: clickMock, children: SNIPPET_MOCK });
 
   // check on:click
   const link = screen.getByRole('link');
