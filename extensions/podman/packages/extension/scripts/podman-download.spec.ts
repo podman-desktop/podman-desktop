@@ -27,13 +27,13 @@ import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { Octokit } from 'octokit';
 
 const mockedPodman5 = {
-  version: '5.6.0',
+  version: '5.6.1',
   platform: {
     win32: {
-      version: 'v5.6.0',
+      version: 'v5.6.1',
       arch: {
         x64: {
-          fileName: 'podman-5.6.0-setup.exe',
+          fileName: 'podman-installer-windows-amd64.exe',
         },
         arm64: {
           fileName: 'podman-installer-windows-arm64.exe',
@@ -41,16 +41,16 @@ const mockedPodman5 = {
       },
     },
     darwin: {
-      version: 'v5.6.0',
+      version: 'v5.6.1',
       arch: {
         x64: {
-          fileName: 'podman-installer-macos-amd64-v5.6.0.pkg',
+          fileName: 'podman-installer-macos-amd64-v5.6.1.pkg',
         },
         arm64: {
-          fileName: 'podman-installer-macos-aarch64-v5.6.0.pkg',
+          fileName: 'podman-installer-macos-aarch64-v5.6.1.pkg',
         },
         universal: {
-          fileName: 'podman-installer-macos-universal-v5.6.0.pkg',
+          fileName: 'podman-installer-macos-universal-v5.6.1.pkg',
         },
       },
     },
@@ -159,20 +159,20 @@ describe('macOS platform', () => {
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       1,
-      'v5.6.0',
-      'podman-installer-macos-amd64-v5.6.0.pkg',
+      'v5.6.1',
+      'podman-installer-macos-amd64-v5.6.1.pkg',
       'podman-installer-macos-amd64.pkg',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       2,
-      'v5.6.0',
-      'podman-installer-macos-aarch64-v5.6.0.pkg',
+      'v5.6.1',
+      'podman-installer-macos-aarch64-v5.6.1.pkg',
       'podman-installer-macos-arm64.pkg',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       3,
-      'v5.6.0',
-      'podman-installer-macos-universal-v5.6.0.pkg',
+      'v5.6.1',
+      'podman-installer-macos-universal-v5.6.1.pkg',
       'podman-installer-macos-universal.pkg',
     );
   });
@@ -220,8 +220,8 @@ describe('windows platform', () => {
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
       expect.stringContaining('v5.6'),
-      expect.stringContaining('podman-5.6.0-setup.exe'),
-      'podman-5.6.0-setup.exe',
+      expect.stringContaining('podman-installer-windows-amd64.exe'),
+      'podman-installer-windows-amd64.exe',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
       expect.stringContaining('v5.6'),
@@ -250,15 +250,15 @@ describe('windows platform', () => {
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       1,
-      'v5.6.0',
-      'podman-5.6.0-setup.exe',
-      'podman-5.6.0-setup.exe',
+      'v5.6.1',
+      'podman-installer-windows-amd64.exe',
+      'podman-installer-windows-amd64.exe',
     );
 
     // check called with the correct parameters for arm64 installer
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       2,
-      'v5.6.0',
+      'v5.6.1',
       'podman-installer-windows-arm64.exe',
       'podman-installer-windows-arm64.exe',
     );

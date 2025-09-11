@@ -101,13 +101,13 @@ export class PodmanDownload {
 
     if (this.#platform === 'win32') {
       const tagVersion = podmanJSON.platform.win32.version;
-      const downloadName = podmanJSON.platform.win32.arch.x64.fileName;
+      const downloadNameAmd64 = podmanJSON.platform.win32.arch.x64.fileName.trim();
       this.#artifactsToDownload.push({
         version: tagVersion,
-        downloadName: downloadName,
-        artifactName: `podman-${this.#podmanVersion}-setup.exe`,
+        downloadName: downloadNameAmd64,
+        artifactName: 'podman-installer-windows-amd64.exe',
       });
-      const downloadNameArm64 = podmanJSON.platform.win32.arch.arm64.fileName;
+      const downloadNameArm64 = podmanJSON.platform.win32.arch.arm64.fileName.trim();
       this.#artifactsToDownload.push({
         version: tagVersion,
         downloadName: downloadNameArm64,
@@ -115,14 +115,14 @@ export class PodmanDownload {
       });
     } else if (this.#platform === 'darwin') {
       const tagVersion = podmanJSON.platform.darwin.version;
-      const downloadNameAmd64 = podmanJSON.platform.darwin.arch.x64.fileName;
+      const downloadNameAmd64 = podmanJSON.platform.darwin.arch.x64.fileName.trim();
       this.#artifactsToDownload.push({
         version: tagVersion,
         downloadName: downloadNameAmd64,
         artifactName: 'podman-installer-macos-amd64.pkg',
       });
 
-      const downloadNameArm64 = podmanJSON.platform.darwin.arch.arm64.fileName;
+      const downloadNameArm64 = podmanJSON.platform.darwin.arch.arm64.fileName.trim();
       this.#artifactsToDownload.push({
         version: tagVersion,
         downloadName: downloadNameArm64,
@@ -130,7 +130,7 @@ export class PodmanDownload {
       });
 
       if (podmanJSON.platform.darwin.arch.universal) {
-        const downloadUniversalName = podmanJSON.platform.darwin.arch.universal.fileName;
+        const downloadUniversalName = podmanJSON.platform.darwin.arch.universal.fileName.trim();
         this.#artifactsToDownload.push({
           version: tagVersion,
           downloadName: downloadUniversalName,
