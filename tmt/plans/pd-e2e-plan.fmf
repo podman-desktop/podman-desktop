@@ -44,8 +44,9 @@ prepare:
   - name: Enable and start Podman rootless service
     how: shell
     script: |
-      systemctl --user enable podman.socket
-      systemctl --user start podman.socket
+      systemctl --user enable podman.socket || exit 1
+      systemctl --user start podman.socket || exit 1
+      systemctl --user is-active podman.socket || exit 1
 
 /e2e: 
   summary: Execute all Playwright E2E tests, excluding those related to Kubernetes.

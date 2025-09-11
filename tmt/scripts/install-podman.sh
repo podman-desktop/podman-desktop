@@ -23,6 +23,15 @@ elif [[ "$PODMAN_VERSION" == "latest" ]]; then
     PODMAN_VERSION="$(curl -s https://api.github.com/repos/containers/podman/releases/latest | jq -r .tag_name | sed 's/^v//')"
 else
     curl -Lo podman.rpm "$CUSTOM_PODMAN_URL"
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to download Podman RPM from $CUSTOM_PODMAN_URL"
+        exit 1
+    fi
+    if [[ ! -s podman.rpm ]]; then
+        echo "Error: Downloaded Podman RPM file is missing or empty."
+        rm -f podman.rpm
+        exit 1
+    fi
     sudo dnf install -y ./podman.rpm
     rm -f podman.rpm
 fi
