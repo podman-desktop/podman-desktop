@@ -22,11 +22,11 @@ function Hero(): JSX.Element {
             <div className="relative">
               <img
                 className="absolute -scale-x-100 right-0 -top-23 w-22 animate-float"
-                src="https://github.com/podman-desktop/3m/blob/ec786501bbca0591c3982146ed919f27c25ca806/img/party-seal.png?raw=true"
+                src="https://3m.podman-desktop.io/img/party-seal.png"
               />
               <img
                 className="absolute -right-8 -top-30 w-22 rotate-6  z-10 animate-float"
-                src="https://github.com/podman-desktop/3m/blob/ec786501bbca0591c3982146ed919f27c25ca806/img/heart-balloon.png?raw=true"
+                src="https://3m.podman-desktop.io/img/heart-balloon.png"
               />
               <h1 className="title-font text-4xl leading-[3rem] lg:text-5xl lg:leading-[4rem] font-extrabold text-charcoal-300 dark:text-white mt-[80px] lg:w-3/4 mx-auto">
                 Best Free &amp; Open Source Tool for Containers &amp; Kubernetes
@@ -35,7 +35,7 @@ function Hero(): JSX.Element {
             <div className="relative">
               <img
                 className="absolute left-[15px] -top-[150px] w-30 animate-float-diagonal"
-                src="https://github.com/podman-desktop/3m/blob/ec786501bbca0591c3982146ed919f27c25ca806/img/seal-with-party-horn.png?raw=true"
+                src="https://3m.podman-desktop.io/img/seal-with-party-horn.png"
               />
               <p className="text-base font-bold leading-[1.9rem] md:text-lg md:leading-[1.9rem] mt-[88px]">
                 The best free and open source tool for developers to work with containers and Kubernetes. Simplify
