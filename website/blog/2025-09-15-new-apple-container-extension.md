@@ -10,7 +10,7 @@ image: /img/blog/apple-container-extension/apple-container-extension.png
 
 Apple Silicon macOS users now have a new way to manage containers locally using the [Apple Container](https://github.com/apple/container) project. This tool creates and runs Linux containers inside lightweight virtual machines optimized for Apple silicon, and it's fully written in Swift.
 
-With the new **Podman Desktop Apple Container extension** for Podman Desktop, you can now display your containers, images, and logs, all within the Podman Desktop UI 🖥️.
+With the new **[Podman Desktop Apple Container extension](https://github.com/podman-desktop/extension-apple-container)** for Podman Desktop, you can now display your containers, images, and logs, all within the Podman Desktop UI 🖥️.
 
 This extension is a technology preview.
 
