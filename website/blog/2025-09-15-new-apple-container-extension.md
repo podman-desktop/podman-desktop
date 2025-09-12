@@ -57,7 +57,7 @@ Not all features are supported yet, as Apple Container itself is still in active
 
 1. Open Podman Desktop.
 2. Navigate to the **Containers** tab.
-   ![list-containers](img/apple-container-extension/list-containers.png)
+   ![list containers](img/apple-container-extension/list-containers.png)
 
 ### Example: Viewing Images
 
@@ -65,7 +65,7 @@ Not all features are supported yet, as Apple Container itself is still in active
 2. All images managed by Apple Container are displayed.
 3. You can remove images or inspect metadata directly from the UI.
 
-![list-images](img/apple-container-extension/list-images.png)
+![list images](img/apple-container-extension/list-images.png)
 
 ### Example: Browsing Container Logs
 
@@ -73,7 +73,7 @@ Not all features are supported yet, as Apple Container itself is still in active
 2. Navigate to the **Containers** tab.
 3. Select an Apple Container-managed container.
 4. Click **Logs** or **Inspect** to see container details.
-   ![list-images](img/apple-container-extension/view-logs.png)
+   ![view logs](img/apple-container-extension/view-logs.png)
 
 ## Installation
 
