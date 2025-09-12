@@ -33,7 +33,7 @@ This design allows Podman Desktop to communicate with Apple Container containers
 Key points about the architecture:
 
 - The extension starts the socktainer CLI/daemon upon launch exposing a REST API
-- Extension registers a UNIX socket as the containers API endpoint.
+- The extension registers a UNIX socket as the containers API endpoint.
 - Podman Desktop consumes this API to display containers, images, and logs.
 - Basic container operations such as stopping or deleting containers/images are supported.
 - Advanced operations will be added as Apple Container matures.
