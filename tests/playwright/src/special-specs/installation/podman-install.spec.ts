@@ -21,7 +21,11 @@ import path from 'node:path';
 
 import { NavigationBar } from '../..';
 import { expect as playExpect, test } from '../../utility/fixtures';
+<<<<<<< HEAD
 import { isCI, isLinux, isMac, isWindows } from '../../utility/platform';
+=======
+import { isLinux, isMac, isWindows } from '../../utility/platform';
+>>>>>>> 3d82f10c028 (chore(test): include e2e tests for podman installer assets)
 
 test.skip(isLinux, 'Podman installation is not supported on Linux');
 
@@ -46,10 +50,13 @@ test.afterAll(async ({ runner }) => {
 
 test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
   test('Dashboard Podman provider card assets check', async ({ page }) => {
+<<<<<<< HEAD
     test.skip(
       !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
       'Only run on macOS and Windows in GitHub Actions',
     );
+=======
+>>>>>>> 3d82f10c028 (chore(test): include e2e tests for podman installer assets)
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
     await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 25_000 });
