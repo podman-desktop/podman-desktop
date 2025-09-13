@@ -375,6 +375,14 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld('createTempFile', async (content: string): Promise<string> => {
+    return ipcInvoke('temp-file-service:createTempFile', content);
+  });
+
+  contextBridge.exposeInMainWorld('removeTempFile', async (filePath: string): Promise<void> => {
+    return ipcInvoke('temp-file-service:removeTempFile', filePath);
+  });
+
   contextBridge.exposeInMainWorld('stopPod', async (engine: string, podId: string): Promise<void> => {
     return ipcInvoke('container-provider-registry:stopPod', engine, podId);
   });
