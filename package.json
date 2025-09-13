@@ -88,7 +88,7 @@
     "typecheck:preload": "tsc --noEmit -p packages/preload/tsconfig.json",
     "typecheck:preload-dd-extension": "tsc --noEmit -p packages/preload-docker-extension/tsconfig.json",
     "typecheck:preload-webview": "tsc --noEmit -p packages/preload-webview/tsconfig.json",
-    "typecheck:renderer": "pnpm run build:preload:types && tsc --noEmit -p packages/renderer/tsconfig.json",
+    "typecheck:renderer": "pnpm run build:preload:types && svelte-check --tsconfig  packages/renderer/tsconfig.json",
     "typecheck:ui": "pnpm run build:ui && pnpm run build:preload:types && tsc --noEmit -p packages/ui/tsconfig.json",
     "typecheck:extensions": "pnpm run typecheck:extensions:compose && pnpm run typecheck:extensions:kind && pnpm run typecheck:extensions:docker && pnpm run typecheck:extensions:lima && pnpm run typecheck:extensions:kube-context && pnpm run typecheck:extensions:podman && pnpm run typecheck:extensions:registries && pnpm run typecheck:extensions:kubectl-cli",
     "typecheck:extensions:kind": "tsc --noEmit --project extensions/kind",
