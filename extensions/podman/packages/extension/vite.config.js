@@ -18,6 +18,7 @@
 
 import { join } from 'path';
 import { builtinModules } from 'module';
+import { report } from 'process';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -61,7 +62,7 @@ const config = {
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     alias: {
       '@podman-desktop/api': join(PACKAGE_ROOT, '..', '..', '..', '..', '__mocks__/@podman-desktop/api.js'),
     },
