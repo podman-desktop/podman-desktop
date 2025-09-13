@@ -151,6 +151,8 @@ import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Directories } from './directories.js';
+import { LegacyDirectories } from './directories-legacy.js';
+import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
 import { DockerDesktopInstallation } from './docker-extension/docker-desktop-installation.js';
 import { DockerPluginAdapter } from './docker-extension/docker-plugin-adapter.js';
@@ -201,6 +203,7 @@ import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
 import { Troubleshooting } from './troubleshooting.js';
 import type { IDisposable } from './types/disposable.js';
+import { DirectoryStrategy } from './util/directory-strategy.js';
 import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
 import { TaskConnectionUtils } from './util/task-connection-utils.js';
@@ -461,7 +464,12 @@ export class PluginSystem {
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
-    container.bind<Directories>(Directories).toSelf().inSingletonScope();
+    const directoryStrategy = new DirectoryStrategy();
+    if (directoryStrategy.shouldUseXDGDirectories()) {
+      container.bind<Directories>(Directories).to(LinuxXDGDirectories).inSingletonScope();
+    } else {
+      container.bind<Directories>(Directories).to(LegacyDirectories).inSingletonScope();
+    }
     container.bind<StatusBarRegistry>(StatusBarRegistry).toSelf().inSingletonScope();
     container.bind<SafeStorageRegistry>(SafeStorageRegistry).toSelf().inSingletonScope();
 
