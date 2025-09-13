@@ -27,6 +27,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
   readonly resourceElementConnectionStatus: Locator;
   readonly resourceElementConnectionActions: Locator;
   readonly createButton: Locator;
+  readonly connectionType: Locator;
 
   constructor(page: Page, resourceName: string, resourceElementVisibleName?: string) {
     super(page, resourceName);
@@ -40,6 +41,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
     this.createButton = this.providerSetup.getByRole('button', {
       name: 'Create',
     });
+    this.connectionType = this.resourceElement.getByLabel('Connection Type');
   }
 
   public async doesResourceElementExist(): Promise<boolean> {
