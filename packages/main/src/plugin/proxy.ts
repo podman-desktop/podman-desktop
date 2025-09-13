@@ -208,19 +208,22 @@ export class Proxy {
       const urlObj = asURL(url);
       const isHttps = urlObj.protocol === 'https:';
       const proxyurl = getProxyUrl(_me, isHttps);
+      const ca = _me.certificates.getAllCertificates();
       if (proxyurl) {
         opts = {
           ...opts,
-          dispatcher: new ProxyAgent({ uri: proxyurl, proxyTls: { ca: _me.certificates.getAllCertificates() } }),
+          dispatcher: new ProxyAgent({
+            uri: proxyurl,
+            requestTls: { ca }, // CA for upstream TLS (HTTP proxy + CONNECT)
+            proxyTls: { ca }, // CA for TLS-to-proxy (HTTPS proxy)
+          }),
         };
       } else if (isHttps) {
         // configure certificates
         opts = {
           ...opts,
           dispatcher: new Agent({
-            connect: {
-              ca: _me.certificates.getAllCertificates(),
-            },
+            connect: { ca },
           }),
         };
       }
