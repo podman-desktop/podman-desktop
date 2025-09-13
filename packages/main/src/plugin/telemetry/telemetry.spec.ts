@@ -16,6 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { promises as fs } from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import type { TelemetrySender } from '@podman-desktop/api';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -87,6 +91,10 @@ class TelemetryTest extends Telemetry {
 
   public override async internalTrack(event: EventType, eventProperties?: unknown): Promise<void> {
     return super.internalTrack(event, eventProperties);
+  }
+
+  public override hasCustomCertificates(): Promise<boolean> {
+    return super.hasCustomCertificates();
   }
 }
 
@@ -366,5 +374,62 @@ describe('aggregateTrack', () => {
     expect(pending).toBeDefined();
     expect(Array.isArray(pending?.properties)).toBe(true);
     expect(pending?.properties).toEqual([{ foo: 1 }, { bar: 2 }]);
+  });
+});
+
+function safeSubdir(subdir?: string): string {
+  if (!subdir) return '';
+  return process.platform === 'win32' ? subdir.replace(/:/g, '_') : subdir;
+}
+
+async function prepareCerts(tmpHome: string, subdir?: string, files: Array<[string, string]> = []): Promise<void> {
+  const base = path.join(tmpHome, '.config', 'containers', 'certs.d', safeSubdir(subdir));
+  await fs.mkdir(base, { recursive: true });
+  await Promise.all(files.map(([name, content]) => fs.writeFile(path.join(base, name), content)));
+}
+
+describe('hasCustomCertificates', () => {
+  let tmpHome: string;
+  let prevHome: string | undefined;
+
+  beforeEach(async () => {
+    tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), 'pd-certs-'));
+    prevHome = process.env['HOME'];
+    process.env['HOME'] = tmpHome;
+    process.env['XDG_CONFIG_HOME'] = path.join(tmpHome, '.config');
+  });
+
+  afterEach(async () => {
+    process.env['HOME'] = prevHome;
+    delete process.env['XDG_CONFIG_HOME'];
+    await fs.rm(tmpHome, { recursive: true, force: true });
+  });
+
+  const scenarios: Array<{
+    name: string;
+    setup: (tmp: string) => Promise<void>;
+    expected: boolean;
+  }> = [
+    { name: 'no cert dirs', setup: async (): Promise<void> => {}, expected: false },
+    {
+      name: 'certs.d exists but no subdirs',
+      setup: tmp => prepareCerts(tmp, undefined, [['note.txt', 'hello']]),
+      expected: false,
+    },
+    {
+      name: 'subdir without cert files',
+      setup: tmp => prepareCerts(tmp, 'example.com:5000', [['readme', 'no certs here']]),
+      expected: false,
+    },
+    {
+      name: 'ca.crt present in subdir',
+      setup: tmp => prepareCerts(tmp, 'registry.test:5001', [['ca.crt', '-----BEGIN CERTIFICATE-----\nDUMMY\n']]),
+      expected: true,
+    },
+  ];
+
+  test.each(scenarios)('$name', async ({ setup, expected }) => {
+    await setup(tmpHome);
+    await expect(telemetry.hasCustomCertificates()).resolves.toBe(expected);
   });
 });
