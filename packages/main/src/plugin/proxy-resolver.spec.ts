@@ -41,6 +41,7 @@ vi.mock('https', () => {
   return {
     get: vi.fn(),
     request: vi.fn(),
+    Agent: vi.fn(),
   };
 });
 
@@ -91,7 +92,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('getOptions return options w/o agent if proxy not enabled', () => {
+test('getOptions return options w/o agent if proxy not enabled and url is not secure', () => {
   const proxy = createProxy(false);
   const options = ProxyResolver.getOptions(proxy, false, certificates);
   expect(options.agent).toBeUndefined();
