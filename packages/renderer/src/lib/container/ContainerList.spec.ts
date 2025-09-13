@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerInfo } from '/@api/container-info';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -1058,5 +1058,39 @@ test('pods with same name on different engines should have separate group', asyn
   await vi.waitFor(() => {
     const expandButtons = getAllByRole('button', { name: 'Collapse Row' });
     expect(expandButtons).toHaveLength(CONTAINERS_MOCK.length);
+  });
+});
+
+// Mock the layout service
+vi.mock('../layout/layout-service', () => ({
+  createLayoutCallbacks: vi.fn().mockReturnValue({
+    onLoad: vi.fn().mockResolvedValue([]),
+    onSave: vi.fn().mockResolvedValue(undefined),
+    onReset: vi.fn().mockResolvedValue([]),
+  }),
+}));
+
+describe('Container layout management', () => {
+  test('should create layout callbacks with correct parameters', async () => {
+    const { createLayoutCallbacks } = await import('../layout/layout-service');
+    const mockCreateLayoutCallbacks = vi.mocked(createLayoutCallbacks);
+
+    const { container } = render(ContainerList, {
+      props: {
+        searchTerm: '',
+      },
+    });
+
+    // Verify createLayoutCallbacks was called with correct parameters
+    expect(mockCreateLayoutCallbacks).toHaveBeenCalledWith('container', [
+      'Status',
+      'Name',
+      'Environment',
+      'Image',
+      'Uptime',
+      'Actions',
+    ]);
+
+    expect(container).toBeInTheDocument();
   });
 });
