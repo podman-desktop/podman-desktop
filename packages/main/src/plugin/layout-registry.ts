@@ -1,0 +1,202 @@
+/**********************************************************************
+ * Copyright (C) 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import { inject, injectable, preDestroy } from 'inversify';
+
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { IDisposable } from '/@api/disposable.js';
+import { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-registry-info.js';
+
+// Table defaults registry - hardcoded fallbacks, can be overridden by components
+const TABLE_DEFAULTS: Record<string, string[]> = {
+  dashboard: ['release-notes', 'extension-banners', 'learning-center', 'providers'],
+  container: ['Status', 'Name', 'Environment', 'Image', 'Uptime', 'Actions'],
+  pod: ['Status', 'Name', 'Containers', 'Age', 'Actions'],
+  image: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
+  volume: ['Status', 'Name', 'Environment', 'Age', 'Size', 'Actions'],
+};
+
+@injectable()
+export class LayoutRegistry implements AsyncDisposable {
+  #disposables: IDisposable[] = [];
+
+  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
+
+  @preDestroy()
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.dispose();
+  }
+
+  init(): void {
+    const layoutConfiguration: IConfigurationNode = {
+      id: 'preferences',
+      title: 'Layout',
+      type: 'object',
+      properties: {
+        ['layout.dashboard']: {
+          description: 'Preferred layout of dashboard sections',
+          type: 'array',
+          default: this.parseConfiguration(TABLE_DEFAULTS['dashboard'] ?? []),
+          hidden: true,
+        },
+        ['layout.container']: {
+          description: 'Preferred layout of columns for containers',
+          type: 'array',
+          default: this.parseConfiguration(TABLE_DEFAULTS['container'] ?? []),
+          hidden: true,
+        },
+        ['layout.pod']: {
+          description: 'Preferred layout of columns for pods',
+          type: 'array',
+          default: this.parseConfiguration(TABLE_DEFAULTS['pod'] ?? []),
+          hidden: true,
+        },
+        ['layout.image']: {
+          description: 'Preferred layout of columns for images',
+          type: 'array',
+          default: this.parseConfiguration(TABLE_DEFAULTS['image'] ?? []),
+          hidden: true,
+        },
+        ['layout.volume']: {
+          description: 'Preferred layout of columns for volumes',
+          type: 'array',
+          default: this.parseConfiguration(TABLE_DEFAULTS['volume'] ?? []),
+          hidden: true,
+        },
+      },
+    };
+
+    this.#disposables.push(this.configurationRegistry.registerConfigurations([layoutConfiguration]));
+  }
+
+  dispose(): void {
+    this.#disposables.forEach(disposable => disposable.dispose());
+    this.#disposables = [];
+  }
+
+  // Get default configuration for a layout kind
+  getDefaultLayoutConfig(layoutKind: string): SavedLayoutConfig[] {
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? [];
+    return defaults.map(name => ({ id: name, enabled: true }));
+  }
+
+  // Load layout configuration (with fallback to defaults)
+  async loadLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
+    try {
+      const config = this.configurationRegistry.getConfiguration('layout');
+      const savedConfig = config.get<SavedLayoutConfig[]>(`${layoutKind}`, []);
+
+      if (!savedConfig || !Array.isArray(savedConfig)) {
+        return this.createDefaultLayoutItems(layoutKind, availableColumns);
+      }
+
+      return this.mergeConfigWithAvailableColumns(layoutKind, savedConfig, availableColumns);
+    } catch (error: unknown) {
+      console.warn(`Failed to load layout config for ${layoutKind}:`, error);
+      return this.createDefaultLayoutItems(layoutKind, availableColumns);
+    }
+  }
+
+  // Save layout configuration
+  async saveLayoutConfig(layoutKind: string, items: LayoutEditItem[]): Promise<void> {
+    const configToSave: SavedLayoutConfig[] = items.map(item => ({ id: item.id, enabled: item.enabled }));
+
+    const config = this.configurationRegistry.getConfiguration('layout');
+    await config.update(`${layoutKind}`, configToSave);
+  }
+
+  // Reset layout to defaults
+  async resetLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
+    const config = this.configurationRegistry.getConfiguration('layout');
+    await config.update(`${layoutKind}`, undefined);
+    return this.createDefaultLayoutItems(layoutKind, availableColumns);
+  }
+
+  // Helper: Create default layout items
+  private createDefaultLayoutItems(layoutKind: string, availableColumns: string[]): LayoutEditItem[] {
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
+    return defaults.map((colName, index) => ({
+      id: colName,
+      label: this.getColumnLabel(layoutKind, colName),
+      enabled: true,
+      originalOrder: index,
+    }));
+  }
+
+  // Helper: Get proper label for column (dashboard sections have different labels)
+  private getColumnLabel(tableKind: string, columnId: string): string {
+    if (tableKind === 'dashboard') {
+      // Transform kebab-case to Title Case (e.g., 'release-notes' -> 'Release Notes')
+      return columnId
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    return columnId;
+  }
+
+  // Helper: Merge saved config with available columns
+  private mergeConfigWithAvailableColumns(
+    layoutKind: string,
+    savedConfig: SavedLayoutConfig[],
+    availableColumns: string[],
+  ): LayoutEditItem[] {
+    const savedIds = new Set(savedConfig.map(item => item.id));
+    const mergedItems: LayoutEditItem[] = [];
+
+    // Get default order to determine originalOrder for each column
+    const defaults = TABLE_DEFAULTS[layoutKind] ?? availableColumns;
+    const getOriginalOrder = (id: string): number => {
+      const index = defaults.indexOf(id);
+      return index >= 0 ? index : defaults.length; // Put unknown items at the end
+    };
+
+    // Add saved columns in their saved order
+    savedConfig.forEach(savedItem => {
+      if (availableColumns.includes(savedItem.id)) {
+        mergedItems.push({
+          id: savedItem.id,
+          label: this.getColumnLabel(layoutKind, savedItem.id),
+          enabled: savedItem.enabled,
+          originalOrder: getOriginalOrder(savedItem.id),
+        });
+      }
+    });
+
+    // Add any new columns that weren't saved
+    availableColumns
+      .filter(colName => !savedIds.has(colName))
+      .forEach(newCol => {
+        mergedItems.push({
+          id: newCol,
+          label: this.getColumnLabel(layoutKind, newCol),
+          enabled: true,
+          originalOrder: getOriginalOrder(newCol),
+        });
+      });
+
+    return mergedItems;
+  }
+
+  parseConfiguration(layout: string[]): SavedLayoutConfig[] {
+    return layout.map(item => ({
+      id: item,
+      enabled: true,
+    }));
+  }
+}
