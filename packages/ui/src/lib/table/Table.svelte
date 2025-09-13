@@ -13,8 +13,11 @@ import { onMount, tick } from 'svelte';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
 import Icon from '../icons/Icon.svelte';
+import LayoutEditor from '../layouts/LayoutEditor.svelte';
+import type { LayoutEditItem } from '../layouts/types';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
+import { tablePersistenceCallbacks } from './table-persistence-store';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +32,93 @@ export let collapsed: string[] = [];
  * By default, it will use the object name property
  */
 export let key: (object: T) => string = item => item.name ?? String(item);
+
+export let enableLayoutConfiguration: boolean = false;
+
+let columnItems: LayoutEditItem[] = [];
+let isInitialized = false;
+let isLoading = false;
+
+// Initialize default column configuration
+function getDefaultColumnItems(): LayoutEditItem[] {
+  return columns.map((col, index) => ({
+    id: col.title,
+    label: col.title,
+    enabled: true,
+    originalOrder: index,
+  }));
+}
+
+// Initialize column configuration
+async function initializeColumns(): Promise<void> {
+  if (isInitialized || isLoading) return;
+
+  isLoading = true;
+  try {
+    if (enableLayoutConfiguration) {
+      const loadedItems = await loadColumnConfiguration();
+      columnItems = loadedItems;
+    } else {
+      columnItems = getDefaultColumnItems();
+    }
+    isInitialized = true;
+  } catch (error: unknown) {
+    console.error('Failed to load column configuration:', error);
+    // Fallback to default configuration
+    columnItems = getDefaultColumnItems();
+    isInitialized = true;
+  } finally {
+    isLoading = false;
+  }
+}
+
+// Initialize columns on mount
+onMount(async () => {
+  await initializeColumns();
+});
+
+// Load configuration
+async function loadColumnConfiguration(): Promise<LayoutEditItem[]> {
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    const loadedItems = await $tablePersistenceCallbacks.load(
+      kind,
+      columns.map(col => col.title),
+    );
+
+    if (loadedItems.length > 0) {
+      // Ensure loaded items have proper originalOrder from defaults if missing
+      const defaultItems = getDefaultColumnItems();
+      return loadedItems.map((item: LayoutEditItem) => ({
+        ...item,
+        originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      }));
+    }
+  }
+  return getDefaultColumnItems();
+}
+
+// Save configuration
+async function saveColumnConfiguration(items: LayoutEditItem[]): Promise<void> {
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    await $tablePersistenceCallbacks.save(kind, items);
+  }
+}
+
+// Save configuration whenever columnItems changes (after initialization)
+$: if (isInitialized && columnItems.length > 0) {
+  saveColumnConfiguration(columnItems).catch((error: unknown) => {
+    console.error('Failed to save column configuration:', error);
+  });
+}
+
+// Computed visible columns based on configuration
+$: visibleColumns =
+  columnItems.length > 0
+    ? columnItems
+        .filter(item => item.enabled)
+        .map(item => columns.find(col => col.title === item.id)!)
+        .filter(Boolean)
+    : columns; // Fallback to all columns when not yet initialized
 
 let tableHtmlDivElement: HTMLDivElement | undefined = undefined;
 
@@ -150,10 +240,15 @@ $: {
   }
 
   // custom columns
-  columns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
+  visibleColumns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
 
-  // final spacer
-  columnWidths.push('5px');
+  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+    // Add space for settings icon in header (32px)
+    columnWidths.push('32px');
+  } else {
+    // final spacer
+    columnWidths.push('5px');
+  }
 
   gridTemplateColumns = columnWidths.join(' ');
 }
@@ -185,6 +280,24 @@ function toggleChildren(name: string | undefined): void {
   // trigger Svelte update
   collapsed = collapsed;
 }
+
+// Reset columns to default state and clear saved configuration
+async function resetColumns(): Promise<void> {
+  try {
+    if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+      columnItems = await $tablePersistenceCallbacks.reset(
+        kind,
+        columns.map(col => col.title),
+      );
+    } else {
+      columnItems = getDefaultColumnItems();
+    }
+  } catch (error) {
+    console.error('Failed to reset column configuration:', error);
+    // Fallback to default configuration
+    columnItems = getDefaultColumnItems();
+  }
+}
 </script>
 
 <div
@@ -195,7 +308,7 @@ function toggleChildren(name: string | undefined): void {
   aria-label={kind}
   bind:this={tableHtmlDivElement}>
   <!-- Table header -->
-  <div role="rowgroup">
+  <div role="rowgroup" class="relative">
     <div
       class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
       role="row">
@@ -210,7 +323,7 @@ function toggleChildren(name: string | undefined): void {
             on:click={toggleAll} />
         </div>
       {/if}
-      {#each columns as column, index (index)}
+      {#each visibleColumns as column, index (index)}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
@@ -236,7 +349,25 @@ function toggleChildren(name: string | undefined): void {
             >{/if}
         </div>
       {/each}
+      <!-- Empty space for settings - only when layout configuration is enabled -->
+      {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
+        <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
+      {/if}
     </div>
+    
+    <!-- Settings - only show when layout configuration is enabled -->
+    {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
+      <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
+        <LayoutEditor
+          bind:items={columnItems}
+          title="Configure Columns"
+          enableReorder={true}
+          enableToggle={true}
+          onReset={resetColumns}
+          resetButtonLabel="Reset to default"
+        />
+      </div>
+    {/if}
   </div>
   <!-- Table body -->
   <div role="rowgroup">
@@ -275,7 +406,7 @@ function toggleChildren(name: string | undefined): void {
                 on:click={objectChecked.bind(undefined, object)} />
             </div>
           {/if}
-          {#each columns as column, index (index)}
+          {#each visibleColumns as column, index (index)}
             <div
               class="whitespace-nowrap {column.info.align === 'right'
                 ? 'justify-self-end'
@@ -284,6 +415,7 @@ function toggleChildren(name: string | undefined): void {
                   : 'justify-self-start'} self-center {column.info.overflow === true
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
+              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component
@@ -312,7 +444,7 @@ function toggleChildren(name: string | undefined): void {
                     disabledTooltip={row.info.disabledText} />
                 </div>
               {/if}
-              {#each columns as column, index (index)}
+              {#each visibleColumns as column, index (index)}
                 <div
                   class="whitespace-nowrap {column.info.align === 'right'
                     ? 'justify-self-end'
@@ -321,6 +453,7 @@ function toggleChildren(name: string | undefined): void {
                       : 'justify-self-start'} self-center {column.info.overflow === true
                     ? ''
                     : 'overflow-hidden'} max-w-full py-1.5"
+                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
                   role="cell">
                   {#if column.info.renderer}
                     <svelte:component
