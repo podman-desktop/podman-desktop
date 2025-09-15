@@ -257,6 +257,15 @@ async function startConnectionProvider(
   );
 }
 
+function isKindCreateButtonDisabled(provider: ProviderInfo): boolean {
+  // Disable kind cluster creation if provider is kind and podman VM is not running
+  if (provider.id === 'kind') {
+    const podmanProvider = providers.find(p => p.id === 'podman');
+    return !podmanProvider?.containerConnections.some(connection => connection.status === 'started');
+  }
+  return false;
+}
+
 async function doCreateNew(provider: ProviderInfo, displayName: string): Promise<void> {
   displayInstallModal = false;
   if (provider.status === 'not-installed') {
@@ -473,10 +482,13 @@ $effect(() => {
                             ? provider.vmProviderConnectionCreationButtonTitle
                             : undefined) ?? 'Create new'}
                     <!-- create new provider button -->
-                    <Tooltip bottom tip="Create new {providerDisplayName}">
+                    {@const isDisabled = isKindCreateButtonDisabled(provider)}
+                    {@const tooltipText = isDisabled ? 'Please start Podman VM first' : `Create new ${providerDisplayName}`}
+                    <Tooltip bottom tip={tooltipText}>
                       <Button
                         aria-label="Create new {providerDisplayName}"
                         inProgress={providerInstallationInProgress.get(provider.name)}
+                        disabled={isDisabled}
                         onclick={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
                         {buttonTitle} ...
                       </Button>
