@@ -18,8 +18,6 @@ This extension is a technology preview.
 
 <!--truncate-->
 
----
-
 ## Introduction
 
 Apple Container is a Swift-based tool for running Linux containers using minimal virtual machines on macOS. To use this functionality, macOS 26 (Tahoe) and above is required.
