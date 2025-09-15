@@ -74,7 +74,12 @@ export class ExploreFeatures {
     const contextsStateList = this.kubernetesClient.getContextsGeneralState();
     features.forEach(feature => {
       if (feature.show && feature.id === 'start-a-container') {
-        feature.show = containerList.length === 0;
+        feature.show =
+          containerList.length === 0 &&
+          providerList
+            .map(provider => provider.containerConnections)
+            .flat()
+            .filter(providerContainerConnection => providerContainerConnection.status === 'started').length > 0;
       } else if (feature.show && feature.id === 'explore-kubernetes') {
         feature.show =
           !providerList.find(provider => provider.kubernetesConnections.length > 0) &&
