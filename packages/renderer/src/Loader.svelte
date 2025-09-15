@@ -91,7 +91,7 @@ window.events.receive('starting-extensions', (value: unknown) => {
 
 <div class="relative w-screen h-screen">
   <Borders />
-  <div class="w-[calc(100%-5px)] h-[calc(100%-5px)] z-10 absolute top-[5px] left-[5px]">
+  <div class="w-[calc(100%-4px)] h-[calc(100%-4px)] z-10 absolute top-[2px] left-[2px]">
     {#if !systemReady}
       <main class="flex flex-row w-screen h-screen justify-center" style="-webkit-app-region: drag;">
         <div class="flex flex-col justify-center">
