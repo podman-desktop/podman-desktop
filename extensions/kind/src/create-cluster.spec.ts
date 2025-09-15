@@ -45,9 +45,17 @@ vi.mock('@podman-desktop/api', async () => {
       onDidUpdateKubeconfig: vi.fn(),
     },
     provider: {
-      getContainerConnections: vi
-        .fn()
-        .mockReturnValue([{ connection: { type: 'docker', endpoint: { socketPath: 'socket' } } }]),
+      getContainerConnections: vi.fn().mockReturnValue([
+        {
+          providerId: 'docker',
+          connection: {
+            name: 'docker-connection',
+            type: 'docker',
+            endpoint: { socketPath: 'socket' },
+            status: (): extensionApi.ProviderConnectionStatus => 'started',
+          },
+        },
+      ]),
     },
     process: {
       exec: vi.fn(),
@@ -488,4 +496,32 @@ test('check that auditItems returns error message when HTTPS port is not availab
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('error');
+});
+
+test('check that auditItems returns error message when provider is not running', async () => {
+  // Mock provider connection with stopped status
+  vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-default',
+        type: 'podman',
+        endpoint: { socketPath: 'socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'stopped',
+      },
+    },
+  ]);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+
+  const checks = await connectionAuditor('podman', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toContain('The podman provider is not running');
 });
