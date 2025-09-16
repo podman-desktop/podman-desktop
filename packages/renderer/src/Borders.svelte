@@ -2,28 +2,48 @@
 let theme: 'light' | 'dark' = 'light'; // will also have light theme
 let os = 'linux';
 
-const topLeftBorder = new URL(`./border-assets/${os}/${os}-${theme}-1.png`, import.meta.url).href;
-const topRightBorder = new URL(`./border-assets/${os}/${os}-${theme}-2.png`, import.meta.url).href;
-const bottomLeftBorder = new URL(`./border-assets/${os}/${os}-${theme}-3.png`, import.meta.url).href;
-const bottomRightBorder = new URL(`./border-assets/${os}/${os}-${theme}-4.png`, import.meta.url).href;
+theme = 'dark';
 
-const topBorder = new URL(`./border-assets/${os}/${os}-${theme}-t.png`, import.meta.url).href;
-const bottomBorder = new URL(`./border-assets/${os}/${os}-${theme}-b.png`, import.meta.url).href;
-const leftBorder = new URL(`./border-assets/${os}/${os}-${theme}-l.png`, import.meta.url).href;
-const rightBorder = new URL(`./border-assets/${os}/${os}-${theme}-r.png`, import.meta.url).href;
+/**
+ * Generates an object containing the `src` and `srcset` for an image asset
+ * based on the provided part.
+ *
+ * @param {string} part - The name of the part for which the image asset is being generated.
+ * @return {{ src: string, srcset: string }} An object containing the `src` and `srcset` paths for the specified image asset.
+ */
+function imgAsset(part: string): { src: string; srcset: string } {
+  const base = new URL(`./border-assets/${os}/${os}-${theme}-${part}.png`, import.meta.url).href;
+  const retina = new URL(`./border-assets/${os}/${os}-${theme}-${part}@2x.png`, import.meta.url).href;
+
+  return {
+    src: base,
+    srcset: `${base} 1x, ${retina} 2x`,
+  };
+}
+
+const topLeft = imgAsset('1');
+const topRight = imgAsset('2');
+const bottomLeft = imgAsset('3');
+const bottomRight = imgAsset('4');
+
+const top = imgAsset('t');
+const bottom = imgAsset('b');
+const left = imgAsset('l');
+const right = imgAsset('r');
 </script>
 
-<div class="absolute top-0 left-0 w-screen h-screen grid grid-cols-[40px_1fr_40px] grid-rows-[40px_1fr_40px] z-0">
-  <img src={topLeftBorder} class="w-[40px] h-[40px]" alt="Top left border"/>
-  <img src={topBorder} class="w-full h-[40px] object-fill" alt="Top border"/>
-  <img src={topRightBorder} class="w-[40px] h-[40px]" alt="Top right border"/>
+<div class="absolute top-0 left-0 w-screen h-screen grid grid-cols-[64px_1fr_64px] grid-rows-[64px_1fr_64px] z-0 pointer-events-none">
+  <img src={topLeft.src} srcset={topLeft.srcset} class="w-[64px] h-[64px]" width="64" height="64" alt="Top left border"/>
+  <img src={top.src} srcset={top.srcset} class="w-full h-[64px] object-fill" height="64" alt="Top border"/>
+  <img src={topRight.src} srcset={topRight.srcset} class="w-[64px] h-[64px]" width="64" height="64" alt="Top right border"/>
 
-  <img src={leftBorder} class="w-[40px] h-full object-fill"  alt="Left border"/>
+  <img src={left.src} srcset={left.srcset} class="w-[64px] h-full object-fill" width="64" alt="Left border"/>
+
   <div class="bg-[var(--pd-content-bg)]"></div>
-  <img src={rightBorder} class="w-[40px] h-full object-fill" alt="Right border"/>
 
-  <img src={bottomLeftBorder} class="w-[40px] h-[40px]" alt="Bottom left border"/>
-  <img src={bottomBorder} class="w-full h-[40px] object-fill"  alt="Bottom border"/>
-  <img src={bottomRightBorder} class="w-[40px] h-[40px]" alt="Bottom right border"/>
+  <img src={right.src} srcset={right.srcset} class="w-[64px] h-full object-fill" width="64" alt="Right border"/>
 
+  <img src={bottomLeft.src} srcset={bottomLeft.srcset} class="w-[64px] h-[64px]" width="64" height="64" alt="Bottom left border"/>
+  <img src={bottom.src} srcset={bottom.srcset} class="w-full h-[64px] object-fill" height="64" alt="Bottom border"/>
+  <img src={bottomRight.src} srcset={bottomRight.srcset} class="w-[64px] h-[64px]" width="64" height="64" alt="Bottom right border"/>
 </div>
