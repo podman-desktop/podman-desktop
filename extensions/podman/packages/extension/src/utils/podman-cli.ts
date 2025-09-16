@@ -24,7 +24,7 @@ const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/lo
  * Finds all installations of podman in the system PATH (Windows, macOS, Linux)
  * @returns Array of unique podman installation paths found
  */
-async function findPodmanInstallations(): Promise<string[]> {
+export async function findPodmanInstallations(): Promise<string[]> {
   try {
     let result: extensionApi.RunResult;
     if (extensionApi.env.isWindows) {
@@ -40,7 +40,8 @@ async function findPodmanInstallations(): Promise<string[]> {
       result.stdout
         .trim()
         .split('\n')
-        .filter(line => line.trim().length > 0),
+        .filter(line => line.trim().length > 0)
+        .map(line => line.replace(/podman is /g, '')),
     );
     return Array.from(uniqueLines);
   } catch (error) {
@@ -97,15 +98,4 @@ export async function getPodmanInstallation(): Promise<InstalledPodman | undefin
     // no podman binary
     return undefined;
   }
-}
-
-// Checks if there are more than one version of podman installed (Windows, macOS, Linux)
-export async function isMultiplePodmanInstalled(): Promise<boolean> {
-  // Checks if custom binary path is set. If so, we don't need to check for multiple installations.
-  if (getCustomBinaryPath()) {
-    return false;
-  }
-  const installations = await findPodmanInstallations();
-  // If there are 2 or more unique installations, return true
-  return installations.length > 1;
 }
