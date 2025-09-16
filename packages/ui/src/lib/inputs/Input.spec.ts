@@ -21,7 +21,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import Input from './Input.svelte';
 
@@ -160,4 +160,25 @@ test('Expect inputClass styling', async () => {
   const element = screen.getByRole('textbox');
   expect(element).toBeInTheDocument();
   expect(element).toHaveClass(thisClass);
+});
+
+describe('input#type', () => {
+  test('default type should be text', () => {
+    const { getByTitle } = render(Input, {
+      title: 'potatoes',
+    });
+
+    const textbox = getByTitle('potatoes');
+    expect(textbox).toHaveAttribute('type', 'text');
+  });
+
+  test('expect type props to be propagated to input element', () => {
+    const { getByTitle } = render(Input, {
+      type: 'password',
+      title: 'potatoes',
+    });
+
+    const textbox = getByTitle('potatoes');
+    expect(textbox).toHaveAttribute('type', 'password');
+  });
 });

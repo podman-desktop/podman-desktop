@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, type Snippet } from 'svelte';
-import type { Booleanish, FormEventHandler, KeyboardEventHandler } from 'svelte/elements';
+import type { Booleanish, FormEventHandler, HTMLInputTypeAttribute, KeyboardEventHandler } from 'svelte/elements';
 import { createBubbler } from 'svelte/legacy';
 
 import Icon from '../icons/Icon.svelte';
@@ -30,6 +30,7 @@ interface Props {
   oninput?: FormEventHandler<HTMLInputElement>;
   onkeypress?: KeyboardEventHandler<HTMLInputElement>;
   title?: string;
+  type?: HTMLInputTypeAttribute;
 }
 
 let {
@@ -53,6 +54,7 @@ let {
   oninput = bubble('input'),
   onkeypress = bubble('keypress'),
   title = '',
+  type = 'text',
 }: Props = $props();
 
 let enabled = $derived(!readonly && !disabled);
@@ -95,7 +97,7 @@ async function onClear(): Promise<void> {
       class:group-focus-within:bg-[var(--pd-input-field-hover-bg)]={enabled}
       class:group-hover-placeholder:text-[color:var(--pd-input-field-placeholder-text)]={enabled}
       {name}
-      type="text"
+      type={type}
       {disabled}
       {readonly}
       {required}
