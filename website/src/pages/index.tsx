@@ -91,7 +91,6 @@ function Testimonials(): JSX.Element {
           />
           <TestimonialCard
             username="José Bayoán Santiago Calderón"
-            userImage="https://media.licdn.com/dms/image/v2/D5635AQG6ohtsrwtWFA/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1737612334868?e=1747674000&v=beta&t=EruTwnMCgArUXZfCBwBZzWQJUbbQMaUB-whOPJag6QU"
             source="LinkedIn"
             text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
           />
