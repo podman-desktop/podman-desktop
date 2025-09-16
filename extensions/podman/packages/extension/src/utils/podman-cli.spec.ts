@@ -19,7 +19,7 @@
 import { type Configuration, env, process } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { isMultiplePodmanInstalled } from './podman-cli';
+import { findPodmanInstallations } from './podman-cli';
 
 const config: Configuration = {
   get: vi.fn().mockReturnValue(undefined), // Default: no custom binary path
@@ -44,24 +44,12 @@ vi.mock('@podman-desktop/api', () => {
   };
 });
 
-describe('isMultiplePodmanInstalled', () => {
+describe('findPodmanInstallations', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(env).isWindows = false;
     vi.mocked(env).isMac = true;
     vi.mocked(env).isLinux = false;
-  });
-
-  describe('Custom binary path', () => {
-    test('should return false when custom binary path is set', async () => {
-      // Setup custom binary path
-      vi.mocked(config.get).mockReturnValue('/custom/path/to/podman');
-
-      const result = await isMultiplePodmanInstalled();
-
-      expect(result).toBe(false);
-      expect(vi.mocked(process.exec)).not.toHaveBeenCalled();
-    });
   });
 
   describe('Windows platform', () => {
@@ -71,29 +59,29 @@ describe('isMultiplePodmanInstalled', () => {
       vi.mocked(env).isLinux = false;
     });
 
-    test('should return false when where command fails', async () => {
+    test('should return empty array when where command fails', async () => {
       vi.mocked(process.exec).mockRejectedValue(new Error('Command failed'));
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual([]);
       expect(process.exec).toHaveBeenCalledWith('where', ['podman']);
     });
 
-    test('should return false when only one installation found', async () => {
+    test('should return single installation when only one found', async () => {
       vi.mocked(process.exec).mockResolvedValue({
         stdout: 'C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe',
         stderr: '',
         command: 'where podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual(['C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe']);
       expect(process.exec).toHaveBeenCalledWith('where', ['podman']);
     });
 
-    test('should return true when multiple installations found', async () => {
+    test('should return multiple installations when multiple found', async () => {
       vi.mocked(process.exec).mockResolvedValue({
         stdout: `C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe
 C:\\tools\\podman\\podman.exe`,
@@ -101,9 +89,9 @@ C:\\tools\\podman\\podman.exe`,
         command: 'where podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(true);
+      expect(result).toEqual(['C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe', 'C:\\tools\\podman\\podman.exe']);
       expect(process.exec).toHaveBeenCalledWith('where', ['podman']);
     });
 
@@ -114,37 +102,51 @@ C:\\tools\\podman\\podman.exe`,
         command: 'where podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual([]);
       expect(process.exec).toHaveBeenCalledWith('where', ['podman']);
+    });
+
+    test('should remove duplicates', async () => {
+      vi.mocked(process.exec).mockResolvedValue({
+        stdout: `C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe
+C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe
+C:\\tools\\podman\\podman.exe`,
+        stderr: '',
+        command: 'where podman',
+      });
+
+      const result = await findPodmanInstallations();
+
+      expect(result).toEqual(['C:\\Program Files\\RedHat\\Podman\\bin\\podman.exe', 'C:\\tools\\podman\\podman.exe']);
     });
   });
 
   describe('Linux/macOS platform', () => {
-    test('should return false when type command fails', async () => {
+    test('should return empty array when type command fails', async () => {
       vi.mocked(process.exec).mockRejectedValue(new Error('Command failed'));
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual([]);
       expect(process.exec).toHaveBeenCalledWith('sh', ['-c', 'type -a podman']);
     });
 
-    test('should return false when only one installation found', async () => {
+    test('should extract paths from "podman is" format', async () => {
       vi.mocked(process.exec).mockResolvedValue({
         stdout: 'podman is /usr/local/bin/podman',
         stderr: '',
         command: 'sh -c type -a podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual(['/usr/local/bin/podman']);
       expect(process.exec).toHaveBeenCalledWith('sh', ['-c', 'type -a podman']);
     });
 
-    test('should return true when multiple installations found', async () => {
+    test('should return multiple extracted paths', async () => {
       vi.mocked(process.exec).mockResolvedValue({
         stdout: `podman is /usr/local/bin/podman
 podman is /opt/homebrew/bin/podman`,
@@ -152,9 +154,9 @@ podman is /opt/homebrew/bin/podman`,
         command: 'sh -c type -a podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(true);
+      expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
       expect(process.exec).toHaveBeenCalledWith('sh', ['-c', 'type -a podman']);
     });
 
@@ -165,25 +167,38 @@ podman is /opt/homebrew/bin/podman`,
         command: 'sh -c type -a podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(false);
+      expect(result).toEqual([]);
       expect(process.exec).toHaveBeenCalledWith('sh', ['-c', 'type -a podman']);
     });
 
-    test('should handle mixed format output and extract paths correctly', async () => {
+    test('should extract paths using generic parsing (last part)', async () => {
       vi.mocked(process.exec).mockResolvedValue({
-        stdout: `podman is /usr/local/bin/podman
-podman is /opt/homebrew/bin/podman
-podman is /usr/bin/podman`,
+        stdout: `podman is /usr/bin/podman
+podman is /opt/podman/bin /podman
+podman is /usr/local/bin/podman`,
         stderr: '',
         command: 'sh -c type -a podman',
       });
 
-      const result = await isMultiplePodmanInstalled();
+      const result = await findPodmanInstallations();
 
-      expect(result).toBe(true);
-      expect(process.exec).toHaveBeenCalledWith('sh', ['-c', 'type -a podman']);
+      expect(result).toEqual(['/usr/bin/podman', '/opt/podman/bin /podman', '/usr/local/bin/podman']);
+    });
+
+    test('should remove duplicates from mixed output', async () => {
+      vi.mocked(process.exec).mockResolvedValue({
+        stdout: `podman is /usr/local/bin/podman
+podman is /usr/local/bin/podman
+podman is /opt/homebrew/bin/podman`,
+        stderr: '',
+        command: 'sh -c type -a podman',
+      });
+
+      const result = await findPodmanInstallations();
+
+      expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
     });
   });
 });

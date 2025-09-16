@@ -1,4 +1,7 @@
 <script lang="ts">
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+
 import type { ProviderInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
@@ -18,9 +21,11 @@ $: {
     {#each providerInfo.warnings as warn, index (index)}
       <div class="flex-row items-center align-middle mt-0.5" role="listitem" aria-label={warn.name}>
         <!-- Make line height center-->
-        <span class="ml-1 text-[var(--pd-content-text)]">⚠</span>
-        <span class="ml-1 text-[var(--pd-content-text)]">{warn.name}:</span>
-        <span class="ml-1 text-[var(--pd-content-text)]">{warn.details}</span>
+        <span class="ml-1 text-[var(--pd-content-card-text)]">
+          <Icon icon={faTriangleExclamation} class="text-[var(--pd-state-warning)] inline" /> {warn.name}:</span>
+        <div class="ml-1 text-[var(--pd-content-text)]">
+          {warn.details}
+        </div>
       </div>
     {/each}
   </div>
