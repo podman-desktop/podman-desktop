@@ -55,7 +55,7 @@ const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<
   >
 >(
   import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL
-    ? [[new URL(import.meta.env.VITE_DEV_SERVER_URL).origin, new Set(['clipboard-sanitized-write'])]]
+    ? [[new URL(import.meta.env.VITE_DEV_SERVER_URL).origin, new Set(['clipboard-sanitized-write', 'clipboard-read'])]]
     : [],
 );
 
