@@ -19,10 +19,12 @@ To celebrate this milestone, and thank you, we built a small surprise:
 
 We are grateful for all the feedback we have been receiving, here is just a short collection:
 
-- “Lovely to have all containers in one tool. Thanks!”
-- “Great project! Small improvements each time make it strong long-term.”
-- “You are doing a great job! Thanks to you I always recommend podman whenever 'docker' comes out in conversations”
-- “OMG this tool is amazing. Tutorial was great. Much easier than minikube.”
+- “Lovely to have all containers in one tool. Thanks!” - _anonymous user feedback_
+- "Podman Desktop is a total win." - _balancedchaos Reddit (r/podman)_
+- “Great project! Small improvements each time make it strong long-term.” - _anonymous user feedback_
+- "The experience has been nice, and the ability to run containers under user without going root is definitely nice." - _ajyotirmay Hacker News_
+- “You are doing a great job! Thanks to you I always recommend podman whenever 'docker' comes out in conversations” - _anonymous user feedback_
+- “OMG this tool is amazing. Tutorial was great. Much easier than minikube.” - _anonymous user feedback_
 
 We read every comment. Yes, even the spicy ones. That feedback shapes our roadmap and helps us focus on the work that makes the biggest difference.
 
