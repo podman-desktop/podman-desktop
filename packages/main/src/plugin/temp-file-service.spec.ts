@@ -37,10 +37,6 @@ vi.mock('node:path', () => ({
   join: vi.fn().mockImplementation((...args) => args.join('/')),
 }));
 
-const mockWriteFile = vi.mocked(writeFile);
-const mockUnlink = vi.mocked(unlink);
-const mockTmpDir = vi.mocked(tmpdir);
-const mockJoin = vi.mocked(join);
 const originalConsoleWarn = console.warn;
 
 class TestTempFileService extends TempFileService {
@@ -63,14 +59,14 @@ class TestTempFileService extends TempFileService {
 
 let tempFileService: TestTempFileService;
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 0));
   console.warn = vi.fn();
 
-  mockTmpDir.mockReturnValue('/tmp');
-  mockWriteFile.mockResolvedValue(undefined);
-  mockJoin.mockImplementation((...args) => args.join('/'));
+  vi.mocked(tmpdir).mockReturnValue('/tmp');
+  vi.mocked(writeFile).mockResolvedValue(undefined);
+  vi.mocked(join).mockImplementation((...args) => args.join('/'));
   tempFileService = new TestTempFileService();
 });
 
@@ -86,9 +82,9 @@ describe('createTempFile', () => {
 
     const result = await tempFileService.createTempFile(content);
 
-    expect(mockTmpDir).toHaveBeenCalled();
-    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.yaml');
-    expect(mockWriteFile).toHaveBeenCalledWith(expectedPath, content, 'utf-8');
+    expect(vi.mocked(tmpdir)).toHaveBeenCalled();
+    expect(vi.mocked(join)).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.yaml');
+    expect(vi.mocked(writeFile)).toHaveBeenCalledWith(expectedPath, content, 'utf-8');
     expect(result).toBe(expectedPath);
     expect(tempFileService.getTempFiles()).toContain(expectedPath);
   });
@@ -100,8 +96,8 @@ describe('createTempFile', () => {
 
     const result = await tempFileService.createTempFile(content, extension);
 
-    expect(mockJoin).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.json');
-    expect(mockWriteFile).toHaveBeenCalledWith(mockPath, content, 'utf-8');
+    expect(vi.mocked(join)).toHaveBeenCalledWith('/tmp', 'temp-1356048000000.json');
+    expect(vi.mocked(writeFile)).toHaveBeenCalledWith(mockPath, content, 'utf-8');
     expect(result).toBe(mockPath);
     expect(tempFileService.getTempFiles()).toContain(mockPath);
   });
@@ -110,7 +106,7 @@ describe('createTempFile', () => {
     const content = 'test content';
     const error = new Error('Permission denied');
 
-    mockWriteFile.mockRejectedValue(error);
+    vi.mocked(writeFile).mockRejectedValue(error);
 
     await expect(tempFileService.createTempFile(content)).rejects.toThrow('Permission denied');
   });
@@ -138,11 +134,11 @@ describe('removeTempFile', () => {
     // Create a file and get its actual path
     const filePath = await tempFileService.createTempFile('content');
 
-    mockUnlink.mockResolvedValue(undefined);
+    vi.mocked(unlink).mockResolvedValue(undefined);
 
     await tempFileService.removeTempFile(filePath);
 
-    expect(mockUnlink).toHaveBeenCalledWith(filePath);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(filePath);
     expect(tempFileService.getTempFiles()).not.toContain(filePath);
   });
 
@@ -151,7 +147,7 @@ describe('removeTempFile', () => {
 
     await tempFileService.removeTempFile(filePath);
 
-    expect(mockUnlink).not.toHaveBeenCalled();
+    expect(vi.mocked(unlink)).not.toHaveBeenCalled();
     expect(tempFileService.getTempFiles()).not.toContain(filePath);
   });
 
@@ -161,7 +157,7 @@ describe('removeTempFile', () => {
     // Create a file and get its actual path
     const filePath = await tempFileService.createTempFile('content');
 
-    mockUnlink.mockRejectedValue(error);
+    vi.mocked(unlink).mockRejectedValue(error);
 
     // Should not throw, but file should remain in tracking since deletion failed
     await expect(tempFileService.removeTempFile(filePath)).resolves.not.toThrow();
@@ -174,7 +170,7 @@ describe('removeTempFile', () => {
     // Create a file and get its actual path
     const filePath = await tempFileService.createTempFile('content');
 
-    mockUnlink.mockRejectedValue(error);
+    vi.mocked(unlink).mockRejectedValue(error);
 
     await tempFileService.removeTempFile(filePath);
 
@@ -196,14 +192,14 @@ describe('cleanup', () => {
     vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 2));
     await tempFileService.createTempFile('content3');
 
-    mockUnlink.mockResolvedValue(undefined);
+    vi.mocked(unlink).mockResolvedValue(undefined);
 
     await tempFileService.cleanup();
 
-    expect(mockUnlink).toHaveBeenCalledTimes(3);
-    expect(mockUnlink).toHaveBeenCalledWith(expectedPath1);
-    expect(mockUnlink).toHaveBeenCalledWith(expectedPath2);
-    expect(mockUnlink).toHaveBeenCalledWith(expectedPath3);
+    expect(vi.mocked(unlink)).toHaveBeenCalledTimes(3);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(expectedPath1);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(expectedPath2);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(expectedPath3);
     expect(tempFileService.getTempFiles()).toHaveLength(0);
   });
 
@@ -218,15 +214,15 @@ describe('cleanup', () => {
     vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
     await tempFileService.createTempFile('content2');
 
-    mockUnlink
+    vi.mocked(unlink)
       .mockResolvedValueOnce(undefined) // file1 succeeds
       .mockRejectedValueOnce(error); // file2 fails
 
     await tempFileService.cleanup();
 
-    expect(mockUnlink).toHaveBeenCalledTimes(2);
-    expect(mockUnlink).toHaveBeenCalledWith(expectedPath1);
-    expect(mockUnlink).toHaveBeenCalledWith(expectedPath2);
+    expect(vi.mocked(unlink)).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(expectedPath1);
+    expect(vi.mocked(unlink)).toHaveBeenCalledWith(expectedPath2);
     expect(console.warn).toHaveBeenCalledWith(`Failed to remove temporary file ${expectedPath2}:`, error);
     // Only file1 removed from tracking, file2 remains due to failed deletion
     expect(tempFileService.getTempFiles()).toEqual([expectedPath2]);
@@ -235,7 +231,7 @@ describe('cleanup', () => {
   test('handles cleanup when no files are tracked', async () => {
     await tempFileService.cleanup();
 
-    expect(mockUnlink).not.toHaveBeenCalled();
+    expect(vi.mocked(unlink)).not.toHaveBeenCalled();
     expect(tempFileService.getTempFiles()).toHaveLength(0);
   });
 });

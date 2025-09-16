@@ -80,7 +80,7 @@ export class TempFileService implements AsyncDisposable {
   /**
    * Get the list of currently tracked temporary files
    */
-  getTempFiles(): string[] {
+  protected getTempFiles(): string[] {
     return Array.from(this.tempFiles);
   }
 }
