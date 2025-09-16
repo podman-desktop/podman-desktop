@@ -28,6 +28,8 @@ We are grateful for all the feedback we have been receiving, here is just a shor
 
 We read every comment. Yes, even the spicy ones. That feedback shapes our roadmap and helps us focus on the work that makes the biggest difference.
 
+Here’s other noteworthy milestones we’ve reached in our quest to help developers work with containers and Kubernetes.
+
 ## Podman Desktop is now an official CNCF Sandbox Project
 
 Last year, we proudly contributed Podman Desktop to the **Cloud Native Computing Foundation (CNCF)**. And now, we’ve officially been **accepted into the CNCF Sandbox** as of **January 21, 2025**! 🎉
