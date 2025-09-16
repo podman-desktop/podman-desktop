@@ -61,7 +61,7 @@ const config = {
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     alias: {
       '@podman-desktop/api': join(PACKAGE_ROOT, '..', '..', '..', '..', '__mocks__/@podman-desktop/api.js'),
     },
