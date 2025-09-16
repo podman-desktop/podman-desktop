@@ -5,10 +5,10 @@ slug: 3-million
 authors: [firewall]
 tags: [podman-desktop, 3-million, downloads, celebrate]
 hide_table_of_contents: false
-image: img/3million/banner.jpg
+image: /img/blog/3million/banner.jpg
 ---
 
-![Banner announcing 3 million users](img/3million/banner.jpg)
+![Banner announcing 3 million users](/img/blog/3million/banner.jpg)
 
 ## Wooohooo !!
 
