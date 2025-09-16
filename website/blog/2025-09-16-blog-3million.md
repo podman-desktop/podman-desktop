@@ -1,6 +1,6 @@
 ---
 title: 3,000,000 downloads. Thank you
-description: We reached 3,000,000 downloads of Podman Desktop. Let's celebrate.
+description: We reached 3,000,000 Downloads of Podman Desktop. Let's celebrate.
 slug: 3-million
 authors: [firewall]
 tags: [podman-desktop, 3-million, downloads, celebrate]
@@ -30,7 +30,7 @@ We read every comment. Yes, even the spicy ones. That feedback shapes our roadma
 
 Last year, we proudly contributed Podman Desktop to the **Cloud Native Computing Foundation (CNCF)**. And now, we’ve officially been **accepted into the CNCF Sandbox** as of **January 21, 2025**! 🎉
 
-This milestone highlights our commitment to building open, community-driven tools that empower developers to seamlessly work with containers and Kubernetes. Joining the CNCF Sandbox is just the beginning. Reaching this 3 Millions downloads milestone, shows the need to build a vibrant cloud-native ecosystem and collaborate with the community to take Podman Desktop even further.
+This milestone highlights our commitment to building open, community-driven tools that empower developers to seamlessly work with containers and Kubernetes. Joining the CNCF Sandbox is just the beginning. Reaching this 3 million downloads milestone, shows the need to build a vibrant cloud-native ecosystem and collaborate with the community to take Podman Desktop even further.
 
 ## Highlights from the past year
 
