@@ -26,7 +26,7 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 import PasswordStringItem from './PasswordStringItem.svelte';
 
 test('Ensure HTMLInputElement', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { description: string } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',
@@ -35,13 +35,13 @@ test('Ensure HTMLInputElement', async () => {
   };
 
   render(PasswordStringItem, { record, value: '', onChange: vi.fn() });
-  const input = screen.getByLabelText('password input-standard-record');
+  const input = screen.getByLabelText(record.description);
   expect(input).toBeInTheDocument();
   expect(input).toBeInstanceOf(HTMLInputElement);
 });
 
 test('Ensure HTMLInputElement readonly', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { description: string } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',
@@ -52,7 +52,7 @@ test('Ensure HTMLInputElement readonly', async () => {
   };
 
   render(PasswordStringItem, { record, value: '', onChange: vi.fn() });
-  const input = screen.getByLabelText('password input-standard-record');
+  const input = screen.getByLabelText(record.description);
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBeTruthy();
 });
