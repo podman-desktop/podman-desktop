@@ -1,22 +1,26 @@
 <script lang="ts">
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { Input } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher, onMount } from 'svelte';
+import type { ComponentProps } from 'svelte';
+import { createEventDispatcher } from 'svelte';
 import Fa from 'svelte-fa';
 
-export let id: string;
-export let name: string | undefined = undefined;
-export let password: string | undefined = undefined;
-export let passwordHidden: boolean = true;
-export let readonly: boolean = false;
+type Props = Omit<ComponentProps<Input>, 'value'> & {
+  password?: string;
+  passwordHidden?: boolean;
+};
 
-let element: HTMLInputElement;
+let {
+  id,
+  name,
+  password = $bindable(),
+  passwordHidden = $bindable(true),
+  readonly = false,
+  ...restProps
+}: Props = $props();
 
+let type: 'text' | 'password' = $derived(passwordHidden ? 'password' : 'text');
 const dispatch = createEventDispatcher();
-
-onMount(() => {
-  element.type = 'password';
-});
 
 // show/hide if the parent doesn't override
 async function onShowHide(event: MouseEvent): Promise<void> {
@@ -24,27 +28,26 @@ async function onShowHide(event: MouseEvent): Promise<void> {
   event.preventDefault();
   if (dispatch('toggleShowHide', { cancelable: true })) {
     passwordHidden = !passwordHidden;
-    element.type = passwordHidden ? 'password' : 'text';
   }
 }
 </script>
 
 <Input
-  class={$$props.class ?? ''}
   id="password-{id}"
   name={name ?? `password-${id}`}
   placeholder="password"
   bind:value={password}
   aria-label="password {id}"
   bind:readonly={readonly}
-  on:input
-  bind:element={element}>
+  type={type}
+  {...restProps}
+>
   {#snippet right()}
     <button
       class="px-1 cursor-pointer text-[var(--pd-input-field-stroke)] group-hover:text-[var(--pd-input-field-hover-stroke)] group-focus-within:text-[var(--pd-input-field-hover-stroke)]"
       class:hidden={!password || readonly}
       aria-label="show/hide"
-      on:click={onShowHide}
+      onclick={onShowHide}
       >{#if passwordHidden}
         <Fa icon={faEye} />
       {:else}
