@@ -43,7 +43,6 @@ import type {
   CheckStatus,
   PreflightChecksCallback,
   ProviderContainerConnectionInfo,
-  ProviderInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
@@ -74,10 +73,6 @@ class TestProviderRegistry extends ProviderRegistry {
 
   override getMatchingProvider(internalId: string): ProviderImpl {
     return super.getMatchingProvider(internalId);
-  }
-
-  override toProviderInfo(provider: ProviderImpl): ProviderInfo {
-    return super.toProviderInfo(provider);
   }
 }
 
@@ -222,7 +217,7 @@ test('should send status update event on status change', async () => {
 
   expect(providerListenerMock).toHaveBeenCalledWith(
     'provider:update-status',
-    expect.objectContaining({ id: 'internalId', name: 'internalName', status: 'installed', status: 'started' }),
+    expect.objectContaining({ id: 'internalId', name: 'internalName', status: 'started' }),
   );
 });
 
