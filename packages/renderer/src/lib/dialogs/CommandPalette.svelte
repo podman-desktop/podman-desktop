@@ -1,5 +1,12 @@
 <script lang="ts">
-import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUpRightFromSquare,
+  faChevronRight,
+  faFileLines,
+  faFilePen,
+  faMagnifyingGlass,
+  faTerminal,
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount, tick } from 'svelte';
@@ -361,12 +368,19 @@ async function onAction(): Promise<void> {
                   ? 'bg-[var(--pd-modal-dropdown-highlight)] selected'
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
-                  <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base py-[2pt]">
+                  <div class="flex flex-row w-full max-w-[700px] truncate items-center justify-between">
+                    <div class="text-base py-[2pt] flex flex-row items-center">
+                      <Icon class='w-[12pt] h-[12pt]' icon={isDocItem ? item.category === 'Tutorial' ? faFilePen : faFileLines : faTerminal}/>
+                      <div class='px-2'>{item.title}</div>
                       {#if isDocItem}
-                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).title}
+                        <Icon icon={faArrowUpRightFromSquare}/>
+                      {/if}
+                    </div>
+                    <div class="flex items-center bg-[var(--pd-invert-content-card-bg)] px-2 py-0.5 rounded-md text-xs ml-auto">
+                      {#if isDocItem}
+                        {(item as DocumentationInfo).category === 'Tutorial' ? item.category : 'Docs'}
                       {:else}
-                        {(item as CommandInfo).title}
+                        Command
                       {/if}
                     </div>
                   </div>
