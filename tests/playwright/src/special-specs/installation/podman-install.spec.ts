@@ -21,7 +21,7 @@ import path from 'node:path';
 
 import { NavigationBar } from '../..';
 import { expect as playExpect, test } from '../../utility/fixtures';
-import { isLinux, isMac, isWindows } from '../../utility/platform';
+import { isCI, isLinux, isMac, isWindows } from '../../utility/platform';
 
 test.skip(isLinux, 'Podman installation is not supported on Linux');
 
@@ -46,6 +46,10 @@ test.afterAll(async ({ runner }) => {
 
 test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
   test('Dashboard Podman provider card assets check', async ({ page }) => {
+    test.skip(
+      !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
+      'Only run on macOS and Windows in GitHub Actions',
+    );
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
     await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 25_000 });
@@ -63,6 +67,7 @@ test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@
     const fileFormatRegexp = isWindows ? 'exe' : 'pkg';
     // x64 = amd64 for both windows and mac, arm64 = arm64 for win, and aarch64 for mac
     const archPart = process.arch === 'x64' ? 'amd64' : process.arch === 'arm64' ? (isMac ? 'aarch64' : 'arm64') : null;
+    playExpect(archPart, { message: `Unsupported architecture: ${process.arch}` }).not.toBeNull();
     const podmanInstallerFilePrefix = `podman-${isWindows ? '.*' : 'installer-macos'}`;
     console.log(
       `Trying to find podman installer artifact: ${podmanInstallerFilePrefix}-${archPart}.${fileFormatRegexp}`,
