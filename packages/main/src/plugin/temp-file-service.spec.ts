@@ -61,7 +61,8 @@ let tempFileService: TestTempFileService;
 beforeEach(() => {
   vi.clearAllMocks();
   vi.useFakeTimers();
-  vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 0));
+  vi.setSystemTime(new Date(Date.UTC(2012, 11, 21, 0, 0, 0)));
+
   console.warn = vi.fn();
 
   vi.mocked(tmpdir).mockReturnValue('/tmp');
@@ -119,7 +120,7 @@ describe('createTempFile', () => {
 
     await tempFileService.createTempFile(content1);
     // Advance time by 1ms for the second file
-    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
+    vi.setSystemTime(new Date(Date.UTC(2012, 11, 21, 0, 0, 1)));
     await tempFileService.createTempFile(content2);
 
     const trackedFiles = tempFileService.getTempFiles();
@@ -187,9 +188,9 @@ describe('cleanup', () => {
     // Add files to tracking
     await tempFileService.createTempFile('content1');
     // Advance time for different timestamps
-    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
+    vi.setSystemTime(new Date(Date.UTC(2012, 11, 21, 0, 0, 1)));
     await tempFileService.createTempFile('content2');
-    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 2));
+    vi.setSystemTime(new Date(Date.UTC(2012, 11, 21, 0, 0, 2)));
     await tempFileService.createTempFile('content3');
 
     vi.mocked(unlink).mockResolvedValue(undefined);
@@ -211,7 +212,8 @@ describe('cleanup', () => {
     // Add files to tracking
     await tempFileService.createTempFile('content1');
     // Advance time for different timestamp
-    vi.setSystemTime(new Date(2012, 11, 21, 0, 0, 1));
+    vi.setSystemTime(new Date(Date.UTC(2012, 11, 21, 0, 0, 1)));
+
     await tempFileService.createTempFile('content2');
 
     vi.mocked(unlink)
