@@ -75,7 +75,7 @@ export class WinInstaller extends BaseInstaller {
         arch() === 'arm64'
           ? podman5Json.platform.win32.arch.arm64.fileName
           : podman5Json.platform.win32.arch.x64.fileName;
-      const setupPath = path.resolve(getAssetsFolder(), `${fileName}`);
+      const setupPath = path.resolve(getAssetsFolder(), fileName);
       try {
         if (fs.existsSync(setupPath)) {
           try {

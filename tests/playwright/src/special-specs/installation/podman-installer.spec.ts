@@ -21,11 +21,7 @@ import path from 'node:path';
 
 import { NavigationBar } from '../..';
 import { expect as playExpect, test } from '../../utility/fixtures';
-<<<<<<< HEAD
 import { isCI, isLinux, isMac, isWindows } from '../../utility/platform';
-=======
-import { isLinux, isMac, isWindows } from '../../utility/platform';
->>>>>>> 3d82f10c028 (chore(test): include e2e tests for podman installer assets)
 
 test.skip(isLinux, 'Podman installation is not supported on Linux');
 
@@ -50,13 +46,10 @@ test.afterAll(async ({ runner }) => {
 
 test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
   test('Dashboard Podman provider card assets check', async ({ page }) => {
-<<<<<<< HEAD
     test.skip(
       !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
       'Only run on macOS and Windows in GitHub Actions',
     );
-=======
->>>>>>> 3d82f10c028 (chore(test): include e2e tests for podman installer assets)
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
     await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 25_000 });
@@ -75,7 +68,7 @@ test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@
     // x64 = amd64 for both windows and mac, arm64 = arm64 for win, and aarch64 for mac
     const archPart = process.arch === 'x64' ? 'amd64' : process.arch === 'arm64' ? (isMac ? 'aarch64' : 'arm64') : null;
     playExpect(archPart, { message: `Unsupported architecture: ${process.arch}` }).not.toBeNull();
-    const podmanInstallerFilePrefix = `podman-${isWindows ? '.*' : 'installer-macos'}`;
+    const podmanInstallerFilePrefix = `podman-${isWindows ? 'installer-windows' : 'installer-macos'}`;
     console.log(
       `Trying to find podman installer artifact: ${podmanInstallerFilePrefix}-${archPart}.${fileFormatRegexp}`,
     );
@@ -99,9 +92,9 @@ test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@
     const files = await fs.promises.readdir(podmanAssetsPath);
     const findFiles = files.filter(file => new RegExp(`^${podmanInstallerFilePrefix}.*$`).exec(file));
     console.log(`Files found: ${findFiles}`);
-    // windows file check: "podman-installer-windows-arch.exe" or podman-5.6.1-setup.exe,
-    // on mac: "podman-installer-macos-(universal|arch-*.pkg"
-    const architecturePattern = isMac ? `(universal|${archPart})-.*` : `(setup|installer-windows-${archPart}).*`;
+    // windows file check: "podman-installer-windows-archXX.exe",
+    // on mac: "podman-installer-macos-(universal|archXX)-version.pkg"
+    const architecturePattern = isMac ? `(universal|${archPart})-.*` : `${archPart}.*`;
     playExpect(findFiles[0]).toMatch(
       new RegExp(`${podmanInstallerFilePrefix}-${architecturePattern}\\.${fileFormatRegexp}`),
     );
