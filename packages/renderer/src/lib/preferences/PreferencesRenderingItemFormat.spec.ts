@@ -478,7 +478,7 @@ test('Expect boolean record to be updated from checked to not checked', async ()
 });
 
 test('Expect a password input when record is type string and format is password', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
+  const record: IConfigurationPropertyRecordedSchema & { description: string } = {
     id: 'record',
     title: 'record',
     parentId: 'parent.record',
@@ -487,7 +487,7 @@ test('Expect a password input when record is type string and format is password'
     type: 'string',
   };
   await awaitRender(record, {});
-  const passwordInput = screen.getByLabelText('password input-standard-record');
+  const passwordInput = screen.getByLabelText(record.description);
   expect(passwordInput).toBeInTheDocument();
   expect(passwordInput).toBeInstanceOf(HTMLInputElement);
 
