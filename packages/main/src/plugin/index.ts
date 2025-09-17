@@ -408,7 +408,7 @@ export class PluginSystem {
 
       const result = await messageBox.showMessageBox({
         title: 'Open External Website',
-        message: 'Are you sure you want to open the external website ?',
+        message: 'Are you sure you want to open the external website?',
         detail: url,
         type: 'question',
         buttons: ['Yes', 'Copy link', 'Cancel'],

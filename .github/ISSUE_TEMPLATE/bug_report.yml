@@ -34,7 +34,7 @@ body:
     id: install
     attributes:
       label: Installation Method
-      description: "How did you install Podman Desktop ?"
+      description: "How did you install Podman Desktop?"
       options:
         - "Installer from website/GitHub releases"
         - "Brew (macOS)"

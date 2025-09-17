@@ -19,7 +19,7 @@ let cleanupInProgress = $state(false);
 let cleanupFailures = $state<string[]>([]);
 
 async function openCleanupDialog(): Promise<void> {
-  let message = 'This action may delete data. Proceed ?';
+  let message = 'This action may delete data. Proceed?';
 
   const result = await window.showMessageBox({
     title: 'Cleanup',

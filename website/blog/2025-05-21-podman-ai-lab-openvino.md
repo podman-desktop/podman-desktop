@@ -58,7 +58,7 @@ Using the terminal shell, execute the given curl command and see the inference r
 
 ![Initial playground on OpenVINO model](img/podman-ai-lab-openvino/openvino-playground1.png)
 
-Enter 'What is OpenVINO ?' in the prompt and click the _Send_ button. The OpenVINO model will respond with an answer.
+Enter 'What is OpenVINO?' in the prompt and click the _Send_ button. The OpenVINO model will respond with an answer.
 
 ![OpenVINO model response in the playground](img/podman-ai-lab-openvino/openvino-playground2.png)
 

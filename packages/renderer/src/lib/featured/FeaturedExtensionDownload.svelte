@@ -62,7 +62,7 @@ async function installExtension(): Promise<void> {
       },
       extension.id,
     );
-    logs = [...logs, '☑️ installation finished !'];
+    logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
   } catch (error) {
     console.log('error', error);

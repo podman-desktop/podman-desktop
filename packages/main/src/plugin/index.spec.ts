@@ -168,7 +168,7 @@ test('Check SecurityRestrictions on Links and user accept', async () => {
 
   expect(showMessageBoxMock).toBeCalledWith({
     buttons: ['Yes', 'Copy link', 'Cancel'],
-    message: 'Are you sure you want to open the external website ?',
+    message: 'Are you sure you want to open the external website?',
     detail: 'https://www.my-custom-domain.io',
     cancelId: 2,
     title: 'Open External Website',
@@ -195,7 +195,7 @@ test('Check SecurityRestrictions on Links and user copy link', async () => {
 
   expect(showMessageBoxMock).toBeCalledWith({
     buttons: ['Yes', 'Copy link', 'Cancel'],
-    message: 'Are you sure you want to open the external website ?',
+    message: 'Are you sure you want to open the external website?',
     detail: 'https://www.my-custom-domain.io',
     title: 'Open External Website',
     cancelId: 2,
@@ -225,7 +225,7 @@ test('Check SecurityRestrictions on Links and user refuses', async () => {
   expect(showMessageBoxMock).toBeCalledWith({
     cancelId: 2,
     buttons: ['Yes', 'Copy link', 'Cancel'],
-    message: 'Are you sure you want to open the external website ?',
+    message: 'Are you sure you want to open the external website?',
     detail: 'https://www.my-custom-domain.io',
     title: 'Open External Website',
     type: 'question',

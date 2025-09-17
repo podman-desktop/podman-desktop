@@ -72,7 +72,7 @@ async function installExtension(): Promise<void> {
         inputfieldError = error;
       },
     );
-    logs = [...logs, '☑️ installation finished !'];
+    logs = [...logs, '☑️ installation finished!'];
     progressPercent = 100;
   } catch (error) {
     console.error('error', error);
