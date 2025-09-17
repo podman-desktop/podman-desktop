@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { existsSync } from 'node:fs';
+import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
 
 import { app } from 'electron';
@@ -38,6 +38,7 @@ vi.mock('electron', async () => {
 vi.mock('node:fs', async () => {
   return {
     existsSync: vi.fn(),
+    unlink: vi.fn(),
   };
 });
 
@@ -135,6 +136,22 @@ test('Autostart enable call should setup startup at login for normal installatio
     path: `"${appExePath}"`,
     args: [],
   });
+});
+
+test('Autostart enable call should remove existing startup file when present', async () => {
+  // Mock that the startup file exists
+  mockFsExists(true);
+  const expectedStartupFilePath = path.resolve(
+    appDataPath,
+    'Microsoft/Windows/Start Menu/Programs/Startup',
+    'podman-desktop.vbs',
+  );
+
+  windowsStartup = new WindowsStartup(configurationRegistry);
+  await windowsStartup.enable();
+
+  // Verify unlink was called with the correct path
+  expect(unlink).toHaveBeenCalledWith(expectedStartupFilePath, expect.any(Function));
 });
 
 test('Autostart disable call should disable startup at login', async () => {

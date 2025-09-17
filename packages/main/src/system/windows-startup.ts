@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { existsSync } from 'node:fs';
+import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
 import type { IConfigurationRegistry } from '/@api/configuration/models.js';
@@ -54,6 +54,16 @@ export class WindowsStartup {
     }
     const preferencesConfig = this.configurationRegistry.getConfiguration('preferences');
     const minimize = preferencesConfig.get<boolean>('login.minimize');
+
+    // after https://github.com/podman-desktop/podman-desktop/pull/13056 there is a leftover startup file that we need to remove
+    const windowsStartupFoler = path.resolve(app.getPath('appData'), 'Microsoft/Windows/Start Menu/Programs/Startup');
+    const startupFile = path.resolve(windowsStartupFoler, 'podman-desktop.vbs');
+
+    if (existsSync(startupFile)) {
+      unlink(startupFile, (err: unknown) => {
+        console.error(`Got error when removing ${startupFile} file: ${err}`);
+      });
+    }
 
     // We pass in "--minimize" so electron can read the flag on first startup.
     const args = minimize ? ['--minimized'] : [];
