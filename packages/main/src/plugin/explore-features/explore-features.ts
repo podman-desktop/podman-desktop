@@ -19,13 +19,13 @@
 import { inject, injectable } from 'inversify';
 
 import { IConfigurationNode } from '/@api/configuration/models.js';
+import { Feature } from '/@api/explore-features.js';
 
 import { ConfigurationRegistry } from '../configuration-registry.js';
 import { ContainerProviderRegistry } from '../container-registry.js';
 import { ExtensionLoader } from '../extension/extension-loader.js';
 import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
 import { ProviderRegistry } from '../provider-registry.js';
-import { Feature } from './explore-features-api.js';
 import featuresJson from './features.json' with { type: 'json' };
 import exploreKubernetes from './images/explore-kubernetes.png';
 import installExtension from './images/install-extensions.png';

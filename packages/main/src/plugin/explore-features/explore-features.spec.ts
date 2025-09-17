@@ -77,8 +77,18 @@ const providerInfoMock: ProviderInfo = {
   id: 'provider1',
   extensionId: 'extension1',
   name: 'provider 1',
-  containerConnections: [],
-  kubernetesConnections: [{} as unknown as ProviderKubernetesConnectionInfo],
+  containerConnections: [
+    {
+      name: 'connection1',
+      displayName: 'Connection 1',
+      status: 'started',
+      endpoint: {
+        socketPath: '',
+      },
+      type: 'podman',
+    },
+  ],
+  kubernetesConnections: [],
   vmConnections: [],
   status: 'ready',
   containerProviderConnectionCreation: false,
@@ -126,7 +136,9 @@ beforeEach(() => {
 
   vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([]);
   vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([]);
-  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([]);
+
+  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([providerInfoMock]);
+
   vi.mocked(kubernetesClientMock.getContextsGeneralState).mockReturnValue(new Map());
 });
 
@@ -181,8 +193,23 @@ test('Do not show satrt a container feature if there is at least one container a
   expect(features[3]?.show).toBe(true);
 });
 
+test('Do not show satrt a container feature if there is no container engine ready', async () => {
+  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([{ ...providerInfoMock, containerConnections: [] }]);
+
+  const features = await exploreFeaturesMock.downloadFeaturesList();
+
+  expect(features[0]?.id).toBe('start-a-container');
+  expect(features[0]?.show).toBe(false);
+
+  expect(features[1]?.show).toBe(true);
+  expect(features[2]?.show).toBe(true);
+  expect(features[3]?.show).toBe(true);
+});
+
 test('Do not show explore kubernetes feature if there is at least one reachable cluster or kubernetes provider connection', async () => {
-  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([providerInfoMock]);
+  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([
+    { ...providerInfoMock, kubernetesConnections: [{} as unknown as ProviderKubernetesConnectionInfo] },
+  ]);
 
   const features = await exploreFeaturesMock.downloadFeaturesList();
 
@@ -211,14 +238,6 @@ test('Do not show manage docker feature if docker compatibility is enabled', asy
   vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
     get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(true),
   } as unknown as Configuration);
-
-  vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([]);
-
-  vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([]);
-
-  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([]);
-
-  vi.mocked(kubernetesClientMock.getContextsGeneralState).mockReturnValue(new Map());
 
   const features = await exploreFeaturesMock.downloadFeaturesList();
 
