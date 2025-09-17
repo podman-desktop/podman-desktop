@@ -321,22 +321,24 @@ export class TrayMenu {
       submenu: [],
     };
 
-    (result.submenu as MenuItemConstructorOptions[]).push({
-      label: 'Start',
-      enabled: item.status === 'stopped' || item.status === 'configured',
-      click: () => {
-        this.sendItemClick({ action: 'Start', providerInfo: item });
-      },
-    });
+    if ((item.lifecycleMethods ?? []).length > 0) {
+      (result.submenu as MenuItemConstructorOptions[]).push({
+        label: 'Start',
+        enabled: item.status === 'stopped' || item.status === 'configured',
+        click: () => {
+          this.sendItemClick({ action: 'Start', providerInfo: item });
+        },
+      });
 
-    (result.submenu as MenuItemConstructorOptions[]).push({
-      label: 'Stop',
-      enabled: item.status === 'started',
-      click: () => {
-        this.sendItemClick({ action: 'Stop', providerInfo: item });
-      },
-    });
-    (result.submenu as MenuItemConstructorOptions[]).push({ type: 'separator' });
+      (result.submenu as MenuItemConstructorOptions[]).push({
+        label: 'Stop',
+        enabled: item.status === 'started',
+        click: () => {
+          this.sendItemClick({ action: 'Stop', providerInfo: item });
+        },
+      });
+      (result.submenu as MenuItemConstructorOptions[]).push({ type: 'separator' });
+    }
 
     if (item.childItems.length > 0) {
       (result.submenu as MenuItemConstructorOptions[]).push(...item.childItems);

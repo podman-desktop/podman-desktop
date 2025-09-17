@@ -142,6 +142,7 @@ test('Tray provider start enabled when configured state', () => {
     name: 'TestProv',
     internalId: 'internalId',
     status: 'configured',
+    lifecycleMethods: ['start'],
   } as ProviderInfo);
 
   const startItem = (menuBuild.mock.lastCall?.[0]?.[0]?.submenu as Array<MenuItemConstructorOptions>)?.find(
@@ -149,6 +150,29 @@ test('Tray provider start enabled when configured state', () => {
   );
   expect(startItem).toBeDefined();
   expect(startItem?.enabled).toBeTruthy();
+});
+
+test('Tray provider start or stop should not be visible when provider has no lifecycle methods', () => {
+  const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+
+  trayMenu.addProviderItems({
+    id: 'testId',
+    name: 'TestProv',
+    internalId: 'internalId',
+    status: 'configured',
+  } as ProviderInfo);
+
+  const startItem = (menuBuild.mock.lastCall?.[0]?.[0]?.submenu as Array<MenuItemConstructorOptions>)?.find(
+    it => it.label === 'Start',
+  );
+  expect(startItem).toBeUndefined();
+
+  const stopItem = (menuBuild.mock.lastCall?.[0]?.[0]?.submenu as Array<MenuItemConstructorOptions>)?.find(
+    it => it.label === 'Stop',
+  );
+  expect(stopItem).toBeUndefined();
 });
 
 test('Tray click trigger is only added on Windows devices', () => {

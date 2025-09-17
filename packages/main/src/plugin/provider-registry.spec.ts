@@ -43,6 +43,7 @@ import type {
   CheckStatus,
   PreflightChecksCallback,
   ProviderContainerConnectionInfo,
+  ProviderInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
@@ -73,6 +74,10 @@ class TestProviderRegistry extends ProviderRegistry {
 
   override getMatchingProvider(internalId: string): ProviderImpl {
     return super.getMatchingProvider(internalId);
+  }
+
+  override toProviderInfo(provider: ProviderImpl): ProviderInfo {
+    return super.toProviderInfo(provider);
   }
 }
 
@@ -201,6 +206,24 @@ test('should send version event if update', async () => {
   } else {
     assert.fail('providerInternalId not initialized');
   }
+});
+
+test('should send status update event on status change', async () => {
+  const providerListenerMock = vi.fn();
+  providerRegistry.addProviderListener(providerListenerMock);
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internalId',
+    name: 'internalName',
+    status: 'installed',
+  });
+
+  provider.updateStatus('started');
+
+  expect(providerListenerMock).toHaveBeenCalledWith(
+    'provider:update-status',
+    expect.objectContaining({ id: 'internalId', name: 'internalName', status: 'installed', status: 'started' }),
+  );
 });
 
 test('should initialize provider if there is container connection provider', async () => {
