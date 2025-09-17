@@ -723,7 +723,7 @@ export class PluginSystem {
     recommendationsRegistry.init();
 
     container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
-    
+
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
     exploreFeatures.init();
