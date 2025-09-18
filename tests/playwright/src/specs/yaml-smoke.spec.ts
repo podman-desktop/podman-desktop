@@ -56,7 +56,7 @@ test.describe.serial(`Play yaml file to pull images and create pod for app ${pod
     let podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
 
-    const playYamlPage = await podsPage.openPlayKubeYaml();
+    const playYamlPage = await podsPage.openPodmanKubePlay();
     await playExpect(playYamlPage.heading).toBeVisible();
 
     const yamlFilePath = path.resolve(__dirname, '..', '..', 'resources', `${podAppName}.yaml`);

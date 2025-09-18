@@ -25,13 +25,13 @@ import { PlayKubeYamlPage } from './play-kube-yaml-page';
 import { PodDetailsPage } from './pods-details-page';
 
 export class PodsPage extends MainPage {
-  readonly playKubernetesYAMLButton: Locator;
+  readonly podmanKubePlayButton: Locator;
   readonly prunePodsButton: Locator;
   readonly pruneConfirmationButton: Locator;
 
   constructor(page: Page) {
     super(page, 'pods');
-    this.playKubernetesYAMLButton = this.page.getByRole('button', {
+    this.podmanKubePlayButton = this.page.getByRole('button', {
       name: 'Podman Kube Play',
     });
     this.prunePodsButton = this.page.getByRole('button', { name: 'Prune' });
@@ -61,10 +61,10 @@ export class PodsPage extends MainPage {
     return (await this.getPodRowByName(name)) !== undefined;
   }
 
-  async openPlayKubeYaml(): Promise<PlayKubeYamlPage> {
-    return test.step('Open Play Kubernetes YAML', async () => {
-      await playExpect(this.playKubernetesYAMLButton).toBeEnabled();
-      await this.playKubernetesYAMLButton.click();
+  async openPodmanKubePlay(): Promise<PlayKubeYamlPage> {
+    return test.step('Open Podman Kube Play', async () => {
+      await playExpect(this.podmanKubePlayButton).toBeEnabled();
+      await this.podmanKubePlayButton.click();
       return new PlayKubeYamlPage(this.page);
     });
   }

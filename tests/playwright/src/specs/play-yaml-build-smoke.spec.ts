@@ -57,7 +57,7 @@ test.describe.serial('Deploy pod via Play YAML using locally built image', { tag
   test('Deploy pod from YAML using build option and verify it is running', async ({ navigationBar }) => {
     const podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
-    const playYamlPage = await podsPage.openPlayKubeYaml();
+    const playYamlPage = await podsPage.openPodmanKubePlay();
     await playExpect(playYamlPage.heading).toBeVisible();
 
     await playYamlPage.playYaml(POD_YAML_PATH, true);
