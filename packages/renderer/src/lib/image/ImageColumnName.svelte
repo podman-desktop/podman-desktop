@@ -14,7 +14,7 @@ let { object }: Props = $props();
 function openDetails(image: ImageInfoUI): void {
   handleNavigation({
     page: image.isManifest ? NavigationPage.MANIFEST : NavigationPage.IMAGE,
-    parameters: { id: image.id, engineId: image.engineId, tag: image.name + ':' + image.tag },
+    parameters: { id: image.id, engineId: image.engineId, tag: image.tag ? `${image.name}:${image.tag}` : image.name },
   });
 }
 </script>

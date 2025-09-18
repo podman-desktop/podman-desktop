@@ -189,3 +189,23 @@ test('Expect clicking works for manifests', async () => {
   fireEvent.click(text);
   expect(routerGotoSpy).toBeCalledWith('/manifests/my-image/podman/bXktaW1hZ2UtbmFtZTpsYXRlc3Q=/summary');
 });
+
+test('Expect clicking works for images without tag (empty tag)', async () => {
+  const imageWithoutTag: ImageInfoUI = {
+    ...image,
+    name: 'my-untagged-image',
+    tag: '',
+    base64RepoTag: 'bXktdW50YWdnZWQtaW1hZ2U=', // base64 of 'my-untagged-image'
+  };
+  render(ImageColumnName, { object: imageWithoutTag });
+
+  const text = screen.getByText('my-untagged-image');
+  expect(text).toBeInTheDocument();
+
+  // test click - should use only the name when tag is empty
+  const routerGotoSpy = vi.spyOn(router, 'goto');
+  fireEvent.click(text);
+
+  // Should navigate with just the name, when tag is empty
+  expect(routerGotoSpy).toBeCalledWith('/images/my-image/podman/bXktdW50YWdnZWQtaW1hZ2U=/summary');
+});
