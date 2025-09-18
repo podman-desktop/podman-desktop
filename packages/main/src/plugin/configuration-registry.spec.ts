@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
+import * as path from 'node:path';
 
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
+import { CONFIGURATION_MANAGED_DEFAULTS_SCOPE } from '/@api/configuration/constants.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
@@ -28,11 +29,26 @@ import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
+vi.mock('node:fs', () => ({
+  readFileSync: vi.fn(),
+  cpSync: vi.fn(),
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+}));
+
+const { readFileSync, cpSync, existsSync, mkdirSync, writeFileSync } = await import('node:fs');
+
 let configurationRegistry: ConfigurationRegistry;
 
-// mock the fs methods
-const readFileSync = vi.spyOn(fs, 'readFileSync');
-const cpSync = vi.spyOn(fs, 'cpSync');
+// mock util functions
+vi.mock('../util.js', () => ({
+  isMac: vi.fn(),
+  isWindows: vi.fn(),
+  isLinux: vi.fn(),
+}));
+
+const { isMac, isWindows, isLinux } = await import('../util.js');
 
 const getConfigurationDirectoryMock = vi.fn();
 const directories = {
@@ -48,20 +64,18 @@ const notificationRegistry = {
 
 let registerConfigurationsDisposable: IDisposable;
 
-beforeAll(() => {
-  // mock the fs module
-  vi.mock('node:fs');
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(mkdirSync).mockReturnValue(undefined);
+  vi.mocked(writeFileSync).mockReturnValue(undefined);
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
-  readFileSync.mockReturnValue(JSON.stringify({}));
+  vi.mocked(readFileSync).mockReturnValue(JSON.stringify({}));
 
-  cpSync.mockReturnValue(undefined);
+  vi.mocked(cpSync).mockReturnValue(undefined);
   configurationRegistry.init();
 
   const node: IConfigurationNode = {
@@ -174,7 +188,7 @@ test('should work with an invalid configuration file', async () => {
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
-  readFileSync.mockReturnValue('invalid JSON content');
+  vi.mocked(readFileSync).mockReturnValue('invalid JSON content');
 
   // configuration is broken but it should not throw any error, just that config is empty
   const originalConsoleError = console.error;
@@ -345,8 +359,6 @@ test('should remove the object configuration if value is equal to default one', 
     },
   };
 
-  const writeFileSync = vi.spyOn(fs, 'writeFileSync');
-
   configurationRegistry.registerConfigurations([node]);
 
   await configurationRegistry.updateConfigurationValue('test.prop', [
@@ -375,4 +387,143 @@ test('should remove the object configuration if value is equal to default one', 
     expect.anything(),
     expect.stringContaining(JSON.stringify({}, undefined, 2)),
   );
+});
+
+describe('Managed Defaults', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.clearAllMocks();
+
+    // Fake the configuration directory + values first writing / reading to file
+    getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(mkdirSync).mockReturnValue(undefined);
+    vi.mocked(writeFileSync).mockReturnValue(undefined);
+    vi.mocked(cpSync).mockReturnValue(undefined);
+    vi.mocked(readFileSync).mockReturnValue(JSON.stringify({}));
+  });
+
+  test('should get correct managed defaults file path for Mac', () => {
+    vi.mocked(isMac).mockReturnValue(true);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(false);
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    const managedDefaultsFile = registry['getManagedDefaultsFile']();
+    expect(managedDefaultsFile).toBe('/Library/Application Support/com.podman.desktop/default-settings.json');
+  });
+
+  test('should get correct managed defaults file path for Windows', () => {
+    vi.mocked(isMac).mockReturnValue(false);
+    vi.mocked(isWindows).mockReturnValue(true);
+    vi.mocked(isLinux).mockReturnValue(false);
+
+    process.env['PROGRAMDATA'] = 'C:\\ProgramData';
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    const managedDefaultsFile = registry['getManagedDefaultsFile']();
+    expect(managedDefaultsFile).toBe(path.join('C:\\ProgramData', 'PodmanDesktop', 'default-settings.json'));
+  });
+
+  test('should get correct managed defaults file path for Linux', () => {
+    vi.mocked(isMac).mockReturnValue(false);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(true);
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    const managedDefaultsFile = registry['getManagedDefaultsFile']();
+    expect(managedDefaultsFile).toBe('/usr/share/podman-desktop/default-settings.json');
+  });
+
+  // If all else fails, fallback to Linux (since sometimes there are unknown platforms such as FreeBSD which are unix-like which try to run Podman Desktop)
+  test('should fallback to Linux path for unknown platforms', () => {
+    vi.mocked(isMac).mockReturnValue(false);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isLinux).mockReturnValue(false);
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    const managedDefaultsFile = registry['getManagedDefaultsFile']();
+    expect(managedDefaultsFile).toBe('/usr/share/podman-desktop/default-settings.json');
+  });
+
+  test('should load managed defaults when file exists', () => {
+    const managedDefaults = { 'managed.setting': 'managedValue' };
+    vi.mocked(existsSync).mockImplementation(filePath => {
+      return (typeof filePath === 'string' && filePath.includes('default-settings.json')) || true;
+    });
+    vi.mocked(readFileSync).mockImplementation(filePath => {
+      if (typeof filePath === 'string' && filePath.includes('default-settings.json')) {
+        return JSON.stringify(managedDefaults);
+      }
+      return JSON.stringify({});
+    });
+
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    registry.init();
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Loaded managed defaults from:'));
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle missing managed defaults file gracefully', () => {
+    vi.mocked(existsSync).mockImplementation(filePath => {
+      return !(typeof filePath === 'string' && filePath.includes('default-settings.json'));
+    });
+
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    registry.init();
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Managed defaults file not found at:'));
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle corrupted managed defaults file gracefully', () => {
+    vi.mocked(existsSync).mockImplementation(filePath => {
+      return (typeof filePath === 'string' && filePath.includes('default-settings.json')) || true;
+    });
+
+    // Purposely return invalid JSON
+    vi.mocked(readFileSync).mockImplementation(filePath => {
+      if (typeof filePath === 'string' && filePath.includes('default-settings.json')) {
+        return 'invalid json';
+      }
+      return JSON.stringify({});
+    });
+
+    // Expect us to "fail" well
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    registry.init();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to parse managed defaults from'),
+      expect.anything(),
+    );
+  });
+
+  test('should load managed defaults configuration with valid JSON', () => {
+    // "test" values
+    const managedDefaults = { 'managed.setting': 'managedValue', 'another.setting': 'anotherValue' };
+
+    // Mock the file system loading the files (JSON too)
+    vi.mocked(existsSync).mockImplementation(filePath => {
+      return (typeof filePath === 'string' && filePath.includes('default-settings.json')) || true;
+    });
+    vi.mocked(readFileSync).mockImplementation(filePath => {
+      if (typeof filePath === 'string' && filePath.includes('default-settings.json')) {
+        return JSON.stringify(managedDefaults);
+      }
+      return JSON.stringify({});
+    });
+
+    const registry = new ConfigurationRegistry(apiSender, directories);
+    registry.init();
+
+    // We expect the file loaded to be the same from the const managedDefaults vs configurationValues.get()
+    const configurationValues = registry['configurationValues'];
+    const managedConfig = configurationValues.get(CONFIGURATION_MANAGED_DEFAULTS_SCOPE);
+    expect(managedConfig).toEqual(managedDefaults);
+  });
 });

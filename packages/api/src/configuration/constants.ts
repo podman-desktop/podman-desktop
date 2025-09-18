@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,3 +18,12 @@
 
 export const CONFIGURATION_DEFAULT_SCOPE = 'DEFAULT';
 export const CONFIGURATION_ONBOARDING_SCOPE = 'Onboarding';
+export const CONFIGURATION_MANAGED_DEFAULTS_SCOPE = 'MANAGED_DEFAULTS';
+
+// Below is the location of the managed defaults file on different OS'
+// this will be the Managed by profile which will show some "suggested defaults" by
+// the system administrator.
+export const MANAGED_DEFAULTS_FILE_MAC = '/Library/Application Support/com.podman.desktop/default-settings.json';
+export const MANAGED_DEFAULTS_FILE_WINDOWS_DIR = 'PodmanDesktop';
+export const MANAGED_DEFAULTS_FILE_WINDOWS_FILE = 'default-settings.json';
+export const MANAGED_DEFAULTS_FILE_LINUX = '/usr/share/podman-desktop/default-settings.json';
