@@ -29,7 +29,7 @@ import { ensureURL, Proxy } from '/@/plugin/proxy.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import type { ApiSenderType } from './api.js';
-import { Directories } from './directories.js';
+import { LegacyDirectories } from './directories-legacy.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
 import type { IDisposable } from './types/disposable.js';
 
@@ -61,7 +61,7 @@ const apiSender: ApiSenderType = {
   },
 };
 function getConfigurationRegistry(): ConfigurationRegistry {
-  return new ConfigurationRegistry(apiSender, new Directories());
+  return new ConfigurationRegistry(apiSender, new LegacyDirectories());
 }
 
 async function buildProxy(): Promise<ProxyServer> {
