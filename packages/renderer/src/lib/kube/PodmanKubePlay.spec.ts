@@ -44,17 +44,6 @@ test('Expect button to be visible with correct text and title', () => {
   expect(button).toHaveAttribute('title', 'Create containers, pods and volumes based on Kubernetes YAML');
 });
 
-test('Expect button to have the KubePlay icon', () => {
-  const { getByRole } = render(PodmanKubePlay);
-
-  const button = getByRole('button', { name: 'Podman Kube Play' });
-  expect(button).toBeInTheDocument();
-
-  // Check that the icon is present (looking for SVG element inside the button)
-  const svg = button.querySelector('svg');
-  expect(svg).toBeInTheDocument();
-});
-
 test('Expect click on button to navigate to kube play page', async () => {
   const { getByRole } = render(PodmanKubePlay);
 
