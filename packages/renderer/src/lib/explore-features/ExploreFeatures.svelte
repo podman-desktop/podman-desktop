@@ -3,8 +3,8 @@ import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import type { Feature } from '/@api/explore-features';
 
-import type { Feature } from '../../../../main/src/plugin/explore-features/explore-features-api';
 import FeatureCard from './FeatureCard.svelte';
 
 let features: Feature[] = $state([]);
