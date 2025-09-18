@@ -28,7 +28,6 @@ import { MainPage } from './main-page';
 export class ContainersPage extends MainPage {
   readonly pruneContainersButton: Locator;
   readonly createContainerButton: Locator;
-  readonly playKubernetesYAMLButton: Locator;
   readonly pruneConfirmationButton: Locator;
   readonly runAllContainersButton: Locator;
 
@@ -39,9 +38,6 @@ export class ContainersPage extends MainPage {
     });
     this.createContainerButton = this.additionalActions.getByRole('button', {
       name: 'Create',
-    });
-    this.playKubernetesYAMLButton = this.additionalActions.getByRole('button', {
-      name: 'Play Kubernetes YAML',
     });
     this.pruneConfirmationButton = this.page.getByRole('button', {
       name: 'Yes',

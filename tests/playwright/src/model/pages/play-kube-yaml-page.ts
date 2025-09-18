@@ -64,7 +64,7 @@ export class PlayKubeYamlPage extends BasePage {
       kubernetesContext: 'kind-kind-cluster',
     },
   ): Promise<PodsPage> {
-    return test.step('Play Kubernetes YAML', async () => {
+    return test.step('Podman Kube Play', async () => {
       if (!pathToYaml) {
         throw Error(`Path to Yaml file is incorrect or not provided!`);
       }

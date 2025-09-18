@@ -32,7 +32,7 @@ export class PodsPage extends MainPage {
   constructor(page: Page) {
     super(page, 'pods');
     this.playKubernetesYAMLButton = this.page.getByRole('button', {
-      name: 'Play Kubernetes YAML',
+      name: 'Podman Kube Play',
     });
     this.prunePodsButton = this.page.getByRole('button', { name: 'Prune' });
     this.pruneConfirmationButton = this.page.getByRole('button', {

@@ -9,6 +9,6 @@ function runContainerYaml(): void {
 }
 </script>
 
-<Button on:click={runContainerYaml} title="Play pod/containers from kubernetes YAML file" icon={KubePlayIcon}>
-  Play Kubernetes YAML
+<Button onclick={runContainerYaml} title="Create containers, pods and volumes based on Kubernetes YAML" icon={KubePlayIcon}>
+  Podman Kube Play
 </Button>
