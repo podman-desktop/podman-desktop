@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import EventEmitter from 'node:events';
+import * as fs from 'node:fs';
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -29,7 +30,7 @@ import { ensureURL, Proxy } from '/@/plugin/proxy.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import type { ApiSenderType } from './api.js';
-import { LegacyDirectories } from './directories-legacy.js';
+import type { Directories } from './directories.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
 import type { IDisposable } from './types/disposable.js';
 
@@ -40,6 +41,13 @@ vi.mock('./proxy-system.js', () => {
     getProxySettingsFromSystem: vi.fn(),
   };
 });
+
+// Mock the fs module
+vi.mock('node:fs');
+const readFileSync = vi.spyOn(fs, 'readFileSync');
+const writeFileSync = vi.spyOn(fs, 'writeFileSync');
+const existsSync = vi.spyOn(fs, 'existsSync');
+const mkdirSync = vi.spyOn(fs, 'mkdirSync');
 
 const certificates: Certificates = {
   getAllCertificates: vi.fn(),
@@ -60,8 +68,19 @@ const apiSender: ApiSenderType = {
     };
   },
 };
+
+const directories = {
+  getConfigurationDirectory: () => '/fake-config-directory',
+  getPluginsDirectory: () => '/fake-plugins-directory',
+  getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
+  getExtensionsStorageDirectory: () => '/fake-extensions-storage-directory',
+  getContributionStorageDir: () => '/fake-contribution-storage-directory',
+  getSafeStorageDirectory: () => '/fake-safe-storage-directory',
+  getDataDirectory: () => '/fake-data-directory',
+} as unknown as Directories;
+
 function getConfigurationRegistry(): ConfigurationRegistry {
-  return new ConfigurationRegistry(apiSender, new LegacyDirectories());
+  return new ConfigurationRegistry(apiSender, directories);
 }
 
 async function buildProxy(): Promise<ProxyServer> {
@@ -75,6 +94,12 @@ let proxy: Proxy | undefined;
 let configurationRegistry: ConfigurationRegistry;
 
 beforeAll(async () => {
+  // Set up filesystem mocks
+  readFileSync.mockReturnValue(JSON.stringify({}));
+  writeFileSync.mockReturnValue(undefined);
+  existsSync.mockReturnValue(true);
+  mkdirSync.mockReturnValue('');
+
   configurationRegistry = getConfigurationRegistry();
   proxy = new Proxy(configurationRegistry, certificates);
   await proxy.init();
