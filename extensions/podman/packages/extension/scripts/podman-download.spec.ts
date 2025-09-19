@@ -18,7 +18,7 @@
 
 import { setupServer, SetupServerApi } from 'msw/node';
 import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
-import { DiskType, DownloadAndCheck, Podman5DownloadMachineOS, PodmanDownload, ShaCheck } from './podman-download';
+import { DownloadAndCheck, Podman5DownloadMachineOS, PodmanDownload, ShaCheck } from './podman-download';
 import * as podman5JSON from '../src/podman5.json';
 import { Readable, Writable } from 'node:stream';
 import { WritableStream } from 'stream/web';
@@ -31,7 +31,14 @@ const mockedPodman5 = {
   platform: {
     win32: {
       version: 'v5.0.0',
-      fileName: 'podman-5.0.0-setup.exe',
+      arch: {
+        x64: {
+          fileName: 'podman-installer-windows-amd64.exe',
+        },
+        arm64: {
+          fileName: 'podman-installer-windows-arm64.exe',
+        },
+      },
     },
     darwin: {
       version: 'v5.0.0',
@@ -169,6 +176,17 @@ describe('macOS platform', () => {
       'podman-installer-macos-universal.pkg',
     );
   });
+
+  test('PodmanDownload artifacts do not contain whitespace character', async () => {
+    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    // check called with the correct parameters
+    const artifactsToDownload = podmanDownload.getArtifactsToDownload();
+    artifactsToDownload.forEach(artifact => {
+      expect(artifact.version).not.toMatch(/\s/);
+      expect(artifact.artifactName).not.toMatch(/\s/);
+      expect(artifact.downloadName).not.toMatch(/\s/);
+    });
+  });
 });
 
 describe('windows platform', () => {
@@ -207,13 +225,20 @@ describe('windows platform', () => {
 
     await podmanDownload.downloadBinaries();
 
+    // check called 2 times
+    expect(downloadAndCheckShaSpy).toHaveBeenCalledTimes(2);
+
     // check called with the correct parameters
-    const artifactsToDownload = podmanDownload.getArtifactsToDownload();
-    artifactsToDownload.forEach(artifact => {
-      expect(artifact.version).toContain('v5.');
-      expect(artifact.artifactName).toContain('-setup.exe');
-      expect(artifact.downloadName).toContain('-setup.exe');
-    });
+    expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
+      expect.stringContaining('v5.6'),
+      expect.stringContaining('podman-installer-windows-amd64.exe'),
+      'podman-installer-windows-amd64.exe',
+    );
+    expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
+      expect.stringContaining('v5.6'),
+      expect.stringContaining('podman-installer-windows-arm64.exe'),
+      'podman-installer-windows-arm64.exe',
+    );
   });
 
   test('PodmanDownload with mocked json', async () => {
@@ -237,19 +262,30 @@ describe('windows platform', () => {
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       1,
       'v5.0.0',
-      'podman-5.0.0-setup.exe',
-      'podman-5.0.0-setup.exe',
+      'podman-installer-windows-amd64.exe',
+      'podman-installer-windows-amd64.exe',
+    );
+
+    // check called with the correct parameters for arm64 installer
+    expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
+      2,
+      'v5.0.0',
+      'podman-installer-windows-arm64.exe',
+      'podman-installer-windows-arm64.exe',
     );
 
     // check no airgap download
     expect(podman5DownloadMachineOSSpy).not.toHaveBeenCalled();
+  });
 
+  test('PodmanDownload artifacts do not contain whitespace character', async () => {
+    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
     // check called with the correct parameters
     const artifactsToDownload = podmanDownload.getArtifactsToDownload();
     artifactsToDownload.forEach(artifact => {
-      expect(artifact.version).toContain('v5.0.0');
-      expect(artifact.artifactName).toBe('podman-5.0.0-setup.exe');
-      expect(artifact.downloadName).toBe('podman-5.0.0-setup.exe');
+      expect(artifact.version).not.toMatch(/\s/);
+      expect(artifact.artifactName).not.toMatch(/\s/);
+      expect(artifact.downloadName).not.toMatch(/\s/);
     });
   });
 });

@@ -111,11 +111,12 @@ const config = {
         to: 'win-ca/roots.exe',
       });
       // add podman installer
-      context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-*.exe`);
       if (context.arch === Arch.x64) {
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-amd64.exe`);
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-x64.zst`);
       }
       if (context.arch === Arch.arm64) {
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-arm64.exe`);
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
       }
     }

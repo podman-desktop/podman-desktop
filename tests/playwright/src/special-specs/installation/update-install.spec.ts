@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
   // Running the test to make sure we download correct architecture of the installer file
   // setup.exe should contain both installers (for x64 and arm64) so that option is always valid
   // or depending on what process.arch returns
-  test(`Correct installer file is downloaded for ${process.arch} architecture during update`, async () => {
+  test(`Correct Podman Desktop installer file is downloaded for ${process.arch} architecture during update`, async () => {
     test.skip(isLinux, 'This test runs only on Windows and Mac platform');
     const fileFormatRegexp = isWindows ? 'exe' : 'zip|dmg';
     const generalInstallerPattern = isWindows ? 'setup' : 'universal';
