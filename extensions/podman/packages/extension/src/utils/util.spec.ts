@@ -157,25 +157,36 @@ test('expect wsl name with provider wsl label', async () => {
 describe('Check multiple Podman installations', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.spyOn(podmanCli, 'isMultiplePodmanInstalled').mockResolvedValue(false);
+    vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue([]);
   });
 
   test('should return empty warnings when no Podman installation provided', async () => {
     const warnings = await getMultiplePodmanInstallationsWarnings(undefined);
 
     expect(warnings).toEqual([]);
-    expect(podmanCli.isMultiplePodmanInstalled).not.toHaveBeenCalled();
+    expect(podmanCli.findPodmanInstallations).not.toHaveBeenCalled();
   });
 
-  test('should return empty warnings when no multiple installations detected', async () => {
+  test('should return empty warnings when custom binary path is set', async () => {
+    vi.spyOn(podmanCli, 'getCustomBinaryPath').mockReturnValue('/custom/path/podman');
+
     const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
 
     expect(warnings).toEqual([]);
-    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
+    expect(podmanCli.findPodmanInstallations).not.toHaveBeenCalled();
+  });
+
+  test('should return empty warnings when only one installation detected', async () => {
+    vi.mocked(podmanCli.findPodmanInstallations).mockResolvedValue(['/usr/bin/podman']);
+
+    const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
+
+    expect(warnings).toEqual([]);
+    expect(podmanCli.findPodmanInstallations).toHaveBeenCalledOnce();
   });
 
   test('should return warning when multiple installations detected', async () => {
-    vi.mocked(podmanCli.isMultiplePodmanInstalled).mockResolvedValue(true);
+    vi.mocked(podmanCli.findPodmanInstallations).mockResolvedValue(['/usr/bin/podman', '/usr/local/bin/podman']);
 
     const warnings = await getMultiplePodmanInstallationsWarnings({ version: '5.0.0' });
 
@@ -183,9 +194,9 @@ describe('Check multiple Podman installations', () => {
       {
         name: 'Multiple Podman installations detected',
         details:
-          'You have multiple Podman installations. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
+          'You have multiple Podman instances in your PATH: /usr/bin/podman, /usr/local/bin/podman. This may cause conflicts. Consider leaving one installation or configure custom binary path in the Podman extension settings to avoid issues.',
       },
     ]);
-    expect(podmanCli.isMultiplePodmanInstalled).toHaveBeenCalledOnce();
+    expect(podmanCli.findPodmanInstallations).toHaveBeenCalledOnce();
   });
 });
