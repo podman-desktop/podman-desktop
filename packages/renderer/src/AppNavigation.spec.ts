@@ -40,6 +40,15 @@ const eventsMock = vi.fn();
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
+class ResizeObserverMock {
+  private _cb: ResizeObserverCallback;
+  constructor(cb: ResizeObserverCallback) {
+    this._cb = cb;
+  }
+  observe(): void {}
+  disconnect(): void {}
+}
+
 vi.mock('/@/stores/kubernetes-contexts-state', async () => {
   return {};
 });
@@ -52,6 +61,7 @@ beforeAll(() => {
   onDidChangeConfiguration.addEventListener = vi.fn().mockImplementation((message: string, callback: () => void) => {
     callbacks.set(message, callback);
   });
+  global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 });
 
 test('Test rendering of the navigation bar with empty items', async (_arg: unknown) => {
