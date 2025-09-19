@@ -1117,7 +1117,7 @@ export class ContainerProviderRegistry {
   async pushImage(
     engineId: string,
     imageTag: string,
-    callback: (name: string, data: string) => void,
+    callback: (name: 'first-message' | 'data' | 'end', data: string) => void,
     authInfo?: containerDesktopAPI.ContainerAuthInfo,
     abortController?: AbortController,
   ): Promise<void> {
@@ -1130,18 +1130,12 @@ export class ContainerProviderRegistry {
         authconfig,
         abortSignal: abortController?.signal,
       });
-      pushStream.on('end', () => {
-        callback('end', '');
-      });
-      let firstMessage = true;
+      pushStream.once('data', callback.bind(undefined, 'first-message'));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pushStream.on('data', (chunk: any) => {
-        if (firstMessage) {
-          firstMessage = false;
-          callback('first-message', '');
-        }
         callback('data', chunk.toString('utf-8'));
       });
+      pushStream.on('end', callback.bind(undefined, 'end'));
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
