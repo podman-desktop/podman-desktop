@@ -6,6 +6,7 @@ import ProviderConfiguring from '/@/lib/dashboard/ProviderConfiguring.svelte';
 import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
 
 import { providerInfos } from '../../stores/providers';
+import ExploreFeatures from '../explore-features/ExploreFeatures.svelte';
 import LearningCenter from '../learning-center/LearningCenter.svelte';
 import NotificationsBox from './NotificationsBox.svelte';
 import ProviderConfigured from './ProviderConfigured.svelte';
@@ -47,6 +48,7 @@ function getInitializationContext(id: string): InitializationContext {
       <div class="px-5 space-y-5 h-full">
         <ReleaseNotesBox />
         <ExtensionBanners />
+        <ExploreFeatures />
         <LearningCenter />
         <!-- Provider is ready display a box to indicate some information -->
         {#if providersReady.length > 0}
