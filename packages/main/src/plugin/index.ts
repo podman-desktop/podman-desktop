@@ -103,6 +103,7 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
+import type { LayoutEditItem } from '/@api/layout-registry-info.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
@@ -180,6 +181,7 @@ import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
 import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
+import { LayoutRegistry } from './layout-registry.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
@@ -706,6 +708,9 @@ export class PluginSystem {
     container.bind<ExtensionDevelopmentFolders>(ExtensionDevelopmentFolders).toSelf().inSingletonScope();
     const extensionDevelopmentFolders = container.get<ExtensionDevelopmentFolders>(ExtensionDevelopmentFolders);
     extensionDevelopmentFolders.init();
+
+    container.bind<LayoutRegistry>(LayoutRegistry).toSelf().inSingletonScope();
+    const layoutRegistry = container.get<LayoutRegistry>(LayoutRegistry);
 
     container.bind<PinRegistry>(PinRegistry).toSelf().inSingletonScope();
     const pinRegistry = container.get<PinRegistry>(PinRegistry);
@@ -2026,6 +2031,35 @@ export class PluginSystem {
         // extract child key with first name after first . notation
         const childKey = key.substring(key.indexOf('.') + 1);
         return configurationRegistry.getConfiguration(parentKey, scope).get(childKey);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-registry:loadLayoutConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<LayoutEditItem[]> => {
+        return layoutRegistry.loadLayoutConfig(key, availableColumns);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-registry:saveLayoutConfig',
+      async (_listener: Electron.IpcMainInvokeEvent, key: string, items: LayoutEditItem[]): Promise<void> => {
+        return layoutRegistry.saveLayoutConfig(key, items);
+      },
+    );
+
+    this.ipcHandle(
+      'layout-registry:resetLayoutConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<LayoutEditItem[]> => {
+        return layoutRegistry.resetLayoutConfig(key, availableColumns);
       },
     );
 
