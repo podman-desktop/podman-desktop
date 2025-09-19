@@ -826,3 +826,91 @@ test('Expect update button to show up when an update is available to a new versi
   expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
   expect(window.updateProvider).toHaveBeenCalled();
 });
+
+describe('Kind cluster creation button', () => {
+  const kindProviderInfo: ProviderInfo = {
+    ...providerInfo,
+    id: 'kind',
+    name: 'Kind',
+    extensionId: 'kind',
+    containerProviderConnectionCreation: false,
+    kubernetesProviderConnectionCreation: true,
+    kubernetesProviderConnectionCreationDisplayName: 'Kind cluster',
+    kubernetesProviderConnectionCreationButtonTitle: 'Create new',
+    containerConnections: [],
+    internalId: '1',
+  };
+
+  test('Expect Kind create button to be enabled when Podman VM is running', async () => {
+    const podmanProvider = {
+      ...providerInfo,
+      containerConnections: [
+        { ...providerInfo.containerConnections[0], status: 'started' as ProviderConnectionStatus },
+      ],
+    };
+    providerInfos.set([kindProviderInfo, podmanProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const createButton = screen.getByRole('button', { name: 'Create new Kind cluster' });
+    expect(createButton).toBeEnabled();
+  });
+
+  test('Expect Kind create button to be disabled when Podman VM is stopped', async () => {
+    const podmanProvider = {
+      ...providerInfo,
+      containerConnections: [
+        { ...providerInfo.containerConnections[0], status: 'stopped' as ProviderConnectionStatus },
+      ],
+    };
+    providerInfos.set([kindProviderInfo, podmanProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const createButton = screen.getByRole('button', { name: 'Create new Kind cluster' });
+    expect(createButton).toBeDisabled();
+  });
+
+  test('Expect Kind create button to be disabled when no Podman provider exists', async () => {
+    providerInfos.set([kindProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+
+    const createButton = screen.getByRole('button', { name: 'Create new Kind cluster' });
+    expect(createButton).toBeDisabled();
+  });
+
+  test('Expect Kind create button to show correct tooltip when disabled', async () => {
+    const podmanProvider = {
+      ...providerInfo,
+      containerConnections: [
+        { ...providerInfo.containerConnections[0], status: 'stopped' as ProviderConnectionStatus },
+      ],
+    };
+    providerInfos.set([kindProviderInfo, podmanProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const createButton = screen.getByRole('button', { name: 'Create new Kind cluster' });
+    await userEvent.hover(createButton);
+    const tooltip = await screen.findByText('Please start Podman VM first');
+    expect(tooltip).toBeInTheDocument();
+  });
+
+  test('Expect non-Kind providers to not be affected by Podman VM status', async () => {
+    const dockerProvider = {
+      ...kindProviderInfo,
+      id: 'docker',
+      name: 'Docker',
+      kubernetesProviderConnectionCreationDisplayName: 'Docker cluster',
+    };
+    const podmanProvider = {
+      ...providerInfo,
+      containerConnections: [
+        { ...providerInfo.containerConnections[0], status: 'stopped' as ProviderConnectionStatus },
+      ],
+    };
+
+    providerInfos.set([dockerProvider, podmanProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const createButton = screen.getByRole('button', { name: 'Create new Docker cluster' });
+    expect(createButton).toBeEnabled(); // Should remain enabled despite Podman being stopped
+  });
+});
