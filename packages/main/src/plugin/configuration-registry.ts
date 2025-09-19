@@ -23,7 +23,14 @@ import { isDeepStrictEqual } from 'node:util';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import {
+  CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_MANAGED_DEFAULTS_SCOPE,
+  MANAGED_DEFAULTS_FILE_LINUX,
+  MANAGED_DEFAULTS_FILE_MAC,
+  MANAGED_DEFAULTS_FILE_WINDOWS_DIR,
+  MANAGED_DEFAULTS_FILE_WINDOWS_FILE,
+} from '/@api/configuration/constants.js';
 import type {
   ConfigurationScope,
   IConfigurationChangeEvent,
@@ -35,6 +42,7 @@ import type { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
+import { isLinux, isMac, isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
 import { Directories } from './directories.js';
@@ -69,11 +77,28 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationContributors = [];
     this.configurationValues = new Map();
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
+    this.configurationValues.set(CONFIGURATION_MANAGED_DEFAULTS_SCOPE, {});
   }
 
   protected getSettingsFile(): string {
     // create directory if it does not exist
     return path.resolve(this.directories.getConfigurationDirectory(), 'settings.json');
+  }
+
+  // If all else fails, we will fallback to Linux-style path as it's the most "generic" and
+  // likely to work in more environments where the OS isn't detected properly, such as "unix-like"
+  // platforms like FreeBSD, etc.
+  protected getManagedDefaultsFile(): string {
+    if (isMac()) {
+      return MANAGED_DEFAULTS_FILE_MAC;
+    } else if (isWindows()) {
+      const programData = process.env['PROGRAMDATA'] ?? 'C:\\ProgramData';
+      return path.join(programData, MANAGED_DEFAULTS_FILE_WINDOWS_DIR, MANAGED_DEFAULTS_FILE_WINDOWS_FILE);
+    } else if (isLinux()) {
+      return MANAGED_DEFAULTS_FILE_LINUX;
+    }
+    // Fallback to Linux-style path
+    return MANAGED_DEFAULTS_FILE_LINUX;
   }
 
   public init(): NotificationCardOptions[] {
@@ -111,7 +136,34 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       configData = {};
     }
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
+    // Load managed defaults
+    this.loadManagedDefaults();
+
     return notifications;
+  }
+
+  private loadManagedDefaults(): void {
+    // "Create" the managed defaults file
+    const managedDefaultsFile = this.getManagedDefaultsFile();
+    let managedDefaultsData = {};
+
+    // It's important that we at least log to console what is happening here, as it's common for logs
+    // to be shared when there are issues loading "managed-by" defaults, so having this information in the logs is useful.
+    if (fs.existsSync(managedDefaultsFile)) {
+      try {
+        const managedDefaultsContent = fs.readFileSync(managedDefaultsFile, 'utf-8');
+        managedDefaultsData = JSON.parse(managedDefaultsContent);
+        console.log(`[Managed-by]: Loaded managed defaults from: ${managedDefaultsFile}`);
+      } catch (error) {
+        console.error(`[Managed-by]: Failed to parse managed defaults from ${managedDefaultsFile}:`, error);
+      }
+    } else {
+      console.log(`[Managed-by]: Managed defaults file not found at: ${managedDefaultsFile}`);
+    }
+
+    // Finally we set it similar to our other configuration scopes
+    this.configurationValues.set(CONFIGURATION_MANAGED_DEFAULTS_SCOPE, managedDefaultsData);
   }
 
   /**
