@@ -56,7 +56,7 @@ export class WindowsStartup {
     const minimize = preferencesConfig.get<boolean>('login.minimize');
 
     // We pass in "--minimize" so electron can read the flag on first startup.
-    const args = minimize ? ['--minimized'] : [];
+    const args = minimize ? ['--minimize'] : [];
     // check if we are using the portable mode.
     // in that case we need to register the binary path to the portable file
     // and not where it is being expanded
