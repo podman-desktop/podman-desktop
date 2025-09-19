@@ -22,6 +22,8 @@ import { render, screen } from '@testing-library/svelte';
 import * as xterm from '@xterm/xterm';
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import { containerLogsClearTimestamps } from '/@/stores/container-logs';
+
 import ContainerDetailsLogs from './ContainerDetailsLogs.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
@@ -69,6 +71,8 @@ const container: ContainerInfoUI = {
   id: 'foo',
 } as unknown as ContainerInfoUI;
 
+containerLogsClearTimestamps.set({ foo: '2025-07-31T21:10:35.000Z' });
+
 test('Render container logs ', async () => {
   // grab the xterm mock
   let writeMock: unknown | undefined;
@@ -81,7 +85,12 @@ test('Render container logs ', async () => {
 
   // expect a call to logsContainer
   await vi.waitFor(() => {
-    expect(window.logsContainer).toHaveBeenCalled();
+    expect(window.logsContainer).toHaveBeenCalledWith({
+      engineId: container.engineId,
+      containerId: container.id,
+      callback: expect.any(Function),
+      since: '2025-07-31T21:10:35.000Z',
+    });
   });
   // now, get the callback of the method
   const params = vi.mocked(window.logsContainer).mock.calls[0][0];

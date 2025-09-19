@@ -1185,6 +1185,9 @@ export class PluginSystem {
           containerId: string;
           onDataId: number;
           cancellableTokenId?: number;
+          timestamps?: boolean;
+          tail?: number;
+          since?: string;
         },
       ): Promise<void> => {
         const abortController = this.createAbortControllerOnCancellationToken(
@@ -1204,6 +1207,9 @@ export class PluginSystem {
             );
           },
           abortController,
+          timestamps: logsParams.timestamps,
+          tail: logsParams.tail,
+          since: logsParams.since,
         });
       },
     );

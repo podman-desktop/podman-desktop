@@ -2762,6 +2762,17 @@ test('container logs callback notified when messages arrive', async () => {
   });
   await containerRegistry.logsContainer({ engineId: 'podman', id: 'containerId', callback });
 
+  const callArgs = vi.mocked(dockerodeContainer.logs).mock.calls[0]?.[0];
+
+  expect(callArgs).toStrictEqual({
+    follow: true,
+    stdout: true,
+    stderr: true,
+    abortSignal: undefined,
+    tail: undefined,
+    timestamps: undefined,
+  });
+
   setTimeout(() => {
     stream.emit('data', 'log message');
     stream.emit('end', '');
