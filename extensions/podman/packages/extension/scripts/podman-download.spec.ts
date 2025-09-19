@@ -176,6 +176,17 @@ describe('macOS platform', () => {
       'podman-installer-macos-universal.pkg',
     );
   });
+
+  test('PodmanDownload artifacts do not contain whitespace character', async () => {
+    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    // check called with the correct parameters
+    const artifactsToDownload = podmanDownload.getArtifactsToDownload();
+    artifactsToDownload.forEach(artifact => {
+      expect(artifact.version).not.toMatch(/\s/);
+      expect(artifact.artifactName).not.toMatch(/\s/);
+      expect(artifact.downloadName).not.toMatch(/\s/);
+    });
+  });
 });
 
 describe('windows platform', () => {
@@ -265,6 +276,17 @@ describe('windows platform', () => {
 
     // check no airgap download
     expect(podman5DownloadMachineOSSpy).not.toHaveBeenCalled();
+  });
+
+  test('PodmanDownload artifacts do not contain whitespace character', async () => {
+    const podmanDownload = new TestPodmanDownload(podman5JSON, true);
+    // check called with the correct parameters
+    const artifactsToDownload = podmanDownload.getArtifactsToDownload();
+    artifactsToDownload.forEach(artifact => {
+      expect(artifact.version).not.toMatch(/\s/);
+      expect(artifact.artifactName).not.toMatch(/\s/);
+      expect(artifact.downloadName).not.toMatch(/\s/);
+    });
   });
 });
 
