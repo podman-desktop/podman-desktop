@@ -38,22 +38,24 @@ let connections = $derived.by(() => {
 </script>
 
 <Tooltip top={!tooltipTopRight} topRight={tooltipTopRight} class="mb-[20px]">
-  <div slot="tip" class="py-2 px-4" hidden={disableTooltip}>
-    <div class="flex flex-col">
-      {#if entry.updateInfo?.version}
-        <div class="flex flex-row h-fit pb-1">
-          Update available
-        </div>
-      {/if}
-      {#each connections as connection (connection.name)}
-        <div class="flex flex-row items-center h-fit">
-          <ProviderWidgetStatus status={connection.status} class="mr-1"/>
-          <ProviderWidgetStatusStyle status={connection.status}/>
-          : {connection.name}
-        </div>
-      {/each}
+  {#snippet tipSnippet()}
+    <div class="py-2 px-4" hidden={disableTooltip}>
+      <div class="flex flex-col">
+        {#if entry.updateInfo?.version}
+          <div class="flex flex-row h-fit pb-1">
+            Update available
+          </div>
+        {/if}
+        {#each connections as connection (connection.name)}
+          <div class="flex flex-row items-center h-fit">
+            <ProviderWidgetStatus status={connection.status} class="mr-1"/>
+            <ProviderWidgetStatusStyle status={connection.status}/>
+            : {connection.name}
+          </div>
+        {/each}
+      </div>
     </div>
-  </div>
+  {/snippet}
   <ProviderButton
     class={className}
     provider={entry}
