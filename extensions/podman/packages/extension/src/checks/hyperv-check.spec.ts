@@ -105,7 +105,7 @@ test('expect HyperV preflight skips podman version check if installationPrefligh
   // exec should only be called once inside the isUserAdmin function, if so the podman check has been skipped as expected
   expect(execSpy).toBeCalledTimes(1);
   expect(execSpy).toBeCalledWith('powershell.exe', [
-    '$null -ne (whoami /groups /fo csv | ConvertFrom-Csv | Where-Object {$_.SID -eq "S-1-5-32-544"})',
+    '$null -ne (& "$env:WINDIR\\System32\\whoami.exe" /groups /fo csv | ConvertFrom-Csv | Where-Object {$_.SID -eq "S-1-5-32-544"})',
   ]);
   expect(result.successful).toBeFalsy();
 });
