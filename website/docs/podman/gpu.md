@@ -121,11 +121,11 @@ You might need to restart your Podman machine.
 - [NVIDIA Container Toolkit Installation](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf)
 
 </TabItem>
-   <TabItem value="macOS" label="macOS (Silicon)" className="markdown">
+   <TabItem value="macOS" label="macOS (Apple silicon)" className="markdown">
 
 #### Prerequisites
 
-- macOS Silicon (M1 or later)
+- Mac with Apple silicon (M1 or later)
 
 #### Procedure
 
@@ -216,7 +216,7 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
 
 4. Configure SELinux (if applicable)
 
-   On SELinux-enabled OSes, such as OSs from the Fedora family, the default policy usually disallows containers to have direct access to devices. We make sure it's allowed.
+   On SELinux-enabled operating systems, such as the Fedora family, the default policy usually disallows containers to have direct access to devices. We make sure it's allowed.
 
    Check whether SELinux is installed and enabled:
 
