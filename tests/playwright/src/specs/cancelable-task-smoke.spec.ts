@@ -53,12 +53,10 @@ test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
     await extensionsPage.installExtensionFromOCIImage(longRunningTaskName);
   });
 
-  test('Execute long running task', async ({ page }) => {
+  test('Cancel long running task', async ({ page }) => {
     const commandPalettePage = new CommandPalette(page);
     await commandPalettePage.executeCommand(taskName);
-  });
 
-  test('Cancel long running task', async ({ page }) => {
     const statusBar = new StatusBar(page);
     const tasksPage = await statusBar.openTasksPage();
     await playExpect(tasksPage.heading).toBeVisible();
@@ -66,13 +64,12 @@ test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
     await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
   });
 
-  test('Execute long running task to completion', async ({ page }) => {
-    const commandPalettePage = new CommandPalette(page);
-    await commandPalettePage.executeCommand(taskName);
-  });
-
   test('Check that task is finished successfully', async ({ page }) => {
     test.setTimeout(200_000);
+
+    const commandPalettePage = new CommandPalette(page);
+    await commandPalettePage.executeCommand(taskName);
+
     const tasksPage = new TasksPage(page);
     await playExpect(tasksPage.heading).toBeVisible();
     await playExpect
