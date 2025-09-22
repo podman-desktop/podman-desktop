@@ -29,8 +29,8 @@ async function closeCard(): Promise<void> {
 
 <div
   class="flex flex-col flex-1 relative bg-[var(--pd-content-card-carousel-card-bg)] pb-4 rounded-lg hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] w-[360px] h-[400px]">
-  <CloseButton onclick={closeCard} class="absolute right-2 top-2 text-[var(--pd-content-card-carousel-card-bg)]"/>
-  <img src={feature.img} class="w-full max-h-[40%] object-cover rounded-t-sm" alt={feature.id} />
+  <CloseButton onclick={closeCard} class="absolute right-2 top-2 text-[var(--pd-content-card-carousel-card-bg)] shadow-md/20"/>
+  <img src={feature.img} class="w-full max-h-[40%] object-cover rounded-t-sm pointer-events-none" alt={feature.id} />
   <div class="p-4 flex flex-col h-full">
     <div class="pt-4 text-nowrap text-[var(--pd-content-card-carousel-card-header-text)] font-semibold">
       {feature.title}
