@@ -74,7 +74,7 @@
   "devDependencies": {
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
-    "vite": "^7.1.6",
+    "vite": "^7.1.7",
     "vitest": "^3.2.4",
     "tmp-promise": "^3.0.3"
   }
