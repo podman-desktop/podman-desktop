@@ -19,7 +19,7 @@
 import { TaskState } from '../model/core/states';
 import { CommandPalette } from '../model/pages/command-palette';
 import { ExperimentalPage } from '../model/pages/experimental-page';
-import { SettingsBar } from '../model/pages/settings-bar';
+import { TasksPage } from '../model/pages/tasks-page';
 import { StatusBar } from '../model/workbench/status-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -40,11 +40,11 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
-  test('Enable all experimental features', async ({ page, navigationBar }) => {
-    await navigationBar.openSettings();
-    await page.screenshot();
-    const settingsBar = new SettingsBar(page);
+  test('Enable all experimental features', async ({ navigationBar }) => {
+    const settingsBar = await navigationBar.openSettings();
+
     const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+    await playExpect(experimentalPage.heading).toBeVisible({ timeout: 10_000 });
     await experimentalPage.enableAllExperimentalFeatures();
   });
 
@@ -64,5 +64,26 @@ test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
     await playExpect(tasksPage.heading).toBeVisible();
     await tasksPage.cancelLatestTask();
     await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
+  });
+
+  test('Execute long running task to completion', async ({ page }) => {
+    const commandPalettePage = new CommandPalette(page);
+    await commandPalettePage.executeCommand(taskName);
+  });
+
+  test('Check that task is finished successfully', async ({ page }) => {
+    test.setTimeout(200_000);
+    const tasksPage = new TasksPage(page);
+    await playExpect(tasksPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await tasksPage.getStatusForLatestTask(), { timeout: 180_000 })
+      .toContain(TaskState.Success);
+  });
+
+  test('Clear all tasks', async ({ page }) => {
+    const tasksPage = new TasksPage(page);
+    await playExpect(tasksPage.heading).toBeVisible();
+    await tasksPage.clearAllTasks();
+    await playExpect(tasksPage.taskList).toHaveCount(0);
   });
 });

@@ -39,17 +39,21 @@ export class ExperimentalPage extends SettingsPage {
 
   public async enableAllExperimentalFeatures(): Promise<void> {
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).toBeVisible();
-    if (await this.enableAllExperimentalFeaturesCheckbox.isChecked()) return;
 
-    await this.enableAllExperimentalFeaturesButton.check();
+    if (!(await this.enableAllExperimentalFeaturesCheckbox.isChecked())) {
+      await this.enableAllExperimentalFeaturesButton.check();
+    }
+
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).toBeChecked();
   }
 
   public async disableAllExperimentalFeatures(): Promise<void> {
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).toBeVisible();
-    if (!(await this.enableAllExperimentalFeaturesCheckbox.isChecked())) return;
 
-    await this.enableAllExperimentalFeaturesButton.uncheck();
+    if (await this.enableAllExperimentalFeaturesCheckbox.isChecked()) {
+      await this.enableAllExperimentalFeaturesButton.uncheck();
+    }
+
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).not.toBeChecked();
   }
 

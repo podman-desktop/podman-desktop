@@ -25,6 +25,7 @@ import { BasePage } from './base-page';
 export class TasksPage extends BasePage {
   readonly heading: Locator;
   readonly taskList: Locator;
+  readonly clearAllButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -32,6 +33,7 @@ export class TasksPage extends BasePage {
       name: 'Tasks',
     });
     this.taskList = page.getByRole('rowgroup').nth(1);
+    this.clearAllButton = page.getByRole('button', { name: 'Clear All' });
   }
 
   async cancelLatestTask(): Promise<void> {
@@ -44,5 +46,10 @@ export class TasksPage extends BasePage {
 
   async getStatusForLatestTask(): Promise<string> {
     return (await this.taskList.getByRole('status').first().textContent()) ?? '';
+  }
+
+  async clearAllTasks(): Promise<void> {
+    await playExpect(this.clearAllButton).toBeEnabled({ timeout: 10_000 });
+    await this.clearAllButton.click();
   }
 }
