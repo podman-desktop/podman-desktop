@@ -8,14 +8,14 @@ hide_table_of_contents: false
 image: /img/blog/3million/banner.jpg
 ---
 
-![Banner announcing 3 million users](/img/blog/3million/banner.jpg)
+![Banner announcing 3 million downloads](/img/blog/3million/banner.jpg)
 
-## Wooohooo !!
+## Wooohooo!!
 
 We are extremely excited to share that Podman Desktop just crossed _3,000,000 downloads_! This is a huge step for the project and we are incredibly thankful for how each of you has helped! This milestone belongs to you. You file issues, suggest features, build extensions, teach teammates, and nudge us to make the day-to-day better. Thank you for helping turn an idea into a tool people rely on.
 
 To celebrate this milestone, and thank you, we built a small surprise:
-[https://3m.podman-desktop.io](https://3m.podman-desktop.io)
+[https://3m.podman-desktop.io](https://3m.podman-desktop.io/)
 
 We are grateful for all the feedback we have been receiving, here is just a short collection:
 
@@ -32,9 +32,9 @@ Here’s other noteworthy milestones we’ve reached in our quest to help develo
 
 ## Podman Desktop is now an official CNCF Sandbox Project
 
-Last year, we proudly contributed Podman Desktop to the **Cloud Native Computing Foundation (CNCF)**. And now, we’ve officially been **accepted into the CNCF Sandbox** as of **January 21, 2025**! 🎉
+Last year, we proudly contributed Podman Desktop to the **Cloud Native Computing Foundation (CNCF)**, and we were **accepted into the CNCF Sandbox on January 21, 2025**. 🎉
 
-This milestone highlights our commitment to building open, community-driven tools that empower developers to seamlessly work with containers and Kubernetes. Joining the CNCF Sandbox is just the beginning. Reaching this 3 million downloads milestone, shows the need to build a vibrant cloud-native ecosystem and collaborate with the community to take Podman Desktop even further.
+This milestone highlights our commitment to building open, community-driven tools that empower developers to seamlessly work with containers and Kubernetes. Joining the CNCF Sandbox is just the beginning. Reaching this 3 million downloads milestone shows the need to build a vibrant cloud‑native ecosystem and collaborate with the community to take Podman Desktop even further.
 
 ## Highlights from the past year
 
