@@ -45,16 +45,14 @@ elif [ "$1" -eq 255 ]; then
 
   if [ -d "$OUTPUT_DIR/traces" ]; then
     cp -r "$OUTPUT_DIR/traces" .
-  else 
-    echo "Error: traces directory does not exist"
-    exit 1
+  else
+    echo "Warning: traces directory does not exist" >&2
   fi
 
   if [ -d "$OUTPUT_DIR/videos" ]; then 
     cp -r "$OUTPUT_DIR/videos" .
-  else 
-    echo "Error: videos directory does not exist"
-    exit 1
+  else
+    echo "Warning: videos directory does not exist" >&2
   fi
 
   cat <<EOF > ./results.yaml
@@ -70,6 +68,14 @@ elif [ "$1" -eq 255 ]; then
 EOF
 
 else
-  echo "Unexpected exit code: $1"
-  exit 1
+  echo "Warning: Unexpected exit code: $1, treating as failure" >&2
+  cat <<EOF > ./results.yaml
+- name: /tests/$2
+  result: fail
+  note: 
+    - "Tests failed with unexpected exit code: $1"
+  log:
+    - ../output.txt
+EOF
 fi
+exit 0

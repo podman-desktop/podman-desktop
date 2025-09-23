@@ -17,7 +17,7 @@
 #  ***********************************************************************/
 
 #!/bin/bash
-set -eu
+set -euo pipefail
 
 # Uninstall a preinstalled Podman version to ensure the desired version will be installed.
 sudo dnf remove -y podman

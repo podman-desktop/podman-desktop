@@ -29,3 +29,4 @@ test: |
   pnpm test:e2e:smoke
   EXIT_CODE=$?
   bash "$TMT_TREE/tmt/scripts/create-results.sh" "$EXIT_CODE" "smoke"
+ 
