@@ -20,6 +20,10 @@
 set -euo pipefail
 
 KIND_VERSION=$(curl -s https://api.github.com/repos/kubernetes-sigs/kind/releases/latest | jq -r .tag_name)
+if [ -z "$KIND_VERSION" ]; then
+  echo "Failed to fetch Kind version"
+  exit 1
+fi
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64
 chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind

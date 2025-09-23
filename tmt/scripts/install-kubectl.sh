@@ -19,7 +19,12 @@
 #!/bin/bash
 set -euo pipefail
 
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+if [ -z "$KUBECTL_VERSION" ]; then
+  echo "Failed to fetch Kubectl version"
+  exit 1
+fi
+curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 kubectl version --client
