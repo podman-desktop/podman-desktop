@@ -1,53 +1,53 @@
 <style>
-  .tooltip.top {
-    left: 50%;
-    transform: translate(-50%, -100%);
-    margin-top: -8px;
-  }
-  .tooltip.bottom {
-    left: 50%;
-    bottom: 0;
-    transform: translate(-50%, 100%);
-    margin-bottom: -8px;
-  }
-  .tooltip.left {
-    left: 0;
-    transform: translateX(-100%);
-    margin-left: -8px;
-  }
-  .tooltip.right {
-    right: 0;
-    transform: translate(100%, -50%);
-    margin-top: -10px;
-    margin-right: -8px;
-  }
-  .tooltip.top-left {
-    left: 0;
-    transform: translate(-80%, -100%);
-    margin-top: -8px;
-  }
-  .tooltip.bottom-left {
-    left: 0;
-    bottom: 0;
-    transform: translate(-80%, 100%);
-    margin-top: -8px;
-  }
-  .tooltip.bottom-right {
-    left: 0;
-    bottom: 0;
-    transform: translate(0%, 100%);
-    margin-top: -8px;
-  }
-  .tooltip.top-right {
-    left: 0;
-    transform: translate(0%, -100%);
-    margin-top: -8px;
-  }
-  .tooltip-slot:hover + .tooltip {
-    opacity: 1;
-    visibility: initial;
-  }
-  </style>
+.tooltip.top {
+  left: 50%;
+  transform: translate(-50%, -100%);
+  margin-top: -8px;
+}
+.tooltip.bottom {
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 100%);
+  margin-bottom: -8px;
+}
+.tooltip.left {
+  left: 0;
+  transform: translateX(-100%);
+  margin-left: -8px;
+}
+.tooltip.right {
+  right: 0;
+  transform: translate(100%, -50%);
+  margin-top: -10px;
+  margin-right: -8px;
+}
+.tooltip.top-left {
+  left: 0;
+  transform: translate(-80%, -100%);
+  margin-top: -8px;
+}
+.tooltip.bottom-left {
+  left: 0;
+  bottom: 0;
+  transform: translate(-80%, 100%);
+  margin-top: -8px;
+}
+.tooltip.bottom-right {
+  left: 0;
+  bottom: 0;
+  transform: translate(0%, 100%);
+  margin-top: -8px;
+}
+.tooltip.top-right {
+  left: 0;
+  transform: translate(0%, -100%);
+  margin-top: -8px;
+}
+.tooltip-slot:hover + .tooltip {
+  opacity: 1;
+  visibility: initial;
+}
+</style>
 
 <script lang="ts">
 import type { Snippet } from 'svelte';
