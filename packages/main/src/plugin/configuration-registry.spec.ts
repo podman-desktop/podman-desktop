@@ -46,6 +46,11 @@ vi.mock('node:fs', () => ({
   },
 }));
 
+// mock DefaultConfiguration for the new managed defaults functionality
+vi.mock('./default-configuration.js', () => ({
+  DefaultConfiguration: vi.fn(),
+}));
+
 let configurationRegistry: ConfigurationRegistry;
 
 const getConfigurationDirectoryMock = vi.fn();
