@@ -36,7 +36,6 @@ provision:
       - size: ">= 20 GB"
 
 environment:
-  TEST_PODMAN_MACHINE: true
   SKIP_COMPOSE_ONBOARDING_TEST: true
 
 

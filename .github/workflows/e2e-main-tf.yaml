@@ -138,8 +138,10 @@ jobs:
             "$TF_VIDEOS_URL"
 
       - name: Upload test artifacts
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: testing-farm-artifacts-${{ matrix.fedora-version }}
-          path: results/*
+          path: |
+            results/*
+            **/playwright-junit-results.xml
