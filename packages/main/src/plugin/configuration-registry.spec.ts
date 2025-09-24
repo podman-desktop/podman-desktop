@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+// Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
+import * as fs from 'node:fs';
+
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
-
-// Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
-import * as fs from 'node:fs';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
@@ -45,16 +45,6 @@ vi.mock('node:fs', () => ({
 
 let configurationRegistry: ConfigurationRegistry;
 
-// Access mocked functions
-const readFileSync = vi.mocked(fs.readFileSync);
-const writeFileSync = vi.mocked(fs.writeFileSync);
-const cpSync = vi.mocked(fs.cpSync);
-const accessMock = vi.mocked(fs.promises.access);
-const mkdirMock = vi.mocked(fs.promises.mkdir);
-const writeFileMock = vi.mocked(fs.promises.writeFile);
-const readFileMock = vi.mocked(fs.promises.readFile);
-const copyFileMock = vi.mocked(fs.promises.copyFile);
-
 const getConfigurationDirectoryMock = vi.fn();
 const directories = {
   getConfigurationDirectory: getConfigurationDirectoryMock,
@@ -74,17 +64,22 @@ beforeEach(async () => {
   vi.clearAllMocks();
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories);
-  readFileSync.mockReturnValue(JSON.stringify({}));
+  // Mock basic fs functions needed for initialization
+  const readFileSync = vi.mocked(fs.readFileSync);
+  const accessMock = vi.mocked(fs.promises.access);
+  const mkdirMock = vi.mocked(fs.promises.mkdir);
+  const writeFileMock = vi.mocked(fs.promises.writeFile);
+  const readFileMock = vi.mocked(fs.promises.readFile);
+  const cpSync = vi.mocked(fs.cpSync);
 
-  // Mock fs.promises methods
+  readFileSync.mockReturnValue(JSON.stringify({}));
   accessMock.mockResolvedValue(undefined);
   mkdirMock.mockResolvedValue(undefined);
   writeFileMock.mockResolvedValue(undefined);
   readFileMock.mockResolvedValue(JSON.stringify({}));
-  copyFileMock.mockResolvedValue(undefined);
-
   cpSync.mockReturnValue(undefined);
+
+  configurationRegistry = new ConfigurationRegistry(apiSender, directories);
   await configurationRegistry.init();
 
   const node: IConfigurationNode = {
@@ -194,6 +189,12 @@ test('Should not find configuration after dispose', async () => {
 });
 
 test('should work with an invalid configuration file', async () => {
+  // Mock fs functions needed for this specific test
+  const readFileSync = vi.mocked(fs.readFileSync);
+  const accessMock = vi.mocked(fs.promises.access);
+  const readFileMock = vi.mocked(fs.promises.readFile);
+  const copyFileMock = vi.mocked(fs.promises.copyFile);
+
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
@@ -358,6 +359,9 @@ describe('should be notified when a configuration is updated', async () => {
 });
 
 test('should remove the object configuration if value is equal to default one', async () => {
+  // Mock fs function needed for this specific test
+  const writeFileSync = vi.mocked(fs.writeFileSync);
+
   const node: IConfigurationNode = {
     id: 'custom',
     title: 'Test Object Property',
