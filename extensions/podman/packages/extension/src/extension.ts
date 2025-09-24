@@ -50,6 +50,7 @@ import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
+import { checkRosettaMacArm } from './utils/rosetta';
 import {
   appConfigDir,
   appHomeDir,
@@ -870,39 +871,6 @@ export async function registerProviderFor(
 
   currentConnections.set(machineInfo.name, disposable);
   storedExtensionContext?.subscriptions.push(disposable);
-}
-
-export async function checkRosettaMacArm(podmanConfiguration: PodmanConfiguration): Promise<void> {
-  // check that rosetta is there for macOS / arm as the machine may fail to start
-  if (extensionApi.env.isMac && os.arch() === 'arm64') {
-    const isEnabled = await podmanConfiguration.isRosettaEnabled();
-    if (isEnabled) {
-      // call the command `arch -arch x86_64 uname -m` to check if rosetta is enabled
-      // if not installed, it will fail
-      try {
-        await extensionApi.process.exec('arch', ['-arch', 'x86_64', 'uname', '-m']);
-      } catch (error: unknown) {
-        const runError = error as RunError;
-        if (runError.stderr?.includes('Bad CPU')) {
-          // rosetta is enabled but not installed, it will fail, stop from there and prompt the user to install rosetta or disable rosetta support
-          const result = await extensionApi.window.showInformationMessage(
-            'Podman machine is configured to use Rosetta but the support is not installed. The startup of the machine will fail.\nDo you want to install Rosetta? Rosetta is allowing to execute amd64 images on Apple silicon architecture.',
-            'Yes',
-            'No',
-            'Disable rosetta support',
-          );
-          if (result === 'Yes') {
-            // ask the person to perform the installation using cli
-            await extensionApi.window.showInformationMessage(
-              'Please install Rosetta from the command line by running `softwareupdate --install-rosetta`',
-            );
-          } else if (result === 'Disable rosetta support') {
-            await podmanConfiguration.updateRosettaSetting(false);
-          }
-        }
-      }
-    }
-  }
 }
 
 export async function startMachine(
