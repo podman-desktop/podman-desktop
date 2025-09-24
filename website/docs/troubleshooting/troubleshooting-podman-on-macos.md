@@ -40,7 +40,7 @@ or any similar error denoting that Podman Engine does not exist.
 
 #### Explanation
 
-The Podman Installer and Homebrew use different locations to store the Podman Engine files in the file system. For example, Podman Installer installs Podman Engine in the path `/opt/podman` whereas Homebrew uses the path `/usr/local` for macOS Intel, `/opt/homebrew` for Apple Silicon and `/home/linuxbrew/.linuxbrew` for Linux.
+The Podman Installer and Homebrew use different locations to store the Podman Engine files in the file system. For example, Podman Installer installs Podman Engine in the path `/opt/podman` whereas Homebrew uses the path `/usr/local` for macOS Intel, `/opt/homebrew` for Apple silicon and `/home/linuxbrew/.linuxbrew` for Linux.
 
 #### Solution
 
@@ -68,11 +68,11 @@ Here, you would replace `path-where-podman-exists` with the output of `which pod
 
 You can now proceed for a fresh installation of Podman Desktop
 
-## Podman machine on Apple Silicon
+## Podman machine on Apple silicon
 
 #### Issue
 
-If you are using an Apple Silicon and brew, you might encounter the following error when starting Podman from Podman Desktop
+If you are using an Apple silicon and brew, you might encounter the following error when starting Podman from Podman Desktop
 
 ```shell-session
 Error: qemu exited unexpectedly with exit code 1, stderr: qemu-system-x86_64: invalid accelerator hvf
@@ -163,9 +163,9 @@ Keep your brew-based installation and apply one of these workarounds:
 - [Homebrew issue #140244](https://github.com/Homebrew/homebrew-core/issues/140244).
 - [Podman issue #19708](https://github.com/containers/podman/issues/19708).
 
-## On Apple Silicon, the Podman Machine does not start
+## On Apple silicon, the Podman Machine does not start
 
-On Apple Silicon, when Podman Machine starts, it stays indefinitely blocked with a _Waiting for VM_ message.
+On Apple silicon, when Podman Machine starts, it stays indefinitely blocked with a _Waiting for VM_ message.
 
 #### Solution
 
