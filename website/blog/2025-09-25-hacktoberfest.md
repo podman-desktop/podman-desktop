@@ -13,13 +13,17 @@ October is here and [**Hacktoberfest**](https://hacktoberfest.com/) is back! It�
 
 ## Why Contribute to Podman Desktop?
 
-Podman Desktop is built with developers in mind. It’s a cross-platform tool that helps streamline container workflows, offering features like:
+Podman Desktop is built with developers in mind. **Designed by developers, for developers** !!
+It’s a cross-platform tool that helps streamline container workflows, offering features like:
 
-- **Container management** directly from your desktop.
-- **Kubernetes integration** for local development.
-- **Extension framework** to expand capabilities.
+- **Container management** Manage your containers, images, and pods directly from your desktop.
+- **Kubernetes integration** Run and test workloads in a local Kubernetes environment.
+- **Extension framework** Build custom extensions to expand and personalize the desktop experience.
+- **Modern tech stack** Contribute using TypeScript, Svelte, Tailwind CSS, Electron, Playwright and more!
 
-Your contributions during Hacktoberfest help us improve these workflows and shape the next generation of container tooling.
+And really—what could be more rewarding for a developer than working on a tool that benefits both our peers and ourselves?
+
+Whether you’re fixing a bug, enhancing the UI, or creating a new extension, your contributions will help shape the next generation of container tooling.
 
 ## Contribution Areas
 
