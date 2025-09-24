@@ -31,6 +31,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { HyperVCheck } from './checks/hyperv-check';
+import { HyperVPodmanVersionCheck } from './checks/hyperv-podman-version-check';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { WSLVersionCheck } from './checks/wsl-version-check';
 import { WSL2Check } from './checks/wsl2-check';
@@ -1984,7 +1985,10 @@ export async function isHyperVEnabled(): Promise<boolean> {
   if (!extensionApi.env.isWindows) {
     return false;
   }
-  const hyperVCheck = new HyperVCheck(telemetryLogger);
+  const hyperVCheck = new SequenceCheck('Hyper-V Platform', [
+    new HyperVPodmanVersionCheck(),
+    new HyperVCheck(telemetryLogger),
+  ]);
   const hyperVCheckResult = await hyperVCheck.execute();
   return hyperVCheckResult.successful;
 }

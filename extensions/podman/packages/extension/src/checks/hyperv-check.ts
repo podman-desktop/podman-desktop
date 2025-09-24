@@ -15,21 +15,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type extensionApi from '@podman-desktop/api';
-import { compareVersions } from 'compare-versions';
+import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 
-import { getPodmanInstallation } from '../utils/podman-cli';
 import { getPowerShellClient } from '../utils/powershell';
 import { BaseCheck } from './base-check';
 
 export class HyperVCheck extends BaseCheck {
   title = 'Hyper-V installed';
-  static readonly PODMAN_MINIMUM_VERSION_FOR_HYPERV = '5.2.0';
 
-  constructor(
-    private telemetryLogger: extensionApi.TelemetryLogger,
-    private installationPreflightMode: boolean = false,
-  ) {
+  constructor(private telemetryLogger: TelemetryLogger) {
     super();
   }
 
@@ -53,13 +47,7 @@ export class HyperVCheck extends BaseCheck {
     return client.isHyperVRunning();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
-    // if the hyperv check is called as an installation preflight we skip the podman version check
-    if (!this.installationPreflightMode && !(await this.isPodmanVersionSupported())) {
-      return this.createFailureResult({
-        description: `Hyper-V is only supported with podman version >= ${HyperVCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV}.`,
-      });
-    }
+  async execute(): Promise<CheckResult> {
     if (!(await this.isUserAdmin())) {
       return this.createFailureResult({
         description: 'You must have administrative rights to run Hyper-V Podman machines',
@@ -96,13 +84,5 @@ export class HyperVCheck extends BaseCheck {
       });
     }
     return this.createSuccessfulResult();
-  }
-
-  private async isPodmanVersionSupported(): Promise<boolean> {
-    const installedPodman = await getPodmanInstallation();
-    if (installedPodman?.version) {
-      return compareVersions(installedPodman?.version, HyperVCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
-    }
-    return false;
   }
 }

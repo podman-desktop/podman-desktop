@@ -59,7 +59,7 @@ export class WinInstaller extends BaseInstaller {
           new WSLVersionCheck(),
           new WSL2Check(this.telemetryLogger, this.extensionContext),
         ]),
-        new HyperVCheck(this.telemetryLogger, true),
+        new HyperVCheck(this.telemetryLogger),
       ),
     ];
   }
