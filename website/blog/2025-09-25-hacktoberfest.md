@@ -29,10 +29,10 @@ Whether you’re fixing a bug, enhancing the UI, or creating a new extension, yo
 
 Here are some ways developers can get involved:
 
-- 🐛 **Bug Fixes** – Help identify and resolve issues in the desktop app.
-- 📝 **Documentation** – Refine guides and technical docs to make it easier for others to onboard.
-- 🔌 **Extensions** – Build or improve extensions to extend Podman Desktop’s functionality.
-- 🎨 **UI/UX Improvements** – Enhance user experience for smoother workflows.
+- 🐛 [**Bug Fixes** ](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug)– Help identify and resolve issues in the desktop app.
+- 📝 [**Documentation**](https://podman-desktop.io/docs/intro) – Refine guides and technical docs to make it easier for others to onboard.
+- 🔌 [**Extensions**](https://podman-desktop.io/extend) – Build or improve extensions to extend Podman Desktop’s functionality.
+- 🎨 [**UI/UX Improvements**](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20%20label%3A%22UX%2FUI%20Issue%22) – Enhance user experience for smoother workflows.
 
 ## How to Get Started
 
