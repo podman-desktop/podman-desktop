@@ -53,11 +53,11 @@ import { HttpServer } from './webview/webview-registry.js';
 let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {
-  override initConfigurationRegistry(
+  override async initConfigurationRegistry(
     container: InversifyContainer,
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
-  ): ConfigurationRegistry {
+  ): Promise<ConfigurationRegistry> {
     if (!container.isBound(ConfigurationRegistry)) {
       container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     }
@@ -326,7 +326,7 @@ test('configurationRegistry propagated', async () => {
   inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
   inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
 
-  const configurationRegistry = pluginSystem.initConfigurationRegistry(
+  const configurationRegistry = await pluginSystem.initConfigurationRegistry(
     inversifyContainer,
     notifications,
     configurationRegistryEmitter,

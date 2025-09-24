@@ -33,6 +33,11 @@ let configurationRegistry: ConfigurationRegistry;
 // mock the fs methods
 const readFileSync = vi.spyOn(fs, 'readFileSync');
 const cpSync = vi.spyOn(fs, 'cpSync');
+const accessMock = vi.spyOn(fs.promises, 'access');
+const mkdirMock = vi.spyOn(fs.promises, 'mkdir');
+const writeFileMock = vi.spyOn(fs.promises, 'writeFile');
+const readFileMock = vi.spyOn(fs.promises, 'readFile');
+const copyFileMock = vi.spyOn(fs.promises, 'copyFile');
 
 const getConfigurationDirectoryMock = vi.fn();
 const directories = {
@@ -53,7 +58,7 @@ beforeAll(() => {
   vi.mock('node:fs');
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
   vi.clearAllMocks();
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
@@ -61,8 +66,15 @@ beforeEach(() => {
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
   readFileSync.mockReturnValue(JSON.stringify({}));
 
+  // Mock fs.promises methods
+  accessMock.mockResolvedValue(undefined);
+  mkdirMock.mockResolvedValue(undefined);
+  writeFileMock.mockResolvedValue(undefined);
+  readFileMock.mockResolvedValue(JSON.stringify({}));
+  copyFileMock.mockResolvedValue(undefined);
+
   cpSync.mockReturnValue(undefined);
-  configurationRegistry.init();
+  await configurationRegistry.init();
 
   const node: IConfigurationNode = {
     id: 'my.fake.property',
@@ -176,12 +188,17 @@ test('should work with an invalid configuration file', async () => {
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
   readFileSync.mockReturnValue('invalid JSON content');
 
+  // Mock fs.promises methods for this test
+  accessMock.mockResolvedValue(undefined);
+  readFileMock.mockResolvedValue('invalid JSON content');
+  copyFileMock.mockResolvedValue(undefined);
+
   // configuration is broken but it should not throw any error, just that config is empty
   const originalConsoleError = console.error;
   const mockedConsoleLog = vi.fn();
   console.error = mockedConsoleLog;
   try {
-    configurationRegistry.init().forEach(notification => notificationRegistry.addNotification(notification));
+    (await configurationRegistry.init()).forEach(notification => notificationRegistry.addNotification(notification));
   } finally {
     console.error = originalConsoleError;
   }
@@ -195,7 +212,7 @@ test('should work with an invalid configuration file', async () => {
   );
 
   // check we did a backup of the file
-  expect(cpSync).toBeCalledWith(
+  expect(copyFileMock).toBeCalledWith(
     expect.stringContaining('settings.json'),
     expect.stringContaining('settings.json.backup'),
   );

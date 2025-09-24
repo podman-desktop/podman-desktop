@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
+import { promises as fsPromises } from 'node:fs';
 import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
@@ -76,19 +77,17 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     return path.resolve(this.directories.getConfigurationDirectory(), 'settings.json');
   }
 
-  public init(): NotificationCardOptions[] {
+  public async init(): Promise<NotificationCardOptions[]> {
     const notifications: NotificationCardOptions[] = [];
 
     const settingsFile = this.getSettingsFile();
     const parentDirectory = path.dirname(settingsFile);
-    if (!fs.existsSync(parentDirectory)) {
-      fs.mkdirSync(parentDirectory, { recursive: true });
-    }
-    if (!fs.existsSync(settingsFile)) {
-      fs.writeFileSync(settingsFile, JSON.stringify({}));
-    }
 
-    const settingsRawContent = fs.readFileSync(settingsFile, 'utf-8');
+    // Ensure the parent directory exists
+    // we don't have to try/catch since this will silently fail if the directory does not exist.
+    await fsPromises.mkdir(parentDirectory, { recursive: true });
+
+    const settingsRawContent = await fsPromises.readFile(settingsFile, 'utf-8');
     let configData: { [key: string]: unknown };
     try {
       configData = JSON.parse(settingsRawContent);
@@ -97,7 +96,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
       const backupFilename = `${settingsFile}.backup-${Date.now()}`;
       // keep original file as a backup
-      fs.cpSync(settingsFile, backupFilename);
+      await fsPromises.copyFile(settingsFile, backupFilename);
 
       // append notification for the user
       notifications.push({

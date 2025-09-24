@@ -431,13 +431,13 @@ export class PluginSystem {
     };
   }
 
-  protected initConfigurationRegistry(
+  protected async initConfigurationRegistry(
     container: Container,
     notifications: NotificationCardOptions[],
     configurationRegistryEmitter: Emitter<ConfigurationRegistry>,
-  ): ConfigurationRegistry {
+  ): Promise<ConfigurationRegistry> {
     const configurationRegistry = container.get<ConfigurationRegistry>(ConfigurationRegistry);
-    notifications.push(...configurationRegistry.init());
+    notifications.push(...(await configurationRegistry.init()));
     configurationRegistryEmitter.fire(configurationRegistry);
     return configurationRegistry;
   }
@@ -479,7 +479,7 @@ export class PluginSystem {
 
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
-    const configurationRegistry = this.initConfigurationRegistry(
+    const configurationRegistry = await this.initConfigurationRegistry(
       container,
       notifications,
       configurationRegistryEmitter,
