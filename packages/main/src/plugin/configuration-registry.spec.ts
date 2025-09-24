@@ -22,6 +22,9 @@ import type { ApiSenderType } from '/@/plugin/api.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
+// Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
+import * as fs from 'node:fs';
+
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
@@ -39,9 +42,6 @@ vi.mock('node:fs', () => ({
     copyFile: vi.fn(),
   },
 }));
-
-// Import fs after mocking
-const fs = await import('node:fs');
 
 let configurationRegistry: ConfigurationRegistry;
 
