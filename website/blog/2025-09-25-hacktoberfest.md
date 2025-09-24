@@ -13,7 +13,7 @@ October is here and [**Hacktoberfest**](https://hacktoberfest.com/) is back! It�
 
 ## Why Contribute to Podman Desktop?
 
-Podman Desktop is a [CNCF](https://www.cncf.io/) sandbox project and has already grown into a thriving open source community with over [**3 million downloads worldwide**](https://podman-desktop.io/blog). By contributing, you’re not only helping shape a successful, widely used project, but also joining a community of developers building tools that benefit peers and the broader ecosystem.
+Podman Desktop is a [CNCF](https://www.cncf.io/) sandbox project and has already grown into a thriving open source community with over [**3 million downloads worldwide**](https://podman-desktop.io/blog/3-million). By contributing, you’re not only helping shape a successful, widely used project, but also joining a community of developers building tools that benefit peers and the broader ecosystem.
 
 Podman Desktop is built with developers in mind. **Designed by developers, for developers** !!
 It’s a cross-platform tool that helps streamline container workflows, offering features like:
@@ -48,9 +48,9 @@ Every contribution, whether big or small, makes Podman Desktop stronger for deve
 
 👉 Start here:
 
-- [Podman Desktop GitHub](https://github.com/containers/podman-desktop)
-- [Contribution Guide](https://github.com/containers/podman-desktop/blob/main/CONTRIBUTING.md)
-- [Readme](https://github.com/containers/podman-desktop/blob/main/README.md)
+- [Podman Desktop GitHub](https://github.com/podman-desktop/podman-desktop)
+- [Contribution Guide](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md)
+- [Readme](https://github.com/podman-desktop/podman-desktop/blob/main/README.md)
 - [Hacktoberfest issues](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahacktoberfest)
 
 This Hacktoberfest, let’s build better container workflows together. 💻🔥
