@@ -126,18 +126,6 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
       .toBeTruthy();
   });
 
-  test('Registry removal verification', async ({ page, navigationBar }) => {
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const registryPage = await settingsBar.openTabPage(RegistriesPage);
-    await playExpect(registryPage.heading).toBeVisible();
-
-    await registryPage.removeRegistry(registryName);
-    const registryBox = registryPage.registriesTable.getByLabel(registryName);
-    const username = registryBox.getByText(registryUsername);
-    await playExpect(username).toBeHidden();
-  });
-
   test('Pull image from github repo under new name', async ({ navigationBar }) => {
     let imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
@@ -149,5 +137,17 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     await playExpect
       .poll(async () => await imagesPage.waitForRowToExists(fullName, 15_000), { timeout: 0 })
       .toBeTruthy();
+  });
+
+  test('Registry removal verification', async ({ page, navigationBar }) => {
+    await navigationBar.openSettings();
+    const settingsBar = new SettingsBar(page);
+    const registryPage = await settingsBar.openTabPage(RegistriesPage);
+    await playExpect(registryPage.heading).toBeVisible();
+
+    await registryPage.removeRegistry(registryName);
+    const registryBox = registryPage.registriesTable.getByLabel(registryName);
+    const username = registryBox.getByText(registryUsername);
+    await playExpect(username).toBeHidden();
   });
 });
