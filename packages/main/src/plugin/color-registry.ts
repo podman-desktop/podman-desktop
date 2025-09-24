@@ -199,6 +199,31 @@ export class ColorRegistry {
         // return the color
         return { id, cssVar, value: theme.get(id)! };
       } else {
+        // For high contrast themes, fall back to regular theme if color not defined
+        if (themeName === 'lightHC') {
+          const fallbackTheme = this.#themes.get('light');
+
+          if (fallbackTheme?.has(id)) {
+            return { id, cssVar, value: fallbackTheme.get(id)! };
+          }
+        } else if (themeName === 'darkHC') {
+          const fallbackTheme = this.#themes.get('dark');
+
+          if (fallbackTheme?.has(id)) {
+            return { id, cssVar, value: fallbackTheme.get(id)! };
+          }
+        } else {
+          // For custom themes that extend high contrast themes, check if they have a parent theme
+          const parentTheme = this.#parentThemes.get(themeName);
+          if (parentTheme) {
+            const parentColors = this.listColors(parentTheme);
+            const parentColor = parentColors.find(c => c.id === id);
+            if (parentColor) {
+              return parentColor;
+            }
+          }
+        }
+
         // error
         throw new Error(`Color ${id} is not defined in theme ${themeName}`);
       }
