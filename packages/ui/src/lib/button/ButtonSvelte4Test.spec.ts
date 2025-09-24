@@ -28,6 +28,7 @@ test('should render content', () => {
   const { getByText } = render(ButtonSvelte4Test, {
     onclick: vi.fn(),
     content: 'Dummy Button',
+    icon: undefined,
   });
 
   const btn = getByText('Dummy Button');
@@ -49,6 +50,8 @@ test('click event should be propagated', async () => {
   const onclickMock = vi.fn();
   const { getByRole } = render(ButtonSvelte4Test, {
     onclick: onclickMock,
+    icon: undefined,
+    content: undefined,
   });
 
   const btn = getByRole('button');
