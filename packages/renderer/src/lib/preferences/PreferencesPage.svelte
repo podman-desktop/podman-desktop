@@ -14,6 +14,8 @@ import PreferencesCliToolsRendering from './PreferencesCliToolsRendering.svelte'
 import PreferencesContainerConnectionRendering from './PreferencesContainerConnectionRendering.svelte';
 import PreferencesKubernetesConnectionRendering from './PreferencesKubernetesConnectionRendering.svelte';
 import PreferencesKubernetesContextsRendering from './PreferencesKubernetesContextsRendering.svelte';
+import PreferencesKubernetesContextsRenderingImportFile from './PreferencesKubernetesContextsRenderingImportFile.svelte';
+import PreferencesKubernetesContextsRenderingReview from './PreferencesKubernetesContextsRenderingReview.svelte';
 import PreferencesProviderRendering from './PreferencesProviderRendering.svelte';
 import PreferencesProxiesRendering from './PreferencesProxiesRendering.svelte';
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
@@ -81,6 +83,12 @@ onMount(async () => {
   </Route>
   <Route path="/kubernetes-contexts" breadcrumb="Kubernetes Contexts">
     <PreferencesKubernetesContextsRendering />
+  </Route>
+  <Route path="/kubernetes-contexts/import-file" breadcrumb="Import config file">
+    <PreferencesKubernetesContextsRenderingImportFile />
+  </Route>
+  <Route path="/kubernetes-contexts/review-contexts/:filePath" breadcrumb="Review added contexts" let:meta>
+    <PreferencesKubernetesContextsRenderingReview filePath={meta.params.filePath} />
   </Route>
   <Route path="/proxies" breadcrumb="Proxy">
     <PreferencesProxiesRendering />

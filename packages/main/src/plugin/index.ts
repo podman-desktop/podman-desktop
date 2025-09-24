@@ -2826,6 +2826,32 @@ export class PluginSystem {
       return kubernetesClient.refreshContextState(context);
     });
 
+    this.ipcHandle(
+      'kubernetes-client:parseKubeconfigFile',
+      async (_listener, filePath: string): Promise<KubeContext[]> => {
+        return kubernetesClient.parseKubeconfigFile(filePath);
+      },
+    );
+
+    this.ipcHandle(
+      'kubernetes-client:importContextsFromFile',
+      async (
+        _listener,
+        yaml: string,
+        selectedContexts: string[],
+        conflictResolutions: Map<string, 'keep-both' | 'replace'>,
+      ): Promise<void> => {
+        return kubernetesClient.importContextsFromFile(yaml, selectedContexts, conflictResolutions);
+      },
+    );
+
+    this.ipcHandle(
+      'kubernetes-client:hasCertificateChanged',
+      async (_listener, filePath: string, contextName: string): Promise<boolean> => {
+        return kubernetesClient.hasCertificateChanged(filePath, contextName);
+      },
+    );
+
     this.ipcHandle('feedback:send', async (_listener, feedbackProperties: FeedbackProperties): Promise<void> => {
       return telemetry.sendFeedback(feedbackProperties);
     });

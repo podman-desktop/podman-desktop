@@ -1265,6 +1265,209 @@ export class KubernetesClient {
   }
 
   /**
+   * Parse a kubeconfig file and extract contexts information
+   *
+   * @param filePath path to the kubeconfig file
+   * @returns array of KubeContext objects found in the file
+   */
+  async parseKubeconfigFile(filePath: string): Promise<KubeContext[]> {
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Kubeconfig file ${filePath} does not exist`);
+    }
+
+    try {
+      // Create a temporary KubeConfig instance to parse the file
+      const tempConfig = new KubeConfig();
+      tempConfig.loadFromFile(filePath);
+
+      const contexts: KubeContext[] = [];
+      const currentContextName = tempConfig.getCurrentContext();
+
+      // Process each context
+      tempConfig.contexts.forEach(context => {
+        // Find the cluster information
+        const cluster = tempConfig.clusters.find(c => c.name === context.cluster);
+
+        contexts.push({
+          name: context.name,
+          cluster: context.cluster,
+          user: context.user,
+          namespace: context.namespace,
+          currentContext: context.name === currentContextName,
+          clusterInfo: cluster
+            ? {
+                name: cluster.name,
+                server: cluster.server,
+                skipTLSVerify: cluster.skipTLSVerify,
+                tlsServerName: cluster.tlsServerName,
+              }
+            : undefined,
+        });
+      });
+
+      return contexts;
+    } catch (error) {
+      throw new Error(`Failed to parse kubeconfig file: ${String(error)}`);
+    }
+  }
+
+  /**
+   * Import contexts from a kubeconfig file into the current kubeconfig
+   *
+   * @param filePath path to the kubeconfig file to import from
+   * @param selectedContexts array of context names to import
+   * @param conflictResolutions map of context names to conflict resolution strategies
+   */
+  async importContextsFromFile(
+    filePath: string,
+    selectedContexts: string[],
+    conflictResolutions: Map<string, 'keep-both' | 'replace'>,
+  ): Promise<void> {
+    // Parse the source kubeconfig file
+    const tempConfig = new KubeConfig();
+    tempConfig.loadFromFile(filePath);
+
+    // Get current config
+    const newConfig = new KubeConfig();
+    newConfig.loadFromString(this.kubeConfig.exportConfig());
+
+    // Process each selected context
+    for (const contextName of selectedContexts) {
+      const sourceContext = tempConfig.contexts.find(ctx => ctx.name === contextName);
+      if (!sourceContext) {
+        continue;
+      }
+
+      // Find related cluster and user
+      const sourceCluster = tempConfig.clusters.find(c => c.name === sourceContext.cluster);
+      const sourceUser = tempConfig.users.find(u => u.name === sourceContext.user);
+
+      if (!sourceCluster || !sourceUser) {
+        throw new Error(`Missing cluster or user information for context ${contextName}`);
+      }
+
+      // Handle conflicts
+      const conflictResolution = conflictResolutions.get(contextName);
+      let finalContextName = contextName;
+      let finalClusterName = sourceContext.cluster;
+      let finalUserName = sourceContext.user;
+
+      // Check for context name conflicts
+      const existingContext = newConfig.contexts.find(ctx => ctx.name === contextName);
+      if (existingContext) {
+        if (conflictResolution === 'replace') {
+          // Remove existing context, cluster, and user
+          newConfig.contexts = newConfig.contexts.filter(ctx => ctx.name !== contextName);
+          // Remove existing cluster and user by their existing names, not source names
+          newConfig.clusters = newConfig.clusters.filter(c => c.name !== existingContext.cluster);
+          newConfig.users = newConfig.users.filter(u => u.name !== existingContext.user);
+        } else if (conflictResolution === 'keep-both') {
+          // Generate unique context name only, keep original cluster and user names
+          finalContextName = this.findNewContextName(contextName);
+          // Keep original cluster and user names unchanged
+          finalClusterName = sourceContext.cluster;
+          finalUserName = sourceContext.user;
+        }
+      }
+
+      // Add the new context
+      newConfig.contexts.push({
+        name: finalContextName,
+        cluster: finalClusterName,
+        user: finalUserName,
+        namespace: sourceContext.namespace,
+      });
+
+      // Add cluster if it doesn't already exist
+      const existingCluster = newConfig.clusters.find(c => c.name === finalClusterName);
+      if (!existingCluster) {
+        newConfig.clusters.push({
+          ...sourceCluster,
+          name: finalClusterName,
+        });
+      }
+
+      // Add user if it doesn't already exist
+      const existingUser = newConfig.users.find(u => u.name === finalUserName);
+      if (!existingUser) {
+        newConfig.users.push({
+          ...sourceUser,
+          name: finalUserName,
+        });
+      }
+    }
+
+    // Save the updated config
+    await this.saveKubeConfig(newConfig);
+    this.kubeConfig = newConfig;
+
+    // Refresh and notify
+    await this.refresh();
+    this.apiSender.send('kubernetes-context-update');
+  }
+
+  /**
+   * Extract certificate data from user object
+   */
+  private async extractCertificate(user: User): Promise<string | undefined> {
+    try {
+      if (user.certData) {
+        return user.certData; // Certificate is base64 encoded
+      }
+      if (user.certFile) {
+        // Certificate is in a separate file
+        return await fs.promises.readFile(user.certFile, 'utf-8');
+      }
+    } catch (error: unknown) {
+      console.error('Error extracting certificate:', error);
+    }
+    return undefined;
+  }
+
+  async hasCertificateChanged(filePath: string, contextName: string): Promise<boolean> {
+    try {
+      // Parse the importing kubeconfig file
+      const importingConfig = new KubeConfig();
+      importingConfig.loadFromFile(filePath);
+
+      // Find the context in the importing file
+      const importingContext = importingConfig.contexts.find(ctx => ctx.name === contextName);
+      if (!importingContext) {
+        throw new Error(`Context ${contextName} not found in importing file`);
+      }
+
+      // Find the user in the importing file
+      const importingUser = importingConfig.users.find(u => u.name === importingContext.user);
+      if (!importingUser) {
+        throw new Error(`User ${importingContext.user} not found in importing file`);
+      }
+
+      // Find the same context in the main kubeconfig
+      const mainContext = this.kubeConfig.contexts.find(ctx => ctx.name === contextName);
+      if (!mainContext) {
+        return false;
+      }
+
+      // Find the user in the main kubeconfig
+      const mainUser = this.kubeConfig.users.find(u => u.name === mainContext.user);
+      if (!mainUser) {
+        return false;
+      }
+
+      // Extract and compare certificates
+      const mainCert = await this.extractCertificate(mainUser);
+      const importingCert = await this.extractCertificate(importingUser);
+
+      // Compare certificates - return true if they're different
+      return mainCert !== importingCert;
+    } catch (error: unknown) {
+      console.error('Error comparing certificates:', error);
+      return true;
+    }
+  }
+
+  /**
    * Load manifests from a YAML string.
    * @param yaml the YAML string
    * @return an array of Kubernetes resources
