@@ -277,8 +277,6 @@ export class ColorRegistry {
     this.registerColor(`${def}text`, {
       dark: colorPalette.white,
       light: colorPalette.charcoal[900],
-      darkHC: colorPalette.white,
-      lightHC: colorPalette.charcoal[900],
     });
   }
 
