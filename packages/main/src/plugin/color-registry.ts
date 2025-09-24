@@ -266,6 +266,8 @@ export class ColorRegistry {
     this.initTerminal();
     this.initProgressBar();
     this.initBadge();
+
+    this.initModernDS();
   }
 
   protected initDefaults(): void {
@@ -275,6 +277,8 @@ export class ColorRegistry {
     this.registerColor(`${def}text`, {
       dark: colorPalette.white,
       light: colorPalette.charcoal[900],
+      darkHC: colorPalette.white,
+      lightHC: colorPalette.charcoal[900],
     });
   }
 
@@ -1554,6 +1558,22 @@ export class ColorRegistry {
     this.registerColor(`${badge}gray`, {
       dark: colorPalette.gray[600],
       light: colorPalette.gray[600],
+    });
+  }
+
+  /**
+   * The modern Design System colors.
+   * These new colors will be moved to the initialization methods above when considered stable.
+   * https://github.com/podman-desktop/podman-desktop/issues/13890
+   * Figma: https://www.figma.com/design/wtGl1grs2btuJSEFMjj3yF/Colors?node-id=17-493&t=uXRtmxS6OxuQHmHS-1
+   */
+  protected initModernDS(): void {
+    const badge = 'modern-';
+
+    this.registerColor(`${badge}window-bg`, {
+      light: 'white',
+      dark: 'oklch(27.4% 0.006 286.033)', // zinc-800
+      darkHC: 'black',
     });
   }
 }
