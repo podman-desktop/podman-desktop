@@ -47,6 +47,8 @@ export class ColorRegistry {
     // default themes
     this.#themes.set('light', new Map());
     this.#themes.set('dark', new Map());
+    this.#themes.set('lightHC', new Map());
+    this.#themes.set('darkHC', new Map());
   }
 
   registerExtensionThemes(extension: AnalyzedExtension, themes: RawThemeContribution[]): extensionApi.Disposable {
@@ -142,6 +144,14 @@ export class ColorRegistry {
     // set the colors in the default themes
     this.#themes.get('light')?.set(colorId, definition.light);
     this.#themes.get('dark')?.set(colorId, definition.dark);
+
+    if (definition.lightHC !== undefined) {
+      this.#themes.get('lightHC')?.set(colorId, definition.lightHC);
+    }
+    if (definition.darkHC !== undefined) {
+      this.#themes.get('darkHC')?.set(colorId, definition.darkHC);
+    }
+
     this.notifyUpdate();
   }
 
