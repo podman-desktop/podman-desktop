@@ -3,7 +3,7 @@ title: Hacktoberfest 2025! - Contribute to Podman Desktop
 description: Contribute to Podman Desktop this Hacktoberfest!
 slug: hacktoberfest-2025
 authors: [rujutashinde]
-tags: [podman-desktop, hacktoberfest]
+tags: [podman-desktop, hacktoberfest, community]
 hide_table_of_contents: false
 ---
 
@@ -13,6 +13,8 @@ October is here and [**Hacktoberfest**](https://hacktoberfest.com/) is back! It�
 
 ## Why Contribute to Podman Desktop?
 
+Podman Desktop is a [CNCF](https://www.cncf.io/) sandbox project and has already grown into a thriving open source community with over [**3 million downloads worldwide**](https://podman-desktop.io/blog). By contributing, you’re not only helping shape a successful, widely used project, but also joining a community of developers building tools that benefit peers and the broader ecosystem.
+
 Podman Desktop is built with developers in mind. **Designed by developers, for developers** !!
 It’s a cross-platform tool that helps streamline container workflows, offering features like:
 
@@ -20,8 +22,6 @@ It’s a cross-platform tool that helps streamline container workflows, offering
 - **Kubernetes integration** Run and test workloads in a local Kubernetes environment.
 - **Extension framework** Build custom extensions to expand and personalize the desktop experience.
 - **Modern tech stack** Contribute using TypeScript, Svelte, Tailwind CSS, Electron, Playwright and more!
-
-And really—what could be more rewarding for a developer than working on a tool that benefits both our peers and ourselves?
 
 Whether you’re fixing a bug, enhancing the UI, or creating a new extension, your contributions will help shape the next generation of container tooling.
 
