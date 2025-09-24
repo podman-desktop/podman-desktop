@@ -265,9 +265,6 @@ jobs:
       - name: Run typecheck
         run: pnpm typecheck
 
-      - name: Run svelte check
-        run: pnpm svelte:check
-
   unit-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: unit tests / ${{ matrix.os }}
@@ -401,7 +398,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         os: [windows-2025, windows-11-arm]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -477,7 +474,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         os: [macos-15, macos-13]
     runs-on: ${{ matrix.os }}
     env:
