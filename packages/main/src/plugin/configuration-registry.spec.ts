@@ -16,9 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
@@ -28,16 +26,34 @@ import { ConfigurationRegistry } from './configuration-registry.js';
 import type { Directories } from './directories.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
+// mock the fs module
+vi.mock('node:fs', () => ({
+  readFileSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  cpSync: vi.fn(),
+  promises: {
+    access: vi.fn(),
+    mkdir: vi.fn(),
+    writeFile: vi.fn(),
+    readFile: vi.fn(),
+    copyFile: vi.fn(),
+  },
+}));
+
+// Import fs after mocking
+const fs = await import('node:fs');
+
 let configurationRegistry: ConfigurationRegistry;
 
-// mock the fs methods
-const readFileSync = vi.spyOn(fs, 'readFileSync');
-const cpSync = vi.spyOn(fs, 'cpSync');
-const accessMock = vi.spyOn(fs.promises, 'access');
-const mkdirMock = vi.spyOn(fs.promises, 'mkdir');
-const writeFileMock = vi.spyOn(fs.promises, 'writeFile');
-const readFileMock = vi.spyOn(fs.promises, 'readFile');
-const copyFileMock = vi.spyOn(fs.promises, 'copyFile');
+// Access mocked functions
+const readFileSync = vi.mocked(fs.readFileSync);
+const writeFileSync = vi.mocked(fs.writeFileSync);
+const cpSync = vi.mocked(fs.cpSync);
+const accessMock = vi.mocked(fs.promises.access);
+const mkdirMock = vi.mocked(fs.promises.mkdir);
+const writeFileMock = vi.mocked(fs.promises.writeFile);
+const readFileMock = vi.mocked(fs.promises.readFile);
+const copyFileMock = vi.mocked(fs.promises.copyFile);
 
 const getConfigurationDirectoryMock = vi.fn();
 const directories = {
@@ -52,11 +68,6 @@ const notificationRegistry = {
 } as unknown as NotificationRegistry;
 
 let registerConfigurationsDisposable: IDisposable;
-
-beforeAll(() => {
-  // mock the fs module
-  vi.mock('node:fs');
-});
 
 beforeEach(async () => {
   vi.resetAllMocks();
@@ -361,8 +372,6 @@ test('should remove the object configuration if value is equal to default one', 
       },
     },
   };
-
-  const writeFileSync = vi.spyOn(fs, 'writeFileSync');
 
   configurationRegistry.registerConfigurations([node]);
 

@@ -83,9 +83,20 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const settingsFile = this.getSettingsFile();
     const parentDirectory = path.dirname(settingsFile);
 
-    // Ensure the parent directory exists
-    // we don't have to try/catch since this will silently fail if the directory does not exist.
-    await fsPromises.mkdir(parentDirectory, { recursive: true });
+    // Ensure the parent directory exists, we will use .access as the "best" way to check if the directory first exists
+    // this is different vs non-async functions such as fs.existsSync as well as mkdirSync / writeFileSync
+    try {
+      await fsPromises.access(parentDirectory);
+    } catch {
+      await fsPromises.mkdir(parentDirectory, { recursive: true });
+    }
+
+    // We will create a "standard" empty settings.json file if the file we are trying to access does not exist.
+    try {
+      await fsPromises.access(settingsFile);
+    } catch {
+      await fsPromises.writeFile(settingsFile, JSON.stringify({}));
+    }
 
     const settingsRawContent = await fsPromises.readFile(settingsFile, 'utf-8');
     let configData: { [key: string]: unknown };
