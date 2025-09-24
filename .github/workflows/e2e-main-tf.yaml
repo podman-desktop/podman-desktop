@@ -95,7 +95,7 @@ jobs:
         if: always()
         run: |
           TF_PLAYWRIGHT_JUNIT_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}/execute/data/guest/default-0/tmt/tests/${{ env.NPM_TARGET }}-test-1/data/junit-results.xml"
-          curl -o playwright-junit-results.xml "$TF_PLAYWRIGHT_JUNIT_URL"
+          curl -o junit-playwright-results.xml "$TF_PLAYWRIGHT_JUNIT_URL"
 
       - name: Publish test report to PR
         if: always()
@@ -106,7 +106,7 @@ jobs:
           detailed_summary: true
           annotate_only: true
           require_tests: true
-          report_paths: '**/playwright-junit-results.xml'
+          report_paths: '**/junit-playwright-results.xml'
 
       - name: Download test artifacts from Testing Farm
         if: failure()
@@ -144,4 +144,4 @@ jobs:
           name: testing-farm-artifacts-${{ matrix.fedora-version }}
           path: |
             results/*
-            **/playwright-junit-results.xml
+            **/junit-playwright-results.xml
