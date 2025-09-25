@@ -131,7 +131,7 @@ const config = {
   nsis: {
     artifactName: `podman-desktop${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
     oneClick: false,
-    include: ['buildResources/installer.nsh'],
+    include: 'buildResources/installer.nsh',
   },
   win: {
     target: [
