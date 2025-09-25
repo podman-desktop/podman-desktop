@@ -31,6 +31,7 @@ updates:
       commitlint:
         applies-to: version-updates
         patterns:
+          - "commitlint"
           - "@commitlint/*"
       docusaurus:
         applies-to: version-updates
