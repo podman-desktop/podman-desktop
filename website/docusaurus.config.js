@@ -2,8 +2,6 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 import { resolve } from 'node:path';
 import { createNotesFiles } from './release-notes-parser';
-import { createJsonDocsFile } from './docs-notes-parser';
-import { createJsonTutorialFile } from './tutorial-notes-parser';
 import Storybook from './storybook';
 import { generateJsonOverviewFile } from './sidebar-content-parser';
 
@@ -37,10 +35,6 @@ const config = {
   themes: ['@docusaurus/theme-mermaid'],
   plugins: [
     async () => {
-      // Generate docs and tutorials JSON files once at build start
-      await createJsonDocsFile();
-      await createJsonTutorialFile();
-
       return {
         name: 'docusaurus-tailwindcss',
         configurePostCss(postcssOptions) {
