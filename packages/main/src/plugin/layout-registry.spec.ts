@@ -25,17 +25,13 @@ import { LayoutRegistry } from './layout-registry.js';
 
 let layoutRegistry: LayoutRegistry;
 let mockConfigurationRegistry: IConfigurationRegistry;
-let mockConfiguration: {
-  get: ReturnType<typeof vi.fn>;
-  update: ReturnType<typeof vi.fn>;
+const mockConfiguration = {
+  get: vi.fn(),
+  update: vi.fn(),
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockConfiguration = {
-    get: vi.fn(),
-    update: vi.fn(),
-  };
 
   mockConfigurationRegistry = {
     registerConfigurations: vi.fn(),
