@@ -70,27 +70,11 @@ export class KubernetesDashboardPage extends MainPage {
   }
 
   async getCurrentTotalCountForResource(name: KubernetesResources): Promise<number> {
-    const currentResource = this.metricsLocatorByName(name);
-    const totalCountLocator = currentResource.getByLabel(`${name} count`, { exact: true });
-
-    if ((await totalCountLocator.count()) === 0) {
-      throw new Error(`No total count locator found for resource: ${name}`);
-    }
-
-    const totalCountText = await totalCountLocator.textContent();
-    return totalCountText ? parseInt(totalCountText, 10) : 0;
+    return this.getCountByType(name);
   }
 
   async getCurrentActiveCountForResource(name: KubernetesResources): Promise<number> {
-    const currentResource = this.metricsLocatorByName(name);
-    const activeCountLocator = currentResource.getByLabel(`${name} active count`, { exact: true });
-
-    if ((await activeCountLocator.count()) === 0) {
-      throw new Error(`No active count locator found for resource: ${name}`);
-    }
-
-    const activeCountText = await activeCountLocator.textContent();
-    return activeCountText ? parseInt(activeCountText, 10) : 0;
+    return this.getCountByType(name, 'active');
   }
 
   private namespaceLocatorByName(name: string): Locator {
@@ -99,5 +83,18 @@ export class KubernetesDashboardPage extends MainPage {
 
   private metricsLocatorByName(name: KubernetesResources): Locator {
     return this.page.getByRole('button').filter({ hasText: name });
+  }
+
+  private async getCountByType(name: KubernetesResources, type = ''): Promise<number> {
+    const currentResource = this.metricsLocatorByName(name);
+    const label = type ? `${name} ${type} count` : `${name} count`;
+    const countLocator = currentResource.getByLabel(label, { exact: true });
+
+    if ((await countLocator.count()) === 0) {
+      throw new Error(`No ${label} locator found for resource: ${name}`);
+    }
+
+    const countText = await countLocator.textContent();
+    return countText ? parseInt(countText, 10) : 0;
   }
 }
