@@ -16,27 +16,22 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable, preDestroy } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { IDisposable } from '/@api/disposable.js';
+import { IDisposable } from '/@api/disposable.js';
 import { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-manager-info.js';
 
 // Dynamic layout registry - populated by frontend components during initialization
 const REGISTERED_LAYOUTS: Record<string, string[]> = {};
 
 @injectable()
-export class LayoutRegistry implements AsyncDisposable {
+export class LayoutRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
 
   constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
-  @preDestroy()
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.dispose();
-  }
-
-  dispose(): void {
+  public dispose(): void {
     this.#disposables.forEach(disposable => disposable.dispose());
     this.#disposables = [];
   }
@@ -74,10 +69,6 @@ export class LayoutRegistry implements AsyncDisposable {
 
       const config = this.configurationRegistry.getConfiguration('layout');
       const savedConfig = config.get<SavedLayoutConfig[]>(`${layoutKind}`, []);
-
-      if (!savedConfig || !Array.isArray(savedConfig)) {
-        return this.createDefaultLayoutItems(layoutKind, availableColumns);
-      }
 
       return this.mergeConfigWithAvailableColumns(layoutKind, savedConfig, availableColumns);
     } catch (error: unknown) {
