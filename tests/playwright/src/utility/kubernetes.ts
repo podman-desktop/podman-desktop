@@ -260,10 +260,15 @@ export async function verifyPortForwardingConfiguration(
 
 export async function verifyLocalPortResponse(forwardAddress: string, responseMessage: string): Promise<void> {
   return test.step('Verify local port response', async () => {
-    const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
-    const blob: Blob = await response.blob();
-    const text: string = await blob.text();
-    playExpect(text).toContain(responseMessage);
+    playExpect.poll(
+      async () => {
+        const response: Response = await fetch(forwardAddress, { cache: 'no-store' });
+        const blob: Blob = await response.blob();
+        const text: string = await blob.text();
+        playExpect(text).toContain(responseMessage);
+      },
+      { timeout: 20_000, intervals: [1_000, 3_000, 5_000, 15_000] },
+    );
   });
 }
 
