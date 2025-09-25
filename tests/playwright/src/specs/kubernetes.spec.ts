@@ -148,8 +148,57 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
     await playExpect(dashboardPage.namespaceDropdownButton).toBeVisible({ timeout: 10_000 });
     await playExpect(dashboardPage.currentNamespace).toHaveValue('default');
 
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.Nodes), { timeout: 10_000 })
+      .toBe(1);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentActiveCountForResource(KubernetesResources.Nodes), { timeout: 10_000 })
+      .toBe(1);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.Deployments), {
+        timeout: 10_000,
+      })
+      .toBe(0);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentActiveCountForResource(KubernetesResources.Deployments), {
+        timeout: 10_000,
+      })
+      .toBe(0);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.Pods), { timeout: 10_000 })
+      .toBe(0);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.Services), {
+        timeout: 10_000,
+      })
+      .toBe(1);
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.ConfigMapsSecrets), {
+        timeout: 10_000,
+      })
+      .toBe(1);
+
     await dashboardPage.changeNamespace('kube-public');
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.ConfigMapsSecrets), {
+        timeout: 10_000,
+      })
+      .toBe(2);
+
     await dashboardPage.changeNamespace('default');
+
+    await playExpect
+      .poll(async () => dashboardPage.getCurrentTotalCountForResource(KubernetesResources.ConfigMapsSecrets), {
+        timeout: 10_000,
+      })
+      .toBe(1);
   });
 
   test.describe
