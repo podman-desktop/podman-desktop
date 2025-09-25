@@ -16,43 +16,39 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable, preDestroy } from 'inversify';
+import { inject, injectable } from 'inversify';
 
-import { DocumentationInfo } from '/@api/documentation-info.js';
+import { DocumentationInfo, DocumentationJsonInfo } from '/@api/documentation-info.js';
 
 import { ApiSenderType } from '../api.js';
+import { Disposable } from '../types/disposable.js';
 
 @injectable()
-export class DocumentationService implements AsyncDisposable {
+export class DocumentationService extends Disposable {
   private documentation: DocumentationInfo[] = [];
   private isInitialized = false;
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
-  ) {}
-
-  @preDestroy()
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.dispose();
-  }
-
-  dispose(): void {
-    this.documentation = [];
-    this.isInitialized = false;
+  ) {
+    super(() => {
+      this.documentation = [];
+      this.isInitialized = false;
+    });
   }
 
   async fetchDocumentation(): Promise<void> {
     try {
-      const [docsContent, tutorialContent] = await Promise.all([
-        this.fetchPageContent('https://podman-desktop.io/docs/intro'),
-        this.fetchPageContent('https://podman-desktop.io/tutorial'),
+      const [docsJson, tutorialsJson] = await Promise.all([
+        this.fetchJsonContent('https://podman-desktop.io/docs.json'),
+        this.fetchJsonContent('https://podman-desktop.io/tutorials.json'),
       ]);
 
-      if (docsContent && tutorialContent) {
-        this.documentation = this.parseDocumentationContent(docsContent, tutorialContent);
+      if (docsJson && tutorialsJson) {
+        this.documentation = this.parseDocumentationFromJson(docsJson, tutorialsJson);
       } else {
-        throw new Error('Failed to fetch documentation content');
+        throw new Error('Failed to fetch documentation JSON files');
       }
       this.isInitialized = true;
     } catch (error) {
@@ -76,7 +72,7 @@ export class DocumentationService implements AsyncDisposable {
     this.apiSender.send('documentation-updated');
   }
 
-  private async fetchPageContent(url: string): Promise<string> {
+  private async fetchJsonContent(url: string): Promise<Array<{ name: string; url: string }> | null> {
     try {
       const response = await fetch(url);
 
@@ -84,7 +80,7 @@ export class DocumentationService implements AsyncDisposable {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.text();
+      return await response.json();
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
@@ -96,49 +92,43 @@ export class DocumentationService implements AsyncDisposable {
     }
   }
 
-  private parseDocumentationContent(docsHtml: string, tutorialHtml: string): DocumentationInfo[] {
+  private parseDocumentationFromJson(
+    docsJson: DocumentationJsonInfo[],
+    tutorialsJson: DocumentationJsonInfo[],
+  ): DocumentationInfo[] {
     const documentation: DocumentationInfo[] = [];
 
     // Validate input parameters
-    if (!docsHtml || !tutorialHtml) {
-      console.warn('Missing HTML content for parsing documentation');
+    if (!docsJson || !tutorialsJson) {
+      console.warn('Missing JSON content for parsing documentation');
       return this.getCoreDocumentationPages();
     }
 
-    // Parse both docs and tutorials using the same logic
+    // Parse both docs and tutorials using generic logic
     const parseConfigs = [
       {
-        html: docsHtml,
-        regex: /<a[^>]*href="([^"]*\/docs\/[^"]*)"[^>]*>([^<]+)<\/a>/g,
+        data: docsJson,
         category: 'Documentation',
-        errorMessage: 'Error parsing documentation links:',
+        errorMessage: 'Error parsing documentation JSON:',
       },
       {
-        html: tutorialHtml,
-        regex: /<a[^>]*href="([^"]*\/tutorial\/[^"]*)"[^>]*>([^<]+)<\/a>/g,
+        data: tutorialsJson,
         category: 'Tutorial',
-        errorMessage: 'Error parsing tutorial links:',
+        errorMessage: 'Error parsing tutorials JSON:',
       },
     ];
 
     for (const config of parseConfigs) {
       try {
-        const matches = Array.from(config.html.matchAll(config.regex));
-
-        for (const match of matches) {
-          if (match && match.length >= 3 && match[1] && match[2]) {
-            const url = match[1].startsWith('http') ? match[1] : `https://podman-desktop.io${match[1]}`;
-            const title = match[2].trim();
-
-            if (title && title.length > 0 && !title.includes('Edit this page') && !title.includes('Next')) {
-              documentation.push({
-                id: `${config.category}-${this.generateId(title)}`,
-                title,
-                description: `${config.category}: ${title}`,
-                url,
-                category: config.category,
-              });
-            }
+        for (const item of config.data) {
+          if (item.name && item.url) {
+            documentation.push({
+              id: `${config.category}-${this.generateId(item.name)}`,
+              title: item.name,
+              description: `${config.category}: ${item.name}`,
+              url: item.url,
+              category: config.category,
+            });
           }
         }
       } catch (error) {
