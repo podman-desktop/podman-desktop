@@ -119,6 +119,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
     await settingsBar.cliToolsTab.click();
 
     await ensureCliInstalled(page, 'Kind');
+    // Workaround for https://github.com/podman-desktop/podman-desktop/issues/13980
+    await ensureCliInstalled(page, 'kubectl');
   }
 
   await createKindCluster(page, CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {

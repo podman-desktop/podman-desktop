@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { execSync } from 'node:child_process';
+
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
@@ -23,7 +25,7 @@ import type { KubernetesResourceState } from '../model/core/states';
 import type { PlayKubernetesOptions } from '../model/core/types';
 import { KubernetesResources } from '../model/core/types';
 import { ContainerDetailsPage } from '../model/pages/container-details-page';
-import type { PodsPage } from '../model/pages/pods-page';
+import { PodsPage } from '../model/pages/pods-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { handleConfirmationDialog } from './operations';
 
@@ -133,14 +135,24 @@ export async function applyYamlFileToCluster(
   resourceYamlPath: string,
   kubernetesRuntime: PlayKubernetesOptions,
 ): Promise<PodsPage> {
-  return test.step(`Apply YAML file to Kubernetes cluster`, async () => {
-    const navigationBar = new NavigationBar(page);
-    const podsPage = await navigationBar.openPods();
-
-    await playExpect(podsPage.heading).toBeVisible();
-    const playYamlPage = await podsPage.openPodmanKubePlay();
-    await playExpect(playYamlPage.heading).toBeVisible();
-    return await playYamlPage.playYaml(resourceYamlPath, false, 180_000, kubernetesRuntime);
+  return test.step(`Apply YAML file to Kubernetes cluster (${kubernetesRuntime}) using Kubectl`, async () => {
+    // workaround for missing option to deploy kube yaml into cluster via UI
+    // test kubectl is present
+    try {
+      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      const version = execSync('kubectl version').toString();
+      console.log(`Kubectl version stdout: ${version}`);
+    } catch (error) {
+      throw new Error(`Kubectl is not installed: ${error}`);
+    }
+    try {
+      // eslint-disable-next-line sonarjs/os-command
+      const kubectlApply = execSync(`kubectl apply -f ${resourceYamlPath}`).toString();
+      console.log(`Kube yaml ${resourceYamlPath} applied successfully via cli: ${kubectlApply}`);
+    } catch (error) {
+      throw new Error(`Error encountered when trying to apply kube yaml: ${error}`);
+    }
+    return new PodsPage(page);
   });
 }
 
