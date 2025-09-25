@@ -141,7 +141,7 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
     await checkKubernetesResourceState(page, KubernetesResources.Nodes, KIND_NODE, KubernetesResourceState.Running);
   });
 
-  test('Kubernetes Namespaces test', async ({ navigationBar }) => {
+  test('Kubernetes dashboard and namespaces test', async ({ navigationBar }) => {
     const kubernetesBar = await navigationBar.openKubernetes();
     const dashboardPage = await kubernetesBar.openKubernetesDashboardPage();
 
