@@ -117,6 +117,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'getOsPlatform', { value: getOsPlatformMock });
+  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'ResizeObserver', {
     value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
   });
@@ -825,4 +826,29 @@ test('Expect update button to show up when an update is available to a new versi
   await userEvent.click(updateButton);
   expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
   expect(window.updateProvider).toHaveBeenCalled();
+});
+
+test('Expect to see rootful text in the container', async () => {
+  configurationProperties.set([
+    {
+      id: 'podman.machine.rootful',
+      parentId: 'podman',
+      title: 'Machine with root privileges',
+      description: 'Machine with root privileges',
+      type: 'boolean',
+      scope: 'ContainerConnection',
+      hidden: false,
+      extension: { id: 'podman' },
+    },
+  ]);
+
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+  providerInfos.set([providerInfo]);
+  render(PreferencesResourcesRendering, {});
+
+  await vi.waitFor(() => {
+    const containerRegion = screen.getByRole('region', { name: defaultContainerConnectionName });
+    expect(containerRegion.textContent).toContain('(rootful)');
+  });
 });

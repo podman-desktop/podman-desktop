@@ -338,6 +338,27 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+function getContainerRootlessInfo(providerId: string, containerName: string): string | null {
+  if (!providerContainerConfiguration.has(providerId)) {
+    return null;
+  }
+
+  const providerConfiguration = providerContainerConfiguration.get(providerId) ?? [];
+  const containerConfig = providerConfiguration.filter(conf => conf.connection === containerName);
+  const rootlessConfig = containerConfig.find(conf => {
+    const id = conf.id;
+    if (!id) return false;
+    const keywords = ['rootless', 'rootful'];
+    return keywords.some(keyword => id.includes(keyword));
+  });
+
+  if (!rootlessConfig) {
+    return null;
+  }
+
+  return rootlessConfig.value ? 'rootful' : 'rootless';
+}
+
 interface Props {
   properties?: IConfigurationPropertyRecordedSchema[];
   focus: string | undefined;
@@ -514,6 +535,7 @@ $effect(() => {
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
+            {@const rootlessInfo = getContainerRootlessInfo(provider.internalId, container.name)}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
@@ -532,6 +554,11 @@ $effect(() => {
               </div>
               <div class="{container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''} font-semibold">
                 {container.displayName}
+                {#if rootlessInfo}
+                  <span class="text-xs font-normal text-[var(--pd-content-sub-header)]">
+                    ({rootlessInfo})
+                  </span>
+                {/if}
               </div>
               <div class="flex" aria-label="Connection Status">
                 <ConnectionStatus status={container.status} />
