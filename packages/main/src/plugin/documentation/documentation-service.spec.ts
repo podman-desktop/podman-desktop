@@ -76,8 +76,8 @@ describe('fetchDocumentation', () => {
 
     // Verify fetch was called with correct URLs
     expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/docs/intro');
-    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/tutorial');
+    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/docs.json');
+    expect(fetchSpy).toHaveBeenCalledWith('https://podman-desktop.io/tutorials.json');
 
     // Verify service is initialized
     const items = await documentationService.getDocumentationItems();
