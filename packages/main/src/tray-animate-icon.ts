@@ -48,6 +48,7 @@ export class AnimatedTray {
   }
 
   protected getAssetsFolder(): string {
+    console.log(app.getAppPath());
     return path.resolve(app.getAppPath(), AnimatedTray.MAIN_ASSETS_FOLDER);
   }
 
