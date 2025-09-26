@@ -114,6 +114,7 @@
         },
         "podman.machine.rootful": {
           "type": "boolean",
+          "format": "rootfulMode",
           "default": true,
           "scope": "ContainerConnection",
           "description": "Machine with root privileges",
