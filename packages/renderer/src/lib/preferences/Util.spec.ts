@@ -273,6 +273,7 @@ describe('getContainerRootlessInfo', () => {
     providerContainerConfiguration.set('test-provider', [
       {
         id: 'some.other.config',
+        format: 'testFormat',
         value: true,
         connection: 'test-container',
         providerId: 'test-provider',
@@ -289,6 +290,7 @@ describe('getContainerRootlessInfo', () => {
     providerContainerConfiguration.set('test-provider', [
       {
         id: 'podman.machine.rootful',
+        format: 'rootfulMode',
         value: true,
         connection: 'test-container',
         providerId: 'test-provider',
@@ -305,6 +307,7 @@ describe('getContainerRootlessInfo', () => {
     providerContainerConfiguration.set('test-provider', [
       {
         id: 'podman.machine.rootful',
+        format: 'rootfulMode',
         value: false,
         connection: 'test-container',
         providerId: 'test-provider',
