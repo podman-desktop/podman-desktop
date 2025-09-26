@@ -22,7 +22,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
-import type { Feature } from '/@api/explore-features';
+import type { ExploreFeature } from '/@api/explore-feature';
 
 import FeatureCard from './FeatureCard.svelte';
 
@@ -34,7 +34,7 @@ vi.mock('tinro', () => {
   };
 });
 
-const featureMock: Feature = {
+const featureMock: ExploreFeature = {
   id: 'feature1',
   title: 'Feature 1',
   description: 'This is feature 1',

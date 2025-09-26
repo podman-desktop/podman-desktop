@@ -22,7 +22,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import exploreFeatures from '../../../../main/src/plugin/explore-features/features.json';
+import exploreFeatures from '../../../../main/src/plugin/explore-features/explore-features.json';
 import ExploreFeatures from './ExploreFeatures.svelte';
 
 vi.mock('svelte/transition', () => ({

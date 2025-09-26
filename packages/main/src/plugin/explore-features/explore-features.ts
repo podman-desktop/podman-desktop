@@ -18,15 +18,15 @@
 
 import { inject, injectable } from 'inversify';
 
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { IConfigurationNode } from '/@api/configuration/models.js';
-import { Feature } from '/@api/explore-features.js';
+import { ExploreFeature } from '/@api/explore-feature.js';
 
-import { ConfigurationRegistry } from '../configuration-registry.js';
 import { ContainerProviderRegistry } from '../container-registry.js';
 import { ExtensionLoader } from '../extension/extension-loader.js';
 import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
 import { ProviderRegistry } from '../provider-registry.js';
-import featuresJson from './features.json' with { type: 'json' };
+import featuresJson from './explore-features.json' with { type: 'json' };
 import exploreKubernetes from './images/explore-kubernetes.png';
 import installExtension from './images/install-extensions.png';
 import manageDocker from './images/manage-docker.png';
@@ -54,12 +54,12 @@ export class ExploreFeatures {
     this.images['manage-docker'] = manageDocker;
   }
 
-  async downloadFeaturesList(): Promise<Feature[]> {
+  async downloadFeaturesList(): Promise<ExploreFeature[]> {
     const hiddenFeatures = this.configurationRegistry
       .getConfiguration('exploreFeatures')
       .get<string[]>('hiddenFeatures', []);
 
-    (featuresJson.features as Feature[]).forEach(feature => {
+    (featuresJson.features as ExploreFeature[]).forEach(feature => {
       feature.show = !hiddenFeatures.includes(feature.id);
       feature.img = this.images[feature.id];
       return feature;
@@ -67,7 +67,7 @@ export class ExploreFeatures {
     return this.checkShowRequirements(featuresJson.features);
   }
 
-  private async checkShowRequirements(features: Feature[]): Promise<Feature[]> {
+  private async checkShowRequirements(features: ExploreFeature[]): Promise<ExploreFeature[]> {
     const containerList = await this.containerProviderRegistry.listContainers();
     const installedExtensionList = (await this.extensionLoader.listExtensions()).filter(ext => ext.removable);
     const providerList = this.providerRegistry.getProviderInfos();

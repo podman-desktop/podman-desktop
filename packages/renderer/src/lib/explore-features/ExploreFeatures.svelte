@@ -3,11 +3,11 @@ import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import type { Feature } from '/@api/explore-features';
+import type { ExploreFeature } from '/@api/explore-feature';
 
 import FeatureCard from './FeatureCard.svelte';
 
-let features: Feature[] = $state([]);
+let features: ExploreFeature[] = $state([]);
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);
 
@@ -43,7 +43,7 @@ function featureClosed(featureId: string): void {
 }
 </script>
 
-{#snippet card(feature: Feature)}
+{#snippet card(feature: ExploreFeature)}
   <FeatureCard feature={feature} closeFeature={featureClosed} />
 {/snippet}
 

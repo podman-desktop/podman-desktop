@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface Feature {
+export interface ExploreFeature {
   id: string;
   title: string;
   description: string;
