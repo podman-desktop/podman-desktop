@@ -24,7 +24,7 @@ import { expect, test, vi } from 'vitest';
 
 import type { ExploreFeature } from '/@api/explore-feature';
 
-import FeatureCard from './FeatureCard.svelte';
+import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 
 vi.mock('tinro', () => {
   return {
@@ -49,7 +49,7 @@ const featureMock: ExploreFeature = {
 const closeFeature = vi.fn();
 
 test('expect feature card to have all Feature properties', async () => {
-  const { rerender } = render(FeatureCard, { feature: featureMock, closeFeature: closeFeature });
+  const { rerender } = render(ExploreFeatureCard, { feature: featureMock, closeFeature: closeFeature });
 
   expect(screen.getByText(featureMock.title)).toBeInTheDocument();
   expect(screen.getByText(featureMock.description)).toBeInTheDocument();
@@ -74,7 +74,7 @@ test('expect feature card to have all Feature properties', async () => {
 });
 
 test('Click on close card', async () => {
-  render(FeatureCard, { feature: featureMock, closeFeature: closeFeature });
+  render(ExploreFeatureCard, { feature: featureMock, closeFeature: closeFeature });
 
   const closeButton = screen.getByRole('button', { name: 'Close' });
   expect(closeButton).toBeInTheDocument();
@@ -86,7 +86,7 @@ test('Click on close card', async () => {
 });
 
 test('Click on learn more link', async () => {
-  render(FeatureCard, { feature: featureMock, closeFeature: closeFeature });
+  render(ExploreFeatureCard, { feature: featureMock, closeFeature: closeFeature });
 
   const learnMoreLink = screen.getByRole('link', { name: 'Learn more' });
   expect(learnMoreLink).toBeInTheDocument();
@@ -97,7 +97,7 @@ test('Click on learn more link', async () => {
 });
 
 test('Click on primary button', async () => {
-  render(FeatureCard, { feature: featureMock, closeFeature: closeFeature });
+  render(ExploreFeatureCard, { feature: featureMock, closeFeature: closeFeature });
 
   const primaryButton = screen.getByRole('button', { name: featureMock.buttonTitle });
   expect(primaryButton).toBeInTheDocument();
@@ -108,7 +108,10 @@ test('Click on primary button', async () => {
 });
 
 test('Click on tutorial button', async () => {
-  render(FeatureCard, { feature: { ...featureMock, tutorialLink: '/link/to/tutorial' }, closeFeature: closeFeature });
+  render(ExploreFeatureCard, {
+    feature: { ...featureMock, tutorialLink: '/link/to/tutorial' },
+    closeFeature: closeFeature,
+  });
 
   const tutorialButton = screen.getByRole('button', { name: 'Watch Tutorial' });
   expect(tutorialButton).toBeInTheDocument();

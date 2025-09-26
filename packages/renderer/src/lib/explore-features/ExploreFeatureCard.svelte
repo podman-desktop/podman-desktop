@@ -4,10 +4,10 @@ import { Button, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
-import type { Feature } from '/@api/explore-features';
+import type { ExploreFeature } from '/@api/explore-feature';
 
 interface Props {
-  feature: Feature;
+  feature: ExploreFeature;
   closeFeature: (featureId: string) => void;
 }
 
