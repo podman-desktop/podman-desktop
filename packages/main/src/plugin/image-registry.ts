@@ -38,6 +38,7 @@ import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from
 import { isMac, isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { Certificates } from './certificates.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
 import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
 import { Telemetry } from './telemetry/telemetry.js';
@@ -54,6 +55,7 @@ export interface RegistryAuthInfo {
 export class ImageRegistry {
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
+  private defaultRegistries: (containerDesktopAPI.DefaultRegistry | containerDesktopAPI.DefaultRegistryMirror)[] = [];
   private providers: Map<string, containerDesktopAPI.RegistryProvider> = new Map();
 
   private readonly _onDidRegisterRegistry = new Emitter<containerDesktopAPI.Registry>();
@@ -79,6 +81,8 @@ export class ImageRegistry {
     private certificates: Certificates,
     @inject(Proxy)
     private proxy: Proxy,
+    @inject(ConfigurationRegistry)
+    private configurationRegistry: ConfigurationRegistry,
   ) {
     this.proxy.onDidUpdateProxy(settings => {
       this.proxySettings = settings;
@@ -92,6 +96,18 @@ export class ImageRegistry {
     if (this.proxyEnabled) {
       this.proxySettings = this.proxy.proxy;
     }
+  }
+
+  loadUserDefaultRegistryConfig(): void {
+    this.defaultRegistries = this.configurationRegistry.getConfiguration('registries').get('defaults', []);
+    this.defaultRegistries.forEach(registry => {
+      if ('registry' in registry) {
+        this.suggestRegistry({
+          name: registry.registry.prefix,
+          url: registry.registry.prefix,
+        });
+      }
+    });
   }
 
   extractRegistryServerFromImage(imageName: string): string | undefined {
