@@ -24,6 +24,7 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 import { ContextUI } from '../context/context';
 import {
   calcHalfCpuCores,
+  getContainerRootlessInfo,
   getNormalizedDefaultNumberValue,
   isPropertyValidInContext,
   isTargetScope,
@@ -255,5 +256,63 @@ describe('calcHalfCpuCores', () => {
 
   test('should return 1 for negative numbers', () => {
     expect(calcHalfCpuCores('-4')).toBe(1);
+  });
+});
+
+describe('getContainerRootlessInfo', () => {
+  test('should return undefined when provider not found', () => {
+    const providerContainerConfiguration = new Map();
+
+    const result = getContainerRootlessInfo(providerContainerConfiguration, 'non-existent-provider', 'test-container');
+
+    expect(result).toBeUndefined();
+  });
+
+  test('should return undefined when rootful config not found', () => {
+    const providerContainerConfiguration = new Map();
+    providerContainerConfiguration.set('test-provider', [
+      {
+        id: 'some.other.config',
+        value: true,
+        connection: 'test-container',
+        providerId: 'test-provider',
+      },
+    ]);
+
+    const result = getContainerRootlessInfo(providerContainerConfiguration, 'test-provider', 'test-container');
+
+    expect(result).toBeUndefined();
+  });
+
+  test('should return "rootful" when podman.machine.rootful is true', () => {
+    const providerContainerConfiguration = new Map();
+    providerContainerConfiguration.set('test-provider', [
+      {
+        id: 'podman.machine.rootful',
+        value: true,
+        connection: 'test-container',
+        providerId: 'test-provider',
+      },
+    ]);
+
+    const result = getContainerRootlessInfo(providerContainerConfiguration, 'test-provider', 'test-container');
+
+    expect(result).toBe('rootful');
+  });
+
+  test('should return "rootless" when podman.machine.rootful is false', () => {
+    const providerContainerConfiguration = new Map();
+    providerContainerConfiguration.set('test-provider', [
+      {
+        id: 'podman.machine.rootful',
+        value: false,
+        connection: 'test-container',
+        providerId: 'test-provider',
+      },
+    ]);
+
+    const result = getContainerRootlessInfo(providerContainerConfiguration, 'test-provider', 'test-container');
+
+    expect(result).toBe('rootless');
   });
 });
