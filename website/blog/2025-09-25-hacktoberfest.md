@@ -31,16 +31,16 @@ Here are some ways developers can get involved:
 
 - 🐛 [**Bug Fixes** ](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug)– Help identify and resolve issues in the desktop app.
 - 📝 [**Documentation**](https://podman-desktop.io/docs/intro) – Refine guides and technical docs to make it easier for others to onboard.
-- 🔌 [**Extensions**](https://podman-desktop.io/extend) – Build or improve extensions to extend Podman Desktop’s functionality.
+- 🔌 [**Extensions**](https://podman-desktop.io/extend) – Build or improve [extensions](https://github.com/podman-desktop?q=extension&type=all&language=&sort=) to extend Podman Desktop’s functionality.
 - 🎨 [**UI/UX Improvements**](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20%20label%3A%22UX%2FUI%20Issue%22) – Enhance user experience for smoother workflows.
 
 ## How to Get Started
 
-1. Browse the GitHub repo for [issues](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahacktoberfest) tagged `hacktoberfest`.
+1. Explore our GitHub repositories for [issues](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahacktoberfest) labeled `hacktoberfest`. You can browse issues across multiple repos in our organization, such as [**Extension: Kubernetes Dashboard**](https://github.com/podman-desktop/extension-kubernetes-dashboard/issues?q=state%3Aopen%20label%3Ahacktoberfest)
 2. Join our [community channels](https://github.com/podman-desktop/podman-desktop/tree/main?tab=readme-ov-file#communication) for guidance and collaboration.
 3. Fork, code, and submit your PR. Once merged, your work counts toward Hacktoberfest!
 
-Learn more about Hacktoberfest participation [here](https://hacktoberfest.com/participation/).
+Learn more about Hacktoberfest participation [**here**](https://hacktoberfest.com/participation/).
 
 ## Let’s Build Together
 
