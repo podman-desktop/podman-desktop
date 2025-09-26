@@ -179,3 +179,22 @@ export function calcHalfCpuCores(osCpu: string): number {
   const hCores = Math.floor(cores / 2);
   return hCores === 0 ? 1 : hCores;
 }
+
+export function getContainerRootlessInfo(
+  providerContainerConfiguration: Map<string, IProviderConnectionConfigurationPropertyRecorded[]>,
+  providerId: string,
+  containerName: string,
+): string | undefined {
+  if (!providerContainerConfiguration.has(providerId)) {
+    return undefined;
+  }
+
+  const providerConfiguration = providerContainerConfiguration.get(providerId) ?? [];
+  const containerConfig = providerConfiguration.filter(conf => conf.connection === containerName);
+  const rootfulConfig = containerConfig.find(conf => conf.id === 'podman.machine.rootful');
+  if (!rootfulConfig) {
+    return undefined;
+  }
+
+  return rootfulConfig.value ? 'rootful' : 'rootless';
+}
