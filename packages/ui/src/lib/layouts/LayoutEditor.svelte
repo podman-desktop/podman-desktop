@@ -1,49 +1,92 @@
 <script lang="ts">
 import { faBars, faCheck, faGripVertical, faUndo } from '@fortawesome/free-solid-svg-icons';
-import { scale } from 'svelte/transition';
+import { SvelteMap } from 'svelte/reactivity';
 
 import { Icon } from '../icons';
 import type { LayoutEditItem } from './LayoutEditor';
 
+/**
+ * LayoutEditor Component
+ *
+ * A dropdown component that allows users to toggle visibility and reorder items in a layout.
+ * Displays as a hamburger menu button that opens a dropdown with checkboxes and drag handles.
+ *
+ * Usage:
+ * ```svelte
+ * <LayoutEditor
+ *   items={layoutItems}
+ *   ordering={columnOrdering}
+ *   enableToggle={true}
+ *   enableReorder={true}
+ *   onToggle={(id, enabled) => handleToggle(id, enabled)}
+ *   onOrderChange={(newOrdering) => handleOrderChange(newOrdering)}
+ *   onReset={() => resetLayout()}
+ * />
+ * ```
+ *
+ * Features:
+ * - Toggle items on/off with checkmarks
+ * - Drag & drop reordering (mouse + keyboard accessible)
+ * - Reset to default state
+ * - Fully keyboard accessible
+ */
 interface Props {
   items: LayoutEditItem[];
+  ordering?: SvelteMap<string, number>;
   title?: string;
   enableReorder?: boolean;
   enableToggle?: boolean;
+  onOrderChange?: (newOrdering: SvelteMap<string, number>) => void;
+  onToggle?: (itemId: string, enabled: boolean) => void;
   onReset?: () => void;
   resetButtonLabel?: string;
   class?: string;
 }
 
 let {
-  items = $bindable([]),
+  items = [],
+  ordering = new SvelteMap(),
   title = 'Select items',
   enableReorder = false,
   enableToggle = false,
+  onOrderChange,
+  onToggle,
   onReset,
   resetButtonLabel = 'Reset to default',
   class: className = '',
 }: Props = $props();
 
+// Create ordered items list based on the ordering Map
+let orderedItems = $derived.by(() => {
+  // If no ordering provided, use original order
+  if (ordering.size === 0) {
+    return [...items].toSorted((a, b) => a.originalOrder - b.originalOrder);
+  }
+
+  // All items should be in the ordering map when reordering is active
+  return [...items].toSorted((a, b) => {
+    const aOrder = ordering.get(a.id) ?? a.originalOrder;
+    const bOrder = ordering.get(b.id) ?? b.originalOrder;
+    return aOrder - bOrder;
+  });
+});
+
 // Create a reactive set derived from items (read-only)
 let enabledItems = $derived(new Set(items.filter(item => item.enabled).map(item => item.id)));
 
-let isResetDisabled = $state(true);
-$effect(() => {
+let isResetDisabled = $derived.by(() => {
   // Reset callback must be provided
   if (!onReset) {
-    isResetDisabled = true;
-    return;
+    return true;
   }
 
   // Reset is disabled if all items are enabled and in original order
   const allEnabled = items.every(item => item.enabled);
 
-  // Check if items are in their original order
-  // Each item's current array position should match its originalOrder
-  const isInOriginalOrder = items.every((item, index) => item.originalOrder === index);
+  // Check if items are in their original order (no custom ordering)
+  const isInOriginalOrder = ordering.size === 0 || orderedItems.every((item, index) => item.originalOrder === index);
 
-  isResetDisabled = allEnabled && isInOriginalOrder;
+  return allEnabled && isInOriginalOrder;
 });
 
 let isOpen = $state(false);
@@ -55,7 +98,7 @@ let dragOverIndex: number | undefined = $state(undefined);
 let isDraggingActive = $state(false);
 let isGripHovered: boolean = $state(false);
 
-async function toggleDropdown(): Promise<void> {
+function toggleDropdown(): void {
   isOpen = !isOpen;
 }
 
@@ -63,14 +106,14 @@ function closeDropdown(): void {
   isOpen = false;
 }
 
-async function handleItemToggle(item: LayoutEditItem): Promise<void> {
+function handleItemToggle(item: LayoutEditItem): void {
   if (!enableToggle || isDraggingActive) return;
-  items = items.map(i => (i.id === item.id ? { ...i, enabled: !i.enabled } : i));
+  onToggle?.(item.id, !item.enabled);
 }
 
 // Creates a visual preview of the list while dragging.
 function createDragPreview(dragIndex: number, hoverIndex: number): LayoutEditItem[] {
-  const newItems = [...items];
+  const newItems = [...orderedItems];
   const draggedItem = newItems[dragIndex];
   newItems.splice(dragIndex, 1);
   newItems.splice(hoverIndex, 0, draggedItem);
@@ -110,11 +153,18 @@ function stopDrag(): void {
   }
 
   if (draggedIndex !== dragOverIndex) {
-    const newItems = [...items];
-    const [draggedItem] = newItems.splice(draggedIndex, 1);
-    newItems.splice(dragOverIndex, 0, draggedItem);
+    // Create new ordering based on the drag operation
+    const newOrdering = new SvelteMap<string, number>();
+    const reorderedItems = [...orderedItems];
+    const [draggedItem] = reorderedItems.splice(draggedIndex, 1);
+    reorderedItems.splice(dragOverIndex, 0, draggedItem);
 
-    items = newItems;
+    // Update the ordering map with new positions for ALL items
+    reorderedItems.forEach((item, index) => {
+      newOrdering.set(item.id, index);
+    });
+
+    onOrderChange?.(newOrdering);
   }
   resetDragging();
 }
@@ -143,14 +193,21 @@ function handleGripKeydown(event: KeyboardEvent, index: number): void {
     event.preventDefault();
     event.stopPropagation();
 
-    const newIndex = key === 'ArrowUp' ? Math.max(0, index - 1) : Math.min(items.length - 1, index + 1);
+    const newIndex = key === 'ArrowUp' ? Math.max(0, index - 1) : Math.min(orderedItems.length - 1, index + 1);
 
     if (newIndex !== index) {
-      // Reorder the items
-      const newItems = [...items];
-      const [movedItem] = newItems.splice(index, 1);
-      newItems.splice(newIndex, 0, movedItem);
-      items = newItems;
+      // Create new ordering based on keyboard movement
+      const newOrdering = new SvelteMap<string, number>();
+      const reorderedItems = [...orderedItems];
+      const [movedItem] = reorderedItems.splice(index, 1);
+      reorderedItems.splice(newIndex, 0, movedItem);
+
+      // Update the ordering map with new positions for ALL items
+      reorderedItems.forEach((item, itemIndex) => {
+        newOrdering.set(item.id, itemIndex);
+      });
+
+      onOrderChange?.(newOrdering);
 
       // Update focus to follow the moved item
       setTimeout(() => {
@@ -174,6 +231,14 @@ function handleKeydown(e: KeyboardEvent): void {
     closeDropdown();
   }
 }
+
+// Handle reset - clear ordering and call parent reset
+function handleReset(): void {
+  // Clear the ordering Map to reset to original order
+  onOrderChange?.(new SvelteMap());
+  // Call parent reset handler for any additional reset logic
+  onReset?.();
+}
 </script>
 
 <svelte:window onclick={handleWindowClick} onkeydown={handleKeydown} onmousemove={handleWindowMouseMove} onmouseup={stopDrag} />
@@ -192,12 +257,11 @@ function handleKeydown(e: KeyboardEvent): void {
 
   {#if isOpen}
     <div 
-      class="origin-top-right absolute z-50 right-0 top-full mt-1 overflow-y-auto overflow-x-hidden rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] border border-[var(--pd-dropdown-border)] text-nowrap"
-      transition:scale={{ duration: 200, start: 0.95, opacity: 0 }}
+      class="origin-top-right absolute z-50 right-0 top-full mt-1 overflow-y-auto overflow-x-hidden rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] border border-[var(--pd-dropdown-border)] text-nowrap animate-in fade-in zoom-in-95 duration-200"
     >
       <div class="bg-[var(--pd-dropdown-header-bg)]">
-        {#each (isDraggingActive && draggedIndex !== undefined && dragOverIndex !== undefined) ? createDragPreview(draggedIndex, dragOverIndex) : items as item, index (item.id)}
-          {@const originalIndex = items.findIndex(originalItem => originalItem.id === item.id)}
+        {#each (isDraggingActive && draggedIndex !== undefined && dragOverIndex !== undefined) ? createDragPreview(draggedIndex, dragOverIndex) : orderedItems as item, index (item.id)}
+          {@const originalIndex = orderedItems.findIndex(originalItem => originalItem.id === item.id)}
             <button
               class="flex items-center justify-between px-3 py-2 w-full"
               class:cursor-pointer={!isDraggingActive && !isGripHovered}
@@ -207,7 +271,7 @@ function handleKeydown(e: KeyboardEvent): void {
               class:bg-[var(--pd-dropdown-item-hover-bg)]={isDraggingActive && dragOverIndex === index}
               class:opacity-60={isDraggingActive && draggedIndex === originalIndex}
               data-item-id={item.id}
-              onclick={(): Promise<void> => handleItemToggle(item)}
+              onclick={(): void => handleItemToggle(item)}
             >
               <div class="flex items-center justify-start gap-3 flex-1">
                 <div class="w-4 h-4 flex items-center justify-center flex-shrink-0 pointer-events-none">
@@ -252,7 +316,7 @@ function handleKeydown(e: KeyboardEvent): void {
             class:hover:bg-[var(--pd-dropdown-item-hover-bg)]={!isResetDisabled}
             class:opacity-50={isResetDisabled}
             class:text-[var(--pd-dropdown-item-disabled-text)]={isResetDisabled}
-            onclick={isResetDisabled ? undefined : onReset}
+            onclick={isResetDisabled ? undefined : handleReset}
             disabled={isResetDisabled}
             tabindex={isResetDisabled ? -1 : 0}
           >

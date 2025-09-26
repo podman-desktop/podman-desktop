@@ -20,16 +20,11 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { SvelteMap } from 'svelte/reactivity';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { LayoutEditItem } from './LayoutEditor';
 import LayoutEditor from './LayoutEditor.svelte';
-
-// Mock the animate function
-HTMLElement.prototype.animate = vi.fn().mockReturnValue({
-  finished: Promise.resolve(),
-  cancel: vi.fn(),
-});
 
 const mockItems: LayoutEditItem[] = [
   { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
@@ -237,7 +232,7 @@ test('Expect reset button is enabled when items are modified', async () => {
 test('Expect reset button is enabled when items are reordered', async () => {
   const onResetMock = vi.fn();
 
-  // Create a component with items in original order first, then reorder them
+  // Create a component with items in original order first
   const originalItems = [
     { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
     { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
@@ -252,17 +247,18 @@ test('Expect reset button is enabled when items are reordered', async () => {
     resetButtonLabel: 'Reset to default',
   });
 
-  // Now reorder the items (simulate drag and drop result)
-  const reorderedItems = [
-    { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
-    { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
-    { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
-    { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
-  ];
+  // Create an ordering Map that represents reordered state
+  const reorderingMap = new SvelteMap([
+    ['item2', 0], // Second item moved to first position
+    ['item1', 1], // First item moved to second position
+    ['item3', 2], // Third item stays in third position
+    ['item4', 3], // Fourth item stays in fourth position
+  ]);
 
-  // Re-render with reordered items
+  // Re-render with ordering Map to simulate reordered state
   await component.rerender({
-    items: reorderedItems,
+    items: originalItems, // Items stay the same, only ordering changes
+    ordering: reorderingMap,
     title: 'Manage Layout',
     onReset: onResetMock,
     resetButtonLabel: 'Reset to default',
@@ -478,14 +474,18 @@ test('Expect reset button enabled after reordering items', async () => {
   const triggerButton = screen.getByTitle('Manage Layout');
   await fireEvent.click(triggerButton);
 
-  // Update with reordered items
+  // Create an ordering Map that represents reordered state
+  const reorderingMap = new SvelteMap([
+    ['item2', 0], // Second item moved to first position
+    ['item1', 1], // First item moved to second position
+    ['item3', 2], // Third item stays in third position
+    ['item4', 3], // Fourth item stays in fourth position
+  ]);
+
+  // Update with reordering Map
   await component.rerender({
-    items: [
-      { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
-      { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
-      { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
-      { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
-    ],
+    items: defaultItems, // Items stay the same, only ordering changes
+    ordering: reorderingMap,
     title: 'Manage Layout',
     enableToggle: true,
     enableReorder: true,
@@ -525,13 +525,23 @@ test('Expect clicking reset button resets state and disables button', async () =
   expect(resetButton).toBeDisabled();
 
   // Modify state (toggle and reorder)
+  const modifiedItems = [
+    { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
+    { id: 'item2', label: 'Second Item', enabled: false, originalOrder: 1 }, // Toggled off
+    { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
+    { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
+  ];
+
+  const reorderingMap = new SvelteMap([
+    ['item2', 0], // Second item moved to first position
+    ['item1', 1], // First item moved to second position
+    ['item3', 2], // Third item stays in third position
+    ['item4', 3], // Fourth item stays in fourth position
+  ]);
+
   await component.rerender({
-    items: [
-      { id: 'item2', label: 'Second Item', enabled: false, originalOrder: 1 },
-      { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
-      { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
-      { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
-    ],
+    items: modifiedItems,
+    ordering: reorderingMap,
     title: 'Manage Layout',
     enableToggle: true,
     enableReorder: true,
@@ -550,6 +560,7 @@ test('Expect clicking reset button resets state and disables button', async () =
   // Simulate parent updating state back to default after reset
   await component.rerender({
     items: defaultItems,
+    ordering: new SvelteMap(), // Clear ordering to indicate default state
     title: 'Manage Layout',
     enableToggle: true,
     enableReorder: true,
