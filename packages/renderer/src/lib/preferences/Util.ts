@@ -191,7 +191,7 @@ export function getContainerRootlessInfo(
 
   const providerConfiguration = providerContainerConfiguration.get(providerId) ?? [];
   const containerConfig = providerConfiguration.filter(conf => conf.connection === containerName);
-  const rootfulConfig = containerConfig.find(conf => conf.id === 'podman.machine.rootful');
+  const rootfulConfig = containerConfig.find(conf => conf.format === 'rootfulMode');
   if (!rootfulConfig) {
     return undefined;
   }
