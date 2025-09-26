@@ -126,7 +126,7 @@ export async function checkKubernetesResourceState(
     await playExpect(kubernetesResourceDetails.heading).toBeVisible();
     await playExpect
       .poll(async () => kubernetesResourceDetails.getState(), { timeout: timeout })
-      .toEqual(expectedResourceState);
+      .toBe(expectedResourceState);
   });
 }
 

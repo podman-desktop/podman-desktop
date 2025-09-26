@@ -61,6 +61,7 @@ export enum KubernetesResourceState {
   Stopped = 'STOPPED',
   Unknown = 'UNKNOWN',
   Succeeded = 'SUCCEEDED',
+  None = '',
 }
 export enum ExtensionState {
   Disabled = 'DISABLED',

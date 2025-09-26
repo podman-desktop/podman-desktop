@@ -334,6 +334,15 @@ test.describe('Kubernetes resources End-to-End test', { tag: '@k8s_e2e' }, () =>
           KubernetesResourceState.Running,
           70_000,
         );
+
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Jobs,
+          CRON_JOB_NAME,
+          KubernetesResourceState.None, // Currently there is no 'Completed' state, using None which means the state column is empty
+          70_000,
+        );
+
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Pods,
