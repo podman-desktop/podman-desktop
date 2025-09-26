@@ -5,7 +5,7 @@ import { onDestroy, onMount } from 'svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import type { ExploreFeature } from '/@api/explore-feature';
 
-import FeatureCard from './FeatureCard.svelte';
+import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 
 let features: ExploreFeature[] = $state([]);
 let expanded: boolean = $state(true);
@@ -44,7 +44,7 @@ function featureClosed(featureId: string): void {
 </script>
 
 {#snippet card(feature: ExploreFeature)}
-  <FeatureCard feature={feature} closeFeature={featureClosed} />
+  <ExploreFeatureCard feature={feature} closeFeature={featureClosed} />
 {/snippet}
 
 {#if features.length > 0}
