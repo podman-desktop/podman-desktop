@@ -2279,6 +2279,28 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes-client:refreshContextState', context);
   });
 
+  contextBridge.exposeInMainWorld('kubernetesParseKubeconfigFile', async (filePath: string): Promise<KubeContext[]> => {
+    return ipcInvoke('kubernetes-client:parseKubeconfigFile', filePath);
+  });
+
+  contextBridge.exposeInMainWorld(
+    'kubernetesImportContextsFromFile',
+    async (
+      filePath: string,
+      selectedContexts: string[],
+      conflictResolutions: Map<string, 'keep-both' | 'replace'>,
+    ): Promise<void> => {
+      return ipcInvoke('kubernetes-client:importContextsFromFile', filePath, selectedContexts, conflictResolutions);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'kubernetesHasCertificateChanged',
+    async (filePath: string, contextName: string): Promise<boolean> => {
+      return ipcInvoke('kubernetes-client:hasCertificateChanged', filePath, contextName);
+    },
+  );
+
   contextBridge.exposeInMainWorld('getKubernetesPortForwards', async (): Promise<ForwardConfig[]> => {
     return ipcInvoke('kubernetes-client:getPortForwards');
   });

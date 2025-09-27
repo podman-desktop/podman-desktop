@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faFileImport, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
@@ -219,7 +219,17 @@ async function connect(contextName: string): Promise<void> {
 }
 </script>
 
-<SettingsPage title="Kubernetes Contexts">
+{#snippet importConfig()}
+  <div class="flex flex-1 justify-end">
+    <div class="px-5" role="group" aria-label="actions">
+      <div class="space-x-2 flex flex-nowrap">
+        <Button type='primary' icon={faFileImport} onclick={(): void => router.goto('/preferences/kubernetes-contexts/import-file')}>Import</Button>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
+<SettingsPage title="Kubernetes Contexts" actions={importConfig}>
   <div class="h-full" role="table" aria-label="Contexts">
     <!-- Use KubernetesIcon in the future / not EngineIcon -->
     <EmptyScreen

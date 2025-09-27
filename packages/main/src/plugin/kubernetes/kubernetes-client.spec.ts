@@ -2655,3 +2655,229 @@ test('expect readNamespacedJob to return the job', async () => {
   expect(job).toBeDefined();
   expect(job?.metadata?.name).toEqual('foobar');
 });
+
+describe('parseKubeconfigFile', () => {
+  beforeEach(() => {
+    // Mock fs.existsSync to return true for file existence checks
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+  });
+
+  test('should parse a valid kubeconfig file', async () => {
+    const client = createTestClient();
+    const mockContexts = [
+      {
+        name: 'test-context',
+        cluster: 'test-cluster',
+        user: 'test-user',
+        namespace: 'default',
+      },
+    ];
+    const mockClusters = [
+      {
+        name: 'test-cluster',
+        server: 'https://test-server:6443',
+        skipTLSVerify: false,
+      },
+    ];
+
+    // Mock KubeConfig methods
+    const tempConfig = new KubeConfig();
+    tempConfig.contexts = mockContexts;
+    tempConfig.clusters = mockClusters;
+    tempConfig.getCurrentContext = vi.fn().mockReturnValue('test-context');
+    tempConfig.loadFromFile = vi.fn();
+
+    // Mock the constructor to return our temp config
+    vi.spyOn(clientNode, 'KubeConfig').mockImplementation(() => tempConfig);
+
+    const result = await client.parseKubeconfigFile('/path/to/kubeconfig');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      name: 'test-context',
+      cluster: 'test-cluster',
+      user: 'test-user',
+      namespace: 'default',
+      currentContext: true,
+      clusterInfo: {
+        name: 'test-cluster',
+        server: 'https://test-server:6443',
+        skipTLSVerify: false,
+        tlsServerName: undefined,
+      },
+    });
+  });
+
+  test('should throw error if file does not exist', async () => {
+    const client = createTestClient();
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+    await expect(client.parseKubeconfigFile('/nonexistent/file')).rejects.toThrow(
+      'Kubeconfig file /nonexistent/file does not exist',
+    );
+  });
+
+  test('should throw error if kubeconfig parsing fails', async () => {
+    const client = createTestClient();
+    const tempConfig = new KubeConfig();
+    tempConfig.loadFromFile = vi.fn().mockImplementation(() => {
+      throw new Error('Invalid YAML');
+    });
+
+    vi.spyOn(clientNode, 'KubeConfig').mockImplementation(() => tempConfig);
+
+    await expect(client.parseKubeconfigFile('/path/to/invalid')).rejects.toThrow(
+      'Failed to parse kubeconfig file: Error: Invalid YAML',
+    );
+  });
+
+  test('should handle contexts without cluster info', async () => {
+    const client = createTestClient();
+    const mockContexts = [
+      {
+        name: 'test-context',
+        cluster: 'missing-cluster',
+        user: 'test-user',
+        namespace: 'default',
+      },
+    ];
+
+    const tempConfig = new KubeConfig();
+    tempConfig.contexts = mockContexts;
+    tempConfig.clusters = []; // No clusters
+    tempConfig.getCurrentContext = vi.fn().mockReturnValue('test-context');
+    tempConfig.loadFromFile = vi.fn();
+
+    vi.spyOn(clientNode, 'KubeConfig').mockImplementation(() => tempConfig);
+
+    const result = await client.parseKubeconfigFile('/path/to/kubeconfig');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBeDefined();
+    expect(result[0]!.clusterInfo).toBeUndefined();
+  });
+});
+
+describe('importContextsFromFile', () => {
+  let client: KubernetesClient;
+  let sourceConfig: KubeConfig;
+  let newConfig: KubeConfig;
+
+  beforeEach(() => {
+    client = createTestClient();
+    // Mock saveKubeConfig and refresh
+    client.saveKubeConfig = vi.fn().mockResolvedValue(undefined);
+    client.refresh = vi.fn().mockResolvedValue(undefined);
+
+    // Create common KubeConfig instances
+    sourceConfig = new KubeConfig();
+    sourceConfig.loadFromFile = vi.fn();
+
+    newConfig = new KubeConfig();
+    newConfig.contexts = [];
+    newConfig.clusters = [];
+    newConfig.users = [];
+    newConfig.loadFromString = vi.fn();
+
+    // Mock KubeConfig constructor to return our real KubeConfig instances
+    vi.spyOn(clientNode, 'KubeConfig').mockReturnValueOnce(sourceConfig).mockReturnValue(newConfig);
+  });
+
+  test.each([
+    {
+      scenario: 'replace conflict resolution',
+      contextName: 'test-context',
+      clusterName: 'test-cluster',
+      userName: 'test-user',
+      conflictResolution: 'replace' as const,
+      expectedExportConfig:
+        '{"contexts":[{"name":"test-context","cluster":"test-cluster","user":"test-user"}],"clusters":[{"name":"test-cluster","server":"https://test:6443"}],"users":[{"name":"test-user"}]}',
+    },
+    {
+      scenario: 'keep-both conflict resolution',
+      contextName: 'test-context',
+      clusterName: 'test-cluster',
+      userName: 'test-user',
+      conflictResolution: 'keep-both' as const,
+      expectedExportConfig: '{"contexts":[],"clusters":[],"users":[]}',
+    },
+    {
+      scenario: 'new context (no conflict)',
+      contextName: 'new-context',
+      clusterName: 'new-cluster',
+      userName: 'new-user',
+      conflictResolution: null,
+      expectedExportConfig:
+        '{"contexts":[{"name":"new-context","cluster":"new-cluster","user":"new-user"}],"clusters":[{"name":"new-cluster","server":"https://new:6443"}],"users":[{"name":"new-user"}]}',
+    },
+  ])(
+    'Expect import with $scenario to call saveKubeConfig',
+    async ({ contextName, clusterName, userName, conflictResolution, expectedExportConfig }) => {
+      // Set up source config
+      sourceConfig.contexts = [{ name: contextName, cluster: clusterName, user: userName }];
+      sourceConfig.clusters = [
+        { name: clusterName, server: `https://${clusterName.split('-')[0]}:6443`, skipTLSVerify: false },
+      ];
+      sourceConfig.users = [{ name: userName }];
+
+      // Set up new config export
+      newConfig.exportConfig = vi.fn().mockReturnValue(expectedExportConfig);
+
+      const conflictResolutions = new Map<string, 'keep-both' | 'replace'>();
+      if (conflictResolution) {
+        conflictResolutions.set(contextName, conflictResolution);
+      }
+
+      await client.importContextsFromFile('/path/to/source', [contextName], conflictResolutions);
+
+      expect(client.saveKubeConfig).toHaveBeenCalled();
+      expect(client.refresh).toHaveBeenCalled();
+      expect(apiSender.send).toHaveBeenCalledWith('kubernetes-context-update');
+      expect(newConfig.loadFromString).toHaveBeenCalled();
+      expect(client.saveKubeConfig).toHaveBeenCalledTimes(1);
+    },
+  );
+});
+
+describe('findNewContextName', () => {
+  test('should generate unique context name', () => {
+    const client = createTestClient();
+    client.kubeConfig.contexts = [
+      { name: 'existing-1', cluster: 'c1', user: 'u1' },
+      { name: 'existing-2', cluster: 'c2', user: 'u2' },
+    ];
+
+    const newName = client.findNewContextName('existing');
+    expect(newName).toBe('existing-3');
+  });
+
+  test('should increment counter if name already exists', () => {
+    const client = createTestClient();
+    client.kubeConfig.contexts = [
+      { name: 'existing-1', cluster: 'c1', user: 'u1' },
+      { name: 'existing-2', cluster: 'c2', user: 'u2' },
+    ];
+
+    const newName = client.findNewContextName('existing-1');
+    expect(newName).toBe('existing-1-1');
+  });
+
+  test('should find next available number', () => {
+    const client = createTestClient();
+    client.kubeConfig.contexts = [
+      { name: 'test-1', cluster: 'c1', user: 'u1' },
+      { name: 'test-2', cluster: 'c2', user: 'u2' },
+    ];
+
+    const newName = client.findNewContextName('test');
+    expect(newName).toBe('test-3');
+  });
+
+  test('should handle empty contexts array', () => {
+    const client = createTestClient();
+    client.kubeConfig.contexts = [];
+
+    const newName = client.findNewContextName('test');
+    expect(newName).toBe('test-1');
+  });
+});
