@@ -244,3 +244,24 @@ article .markdown ol ol {
   background-color: transparent;
   color: var(--ifm-color-primary);
 }
+
+/**
+  Reorder navbar items to move search button to the left of Downloads button
+ */
+
+.navbar__items--right > *:nth-child(1) {
+  order: 1;
+  margin-right: 1rem;
+}
+
+.navbar__items--right > *:nth-child(2) {
+  order: 4;
+}
+
+.navbar__items--right > *:nth-child(3) {
+  order: 2;
+}
+
+.navbar__items--right > *:nth-child(4) {
+  order: 3;
+}
