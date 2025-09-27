@@ -50,22 +50,46 @@
 </style>
 
 <script lang="ts">
+import type { Snippet } from 'svelte';
+
 import { tooltipHidden } from './tooltip-store';
 
-export let tip: string | undefined = undefined;
-export let top = false;
-export let topLeft = false;
-export let topRight = false;
-export let right = false;
-export let bottom = false;
-export let bottomLeft = false;
-export let bottomRight = false;
-export let left = false;
+interface Props {
+  tip?: string;
+  top?: boolean;
+  topLeft?: boolean;
+  topRight?: boolean;
+  right?: boolean;
+  bottom?: boolean;
+  bottomLeft?: boolean;
+  bottomRight?: boolean;
+  left?: boolean;
+  class?: string;
+  tipSnippet?: Snippet;
+  children?: Snippet;
+  'aria-label'?: string;
+}
+
+let {
+  tip = undefined,
+  top = false,
+  topLeft = false,
+  topRight = false,
+  right = false,
+  bottom = false,
+  bottomLeft = false,
+  bottomRight = false,
+  left = false,
+  class: className,
+  tipSnippet,
+  children,
+  'aria-label': ariaLabel,
+}: Props = $props();
 </script>
 
-<div class="relative inline-block">
-  <span class="group tooltip-slot {$$props.class}">
-    <slot />
+<div class="relative inline-block" aria-label={ariaLabel}>
+  <span class="group tooltip-slot {className}">
+    {@render children?.()}
   </span>
   <div
     class="whitespace-nowrap absolute tooltip opacity-0 inline-block transition-opacity duration-150 ease-in-out pointer-events-none text-sm z-60"
@@ -79,16 +103,16 @@ export let left = false;
     class:bottom-right={bottomRight}>
     {#if tip && !$tooltipHidden}
       <div
-        class="inline-block py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {$$props.class}"
+        class="inline-block py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
         aria-label="tooltip">
         {tip}
       </div>
     {/if}
-    {#if $$slots.tip && !tip && !$tooltipHidden}
+    {#if tipSnippet && !tip && !$tooltipHidden}
       <div
-        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {$$props.class}"
+        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
         aria-label="tooltip">
-        <slot name="tip" />
+        {@render tipSnippet?.()}
       </div>
     {/if}
   </div>

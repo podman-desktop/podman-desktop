@@ -237,7 +237,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
         {#if cliTool.version}
           <div
             class="flex flex-row justify-between align-center bg-[var(--pd-invert-content-bg)] p-2 rounded-lg min-w-[320px] w-fit">
-            <Tooltip area-label="cli-full-path" bottomRight={true} tip="Path: {cliTool.path}">
+            <Tooltip aria-label="cli-full-path" bottomRight={true} tip="Path: {cliTool.path}">
               <div
                 class="flex text-[var(--pd-invert-content-card-text)] font-bold text-sm items-center"
                 aria-label="cli-version">
