@@ -3177,19 +3177,22 @@ export class PluginSystem {
   }
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
+    // Helper function to safely send to renderer, handling shutdown race condition
+    const safeSend = (messageType: string, data?: unknown): void => {
+      if (!this.isQuitting) {
+        try {
+          this.getWebContentsSender().send(channel, loggerId, messageType, data);
+        } catch (err) {
+          // Silently ignore errors during shutdown race condition
+        }
+      }
+    };
+
     return {
-      log: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'log', data);
-      },
-      warn: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'warn', data);
-      },
-      error: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'error', data);
-      },
-      onEnd: (): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'finish');
-      },
+      log: (...data: unknown[]): void => safeSend('log', data),
+      warn: (...data: unknown[]): void => safeSend('warn', data),
+      error: (...data: unknown[]): void => safeSend('error', data),
+      onEnd: (): void => safeSend('finish'),
     };
   }
 

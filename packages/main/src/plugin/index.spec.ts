@@ -767,3 +767,41 @@ describe.each<{
     expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
   });
 });
+
+describe('Log race condition fix', () => {
+  let pluginSystem: PluginSystem;
+
+  beforeEach(() => {
+    const trayMenu = {} as TrayMenu;
+    const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
+    pluginSystem = new PluginSystem(trayMenu, mainWindowDeferred);
+  });
+
+  test('should not throw error when window is destroyed during shutdown', () => {
+    // Simulate the race condition: window destroyed, getWebContentsSender throws
+    vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
+      throw new Error('Unable to find the main window');
+    });
+    (pluginSystem as any).isQuitting = false;
+
+    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
+
+    // The core test: no exceptions should be thrown
+    expect(() => {
+      logger.log('test');
+      logger.warn('test');
+      logger.error('test');
+      logger.onEnd();
+    }).not.toThrow();
+  });
+
+  test('should not attempt to send when isQuitting=true', () => {
+    const spy = vi.spyOn(pluginSystem, 'getWebContentsSender');
+    (pluginSystem as any).isQuitting = true;
+
+    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
+    logger.log('test');
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+});
