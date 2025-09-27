@@ -45,11 +45,11 @@ export function MacOSDownloads(): JSX.Element {
           <h3 className="mt-0">Podman Desktop for macOS</h3>
           <div className="pt-8">
             <TelemetryLink
-              className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold"
+              className="mt-auto no-underline hover:no-underline inline-flex text-white hover:text-white bg-purple-500 border-0 py-2 px-6 focus:outline-hidden hover:bg-purple-500 rounded-sm text-md font-semibold items-center"
               eventPath="download"
               eventTitle="download-mac"
               to={macos.universal}>
-              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2" />
+              <FontAwesomeIcon size="1x" icon={faDownload} className="mr-2 my-auto" />
               Download Now
             </TelemetryLink>
             <caption className="block w-full mt-1 text/50 dark:text-white/50">
