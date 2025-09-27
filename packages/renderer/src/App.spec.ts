@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { tablePersistenceCallbacks } from '@podman-desktop/ui-svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
@@ -122,8 +123,9 @@ test('receive context menu visible event from main', async () => {
   // wait for dispatch method to be called
   await waitFor(() => expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(Event)));
 
-  const eventSent = vi.mocked(dispatchEventMock).mock.calls[0][0];
-  expect((eventSent as Event).type).toBe('tooltip-hide');
+  const tooltipHideCall = vi.mocked(dispatchEventMock).mock.calls.find(call => call[0].type === 'tooltip-hide');
+  expect(tooltipHideCall).toBeDefined();
+  expect(tooltipHideCall![0].type).toBe('tooltip-hide');
 });
 
 test('receive context menu not visible event from main', async () => {
@@ -134,8 +136,9 @@ test('receive context menu not visible event from main', async () => {
   //  wait for dispatch method to be called
   await waitFor(() => expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(Event)));
 
-  const eventSent = vi.mocked(dispatchEventMock).mock.calls[0][0];
-  expect((eventSent as Event).type).toBe('tooltip-show');
+  const tooltipShowCall = vi.mocked(dispatchEventMock).mock.calls.find(call => call[0].type === 'tooltip-show');
+  expect(tooltipShowCall).toBeDefined();
+  expect(tooltipShowCall![0].type).toBe('tooltip-show');
 });
 
 test('opens submenu when a `submenu` menu is opened', async () => {
@@ -255,4 +258,92 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
   router.goto('/pods');
   await tick();
   expect(get(lastPage).name).equals('Dashboard Page');
+});
+
+describe('Table persistence functionality', () => {
+  test('should set tablePersistenceCallbacks store on app initialization', async () => {
+    // Mock the window methods
+    Object.defineProperty(window, 'loadLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'saveLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'resetLayoutConfig', { value: vi.fn() });
+
+    render(App);
+
+    // Check that the tablePersistenceCallbacks store is set
+    const callbacks = get(tablePersistenceCallbacks);
+    expect(callbacks).toBeDefined();
+    expect(callbacks).toHaveProperty('load');
+    expect(callbacks).toHaveProperty('save');
+    expect(callbacks).toHaveProperty('reset');
+    expect(typeof callbacks!.load).toBe('function');
+    expect(typeof callbacks!.save).toBe('function');
+    expect(typeof callbacks!.reset).toBe('function');
+  });
+
+  test('should provide working load callback through store', async () => {
+    const mockLoadLayoutConfig = vi
+      .fn()
+      .mockResolvedValue([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+
+    // Mock the window method
+    Object.defineProperty(window, 'loadLayoutConfig', { value: mockLoadLayoutConfig });
+    Object.defineProperty(window, 'saveLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'resetLayoutConfig', { value: vi.fn() });
+
+    render(App);
+
+    // Get the callbacks from the store
+    const callbacks = get(tablePersistenceCallbacks);
+    expect(callbacks).toBeDefined();
+
+    // Test the load callback
+    const result = await callbacks!.load('test-kind', ['Name', 'Age']);
+
+    expect(mockLoadLayoutConfig).toHaveBeenCalledWith('test-kind', ['Name', 'Age']);
+    expect(result).toEqual([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+  });
+
+  test('should provide working save callback through store', async () => {
+    const mockSaveLayoutConfig = vi.fn().mockResolvedValue(undefined);
+
+    // Mock the window methods
+    Object.defineProperty(window, 'loadLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'saveLayoutConfig', { value: mockSaveLayoutConfig });
+    Object.defineProperty(window, 'resetLayoutConfig', { value: vi.fn() });
+
+    render(App);
+
+    // Get the callbacks from the store
+    const callbacks = get(tablePersistenceCallbacks);
+    expect(callbacks).toBeDefined();
+
+    // Test the save callback
+    const items = [{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }];
+    await callbacks!.save('test-kind', items);
+
+    expect(mockSaveLayoutConfig).toHaveBeenCalledWith('test-kind', items);
+  });
+
+  test('should provide working reset callback through store', async () => {
+    const mockResetLayoutConfig = vi
+      .fn()
+      .mockResolvedValue([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+
+    // Mock the window methods
+    Object.defineProperty(window, 'loadLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'saveLayoutConfig', { value: vi.fn() });
+    Object.defineProperty(window, 'resetLayoutConfig', { value: mockResetLayoutConfig });
+
+    render(App);
+
+    // Get the callbacks from the store
+    const callbacks = get(tablePersistenceCallbacks);
+    expect(callbacks).toBeDefined();
+
+    // Test the reset callback
+    const result = await callbacks!.reset('test-kind', ['Name', 'Age']);
+
+    expect(mockResetLayoutConfig).toHaveBeenCalledWith('test-kind', ['Name', 'Age']);
+    expect(result).toEqual([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+  });
 });
