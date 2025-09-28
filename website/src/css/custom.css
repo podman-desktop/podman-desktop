@@ -251,7 +251,6 @@ article .markdown ol ol {
 
 .navbar__items--right > *:nth-child(1) {
   order: 1;
-  margin-right: 1rem;
 }
 
 .navbar__items--right > *:nth-child(2) {
