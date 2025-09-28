@@ -22,7 +22,7 @@ export function GitHubStarsButton({ mobile = false }: { readonly mobile?: boolea
       <span>Star</span>
       <span
         id="github-stars-badge"
-        className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs min-w-[2.5rem] text-center">
+        className="ml-2 px-2 py-1 bg-charcoal-300 dark:bg-charcoal-600 rounded text-white dark:text-gray-100 text-xs min-w-[2.5rem] text-center">
         {stargazersCount >= 1000 ? `${(stargazersCount / 1000).toFixed(1)}k` : `${stargazersCount}`}
       </span>
     </a>
