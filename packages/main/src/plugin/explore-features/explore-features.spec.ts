@@ -16,9 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { existsSync, promises } from 'node:fs';
+import path from 'node:path';
+
 import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { Context } from '/@/plugin/context/context.js';
 import type { ContainerInfo } from '/@api/container-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info.js';
@@ -29,6 +33,21 @@ import type { ExtensionLoader } from '../extension/extension-loader.js';
 import type { KubernetesClient } from '../kubernetes/kubernetes-client.js';
 import type { ProviderRegistry } from '../provider-registry.js';
 import { ExploreFeatures } from './explore-features.js';
+
+vi.mock('electron', async () => {
+  return {
+    app: {
+      getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
+    },
+  };
+});
+
+vi.mock('node:fs', () => ({
+  promises: {
+    readFile: vi.fn(),
+  },
+  existsSync: vi.fn(),
+}));
 
 const configurationRegistryMock = {
   getConfiguration: vi.fn().mockReturnValue({
@@ -53,6 +72,10 @@ const providerRegistryMock = {
 const kubernetesClientMock = {
   getContextsGeneralState: vi.fn(),
 } as unknown as KubernetesClient;
+
+const contextMock = {
+  setValue: vi.fn(),
+} as unknown as Context;
 
 const containerInfoMock: ContainerInfo = {
   Id: '1234567890',
@@ -111,7 +134,7 @@ const extensionInfoMock: ExtensionInfo = {
   description: '',
   displayName: 'Extension Mock',
   publisher: '',
-  removable: true,
+  removable: false,
   devMode: false,
   version: '',
   state: '',
@@ -125,6 +148,7 @@ const exploreFeaturesMock = new ExploreFeatures(
   configurationRegistryMock,
   providerRegistryMock,
   kubernetesClientMock,
+  contextMock,
 );
 
 beforeEach(() => {
@@ -140,10 +164,12 @@ beforeEach(() => {
   vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([providerInfoMock]);
 
   vi.mocked(kubernetesClientMock.getContextsGeneralState).mockReturnValue(new Map());
+
+  vi.mocked(promises.readFile).mockResolvedValue('some data');
 });
 
-test('init explore features in the configuration registry', () => {
-  exploreFeaturesMock.init();
+test('init explore features in the configuration registry', async () => {
+  await exploreFeaturesMock.init();
 
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
@@ -158,11 +184,11 @@ test('init explore features in the configuration registry', () => {
 
   expect(configurationNode?.properties?.['exploreFeatures.hiddenFeatures']).toBeDefined();
   expect(configurationNode?.properties?.['exploreFeatures.hiddenFeatures']?.type).toBe('array');
-  expect(configurationNode?.properties?.['exploreFeatures.hiddenFeatures']?.default).toStrictEqual([]);
   expect(configurationNode?.properties?.['exploreFeatures.hiddenFeatures']?.hidden).toBe(true);
 });
 
 test('Get features list', async () => {
+  await exploreFeaturesMock.init();
   const features = await exploreFeaturesMock.downloadFeaturesList();
 
   expect(features.length).toBe(4);
@@ -173,80 +199,46 @@ test('Get features list', async () => {
   expect(features[2]?.show).toBe(true);
   expect(features[3]?.show).toBe(true);
 
-  // all features have an image
-  expect(features[0]?.img).toBeTruthy();
-  expect(features[1]?.img).toBeTruthy();
-  expect(features[2]?.img).toBeTruthy();
-  expect(features[3]?.img).toBeTruthy();
+  // all features be checked for image file
+  expect(vi.mocked(existsSync)).toBeCalledWith(
+    path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${features[0]?.id}.png`),
+  );
+  expect(vi.mocked(existsSync)).toBeCalledWith(
+    path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${features[1]?.id}.png`),
+  );
+  expect(vi.mocked(existsSync)).toBeCalledWith(
+    path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${features[2]?.id}.png`),
+  );
+  expect(vi.mocked(existsSync)).toBeCalledWith(
+    path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${features[3]?.id}.png`),
+  );
 });
 
-test('Do not show satrt a container feature if there is at least one container already', async () => {
+test('Context value are set when calling downloadFeaturesList', async () => {
   vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([containerInfoMock]);
 
-  const features = await exploreFeaturesMock.downloadFeaturesList();
-
-  expect(features[0]?.id).toBe('start-a-container');
-  expect(features[0]?.show).toBe(false);
-
-  expect(features[1]?.show).toBe(true);
-  expect(features[2]?.show).toBe(true);
-  expect(features[3]?.show).toBe(true);
-});
-
-test('Do not show satrt a container feature if there is no container engine ready', async () => {
-  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([{ ...providerInfoMock, containerConnections: [] }]);
-
-  const features = await exploreFeaturesMock.downloadFeaturesList();
-
-  expect(features[0]?.id).toBe('start-a-container');
-  expect(features[0]?.show).toBe(false);
-
-  expect(features[1]?.show).toBe(true);
-  expect(features[2]?.show).toBe(true);
-  expect(features[3]?.show).toBe(true);
-});
-
-test('Do not show explore kubernetes feature if there is at least one reachable cluster or kubernetes provider connection', async () => {
   vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([
+    providerInfoMock,
     { ...providerInfoMock, kubernetesConnections: [{} as unknown as ProviderKubernetesConnectionInfo] },
   ]);
 
-  const features = await exploreFeaturesMock.downloadFeaturesList();
+  vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([
+    extensionInfoMock,
+    { ...extensionInfoMock, removable: true },
+  ]);
 
-  expect(features[1]?.id).toBe('explore-kubernetes');
-  expect(features[1]?.show).toBe(false);
-
-  expect(features[0]?.show).toBe(true);
-  expect(features[2]?.show).toBe(true);
-  expect(features[3]?.show).toBe(true);
-});
-
-test('Do not show install extension feature if there is at least one installed extension already', async () => {
-  vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([extensionInfoMock]);
-
-  const features = await exploreFeaturesMock.downloadFeaturesList();
-
-  expect(features[2]?.id).toBe('install-extensions');
-  expect(features[2]?.show).toBe(false);
-
-  expect(features[0]?.show).toBe(true);
-  expect(features[1]?.show).toBe(true);
-  expect(features[3]?.show).toBe(true);
-});
-
-test('Do not show manage docker feature if docker compatibility is enabled', async () => {
   vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-    get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(true),
+    get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(false),
   } as unknown as Configuration);
 
-  const features = await exploreFeaturesMock.downloadFeaturesList();
+  await exploreFeaturesMock.downloadFeaturesList();
 
-  expect(features[3]?.id).toBe('manage-docker');
-  expect(features[3]?.show).toBe(false);
-
-  expect(features[0]?.show).toBe(true);
-  expect(features[1]?.show).toBe(true);
-  expect(features[2]?.show).toBe(true);
+  expect(contextMock.setValue).toHaveBeenCalledWith('containerListLength', 1);
+  expect(contextMock.setValue).toHaveBeenCalledWith('runningContainerConnections', 2);
+  expect(contextMock.setValue).toHaveBeenCalledWith('kubernetesConnections', true);
+  expect(contextMock.setValue).toHaveBeenCalledWith('reachableContexts', false);
+  expect(contextMock.setValue).toHaveBeenCalledWith('installedExtensionsNumber', 1);
+  expect(contextMock.setValue).toHaveBeenCalledWith('isDockerCompatibilityEnabled', false);
 });
 
 test('Do not show hidden features', async () => {

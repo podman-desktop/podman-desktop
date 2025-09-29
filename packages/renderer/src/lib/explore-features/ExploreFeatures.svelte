@@ -3,8 +3,10 @@ import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import { context } from '/@/stores/context';
 import type { ExploreFeature } from '/@api/explore-feature';
 
+import { ContextKeyExpr } from '../context/contextKey';
 import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 
 let features: ExploreFeature[] = $state([]);
@@ -23,7 +25,13 @@ const listener: EventListener = (obj: object) => {
 const CONFIGURATION_KEY = 'exploreFeatures.expanded';
 
 onMount(async () => {
-  features = (await window.listFeatures()).filter(feature => feature.show ?? true);
+  features = (await window.listFeatures()).filter(feature => {
+    if (feature.when) {
+      const whenDeserialized = ContextKeyExpr.deserialize(feature.when);
+      return whenDeserialized?.evaluate($context) && (feature.show ?? true);
+    }
+    return feature.show ?? true;
+  });
 
   onDidChangeConfiguration.addEventListener(CONFIGURATION_KEY, listener);
   expanded = (await window.getConfigurationValue<boolean>(CONFIGURATION_KEY)) ?? true;

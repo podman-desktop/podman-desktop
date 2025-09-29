@@ -16,9 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { existsSync, promises } from 'node:fs';
+import path from 'node:path';
+
+import { app } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { Context } from '/@/plugin/context/context.js';
 import { IConfigurationNode } from '/@api/configuration/models.js';
 import { ExploreFeature } from '/@api/explore-feature.js';
 
@@ -27,14 +32,13 @@ import { ExtensionLoader } from '../extension/extension-loader.js';
 import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
 import { ProviderRegistry } from '../provider-registry.js';
 import featuresJson from './explore-features.json' with { type: 'json' };
-import exploreKubernetes from './images/explore-kubernetes.png';
-import installExtension from './images/install-extensions.png';
-import manageDocker from './images/manage-docker.png';
-import startAContainer from './images/start-a-container.png';
 
 @injectable()
 export class ExploreFeatures {
-  private images: { [featureId: string]: string } = {};
+  static readonly MAIN_IMAGES_FOLDER = path.resolve(
+    app.getAppPath(),
+    'packages/main/src/assets/explore-features-images',
+  );
 
   constructor(
     @inject(ContainerProviderRegistry)
@@ -47,12 +51,9 @@ export class ExploreFeatures {
     private providerRegistry: ProviderRegistry,
     @inject(KubernetesClient)
     private kubernetesClient: KubernetesClient,
-  ) {
-    this.images['start-a-container'] = startAContainer;
-    this.images['explore-kubernetes'] = exploreKubernetes;
-    this.images['install-extensions'] = installExtension;
-    this.images['manage-docker'] = manageDocker;
-  }
+    @inject(Context)
+    private context: Context,
+  ) {}
 
   async downloadFeaturesList(): Promise<ExploreFeature[]> {
     const hiddenFeatures = this.configurationRegistry
@@ -61,37 +62,40 @@ export class ExploreFeatures {
 
     (featuresJson.features as ExploreFeature[]).forEach(feature => {
       feature.show = !hiddenFeatures.includes(feature.id);
-      feature.img = this.images[feature.id];
-      return feature;
     });
-    return this.checkShowRequirements(featuresJson.features);
+
+    await this.updateShowRequirements();
+    return featuresJson.features;
   }
 
-  private async checkShowRequirements(features: ExploreFeature[]): Promise<ExploreFeature[]> {
+  private async updateShowRequirements(): Promise<void> {
     const containerList = await this.containerProviderRegistry.listContainers();
     const installedExtensionList = (await this.extensionLoader.listExtensions()).filter(ext => ext.removable);
     const providerList = this.providerRegistry.getProviderInfos();
     const contextsStateList = this.kubernetesClient.getContextsGeneralState();
-    features.forEach(feature => {
-      if (feature.show && feature.id === 'start-a-container') {
-        feature.show =
-          containerList.length === 0 &&
-          providerList
-            .map(provider => provider.containerConnections)
-            .flat()
-            .filter(providerContainerConnection => providerContainerConnection.status === 'started').length > 0;
-      } else if (feature.show && feature.id === 'explore-kubernetes') {
-        feature.show =
-          !providerList.find(provider => provider.kubernetesConnections.length > 0) &&
-          !contextsStateList.values().some(context => context.reachable);
-      } else if (feature.show && feature.id === 'install-extensions') {
-        feature.show = installedExtensionList.length === 0;
-      } else if (feature.show && feature.id === 'manage-docker') {
-        feature.show = !this.configurationRegistry.getConfiguration('dockerCompatibility').get<boolean>('enabled');
-      }
-    });
 
-    return features;
+    this.context.setValue('containerListLength', containerList.length);
+    this.context.setValue(
+      'runningContainerConnections',
+      providerList
+        .map(provider => provider.containerConnections)
+        .flat()
+        .filter(providerContainerConnection => providerContainerConnection.status === 'started').length,
+    );
+
+    this.context.setValue(
+      'kubernetesConnections',
+      providerList.some(provider => provider.kubernetesConnections.length > 0),
+    );
+    this.context.setValue(
+      'reachableContexts',
+      contextsStateList.values().some(context => context.reachable),
+    );
+    this.context.setValue('installedExtensionsNumber', installedExtensionList.length);
+    this.context.setValue(
+      'isDockerCompatibilityEnabled',
+      this.configurationRegistry.getConfiguration('dockerCompatibility').get<boolean>('enabled'),
+    );
   }
 
   async closeFeatureCard(featureId: string): Promise<void> {
@@ -105,7 +109,7 @@ export class ExploreFeatures {
     await this.configurationRegistry.updateConfigurationValue('exploreFeatures.hiddenFeatures', [...hiddenFeatures]);
   }
 
-  init(): void {
+  async init(): Promise<void> {
     const exploreFeaturesConfiguration: IConfigurationNode = {
       id: 'exploreFeatures',
       title: 'Show explore features content',
@@ -118,12 +122,19 @@ export class ExploreFeatures {
         },
         ['exploreFeatures.hiddenFeatures']: {
           type: 'array',
-          default: [],
           hidden: true,
         },
       },
     };
 
     this.configurationRegistry.registerConfigurations([exploreFeaturesConfiguration]);
+
+    for (const feature of featuresJson.features as ExploreFeature[]) {
+      const imageFile = path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${feature.id}.png`);
+      if (existsSync(imageFile)) {
+        const fileImage = await promises.readFile(imageFile);
+        feature.img = `data:image/png;base64,${fileImage.toString('base64')}`;
+      }
+    }
   }
 }

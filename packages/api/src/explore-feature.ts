@@ -27,4 +27,5 @@ export interface ExploreFeature {
   learnMore?: string;
   img?: string;
   show?: boolean;
+  when?: string;
 }

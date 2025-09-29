@@ -726,7 +726,7 @@ export class PluginSystem {
 
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
-    exploreFeatures.init();
+    await exploreFeatures.init();
 
     // do not wait
     featured.init().catch((e: unknown) => {

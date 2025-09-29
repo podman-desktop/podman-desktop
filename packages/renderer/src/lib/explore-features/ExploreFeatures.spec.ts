@@ -22,7 +22,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import exploreFeatures from '../../../../main/src/plugin/explore-features/explore-features.json';
+import type { ExploreFeature } from '/@api/explore-feature';
+
 import ExploreFeatures from './ExploreFeatures.svelte';
 
 vi.mock('svelte/transition', () => ({
@@ -42,12 +43,31 @@ class ResizeObserver {
   unobserve = vi.fn();
 }
 
+const exploreFeatures: ExploreFeature[] = [
+  {
+    id: 'feature1',
+    title: 'Feature 1',
+    description: 'Feature 1 description',
+    buttonIcon: 'icon1',
+    buttonTitle: 'button 1',
+    buttonLink: '',
+  },
+  {
+    id: 'feature2',
+    title: 'Feature 2',
+    description: 'Feature 2 description',
+    buttonIcon: 'icon2',
+    buttonTitle: 'button 2',
+    buttonLink: '',
+  },
+];
+
 beforeAll(() => {
   global.ResizeObserver = ResizeObserver;
 });
 
 beforeEach(() => {
-  vi.mocked(window.listFeatures).mockResolvedValue(exploreFeatures.features);
+  vi.mocked(window.listFeatures).mockResolvedValue(exploreFeatures);
 });
 
 afterEach(() => {
@@ -58,13 +78,13 @@ test('Explore features carousel shows features', async () => {
   render(ExploreFeatures);
 
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(exploreFeatures.features[0].title);
+    const firstCard = screen.getByText(exploreFeatures[0].title);
     expect(firstCard).toBeVisible();
   });
 });
 
 test('Carousel does not show when there are 0 features to show', async () => {
-  vi.mocked(window.listFeatures).mockResolvedValue([{ ...exploreFeatures.features[0], show: false }]);
+  vi.mocked(window.listFeatures).mockResolvedValue([{ ...exploreFeatures[0], show: false }]);
 
   render(ExploreFeatures);
   await tick();
@@ -79,16 +99,16 @@ test('Clicking on ExploreFeatures title hides carousel with features', async () 
   await tick();
 
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(exploreFeatures.features[0].title);
+    const firstCard = screen.getByText(exploreFeatures[0].title);
     expect(firstCard).toBeVisible();
   });
 
   const button = screen.getByRole('button', { name: 'Explore Features' });
   expect(button).toBeInTheDocument();
-  expect(screen.queryByText(exploreFeatures.features[0].title)).toBeInTheDocument();
+  expect(screen.queryByText(exploreFeatures[0].title)).toBeInTheDocument();
   await fireEvent.click(button);
   await vi.waitFor(() => {
-    expect(screen.queryByText(exploreFeatures.features[0].title)).not.toBeInTheDocument();
+    expect(screen.queryByText(exploreFeatures[0].title)).not.toBeInTheDocument();
   });
 });
 
