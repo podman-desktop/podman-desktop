@@ -44,7 +44,7 @@
           ]
         },
         {
-          "id": "podmanComposeInstalled",
+          "id": "podmanComposeInstalledView",
           "title": "Found podman-compose installed",
           "when": "compose.isPodmanComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide",
           "content": [
