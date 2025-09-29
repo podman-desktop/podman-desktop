@@ -535,7 +535,7 @@ $effect(() => {
               <div class="{container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''} font-semibold">
                 {container.displayName}
                 {#if rootlessInfo}
-                  <span class="text-xs font-normal text-[var(--pd-content-sub-header)]">
+                  <span class="text-xs font-normal text-[var(--pd-content-sub-header)]" role="status" aria-label="Machine running in {rootlessInfo} mode">
                     ({rootlessInfo})
                   </span>
                 {/if}
