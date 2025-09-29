@@ -32,7 +32,6 @@ import ImageDetailsHistory from './ImageDetailsHistory.svelte';
 import ImageDetailsInspect from './ImageDetailsInspect.svelte';
 import ImageDetailsSummary from './ImageDetailsSummary.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
-import PushImageModal from './PushImageModal.svelte';
 import RenameImageModal from './RenameImageModal.svelte';
 
 interface Props {
@@ -49,18 +48,12 @@ let allImages: ImageInfo[];
 
 const imageUtils = new ImageUtils();
 
-let pushImageModal = $state(false);
-function handlePushImageModal(): void {
-  pushImageModal = true;
-}
-
 let renameImageModal = $state(false);
 function handleRenameImageModal(): void {
   renameImageModal = true;
 }
 
 function closeModals(): void {
-  pushImageModal = false;
   renameImageModal = false;
 }
 
@@ -152,7 +145,6 @@ onDestroy(() => {
       {#if image}
         <ImageActions
           image={image}
-          onPushImage={handlePushImageModal}
           onRenameImage={handleRenameImageModal}
           detailed={true}
           dropdownMenu={false}
@@ -192,11 +184,6 @@ onDestroy(() => {
     {/snippet}
   </DetailsPage>
 
-  {#if pushImageModal}
-    <PushImageModal
-      imageInfoToPush={image}
-      closeCallback={closeModals} />
-  {/if}
   {#if renameImageModal}
     <RenameImageModal
       imageInfoToRename={image}
