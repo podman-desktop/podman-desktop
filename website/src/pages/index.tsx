@@ -3,7 +3,7 @@ import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Banner from '../components/3MBanner';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
@@ -12,6 +12,186 @@ import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
+import type { ProcessedExtension } from '../utils/extensionData';
+import { fetchExtensions, getFeaturedExtensions } from '../utils/extensionData';
+
+function ExtensionSpotlight(): JSX.Element {
+  return (
+    <section className="py-24 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <div className="container mx-auto px-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-4xl font-bold mb-6">Extend Your Workflow</h2>
+            <p className="text-xl mb-8 text-white/90">
+              Discover 50+ extensions that enhance Podman Desktop with AI tools, Kubernetes integrations, security
+              scanners, and more.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/registry"
+                className="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Browse Extensions
+              </Link>
+              <Link
+                to="/extend"
+                className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition-colors">
+                Learn More
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+              <div className="text-2xl mb-2">🤖</div>
+              <h3 className="font-semibold">AI Lab</h3>
+              <p className="text-sm text-white/80">GPU-accelerated AI</p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+              <div className="text-2xl mb-2">☸️</div>
+              <h3 className="font-semibold">Kind</h3>
+              <p className="text-sm text-white/80">Local Kubernetes</p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+              <div className="text-2xl mb-2">🔒</div>
+              <h3 className="font-semibold">Security</h3>
+              <p className="text-sm text-white/80">Vulnerability scanning</p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+              <div className="text-2xl mb-2">🛠️</div>
+              <h3 className="font-semibold">Dev Tools</h3>
+              <p className="text-sm text-white/80">CLI integrations</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ExtensionCarousel(): JSX.Element {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [extensions, setExtensions] = useState<ProcessedExtension[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadExtensions = async (): Promise<void> => {
+      try {
+        const allExtensions = await fetchExtensions();
+        const featured = getFeaturedExtensions(allExtensions, 3);
+        setExtensions(featured);
+      } catch (error) {
+        console.error('Failed to load extensions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExtensions().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (extensions.length > 0) {
+      const timer = setInterval((): void => {
+        setCurrentIndex(prev => (prev + 1) % extensions.length);
+      }, 5000);
+      return (): void => clearInterval(timer);
+    }
+  }, [extensions.length]);
+
+  const getCategoryIcon = (category: string): string => {
+    const iconMap: { [key: string]: string } = {
+      AI: '🤖',
+      Kubernetes: '☸️',
+      Containers: '🐳',
+      Authentication: '🔐',
+      Development: '🛠️',
+      Tools: '⚙️',
+      Other: '📦',
+    };
+    return iconMap[category] || '📦';
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-gray-50 dark:bg-charcoal-900">
+        <div className="container mx-auto px-5">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-charcoal-300 dark:text-white mb-4">Featured Extensions</h2>
+            <p className="text-gray-600 dark:text-gray-300">Discover the latest and most popular extensions</p>
+          </div>
+          <div className="relative max-w-4xl mx-auto">
+            <div className="bg-white dark:bg-charcoal-800 rounded-xl p-8 flex items-center animate-pulse">
+              <div className="w-1/3">
+                <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              </div>
+              <div className="w-2/3 pl-8">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-32"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (extensions.length === 0) {
+    return <></>;
+  }
+
+  return (
+    <section className="py-16 bg-gray-50 dark:bg-charcoal-900">
+      <div className="container mx-auto px-5">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-charcoal-300 dark:text-white mb-4">Featured Extensions</h2>
+          <p className="text-gray-600 dark:text-gray-300">Discover the latest and most popular extensions</p>
+        </div>
+
+        <div className="relative max-w-4xl mx-auto">
+          <div className="overflow-hidden rounded-xl">
+            <div
+              className="flex transition-transform duration-500"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+              {extensions.map((ext, _index) => (
+                <div key={ext.id} className="w-full flex-shrink-0">
+                  <div className="bg-white dark:bg-charcoal-800 rounded-xl p-8 flex items-center">
+                    <div className="w-1/3">
+                      <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-6xl">
+                        {getCategoryIcon(ext.category)}
+                      </div>
+                    </div>
+                    <div className="w-2/3 pl-8">
+                      <h3 className="text-2xl font-bold text-charcoal-300 dark:text-white mb-4">{ext.name}</h3>
+                      <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">{ext.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-purple-600 font-semibold">{ext.installs} installs</span>
+                        <Link
+                          to="/registry"
+                          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                          Install Now
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-6 space-x-2">
+            {extensions.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-3 h-3 rounded-full ${index === currentIndex ? 'bg-purple-600' : 'bg-gray-300'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function Hero(): JSX.Element {
   return (
@@ -457,6 +637,8 @@ export default function Home(): JSX.Element {
       <MainFeatures />
       <Pods />
       <AdditionalFeatures />
+      <ExtensionSpotlight />
+      <ExtensionCarousel />
       <Testimonials />
       <FAQ />
     </Layout>

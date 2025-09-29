@@ -1,24 +1,18 @@
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
-import Layout from '@theme/Layout';
-
-function ExtensionListFromIframe(): JSX.Element {
-  return (
-    <iframe
-      title="Extensions Catalog"
-      src="https://registry.podman-desktop.io/"
-      className="w-full min-h-[2000px] h-full"
-    />
-  );
-}
+import { useHistory } from '@docusaurus/router';
+import { useEffect } from 'react';
 
 export default function Extensions(): JSX.Element {
-  const { siteConfig } = useDocusaurusContext();
+  const history = useHistory();
+
+  useEffect(() => {
+    // Redirect to the new internal registry
+    history.replace('/registry');
+  }, [history]);
 
   return (
-    <Layout title={siteConfig.title} description="Extensions" wrapperClassName="h-full">
-      <TailWindThemeSelector />
-      <ExtensionListFromIframe />
-    </Layout>
+    <div className="container mx-auto px-5 py-24 text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 dark:text-gray-300">Redirecting to Extension Registry...</p>
+    </div>
   );
 }
