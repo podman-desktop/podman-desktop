@@ -85,7 +85,9 @@ function ExtensionCarousel(): JSX.Element {
       }
     };
 
-    loadExtensions().catch(console.error);
+    loadExtensions().catch((error: unknown) => {
+      console.error('Failed to load extensions:', error);
+    });
   }, []);
 
   useEffect(() => {

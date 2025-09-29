@@ -67,7 +67,9 @@ function ExtensionShowcase(): JSX.Element {
       }
     };
 
-    loadExtensions().catch(console.error);
+    loadExtensions().catch((error: unknown) => {
+      console.error('Failed to load extensions:', error);
+    });
   }, []);
 
   const getCategoryIcon = (category: string): string => {
@@ -175,7 +177,9 @@ function ExtensionCategories(): JSX.Element {
       }
     };
 
-    loadCategories().catch(console.error);
+    loadCategories().catch((error: unknown) => {
+      console.error('Failed to load categories:', error);
+    });
   }, []);
 
   if (loading) {
