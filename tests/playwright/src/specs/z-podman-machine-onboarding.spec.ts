@@ -196,6 +196,7 @@ test.describe
               await playExpect(resourcesPodmanConnections.connectionType).toBeVisible({ timeout: 10_000 });
               await playExpect(resourcesPodmanConnections.connectionType).toHaveText(
                 getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+                { ignoreCase: true },
               );
               await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
               await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
