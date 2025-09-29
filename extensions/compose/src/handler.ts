@@ -111,4 +111,8 @@ async function checkAndUpdateComposeBinaryInstalledContexts(detect: Detect): Pro
 
   // Update the compose onboarding context for installComposeSystemWide is either true or false
   extensionApi.context.setValue('compose.isComposeInstalledSystemWide', isDockerComposeInstalledSystemWide);
+
+  // check if 'podman-compose' is installed system-wide
+  const isPodmanComposeInstalledSystemWide = await detect.checkSystemWidePodmanCompose();
+  extensionApi.context.setValue('compose.isPodmanComposeInstalledSystemWide', isPodmanComposeInstalledSystemWide);
 }

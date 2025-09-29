@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as detect from './detect';
 import * as handler from './handler';
@@ -62,5 +62,33 @@ test('updateConfigAndContextComposeBinary: make sure configuration gets updated 
   await handler.updateConfigAndContextComposeBinary(extensionContextMock);
 
   expect(configUpdateSpy).toHaveBeenCalledWith('binary.installComposeSystemWide', true);
+
+  describe('podman-compose', async () => {
+    test('updateConfigAndContextComposeBinary: should set isPodmanComposeInstalledSystemWide context to true when podman-compose is installed', async () => {
+      vi.mocked(detect.Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
+      vi.mocked(detect.Detect.prototype.checkSystemWidePodmanCompose).mockResolvedValue(true);
+
+      // Run updateConfigAndContextComposeBinary
+      await handler.updateConfigAndContextComposeBinary(extensionContextMock);
+
+      expect(vi.mocked(extensionApi.context.setValue)).toHaveBeenCalledWith(
+        'compose.isPodmanComposeInstalledSystemWide',
+        true,
+      );
+    });
+
+    test('updateConfigAndContextComposeBinary: should set isPodmanComposeInstalledSystemWide context to false when podman-compose is not installed', async () => {
+      vi.mocked(detect.Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+      vi.mocked(detect.Detect.prototype.checkSystemWidePodmanCompose).mockResolvedValue(false);
+
+      // Run updateConfigAndContextComposeBinary
+      await handler.updateConfigAndContextComposeBinary(extensionContextMock);
+
+      expect(vi.mocked(extensionApi.context.setValue)).toHaveBeenCalledWith(
+        'compose.isPodmanComposeInstalledSystemWide',
+        false,
+      );
+    });
+  });
   expect(contextUpdateSpy).toHaveBeenCalledWith('compose.isComposeInstalledSystemWide', true);
 });
