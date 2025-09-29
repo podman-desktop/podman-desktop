@@ -42,6 +42,7 @@ vi.mock('electron', () => ({
   app: {
     getVersion: vi.fn(),
     getPath: vi.fn(),
+    getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
   },
   shell: {
     openExternal: vi.fn(),

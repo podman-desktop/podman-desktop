@@ -1,17 +1,33 @@
 <script lang="ts">
 import Tooltip from './Tooltip.svelte';
 
-export let tipProp: string | undefined = undefined;
-export let tipSlot: string | undefined = undefined;
-export let top = false;
-export let topLeft = false;
-export let topRight = false;
-export let right = false;
-export let bottom = false;
-export let bottomLeft = false;
-export let bottomRight = false;
-export let left = false;
-export let classStyle = '';
+interface Props {
+  tipProp?: string;
+  tipSlot?: string;
+  top?: boolean;
+  topLeft?: boolean;
+  topRight?: boolean;
+  right?: boolean;
+  bottom?: boolean;
+  bottomLeft?: boolean;
+  bottomRight?: boolean;
+  left?: boolean;
+  classStyle?: string;
+}
+
+let {
+  tipProp = undefined,
+  tipSlot = undefined,
+  top = false,
+  topLeft = false,
+  topRight = false,
+  right = false,
+  bottom = false,
+  bottomLeft = false,
+  bottomRight = false,
+  left = false,
+  classStyle = '',
+}: Props = $props();
 </script>
 
 <Tooltip
@@ -25,10 +41,9 @@ export let classStyle = '';
   bottomRight={bottomRight}
   left={left}
   class={classStyle}>
-  <slot />
-  <svelte:fragment slot="tip">
+  {#snippet tipSnippet()}
     {#if tipSlot}
       {tipSlot}
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </Tooltip>

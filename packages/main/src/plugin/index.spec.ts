@@ -85,6 +85,7 @@ beforeAll(async () => {
       app: {
         on: vi.fn(),
         getVersion: vi.fn(),
+        getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
       },
       clipboard: {
         writeText: vi.fn(),

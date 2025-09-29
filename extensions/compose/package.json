@@ -44,10 +44,22 @@
           ]
         },
         {
+          "id": "podmanComposeInstalledView",
+          "title": "Found podman-compose installed",
+          "when": "compose.isPodmanComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide",
+          "content": [
+            [
+              {
+                "value": "#### We detected `podman-compose` binary being installed. It won't try to install docker-compose on your system. Unless you remove first podman-compose."
+              }
+            ]
+          ]
+        },
+        {
           "id": "welcomeDownloadView",
           "label": "Compose Download",
           "title": "Compose download",
-          "when": "!compose.isComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
           "content": [
             [
               {
@@ -72,7 +84,7 @@
           "id": "downloadCommand",
           "title": "Downloading Compose ${onboardingContext:composeDownloadVersion}",
           "description": "Downloading the binary.\n\nOnce downloaded, the next step will install Compose system-wide.",
-          "when": "!compose.isComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
           "command": "compose.onboarding.downloadCommand",
           "completionEvents": [
             "onCommand:compose.onboarding.downloadCommand"
@@ -81,13 +93,13 @@
         {
           "id": "downloadFailure",
           "title": "Failed downloading Compose",
-          "when": "!compose.isComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
           "state": "failed"
         },
         {
           "id": "downloadSuccessfulView",
           "title": "Compose successfully Downloaded",
-          "when": "!compose.isComposeInstalledSystemWide && !onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !onboardingContext:composeIsNotDownloaded",
           "content": [
             [
               {
@@ -100,7 +112,7 @@
           "id": "installSystemWideCommand",
           "title": "Install Compose",
           "description": "Installing the binary system-wide.\n\n You may be prompted for elevated system privileges.",
-          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
           "command": "compose.onboarding.installSystemWideCommand",
           "completionEvents": [
             "onCommand:compose.onboarding.installSystemWideCommand"
@@ -109,7 +121,7 @@
         {
           "id": "installSystemWideFailure",
           "title": "Failed installing Compose",
-          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
           "state": "failed"
         },
         {
@@ -145,7 +157,7 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Compose support installed. You can use `podman compose` using the podman CLI.",
-          "when": "(isMac || isWindows) && compose.isComposeInstalledSystemWide",
+          "when": "(isMac || isWindows) && compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
         },
@@ -153,7 +165,15 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Setup...]{command=compose.openComposeOnboarding}",
-          "when": "(isMac || isWindows) && !compose.isComposeInstalledSystemWide",
+          "when": "(isMac || isWindows) && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
+          "group": "podman-desktop.podman",
+          "scope": "DockerCompatibility"
+        },
+        "podman.compose.cli.support.podmancompose": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Compose support using `podman-compose` python implementation.",
+          "when": "compose.isPodmanComposeInstalledSystemWide",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
         }

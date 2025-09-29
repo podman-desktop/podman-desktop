@@ -121,14 +121,25 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
 
   if (!providerSocket) return auditResult;
 
-  const memTotal = await getMemTotalInfo(providerSocket.connection.endpoint.socketPath);
-
-  // check if configured memory is less than 6GB
-  if (memTotal < 6000000000) {
+  // check if provider is running
+  const providerStatus = providerSocket.connection.status();
+  if (providerStatus !== 'started') {
     records.push({
-      type: 'info',
-      record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
+      type: 'error',
+      record: `The ${provider} provider is not running. Please start the ${provider} provider to create a Kind cluster.`,
     });
+  }
+
+  // Only check memory if provider is running
+  if (providerStatus === 'started') {
+    const memTotal = await getMemTotalInfo(providerSocket.connection.endpoint.socketPath);
+    // check if configured memory is less than 6GB
+    if (memTotal < 6000000000) {
+      records.push({
+        type: 'info',
+        record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
+      });
+    }
   }
   return auditResult;
 }

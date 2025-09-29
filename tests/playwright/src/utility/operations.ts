@@ -522,6 +522,8 @@ export async function verifyVirtualizationProvider(
     await playExpect
       .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
       .toBeTruthy();
-    await playExpect(resourceConnectionCardPage.connectionType).toContainText(virtualizationProvider);
+    await playExpect(resourceConnectionCardPage.connectionType).toContainText(virtualizationProvider, {
+      ignoreCase: true,
+    });
   });
 }

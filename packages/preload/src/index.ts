@@ -62,6 +62,7 @@ import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
+import type { ExploreFeature } from '/@api/explore-feature';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
@@ -2528,6 +2529,14 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('listGuides', async (): Promise<Guide[]> => {
     return ipcInvoke('learning-center:listGuides');
+  });
+
+  contextBridge.exposeInMainWorld('listFeatures', async (): Promise<ExploreFeature[]> => {
+    return ipcInvoke('explore-features:listFeatures');
+  });
+
+  contextBridge.exposeInMainWorld('closeFeatureCard', async (featureId: string): Promise<void> => {
+    return ipcInvoke('explore-features:closeFeatureCard', featureId);
   });
 
   contextBridge.exposeInMainWorld('contextCollectAllValues', async (): Promise<Record<string, unknown>> => {
