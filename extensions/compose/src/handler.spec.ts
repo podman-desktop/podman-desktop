@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import type * as detect from './detect';
+import * as detect from './detect';
 import * as handler from './handler';
 
-const config: Configuration = {
-  get: () => {
-    return true;
-  },
-  has: () => true,
-  update: () => Promise.resolve(),
-};
-
+vi.mock('./detect');
 vi.mock('@podman-desktop/api', async () => {
   return {
     configuration: {
-      getConfiguration: (): Configuration => config,
+      getConfiguration: vi.fn(),
     },
     window: {
       showInformationMessage: vi.fn(),
@@ -49,24 +41,22 @@ const extensionContextMock: extensionApi.ExtensionContext = {
   storagePath: '/storage-path',
 } as unknown as extensionApi.ExtensionContext;
 
-test('updateConfigAndContextComposeBinary: make sure configuration gets updated if checkSystemWideDockerCompose had returned true', async () => {
-  vi.mock('./detect', () => {
-    // Create mock Detect
-    const detectMock: detect.Detect = {
-      checkSystemWideDockerCompose: vi.fn().mockReturnValue(Promise.resolve(true)),
-      checkForDockerCompose: vi.fn().mockReturnValue(Promise.resolve(true)),
-      getStoragePath: vi.fn().mockReturnValue(Promise.resolve('mockPath')),
-    } as unknown as detect.Detect;
-
-    // Make sure we return it with the above mocked values
-    return {
-      Detect: vi.fn().mockReturnValue(detectMock),
-    };
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.clearAllMocks();
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+    has: vi.fn(),
+    update: vi.fn(),
   });
+});
 
+test('updateConfigAndContextComposeBinary: make sure configuration gets updated if checkSystemWideDockerCompose had returned true', async () => {
   // Spy on setValue and configuration updates
   const contextUpdateSpy = vi.spyOn(extensionApi.context, 'setValue');
   const configUpdateSpy = vi.spyOn(extensionApi.configuration.getConfiguration('compose'), 'update');
+
+  vi.mocked(detect.Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
 
   // Run updateConfigAndContextComposeBinarys
   await handler.updateConfigAndContextComposeBinary(extensionContextMock);
