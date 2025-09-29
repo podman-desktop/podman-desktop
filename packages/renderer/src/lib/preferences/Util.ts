@@ -180,6 +180,18 @@ export function calcHalfCpuCores(osCpu: string): number {
   return hCores === 0 ? 1 : hCores;
 }
 
+/**
+ * Maps boolean configuration values to their enum display text as defined in package.json
+ * @param config Configuration property from package.json definition
+ * @returns Display text from enum array or undefined if no enum defined
+ */
+function getBooleanDisplayText(config: IProviderConnectionConfigurationPropertyRecorded): string | undefined {
+  if (!config.enum) {
+    return undefined;
+  }
+  return config.enum[config.value ? 1 : 0];
+}
+
 export function getContainerRootlessInfo(
   providerContainerConfiguration: Map<string, IProviderConnectionConfigurationPropertyRecorded[]>,
   providerId: string,
@@ -191,10 +203,9 @@ export function getContainerRootlessInfo(
 
   const providerConfiguration = providerContainerConfiguration.get(providerId) ?? [];
   const containerConfig = providerConfiguration.filter(conf => conf.connection === containerName);
-  const rootfulConfig = containerConfig.find(conf => conf.format === 'rootfulMode');
+  const rootfulConfig = containerConfig.find(conf => conf.id === 'podman.machine.rootful');
   if (!rootfulConfig) {
     return undefined;
   }
-
-  return rootfulConfig.value ? 'rootful' : 'rootless';
+  return getBooleanDisplayText(rootfulConfig);
 }
