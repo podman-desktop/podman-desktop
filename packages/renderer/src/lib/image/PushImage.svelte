@@ -2,12 +2,14 @@
 import { faCheckCircle, faCircleArrowUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
-import { onDestroy } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
+import { get } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { providerInfos } from '/@/stores/providers';
 
+import { lastPage } from '../../stores/breadcrumb';
 import { imagesInfos } from '../../stores/images';
 import type { PushImageCallback } from '../../stores/push-images.svelte';
 import { getNextTaskId, getPushImageInfo, PushImageInfo } from '../../stores/push-images.svelte';
@@ -101,6 +103,7 @@ async function checkRegistryAuthConfiguration(): Promise<void> {
       .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageId}`, err));
   }
 }
+
 $effect(() => {
   if (taskId && taskId !== pushImageInfo.taskId) {
     //
@@ -118,11 +121,12 @@ async function pushImage(): Promise<void> {
   return pushImageInfo.pushImage(engineId, selectedImageTag, imageId, base64RepoTag, getNextTaskId());
 }
 
-async function pushImageFinished(): Promise<void> {
-  router.goto('/images');
+function pushImageFinished(): void {
+  router.goto(get(lastPage).path);
 }
-
 let isAuthenticatedForThisImage = $state(false);
+
+onMount(loadBackgroundPush);
 
 onDestroy(() => {
   pushImageInfo.disconnectUI();
@@ -143,12 +147,6 @@ function onInit(): void {
   {#snippet content()}
     <div class="space-y-6">
       <div class="w-full">
-        <div class="flex-column">
-          <div>taskId: {taskId}</div>
-          <div>imageId: {imageId}</div>
-          <div>engineId: {engineId}</div>
-          <div>base64RepoTag: {base64RepoTag}</div>
-        </div>
         <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
         {#if isAuthenticatedForThisImage}
           <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />

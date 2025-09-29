@@ -52,7 +52,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-test.describe.serial('Push image to container registry', { tag: '@smoke' }, () => {
+test.describe.serial('Push image to container registry', { tag: '@smoke1' }, () => {
   test('Add registry', async ({ navigationBar, page }) => {
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
@@ -102,7 +102,11 @@ test.describe.serial('Push image to container registry', { tag: '@smoke' }, () =
     const imageDetailsPage = await imagesPage.openImageDetails(fullName);
     await playExpect(imageDetailsPage.heading).toBeVisible();
 
-    await imageDetailsPage.pushImage();
+    const pushImagePage = await imageDetailsPage.pushImage();
+    await playExpect(pushImagePage.heading).toBeVisible();
+
+    await pushImagePage.pushImage();
+    await playExpect(imagesPage.heading).toBeVisible();
   });
 
   test('Delete image', async ({ navigationBar }) => {
