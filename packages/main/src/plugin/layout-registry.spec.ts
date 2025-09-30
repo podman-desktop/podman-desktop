@@ -32,6 +32,7 @@ const mockConfiguration = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.resetAllMocks();
 
   mockConfigurationRegistry = {
     registerConfigurations: vi.fn(),
