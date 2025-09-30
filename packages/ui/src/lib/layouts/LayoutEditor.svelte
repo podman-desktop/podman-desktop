@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faBars, faCheck, faGripVertical, faUndo } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faGripVertical, faPen, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { Icon } from '../icons';
@@ -252,7 +252,7 @@ function handleReset(): void {
     title={title}
     tabindex="0"
   >
-    <Icon icon={faBars} />
+    <Icon icon={faPen} />
   </button>
 
   {#if isOpen}
