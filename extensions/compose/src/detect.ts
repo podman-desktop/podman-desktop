@@ -63,6 +63,19 @@ export class Detect {
     }
   }
 
+  // search if podman-compose (python) is available is installed system wide
+  async checkSystemWidePodmanCompose(): Promise<boolean> {
+    try {
+      await extensionApi.process.exec('podman-compose', ['--version'], {
+        env: { PATH: process.env.PATH ?? '' },
+      });
+      return true;
+    } catch (e) {
+      console.debug('Error trying to run the version on podman-compose. Binary might not be there', e);
+      return false;
+    }
+  }
+
   async getDockerComposeBinaryInfo(
     composeCliName: string,
     dir: string = '',
