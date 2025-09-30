@@ -2,12 +2,64 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://podman-desktop.io/blog</id>
     <title>Podman Desktop Blog</title>
-    <updated>2025-09-22T00:00:00.000Z</updated>
+    <updated>2025-09-30T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://podman-desktop.io/blog"/>
     <subtitle>Podman Desktop Blog</subtitle>
     <icon>https://podman-desktop.io/img/favicon.ico</icon>
     <rights>Copyright © 2025 Podman Desktop</rights>
+    <entry>
+        <title type="html"><![CDATA[Hacktoberfest 2025! - Contribute to Podman Desktop]]></title>
+        <id>https://podman-desktop.io/blog/hacktoberfest-2025</id>
+        <link href="https://podman-desktop.io/blog/hacktoberfest-2025"/>
+        <updated>2025-09-30T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Contribute to Podman Desktop this Hacktoberfest!]]></summary>
+        <content type="html"><![CDATA[<p>October is here and <a href="https://hacktoberfest.com/" target="_blank" rel="noopener noreferrer"><strong>Hacktoberfest</strong></a> is back! It’s the perfect opportunity to sharpen your skills, explore open source, and contribute to <a href="https://podman-desktop.io/" target="_blank" rel="noopener noreferrer"><strong>Podman Desktop</strong> </a> — an open source tool designed to simplify working with containers and Kubernetes from your local machine.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="why-contribute-to-podman-desktop">Why Contribute to Podman Desktop?<a href="https://podman-desktop.io/blog/hacktoberfest-2025#why-contribute-to-podman-desktop" class="hash-link" aria-label="Direct link to Why Contribute to Podman Desktop?" title="Direct link to Why Contribute to Podman Desktop?">​</a></h2>
+<p>Podman Desktop is a <a href="https://www.cncf.io/" target="_blank" rel="noopener noreferrer">CNCF</a> sandbox project and has already grown into a thriving open source community with over <a href="https://podman-desktop.io/blog/3-million" target="_blank" rel="noopener noreferrer"><strong>3 million downloads worldwide</strong></a>. By contributing, you’re not only helping shape a successful, widely used project, but also joining a community of developers building tools that benefit peers and the broader ecosystem.</p>
+<p>Podman Desktop is built with developers in mind. <strong>Designed by developers, for developers</strong> !!
+It’s a cross-platform tool that helps streamline container workflows, offering features like:</p>
+<ul>
+<li><strong>Container management</strong> Manage your containers, images, and pods directly from your desktop.</li>
+<li><strong>Kubernetes integration</strong> Run and test workloads in a local Kubernetes environment.</li>
+<li><strong>Extension framework</strong> Build custom extensions to expand and personalize the desktop experience.</li>
+<li><strong>Modern tech stack</strong> Contribute using TypeScript, Svelte, Tailwind CSS, Electron, Playwright and more!</li>
+</ul>
+<p>Whether you’re fixing a bug, enhancing the UI, or creating a new extension, your contributions will help shape the next generation of container tooling.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="contribution-areas">Contribution Areas<a href="https://podman-desktop.io/blog/hacktoberfest-2025#contribution-areas" class="hash-link" aria-label="Direct link to Contribution Areas" title="Direct link to Contribution Areas">​</a></h2>
+<p>Here are some ways developers can get involved:</p>
+<ul>
+<li>🐛 <a href="https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug" target="_blank" rel="noopener noreferrer"><strong>Bug Fixes</strong> </a>– Help identify and resolve issues in the desktop app.</li>
+<li>📝 <a href="https://podman-desktop.io/docs/intro" target="_blank" rel="noopener noreferrer"><strong>Documentation</strong></a> – Refine guides and technical docs to make it easier for others to onboard.</li>
+<li>🔌 <a href="https://podman-desktop.io/extend" target="_blank" rel="noopener noreferrer"><strong>Extensions</strong></a> – Build or improve <a href="https://github.com/podman-desktop?q=extension&amp;type=all&amp;language=&amp;sort=" target="_blank" rel="noopener noreferrer">extensions</a> to extend Podman Desktop’s functionality.</li>
+<li>🎨 <a href="https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20%20label%3A%22UX%2FUI%20Issue%22" target="_blank" rel="noopener noreferrer"><strong>UI/UX Improvements</strong></a> – Enhance user experience for smoother workflows.</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="how-to-get-started">How to Get Started<a href="https://podman-desktop.io/blog/hacktoberfest-2025#how-to-get-started" class="hash-link" aria-label="Direct link to How to Get Started" title="Direct link to How to Get Started">​</a></h2>
+<ol>
+<li>Explore our GitHub repositories for <a href="https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahacktoberfest" target="_blank" rel="noopener noreferrer">issues</a> labeled <code>hacktoberfest</code>. Additional issues are available across projects like <a href="https://github.com/podman-desktop/extension-kubernetes-dashboard/issues?q=state%3Aopen%20label%3Ahacktoberfest" target="_blank" rel="noopener noreferrer"><strong>Extension: Kubernetes Dashboard</strong></a></li>
+<li>Join our <a href="https://github.com/podman-desktop/podman-desktop/tree/main?tab=readme-ov-file#communication" target="_blank" rel="noopener noreferrer">community channels</a> for guidance and collaboration.</li>
+<li>Fork, code, and submit your PR. Once merged, your work counts toward Hacktoberfest!</li>
+</ol>
+<p>Learn more about <a href="https://hacktoberfest.com/participation/" target="_blank" rel="noopener noreferrer"><strong>Hacktoberfest Participation</strong></a>.</p>
+<h2 class="anchor anchorWithStickyNavbar_JmGV" id="lets-build-together">Let’s Build Together<a href="https://podman-desktop.io/blog/hacktoberfest-2025#lets-build-together" class="hash-link" aria-label="Direct link to Let’s Build Together" title="Direct link to Let’s Build Together">​</a></h2>
+<p>Every contribution, whether big or small, makes Podman Desktop stronger for developers everywhere. Hacktoberfest is your chance to get involved, expand your skills, and make an impact.</p>
+<p>👉 Start here:</p>
+<ul>
+<li><a href="https://github.com/podman-desktop/podman-desktop" target="_blank" rel="noopener noreferrer">Podman Desktop GitHub</a></li>
+<li><a href="https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contribution Guide</a></li>
+<li><a href="https://github.com/podman-desktop/podman-desktop/blob/main/README.md" target="_blank" rel="noopener noreferrer">Readme</a></li>
+<li><a href="https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahacktoberfest" target="_blank" rel="noopener noreferrer">Hacktoberfest issues</a></li>
+<li><a href="https://github.com/podman-desktop/extension-kubernetes-dashboard/issues?q=state%3Aopen%20label%3Ahacktoberfest" target="_blank" rel="noopener noreferrer">Hacktoberfest issues - Kubernetes Dashboard Extension</a></li>
+</ul>
+<p>This Hacktoberfest, let’s build better container workflows together. 💻🔥</p>]]></content>
+        <author>
+            <name>Rujuta Shinde</name>
+            <uri>https://github.com/rujutashinde</uri>
+        </author>
+        <category label="podman-desktop" term="podman-desktop"/>
+        <category label="hacktoberfest" term="hacktoberfest"/>
+        <category label="community" term="community"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[3,000,000 downloads. Thank you]]></title>
         <id>https://podman-desktop.io/blog/3-million</id>
@@ -3038,82 +3090,5 @@ release, we received pull requests from the following people:</p>
         <category label="ai" term="ai"/>
         <category label="llm" term="llm"/>
         <category label="local" term="local"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Podman Desktop + CNCF - Community Driven Move]]></title>
-        <id>https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf</id>
-        <link href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf"/>
-        <updated>2024-11-14T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Today, we're thrilled to announce our application for Podman Desktop to join the Cloud Native Computing Foundation (CNCF) as a Sandbox project.]]></summary>
-        <content type="html"><![CDATA[<p><img decoding="async" loading="lazy" alt="banner" src="https://podman-desktop.io/assets/images/cncf_rocket-fc81d488acce6be1406b6d01efccc74a.png" width="1216" height="832" class="img_SS3x"></p>
-<p>Today, we're thrilled to announce our application for Podman Desktop to join the Cloud Native Computing Foundation (CNCF) as a Sandbox project.This is a huge milestone for our project and our community, and we're incredibly excited for what the future holds.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="about-podman-desktop">About Podman Desktop<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#about-podman-desktop" class="hash-link" aria-label="Direct link to About Podman Desktop" title="Direct link to About Podman Desktop">​</a></h3>
-<p>Podman Desktop builds upon the innovations brought by Podman, offering a powerful yet user-friendly environment for containerized development. Podman provides a daemonless, rootless container engine that enhances security and flexibility, while Podman Desktop delivers an intuitive graphical interface for managing containers and interacting with Kubernetes. Enhanced by a plug-in system that allows developers to customize their inner loop container workflows to their needs and offers flexible extension points for other projects as well as other container engines.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="why-the-cncf">Why the CNCF?<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#why-the-cncf" class="hash-link" aria-label="Direct link to Why the CNCF?" title="Direct link to Why the CNCF?">​</a></h3>
-<p>The CNCF is a vital organization for the cloud-native world, supporting collaboration and driving innovation for critical projects like Kubernetes, Prometheus, and Envoy. As a CNCF project, Podman Desktop will benefit from increased visibility, a neutral home for open governance, and access to a wealth of resources and expertise. CNCF projects will take a renewed interest in collaborating with us. This move will help us grow our community, ensure the project's long-term sustainability, and accelerate its development.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="how-podman-desktop-simplifies-containers-and-kubernetes">How Podman Desktop simplifies containers and Kubernetes<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#how-podman-desktop-simplifies-containers-and-kubernetes" class="hash-link" aria-label="Direct link to How Podman Desktop simplifies containers and Kubernetes" title="Direct link to How Podman Desktop simplifies containers and Kubernetes">​</a></h3>
-<p>Developing with containers can be complex. Podman Desktop simplifies this by providing an intuitive interface and powerful tools for building, managing, and running containers. This allows developers to focus on writing code, not wrestling with infrastructure. Why is this important? Because in today's complex world, developer productivity is paramount. By removing friction and simplifying workflows, Podman Desktop empowers developers to deliver value faster.
-Podman Desktop enables developers to run Kubernetes locally, mirroring their production environment. This eliminates the "works on my machine" problem and allows for early detection of configuration issues. By closing the gap between development and production, Podman Desktop reduces deployment risks and accelerates the feedback loop. This leads to higher quality software and faster release cycles.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="open-source-and-the-cncf-a-perfect-match-for-developer-tools">Open source and the CNCF: A perfect match for developer tools<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#open-source-and-the-cncf-a-perfect-match-for-developer-tools" class="hash-link" aria-label="Direct link to Open source and the CNCF: A perfect match for developer tools" title="Direct link to Open source and the CNCF: A perfect match for developer tools">​</a></h3>
-<p>We believe in the power of open source. Open source software fosters transparency, encourages collaboration, and drives innovation. By donating Podman Desktop to the CNCF, we're ensuring it remains open and accessible to all, fostering a vibrant community around it. The CNCF is the perfect home for Podman Desktop because it champions open source values and provides a neutral ground for collaborative development. This ensures that Podman Desktop remains vendor-neutral and driven by the needs of its users, keeping options open and avoiding vendor lock-in.</p>
-<p>Furthermore, while the CNCF has fostered incredible innovation and many developers profit from the number of projects available through the CNCF, there's a recognized need for more developer-focused tooling. Podman Desktop fills this gap perfectly by providing a developer-centric, streamlined, and intuitive experience for containerizing, managing, and deploying cloud-native applications.
-Podman Desktop has a natural affinity to Kubernetes due to its design and features that seamlessly bridge the gap between local container development and Kubernetes deployments. This close relationship aligns perfectly with the CNCF's mission to drive the adoption of cloud-native technologies.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="join-the-growing-podman-desktop-community">Join the growing Podman Desktop community<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#join-the-growing-podman-desktop-community" class="hash-link" aria-label="Direct link to Join the growing Podman Desktop community" title="Direct link to Join the growing Podman Desktop community">​</a></h3>
-<p>As a CNCF project, we have the opportunity to open our doors to a wider community of contributors and users. We believe that open source thrives on collaboration and diverse perspectives. By broadening our contributor base, we can accelerate innovation, improve the quality of Podman Desktop, and ensure it meets the needs of a diverse range of users.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="you-can-contribute-in-various-ways">You can contribute in various ways<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#you-can-contribute-in-various-ways" class="hash-link" aria-label="Direct link to You can contribute in various ways" title="Direct link to You can contribute in various ways">​</a></h3>
-<ul>
-<li>
-<p>Reporting issues: If you encounter bugs or have suggestions for improvements, you can report them on the <a href="https://github.com/podman-desktop/podman-desktop/issues" target="_blank" rel="noopener noreferrer">GitHub issue tracker</a>. Be sure to provide detailed information and steps to reproduce the issue.</p>
-</li>
-<li>
-<p>Working on issues: You can browse the <a href="https://github.com/podman-desktop/podman-desktop/issues" target="_blank" rel="noopener noreferrer">issue tracker</a> and contribute by fixing bugs or implementing new features. This involves forking the repository, making changes, and submitting pull requests.</p>
-</li>
-<li>
-<p>Contributing code: Beyond addressing existing issues, you can propose and contribute entirely new features or enhancements to Podman Desktop's functionality, user interface, or integrations with other tools. Learn more about <a href="https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">how to contribute</a>.</p>
-</li>
-<li>
-<p>Contributing plug-ins: Feel like there is an integration missing? You can contribute your own plug-in functionality for Podman Desktop. <a href="https://podman-desktop.io/blog/extensions-introduction" target="_blank" rel="noopener noreferrer">Check out the guide</a>.</p>
-</li>
-<li>
-<p>Improving documentation: Clear and comprehensive documentation is essential. You can contribute by improving existing documentation, adding new guides, or creating tutorials.</p>
-</li>
-<li>
-<p>Providing website contributions: The <a href="https://podman-desktop.io/" target="_blank" rel="noopener noreferrer">Podman Desktop website</a> is also open source. You can contribute to its content, design, or translations.</p>
-</li>
-<li>
-<p>Becoming an Adopter: If you are a happy user, we’d love to know and share the word. Consider adding yourself or your organization to <a href="https://github.com/podman-desktop/podman-desktop/blob/main/ADOPTERS.md" target="_blank" rel="noopener noreferrer">the list of adopters</a> with a pull request.</p>
-</li>
-</ul>
-<p>Before you start contributing, it's helpful to familiarize yourself with the <a href="https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">project's contribution guidelines</a> and code architecture. These resources provide valuable information on coding style, testing procedures, and the overall development process. You can also join #podman-desktop on the Kubernetes Slack to connect with other contributors and get help.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="kubecon-2024-and-beyond">KubeCon 2024 and beyond<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#kubecon-2024-and-beyond" class="hash-link" aria-label="Direct link to KubeCon 2024 and beyond" title="Direct link to KubeCon 2024 and beyond">​</a></h3>
-<p>We are at KubeCon NA 2024 in Salt Lake, to officially announce this exciting news and share more about Podman Desktop and our roadmap. Stop by the Red Hat booth to say hello, contribute to the project, and help us shape the future of cloud-native development.</p>
-<h3 class="anchor anchorWithStickyNavbar_JmGV" id="get-involved-and-learn-more">Get involved and learn more<a href="https://podman-desktop.io/blog/2024/11/14/podman-desktop-cncf#get-involved-and-learn-more" class="hash-link" aria-label="Direct link to Get involved and learn more" title="Direct link to Get involved and learn more">​</a></h3>
-<p>We're incredibly excited about this new chapter for Podman Desktop and can't wait to see what we can achieve together with the CNCF community.</p>
-<ul>
-<li>
-<p>Visit our website: <a href="https://podman-desktop.io/" target="_blank" rel="noopener noreferrer">https://podman-desktop.io/</a></p>
-</li>
-<li>
-<p>Join our community: #podman-desktop on the Kubernetes Slack</p>
-</li>
-<li>
-<p>Contribute to the project: <a href="https://github.com/podman-desktop/podman-desktop/" target="_blank" rel="noopener noreferrer">https://github.com/podman-desktop/podman-desktop/</a></p>
-</li>
-<li>
-<p>Read <a href="https://developers.redhat.com/e-books/infographic-10-reasons-why-developer-should-consider-podman-desktop" target="_blank" rel="noopener noreferrer">10 Reasons Why Developers Should Consider Podman Desktop</a></p>
-</li>
-</ul>]]></content>
-        <author>
-            <name>Markus Eisele</name>
-            <uri>https://github.com/myfear</uri>
-        </author>
-        <author>
-            <name>Stevan Le Meur</name>
-            <uri>https://github.com/slemeur</uri>
-        </author>
-        <category label="podman-desktop" term="podman-desktop"/>
-        <category label="podman" term="podman"/>
-        <category label="cncf" term="cncf"/>
-        <category label="container" term="container"/>
     </entry>
 </feed>
