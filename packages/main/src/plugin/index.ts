@@ -3177,14 +3177,13 @@ export class PluginSystem {
   }
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
-    // Helper function to safely send to renderer, handling shutdown race condition
     const safeSend = (messageType: string, data?: unknown): void => {
-      if (!this.isQuitting) {
-        try {
-          this.getWebContentsSender().send(channel, loggerId, messageType, data);
-        } catch (err) {
-          // Silently ignore errors during shutdown race condition
-        }
+      if (this.isQuitting) return;
+
+      try {
+        this.getWebContentsSender().send(channel, loggerId, messageType, data);
+      } catch (err) {
+        console.error('Failed to send log message to renderer:', err);
       }
     };
 
