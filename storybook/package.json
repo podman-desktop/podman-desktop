@@ -31,7 +31,7 @@
     "@tsconfig/svelte": "^5.0.5",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "autoprefixer": "^10.4.21",
-    "cross-env": "10.0.0",
+    "cross-env": "10.1.0",
     "eslint-plugin-storybook": "9.1.9",
     "eslint-plugin-svelte": "^3.12.4",
     "postcss": "^8.5.6",
