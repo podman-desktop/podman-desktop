@@ -253,12 +253,20 @@ let sizeColumn = new TableColumn<ImageInfoUI, string>('Size', {
   comparator: (a, b): number => b.size - a.size,
 });
 
+let archColumn = new TableColumn<ImageInfoUI, string>('Arch', {
+  align: 'right',
+  renderMapping: (image): string => image.arch,
+  renderer: TableSimpleColumn,
+  comparator: (a, b): number => a.arch.localeCompare(b.arch),
+});
+
 const columns = [
   statusColumn,
   nameColumn,
   envColumn,
   ageColumn,
   sizeColumn,
+  archColumn,
   new TableColumn<ImageInfoUI>('Actions', {
     align: 'right',
     width: '150px',

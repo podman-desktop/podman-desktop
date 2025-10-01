@@ -28,6 +28,7 @@ export interface ImageInfo extends Dockerode.ImageInfo {
   Digest: string;
   isManifest?: boolean;
   manifests?: { digest?: string }[];
+  Arch?: string;
 }
 
 export interface BuildImageOptions {
