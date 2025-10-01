@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import type { ImageInfo, PodInfo } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
@@ -70,6 +71,10 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
+let imageItems: ImageInfo[] = $state([]);
+let containerItems: ContainerInfo[] = $state([]);
+let podItems: PodInfo[] = $state([]);
+let volumeItems: VolumeInfo[] = $state([]);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
