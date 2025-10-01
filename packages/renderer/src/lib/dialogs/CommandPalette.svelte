@@ -1,14 +1,23 @@
 <script lang="ts">
 import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import type { ImageInfo, PodInfo } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { Buffer } from 'buffer';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
+import { router } from 'tinro';
 
 import { commandsInfos } from '/@/stores/commands';
+import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { imagesInfos } from '/@/stores/images';
+import { podsInfos } from '/@/stores/pods';
+import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
-import type { DocumentationInfo } from '/@api/documentation-info';
+import type { ContainerInfo } from '/@api/container-info';
+import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
+import type { VolumeInfo } from '/@api/volume-info';
 
 import type { ContextUI } from '../context/context';
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
@@ -16,6 +25,7 @@ import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
 import EnterIcon from '../images/EnterIcon.svelte';
 import NotFoundIcon from '../images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
+import { createGoToItems } from './CommandPaletteUtils';
 
 const ENTER_KEY = 'Enter';
 const ESCAPE_KEY = 'Escape';
@@ -59,9 +69,14 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
+let imageItems: ImageInfo[] = $state([]);
+let containerItems: ContainerInfo[] = $state([]);
+let podItems: PodInfo[] = $state([]);
+let volumeItems: VolumeInfo[] = $state([]);
 
 let commandInfoItems: CommandInfo[] = $state([]);
 let documentationItems: DocumentationInfo[] = $state([]);
+let goToItems: GoToInfo[] = $derived(createGoToItems(imageItems, containerItems, podItems, volumeItems));
 let globalContext: ContextUI;
 
 // Keep backward compatibility with existing variable name
@@ -82,6 +97,15 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
   ),
 );
 
+let filteredGoToItems = $derived(
+  goToItems.filter(item =>
+    inputValue
+      ? item.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
+        item.kind?.toLowerCase().includes(inputValue.toLowerCase())
+      : true,
+  ),
+);
+
 let filteredItems = $derived.by(() => {
   if (searchOptionsSelectedIndex === 1) {
     // Commands mode
@@ -91,13 +115,17 @@ let filteredItems = $derived.by(() => {
     return filteredDocumentationInfoItems;
   } else if (searchOptionsSelectedIndex === 3) {
     // Go to mode (could be different logic later)
-    return filteredCommandInfoItems;
+    return filteredGoToItems;
   } else {
     // All mode - combine both
-    return [...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
+    return [...filteredCommandInfoItems, ...filteredDocumentationInfoItems, ...filteredGoToItems];
   }
 });
 let contextsUnsubscribe: Unsubscriber;
+let imagesUnsubscribe: Unsubscriber;
+let containersUnsubscribe: Unsubscriber;
+let podsUnsubscribe: Unsubscriber;
+let volumeListUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
@@ -109,6 +137,19 @@ onMount(() => {
   contextsUnsubscribe = context.subscribe(value => {
     globalContext = value;
   });
+
+  imagesUnsubscribe = imagesInfos.subscribe(infos => {
+    imageItems = infos;
+  });
+  containersUnsubscribe = containersInfos.subscribe(infos => {
+    containerItems = infos;
+  });
+  podsUnsubscribe = podsInfos.subscribe(infos => {
+    podItems = infos;
+  });
+  volumeListUnsubscribe = volumeListInfos.subscribe(infos => {
+    volumeItems = infos.map(info => info.Volumes).flat();
+  });
   // subscribe to the commands
   return commandsInfos.subscribe(infos => {
     commandInfoItems = infos;
@@ -117,6 +158,10 @@ onMount(() => {
 
 onDestroy(() => {
   contextsUnsubscribe?.();
+  imagesUnsubscribe?.();
+  containersUnsubscribe?.();
+  podsUnsubscribe?.();
+  volumeListUnsubscribe?.();
 });
 
 // Focus the input when the command palette becomes visible
@@ -230,6 +275,7 @@ async function executeAction(index: number): Promise<void> {
 
   // Check if it's a documentation item by checking for 'category' property
   const isDocItem = 'category' in item;
+  const isGoToItem = 'kind' in item;
 
   if (isDocItem) {
     // Documentation item
@@ -240,6 +286,30 @@ async function executeAction(index: number): Promise<void> {
       } catch (error) {
         console.error('Error opening documentation URL', error);
       }
+    }
+  } else if (isGoToItem) {
+    // Go to item
+    const goToItem = item as GoToInfo;
+    const kind = goToItem.kind.toLowerCase();
+
+    switch (kind) {
+      case 'image':
+        router.goto(
+          `/images/${goToItem.id}/${goToItem.info.engineId}/${Buffer.from(((goToItem.info) as ImageInfo).RepoTags?.[0] ?? goToItem.id).toString('base64')}/summary`,
+        );
+        break;
+
+      case 'container':
+        router.goto(`/containers/${goToItem.id}/summary`);
+        break;
+
+      case 'pod':
+        router.goto(`/pods/podman/${goToItem.name}/${goToItem.info.engineId}/summary`);
+        break;
+
+      case 'volume':
+        router.goto(`/volumes/${goToItem.id}/${goToItem.info.engineId}/summary`);
+        break;
     }
   } else {
     // Command item
@@ -345,6 +415,7 @@ async function onAction(): Promise<void> {
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
             {@const isDocItem = 'category' in item}
+            {@const isGoToItem = 'kind' in item}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
@@ -356,6 +427,8 @@ async function onAction(): Promise<void> {
                     <div class="text-base py-[2pt]">
                       {#if isDocItem}
                         {(item as DocumentationInfo).category}: {(item as DocumentationInfo).name}
+                       {:else if isGoToItem}
+                         {(item as GoToInfo).kind}: {(item as GoToInfo).name}
                       {:else}
                         {(item as CommandInfo).title}
                       {/if}

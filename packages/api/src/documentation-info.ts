@@ -16,6 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { PodInfo } from '@podman-desktop/api';
+
+import type { ContainerInfo } from './container-info.js';
+import type { ImageInfo } from './image-info.js';
+import type { VolumeInfo } from './volume-info.js';
+
 export interface DocumentationBaseInfo {
   name: string;
   url: string;
@@ -25,4 +31,11 @@ export interface DocumentationInfo extends DocumentationBaseInfo {
   id: string;
   description: string;
   category: string;
+}
+
+export interface GoToInfo {
+  id: string;
+  name: string;
+  kind: string;
+  info: PodInfo | ContainerInfo | ImageInfo | VolumeInfo;
 }
