@@ -68,6 +68,10 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
+let imageItems: ImageInfo[] = $state([]);
+let containerItems: ContainerInfo[] = $state([]);
+let podItems: PodInfo[] = $state([]);
+let volumeItems: VolumeInfo[] = $state([]);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
