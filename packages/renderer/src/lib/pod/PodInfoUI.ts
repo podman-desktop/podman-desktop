@@ -39,7 +39,6 @@ export interface PodInfoUI {
   status: string;
   age: string;
   created: string;
-  selected: boolean;
   containers: PodInfoContainerUI[];
   actionInProgress?: boolean;
   actionError?: string;
