@@ -107,9 +107,41 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     });
 
     if (defaultRegistries.length > 0) {
-      configFileContent.registry.push(...defaultRegistries);
-      await this.saveRegistriesConfContent(configFileContent);
+      const combinedRegistries = this.resolveDefaultRegistryConflicts(defaultRegistries, configFileContent.registry);
+      await this.saveRegistriesConfContent({ registry: combinedRegistries });
     }
+  }
+
+  resolveDefaultRegistryConflicts(
+    defaultRegistries: RegistryConfigurationEntry[],
+    existingRegistries: RegistryConfigurationEntry[],
+  ): RegistryConfigurationEntry[] {
+    defaultRegistries.forEach(defaultRegistry => {
+      const duplicateRegistry = existingRegistries.find(
+        existingRegistry => existingRegistry.prefix === defaultRegistry.prefix,
+      );
+      if (duplicateRegistry) {
+        if (
+          duplicateRegistry.blocked !== defaultRegistry.blocked ||
+          duplicateRegistry.insecure !== defaultRegistry.insecure ||
+          duplicateRegistry.location !== defaultRegistry.location
+        ) {
+          console.warn(
+            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties don't match. Please update this registry in ... or ...`,
+          );
+        } else {
+          defaultRegistry.mirror?.forEach(mirror => {
+            duplicateRegistry.mirror ??= [];
+            if (!duplicateRegistry.mirror?.includes(mirror)) {
+              duplicateRegistry.mirror.push(mirror);
+            }
+          });
+        }
+      } else {
+        existingRegistries.push(defaultRegistry);
+      }
+    });
+    return existingRegistries;
   }
 
   async checkRegistryConfFileExistsInVm(): Promise<boolean> {
