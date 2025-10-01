@@ -1,7 +1,9 @@
 <script lang="ts">
-import { Table, TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
+import { SvelteSet } from 'svelte/reactivity';
 
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 import type { TaskInfoUI } from '/@/stores/tasks';
 
 import TaskManagerTableActionsColumn from './TaskManagerTableActionsColumn.svelte';
@@ -9,10 +11,10 @@ import TaskManagerTableProgressColumn from './TaskManagerTableProgressColumn.sve
 
 interface Props {
   tasks: TaskInfoUI[];
-  selectedItemsNumber?: number;
+  selected?: SvelteSet<string>;
 }
 
-let { tasks, selectedItemsNumber = $bindable() }: Props = $props();
+let { tasks, selected = $bindable(new SvelteSet()) }: Props = $props();
 
 const nameColumn = new TableColumn<TaskInfoUI, string>('Name', {
   width: '3fr',
@@ -46,12 +48,28 @@ const row = new TableRow<TaskInfoUI>({
   selectable: (task): boolean => task.state === 'completed',
   disabledText: 'Task is still running',
 });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(task: TaskInfoUI): string {
+  return task.id;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(task: TaskInfoUI): string {
+  return task.name;
+}
 </script>
 
-<Table
-  bind:selectedItemsNumber={selectedItemsNumber}
+<TableSvelte5
+  bind:selected={selected}
   kind="tasks"
   data={tasks}
   columns={columns}
   row={row}
-  defaultSortColumn="Age" />
+  defaultSortColumn="Age"
+  key={key}
+  label={label}/>

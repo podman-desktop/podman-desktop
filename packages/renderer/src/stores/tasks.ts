@@ -28,9 +28,7 @@ import { findMatchInLeaves } from './search-util';
  * When tasks are displayed into a table, the selected property is used
  * to flag the task as being selectable.
  */
-export interface TaskInfoUI extends TaskInfo {
-  selected?: boolean;
-}
+export type TaskInfoUI = TaskInfo;
 
 /**
  * Defines the store used to define the tasks.
