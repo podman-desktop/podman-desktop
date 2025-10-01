@@ -21,10 +21,13 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { commandsInfos } from '/@/stores/commands';
+import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import type { ContainerInfo } from '/@api/container-info';
 
 import CommandPalette from './CommandPalette.svelte';
 
@@ -35,6 +38,19 @@ const getOsPlatformMock = vi.fn();
 const getDocumentationItemsMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
+
+vi.mock('tinro', () => {
+  return {
+    router: {
+      goto: vi.fn(),
+    },
+  };
+});
+
+const mockContainerInfo = {
+  Id: 'test-container-id',
+  Names: ['test-container'],
+} as unknown as ContainerInfo;
 
 beforeAll(() => {
   (window.events as unknown) = {
@@ -62,6 +78,7 @@ beforeAll(() => {
   getOsPlatformMock.mockResolvedValue('linux');
   getDocumentationItemsMock.mockResolvedValue([]);
 
+  containersInfos.set([mockContainerInfo]);
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -542,5 +559,19 @@ describe('Command Palette', () => {
     expect(commandsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(docsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+  });
+
+  test('should call router.goto when clicking on container item', async () => {
+    render(CommandPalette, { display: true });
+
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
+    await userEvent.click(gotoTab);
+    await tick();
+
+    const containerItem = screen.getByRole('button', { name: 'Container: test-container' });
+    await userEvent.click(containerItem);
+    await tick();
+
+    expect(router.goto).toHaveBeenCalledWith('/containers/test-container-id/summary');
   });
 });
