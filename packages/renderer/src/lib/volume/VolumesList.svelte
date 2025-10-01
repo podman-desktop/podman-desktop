@@ -4,7 +4,6 @@ import {
   Button,
   FilteredEmptyScreen,
   NavPage,
-  Table,
   TableColumn,
   TableDurationColumn,
   TableRow,
@@ -12,8 +11,11 @@ import {
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
+
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 
 import { providerInfos } from '../../stores/providers';
 import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '../../stores/volumes';
@@ -32,6 +34,8 @@ import type { VolumeInfoUI } from './VolumeInfoUI';
 
 export let searchTerm = '';
 $: searchPattern.set(searchTerm);
+
+let selected: SvelteSet<string> = new SvelteSet();
 
 let volumes: VolumeInfoUI[] = [];
 let enginesList: EngineInfoUI[];
@@ -65,16 +69,6 @@ onMount(async () => {
 
     // Set the engines to the global variable for the Prune functionality button
     enginesList = uniqueEngines;
-
-    // update selected items based on current selected items
-    computedVolumes.forEach(volume => {
-      const matchingVolume = volumes.find(
-        currentVolume => currentVolume.name === volume.name && currentVolume.engineId === volume.engineId,
-      );
-      if (matchingVolume) {
-        volume.selected = matchingVolume.selected;
-      }
-    });
     volumes = computedVolumes;
   });
 });
@@ -126,8 +120,6 @@ function gotoCreateVolume(): void {
   router.goto('/volumes/create');
 }
 
-let selectedItemsNumber: number;
-
 let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',
   width: '70px',
@@ -173,6 +165,20 @@ const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
 });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(obj: VolumeInfoUI): string {
+  return `${obj.engineId}:${obj.name}`;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(obj: VolumeInfoUI): string {
+  return obj.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
@@ -194,17 +200,17 @@ const row = new TableRow<VolumeInfoUI>({
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
-    {#if selectedItemsNumber > 0}
+    {#if selected.size > 0}
       <Button
         on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedVolumes,
-            `delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}`,
+            `delete ${selected.size} volume${selected.size > 1 ? 's' : ''}`,
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title="Delete {selected.size} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>On {selected.size} selected items.</span>
     {/if}
   {/snippet}
 
@@ -220,15 +226,17 @@ const row = new TableRow<VolumeInfoUI>({
         <VolumeEmptyScreen />
       {/if}
     {:else}
-      <Table
+      <TableSvelte5
         kind="volume"
-        bind:selectedItemsNumber={selectedItemsNumber}
+        bind:selected={selected}
         data={volumes}
         columns={columns}
         row={row}
         defaultSortColumn="Name"
-        on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
-      </Table>
+        key={key}
+        label={label}
+      >
+      </TableSvelte5>
     {/if}
   </div>
   {/snippet}
