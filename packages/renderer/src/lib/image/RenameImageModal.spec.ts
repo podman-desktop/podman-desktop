@@ -34,6 +34,7 @@ const imageInfo: ImageInfoUI = {
   engineId: 'podman.Podman Machine',
   engineName: 'Podman',
   humanSize: '128kb',
+  arch: 'amd64',
   age: '2 hours',
   selected: false,
   status: 'UNUSED',
