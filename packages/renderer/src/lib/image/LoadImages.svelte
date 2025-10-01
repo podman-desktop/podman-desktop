@@ -63,7 +63,7 @@ async function loadImages(): Promise<void> {
   for (const archive of archivesToLoad) {
     try {
       await window.loadImages({
-        provider: selectedProvider,
+        provider: $state.snapshot(selectedProvider),
         archives: [archive],
       });
     } catch (e) {
