@@ -4,7 +4,6 @@ import {
   Button,
   FilteredEmptyScreen,
   NavPage,
-  Table,
   TableColumn,
   TableDurationColumn,
   TableRow,
@@ -12,9 +11,11 @@ import {
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
 import type { ContainerInfo } from '/@api/container-info';
@@ -46,6 +47,9 @@ interface Props {
 }
 
 let { searchTerm = $bindable(''), imageEngineId = '' }: Props = $props();
+
+let selected: SvelteSet<string> = new SvelteSet();
+
 $effect(() => {
   searchPattern.set(searchTerm);
 });
@@ -72,15 +76,6 @@ function updateImages(globalContext: ContextUI): void {
     )
     .flat();
 
-  // update selected items based on current selected items
-  computedImages.forEach(image => {
-    const matchingImage = images.find(
-      currentImage => currentImage.id === image.id && currentImage.engineId === image.engineId,
-    );
-    if (matchingImage) {
-      image.selected = matchingImage.selected;
-    }
-  });
   computedImages.sort((first, second) => second.createdAt - first.createdAt);
 
   // Go through each image and if it has a children, remove the "children" from computedImages so they do not show up
@@ -191,7 +186,7 @@ function loadImages(): void {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
 async function deleteSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = images.filter(image => selected.has(key(image)));
   if (selectedImages.length === 0) {
     return;
   }
@@ -211,7 +206,7 @@ async function deleteSelectedImages(): Promise<void> {
 
 // save the items selected in the list
 async function saveSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = images.filter(image => selected.has(key(image)));
   if (selectedImages.length === 0) {
     return;
   }
@@ -219,8 +214,6 @@ async function saveSelectedImages(): Promise<void> {
   saveImagesInfo.set(selectedImages);
   router.goto('/images/save');
 }
-
-let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
@@ -275,6 +268,20 @@ const row = new TableRow<ImageInfoUI>({
     return image.children ?? [];
   },
 });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(item: ImageInfoUI): string {
+  return item.id;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(item: ImageInfoUI): string {
+  return item.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="images">
@@ -301,22 +308,22 @@ const row = new TableRow<ImageInfoUI>({
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
-    {#if selectedItemsNumber && selectedItemsNumber > 0}
+    {#if selected.size && selected.size > 0}
       <Button
         on:click={(): void => {
-          if (selectedItemsNumber) {withBulkConfirmation(
+          if (selected.size) {withBulkConfirmation(
             deleteSelectedImages,
-            `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
+            `delete ${selected.size} image${selected.size > 1 ? 's' : ''}`,
           );}}}
-        title="Delete {selectedItemsNumber} selected items"
+        title="Delete {selected.size} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
       <Button
         on:click={saveSelectedImages}
-        title="Save {selectedItemsNumber} selected items"
+        title="Save {selected.size} selected items"
         aria-label="Save images"
         icon={faDownload} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>On {selected.size} selected items.</span>
     {/if}
   {/snippet}
 
@@ -332,15 +339,17 @@ const row = new TableRow<ImageInfoUI>({
         <ImageEmptyScreen />
       {/if}
     {:else}
-      <Table
+      <TableSvelte5
         kind="image"
-        bind:selectedItemsNumber={selectedItemsNumber}
+        bind:selected={selected}
         data={images}
         columns={columns}
         row={row}
         defaultSortColumn="Age"
-        on:update={(): ImageInfoUI[] => (images = images)}>
-      </Table>
+        key={key}
+        label={label}
+      >
+      </TableSvelte5>
     {/if}
   </div>
   {/snippet}
