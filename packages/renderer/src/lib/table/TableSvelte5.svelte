@@ -45,6 +45,27 @@ let {
   label,
 }: Props = $props();
 
+// All keys of the data
+let keys: Set<string> = $derived(
+  new Set(data.flatMap((item: T) => [key(item), ...(row.info.children?.(item)?.map(child => key(child)) ?? [])])),
+);
+
+$effect(() => {
+  // cleanup selected set
+  selected.values().forEach((item: string) => {
+    if (!keys.has(item)) {
+      selected.delete(item);
+    }
+  });
+
+  // cleanup collapsed set
+  collapsed.values().forEach((item: string) => {
+    if (!keys.has(item)) {
+      collapsed.delete(item);
+    }
+  });
+});
+
 /**
  * Svelte states
  */
@@ -221,6 +242,7 @@ function onToggle(keyItem: string): void {
     <div
       class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
       role="row">
+      <div class="whitespace-nowrap justify-self-start" role="columnheader"></div>
       {#if row.info.selectable}
         <div class="whitespace-nowrap place-self-center" role="columnheader">
           <Checkbox

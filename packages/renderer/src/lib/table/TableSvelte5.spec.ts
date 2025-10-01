@@ -106,7 +106,7 @@ function label(person: Person): string {
 }
 
 describe('column header', () => {
-  test('expect number of column header equal to columns', () => {
+  test('expect number of column header equal to columns plus one', () => {
     const { getAllByRole } = render(TableSvelte5<Person>, {
       kind: 'persons',
       data: PARENTS,
@@ -117,7 +117,7 @@ describe('column header', () => {
     });
 
     const columns = getAllByRole('columnheader');
-    expect(columns).toHaveLength(COLUMNS.length);
+    expect(columns).toHaveLength(COLUMNS.length + 1);
   });
 
   test.each<TableColumn<any, any>>(COLUMNS)('column header with $title should exists', async column => {
