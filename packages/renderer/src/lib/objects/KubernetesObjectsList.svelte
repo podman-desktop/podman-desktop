@@ -2,11 +2,13 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { TableColumn, TableRow } from '@podman-desktop/ui-svelte';
-import { Button, FilteredEmptyScreen, NavPage, Table } from '@podman-desktop/ui-svelte';
+import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount, type Snippet } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
 import { listenResources } from '/@/lib/kube/resources-listen';
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 import type { IDisposable } from '/@api/disposable.js';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
@@ -41,6 +43,7 @@ interface Props {
 }
 
 let started = $state<boolean>(false);
+let selected: SvelteSet<string> = new SvelteSet();
 
 let { kinds, singular, plural, icon, searchTerm, columns, row, emptySnippet }: Props = $props();
 
@@ -96,7 +99,7 @@ onDestroy(() => {
 let bulkDeleteInProgress = $state<boolean>(false);
 async function deleteSelectedObjects(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selectedObjects = objects.filter((object: any) => object?.selected);
+  const selectedObjects = objects.filter((object: KubernetesObject) => selected.has(key(object)));
   if (selectedObjects.length === 0) {
     return;
   }
@@ -108,9 +111,15 @@ async function deleteSelectedObjects(): Promise<void> {
 
   await Promise.all(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    selectedObjects.map(async (object: any) => {
+    selectedObjects.map(async (object: KubernetesObject) => {
+      // validate name
+      if (!object.metadata?.name) {
+        console.error(`error while deleting ${singular}`, `object ${object.metadata?.name} has no name`);
+        return;
+      }
+
       try {
-        await kinds.find(kind => kind.isResource(object))?.delete(object.name);
+        await kinds.find(kind => kind.isResource(object))?.delete(object.metadata.name);
       } catch (e) {
         console.error(`error while deleting ${singular}`, e);
       }
@@ -119,7 +128,19 @@ async function deleteSelectedObjects(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-let selectedItemsNumber = $state<number>(0);
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(obj: KubernetesObject): string {
+  return obj.metadata?.uid ?? `${obj.metadata?.namespace}:${obj.metadata?.name}`;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(obj: KubernetesObject): string {
+  return obj.metadata?.name ?? '<none>';
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
@@ -131,17 +152,17 @@ let selectedItemsNumber = $state<number>(0);
     {#if kinds[0].resource !== 'nodes'}
       <NamespaceDropdown/>
     {/if}
-    {#if selectedItemsNumber > 0}
+    {#if selected.size > 0}
       <Button
         on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedObjects,
-            `delete ${selectedItemsNumber} ${selectedItemsNumber > 1 ? plural : singular}`,
+            `delete ${selected.size} ${selected.size > 1 ? plural : singular}`,
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title="Delete {selected.size} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>On {selected.size} selected items.</span>
     {/if}
     <div class="flex grow justify-end">
       <KubernetesCurrentContextConnectionBadge />
@@ -150,14 +171,17 @@ let selectedItemsNumber = $state<number>(0);
 
   {#snippet content()}
   <div class="flex min-w-full h-full">
-    <Table
+    <TableSvelte5
       kind={singular}
-      bind:selectedItemsNumber={selectedItemsNumber}
+      bind:selected={selected}
       data={objects}
       columns={columns}
       row={row}
-      defaultSortColumn="Name">
-    </Table>
+      defaultSortColumn="Name"
+      key={key}
+      label={label}
+    >
+    </TableSvelte5>
 
     {#if started && objects.length === 0}
       {#if searchTerm}
