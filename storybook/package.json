@@ -12,10 +12,10 @@
     "svelte-fa": "^4.0.0"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.0.1",
-    "@fortawesome/free-brands-svg-icons": "^7.0.1",
-    "@fortawesome/free-regular-svg-icons": "^7.0.1",
-    "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fortawesome/free-brands-svg-icons": "^7.1.0",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@podman-desktop/ui-svelte": "workspace:*",
     "eslint": "^9.36.0",
     "svelte-fa": "^4.0.4"

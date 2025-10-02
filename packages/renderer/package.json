@@ -12,10 +12,10 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^7.0.1",
-    "@fortawesome/free-brands-svg-icons": "^7.0.1",
-    "@fortawesome/free-regular-svg-icons": "^7.0.1",
-    "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fortawesome/free-brands-svg-icons": "^7.1.0",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@sveltejs/vite-plugin-svelte": "6.2.1",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/dom": "^10.4.1",
