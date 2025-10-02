@@ -1013,6 +1013,15 @@ declare module '@podman-desktop/api' {
     readonly label: string;
   }
 
+  export interface ProviderDetails {
+    id: string;
+    name: string;
+    creationButtonTitle: string;
+    creationDisplayName: string;
+    emptyConnectionMarkdownDescription: string;
+    connectionsCount: number;
+  }
+
   export namespace provider {
     export function createProvider(provider: ProviderOptions): Provider;
     export const onDidUpdateProvider: Event<ProviderEvent>;
@@ -1021,6 +1030,7 @@ declare module '@podman-desktop/api' {
     export const onDidUnregisterContainerConnection: Event<UnregisterContainerConnectionEvent>;
     export const onDidRegisterContainerConnection: Event<RegisterContainerConnectionEvent>;
     export function getContainerConnections(): ProviderContainerConnection[];
+    export function getKubernetesProviders(): ProviderDetails[];
     /**
      * It returns the lifecycle context for the provider connection.
      * If no context is found it throws an error
