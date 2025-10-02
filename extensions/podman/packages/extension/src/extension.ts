@@ -1406,7 +1406,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     const command = extensionApi.commands.registerCommand('podman.socketCompatibilityMode', async () => {
       // Manually check to see if the socket is disguised (this will be called when pressing the status bar item)
       const isDisguisedPodmanSocket = await isDisguisedPodman();
-
+      if (isDisguisedPodmanSocket === undefined) {
+        await extensionApi.window.showInformationMessage(`Could not get if Podman is disguised`);
+      }
       // We use isEnabled() as we do not want to "renable" again if the user has already enabled it.
       if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
         const result = await extensionApi.window.showInformationMessage(

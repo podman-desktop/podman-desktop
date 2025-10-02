@@ -26,12 +26,12 @@ const windowsSocketPath = '//./pipe/docker_engine';
 const defaultSocketPath = '/var/run/docker.sock';
 
 // Async function that checks to see if the current Docker socket is a disguised Podman socket
-export async function isDisguisedPodman(): Promise<boolean> {
+export async function isDisguisedPodman(): Promise<boolean | undefined> {
   const socketPath = getSocketPath();
   return isDisguisedPodmanPath(socketPath, DEFAULT_TIMEOUT);
 }
 
-export async function isDisguisedPodmanPath(socketPath: string, timeout?: number): Promise<boolean> {
+export async function isDisguisedPodmanPath(socketPath: string, timeout?: number): Promise<boolean | undefined> {
   const options: http.RequestOptions = {
     path: '/libpod/_ping',
     socketPath,
@@ -42,7 +42,7 @@ export async function isDisguisedPodmanPath(socketPath: string, timeout?: number
     options.timeout = timeout;
   }
 
-  return new Promise<boolean>(resolve => {
+  return new Promise<boolean | undefined>(resolve => {
     const req = http.request(options, res => {
       res.on('data', () => {
         // do nothing
@@ -57,12 +57,12 @@ export async function isDisguisedPodmanPath(socketPath: string, timeout?: number
     // in case of error, it's not reachable
     req.once('error', err => {
       console.debug('Error while pinging docker as podman', err);
-      resolve(false);
+      resolve(undefined);
     });
 
     // in case of timeout, it's not reachable
     req.on('timeout', () => {
-      resolve(false);
+      resolve(undefined);
     });
 
     req.end();
