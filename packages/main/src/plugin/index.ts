@@ -3178,8 +3178,6 @@ export class PluginSystem {
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
     const safeSend = (messageType: string, data?: unknown): void => {
-      if (this.isQuitting) return;
-
       try {
         this.getWebContentsSender().send(channel, loggerId, messageType, data);
       } catch (err) {
