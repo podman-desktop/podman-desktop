@@ -242,6 +242,7 @@ describe('podman-mac-helper tests', () => {
 
   test('show setup podman mac helper notification if on mac and podman-mac-helper needs running', async () => {
     const extensionNotifications = new ExtensionNotifications();
+    vi.mocked(isDisguisedPodman).mockImplementation(async () => false);
     await extensionNotifications.checkMacSocket();
 
     await vi.waitFor(() => {
