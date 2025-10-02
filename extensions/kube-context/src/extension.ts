@@ -58,7 +58,7 @@ export async function updateContext(
   const kubeConfig = jsYaml.load(kubeConfigRawContent) as KubeConfig;
 
   // get the current context
-  const currentContext = kubeConfig?.['current-context'];
+  const currentContext = String(kubeConfig?.['current-context'] ?? '');
 
   // get all contexts
   const contexts: KubeContext[] = kubeConfig?.['contexts'] ? kubeConfig['contexts'] : [];
@@ -67,7 +67,7 @@ export async function updateContext(
     // now, add each context
     const subitems: extensionApi.MenuItem[] = contexts.map(context => {
       return {
-        label: context.name,
+        label: String(context.name),
         id: 'kubecontext.switch',
         type: 'checkbox',
         checked: context.name === currentContext,
