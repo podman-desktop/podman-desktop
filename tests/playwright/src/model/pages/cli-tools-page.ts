@@ -30,6 +30,7 @@ export class CLIToolsPage extends SettingsPage {
   readonly toolsTable: Locator;
   readonly dropDownDialog: Locator;
   readonly versionInputField: Locator;
+  private rateLimitReachedFlag = false;
 
   constructor(page: Page) {
     super(page, 'CLI Tools');
@@ -40,6 +41,13 @@ export class CLIToolsPage extends SettingsPage {
     this.toolsTable = this.content.getByRole('table', { name: 'cli-tools' });
     this.dropDownDialog = page.getByRole('dialog', { name: 'drop-down-dialog' });
     this.versionInputField = this.dropDownDialog.getByRole('textbox');
+
+    page.on('console', msg => {
+      if (msg.text().includes('API rate limit exceeded')) {
+        console.log('Rate limit flag triggered!');
+        this.rateLimitReachedFlag = true;
+      }
+    });
   }
 
   public getToolRow(toolName: string): Locator {
@@ -91,6 +99,7 @@ export class CLIToolsPage extends SettingsPage {
 
   public async installTool(toolName: string, timeout = 60_000): Promise<this> {
     return test.step(`Install ${toolName}`, async () => {
+      this.isAPIrateLimitReached();
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
 
@@ -135,6 +144,7 @@ export class CLIToolsPage extends SettingsPage {
         return this;
       }
 
+      this.isAPIrateLimitReached();
       await playExpect(this.getDowngradeButton(toolName)).toBeEnabled();
       await this.getDowngradeButton(toolName).click();
       await playExpect(this.dropDownDialog).toBeVisible();
@@ -165,6 +175,7 @@ export class CLIToolsPage extends SettingsPage {
         return this;
       }
 
+      this.isAPIrateLimitReached();
       await playExpect(this.getUpdateButton(toolName)).toBeEnabled();
       await this.getUpdateButton(toolName).click();
       await playExpect
@@ -182,6 +193,13 @@ export class CLIToolsPage extends SettingsPage {
       const versionSplitInParts = currentVersion.split(' ');
       const versionNumber = versionSplitInParts[versionSplitInParts.length - 1];
       return this.dropDownDialog.getByRole('button').filter({ hasNotText: versionNumber }).first().innerText();
+    }
+  }
+
+  public isAPIrateLimitReached(): void {
+    if (this.rateLimitReachedFlag) {
+      console.log('Rate limit flag is set to true');
+      test.skip(true, 'Rate limit exceeded; skipping current test');
     }
   }
 }
