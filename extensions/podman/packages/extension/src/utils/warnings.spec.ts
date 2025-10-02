@@ -53,5 +53,5 @@ test('isDisguisedPodman with timeout', async () => {
 
   const response = await isDisguisedPodmanPath('http://localhost:10000/socket', 50);
 
-  expect(response).toBe(false);
+  expect(response).toBe(undefined);
 });
