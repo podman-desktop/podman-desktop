@@ -1551,3 +1551,29 @@ export class ProviderRegistry {
     return false;
   }
 }
+getMatchingConnectionFromProvider(
+  internalProviderId: string,
+  providerConnectionInfo: ProviderConnectionInfo,
+) {
+  switch (providerConnectionInfo.connectionType) {
+    case 'container':
+      return this.getMatchingContainerConnectionFromProvider(
+        internalProviderId,
+        providerConnectionInfo,
+      );
+    case 'kubernetes':
+      return this.getMatchingKubernetesConnectionFromProvider(
+        internalProviderId,
+        providerConnectionInfo,
+      );
+    case 'vm':
+      return this.getMatchingVmConnectionFromProvider(
+        internalProviderId,
+        providerConnectionInfo,
+      );
+    default:
+      throw new Error(
+        `Unsupported provider connection type: ${(providerConnectionInfo as any).connectionType}`,
+      );
+  }
+}

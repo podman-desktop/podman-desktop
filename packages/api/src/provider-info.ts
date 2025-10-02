@@ -157,3 +157,27 @@ export interface ProviderCleanupActionInfo {
   actions: Promise<ProviderCleanupAction[]>;
   instance: unknown;
 }
+
+export type ProviderConnectionType = 'container' | 'kubernetes' | 'vm';
+
+export interface ProviderContainerConnectionInfo {
+  connectionType: 'container';
+  // ...existing fields
+}
+
+export interface ProviderKubernetesConnectionInfo {
+  connectionType: 'kubernetes';
+  // ...existing fields
+}
+
+export interface ProviderVmConnectionInfo {
+  connectionType: 'vm';
+  name: string;
+  status: ProviderConnectionStatus;
+  lifecycleMethods?: LifecycleMethod[];
+}
+
+export type ProviderConnectionInfo =
+  | ProviderContainerConnectionInfo
+  | ProviderKubernetesConnectionInfo
+  | ProviderVmConnectionInfo;
