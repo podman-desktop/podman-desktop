@@ -1024,7 +1024,23 @@ export async function registerUpdatesIfAny(
     });
   }
 }
-
+update: () => {
+  extensionNotifications.shouldNotifySetup = false;
+  return extensionAPI.window.withProgress(
+    {
+      location: extensionAPI.ProgressLocation.TASK_WIDGET,
+      title: 'Updating Podman',
+      cancellable: false,
+    },
+    async () => {
+      try {
+        await podmanInstall.performUpdate(provider, installedPodman);
+      } finally {
+        extensionNotifications.shouldNotifySetup = true;
+      }
+    }
+  );
+}
 export const ROOTFUL_MACHINE_INIT_SUPPORTED_KEY = 'podman.isRootfulMachineInitSupported';
 export const USER_MODE_NETWORKING_SUPPORTED_KEY = 'podman.isUserModeNetworkingSupported';
 export const START_NOW_MACHINE_INIT_SUPPORTED_KEY = 'podman.isStartNowAtMachineInitSupported';
