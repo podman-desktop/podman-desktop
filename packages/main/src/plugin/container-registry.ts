@@ -830,6 +830,32 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async inspectNetwork(engineId: string, networkId: string): Promise<NetworkInspectInfo> {
+    let telemetryOptions = {};
+    try {
+      // need to find the container engine of the container
+      const provider = this.internalProviders.get(engineId);
+      if (!provider) {
+        throw new Error('no engine matching this engine');
+      }
+      if (!provider.api) {
+        throw new Error('no running provider for the matching engine');
+      }
+      const network = provider.api.getNetwork(networkId);
+      const networkInspect = await network.inspect();
+      return {
+        engineName: provider.name,
+        engineId: provider.id,
+        ...networkInspect,
+      };
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('inspectNetwork', telemetryOptions);
+    }
+  }
+
   async listVolumes(fetchUsage = false): Promise<VolumeListInfo[]> {
     let telemetryOptions = {};
     const volumes = await Promise.all(
