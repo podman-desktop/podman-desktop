@@ -1528,6 +1528,9 @@ export class ExtensionLoader implements AsyncDisposable {
       ): Promise<void> => {
         await this.navigationManager.navigateToEditProviderContainerConnection(connection);
       },
+      navigateToProviderNewConnection: async (providerId: string): Promise<void> => {
+        await this.navigationManager.navigateToProviderNewConnection(providerId);
+      },
       navigateToOnboarding: async (extensionId?: string): Promise<void> => {
         let onboardingExtensionId = extensionId;
         onboardingExtensionId ??= extensionInfo.id;

@@ -255,3 +255,14 @@ test(`Test navigationHandle for ${NavigationPage.EXPERIMENTAL_FEATURES}`, () => 
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/experimental');
 });
+
+test(`Test navigationHandle for ${NavigationPage.PROVIDER_NEW_CONNECTION}`, () => {
+  handleNavigation({
+    page: NavigationPage.PROVIDER_NEW_CONNECTION,
+    parameters: {
+      provider: 'dummyProviderId',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/provider/dummyProviderId');
+});

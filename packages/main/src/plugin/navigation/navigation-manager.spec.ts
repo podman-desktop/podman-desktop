@@ -280,3 +280,16 @@ describe('register route', () => {
     }).rejects.toThrowError('Dummy error');
   });
 });
+
+test('check navigateToProviderNewConnection', async () => {
+  vi.mocked(providerRegistry.getMatchingProviderInternalId).mockReturnValue('anInternalId');
+
+  await navigationManager.navigateToProviderNewConnection('my.extension');
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.PROVIDER_NEW_CONNECTION,
+    parameters: {
+      provider: 'anInternalId',
+    },
+  });
+});

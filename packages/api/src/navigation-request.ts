@@ -48,6 +48,7 @@ export interface NavigationParameters {
   [NavigationPage.RESOURCES]: never;
   [NavigationPage.CLI_TOOLS]: never;
   [NavigationPage.EDIT_CONTAINER_CONNECTION]: { provider: string; name: string };
+  [NavigationPage.PROVIDER_NEW_CONNECTION]: { provider: string };
   [NavigationPage.PROVIDER_TASK]: { internalId: string; taskId: number | undefined };
   [NavigationPage.EXPERIMENTAL_FEATURES]: never;
 }
