@@ -39,5 +39,9 @@ export interface GoToInfo {
   id: string;
   name: string;
   kind: string;
-  info: PodInfo | ContainerInfo | ImageInfo | VolumeInfo;
+  info: PodInfo | ContainerInfo | ImageInfo | VolumeInfo | NavigationInfo;
+}
+
+export interface NavigationInfo {
+  link: string;
 }

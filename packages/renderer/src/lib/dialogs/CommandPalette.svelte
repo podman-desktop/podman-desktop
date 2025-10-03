@@ -12,11 +12,12 @@ import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imagesInfos } from '/@/stores/images';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
 import type { ContainerInfo } from '/@api/container-info';
-import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
+import type { DocumentationInfo, GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
 import type { ContextUI } from '../context/context';
@@ -76,7 +77,10 @@ let volumeItems: VolumeInfo[] = $state([]);
 
 let commandInfoItems: CommandInfo[] = $state([]);
 let documentationItems: DocumentationInfo[] = $state([]);
-let goToItems: GoToInfo[] = $derived(createGoToItems(imageItems, containerItems, podItems, volumeItems));
+let navigationItems: NavigationRegistryEntry[] = $state([]);
+let goToItems: GoToInfo[] = $derived(
+  createGoToItems(imageItems, containerItems, podItems, volumeItems, navigationItems),
+);
 let globalContext: ContextUI;
 
 // Keep backward compatibility with existing variable name
@@ -126,6 +130,7 @@ let imagesUnsubscribe: Unsubscriber;
 let containersUnsubscribe: Unsubscriber;
 let podsUnsubscribe: Unsubscriber;
 let volumeListUnsubscribe: Unsubscriber;
+let navigationUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
@@ -150,6 +155,9 @@ onMount(() => {
   volumeListUnsubscribe = volumeListInfos.subscribe(infos => {
     volumeItems = infos.map(info => info.Volumes).flat();
   });
+  navigationUnsubscribe = navigationRegistry.subscribe(infos => {
+    navigationItems = infos;
+  });
   // subscribe to the commands
   return commandsInfos.subscribe(infos => {
     commandInfoItems = infos;
@@ -162,6 +170,7 @@ onDestroy(() => {
   containersUnsubscribe?.();
   podsUnsubscribe?.();
   volumeListUnsubscribe?.();
+  navigationUnsubscribe?.();
 });
 
 // Focus the input when the command palette becomes visible
@@ -295,7 +304,7 @@ async function executeAction(index: number): Promise<void> {
     switch (kind) {
       case 'image':
         router.goto(
-          `/images/${goToItem.id}/${goToItem.info.engineId}/${Buffer.from(goToItem.name ?? goToItem.id ?? '').toString('base64')}/summary`,
+          `/images/${goToItem.id}/${(goToItem.info as ImageInfo).engineId}/${Buffer.from(goToItem.name ?? goToItem.id ?? '').toString('base64')}/summary`,
         );
         break;
 
@@ -304,11 +313,15 @@ async function executeAction(index: number): Promise<void> {
         break;
 
       case 'pod':
-        router.goto(`/pods/podman/${goToItem.name}/${goToItem.info.engineId}/summary`);
+        router.goto(`/pods/podman/${goToItem.name}/${(goToItem.info as PodInfo).engineId}/summary`);
         break;
 
       case 'volume':
-        router.goto(`/volumes/${goToItem.id}/${goToItem.info.engineId}/summary`);
+        router.goto(`/volumes/${goToItem.id}/${(goToItem.info as VolumeInfo).engineId}/summary`);
+        break;
+
+      case 'navigation':
+        router.goto((goToItem.info as NavigationInfo).link);
         break;
     }
   } else {
@@ -428,7 +441,12 @@ async function onAction(): Promise<void> {
                       {#if isDocItem}
                         {(item as DocumentationInfo).category}: {(item as DocumentationInfo).title}
                        {:else if isGoToItem}
-                         {(item as GoToInfo).kind}: {(item as GoToInfo).name}
+                        {@const goToItem = item as GoToInfo}
+                        {#if goToItem.kind === 'Navigation'}
+                          {goToItem.name}
+                        {:else}
+                          {goToItem.kind}: {goToItem.name}
+                        {/if}
                       {:else}
                         {(item as CommandInfo).title}
                       {/if}
