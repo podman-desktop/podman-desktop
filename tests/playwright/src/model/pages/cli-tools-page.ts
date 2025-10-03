@@ -41,13 +41,11 @@ export class CLIToolsPage extends SettingsPage {
     this.toolsTable = this.content.getByRole('table', { name: 'cli-tools' });
     this.dropDownDialog = page.getByRole('dialog', { name: 'drop-down-dialog' });
     this.versionInputField = this.dropDownDialog.getByRole('textbox');
+    this.attachRateLimitListener();
+  }
 
-    page.on('console', msg => {
-      if (msg.text().includes('API rate limit exceeded')) {
-        console.log('Rate limit flag triggered!');
-        this.rateLimitReachedFlag = true;
-      }
-    });
+  public wasRateLimitReached(): boolean {
+    return this.rateLimitReachedFlag;
   }
 
   public getToolRow(toolName: string): Locator {
@@ -99,10 +97,10 @@ export class CLIToolsPage extends SettingsPage {
 
   public async installTool(toolName: string, timeout = 60_000): Promise<this> {
     return test.step(`Install ${toolName}`, async () => {
-      this.isAPIrateLimitReached();
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
 
+      await this.ensureAPIRateLimitNotReached();
       const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
       try {
         await playExpect(confirmationDialog).toBeVisible();
@@ -144,9 +142,10 @@ export class CLIToolsPage extends SettingsPage {
         return this;
       }
 
-      this.isAPIrateLimitReached();
       await playExpect(this.getDowngradeButton(toolName)).toBeEnabled();
       await this.getDowngradeButton(toolName).click();
+
+      await this.ensureAPIRateLimitNotReached();
       await playExpect(this.dropDownDialog).toBeVisible();
 
       if (!version) {
@@ -175,9 +174,10 @@ export class CLIToolsPage extends SettingsPage {
         return this;
       }
 
-      this.isAPIrateLimitReached();
       await playExpect(this.getUpdateButton(toolName)).toBeEnabled();
       await this.getUpdateButton(toolName).click();
+
+      await this.ensureAPIRateLimitNotReached();
       await playExpect
         .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
         .not.toContain(currentVersion);
@@ -196,10 +196,20 @@ export class CLIToolsPage extends SettingsPage {
     }
   }
 
-  public isAPIrateLimitReached(): void {
+  private attachRateLimitListener(): void {
+    this.page.on('console', msg => {
+      if (msg.text().includes('API rate limit exceeded')) {
+        console.log('Rate limit flag triggered!');
+        this.rateLimitReachedFlag = true;
+      }
+    });
+  }
+
+  private async ensureAPIRateLimitNotReached(): Promise<void> {
+    await this.page.waitForTimeout(2_000); //give some time for the listener to catch up
     if (this.rateLimitReachedFlag) {
-      console.log('Rate limit flag is set to true');
-      test.skip(true, 'Rate limit exceeded; skipping current test');
+      console.log('Skipping test due to API rate limit being reached');
+      test.skip(true, 'Skipping test due to API rate limit being reached');
     }
   }
 }
