@@ -1396,8 +1396,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Create a modal dialog to ask the user if they want to enable or disable compatibility mode
     const command = extensionApi.commands.registerCommand('podman.socketCompatibilityMode', async () => {
       // Manually check to see if the socket is disguised (this will be called when pressing the status bar item)
-      const isDisguisedPodmanSocket = await isDisguisedPodman();
-
+      let isDisguisedPodmanSocket: boolean;
+      try {
+        isDisguisedPodmanSocket = await isDisguisedPodman();
+      } catch (error) {
+        await extensionApi.window.showInformationMessage('Could not get if Podman is disguised');
+        return;
+      }
       // We use isEnabled() as we do not want to "renable" again if the user has already enabled it.
       if (!isDisguisedPodmanSocket && !socketCompatibilityMode.isEnabled()) {
         const result = await extensionApi.window.showInformationMessage(

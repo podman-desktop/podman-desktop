@@ -42,7 +42,7 @@ export async function isDisguisedPodmanPath(socketPath: string, timeout?: number
     options.timeout = timeout;
   }
 
-  return new Promise<boolean>(resolve => {
+  return new Promise<boolean>((resolve, reject) => {
     const req = http.request(options, res => {
       res.on('data', () => {
         // do nothing
@@ -57,12 +57,12 @@ export async function isDisguisedPodmanPath(socketPath: string, timeout?: number
     // in case of error, it's not reachable
     req.once('error', err => {
       console.debug('Error while pinging docker as podman', err);
-      resolve(false);
+      reject(new Error(`Socket unreachable due to error: ${err.message}`));
     });
 
     // in case of timeout, it's not reachable
     req.on('timeout', () => {
-      resolve(false);
+      reject(new Error('Socket unreachable due to timeout.'));
     });
 
     req.end();

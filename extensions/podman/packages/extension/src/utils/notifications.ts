@@ -127,7 +127,13 @@ export class ExtensionNotifications {
       return;
     }
 
-    const isDisguisedPodmanSocket = await isDisguisedPodman();
+    let isDisguisedPodmanSocket: boolean;
+    try {
+      isDisguisedPodmanSocket = await isDisguisedPodman();
+    } catch (error) {
+      console.debug('Error while check if the socket is disguised', error);
+      return;
+    }
 
     // If the socket is not disguised, we should alert the user that compatibility was not ran.
     if (!isDisguisedPodmanSocket) {
@@ -166,7 +172,13 @@ export class ExtensionNotifications {
     const socketCompatibilityMode = getSocketCompatibility();
 
     // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
-    const isDisguisedPodmanSocket = await isDisguisedPodman();
+    let isDisguisedPodmanSocket: boolean;
+    try {
+      isDisguisedPodmanSocket = await isDisguisedPodman();
+    } catch (error) {
+      console.debug('Error while check if the socket is disguised', error);
+      return;
+    }
 
     // Notify if we need to run podman-mac-helper only if isDisguisedPodmanSocket is set to false
     // and we are on macOS, as the helper is only required for macOS.
