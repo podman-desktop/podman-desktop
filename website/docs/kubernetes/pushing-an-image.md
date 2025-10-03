@@ -20,3 +20,4 @@ See the procedural details in the following sections:
 
 - [Building an image and testing it in Kind](/docs/kind/building-an-image-and-testing-it-in-kind)
 - [Building an image and testing it in Minikube](/docs/minikube/building-an-image-and-testing-it-in-minikube)
+- [Building an image and testing it in Lima](/docs/lima/building-an-image-and-testing-it-in-lima)
