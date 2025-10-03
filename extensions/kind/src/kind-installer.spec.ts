@@ -332,8 +332,12 @@ describe('downloadReleaseAsset', () => {
     });
 
     // mock fs
-    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-    const mkdirSpy = vi.spyOn(fs.promises, 'mkdir').mockResolvedValue('');
+    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
+      return false;
+    });
+    const mkdirSpy = vi.spyOn(fs.promises, 'mkdir').mockImplementation(async () => {
+      return '';
+    });
 
     const writeFileSpy = vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
 

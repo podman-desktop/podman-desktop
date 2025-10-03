@@ -148,7 +148,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     vi.mocked(extensionApi.env).isLinux = false;
 
     // Mock "isDisguisedPodman" to return true to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockResolvedValue(true);
+    vi.mocked(isDisguisedPodman).mockImplementation(async () => true);
 
     await extensionNotifications.checkMacSocket();
 
@@ -168,7 +168,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     vi.mocked(extensionApi.env).isLinux = false;
 
     // Mock "isDisguisedPodman" to return false to indicate a failed socket
-    vi.mocked(isDisguisedPodman).mockResolvedValue(false);
+    vi.mocked(isDisguisedPodman).mockImplementation(async () => false);
 
     await extensionNotifications.checkMacSocket();
 
