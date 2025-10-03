@@ -51,7 +51,7 @@ test('isDisguisedPodman with timeout', async () => {
   server = setupServer(...handlers);
   server.listen({ onUnhandledRequest: 'error' });
 
-  const response = await isDisguisedPodmanPath('http://localhost:10000/socket', 50);
-
-  expect(response).toBe(undefined);
+  await expect(isDisguisedPodmanPath('http://localhost:10000/socket', 50)).rejects.toThrow(
+    'Socket unreachable due to timeout.',
+  );
 });
