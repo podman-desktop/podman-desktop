@@ -281,13 +281,13 @@ describe('register route', () => {
   });
 });
 
-test('check navigateToProviderNewConnection', async () => {
+test('check navigateToCreateProviderConnection', async () => {
   vi.mocked(providerRegistry.getMatchingProviderInternalId).mockReturnValue('anInternalId');
 
-  await navigationManager.navigateToProviderNewConnection('my.extension');
+  await navigationManager.navigateToCreateProviderConnection('my.extension');
 
   expect(apiSender.send).toHaveBeenCalledWith('navigate', {
-    page: NavigationPage.PROVIDER_NEW_CONNECTION,
+    page: NavigationPage.CREATE_PROVIDER_CONNECTION,
     parameters: {
       provider: 'anInternalId',
     },

@@ -133,7 +133,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.EXPERIMENTAL_FEATURES:
       router.goto('/preferences/experimental');
       break;
-    case NavigationPage.PROVIDER_NEW_CONNECTION:
+    case NavigationPage.CREATE_PROVIDER_CONNECTION:
       router.goto(`/preferences/provider/${request.parameters.provider}`);
       break;
   }

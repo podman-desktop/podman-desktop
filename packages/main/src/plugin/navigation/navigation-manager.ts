@@ -332,10 +332,10 @@ export class NavigationManager {
     });
   }
 
-  async navigateToProviderNewConnection(providerId: string): Promise<void> {
+  async navigateToCreateProviderConnection(providerId: string): Promise<void> {
     const internalId = this.providerRegistry.getMatchingProviderInternalId(providerId);
     this.navigateTo({
-      page: NavigationPage.PROVIDER_NEW_CONNECTION,
+      page: NavigationPage.CREATE_PROVIDER_CONNECTION,
       parameters: {
         provider: internalId,
       },

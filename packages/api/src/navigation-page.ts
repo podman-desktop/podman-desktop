@@ -47,5 +47,5 @@ export enum NavigationPage {
   EDIT_CONTAINER_CONNECTION = 'edit-container-connection',
   DEPLOY_TO_KUBE = 'deploy-to-kube',
   EXPERIMENTAL_FEATURES = 'experimental',
-  PROVIDER_NEW_CONNECTION = 'provider-new-connection',
+  CREATE_PROVIDER_CONNECTION = 'create-provider-connection',
 }
