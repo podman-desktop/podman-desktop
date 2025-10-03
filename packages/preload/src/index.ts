@@ -82,7 +82,6 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
-import type { LayoutEditItem } from '/@api/layout-manager-info';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
@@ -108,6 +107,7 @@ import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
 
+import type { ListOrganizerItem } from '../../api/src/list-organizer';
 import type { ApiSenderType } from '../../main/src/plugin/api';
 import type { ContextInfo } from '../../main/src/plugin/api/context-info';
 import type { KubernetesGeneratorInfo } from '../../main/src/plugin/api/KubernetesGeneratorInfo';
@@ -2515,20 +2515,18 @@ export function initExposure(): void {
 
   // Layout Registry functions
   contextBridge.exposeInMainWorld(
-    'loadLayoutConfig',
-    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
-      return ipcInvoke('layout-registry:loadLayoutConfig', kind, availableColumns);
+    'loadListConfig',
+    async (kind: string, availableColumns: string[]): Promise<ListOrganizerItem[]> => {
+      return ipcInvoke('list-organizer-registry:loadListConfig', kind, availableColumns);
     },
   );
-
-  contextBridge.exposeInMainWorld('saveLayoutConfig', async (kind: string, items: LayoutEditItem[]): Promise<void> => {
-    return ipcInvoke('layout-registry:saveLayoutConfig', kind, items);
+  contextBridge.exposeInMainWorld('saveListConfig', async (kind: string, items: ListOrganizerItem[]): Promise<void> => {
+    return ipcInvoke('list-organizer-registry:saveListConfig', kind, items);
   });
-
   contextBridge.exposeInMainWorld(
-    'resetLayoutConfig',
-    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
-      return ipcInvoke('layout-registry:resetLayoutConfig', kind, availableColumns);
+    'resetListConfig',
+    async (kind: string, availableColumns: string[]): Promise<ListOrganizerItem[]> => {
+      return ipcInvoke('list-organizer-registry:resetListConfig', kind, availableColumns);
     },
   );
 

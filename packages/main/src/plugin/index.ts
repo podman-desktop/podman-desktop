@@ -103,7 +103,6 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
-import type { LayoutEditItem } from '/@api/layout-manager-info.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
@@ -127,6 +126,7 @@ import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
+import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { isMac } from '../util.js';
@@ -182,10 +182,10 @@ import { ImageRegistry } from './image-registry.js';
 import { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
 import { ExtensionInstaller } from './install/extension-installer.js';
 import { KubernetesClient } from './kubernetes/kubernetes-client.js';
-import { LayoutRegistry } from './layout-registry.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
+import { ListOrganizerRegistry } from './list-organizer.js';
 import { MessageBox } from './message-box.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
@@ -710,8 +710,8 @@ export class PluginSystem {
     const extensionDevelopmentFolders = container.get<ExtensionDevelopmentFolders>(ExtensionDevelopmentFolders);
     extensionDevelopmentFolders.init();
 
-    container.bind<LayoutRegistry>(LayoutRegistry).toSelf().inSingletonScope();
-    const layoutRegistry = container.get<LayoutRegistry>(LayoutRegistry);
+    container.bind<ListOrganizerRegistry>(ListOrganizerRegistry).toSelf().inSingletonScope();
+    const listOrganizerRegistry = container.get<ListOrganizerRegistry>(ListOrganizerRegistry);
 
     container.bind<PinRegistry>(PinRegistry).toSelf().inSingletonScope();
     const pinRegistry = container.get<PinRegistry>(PinRegistry);
@@ -2046,31 +2046,31 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'layout-registry:loadLayoutConfig',
+      'list-organizer-registry:loadListConfig',
       async (
         _listener: Electron.IpcMainInvokeEvent,
         key: string,
         availableColumns: string[],
-      ): Promise<LayoutEditItem[]> => {
-        return layoutRegistry.loadLayoutConfig(key, availableColumns);
+      ): Promise<ListOrganizerItem[]> => {
+        return listOrganizerRegistry.loadListConfig(key, availableColumns);
       },
     );
 
     this.ipcHandle(
-      'layout-registry:saveLayoutConfig',
-      async (_listener: Electron.IpcMainInvokeEvent, key: string, items: LayoutEditItem[]): Promise<void> => {
-        return layoutRegistry.saveLayoutConfig(key, items);
+      'list-organizer-registry:saveListConfig',
+      async (_listener: Electron.IpcMainInvokeEvent, key: string, items: ListOrganizerItem[]): Promise<void> => {
+        return listOrganizerRegistry.saveListConfig(key, items);
       },
     );
 
     this.ipcHandle(
-      'layout-registry:resetLayoutConfig',
+      'list-organizer-registry:resetListConfig',
       async (
         _listener: Electron.IpcMainInvokeEvent,
         key: string,
         availableColumns: string[],
-      ): Promise<LayoutEditItem[]> => {
-        return layoutRegistry.resetLayoutConfig(key, availableColumns);
+      ): Promise<ListOrganizerItem[]> => {
+        return listOrganizerRegistry.resetListConfig(key, availableColumns);
       },
     );
 

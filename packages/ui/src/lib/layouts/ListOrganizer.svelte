@@ -3,18 +3,18 @@ import { faCheck, faGripVertical, faPen, faUndo } from '@fortawesome/free-solid-
 import { SvelteMap } from 'svelte/reactivity';
 
 import { Icon } from '../icons';
-import type { LayoutEditItem } from './LayoutEditor';
+import type { ListOrganizerItem } from './ListOrganizer';
 
 /**
- * LayoutEditor Component
+ * ListOrganizer Component
  *
  * A dropdown component that allows users to toggle visibility and reorder items in a layout.
  * Displays as a hamburger menu button that opens a dropdown with checkboxes and drag handles.
  *
  * Usage:
  * ```svelte
- * <LayoutEditor
- *   items={layoutItems}
+ * <ListOrganizer
+ *   items={listItems}
  *   ordering={columnOrdering}
  *   enableToggle={true}
  *   enableReorder={true}
@@ -31,7 +31,7 @@ import type { LayoutEditItem } from './LayoutEditor';
  * - Fully keyboard accessible
  */
 interface Props {
-  items: LayoutEditItem[];
+  items: ListOrganizerItem[];
   ordering?: SvelteMap<string, number>;
   title?: string;
   enableReorder?: boolean;
@@ -106,13 +106,13 @@ function closeDropdown(): void {
   isOpen = false;
 }
 
-function handleItemToggle(item: LayoutEditItem): void {
+function handleItemToggle(item: ListOrganizerItem): void {
   if (!enableToggle || isDraggingActive) return;
   onToggle?.(item.id, !item.enabled);
 }
 
 // Creates a visual preview of the list while dragging.
-function createDragPreview(dragIndex: number, hoverIndex: number): LayoutEditItem[] {
+function createDragPreview(dragIndex: number, hoverIndex: number): ListOrganizerItem[] {
   const newItems = [...orderedItems];
   const draggedItem = newItems[dragIndex];
   newItems.splice(dragIndex, 1);

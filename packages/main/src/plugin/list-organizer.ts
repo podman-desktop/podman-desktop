@@ -20,13 +20,14 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { IDisposable } from '/@api/disposable.js';
-import { LayoutEditItem, SavedLayoutConfig } from '/@api/layout-manager-info.js';
 
-// Dynamic layout registry - populated by frontend components during initialization
-const REGISTERED_LAYOUTS: Record<string, string[]> = {};
+import { type ListOrganizerItem, SavedListOrganizerConfig } from '../../../api/src/list-organizer.js';
+
+// Dynamic list organizer registry - populated by frontend components during initialization
+const REGISTERED_LISTS: Record<string, string[]> = {};
 
 @injectable()
-export class LayoutRegistry implements IDisposable {
+export class ListOrganizerRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
 
   constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
@@ -36,27 +37,27 @@ export class LayoutRegistry implements IDisposable {
     this.#disposables = [];
   }
 
-  // Get default configuration for a layout kind
-  getDefaultLayoutConfig(layoutKind: string): SavedLayoutConfig[] {
-    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? [];
+  // Get default configuration for a list kind
+  getDefaultListConfig(listKind: string): SavedListOrganizerConfig[] {
+    const defaults = REGISTERED_LISTS[listKind] ?? [];
     return defaults.map(name => ({ id: name, enabled: true }));
   }
 
-  // Load layout configuration (with fallback to defaults)
-  async loadLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
+  // Load list configuration (with fallback to defaults)
+  async loadListConfig(listKind: string, availableColumns: string[]): Promise<ListOrganizerItem[]> {
     try {
-      // Auto-register the layout if not already registered
-      if (!REGISTERED_LAYOUTS[layoutKind]) {
-        REGISTERED_LAYOUTS[layoutKind] = availableColumns;
+      // Auto-register the list if not already registered
+      if (!REGISTERED_LISTS[listKind]) {
+        REGISTERED_LISTS[listKind] = availableColumns;
 
         // Register the configuration with the configuration registry
-        const layoutConfiguration: IConfigurationNode = {
+        const listConfiguration: IConfigurationNode = {
           id: 'preferences',
-          title: 'Layout',
+          title: 'List',
           type: 'object',
           properties: {
-            [`layout.${layoutKind}`]: {
-              description: `Preferred layout of columns for ${layoutKind}`,
+            [`list.${listKind}`]: {
+              description: `Preferred list of columns for ${listKind}`,
               type: 'array',
               default: this.parseConfiguration(availableColumns),
               hidden: true,
@@ -64,37 +65,37 @@ export class LayoutRegistry implements IDisposable {
           },
         };
 
-        this.#disposables.push(this.configurationRegistry.registerConfigurations([layoutConfiguration]));
+        this.#disposables.push(this.configurationRegistry.registerConfigurations([listConfiguration]));
       }
 
-      const config = this.configurationRegistry.getConfiguration('layout');
-      const savedConfig = config.get<SavedLayoutConfig[]>(`${layoutKind}`, []);
+      const config = this.configurationRegistry.getConfiguration('list');
+      const savedConfig = config.get<SavedListOrganizerConfig[]>(`${listKind}`, []);
 
-      return this.mergeConfigWithAvailableColumns(layoutKind, savedConfig, availableColumns);
+      return this.mergeConfigWithAvailableColumns(listKind, savedConfig, availableColumns);
     } catch (error: unknown) {
-      console.warn(`Failed to load layout config for ${layoutKind}:`, error);
-      return this.createDefaultLayoutItems(layoutKind, availableColumns);
+      console.warn(`Failed to load list config for ${listKind}:`, error);
+      return this.createDefaultListItems(listKind, availableColumns);
     }
   }
 
-  // Save layout configuration
-  async saveLayoutConfig(layoutKind: string, items: LayoutEditItem[]): Promise<void> {
-    const configToSave: SavedLayoutConfig[] = items.map(item => ({ id: item.id, enabled: item.enabled }));
+  // Save list configuration
+  async saveListConfig(listKind: string, items: ListOrganizerItem[]): Promise<void> {
+    const configToSave: SavedListOrganizerConfig[] = items.map(item => ({ id: item.id, enabled: item.enabled }));
 
-    const config = this.configurationRegistry.getConfiguration('layout');
-    await config.update(`${layoutKind}`, configToSave);
+    const config = this.configurationRegistry.getConfiguration('list');
+    await config.update(`${listKind}`, configToSave);
   }
 
-  // Reset layout to defaults
-  async resetLayoutConfig(layoutKind: string, availableColumns: string[]): Promise<LayoutEditItem[]> {
-    const config = this.configurationRegistry.getConfiguration('layout');
-    await config.update(`${layoutKind}`, undefined);
-    return this.createDefaultLayoutItems(layoutKind, availableColumns);
+  // Reset list to defaults
+  async resetListConfig(listKind: string, availableColumns: string[]): Promise<ListOrganizerItem[]> {
+    const config = this.configurationRegistry.getConfiguration('list');
+    await config.update(`${listKind}`, undefined);
+    return this.createDefaultListItems(listKind, availableColumns);
   }
 
-  // Helper: Create default layout items
-  private createDefaultLayoutItems(layoutKind: string, availableColumns: string[]): LayoutEditItem[] {
-    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? availableColumns;
+  // Helper: Create default list items
+  private createDefaultListItems(listKind: string, availableColumns: string[]): ListOrganizerItem[] {
+    const defaults = REGISTERED_LISTS[listKind] ?? availableColumns;
     return defaults.map((colName, index) => ({
       id: colName,
       label: this.getColumnLabel(colName),
@@ -114,15 +115,15 @@ export class LayoutRegistry implements IDisposable {
 
   // Helper: Merge saved config with available columns
   private mergeConfigWithAvailableColumns(
-    layoutKind: string,
-    savedConfig: SavedLayoutConfig[],
+    listKind: string,
+    savedConfig: SavedListOrganizerConfig[],
     availableColumns: string[],
-  ): LayoutEditItem[] {
+  ): ListOrganizerItem[] {
     const savedIds = new Set(savedConfig.map(item => item.id));
-    const mergedItems: LayoutEditItem[] = [];
+    const mergedItems: ListOrganizerItem[] = [];
 
     // Get default order to determine originalOrder for each column
-    const defaults = REGISTERED_LAYOUTS[layoutKind] ?? availableColumns;
+    const defaults = REGISTERED_LISTS[listKind] ?? availableColumns;
     const getOriginalOrder = (id: string): number => {
       const index = defaults.indexOf(id);
       return index >= 0 ? index : defaults.length; // Put unknown items at the end
@@ -155,8 +156,8 @@ export class LayoutRegistry implements IDisposable {
     return mergedItems;
   }
 
-  parseConfiguration(layout: string[]): SavedLayoutConfig[] {
-    return layout.map(item => ({
+  parseConfiguration(list: string[]): SavedListOrganizerConfig[] {
+    return list.map(item => ({
       id: item,
       enabled: true,
     }));

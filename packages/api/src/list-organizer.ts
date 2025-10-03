@@ -16,9 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface LayoutEditItem {
-  id: string;
+export interface ListOrganizerItem extends SavedListOrganizerConfig {
   label: string;
-  enabled: boolean;
   originalOrder: number;
+}
+
+export interface SavedListOrganizerConfig {
+  id: string;
+  enabled: boolean;
+}
+
+export interface ListOrganizerCallbacks {
+  onLoad: () => Promise<ListOrganizerItem[]>;
+  onSave: (items: ListOrganizerItem[]) => Promise<void>;
+  onReset: () => Promise<ListOrganizerItem[]>;
+}
+
+export interface ListOrganizerRegistration {
+  kind: string;
+  defaultColumns: string[];
+  columnLabels?: Record<string, string>;
 }

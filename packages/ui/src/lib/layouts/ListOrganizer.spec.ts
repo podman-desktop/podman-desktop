@@ -23,10 +23,10 @@ import userEvent from '@testing-library/user-event';
 import { SvelteMap } from 'svelte/reactivity';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { LayoutEditItem } from './LayoutEditor';
-import LayoutEditor from './LayoutEditor.svelte';
+import type { ListOrganizerItem } from './ListOrganizer';
+import ListOrganizer from './ListOrganizer.svelte';
 
-const mockItems: LayoutEditItem[] = [
+const mockItems: ListOrganizerItem[] = [
   { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
   { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
   { id: 'item3', label: 'Third Item', enabled: false, originalOrder: 2 },
@@ -39,7 +39,7 @@ beforeEach(() => {
 
 test('Expect trigger button is visible and has correct title', async () => {
   const title = 'Manage Layout';
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title,
   });
@@ -50,7 +50,7 @@ test('Expect trigger button is visible and has correct title', async () => {
 });
 
 test('Expect dropdown opens when trigger button is clicked', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
   });
@@ -71,7 +71,7 @@ test('Expect dropdown opens when trigger button is clicked', async () => {
 });
 
 test.skip('Expect dropdown closes when clicking outside', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
   });
@@ -90,7 +90,7 @@ test.skip('Expect dropdown closes when clicking outside', async () => {
 });
 
 test('Expect enabled items show check icon', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -117,7 +117,7 @@ test('Expect enabled items show check icon', async () => {
 test('Expect item toggle functionality works when enableToggle is true', async () => {
   const updatedItems = [...mockItems];
 
-  const component = render(LayoutEditor, {
+  const component = render(ListOrganizer, {
     items: updatedItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -139,7 +139,7 @@ test('Expect item toggle functionality works when enableToggle is true', async (
 });
 
 test('Expect grip icons are visible when enableReorder is true', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     enableReorder: true,
@@ -156,7 +156,7 @@ test('Expect grip icons are visible when enableReorder is true', async () => {
 test('Expect reset button is visible when onReset is provided', async () => {
   const onResetMock = vi.fn();
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -173,7 +173,7 @@ test('Expect reset button is visible when onReset is provided', async () => {
 test('Expect reset button calls onReset when clicked', async () => {
   const onResetMock = vi.fn();
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -195,7 +195,7 @@ test('Expect reset button is disabled when items are in default state', async ()
   // All items enabled and in original order = default state
   const defaultItems = mockItems.map(item => ({ ...item, enabled: true }));
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: defaultItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -215,7 +215,7 @@ test('Expect reset button is enabled when items are modified', async () => {
   // Some items disabled = modified state
   const modifiedItems = [...mockItems]; // Already has item3 disabled
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: modifiedItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -240,7 +240,7 @@ test('Expect reset button is enabled when items are reordered', async () => {
     { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
   ];
 
-  const component = render(LayoutEditor, {
+  const component = render(ListOrganizer, {
     items: originalItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -272,7 +272,7 @@ test('Expect reset button is enabled when items are reordered', async () => {
 });
 
 test('Expect drag handles are draggable when enableReorder is true', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     enableReorder: true,
@@ -288,7 +288,7 @@ test('Expect drag handles are draggable when enableReorder is true', async () =>
 });
 
 test('Expect mouse events work on drag handles', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     enableReorder: true,
@@ -307,7 +307,7 @@ test('Expect mouse events work on drag handles', async () => {
 });
 
 test('Expect grip handle accepts click events', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -328,7 +328,7 @@ test('Expect grip handle accepts click events', async () => {
 test('Expect custom title is used', async () => {
   const customTitle = 'Custom Layout Manager';
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: customTitle,
   });
@@ -341,7 +341,7 @@ test('Expect custom reset button label is used', async () => {
   const onResetMock = vi.fn();
   const customLabel = 'Restore Defaults';
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -356,7 +356,7 @@ test('Expect custom reset button label is used', async () => {
 });
 
 test('Expect no reset button when onReset is not provided', async () => {
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
   });
@@ -371,7 +371,7 @@ test('Expect no reset button when onReset is not provided', async () => {
 test('Expect reset button has proper styling', async () => {
   const onResetMock = vi.fn();
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: mockItems,
     title: 'Manage Layout',
     onReset: onResetMock,
@@ -388,14 +388,14 @@ test('Expect reset button has proper styling', async () => {
 test('Expect reset button disabled in default state (all enabled, original order)', async () => {
   const onResetMock = vi.fn();
 
-  const defaultItems: LayoutEditItem[] = [
+  const defaultItems: ListOrganizerItem[] = [
     { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
     { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
     { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
     { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
   ];
 
-  render(LayoutEditor, {
+  render(ListOrganizer, {
     items: defaultItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -414,14 +414,14 @@ test('Expect reset button disabled in default state (all enabled, original order
 test('Expect reset button enabled after toggling item', async () => {
   const onResetMock = vi.fn();
 
-  const defaultItems: LayoutEditItem[] = [
+  const defaultItems: ListOrganizerItem[] = [
     { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
     { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
     { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
     { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
   ];
 
-  const component = render(LayoutEditor, {
+  const component = render(ListOrganizer, {
     items: defaultItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -455,14 +455,14 @@ test('Expect reset button enabled after toggling item', async () => {
 test('Expect reset button enabled after reordering items', async () => {
   const onResetMock = vi.fn();
 
-  const defaultItems: LayoutEditItem[] = [
+  const defaultItems: ListOrganizerItem[] = [
     { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
     { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
     { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
     { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
   ];
 
-  const component = render(LayoutEditor, {
+  const component = render(ListOrganizer, {
     items: defaultItems,
     title: 'Manage Layout',
     enableToggle: true,
@@ -501,14 +501,14 @@ test('Expect clicking reset button resets state and disables button', async () =
   const onResetMock = vi.fn();
 
   // Start with default state, then modify, then reset
-  const defaultItems: LayoutEditItem[] = [
+  const defaultItems: ListOrganizerItem[] = [
     { id: 'item1', label: 'First Item', enabled: true, originalOrder: 0 },
     { id: 'item2', label: 'Second Item', enabled: true, originalOrder: 1 },
     { id: 'item3', label: 'Third Item', enabled: true, originalOrder: 2 },
     { id: 'item4', label: 'Fourth Item', enabled: true, originalOrder: 3 },
   ];
 
-  const component = render(LayoutEditor, {
+  const component = render(ListOrganizer, {
     items: defaultItems,
     title: 'Manage Layout',
     enableToggle: true,
