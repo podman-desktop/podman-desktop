@@ -290,31 +290,12 @@ function QuickActions(): JSX.Element {
   );
 }
 
-function ExtendBreadcrumb(): JSX.Element {
-  return (
-    <nav className="bg-gray-50 dark:bg-charcoal-900 py-4">
-      <div className="container mx-auto px-5">
-        <div className="flex items-center space-x-2 text-sm">
-          <Link to="/" className="text-gray-600 hover:text-purple-600">
-            Home
-          </Link>
-          <span className="text-gray-400">/</span>
-          <Link to="/extend" className="text-purple-600 font-medium">
-            Extend
-          </Link>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
 export default function Home(): JSX.Element {
   return (
     <Layout
       title="Extend Podman Desktop"
       description="Extend Podman Desktop with extensions for Kubernetes, AI, security, and more">
       <TailWindThemeSelector />
-      <ExtendBreadcrumb />
       <ExtendHero />
       <ExtensionShowcase />
       <ExtensionCategories />
