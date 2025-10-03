@@ -1409,7 +1409,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       try {
         isDisguisedPodmanSocket = await isDisguisedPodman();
       } catch (error) {
-        await extensionApi.window.showInformationMessage(`Could not get if Podman is disguised`);
+        await extensionApi.window.showInformationMessage('Could not get if Podman is disguised');
         return;
       }
       // We use isEnabled() as we do not want to "renable" again if the user has already enabled it.
