@@ -3,12 +3,14 @@ import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-i
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
+import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imagesInfos } from '/@/stores/images';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
@@ -68,18 +70,16 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
-let imageItems: ImageInfo[] = $state([]);
-let containerItems: ContainerInfo[] = $state([]);
-let podItems: PodInfo[] = $state([]);
-let volumeItems: VolumeInfo[] = $state([]);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
 let podInfos: PodInfo[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
-
-let goToItems: GoToInfo[] = $derived(createGoToItems(imageInfos, containerInfos, podInfos, volumInfos));
+let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
+let goToItems: GoToInfo[] = $derived(
+  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
+);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
@@ -278,6 +278,8 @@ async function executeAction(index: number): Promise<void> {
         page: NavigationPage.VOLUME,
         parameters: { name: item.Name, engineId: item.engineId },
       });
+    } else if (item.type === 'Navigation') {
+      router.goto(item.link);
     }
   } else {
     // Command item
@@ -403,7 +405,11 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
                       {#if docItem}
                         {(item.category)}: {(item.name)}
                        {:else if goToItem}
-                         {(item.type)}: {(getGoToDisplayText(item))}
+                        {#if item.type === 'Navigation'}
+                          {item.name}
+                        {:else}
+                          {(item.type)}: {(getGoToDisplayText(item))}
+                        {/if}
                       {:else}
                         {(item.title)}
                       {/if}
