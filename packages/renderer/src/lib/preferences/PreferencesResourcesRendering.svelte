@@ -38,6 +38,7 @@ import PreferencesProviderInstallationModal from './PreferencesProviderInstallat
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import {
+  getContainerRootlessInfo,
   getProviderConnectionName,
   type IConnectionRestart,
   type IConnectionStatus,
@@ -514,6 +515,7 @@ $effect(() => {
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
+            {@const rootlessInfo = getContainerRootlessInfo(providerContainerConfiguration, provider.internalId, container.name)}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
@@ -532,6 +534,11 @@ $effect(() => {
               </div>
               <div class="{container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''} font-semibold">
                 {container.displayName}
+                {#if rootlessInfo}
+                  <span class="text-xs font-normal text-[var(--pd-content-sub-header)]" role="status" aria-label="Machine running in {rootlessInfo} mode">
+                    ({rootlessInfo})
+                  </span>
+                {/if}
               </div>
               <div class="flex" aria-label="Connection Status">
                 <ConnectionStatus status={container.status} />
