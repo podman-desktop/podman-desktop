@@ -82,6 +82,7 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
+import type { LayoutEditItem } from '/@api/layout-manager-info';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
@@ -2509,6 +2510,25 @@ export function initExposure(): void {
       cancellationToken?: number,
     ): Promise<containerDesktopAPI.ImageChecks | undefined> => {
       return ipcInvoke('image-checker:check', id, image, cancellationToken);
+    },
+  );
+
+  // Layout Registry functions
+  contextBridge.exposeInMainWorld(
+    'loadLayoutConfig',
+    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
+      return ipcInvoke('layout-registry:loadLayoutConfig', kind, availableColumns);
+    },
+  );
+
+  contextBridge.exposeInMainWorld('saveLayoutConfig', async (kind: string, items: LayoutEditItem[]): Promise<void> => {
+    return ipcInvoke('layout-registry:saveLayoutConfig', kind, items);
+  });
+
+  contextBridge.exposeInMainWorld(
+    'resetLayoutConfig',
+    async (kind: string, availableColumns: string[]): Promise<LayoutEditItem[]> => {
+      return ipcInvoke('layout-registry:resetLayoutConfig', kind, availableColumns);
     },
   );
 
