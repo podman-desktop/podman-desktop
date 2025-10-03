@@ -9,14 +9,15 @@ import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imagesInfos } from '/@/stores/images';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
 import type { ContainerInfo } from '/@api/container-info';
-import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { PodInfo } from '/@api/pod-info';
+import type { DocumentationInfo, GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
@@ -25,6 +26,7 @@ import EnterIcon from '../images/EnterIcon.svelte';
 import NotFoundIcon from '../images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
+import { router } from 'tinro';
 
 const ENTER_KEY = 'Enter';
 const ESCAPE_KEY = 'Escape';
@@ -68,18 +70,16 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
-let imageItems: ImageInfo[] = $state([]);
-let containerItems: ContainerInfo[] = $state([]);
-let podItems: PodInfo[] = $state([]);
-let volumeItems: VolumeInfo[] = $state([]);
 
 let documentationItems: DocumentationInfo[] = $state([]);
 let containerInfos: ContainerInfo[] = $derived($containersInfos);
 let podInfos: PodInfo[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
-
-let goToItems: GoToInfo[] = $derived(createGoToItems(imageInfos, containerInfos, podInfos, volumInfos));
+let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
+let goToItems: GoToInfo[] = $derived(
+  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
+);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
@@ -278,6 +278,8 @@ async function executeAction(index: number): Promise<void> {
         page: NavigationPage.VOLUME,
         parameters: { name: item.Name, engineId: item.engineId },
       });
+    } else if (item.type === 'Navigation') {
+      router.goto(item.link);
     }
   } else {
     // Command item
@@ -403,7 +405,11 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
                       {#if docItem}
                         {(item.category)}: {(item.name)}
                        {:else if goToItem}
-                         {(item.type)}: {(getGoToDisplayText(item))}
+                        {#if item.type === 'Navigation'}
+                          {item.name}
+                        {:else}
+                          {(item.type)}: {(getGoToDisplayText(item))}
+                        {/if}
                       {:else}
                         {(item.title)}
                       {/if}
