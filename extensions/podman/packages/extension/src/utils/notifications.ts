@@ -131,6 +131,7 @@ export class ExtensionNotifications {
     try {
       isDisguisedPodmanSocket = await isDisguisedPodman();
     } catch (error) {
+      console.debug('Error while check if the socket is disguised', error);
       return;
     }
 
@@ -175,6 +176,7 @@ export class ExtensionNotifications {
     try {
       isDisguisedPodmanSocket = await isDisguisedPodman();
     } catch (error) {
+      console.debug('Error while check if the socket is disguised', error);
       return;
     }
 
