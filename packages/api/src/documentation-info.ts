@@ -36,4 +36,10 @@ export type GoToInfo =
   | (PodInfo & { type: 'Pod' })
   | (ContainerInfo & { type: 'Container' })
   | (ImageInfo & { type: 'Image' })
-  | (VolumeInfo & { type: 'Volume' });
+  | (VolumeInfo & { type: 'Volume' })
+  | (NavigationInfo & { type: 'Navigation' });
+
+export interface NavigationInfo {
+  name: string;
+  link: string;
+}

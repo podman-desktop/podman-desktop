@@ -27,9 +27,7 @@ const config = {
   markdown: {
     mermaid: true,
     parseFrontMatter: async params => {
-      // Only call the release notes parser per-file
-      const result = await createNotesFiles(params);
-      return result;
+      return createNotesFiles(params);
     },
   },
   themes: ['@docusaurus/theme-mermaid'],
