@@ -127,9 +127,10 @@ export class ExtensionNotifications {
       return;
     }
 
-    const isDisguisedPodmanSocket = await isDisguisedPodman();
-
-    if (isDisguisedPodmanSocket === undefined) {
+    let isDisguisedPodmanSocket: boolean;
+    try {
+      isDisguisedPodmanSocket = await isDisguisedPodman();
+    } catch (error) {
       return;
     }
 
@@ -170,9 +171,10 @@ export class ExtensionNotifications {
     const socketCompatibilityMode = getSocketCompatibility();
 
     // Check to see if we actually have a disguised podman socket, if it's false, we should notify.
-    const isDisguisedPodmanSocket = await isDisguisedPodman();
-
-    if (isDisguisedPodmanSocket === undefined) {
+    let isDisguisedPodmanSocket: boolean;
+    try {
+      isDisguisedPodmanSocket = await isDisguisedPodman();
+    } catch (error) {
       return;
     }
 
