@@ -52,10 +52,8 @@ test('expect to display wait message before to receive results', async () => {
     },
   ]);
 
-  imageCheckMock.mockImplementation(async () => {
-    // never returns results
-    return new Promise(() => {});
-  });
+  // never returns results
+  imageCheckMock.mockResolvedValue(new Promise(() => {}));
 
   render(ImageDetailsCheck, {
     imageInfo: {
@@ -88,10 +86,8 @@ test('expect to cancel when clicking the Cancel button', async () => {
     },
   ]);
 
-  imageCheckMock.mockImplementation(async () => {
-    // never returns results
-    return new Promise(() => {});
-  });
+  // never returns results
+  imageCheckMock.mockResolvedValue(new Promise(() => {}));
 
   render(ImageDetailsCheck, {
     imageInfo: {
@@ -130,10 +126,8 @@ test('expect to cancel when destroying the component', async () => {
     },
   ]);
 
-  imageCheckMock.mockImplementation(async () => {
-    // never returns results
-    return new Promise(() => {});
-  });
+  // never returns results
+  imageCheckMock.mockResolvedValue(new Promise(() => {}));
 
   const result = render(ImageDetailsCheck, {
     imageInfo: {
@@ -169,10 +163,8 @@ test('expect to not cancel again when destroying the component after manual canc
     },
   ]);
 
-  imageCheckMock.mockImplementation(async () => {
-    // never returns results
-    return new Promise(() => {});
-  });
+  // never returns results
+  imageCheckMock.mockResolvedValue(new Promise(() => {}));
 
   const result = render(ImageDetailsCheck, {
     imageInfo: {

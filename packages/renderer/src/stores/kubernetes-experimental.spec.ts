@@ -23,9 +23,7 @@ import { configurationProperties } from './configurationProperties';
 import { isKubernetesExperimentalModeStore } from './kubernetes-experimental';
 
 test('experimental mode is set', async () => {
-  vi.mocked(window.isExperimentalConfigurationEnabled).mockImplementation(async () => {
-    return true;
-  });
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
   configurationProperties.set([]);
   await vi.waitFor(() => {
     const result = get(isKubernetesExperimentalModeStore);
@@ -34,9 +32,7 @@ test('experimental mode is set', async () => {
 });
 
 test('experimental mode is not set', async () => {
-  vi.mocked(window.isExperimentalConfigurationEnabled).mockImplementation(async () => {
-    return false;
-  });
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
   configurationProperties.set([]);
   await vi.waitFor(() => {
     const result = get(isKubernetesExperimentalModeStore);
