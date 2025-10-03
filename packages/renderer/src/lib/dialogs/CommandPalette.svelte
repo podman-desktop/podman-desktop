@@ -15,10 +15,10 @@ import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
 import type { ContainerInfo } from '/@api/container-info';
-import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { PodInfo } from '/@api/pod-info';
+import type { DocumentationInfo, GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
