@@ -72,6 +72,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     size: 0,
     humanSize: '',
     id: '',
+    arch: '',
     status: 'UNUSED',
     name: '',
     selected: false,

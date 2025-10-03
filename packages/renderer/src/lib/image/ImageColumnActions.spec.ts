@@ -33,6 +33,7 @@ const image: ImageInfoUI = {
   tag: 'latest-tag',
   createdAt: 0,
   age: '',
+  arch: '',
   size: 0,
   humanSize: '',
   base64RepoTag: 'repoTag',

@@ -73,6 +73,7 @@ const fakedImage: ImageInfoUI = {
   tag: 'tag',
   createdAt: 0,
   age: 'age',
+  arch: '',
   size: 0,
   humanSize: 'humanSize',
   base64RepoTag: 'base64RepoTag',

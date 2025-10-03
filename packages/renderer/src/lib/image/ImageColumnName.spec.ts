@@ -36,6 +36,7 @@ const image: ImageInfoUI = {
   tag: 'latest',
   createdAt: 0,
   age: '',
+  arch: '',
   size: 0,
   humanSize: '',
   base64RepoTag: 'bXktaW1hZ2UtbmFtZTpsYXRlc3Q=',
