@@ -43,6 +43,7 @@ vi.mock('/@/stores/kubernetes-contexts', async () => {
 const mockParseKubeconfigFile = vi.fn();
 const mockImportContextsFromFile = vi.fn();
 const mockHasCertificateChanged = vi.fn();
+const mockShowMessageBox = vi.fn();
 
 Object.defineProperty(window, 'kubernetesParseKubeconfigFile', {
   value: mockParseKubeconfigFile,
@@ -56,9 +57,14 @@ Object.defineProperty(window, 'kubernetesHasCertificateChanged', {
   value: mockHasCertificateChanged,
 });
 
+Object.defineProperty(window, 'showMessageBox', {
+  value: mockShowMessageBox,
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   // Mock default responses
+  mockShowMessageBox.mockResolvedValue({ response: 0 });
   mockParseKubeconfigFile.mockResolvedValue([
     {
       name: 'new-context',
@@ -126,17 +132,22 @@ test('Expect review page to render with title', async () => {
   expect(mockParseKubeconfigFile).toHaveBeenCalledWith('path/to/kubeconfig.yaml');
 });
 
-test('Expect error when no file path provided', async () => {
+test('Expect error dialog when no file path provided', async () => {
   render(PreferencesKubernetesContextsRenderingReview, {
     props: { filePath: '' },
   });
 
   await vi.waitFor(() => {
-    expect(screen.getByText('No kubeconfig file path found. Please go back and select a file.')).toBeInTheDocument();
+    expect(mockShowMessageBox).toHaveBeenCalledWith({
+      title: 'Error',
+      message: 'No kubeconfig file path found. Please go back and select a file.',
+      type: 'error',
+      buttons: ['OK'],
+    });
   });
 });
 
-test('Expect error when no contexts found in file', async () => {
+test('Expect error dialog when no contexts found in file', async () => {
   mockParseKubeconfigFile.mockResolvedValue([]);
 
   render(PreferencesKubernetesContextsRenderingReview, {
@@ -144,7 +155,12 @@ test('Expect error when no contexts found in file', async () => {
   });
 
   await vi.waitFor(() => {
-    expect(screen.getByText('No valid contexts found in the config file')).toBeInTheDocument();
+    expect(mockShowMessageBox).toHaveBeenCalledWith({
+      title: 'Error',
+      message: 'No valid contexts found in the config file',
+      type: 'error',
+      buttons: ['OK'],
+    });
   });
 });
 
@@ -171,5 +187,32 @@ test('Expect certificate changed to be called for each context', async () => {
   await vi.waitFor(() => {
     expect(mockHasCertificateChanged).toHaveBeenCalledWith('path/to/kubeconfig.yaml', 'new-context');
     expect(mockHasCertificateChanged).toHaveBeenCalledWith('path/to/kubeconfig.yaml', 'existing-context');
+  });
+});
+
+test('Expect error dialog when import operation fails', async () => {
+  const importError = new Error('Import failed');
+  mockImportContextsFromFile.mockRejectedValue(importError);
+
+  render(PreferencesKubernetesContextsRenderingReview, {
+    props: { filePath: 'path%2Fto%2Fkubeconfig.yaml' },
+  });
+
+  // Wait for contexts to load
+  await vi.waitFor(() => {
+    expect(screen.getByRole('button', { name: /Import 2 contexts/ })).toBeInTheDocument();
+  });
+
+  // Click import button
+  const importButton = screen.getByRole('button', { name: /Import 2 contexts/ });
+  await userEvent.click(importButton);
+
+  await vi.waitFor(() => {
+    expect(mockShowMessageBox).toHaveBeenCalledWith({
+      title: 'Error',
+      message: `Failed to import contexts: ${importError}`,
+      type: 'error',
+      buttons: ['OK'],
+    });
   });
 });

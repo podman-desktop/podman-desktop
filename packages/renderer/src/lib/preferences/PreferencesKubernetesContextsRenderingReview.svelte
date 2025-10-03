@@ -33,14 +33,23 @@ const { filePath }: Props = $props();
 let loadedContexts: LoadedContext[] = $state([]);
 let existingContexts: KubeContext[] = $state([]);
 let loading: boolean = $state(false);
-let errorMessage: string = $state('');
+
+// Helper function to show error dialogs
+async function showErrorDialog(message: string): Promise<void> {
+  await window.showMessageBox({
+    title: 'Error',
+    message,
+    type: 'error',
+    buttons: ['OK'],
+  });
+}
 
 onMount(async () => {
   existingContexts = $kubernetesContexts;
 
   // Get the kubeconfig file path from props (passed via route parameter)
   if (!filePath) {
-    errorMessage = 'No kubeconfig file path found. Please go back and select a file.';
+    await showErrorDialog('No kubeconfig file path found. Please go back and select a file.');
     return;
   }
 
@@ -51,7 +60,7 @@ onMount(async () => {
     const parsedContexts = await window.kubernetesParseKubeconfigFile(decodedPath);
 
     if (parsedContexts.length === 0) {
-      errorMessage = 'No valid contexts found in the config file';
+      await showErrorDialog('No valid contexts found in the config file');
       return;
     }
 
@@ -72,7 +81,7 @@ onMount(async () => {
       });
     }
   } catch (error: unknown) {
-    errorMessage = `Failed to parse config file: ${error}`;
+    await showErrorDialog(`Failed to parse config file: ${error}`);
   }
 });
 
@@ -97,12 +106,11 @@ async function importSelectedContexts(): Promise<void> {
   const selectedContexts = loadedContexts.filter(context => context.selected);
 
   if (selectedContexts.length === 0) {
-    errorMessage = 'Please select at least one context to import';
+    await showErrorDialog('Please select at least one context to import');
     return;
   }
 
   loading = true;
-  errorMessage = '';
 
   try {
     // Get the kubeconfig file path from props
@@ -130,7 +138,7 @@ async function importSelectedContexts(): Promise<void> {
     // Navigate back to contexts page
     goToKubernetesContextsPage();
   } catch (err: unknown) {
-    errorMessage = `Failed to import contexts: ${err}`;
+    await showErrorDialog(`Failed to import contexts: ${err}`);
   } finally {
     loading = false;
   }
@@ -158,13 +166,6 @@ function goToUpPage(): void {
 
   {#snippet content()}
     <div class="flex m-5 flex-col w-full">
-      <!-- Error banner -->
-      <div aria-label="importError">
-        {#if errorMessage !== ''}
-          <ErrorMessage class="py-2" error={errorMessage} />
-        {/if}
-      </div>
-
       <!-- Main content card -->
       <div class="bg-[var(--pd-content-card-bg)] rounded-lg text-[var(--pd-content-card-text)] px-8 pt-6 pb-6" role="table" aria-label="Review contexts">
         <!-- Context list -->
