@@ -462,6 +462,7 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           row={row}
           defaultSortColumn="Name"
           key={key}
+          enableLayoutConfiguration={true}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
       {/if}

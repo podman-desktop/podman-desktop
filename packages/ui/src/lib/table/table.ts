@@ -18,6 +18,8 @@
 
 import type { Component } from 'svelte';
 
+import type { LayoutEditItem } from '../layouts/LayoutEditor';
+
 /**
  * Options to be used when creating a Column.
  */
@@ -119,4 +121,10 @@ export interface RowInformation<Type, ChildType> {
  */
 export class Row<Type, ChildType = Type> {
   constructor(readonly info: RowInformation<Type, ChildType>) {}
+}
+
+export interface TablePersistenceCallbacks {
+  load: (kind: string, columnNames: string[]) => Promise<LayoutEditItem[]>;
+  save: (kind: string, items: LayoutEditItem[]) => Promise<void>;
+  reset: (kind: string, columnNames: string[]) => Promise<LayoutEditItem[]>;
 }
