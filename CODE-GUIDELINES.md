@@ -211,7 +211,7 @@ test('Compo1 calls Compo2', async () => {
 #### When the sub-components have bindable properties
 
 When a sub-component has a bindable property, you may want to test that
-some operations are performed on this propertry.
+some operations are performed on this property.
 But as the property value is returned by the sub-component, which is now mocked, you have to return such an object when you mock the component.
 
 For this, you can mock the implementation of the sub-component constructor, and update
