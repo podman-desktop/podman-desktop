@@ -1,6 +1,5 @@
 <script lang="ts">
 import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import type { ImageInfo, PodInfo } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
