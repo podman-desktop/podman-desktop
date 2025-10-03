@@ -169,3 +169,117 @@ const text = getByText('text in the page');
 // [Good]
 expect(text).toHaveStyle({ color: '#FFFFF'});
 ```
+
+### Mocking a sub-component
+
+To test a component in isolation without testing its sub-components, you have the possibility to mock
+the sub-components. For example:
+
+Compo1.svelte
+
+```typescript
+<script lang="ts">
+import Compo2 from './Compo2.svelte';
+</script>
+
+<Compo2 />
+```
+
+Compo2.svelte
+
+```typescript
+Some content
+```
+
+Compo1.spec.ts
+
+```typescript
+import { render } from '@testing-library/svelte';
+import { expect, test, vi } from 'vitest';
+
+import Compo1 from './Compo1.svelte';
+import Compo2 from './Compo2.svelte';
+
+vi.mock(import('./Compo2.svelte'));
+
+test('Compo1 calls Compo2', async () => {
+  render(Compo1);
+  expect(Compo2).toHaveBeenCalled();
+});
+```
+
+#### When the sub-components have bindable properties
+
+When a sub-component has a bindable property, you may want to test that
+some operations are performed on this propertry.
+But as the property value is returned by the sub-component, which is now mocked, you have to return such an object when you mock the component.
+
+For this, you can mock the implementation of the sub-component constructor, and update
+the bound property passed as parameter with an object for which you can spy the methods. For example:
+
+Compo1.svelte
+
+```typescript
+<script lang="ts">
+import { onMount } from 'svelte';
+import type { Obj } from './compo2';
+import Compo2 from './Compo2.svelte';
+
+let myobj = $state<Obj>();
+
+onMount(() => {
+  myobj?.fct1('a name');
+});
+</script>
+
+<Compo2 bind:obj={myobj} />
+```
+
+Compo2.svelte
+
+```typescript
+<script lang="ts">
+import type { Obj } from './compo2';
+
+interface Props {
+  obj?: Obj;
+}
+
+let { obj = $bindable() }: Props = $props();
+</script>
+```
+
+compo2.ts
+
+```typescript
+export interface Obj {
+  fct1: (name: string) => void;
+}
+```
+
+Compo1.spec.ts
+
+```typescript
+import { render } from '@testing-library/svelte';
+import { expect, test, vi } from 'vitest';
+
+import Compo1 from './Compo1.svelte';
+import type { Obj } from './compo2';
+import Compo2 from './Compo2.svelte';
+
+vi.mock(import('./Compo2.svelte'));
+
+test('compo1 calls fct1 of obj on mount', async () => {
+  // create a mock Obj, with methods you can spy
+  const obj: Obj = {
+    fct1: vi.fn(),
+  };
+  vi.mocked(Compo2).mockImplementation((_, props) => {
+    props.obj = obj; // update the value of the prop with your mock Obj
+    return {};
+  });
+  render(Compo1);
+  expect(Compo2).toHaveBeenCalled();
+  expect(obj.fct1).toHaveBeenCalledWith('a name'); // check the method has been called
+});
+```
