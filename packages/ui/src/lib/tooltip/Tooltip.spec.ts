@@ -18,17 +18,40 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import Tooltip from './Tooltip.svelte';
 import { tooltipHidden } from './tooltip-store';
+import TooltipTestComponent from './TooltipTestComponent.svelte';
 
-test('tooltip is not empty string when tooltipHidden value false', async () => {
+vi.mock('@floating-ui/dom', () => ({
+  computePosition: vi.fn((): Promise<{ x: number; y: number }> => Promise.resolve({ x: 100, y: 200 })),
+  flip: vi.fn(() => ({})),
+  shift: vi.fn(() => ({})),
+  offset: vi.fn(() => ({})),
+  autoUpdate: vi.fn((_ref, _tooltip, update): (() => void) => {
+    update();
+    return (): void => {};
+  }),
+}));
+
+beforeEach(() => {
+  tooltipHidden.set(false);
+  vi.clearAllMocks();
+});
+
+test('tooltip is hidden when tooltipHidden is true', async () => {
   tooltipHidden.set(false);
 
-  render(Tooltip, { tip: 'test 1' });
+  const { container } = render(TooltipTestComponent, { tip: 'test 1' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  expect(slot).toBeInTheDocument();
+
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
   expect(screen.queryByText('test 1')).toBeInTheDocument();
 
   tooltipHidden.set(true);
@@ -36,14 +59,229 @@ test('tooltip is not empty string when tooltipHidden value false', async () => {
   expect(screen.queryByText('test 1')).not.toBeInTheDocument();
 
   tooltipHidden.set(false);
+  await fireEvent.mouseEnter(slot!);
   await tick();
   expect(screen.queryByText('test 1')).toBeInTheDocument();
 });
 
-test('tooltip z order', async () => {
-  render(Tooltip, { tip: 'my tooltip' });
+test('tooltip z-index is correctly set', async () => {
+  const { container } = render(TooltipTestComponent, { tip: 'my tooltip' });
 
-  // get the tooltip
-  const tooltip = screen.getByText('my tooltip');
-  expect(tooltip.parentElement).toHaveClass('z-60');
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  const tooltipContainer = container.querySelector('.tooltip-content');
+  expect(tooltipContainer).toHaveClass('z-[9999]');
+});
+
+test('tooltip shows on mouse enter and hides on mouse leave', async () => {
+  const { container } = render(TooltipTestComponent, { tip: 'hover text' });
+
+  const slot = container.querySelector('.tooltip-slot');
+
+  expect(screen.queryByText('hover text')).not.toBeInTheDocument();
+
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+  expect(screen.queryByText('hover text')).toBeInTheDocument();
+
+  await fireEvent.mouseLeave(slot!);
+  await tick();
+  expect(screen.queryByText('hover text')).not.toBeInTheDocument();
+});
+
+test('tooltip respects top placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'top tooltip', top: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'top' }),
+  );
+});
+
+test('tooltip respects bottom placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'bottom tooltip', bottom: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'bottom' }),
+  );
+});
+
+test('tooltip respects left placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'left tooltip', left: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'left' }),
+  );
+});
+
+test('tooltip respects right placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'right tooltip', right: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'right' }),
+  );
+});
+
+test('tooltip respects topLeft placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'top-left tooltip', topLeft: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'top-start' }),
+  );
+});
+
+test('tooltip respects bottomRight placement prop', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'bottom-right tooltip', bottomRight: true });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'bottom-end' }),
+  );
+});
+
+test('tooltip defaults to top placement when no placement prop is provided', async () => {
+  const { computePosition } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'default tooltip' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(computePosition).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    expect.objectContaining({ placement: 'top' }),
+  );
+});
+
+test('tooltip calls autoUpdate on mouse enter', async () => {
+  const { autoUpdate } = await import('@floating-ui/dom');
+
+  const { container } = render(TooltipTestComponent, { tip: 'auto update test' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(autoUpdate).toHaveBeenCalled();
+});
+
+test('tooltip applies max-width styling', async () => {
+  const { container } = render(TooltipTestComponent, { tip: 'long text tooltip' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  const tooltipContainer = container.querySelector('.tooltip-content');
+  expect(tooltipContainer).toHaveClass('tooltip-content');
+});
+
+test('tooltip handles tipSnippet prop', async () => {
+  const TestComponent = await import('./TooltipTestWithSnippet.svelte');
+  const { container } = render(TestComponent.default);
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  expect(screen.queryByText('Custom snippet content')).toBeInTheDocument();
+});
+
+test('tooltip is initially hidden with opacity-0', async () => {
+  const { container } = render(TooltipTestComponent, { tip: 'opacity test' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+
+  const tooltipContainer = container.querySelector('.tooltip-content');
+  expect(tooltipContainer).toBeInTheDocument();
+});
+
+async function renderAndHoverTooltip(props: Record<string, unknown>): Promise<HTMLElement> {
+  const { container } = render(TooltipTestComponent, props);
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  return screen.getByLabelText('tooltip');
+}
+
+function expectTooltipStyling(element: HTMLElement): void {
+  expect(element).toBeInTheDocument();
+  expect(element).toHaveClass('bg-[var(--pd-tooltip-bg)]');
+  expect(element).toHaveClass('text-[var(--pd-tooltip-text)]');
+  expect(element).toHaveClass('border-[var(--pd-tooltip-border)]');
+  expect(element).toHaveClass('border-[1px]');
+}
+
+test('Expect basic slot styling', async () => {
+  const element = await renderAndHoverTooltip({ tipSlot: 'test' });
+  expectTooltipStyling(element);
+});
+
+test('Expect basic prop styling', async () => {
+  const element = await renderAndHoverTooltip({ tip: 'test' });
+  expectTooltipStyling(element);
+});
+
+test('Expect class styling to apply to tip slot div', async () => {
+  const { container } = render(TooltipTestComponent, { classStyle: 'my-[5px] mx-[10px]' });
+
+  const slot = container.querySelector('.tooltip-slot');
+  await fireEvent.mouseEnter(slot!);
+  await tick();
+
+  const slotElement = screen.getByLabelText('tooltip');
+  expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
 });
