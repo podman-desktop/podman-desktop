@@ -34,6 +34,7 @@ vi.mock('./image-utils', () => {
   return {
     ImageUtils: vi.fn().mockImplementation(() => ({
       deleteImage: vi.fn().mockImplementation(() => Promise.reject(new Error('Cannot delete image in test'))),
+      updateImage: vi.fn().mockImplementation(() => Promise.resolve()),
     })),
   };
 });

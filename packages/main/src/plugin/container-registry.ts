@@ -1265,6 +1265,69 @@ export class ContainerProviderRegistry {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
+  async updateImage(engineId: string, imageId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      // first get image info to check if it has a registry
+      const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
+      if (!imageInfo.RepoTags || imageInfo.RepoTags.length === 0) {
+        throw new Error('Image has no registry tags and cannot be updated');
+      }
+      // get the first repo tag
+      const repoTag = imageInfo.RepoTags[0];
+      if (!repoTag) {
+        throw new Error('Image has no valid repository tag and cannot be updated');
+      }
+
+      // check if this is a localhost image
+      if (repoTag.startsWith('localhost/') || repoTag.startsWith('127.0.0.1')) {
+        throw new Error('Local images cannot be updated');
+      }
+
+      // check if this is an immutable tag (contains a SHA digest)
+      if (repoTag.includes('@sha256:')) {
+        throw new Error('Image with digest-based tag is immutable and cannot be updated');
+      }
+
+      // store the current image ID to compare after pull
+      const oldImageId = imageInfo.Id;
+
+      // pull the latest build of the image
+      const authconfig = this.imageRegistry.getAuthconfigForImage(repoTag);
+      const matchingEngine = this.getMatchingEngine(engineId);
+      const pullStream = await matchingEngine.pull(repoTag, { authconfig });
+
+      await new Promise<void>((resolve, reject) => {
+        matchingEngine.modem.followProgress(pullStream, (err: Error | null) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+
+      // check if the image was actually updated
+      const updatedImageInfo = await matchingEngine.getImage(repoTag).inspect();
+
+      if (updatedImageInfo.Id === oldImageId) {
+        throw new Error('Image is already the latest version');
+      }
+
+      // Only delete the old image if it had a single tag
+      if (updatedImageInfo.RepoTags && updatedImageInfo.RepoTags.length === 1) {
+        try {
+          await this.deleteImage(engineId, oldImageId);
+        } catch (error) {
+          console.warn(`Could not delete old image ${oldImageId}:`, error);
+          // Don't fail the update if we can't delete the old image
+        }
+      }
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('updateImage', { imageName: this.getImageHash(imageId), ...telemetryOptions });
+    }
+  }
+
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
     let telemetryOptions = {};
     try {

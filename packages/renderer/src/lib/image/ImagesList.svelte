@@ -1,5 +1,12 @@
 <script lang="ts">
-import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowCircleDown,
+  faArrowCircleUp,
+  faCube,
+  faDownload,
+  faTrash,
+  faUpload,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
@@ -71,8 +78,6 @@ function updateImages(globalContext: ContextUI): void {
       imageUtils.getImagesInfoUI(imageInfo, storeContainers, globalContext, viewContributions, storeImages),
     )
     .flat();
-
-  // update selected items based on current selected items
   computedImages.forEach(image => {
     const matchingImage = images.find(
       currentImage => currentImage.id === image.id && currentImage.engineId === image.engineId,
@@ -220,6 +225,27 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
+// update the items selected in the list (to latest build only)
+let bulkUpdateInProgress = $state(false);
+async function updateSelectedImages(): Promise<void> {
+  const selectedImages = images.filter(image => image.selected);
+  if (selectedImages.length === 0) {
+    return;
+  }
+
+  // mark images for updating
+  bulkUpdateInProgress = true;
+  selectedImages.forEach(image => (image.status = 'UPDATING'));
+  images = images;
+
+  await selectedImages.reduce((prev: Promise<void>, image) => {
+    return prev
+      .then(() => imageUtils.updateImage(image))
+      .catch((e: unknown) => console.error('error while updating image', e));
+  }, Promise.resolve());
+  bulkUpdateInProgress = false;
+}
+
 let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
@@ -337,6 +363,16 @@ function label(item: ImageInfoUI): string {
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
+      <Button
+        on:click={(): void => {
+          if (selectedItemsNumber) {withBulkConfirmation(
+            updateSelectedImages,
+            `update ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
+          );}}}
+        title="Update {selectedItemsNumber} selected items"
+        inProgress={bulkUpdateInProgress}
+        aria-label="Update images"
+        icon={faArrowCircleUp} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}
