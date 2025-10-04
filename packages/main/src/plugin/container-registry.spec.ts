@@ -6057,3 +6057,136 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
   });
 });
+
+describe('updateImage', () => {
+  test('should successfully update image when new version is available', async () => {
+    const oldImageId = 'sha256:old123';
+    const newImageId = 'sha256:new456';
+    const repoTag = 'docker.io/library/alpine:3.15';
+
+    // Old image has single tag - should be deleted after update
+    const oldImageInspect = {
+      Id: oldImageId,
+      RepoTags: [repoTag],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    const newImageInspect = {
+      Id: newImageId,
+      RepoTags: [repoTag],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect')
+      .mockResolvedValueOnce(oldImageInspect as never)
+      .mockResolvedValueOnce(newImageInspect as never);
+
+    vi.spyOn(containerRegistry, 'pullImage').mockResolvedValue();
+    const deleteImageSpy = vi.spyOn(containerRegistry, 'deleteImage').mockResolvedValue();
+
+    const fakeProvider = {
+      name: 'podman',
+      connection: {
+        name: 'podman',
+        type: 'podman',
+        status: (): string => 'started',
+        endpoint: {
+          socketPath: '/run/podman.sock',
+        },
+      },
+    };
+    containerRegistry.addInternalProvider('engine1', fakeProvider as unknown as InternalContainerProvider);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', vi.fn());
+
+    expect(result.updated).toBe(true);
+    expect(result.message).toBe('Image updated successfully');
+    // Should delete the old image since it had only one tag
+    expect(deleteImageSpy).toHaveBeenCalledWith('engine1', oldImageId);
+  });
+
+  test('should return not updated when image is already on latest version', async () => {
+    const imageId = 'sha256:same123';
+    const imageInspect = {
+      Id: imageId,
+      RepoTags: ['nginx:latest'],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect').mockResolvedValue(imageInspect as never);
+    vi.spyOn(containerRegistry, 'pullImage').mockResolvedValue();
+
+    const fakeProvider = {
+      name: 'podman',
+      connection: {
+        name: 'podman',
+        type: 'podman',
+        status: (): string => 'started',
+        endpoint: {
+          socketPath: '/run/podman.sock',
+        },
+      },
+    };
+    containerRegistry.addInternalProvider('engine1', fakeProvider as unknown as InternalContainerProvider);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', vi.fn());
+
+    expect(result.updated).toBe(false);
+    expect(result.message).toBe('Image is already on the latest version');
+  });
+
+  test('should reject localhost images', async () => {
+    const imageInspect = {
+      Id: 'sha256:local123',
+      RepoTags: ['localhost/myapp:latest'],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect').mockResolvedValue(imageInspect as never);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', vi.fn());
+
+    expect(result.updated).toBe(false);
+    expect(result.message).toBe('Localhost images are always up to date');
+  });
+
+  test('should not delete old image if it has multiple tags', async () => {
+    const oldImageId = 'sha256:multi123';
+    const newImageId = 'sha256:multi456';
+    const repoTag = 'nginx:latest';
+
+    // Old image has multiple tags
+    const oldImageInspect = {
+      Id: oldImageId,
+      RepoTags: ['nginx:latest', 'nginx:stable', 'nginx:1.25'],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    const newImageInspect = {
+      Id: newImageId,
+      RepoTags: [repoTag],
+    } as unknown as Dockerode.ImageInspectInfo;
+
+    vi.spyOn(containerRegistry, 'getImageInspect')
+      .mockResolvedValueOnce(oldImageInspect as never)
+      .mockResolvedValueOnce(newImageInspect as never);
+
+    vi.spyOn(containerRegistry, 'pullImage').mockResolvedValue();
+    const deleteImageSpy = vi.spyOn(containerRegistry, 'deleteImage').mockResolvedValue();
+
+    const fakeProvider = {
+      name: 'podman',
+      connection: {
+        name: 'podman',
+        type: 'podman',
+        status: (): string => 'started',
+        endpoint: {
+          socketPath: '/run/podman.sock',
+        },
+      },
+    };
+    containerRegistry.addInternalProvider('engine1', fakeProvider as unknown as InternalContainerProvider);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', vi.fn());
+
+    expect(result.updated).toBe(true);
+    expect(result.message).toBe('Image updated successfully');
+    // Should NOT delete the old image since it has multiple tags
+    expect(deleteImageSpy).not.toHaveBeenCalled();
+  });
+});

@@ -1168,6 +1168,56 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:updateImages',
+      async (
+        _listener,
+        images: { id: string; engineId: string }[],
+        callbackId: number,
+      ): Promise<{ id: string; updated: boolean; message: string }[]> => {
+        const results: { id: string; updated: boolean; message: string }[] = [];
+
+        for (const image of images) {
+          try {
+            const result = await containerProviderRegistry.updateImage(image.engineId, image.id, (event: PullEvent) => {
+              this.getWebContentsSender().send(
+                'container-provider-registry:updateImages-onData',
+                callbackId,
+                image.id,
+                event,
+              );
+            });
+            results.push({ id: image.id, updated: result.updated, message: result.message });
+
+            // Show notification for all outcomes (respects toast settings)
+            if (result.updated) {
+              // Successfully updated
+              taskManager.createNotificationTask({
+                title: `${image.id} updated successfully`,
+                type: 'info',
+              });
+            } else {
+              // Already on latest version
+              taskManager.createNotificationTask({
+                title: `${image.id} already on latest version`,
+                body: result.message,
+                type: 'info',
+              });
+            }
+          } catch (error) {
+            results.push({ id: image.id, updated: false, message: String(error) });
+            // Error during update
+            taskManager.createNotificationTask({
+              title: `Failed to update ${image.id}`,
+              body: String(error),
+              type: 'error',
+            });
+          }
+        }
+
+        return results;
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:pushImage',
       async (_listener, engine: string, imageId: string, callbackId: number): Promise<void> => {
         const msgName = 'container-provider-registry:pushImage-onData';
