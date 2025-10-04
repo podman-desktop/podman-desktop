@@ -25,6 +25,7 @@ import type {
   KubernetesProviderConnectionFactory,
   Provider,
   ProviderAutostart,
+  ProviderAutostop,
   ProviderCleanup,
   ProviderConnectionStatus,
   ProviderDetectionCheck,
@@ -295,6 +296,16 @@ export class ProviderImpl implements Provider, IDisposable {
 
   registerAutostart(update: ProviderAutostart): Disposable {
     return this.providerRegistry.registerAutostart(this, update);
+  }
+
+  /**
+   * Registers an autostop handler with the provider registry.
+   *
+   * @param {ProviderAutostop} update - The autostop configuration or handler to be registered.
+   * @return {Disposable} A disposable reference allowing the caller to unregister the autostop handler.
+   */
+  registerAutostop(update: ProviderAutostop): Disposable {
+    return this.providerRegistry.registerAutostop(this, update);
   }
 
   registerCleanup(cleanup: ProviderCleanup): Disposable {
