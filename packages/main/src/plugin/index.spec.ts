@@ -792,3 +792,52 @@ describe('Log race condition fix', () => {
     }).not.toThrow();
   });
 });
+
+describe('updateImages handler', () => {
+  test('should update images and create notifications', async () => {
+    const handle = handlers.get('container-provider-registry:updateImages');
+    expect(handle).not.equal(undefined);
+
+    const images = [{ id: 'alpine:latest', engineId: 'engine1' }];
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockResolvedValue({
+      updated: true,
+      message: 'Image updated successfully',
+    });
+
+    const createNotificationTaskSpy = vi.spyOn(TaskManager.prototype, 'createNotificationTask');
+
+    const { result: results } = await handle(undefined, images, 1);
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toEqual({
+      id: 'alpine:latest',
+      updated: true,
+      message: 'Image updated successfully',
+    });
+    expect(createNotificationTaskSpy).toHaveBeenCalledWith({
+      title: 'alpine:latest updated successfully',
+      type: 'info',
+    });
+  });
+
+  test('should handle update errors', async () => {
+    const handle = handlers.get('container-provider-registry:updateImages');
+    expect(handle).not.equal(undefined);
+
+    const images = [{ id: 'invalid:image', engineId: 'engine1' }];
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(new Error('Network error'));
+
+    const createNotificationTaskSpy = vi.spyOn(TaskManager.prototype, 'createNotificationTask');
+
+    const { result: results } = await handle(undefined, images, 1);
+
+    expect(results[0].updated).toBe(false);
+    expect(createNotificationTaskSpy).toHaveBeenCalledWith({
+      title: 'Failed to update invalid:image',
+      body: 'Error: Network error',
+      type: 'error',
+    });
+  });
+});
