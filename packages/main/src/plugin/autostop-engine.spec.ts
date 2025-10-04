@@ -85,7 +85,6 @@ test('Check that setAutostop is called once if only one provider has registered 
   });
 
   const disposable = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId');
-  await autostopEngine.setConfigurationForProviders();
 
   disposable.dispose();
   expect(mockSetAutostop).toBeCalledTimes(1);
@@ -101,8 +100,6 @@ test('Check that setAutostop is called once if only one provider has registered 
 
   const disposable = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId');
 
-  await autostopEngine.setConfigurationForProviders();
-
   disposable.dispose();
   expect(mockSetAutostop).toBeCalledTimes(1);
   expect(mockSetAutostop).toBeCalledWith('internalId', false);
@@ -117,8 +114,6 @@ test('Check that setAutostop is called twice if only two providers has registere
 
   const disposable1 = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId1');
   const disposable2 = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId2');
-
-  await autostopEngine.setConfigurationForProviders();
 
   disposable1.dispose();
   disposable2.dispose();

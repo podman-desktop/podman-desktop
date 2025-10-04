@@ -3214,9 +3214,6 @@ export class PluginSystem {
     }
     extensionsUpdater.init().catch((err: unknown) => console.error('Unable to perform extension updates', err));
     autoStartEngine.start().catch((err: unknown) => console.error('Unable to perform autostart', err));
-    autostopEngine
-      .setConfigurationForProviders()
-      .catch((err: unknown) => console.error('Unable to perform autostop', err));
     return this.extensionLoader;
   }
 

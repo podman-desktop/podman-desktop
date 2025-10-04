@@ -15,16 +15,48 @@ export class AutostopEngine {
     private configurationRegistry: IConfigurationRegistry,
     @inject(ProviderRegistry)
     private providerRegistry: ProviderRegistry,
-  ) {}
-
-  registerProvider(extensionId: string, extensionDisplayName: string, providerInternalId: string): Disposable {
-    this.providerExtension.set(providerInternalId, extensionId);
-    this.registerProviderConfiguration(extensionId, extensionDisplayName);
-    return Disposable.create(() => {
-      this.providerExtension.delete(providerInternalId);
+  ) {
+    // register one listener only
+    this.configurationRegistry.onDidChangeConfiguration(async e => {
+      const m = /^preferences\.(.+)\.engine\.autostop$/.exec(e.key);
+      if (!m) return;
+      const extensionId = m[1];
+      const providerInternalId = this.providerExtension.get(extensionId!);
+      if (providerInternalId) {
+        await this.providerRegistry.setAutostop(providerInternalId, e.value as boolean);
+      }
     });
   }
 
+  /**
+   * Registers a provider with the given extension details and handles its configuration settings.
+   *
+   * @param {string} extensionId - The unique identifier for the extension.
+   * @param {string} extensionDisplayName - The display name of the extension.
+   * @param {string} providerInternalId - The internal identifier for the provider being registered.
+   * @return {Disposable} A disposable object to clean up the registered provider.
+   */
+  registerProvider(extensionId: string, extensionDisplayName: string, providerInternalId: string): Disposable {
+    this.providerExtension.set(extensionId, providerInternalId);
+    this.registerProviderConfiguration(extensionId, extensionDisplayName);
+
+    // immediately apply current setting
+    const cfg = this.configurationRegistry.getConfiguration(`preferences.${extensionId}`);
+    const autostop = cfg.get<boolean>('engine.autostop', false);
+    this.providerRegistry.setAutostop(providerInternalId, autostop).catch(console.error);
+
+    return Disposable.create(() => {
+      this.providerExtension.delete(extensionId);
+    });
+  }
+
+  /**
+   * Registers a provider-specific configuration node for the application.
+   *
+   * @param {string} extensionId - The unique identifier of the provider extension.
+   * @param {string} extensionDisplayName - The user-friendly display name of the provider extension.
+   * @return {IConfigurationNode} The configuration node that was registered.
+   */
   private registerProviderConfiguration(extensionId: string, extensionDisplayName: string): IConfigurationNode {
     const autoStopConfigurationNode: IConfigurationNode = {
       id: `preferences.${extensionId}.engine.autostop`,
@@ -45,25 +77,5 @@ export class AutostopEngine {
 
     this.configurationRegistry.registerConfigurations([autoStopConfigurationNode]);
     return autoStopConfigurationNode;
-  }
-
-  async setConfigurationForProviders(): Promise<void> {
-    this.providerExtension.forEach((extensionId, providerInternalId) => {
-      const autostopConfiguration = this.configurationRegistry.getConfiguration(`preferences.${extensionId}`);
-
-      const autostop = autostopConfiguration.get<boolean>('engine.autostop', false);
-
-      this.providerRegistry.setAutostop(providerInternalId, autostop).catch((e: unknown) => {
-        console.error(`Failed to autostop ${extensionId} container engine`, e);
-      });
-
-      // set the value if we toggle the property
-      this.configurationRegistry.onDidChangeConfiguration(async e => {
-        if (e.key === `preferences.${extensionId}.engine.autostop`) {
-          const value = e.value as boolean;
-          await this.providerRegistry.setAutostop(providerInternalId, value);
-        }
-      });
-    });
   }
 }

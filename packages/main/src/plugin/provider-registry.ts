@@ -309,10 +309,24 @@ export class ProviderRegistry {
     });
   }
 
+  /**
+   * Registers an AutostopEngine instance to be used by the system.
+   *
+   * @param {AutostopEngine} engine - The AutostopEngine instance to be registered.
+   * @return {void} Does not return a value.
+   */
   registerAutostopEngine(engine: AutostopEngine): void {
     this.autostopEngine = engine;
   }
 
+  /**
+   * Registers an autostop provider with the autostop system.
+   *
+   * @param {ProviderImpl} providerImpl - The provider implementation containing metadata to register the autostop.
+   * @param {ProviderAutostop} autostop - The autostop logic or configurations associated with the provider.
+   * @return {Disposable} A disposable object that can be used to unregister the autostop provider.
+   * @throws {Error} If no autostop engine has been registered.
+   */
   registerAutostop(providerImpl: ProviderImpl, autostop: ProviderAutostop): Disposable {
     if (!this.autostopEngine) {
       throw new Error('no autostop engine has been registered. Autostop feature is disabled');
@@ -471,6 +485,14 @@ export class ProviderRegistry {
     });
   }
 
+  /**
+   * Sets the autostop configuration for the specified provider.
+   *
+   * @param {string} internalId - The unique identifier of the provider.
+   * @param {boolean} value - The desired state for autostop (true to enable, false to disable).
+   * @return {Promise<void>} A promise that resolves when the operation is complete.
+   * @throws {Error} If no autostop configuration matches the specified provider ID.
+   */
   async setAutostop(internalId: string, value: boolean): Promise<void> {
     const autostop = this.providerAutostops.get(internalId);
     if (!autostop) {
