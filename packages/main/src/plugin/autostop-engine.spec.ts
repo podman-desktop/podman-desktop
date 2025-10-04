@@ -121,3 +121,51 @@ test('Check that setAutostop is called twice if only two providers has registere
   expect(mockSetAutostop).toHaveBeenNthCalledWith(1, 'internalId1', true);
   expect(mockSetAutostop).toHaveBeenLastCalledWith('internalId2', true);
 });
+
+test('Toggling autostop after disposing one of two providers still updates the remaining provider', async () => {
+  // Always return true initially
+  vi.spyOn(configurationRegistry, 'getConfiguration').mockImplementation(() => {
+    return {
+      get: (_section: string, _defaultValue: boolean) => true,
+    } as Configuration;
+  });
+
+  // Capture the onDidChangeConfiguration handler via the getter
+  let configChangeHandler: ((e: { key: string; value: unknown }) => Promise<void>) | undefined;
+  const fakeEvent = (handler: typeof configChangeHandler): { dispose: () => void } => {
+    configChangeHandler = handler;
+    // Return a dummy disposable
+    return { dispose: (): void => {} };
+  };
+  // @ts-expect-error - vi.spyOn is not typed correctly
+  vi.spyOn(configurationRegistry, 'onDidChangeConfiguration', 'get').mockReturnValue(fakeEvent);
+
+  // Re-instantiate autostopEngine to register the handler
+  autostopEngine = new AutostopEngine(configurationRegistry, providerRegistry);
+
+  // Register two providers for the same extension
+  const disposable1 = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId1');
+  const disposable2 = autostopEngine.registerProvider(extensionId, extensionDisplayName, 'internalId2');
+
+  // Dispose only the first provider
+  disposable1.dispose();
+
+  // Simulate toggling the autostop setting to false
+  vi.spyOn(configurationRegistry, 'getConfiguration').mockImplementation(() => {
+    return {
+      get: (_section: string, _defaultValue: boolean) => false,
+    } as Configuration;
+  });
+
+  // Call the captured handler
+  await configChangeHandler?.({
+    key: `preferences.${extensionId}.engine.autostop`,
+    value: false,
+  });
+
+  // Only the remaining provider should receive the update
+  expect(mockSetAutostop).toHaveBeenCalledWith('internalId2', false);
+  expect(mockSetAutostop).not.toHaveBeenCalledWith('internalId1', false);
+
+  disposable2.dispose();
+});

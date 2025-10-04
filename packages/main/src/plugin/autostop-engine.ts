@@ -8,7 +8,7 @@ import { Disposable } from './types/disposable.js';
 
 @injectable()
 export class AutostopEngine {
-  private providerExtension = new Map<string, string>();
+  private providerExtension = new Map<string, Set<string>>();
 
   constructor(
     @inject(IConfigurationRegistry)
@@ -21,10 +21,9 @@ export class AutostopEngine {
       const m = /^preferences\.(.+)\.engine\.autostop$/.exec(e.key);
       if (!m) return;
       const extensionId = m[1];
-      const providerInternalId = this.providerExtension.get(extensionId!);
-      if (providerInternalId) {
-        await this.providerRegistry.setAutostop(providerInternalId, e.value as boolean);
-      }
+      const providerIds = this.providerExtension.get(extensionId!);
+      if (!providerIds?.size) return;
+      await Promise.all(Array.from(providerIds, id => this.providerRegistry.setAutostop(id, e.value as boolean)));
     });
   }
 
@@ -37,7 +36,12 @@ export class AutostopEngine {
    * @return {Disposable} A disposable object to clean up the registered provider.
    */
   registerProvider(extensionId: string, extensionDisplayName: string, providerInternalId: string): Disposable {
-    this.providerExtension.set(extensionId, providerInternalId);
+    let providerIds = this.providerExtension.get(extensionId);
+    if (!providerIds) {
+      providerIds = new Set();
+      this.providerExtension.set(extensionId, providerIds);
+    }
+    providerIds.add(providerInternalId);
     this.registerProviderConfiguration(extensionId, extensionDisplayName);
 
     // immediately apply current setting
@@ -46,7 +50,11 @@ export class AutostopEngine {
     this.providerRegistry.setAutostop(providerInternalId, autostop).catch(console.error);
 
     return Disposable.create(() => {
-      this.providerExtension.delete(extensionId);
+      const providerIds = this.providerExtension.get(extensionId);
+      providerIds?.delete(providerInternalId);
+      if (!providerIds?.size) {
+        this.providerExtension.delete(extensionId);
+      }
     });
   }
 
