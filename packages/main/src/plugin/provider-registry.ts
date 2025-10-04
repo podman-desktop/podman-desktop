@@ -25,6 +25,7 @@ import type {
   Logger,
   Provider,
   ProviderAutostart,
+  ProviderAutostop,
   ProviderCleanup,
   ProviderCleanupAction,
   ProviderCleanupExecuteOptions,
@@ -55,6 +56,7 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { AutostopEngine } from '/@/plugin/autostop-engine.js';
 import type { Event } from '/@api/event.js';
 import type {
   LifecycleMethod,
@@ -104,8 +106,10 @@ export class ProviderRegistry {
   private providerInstallations: Map<string, ProviderInstallation> = new Map();
   private providerUpdates: Map<string, ProviderUpdate> = new Map();
   private providerAutostarts: Map<string, ProviderAutostart> = new Map();
+  private providerAutostops: Map<string, ProviderAutostop> = new Map();
   private providerCleanup: Map<string, ProviderCleanup> = new Map();
   private autostartEngine: AutostartEngine | undefined = undefined;
+  private autostopEngine: AutostopEngine | undefined = undefined;
 
   private connectionLifecycleContexts: Map<ProviderConnection, LifecycleContextImpl> = new Map();
   private listeners: ProviderEventListener[];
@@ -305,6 +309,27 @@ export class ProviderRegistry {
     });
   }
 
+  registerAutostopEngine(engine: AutostopEngine): void {
+    this.autostopEngine = engine;
+  }
+
+  registerAutostop(providerImpl: ProviderImpl, autostop: ProviderAutostop): Disposable {
+    if (!this.autostopEngine) {
+      throw new Error('no autostop engine has been registered. Autostop feature is disabled');
+    }
+
+    this.providerAutostops.set(providerImpl.internalId, autostop);
+    const disposable = this.autostopEngine.registerProvider(
+      providerImpl.extensionId,
+      providerImpl.extensionDisplayName,
+      providerImpl.internalId,
+    );
+    return Disposable.create(() => {
+      this.providerAutostops.delete(providerImpl.internalId);
+      disposable.dispose();
+    });
+  }
+
   registerCleanup(providerImpl: ProviderImpl, cleanup: ProviderCleanup): Disposable {
     this.providerCleanup.set(providerImpl.internalId, cleanup);
 
@@ -444,6 +469,15 @@ export class ProviderRegistry {
       name: provider.name,
       status: provider.status,
     });
+  }
+
+  async setAutostop(internalId: string, value: boolean): Promise<void> {
+    const autostop = this.providerAutostops.get(internalId);
+    if (!autostop) {
+      throw new Error(`no autostop matching provider id ${internalId}`);
+    }
+
+    await autostop.setAutostop(new LoggerImpl(), value);
   }
 
   async runPreflightChecks(

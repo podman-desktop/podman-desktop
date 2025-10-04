@@ -25,6 +25,7 @@ import type {
   KubernetesProviderConnectionFactory,
   Provider,
   ProviderAutostart,
+  ProviderAutostop,
   ProviderCleanup,
   ProviderConnectionStatus,
   ProviderDetectionCheck,
@@ -295,6 +296,10 @@ export class ProviderImpl implements Provider, IDisposable {
 
   registerAutostart(update: ProviderAutostart): Disposable {
     return this.providerRegistry.registerAutostart(this, update);
+  }
+
+  registerAutostop(update: ProviderAutostop): Disposable {
+    return this.providerRegistry.registerAutostop(this, update);
   }
 
   registerCleanup(cleanup: ProviderCleanup): Disposable {

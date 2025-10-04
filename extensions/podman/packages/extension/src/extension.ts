@@ -76,6 +76,7 @@ let storedExtensionContext: extensionApi.ExtensionContext | undefined;
 let stopLoop = false;
 let autoMachineStarted = false;
 let autoMachineName: string | undefined;
+let autoMachineStop = false;
 
 // System default notifier
 let defaultMachineNotify = !extensionApi.env.isLinux;
@@ -1481,6 +1482,17 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     },
   });
 
+  const setAutostopFlag = async (value: boolean): Promise<void> => {
+    console.log(`Set flag to stop all machines on exit to: ${value}`);
+    autoMachineStop = value;
+  };
+
+  provider.registerAutostop({
+    setAutostop: async (_logger: extensionApi.Logger, value) => {
+      await setAutostopFlag(value);
+    },
+  });
+
   extensionContext.subscriptions.push(provider);
 
   start(extensionContext, provider, podmanInstall, podmanConfiguration, version).catch((error: unknown) => {
@@ -1822,6 +1834,23 @@ async function stopAutoStartedMachine(): Promise<void> {
   await execPodman(['machine', 'stop', autoMachineName], currentMachine.VMType);
 }
 
+async function stopAllMachines(): Promise<void> {
+  if (!autoMachineStop) {
+    console.log('Auto stop is disabled');
+    return;
+  }
+
+  const machineListOutput = await getJSONMachineList();
+  const machines = machineListOutput.list;
+
+  console.log(
+    'Stopping all machines: ',
+    machines.map(machine => machine?.Name),
+  );
+  const machinesToStop = machines.filter(machine => machine?.Running || machine?.Starting);
+  await Promise.all(machinesToStop.map(machine => execPodman(['machine', 'stop', machine.Name], machine.VMType)));
+}
+
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await getPodmanInstallation();
 
@@ -1870,11 +1899,20 @@ export async function getJSONMachineListByProvider(containerMachineProvider?: st
 export async function deactivate(): Promise<void> {
   stopLoop = true;
   console.log('stopping podman extension');
-  await stopAutoStartedMachine().then(() => {
-    if (autoMachineStarted) {
-      console.log('stopped autostarted machine', autoMachineName);
-    }
-  });
+
+  if (autoMachineStop) {
+    await stopAllMachines().then(() => {
+      if (autoMachineStop) {
+        console.log('stopped all machines');
+      }
+    });
+  } else {
+    await stopAutoStartedMachine().then(() => {
+      if (autoMachineStarted) {
+        console.log('stopped autostarted machine', autoMachineName);
+      }
+    });
+  }
 
   // cleanup
   listeners.clear();

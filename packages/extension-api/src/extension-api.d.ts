@@ -639,6 +639,10 @@ declare module '@podman-desktop/api' {
     start(logger: Logger, context?: AutostartContext): Promise<void>;
   }
 
+  export interface ProviderAutostop {
+    setAutostop(logger: Logger, value: boolean): Promise<void>;
+  }
+
   /**
    * Allow to clean some resources in case for example
    */
@@ -701,6 +705,9 @@ declare module '@podman-desktop/api' {
 
     // register autostart flow
     registerAutostart(autostart: ProviderAutostart): Disposable;
+
+    // register autostop flow
+    registerAutostop(autostop: ProviderAutostop): Disposable;
 
     registerCleanup(cleanup: ProviderCleanup): Disposable;
 
