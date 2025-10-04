@@ -1,5 +1,12 @@
 <script lang="ts">
-import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowCircleDown,
+  faArrowCircleUp,
+  faCube,
+  faDownload,
+  faTrash,
+  faUpload,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
@@ -220,6 +227,56 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
+// update the items selected in the list (to latest build only)
+let bulkUpdateInProgress = $state(false);
+async function updateSelectedImages(): Promise<void> {
+  const selectedImages = images.filter(image => image.selected);
+  if (selectedImages.length === 0) {
+    return;
+  }
+
+  // Store original statuses
+  const originalStatuses = new Map(selectedImages.map(img => [img.id, img.status]));
+
+  // mark images for updating
+  bulkUpdateInProgress = true;
+  selectedImages.forEach(image => (image.status = 'UPDATING'));
+  images = images;
+
+  // Update each image sequentially to latest build
+  for (const img of selectedImages) {
+    try {
+      let imageId = `${img.name}:${img.tag}`;
+      if (imageId.startsWith('<none>')) {
+        imageId = img.shortId;
+      }
+
+      const results = await window.updateImages([{ id: imageId, engineId: img.engineId }], () => {
+        // Progress callback
+      });
+
+      // If the image wasn't updated (already on latest), restore original status
+      if (results && results.length > 0 && !results[0].updated) {
+        const originalStatus = originalStatuses.get(img.id);
+        if (originalStatus) {
+          img.status = originalStatus;
+        }
+      }
+      // If it was updated, the image list will refresh automatically
+    } catch (error) {
+      console.error(`error while updating image ${img.name}:${img.tag}`, error);
+      // Restore original status on error
+      const originalStatus = originalStatuses.get(img.id);
+      if (originalStatus) {
+        img.status = originalStatus;
+      }
+    }
+  }
+
+  images = images; // Trigger reactivity
+  bulkUpdateInProgress = false;
+}
+
 let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
@@ -316,6 +373,16 @@ const row = new TableRow<ImageInfoUI>({
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
+      <Button
+        on:click={(): void => {
+          if (selectedItemsNumber) {withBulkConfirmation(
+            updateSelectedImages,
+            `update ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
+          );}}}
+        title="Update {selectedItemsNumber} selected items"
+        inProgress={bulkUpdateInProgress}
+        aria-label="Update images"
+        icon={faArrowCircleUp} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}
