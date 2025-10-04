@@ -21,9 +21,16 @@ export class AutostopEngine {
       const m = /^preferences\.(.+)\.engine\.autostop$/.exec(e.key);
       if (!m) return;
       const extensionId = m[1];
-      const providerIds = this.providerExtension.get(extensionId!);
-      if (!providerIds?.size) return;
-      await Promise.all(Array.from(providerIds, id => this.providerRegistry.setAutostop(id, e.value as boolean)));
+      const providerIds = Array.from(this.providerExtension.get(extensionId!) ?? []);
+      if (providerIds.length === 0) return;
+      const results = await Promise.allSettled(
+        Array.from(providerIds, id => this.providerRegistry.setAutostop(id, e.value as boolean)),
+      );
+      results.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          console.log(`Failed to set autostop for provider ${providerIds[idx]}`, result.reason);
+        }
+      });
     });
   }
 
