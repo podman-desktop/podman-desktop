@@ -247,6 +247,11 @@ export class ImageUtils {
     return window.deleteImage(image.engineId, imageId);
   }
 
+  updateImage(image: ImageInfoUI): Promise<void> {
+    const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
+    return window.updateImage(image.engineId, imageId);
+  }
+
   getImageInfoUI(
     imageInfo: ImageInfo,
     base64RepoTag: string,
