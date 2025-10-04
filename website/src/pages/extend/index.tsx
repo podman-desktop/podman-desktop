@@ -34,7 +34,7 @@ function ExtendHero(): JSX.Element {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/registry"
+              to="/extensions"
               className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
               Browse Extensions
             </Link>
@@ -149,7 +149,7 @@ function ExtensionShowcase(): JSX.Element {
                   <span className="text-sm text-gray-600 dark:text-gray-300">{ext.rating}</span>
                   <span className="text-sm text-gray-500 ml-2">({ext.installs})</span>
                 </div>
-                <Link to="/registry" className="text-purple-600 hover:text-purple-700 font-medium">
+                <Link to="/extensions" className="text-purple-600 hover:text-purple-700 font-medium">
                   Install →
                 </Link>
               </div>
@@ -236,7 +236,7 @@ function QuickActions(): JSX.Element {
       title: 'Browse Catalog',
       description: 'Explore 50+ available extensions',
       icon: faDownload,
-      link: '/registry',
+      link: '/extensions',
       color: 'bg-blue-500',
     },
     {
