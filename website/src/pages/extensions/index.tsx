@@ -1,6 +1,15 @@
 import '@fortawesome/fontawesome-svg-core/styles.css';
 
-import { faChevronDown, faChevronUp, faDownload, faSearch, faStar, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { useLocation } from '@docusaurus/router';
+import {
+  faChevronDown,
+  faChevronUp,
+  faCopy,
+  faDownload,
+  faSearch,
+  faStar,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -19,6 +28,7 @@ interface ExtensionDetailModalState {
   readmeContent: string;
   readmeLoading: boolean;
   readmeError: string | null;
+  copyFeedback: boolean;
 }
 
 function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailModalProps): JSX.Element {
@@ -26,6 +36,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
     readmeContent: '',
     readmeLoading: false,
     readmeError: null,
+    copyFeedback: false,
   });
 
   useEffect(() => {
@@ -34,6 +45,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
         readmeContent: '',
         readmeLoading: true,
         readmeError: null,
+        copyFeedback: false,
       });
 
       fetchExtensionReadme(extension.readmeUrl)
@@ -42,6 +54,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
             readmeContent: content,
             readmeLoading: false,
             readmeError: null,
+            copyFeedback: false,
           });
         })
         .catch((_error: unknown) => {
@@ -49,21 +62,40 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
             readmeContent: '',
             readmeLoading: false,
             readmeError: 'Failed to load README content',
+            copyFeedback: false,
           });
         });
     }
   }, [extension, isOpen]);
 
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return (): void => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!extension || !isOpen) return <></>;
 
   const getInstallUrl = (extension: ProcessedExtension): string => {
-    // Use the publisher and extension name from the extension ID
-    // The ID is already in the format: publisherName.extensionName
     return `podman-desktop:extension/${extension.id}`;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-250 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-250 p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
+      onClick={onClose}>
       <div
         className="bg-white dark:bg-charcoal-800 rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
         onClick={e => e.stopPropagation()}>
@@ -178,6 +210,30 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                   <FontAwesomeIcon icon={faDownload} className="mr-2" />
                   Install Extension
                 </a>
+                <button
+                  onClick={() => {
+                    const copyToClipboard = async (): Promise<void> => {
+                      try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('extension', extension.id);
+                        await navigator.clipboard.writeText(url.toString());
+                        // Show feedback
+                        setReadmeState(prev => ({ ...prev, copyFeedback: true }));
+                        setTimeout(() => {
+                          setReadmeState(prev => ({ ...prev, copyFeedback: false }));
+                        }, 2000);
+                      } catch (err) {
+                        console.error('Failed to copy permalink:', err);
+                      }
+                    };
+                    copyToClipboard().catch((err: unknown) => {
+                      console.error('Failed to copy permalink:', err);
+                    });
+                  }}
+                  className="w-full bg-gray-100 dark:bg-charcoal-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-charcoal-500 transition-colors flex items-center justify-center cursor-pointer">
+                  <FontAwesomeIcon icon={faCopy} className="mr-2" />
+                  {readmeState.copyFeedback ? 'Copied!' : 'Copy Permalink'}
+                </button>
               </div>
             </div>
           </div>
@@ -243,11 +299,19 @@ function formatMarkdownAsHtml(markdown: string): string {
       // Handle !image without brackets
       .replace(/!image\(([^)]+)\)/g, '<img src="$1" alt="" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />')
 
-      // Standard markdown images
-      .replace(
-        /!\[([^\]]*)\]\(([^)]+)\)/g,
-        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />',
-      )
+      // Standard markdown images - detect badge images and align them to the left
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+        // Check if this looks like a badge (shields.io, codecov, etc.)
+        const isBadge =
+          /shields\.io|codecov\.io|github\.com.*badge|img\.shields\.io|badge/i.test(src) ||
+          /badge|stars|coverage|version|license|downloads|build|status|quality|security/i.test(alt) ||
+          /\.svg$/.test(src); // SVG images are often badges
+
+        if (isBadge) {
+          return `<img src="${src}" alt="${alt}" class="h-5 inline-block mr-2 my-1 mb-2" /><br>`;
+        }
+        return `<img src="${src}" alt="${alt}" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />`;
+      })
 
       // Links - handle internal anchor links within the modal
       .replace(
@@ -269,16 +333,19 @@ function formatMarkdownAsHtml(markdown: string): string {
       .replace(/\s+/g, ' ')
       .replace(/\n\s*\n/g, '\n\n')
 
-      // Line breaks
+      // Handle paragraph breaks first
       .replace(/\n\n/g, '</p><p class="mb-3">')
+
+      // Handle single line breaks within paragraphs
       .replace(/\n/g, '<br>')
 
-      // Wrap in paragraphs (excluding list items and other HTML elements)
-      .replace(/^(?!<[hl])(?!<li)([^<\n][^\n]*)$/gm, '<p class="mb-3">$1</p>')
+      // Wrap remaining plain text in paragraphs (excluding existing HTML elements)
+      .replace(/^(?!<[hl])(?!<li)(?!<p)(?!<img)(?!<pre)(?!<code)([^<\n][^\n]*)$/gm, '<p class="mb-3">$1</p>')
 
-      // Clean up empty paragraphs
+      // Clean up empty paragraphs and fix paragraph structure
       .replace(/<p class="mb-3"><\/p>/g, '')
       .replace(/<p class="mb-3"><br><\/p>/g, '')
+      .replace(/<p class="mb-3">\s*<\/p>/g, '')
   );
 }
 
@@ -293,6 +360,7 @@ export default function ExtensionRegistry(): JSX.Element {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedExtension, setSelectedExtension] = useState<ProcessedExtension | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const { search } = useLocation();
 
   useEffect(() => {
     const loadData = async (): Promise<void> => {
@@ -312,6 +380,23 @@ export default function ExtensionRegistry(): JSX.Element {
       console.error('Failed to load data:', error);
     });
   }, []);
+
+  // Handle URL parameters for permalinks
+  useEffect(() => {
+    const extensionId = new URLSearchParams(search).get('extension');
+    if (extensionId && extensions.length > 0) {
+      const extension = extensions.find(ext => ext.id === extensionId);
+      if (extension) {
+        setSelectedExtension(extension);
+        setShowDetailModal(true);
+      } else {
+        // Extension not found, clean up URL parameter
+        const url = new URL(window.location.href);
+        url.searchParams.delete('extension');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [search, extensions]);
 
   const filteredAndSortedExtensions = useMemo(() => {
     let filtered = extensions;
@@ -357,6 +442,19 @@ export default function ExtensionRegistry(): JSX.Element {
   const handleExtensionClick = (extension: ProcessedExtension): void => {
     setSelectedExtension(extension);
     setShowDetailModal(true);
+    // Update URL with extension parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('extension', extension.id);
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const handleModalClose = (): void => {
+    setShowDetailModal(false);
+    setSelectedExtension(null);
+    // Remove extension parameter from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('extension');
+    window.history.pushState({}, '', url.toString());
   };
 
   if (loading) {
@@ -485,7 +583,7 @@ export default function ExtensionRegistry(): JSX.Element {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {filteredAndSortedExtensions.map(extension => (
                 <div
                   key={extension.id}
@@ -507,7 +605,9 @@ export default function ExtensionRegistry(): JSX.Element {
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors truncate mb-2">
+                            <h3
+                              onClick={() => handleExtensionClick(extension)}
+                              className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors truncate mb-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400">
                               {extension.name}
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 truncate -mt-1 mb-0">
@@ -523,7 +623,11 @@ export default function ExtensionRegistry(): JSX.Element {
                       </div>
                     </div>
 
-                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{extension.description}</p>
+                    <p
+                      onClick={() => handleExtensionClick(extension)}
+                      className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                      {extension.description}
+                    </p>
 
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
@@ -565,11 +669,7 @@ export default function ExtensionRegistry(): JSX.Element {
         </div>
       </div>
 
-      <ExtensionDetailModal
-        extension={selectedExtension}
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-      />
+      <ExtensionDetailModal extension={selectedExtension} isOpen={showDetailModal} onClose={handleModalClose} />
     </Layout>
   );
 }
