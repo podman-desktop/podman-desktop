@@ -179,10 +179,10 @@ function FAQ(): JSX.Element {
             title="Is Podman Desktop free?"
             text={
               <p>
-                Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License
-                (LGPL). This means that it is freely available for use, modification, and distribution by anyone,
-                without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it
-                accessible to individuals and organizations alike.
+                Yes, Podman Desktop is an open-source project released under the Apache License 2.0. This means that it
+                is freely available for use, modification, and distribution by anyone, without charge or licensing fees.
+                Users can download and use Podman Desktop at no cost, making it accessible to individuals and
+                organizations alike.
               </p>
             }
           />

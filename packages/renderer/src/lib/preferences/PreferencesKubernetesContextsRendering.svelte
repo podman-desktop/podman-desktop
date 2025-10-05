@@ -340,11 +340,15 @@ async function connect(contextName: string): Promise<void> {
                       <div class="ml-1 text-xs text-[var(--pd-status-dead)]" aria-label="Error">
                         <Tooltip>
                           <div>ERROR</div>
-                          <div slot="tip" class="p-2">
-                            {#each context.errorMessage.split('\n').filter(l => l) as line, index (index)}
-                              <p>{line}</p>
-                            {/each}
+                          {#snippet tipSnippet()}
+                          <div class="p-2">
+                            {#if context.errorMessage}
+                              {#each context.errorMessage.split('\n').filter(l => l) as line, index (index)}
+                                <p>{line}</p>
+                              {/each}
+                            {/if}
                           </div>
+                          {/snippet}
                         </Tooltip>
                       </div>
                     {:else}

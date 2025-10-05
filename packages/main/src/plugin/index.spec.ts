@@ -85,6 +85,7 @@ beforeAll(async () => {
       app: {
         on: vi.fn(),
         getVersion: vi.fn(),
+        getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
       },
       clipboard: {
         writeText: vi.fn(),
@@ -764,5 +765,30 @@ describe.each<{
     expect(errorMock).toHaveBeenCalledWith(rejectError);
     expect(originalTask.status).toEqual('in-progress');
     expect(originalTask.error).toEqual('Something went wrong while creating container provider: Error: an error');
+  });
+});
+
+describe('Log race condition fix', () => {
+  let pluginSystem: PluginSystem;
+
+  beforeEach(() => {
+    const trayMenu = {} as TrayMenu;
+    const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
+    pluginSystem = new PluginSystem(trayMenu, mainWindowDeferred);
+  });
+
+  test('should not throw error when window is destroyed during shutdown', () => {
+    vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
+      throw new Error('Unable to find the main window');
+    });
+    (pluginSystem as any).isQuitting = false;
+
+    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
+    expect(() => {
+      logger.log('test');
+      logger.warn('test');
+      logger.error('test');
+      logger.onEnd();
+    }).not.toThrow();
   });
 });

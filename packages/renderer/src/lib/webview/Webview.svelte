@@ -6,6 +6,7 @@ import { webviews } from '/@/stores/webviews';
 import type { WebviewInfo } from '/@api/webview-info';
 
 import Route from '../../Route.svelte';
+import { webviewLifecycle } from './webview-directive';
 
 // webview id
 export let id: string;
@@ -32,6 +33,9 @@ const notifyNewWebwievState = (): void => {
 $: webviewInfo && notifyNewWebwievState();
 // webview HTML element used to communicate
 let webviewElement: HTMLElement | undefined;
+
+// reactive options for webview lifecycle directive - updates when webviewInfo changes
+$: lifecycleOptions = { webviewInfo };
 
 // function to notify webview when messages are coming
 const postMessageToWebview = (webviewEvent: unknown): void => {
@@ -102,6 +106,7 @@ onDestroy(() => {
   <Route path="/*" breadcrumb={webviewInfo.name}>
     <webview
       bind:this={webviewElement}
+      use:webviewLifecycle={lifecycleOptions}
       aria-label="Webview {webviewInfo?.name}"
       role="document"
       httpreferrer="http://{webviewInfo?.uuid}.webview.localhost:{webViewPort}"

@@ -74,6 +74,7 @@ vi.mock('node:fs', () => ({
 
 const detectMock = {
   checkSystemWideDockerCompose: vi.fn(),
+  checkSystemWidePodmanCompose: vi.fn(),
   getDockerComposeBinaryInfo: vi.fn(),
   getStoragePath: vi.fn(),
   getExtensionStorageBin: vi.fn(),

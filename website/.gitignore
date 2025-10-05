@@ -11,6 +11,8 @@
 .docusaurus
 .cache-loader
 static/release-notes
+docs.json
+tutorials.json
 
 # Cache
 .eslintcache

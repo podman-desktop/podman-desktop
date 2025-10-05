@@ -331,4 +331,14 @@ export class NavigationManager {
       },
     });
   }
+
+  async navigateToCreateProviderConnection(providerId: string): Promise<void> {
+    const internalId = this.providerRegistry.getMatchingProviderInternalId(providerId);
+    this.navigateTo({
+      page: NavigationPage.CREATE_PROVIDER_CONNECTION,
+      parameters: {
+        provider: internalId,
+      },
+    });
+  }
 }

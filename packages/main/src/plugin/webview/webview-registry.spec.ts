@@ -26,6 +26,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 
+import type { DevToolsManager } from './devtools-manager.js';
 import type { WebviewPanelImpl } from './webview-panel-impl.js';
 import { WebviewRegistry } from './webview-registry.js';
 
@@ -67,6 +68,11 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
+const mockDevToolsManager = {
+  registerDevTools: vi.fn(),
+  cleanupDevTools: vi.fn(),
+} as unknown as DevToolsManager;
+
 const getRouterMock = vi.fn();
 const fakeRouter = {
   get: getRouterMock,
@@ -78,7 +84,7 @@ const currentConsoleLog = console.log;
 beforeEach(() => {
   vi.resetAllMocks();
   console.log = vi.fn();
-  webviewRegistry = new TestWebviewRegistry(apiSender);
+  webviewRegistry = new TestWebviewRegistry(apiSender, mockDevToolsManager);
 
   // mock buildRouter method
   spyRouter = vi.spyOn(webviewRegistry, 'buildRouter').mockReturnValue(fakeRouter);

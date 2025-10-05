@@ -55,7 +55,7 @@ let searchOptions: SearchOption[] = $derived([
   { text: 'All', shortCut: [`${modifierC}${modifierS}P`] },
   { text: 'Commands', shortCut: [`${F1}`, '>'] },
   { text: 'Documentation', shortCut: [`${modifierC}K`] },
-  // { text: 'Go to', shortCut: [`${modifierC}F`] },
+  { text: 'Go to', shortCut: [`${modifierC}F`] },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
 
@@ -136,10 +136,10 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       searchOptionsSelectedIndex = 2;
       displaySearchBar();
       e.preventDefault();
-      // } else if (e.key.toLowerCase() === 'f') {
-      //   searchOptionsSelectedIndex = 3;
-      //   displaySearchBar();
-      //   e.preventDefault();
+    } else if (e.key.toLowerCase() === 'f') {
+      searchOptionsSelectedIndex = 3;
+      displaySearchBar();
+      e.preventDefault();
     }
   }
 

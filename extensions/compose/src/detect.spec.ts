@@ -86,6 +86,21 @@ describe('Check for Docker Compose', async () => {
   });
 });
 
+describe('Check for System Wide Podman Compose', async () => {
+  test('not installed', async () => {
+    const customError = { exitCode: -1 } as extensionApi.RunError;
+    vi.mocked(extensionApi.process.exec).mockRejectedValue(customError);
+    const result = await detect.checkSystemWidePodmanCompose();
+    expect(result).toBeFalsy();
+  });
+
+  test('installed', async () => {
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+    const result = await detect.checkSystemWidePodmanCompose();
+    expect(result).toBeTruthy();
+  });
+});
+
 describe('Check for path', async () => {
   const customError = { exitCode: -1 } as extensionApi.RunError;
   test('not included', async () => {

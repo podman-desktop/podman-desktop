@@ -126,6 +126,7 @@ import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
+import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { isMac } from '../util.js';
@@ -164,6 +165,7 @@ import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
 import { ExperimentalConfigurationManager } from './experimental-configuration-manager.js';
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
+import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
 import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
@@ -183,6 +185,7 @@ import { KubernetesClient } from './kubernetes/kubernetes-client.js';
 import { downloadGuideList } from './learning-center/learning-center.js';
 import { LearningCenterInit } from './learning-center-init.js';
 import { LibpodApiInit } from './libpod-api-enable/libpod-api-init.js';
+import { ListOrganizerRegistry } from './list-organizer.js';
 import { MessageBox } from './message-box.js';
 import { NavigationItemsInit } from './navigation-items-init.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
@@ -209,6 +212,7 @@ import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
 import { TaskConnectionUtils } from './util/task-connection-utils.js';
 import { ViewRegistry } from './view-registry.js';
+import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
 
@@ -680,6 +684,7 @@ export class PluginSystem {
     container.bind<ImageFilesRegistry>(ImageFilesRegistry).toSelf().inSingletonScope();
     container.bind<Troubleshooting>(Troubleshooting).toSelf().inSingletonScope();
     container.bind<ContributionManager>(ContributionManager).toSelf().inSingletonScope();
+    container.bind<DevToolsManager>(DevToolsManager).toSelf().inSingletonScope();
     container.bind<WebviewRegistry>(WebviewRegistry).toSelf().inSingletonScope();
 
     const webviewRegistry = container.get<WebviewRegistry>(WebviewRegistry);
@@ -707,6 +712,9 @@ export class PluginSystem {
     const extensionDevelopmentFolders = container.get<ExtensionDevelopmentFolders>(ExtensionDevelopmentFolders);
     extensionDevelopmentFolders.init();
 
+    container.bind<ListOrganizerRegistry>(ListOrganizerRegistry).toSelf().inSingletonScope();
+    const listOrganizerRegistry = container.get<ListOrganizerRegistry>(ListOrganizerRegistry);
+
     container.bind<PinRegistry>(PinRegistry).toSelf().inSingletonScope();
     const pinRegistry = container.get<PinRegistry>(PinRegistry);
     pinRegistry.init();
@@ -730,6 +738,10 @@ export class PluginSystem {
     recommendationsRegistry.init();
 
     container.bind<TempFileService>(TempFileService).toSelf().inSingletonScope();
+
+    container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
+    const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
+    await exploreFeatures.init();
 
     // do not wait
     featured.init().catch((e: unknown) => {
@@ -2036,6 +2048,35 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
+      'list-organizer-registry:loadListConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<ListOrganizerItem[]> => {
+        return listOrganizerRegistry.loadListConfig(key, availableColumns);
+      },
+    );
+
+    this.ipcHandle(
+      'list-organizer-registry:saveListConfig',
+      async (_listener: Electron.IpcMainInvokeEvent, key: string, items: ListOrganizerItem[]): Promise<void> => {
+        return listOrganizerRegistry.saveListConfig(key, items);
+      },
+    );
+
+    this.ipcHandle(
+      'list-organizer-registry:resetListConfig',
+      async (
+        _listener: Electron.IpcMainInvokeEvent,
+        key: string,
+        availableColumns: string[],
+      ): Promise<ListOrganizerItem[]> => {
+        return listOrganizerRegistry.resetListConfig(key, availableColumns);
+      },
+    );
+
+    this.ipcHandle(
       'configuration-registry:updateConfigurationValue',
       async (
         _listener: Electron.IpcMainInvokeEvent,
@@ -2880,6 +2921,15 @@ export class PluginSystem {
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
       return viewRegistry.listViewsContributions();
     });
+
+    this.ipcHandle('webview:devtools:register', async (_listener, webcontentId: number): Promise<void> => {
+      return webviewRegistry.registerWebviewDevTools(webcontentId);
+    });
+
+    this.ipcHandle('webview:devtools:cleanup', async (_listener, webcontentId: number): Promise<void> => {
+      return webviewRegistry.cleanupWebviewDevTools(webcontentId);
+    });
+
     this.ipcHandle('webviewRegistry:listWebviews', async (_listener): Promise<WebviewInfo[]> => {
       return webviewRegistry.listWebviews();
     });
@@ -3032,6 +3082,14 @@ export class PluginSystem {
       return downloadGuideList();
     });
 
+    this.ipcHandle('explore-features:listFeatures', async () => {
+      return exploreFeatures.downloadFeaturesList();
+    });
+
+    this.ipcHandle('explore-features:closeFeatureCard', async (_listener, featureId: string): Promise<void> => {
+      return exploreFeatures.closeFeatureCard(featureId);
+    });
+
     this.ipcHandle(
       'dialog:openDialog',
       async (_listener, dialogId: string, options: containerDesktopAPI.OpenDialogOptions): Promise<void> => {
@@ -3164,19 +3222,19 @@ export class PluginSystem {
   }
 
   getLogHandler(channel: string, loggerId: string): LoggerWithEnd {
+    const safeSend = (messageType: string, data?: unknown): void => {
+      try {
+        this.getWebContentsSender().send(channel, loggerId, messageType, data);
+      } catch (err) {
+        console.error('Failed to send log message to renderer:', err);
+      }
+    };
+
     return {
-      log: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'log', data);
-      },
-      warn: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'warn', data);
-      },
-      error: (...data: unknown[]): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'error', data);
-      },
-      onEnd: (): void => {
-        this.getWebContentsSender().send(channel, loggerId, 'finish');
-      },
+      log: (...data: unknown[]): void => safeSend('log', data),
+      warn: (...data: unknown[]): void => safeSend('warn', data),
+      error: (...data: unknown[]): void => safeSend('error', data),
+      onEnd: (): void => safeSend('finish'),
     };
   }
 

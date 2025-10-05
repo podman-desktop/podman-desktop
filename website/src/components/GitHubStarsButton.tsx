@@ -16,13 +16,13 @@ export function GitHubStarsButton({ mobile = false }: { readonly mobile?: boolea
       className={
         mobile
           ? 'dropdown__link flex items-center gap-2 px-4 py-[9px] font-medium text-base'
-          : 'navbar__item navbar__link hidden xl:flex items-center gap-2 px-4 py-[9px] border border-black dark:border-white rounded-lg font-medium min-w-[9rem] text-base'
+          : 'navbar__item navbar__link hidden xl:flex items-center gap-2 px-4 mr-3 py-[9px] border border-black dark:border-white rounded-lg font-medium min-w-[9rem] text-base'
       }>
       <FontAwesomeIcon icon={faGithub} />
       <span>Star</span>
       <span
         id="github-stars-badge"
-        className="ml-2 px-2 py-1 bg-charcoal-300 rounded text-white text-xs min-w-[2.5rem] text-center">
+        className="ml-2 px-2 py-1 bg-gray-400 dark:bg-charcoal-600 rounded text-black dark:text-gray-100 text-xs min-w-[2.5rem] text-center">
         {stargazersCount >= 1000 ? `${(stargazersCount / 1000).toFixed(1)}k` : `${stargazersCount}`}
       </span>
     </a>
