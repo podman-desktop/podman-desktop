@@ -107,6 +107,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
       onKeyDown={handleKeyDown}>
       <div
         className="bg-white dark:bg-charcoal-800 rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
+        style={{ scrollBehavior: 'smooth' }}
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -332,7 +333,7 @@ function formatMarkdownAsHtml(markdown: string): string {
     // Links - handle internal anchor links within the modal
     .replace(
       /\[([^[\]]+)\]\(#([^)]+)\)/g,
-      '<a href="#$2" class="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer" onclick="event.preventDefault(); document.getElementById(\'$2\').scrollIntoView({behavior: \'smooth\'}); return false;">$1</a>',
+      '<a href="#$2" class="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">$1</a>',
     )
     // External links - open in same window
     .replace(
