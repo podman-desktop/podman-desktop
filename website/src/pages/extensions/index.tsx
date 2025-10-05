@@ -97,7 +97,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
       onClick={onClose}>
       <div
-        className="bg-white dark:bg-charcoal-800 rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
+        className="bg-white dark:bg-charcoal-800 rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
         onClick={e => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
