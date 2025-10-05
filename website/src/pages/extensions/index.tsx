@@ -465,8 +465,8 @@ export default function ExtensionRegistry(): JSX.Element {
           return b.rating - a.rating;
         case 'popularity':
         default: {
-          const aScore = a.rating * (parseInt(a.installs.replace(/[^\d]/g, '')) || 0);
-          const bScore = b.rating * (parseInt(b.installs.replace(/[^\d]/g, '')) || 0);
+          const aScore = a.rating * (Number.parseInt(a.installs.replace(/[^\d]/g, ''), 10) || 0);
+          const bScore = b.rating * (Number.parseInt(b.installs.replace(/[^\d]/g, ''), 10) || 0);
           return bScore - aScore;
         }
       }
