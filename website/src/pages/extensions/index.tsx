@@ -667,19 +667,12 @@ export default function ExtensionRegistry(): JSX.Element {
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3
+                            <button
+                              type="button"
                               onClick={() => handleExtensionClick(extension)}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  handleExtensionClick(extension);
-                                }
-                              }}
-                              tabIndex={0}
-                              role="button"
-                              className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors truncate mb-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400">
+                              className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors truncate mb-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 font-inherit text-left w-full">
                               {extension.name}
-                            </h3>
+                            </button>
                             <p className="text-sm text-gray-500 dark:text-gray-400 truncate -mt-1 mb-0">
                               by {extension.publisher}
                             </p>
