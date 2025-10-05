@@ -92,14 +92,26 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
     return `podman-desktop:extension/${extension.id}`;
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-250 p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
-      onClick={onClose}>
+      onClick={onClose}
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}>
       <div
         className="bg-white dark:bg-charcoal-800 rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
-        onClick={e => e.stopPropagation()}>
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        tabIndex={0}>
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center justify-center space-x-4">
@@ -116,11 +128,14 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                 />
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-charcoal-300 dark:text-white mb-2">{extension.name}</h2>
+                <h2 id="modal-title" className="text-3xl font-bold text-charcoal-300 dark:text-white mb-2">
+                  {extension.name}
+                </h2>
                 <p className="text-lg text-gray-600 dark:text-gray-300 -mt-1 mb-0">by {extension.publisher}</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">
               <FontAwesomeIcon icon={faTimes} size="lg" />
@@ -212,6 +227,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                   Install Extension
                 </a>
                 <button
+                  type="button"
                   onClick={() => {
                     const copyToClipboard = async (): Promise<void> => {
                       try {
@@ -552,6 +568,7 @@ export default function ExtensionRegistry(): JSX.Element {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-charcoal-300 dark:text-white mb-0">Filters</h2>
                 <button
+                  type="button"
                   onClick={() => setShowFilters(!showFilters)}
                   className="lg:hidden bg-gray-100 dark:bg-charcoal-700 hover:bg-gray-200 dark:hover:bg-charcoal-600 text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center">
                   <FontAwesomeIcon icon={showFilters ? faChevronUp : faChevronDown} className="text-sm" />
@@ -564,6 +581,7 @@ export default function ExtensionRegistry(): JSX.Element {
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Categories</h3>
                   <div className="space-y-2">
                     <button
+                      type="button"
                       onClick={() => setSelectedCategory('All')}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
                         selectedCategory === 'All'
@@ -574,6 +592,7 @@ export default function ExtensionRegistry(): JSX.Element {
                     </button>
                     {categories.map(category => (
                       <button
+                        type="button"
                         key={category.name}
                         onClick={() => setSelectedCategory(category.name)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
@@ -598,6 +617,7 @@ export default function ExtensionRegistry(): JSX.Element {
                       { value: 'rating', label: 'Rating' },
                     ].map(option => (
                       <button
+                        type="button"
                         key={option.value}
                         onClick={() => setSortBy(option.value as 'popularity' | 'name' | 'date' | 'rating')}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
@@ -685,6 +705,7 @@ export default function ExtensionRegistry(): JSX.Element {
 
                     <div className="flex mt-auto">
                       <button
+                        type="button"
                         onClick={() => handleExtensionClick(extension)}
                         className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm cursor-pointer">
                         <FontAwesomeIcon icon={faDownload} className="mr-1" />
