@@ -692,17 +692,7 @@ export default function ExtensionRegistry(): JSX.Element {
                       </div>
                     </div>
 
-                    <p
-                      onClick={() => handleExtensionClick(extension)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleExtensionClick(extension);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 transition-colors">
                       {extension.description}
                     </p>
 
