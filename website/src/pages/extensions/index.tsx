@@ -104,15 +104,16 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
       onClick={onClose}
       tabIndex={-1}
-      onKeyDown={handleKeyDown}>
+      onKeyDown={handleKeyDown}
+      role="presentation">
       <div
         className="bg-white dark:bg-charcoal-800 rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
         style={{ scrollBehavior: 'smooth' }}
         onClick={e => e.stopPropagation()}
+        onKeyDown={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
-        tabIndex={0}>
+        aria-labelledby="modal-title">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center justify-center space-x-4">
