@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
+import DOMPurify from 'dompurify';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import TailWindThemeSelector from '../../components/TailWindThemeSelector';
@@ -246,107 +247,139 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
 function formatMarkdownAsHtml(markdown: string): string {
   if (!markdown) return '';
 
-  return (
-    markdown
-      // Headers with IDs for anchor links
-      .replace(/^### ([^\n]*)$/gm, (match, title) => {
-        const id = title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-/, '')
-          .replace(/-$/, '');
-        return `<h3 id="${id}" class="text-lg font-semibold mb-2 mt-4">${title}</h3>`;
-      })
-      .replace(/^## ([^\n]*)$/gm, (match, title) => {
-        const id = title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-/, '')
-          .replace(/-$/, '');
-        return `<h2 id="${id}" class="text-xl font-semibold mb-3 mt-6">${title}</h2>`;
-      })
-      .replace(/^# ([^\n]*)$/gm, (match, title) => {
-        const id = title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-/, '')
-          .replace(/-$/, '');
-        return `<h1 id="${id}" class="text-2xl font-bold mb-4 mt-2">${title}</h1>`;
-      })
+  const html = markdown
+    // Headers with IDs for anchor links
+    .replace(/^### ([^\n]*)$/gm, (match, title) => {
+      const id = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-/, '')
+        .replace(/-$/, '');
+      return `<h3 id="${id}" class="text-lg font-semibold mb-2 mt-4">${title}</h3>`;
+    })
+    .replace(/^## ([^\n]*)$/gm, (match, title) => {
+      const id = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-/, '')
+        .replace(/-$/, '');
+      return `<h2 id="${id}" class="text-xl font-semibold mb-3 mt-6">${title}</h2>`;
+    })
+    .replace(/^# ([^\n]*)$/gm, (match, title) => {
+      const id = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-/, '')
+        .replace(/-$/, '');
+      return `<h1 id="${id}" class="text-2xl font-bold mb-4 mt-2">${title}</h1>`;
+    })
 
-      // Bold and italic
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+    // Bold and italic
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
 
-      // Code blocks
-      .replace(
-        /```([\s\S]*?)```/g,
-        '<pre class="bg-gray-200 dark:bg-charcoal-600 p-3 rounded text-sm overflow-x-auto my-4"><code>$1</code></pre>',
-      )
+    // Code blocks
+    .replace(
+      /```([\s\S]*?)```/g,
+      '<pre class="bg-gray-200 dark:bg-charcoal-600 p-3 rounded text-sm overflow-x-auto my-4"><code>$1</code></pre>',
+    )
 
-      // Inline code
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-gray-200 dark:bg-charcoal-600 px-1 py-0.5 rounded text-sm font-mono">$1</code>',
-      )
+    // Inline code
+    .replace(
+      /`([^`]+)`/g,
+      '<code class="bg-gray-200 dark:bg-charcoal-600 px-1 py-0.5 rounded text-sm font-mono">$1</code>',
+    )
 
-      // Images - handle various formats
-      .replace(
-        /!image\[([^\]]*)\]\(([^)]+)\)/g,
-        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />',
-      )
+    // Images - handle various formats
+    .replace(
+      /!image\[([^\]]*)\]\(([^)]+)\)/g,
+      '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />',
+    )
 
-      // Handle !image without brackets
-      .replace(/!image\(([^)]+)\)/g, '<img src="$1" alt="" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />')
+    // Handle !image without brackets
+    .replace(/!image\(([^)]+)\)/g, '<img src="$1" alt="" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />')
 
-      // Standard markdown images - detect badge images and align them to the left
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-        // Check if this looks like a badge (shields.io, codecov, etc.)
-        const isBadge =
-          /shields\.io|codecov\.io|github\.com.*badge|img\.shields\.io|badge/i.test(src) ||
-          /badge|stars|coverage|version|license|downloads|build|status|quality|security/i.test(alt) ||
-          /\.svg$/.test(src); // SVG images are often badges
+    // Standard markdown images - detect badge images and align them to the left
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+      // Check if this looks like a badge (shields.io, codecov, etc.)
+      const isBadge =
+        /shields\.io|codecov\.io|github\.com.*badge|img\.shields\.io|badge/i.test(src) ||
+        /badge|stars|coverage|version|license|downloads|build|status|quality|security/i.test(alt) ||
+        /\.svg$/.test(src); // SVG images are often badges
 
-        if (isBadge) {
-          return `<img src="${src}" alt="${alt}" class="h-5 inline-block mr-2 my-1 mb-2" /><br>`;
-        }
-        return `<img src="${src}" alt="${alt}" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />`;
-      })
+      if (isBadge) {
+        return `<img src="${src}" alt="${alt}" class="h-5 inline-block mr-2 my-1 mb-2" /><br>`;
+      }
+      return `<img src="${src}" alt="${alt}" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />`;
+    })
 
-      // Links - handle internal anchor links within the modal
-      .replace(
-        /\[([^[\]]+)\]\(#([^)]+)\)/g,
-        '<a href="#$2" class="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer" onclick="event.preventDefault(); document.getElementById(\'$2\').scrollIntoView({behavior: \'smooth\'}); return false;">$1</a>',
-      )
-      // External links - open in same window
-      .replace(
-        /\[([^[\]]+)\]\((https?:\/\/[^)]+)\)/g,
-        '<a href="$2" class="text-purple-600 dark:text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>',
-      )
+    // Links - handle internal anchor links within the modal
+    .replace(
+      /\[([^[\]]+)\]\(#([^)]+)\)/g,
+      '<a href="#$2" class="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer" onclick="event.preventDefault(); document.getElementById(\'$2\').scrollIntoView({behavior: \'smooth\'}); return false;">$1</a>',
+    )
+    // External links - open in same window
+    .replace(
+      /\[([^[\]]+)\]\((https?:\/\/[^)]+)\)/g,
+      '<a href="$2" class="text-purple-600 dark:text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>',
+    )
 
-      // Lists - simple approach
-      .replace(/^\* ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
-      .replace(/^- ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
-      .replace(/^\d+\. ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+    // Lists - simple approach
+    .replace(/^\* ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+    .replace(/^- ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+    .replace(/^\d+\. ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
 
-      // Clean up multiple spaces and normalize whitespace
-      .replace(/\s+/g, ' ')
-      .replace(/\n\s*\n/g, '\n\n')
+    // Clean up multiple spaces and normalize whitespace
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s*\n/g, '\n\n')
 
-      // Handle paragraph breaks first
-      .replace(/\n\n/g, '</p><p class="mb-3">')
+    // Handle paragraph breaks first
+    .replace(/\n\n/g, '</p><p class="mb-3">')
 
-      // Handle single line breaks within paragraphs
-      .replace(/\n/g, '<br>')
+    // Handle single line breaks within paragraphs
+    .replace(/\n/g, '<br>')
 
-      // Wrap remaining plain text in paragraphs (excluding existing HTML elements)
-      .replace(/^(?!<[hl])(?!<li)(?!<p)(?!<img)(?!<pre)(?!<code)([^<\n][^\n]*)$/gm, '<p class="mb-3">$1</p>')
+    // Wrap remaining plain text in paragraphs (excluding existing HTML elements)
+    .replace(/^(?!<[hl])(?!<li)(?!<p)(?!<img)(?!<pre)(?!<code)([^<\n][^\n]*)$/gm, '<p class="mb-3">$1</p>')
 
-      // Clean up empty paragraphs and fix paragraph structure
-      .replace(/<p class="mb-3"><\/p>/g, '')
-      .replace(/<p class="mb-3"><br><\/p>/g, '')
-      .replace(/<p class="mb-3">\s*<\/p>/g, '')
-  );
+    // Clean up empty paragraphs and fix paragraph structure
+    .replace(/<p class="mb-3"><\/p>/g, '')
+    .replace(/<p class="mb-3"><br><\/p>/g, '')
+    .replace(/<p class="mb-3">\s*<\/p>/g, '');
+
+  // Sanitize the HTML to prevent XSS attacks
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'p',
+      'br',
+      'strong',
+      'em',
+      'b',
+      'i',
+      'ul',
+      'ol',
+      'li',
+      'a',
+      'img',
+      'pre',
+      'code',
+      'blockquote',
+    ],
+    ALLOWED_ATTR: ['id', 'class', 'href', 'target', 'rel', 'src', 'alt', 'title'],
+    ALLOW_DATA_ATTR: false,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+    SANITIZE_DOM: true,
+    KEEP_CONTENT: true,
+    // Remove any onclick handlers and javascript: URLs
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
+    FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover', 'onfocus', 'onblur'],
+  });
 }
 
 export default function ExtensionRegistry(): JSX.Element {
