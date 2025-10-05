@@ -1,20 +1,12 @@
-import {
-  faChevronDown,
-  faChevronUp,
-  faCopy,
-  faDownload,
-  faExternalLinkAlt,
-  faEye,
-  faSearch,
-  faStar,
-  faTimes,
-} from '@fortawesome/free-solid-svg-icons';
+import '@fortawesome/fontawesome-svg-core/styles.css';
+
+import { faChevronDown, faChevronUp, faDownload, faSearch, faStar, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Layout from '@theme/Layout';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import TailWindThemeSelector from '../../components/TailWindThemeSelector';
-import type { ExtensionCategory, ProcessedExtension } from '../../utils/extensionData';
+import type { CategoryMapping, ExtensionCategory, ProcessedExtension } from '../../utils/extensionData';
 import { fetchExtensionCategories, fetchExtensionReadme, fetchExtensions } from '../../utils/extensionData';
 
 interface ExtensionDetailModalProps {
@@ -64,100 +56,65 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
 
   if (!extension || !isOpen) return <></>;
 
-  const copyToClipboard = (text: string): void => {
-    navigator.clipboard.writeText(text).catch((error: unknown) => {
-      console.error('Failed to copy to clipboard:', error);
-    });
-    // You could add a toast notification here
+  const getInstallUrl = (extension: ProcessedExtension): string => {
+    // Use the publisher and extension name from the extension ID
+    // The ID is already in the format: publisherName.extensionName
+    return `podman-desktop:extension/${extension.id}`;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-charcoal-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-250 p-4" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-charcoal-800 rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto lg:overflow-hidden"
+        onClick={e => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 flex items-center justify-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="w-25 h-25 flex items-center justify-center">
                 <img
                   src={extension.icon}
                   alt={`${extension.name} icon`}
                   className="w-full h-full object-contain"
                   onError={e => {
-                    // Fallback to category icon if image fails to load
+                    // Hide image if it fails to load
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
-                    target.nextElementSibling?.classList.remove('hidden');
                   }}
                 />
-                <div className="text-6xl hidden">{getCategoryIcon(extension.category)}</div>
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-charcoal-300 dark:text-white">{extension.name}</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300">by {extension.publisher}</p>
+                <h2 className="text-3xl font-bold text-charcoal-300 dark:text-white mb-2">{extension.name}</h2>
+                <p className="text-lg text-gray-600 dark:text-gray-300 -mt-1 mb-0">by {extension.publisher}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">
               <FontAwesomeIcon icon={faTimes} size="lg" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">Installation</h3>
-                <div className="bg-gray-100 dark:bg-charcoal-700 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <code className="text-sm font-mono text-gray-800 dark:text-gray-200">
-                      podman extension install {extension.ociUri}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(`podman extension install ${extension.ociUri}`)}
-                      className="text-purple-600 hover:text-purple-700 text-sm">
-                      <FontAwesomeIcon icon={faCopy} className="mr-1" />
-                      Copy
-                    </button>
+              <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">Documentation</h3>
+              <div className="bg-gray-100 dark:bg-charcoal-700 rounded-lg p-4 h-[50vh] lg:h-[75vh] overflow-y-auto">
+                {readmeState.readmeLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    <span className="ml-2 text-gray-600 dark:text-gray-300">Loading documentation...</span>
                   </div>
-                </div>
-              </div>
-
-              {extension.keywords.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">Keywords</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {extension.keywords.map((keyword, index) => (
-                      <span
-                        key={index}
-                        className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">
-                        {keyword}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">Documentation</h3>
-                <div className="bg-gray-100 dark:bg-charcoal-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-                  {readmeState.readmeLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                      <span className="ml-2 text-gray-600 dark:text-gray-300">Loading documentation...</span>
-                    </div>
-                  ) : readmeState.readmeError ? (
-                    <div className="text-red-600 dark:text-red-400 text-center py-4">{readmeState.readmeError}</div>
-                  ) : (
-                    <div
-                      className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 prose-headings:text-charcoal-300 dark:prose-headings:text-white prose-a:text-purple-600 dark:prose-a:text-purple-400 prose-code:text-purple-600 dark:prose-code:text-purple-400 prose-pre:bg-gray-200 dark:prose-pre:bg-charcoal-600 prose-pre:text-gray-800 dark:prose-pre:text-gray-200"
-                      dangerouslySetInnerHTML={{ __html: formatMarkdownAsHtml(readmeState.readmeContent) }}
-                    />
-                  )}
-                </div>
+                ) : readmeState.readmeError ? (
+                  <div className="text-red-600 dark:text-red-400 text-center py-4">{readmeState.readmeError}</div>
+                ) : (
+                  <div
+                    className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 prose-headings:text-charcoal-300 dark:prose-headings:text-white prose-a:text-purple-600 dark:prose-a:text-purple-400 prose-code:text-purple-600 dark:prose-code:text-purple-400 prose-pre:bg-gray-200 dark:prose-pre:bg-charcoal-600 prose-pre:text-gray-800 dark:prose-pre:text-gray-200"
+                    dangerouslySetInnerHTML={{ __html: formatMarkdownAsHtml(readmeState.readmeContent) }}
+                  />
+                )}
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               <div className="bg-gray-50 dark:bg-charcoal-700 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-charcoal-300 dark:text-white mb-4">Extension Info</h3>
                 <div className="space-y-3">
@@ -169,9 +126,17 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                     <span className="text-gray-600 dark:text-gray-300">Publisher</span>
                     <span className="font-medium text-charcoal-300 dark:text-white">{extension.publisher}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Category</span>
-                    <span className="font-medium text-charcoal-300 dark:text-white">{extension.category}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+                    <span className="text-gray-600 dark:text-gray-300">Categories</span>
+                    <div className="flex flex-wrap gap-1 sm:justify-end">
+                      {extension.categories.map((cat, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded text-xs">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-300">License</span>
@@ -191,15 +156,28 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                 </div>
               </div>
 
+              {extension.keywords.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">Keywords</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {extension.keywords.map((keyword, index) => (
+                      <span
+                        key={index}
+                        className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
-                <button className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
+                <a
+                  href={getInstallUrl(extension)}
+                  className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center no-underline">
                   <FontAwesomeIcon icon={faDownload} className="mr-2" />
                   Install Extension
-                </button>
-                <button className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-charcoal-600 transition-colors flex items-center justify-center">
-                  <FontAwesomeIcon icon={faExternalLinkAlt} className="mr-2" />
-                  View Documentation
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -209,28 +187,36 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
   );
 }
 
-function getCategoryIcon(category: string): string {
-  const iconMap: { [key: string]: string } = {
-    AI: '🤖',
-    Kubernetes: '☸️',
-    Containers: '🐳',
-    Authentication: '🔐',
-    Development: '🛠️',
-    Tools: '⚙️',
-    Other: '📦',
-  };
-  return iconMap[category] || '📦';
-}
-
 function formatMarkdownAsHtml(markdown: string): string {
   if (!markdown) return '';
 
   return (
     markdown
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mb-2 mt-4">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3 mt-6">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4 mt-8">$1</h1>')
+      // Headers with IDs for anchor links
+      .replace(/^### ([^\n]*)$/gm, (match, title) => {
+        const id = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-/, '')
+          .replace(/-$/, '');
+        return `<h3 id="${id}" class="text-lg font-semibold mb-2 mt-4">${title}</h3>`;
+      })
+      .replace(/^## ([^\n]*)$/gm, (match, title) => {
+        const id = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-/, '')
+          .replace(/-$/, '');
+        return `<h2 id="${id}" class="text-xl font-semibold mb-3 mt-6">${title}</h2>`;
+      })
+      .replace(/^# ([^\n]*)$/gm, (match, title) => {
+        const id = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-/, '')
+          .replace(/-$/, '');
+        return `<h1 id="${id}" class="text-2xl font-bold mb-4 mt-2">${title}</h1>`;
+      })
 
       // Bold and italic
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
@@ -248,23 +234,47 @@ function formatMarkdownAsHtml(markdown: string): string {
         '<code class="bg-gray-200 dark:bg-charcoal-600 px-1 py-0.5 rounded text-sm font-mono">$1</code>',
       )
 
-      // Links
+      // Images - handle various formats
       .replace(
-        /\[([^[\]]+)\]\(([^()]+)\)/g,
+        /!image\[([^\]]*)\]\(([^)]+)\)/g,
+        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />',
+      )
+
+      // Handle !image without brackets
+      .replace(/!image\(([^)]+)\)/g, '<img src="$1" alt="" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />')
+
+      // Standard markdown images
+      .replace(
+        /!\[([^\]]*)\]\(([^)]+)\)/g,
+        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" />',
+      )
+
+      // Links - handle internal anchor links within the modal
+      .replace(
+        /\[([^[\]]+)\]\(#([^)]+)\)/g,
+        '<a href="#$2" class="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer" onclick="event.preventDefault(); document.getElementById(\'$2\').scrollIntoView({behavior: \'smooth\'}); return false;">$1</a>',
+      )
+      // External links - open in same window
+      .replace(
+        /\[([^[\]]+)\]\((https?:\/\/[^)]+)\)/g,
         '<a href="$2" class="text-purple-600 dark:text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>',
       )
 
-      // Lists
-      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
-      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
-      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1">$1</li>')
+      // Lists - simple approach
+      .replace(/^\* ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      .replace(/^- ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      .replace(/^\d+\. ([^\n]*)$/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+
+      // Clean up multiple spaces and normalize whitespace
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n\n')
 
       // Line breaks
       .replace(/\n\n/g, '</p><p class="mb-3">')
       .replace(/\n/g, '<br>')
 
-      // Wrap in paragraphs
-      .replace(/^(?!<[hl])([^<\n].*)$/gm, '<p class="mb-3">$1</p>')
+      // Wrap in paragraphs (excluding list items and other HTML elements)
+      .replace(/^(?!<[hl])(?!<li)([^<\n][^\n]*)$/gm, '<p class="mb-3">$1</p>')
 
       // Clean up empty paragraphs
       .replace(/<p class="mb-3"><\/p>/g, '')
@@ -275,6 +285,7 @@ function formatMarkdownAsHtml(markdown: string): string {
 export default function ExtensionRegistry(): JSX.Element {
   const [extensions, setExtensions] = useState<ProcessedExtension[]>([]);
   const [categories, setCategories] = useState<ExtensionCategory[]>([]);
+  const [categoryMapping, setCategoryMapping] = useState<CategoryMapping>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -286,9 +297,10 @@ export default function ExtensionRegistry(): JSX.Element {
   useEffect(() => {
     const loadData = async (): Promise<void> => {
       try {
-        const [extensionsData, categoriesData] = await Promise.all([fetchExtensions(), fetchExtensionCategories()]);
+        const [extensionsData, categoriesResult] = await Promise.all([fetchExtensions(), fetchExtensionCategories()]);
         setExtensions(extensionsData);
-        setCategories(categoriesData);
+        setCategories(categoriesResult.categories);
+        setCategoryMapping(categoriesResult.mapping);
       } catch (error) {
         console.error('Failed to load extension data:', error);
       } finally {
@@ -317,16 +329,7 @@ export default function ExtensionRegistry(): JSX.Element {
 
     // Filter by category
     if (selectedCategory !== 'All') {
-      // Map display names to actual category names
-      const categoryMap: { [key: string]: string } = {
-        'Container Engines': 'Containers',
-        Kubernetes: 'Kubernetes',
-        'AI & Machine Learning': 'AI',
-        Authentication: 'Authentication',
-        'Development Tools': 'Development',
-      };
-
-      const actualCategory = categoryMap[selectedCategory] || selectedCategory;
+      const actualCategory = categoryMapping[selectedCategory] || selectedCategory;
       filtered = filtered.filter(ext => ext.category === actualCategory);
     }
 
@@ -349,18 +352,11 @@ export default function ExtensionRegistry(): JSX.Element {
     });
 
     return filtered;
-  }, [extensions, searchQuery, selectedCategory, sortBy]);
+  }, [extensions, searchQuery, selectedCategory, sortBy, categoryMapping]);
 
   const handleExtensionClick = (extension: ProcessedExtension): void => {
     setSelectedExtension(extension);
     setShowDetailModal(true);
-  };
-
-  const copyInstallCommand = (extension: ProcessedExtension): void => {
-    navigator.clipboard.writeText(`podman extension install ${extension.ociUri}`).catch((error: unknown) => {
-      console.error('Failed to copy to clipboard:', error);
-    });
-    // You could add a toast notification here
   };
 
   if (loading) {
@@ -390,10 +386,13 @@ export default function ExtensionRegistry(): JSX.Element {
             </p>
             <div className="max-w-2xl mx-auto">
               <div className="relative">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"
-                />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    className="text-gray-700 text-lg"
+                    style={{ color: '#374151', fontSize: '18px' }}
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="Search extensions..."
@@ -410,25 +409,25 @@ export default function ExtensionRegistry(): JSX.Element {
       <div className="container mx-auto px-5 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
-            <div className="bg-white dark:bg-charcoal-800 rounded-lg p-6 sticky top-8">
+          <div className="w-full lg:w-64 flex-shrink-0">
+            <div className="bg-white dark:bg-charcoal-800 rounded-lg lg:sticky lg:top-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-charcoal-300 dark:text-white">Filters</h2>
+                <h2 className="text-lg font-semibold text-charcoal-300 dark:text-white mb-0">Filters</h2>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                  <FontAwesomeIcon icon={showFilters ? faChevronUp : faChevronDown} />
+                  className="lg:hidden bg-gray-100 dark:bg-charcoal-700 hover:bg-gray-200 dark:hover:bg-charcoal-600 text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                  <FontAwesomeIcon icon={showFilters ? faChevronUp : faChevronDown} className="text-sm" />
                 </button>
               </div>
 
-              <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+              <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'} overflow-hidden`}>
                 {/* Categories */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Categories</h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => setSelectedCategory('All')}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
                         selectedCategory === 'All'
                           ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-charcoal-700'
@@ -439,12 +438,12 @@ export default function ExtensionRegistry(): JSX.Element {
                       <button
                         key={category.name}
                         onClick={() => setSelectedCategory(category.name)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
                           selectedCategory === category.name
                             ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-charcoal-700'
                         }`}>
-                        {category.icon} {category.name} ({category.count})
+                        {category.name} ({category.count})
                       </button>
                     ))}
                   </div>
@@ -463,7 +462,7 @@ export default function ExtensionRegistry(): JSX.Element {
                       <button
                         key={option.value}
                         onClick={() => setSortBy(option.value as 'popularity' | 'name' | 'date' | 'rating')}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors break-words ${
                           sortBy === option.value
                             ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-charcoal-700'
@@ -478,47 +477,50 @@ export default function ExtensionRegistry(): JSX.Element {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-charcoal-300 dark:text-white">
                 {selectedCategory === 'All' ? 'All Extensions' : selectedCategory} ({filteredAndSortedExtensions.length}
                 )
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredAndSortedExtensions.map(extension => (
                 <div
                   key={extension.id}
-                  className="bg-white dark:bg-charcoal-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer group"
-                  onClick={() => handleExtensionClick(extension)}>
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                          <img
-                            src={extension.icon}
-                            alt={`${extension.name} icon`}
-                            className="w-full h-full object-contain"
-                            onError={e => {
-                              // Fallback to category icon if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                          <div className="text-3xl hidden">{getCategoryIcon(extension.category)}</div>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors">
-                            {extension.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">by {extension.publisher}</p>
+                  className="bg-white dark:bg-charcoal-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 group h-80 flex flex-col">
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="mb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center justify-center space-x-3 min-w-0 flex-1">
+                          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                            <img
+                              src={extension.icon}
+                              alt={`${extension.name} icon`}
+                              className="w-full h-full object-contain"
+                              onError={e => {
+                                // Hide image if it fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-semibold text-charcoal-300 dark:text-white group-hover:text-purple-600 transition-colors truncate mb-2">
+                              {extension.name}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate -mt-1 mb-0">
+                              by {extension.publisher}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">
-                        {extension.category}
-                      </span>
+                      <div className="flex justify-start">
+                        <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded mt-2">
+                          {extension.category}
+                        </span>
+                      </div>
                     </div>
 
                     <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{extension.description}</p>
@@ -537,23 +539,12 @@ export default function ExtensionRegistry(): JSX.Element {
                       <span className="text-xs text-gray-500 dark:text-gray-400">v{extension.latestVersion}</span>
                     </div>
 
-                    <div className="flex space-x-2">
+                    <div className="flex mt-auto">
                       <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          copyInstallCommand(extension);
-                        }}
-                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm">
-                        <FontAwesomeIcon icon={faCopy} className="mr-1" />
-                        Copy Install
-                      </button>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleExtensionClick(extension);
-                        }}
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-charcoal-700 transition-colors text-sm">
-                        <FontAwesomeIcon icon={faEye} />
+                        onClick={() => handleExtensionClick(extension)}
+                        className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm cursor-pointer">
+                        <FontAwesomeIcon icon={faDownload} className="mr-1" />
+                        Install
                       </button>
                     </div>
                   </div>

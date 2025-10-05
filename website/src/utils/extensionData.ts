@@ -1,3 +1,6 @@
+// API Configuration
+const API_BASE_URL = 'https://registry.podman-desktop.io/api';
+
 export interface ExtensionVersion {
   version: string;
   preview: boolean;
@@ -29,6 +32,7 @@ export interface ProcessedExtension {
   description: string;
   publisher: string;
   category: string;
+  categories: string[];
   icon: string;
   latestVersion: string;
   lastUpdated: string;
@@ -43,9 +47,12 @@ export interface ProcessedExtension {
 export interface ExtensionCategory {
   name: string;
   description: string;
-  icon: string;
   count: number;
   extensions: ProcessedExtension[];
+}
+
+export interface CategoryMapping {
+  [displayName: string]: string;
 }
 
 // Cache for extension data
@@ -58,7 +65,7 @@ export async function fetchExtensions(): Promise<ProcessedExtension[]> {
   }
 
   try {
-    const response = await fetch('https://registry.podman-desktop.io/api/extensions.json');
+    const response = await fetch(`${API_BASE_URL}/extensions.json`);
     const data = await response.json();
 
     const processedExtensions: ProcessedExtension[] = data.extensions.map((ext: Extension) => {
@@ -77,11 +84,17 @@ export async function fetchExtensions(): Promise<ProcessedExtension[]> {
 
       const rating = Math.max(4.0, Math.min(5.0, 4.5 - (daysSinceUpdate / 365) * 0.5 + (versionCount / 10) * 0.3));
 
-      // Generate icon URL using the pattern: https://registry.podman-desktop.io/api/extensions/{publisherName}/{extensionName}/{version}/icon.png
-      const iconUrl = `https://registry.podman-desktop.io/api/extensions/${ext.publisher.publisherName}/${ext.extensionName}/${latestVersion?.version ?? ext.versions[0].version}/icon.png`;
+      // Get icon and README URLs from the files array
+      const latestVersionData = latestVersion ?? ext.versions[0];
+      const iconFile = latestVersionData.files.find(f => f.assetType === 'icon');
+      const readmeFile = latestVersionData.files.find(f => f.assetType === 'README');
 
-      // Generate README URL using the pattern: https://registry.podman-desktop.io/api/extensions/{publisherName}/{extensionName}/{version}/README.md
-      const readmeUrl = `https://registry.podman-desktop.io/api/extensions/${ext.publisher.publisherName}/${ext.extensionName}/${latestVersion?.version ?? ext.versions[0].version}/README.md`;
+      const iconUrl =
+        iconFile?.data ??
+        `${API_BASE_URL}/extensions/${ext.publisher.publisherName}/${ext.extensionName}/${latestVersionData.version}/icon.png`;
+      const readmeUrl =
+        readmeFile?.data ??
+        `${API_BASE_URL}/extensions/${ext.publisher.publisherName}/${ext.extensionName}/${latestVersionData.version}/README.md`;
 
       return {
         id: `${ext.publisher.publisherName}.${ext.extensionName}`,
@@ -89,6 +102,7 @@ export async function fetchExtensions(): Promise<ProcessedExtension[]> {
         description: ext.shortDescription,
         publisher: ext.publisher.displayName,
         category: ext.categories[0] ?? 'Other',
+        categories: ext.categories,
         icon: iconUrl,
         latestVersion: latestVersion?.version ?? ext.versions[0].version,
         lastUpdated: latestVersion?.lastUpdated ?? ext.versions[0].lastUpdated,
@@ -116,9 +130,17 @@ export async function fetchExtensions(): Promise<ProcessedExtension[]> {
   }
 }
 
-export async function fetchExtensionCategories(): Promise<ExtensionCategory[]> {
+export async function fetchExtensionCategories(): Promise<{
+  categories: ExtensionCategory[];
+  mapping: CategoryMapping;
+}> {
   if (categoryCache) {
-    return categoryCache;
+    // Return cached data with mapping
+    // We need to reconstruct apiCategories from the cached data
+    const extensions = await fetchExtensions();
+    const apiCategories = Array.from(new Set(extensions.map(ext => ext.category))).sort((a, b) => a.localeCompare(b));
+    const mapping = createCategoryMapping(categoryCache, apiCategories);
+    return { categories: categoryCache, mapping };
   }
 
   const extensions = await fetchExtensions();
@@ -132,53 +154,88 @@ export async function fetchExtensionCategories(): Promise<ExtensionCategory[]> {
     categoryMap.get(ext.category)!.push(ext);
   });
 
-  const categories: ExtensionCategory[] = [
-    {
-      name: 'Container Engines',
-      description: 'Docker, Podman, Lima integrations',
-      icon: '🐳',
-      count: categoryMap.get('Containers')?.length ?? 0,
-      extensions: categoryMap.get('Containers') ?? [],
-    },
-    {
-      name: 'Kubernetes',
-      description: 'Kind, Minikube, OpenShift tools',
-      icon: '☸️',
-      count: categoryMap.get('Kubernetes')?.length ?? 0,
-      extensions: categoryMap.get('Kubernetes') ?? [],
-    },
-    {
-      name: 'AI & Machine Learning',
-      description: 'GPU acceleration, model management',
-      icon: '🤖',
-      count: categoryMap.get('AI')?.length ?? 0,
-      extensions: categoryMap.get('AI') ?? [],
-    },
-    {
-      name: 'Authentication',
-      description: 'Login and authentication providers',
-      icon: '🔐',
-      count: categoryMap.get('Authentication')?.length ?? 0,
-      extensions: categoryMap.get('Authentication') ?? [],
-    },
-    {
-      name: 'Development Tools',
-      description: 'CLI tools, registries, debugging',
-      icon: '🛠️',
-      count:
-        (categoryMap.get('Development')?.length ?? 0) +
-        (categoryMap.get('Tools')?.length ?? 0) +
-        (categoryMap.get('Other')?.length ?? 0),
-      extensions: [
-        ...(categoryMap.get('Development') ?? []),
-        ...(categoryMap.get('Tools') ?? []),
-        ...(categoryMap.get('Other') ?? []),
-      ],
-    },
-  ].filter(cat => cat.count > 0);
+  // Get all unique categories from the API
+  const apiCategories = Array.from(categoryMap.keys()).sort((a, b) => a.localeCompare(b));
+
+  // Create display categories based on API categories
+  const categories: ExtensionCategory[] = apiCategories
+    .map(apiCategory => {
+      const categoryExtensions = categoryMap.get(apiCategory) ?? [];
+
+      // Create display name and description based on API category
+      const displayInfo = getCategoryDisplayInfo(apiCategory);
+
+      return {
+        name: displayInfo.name,
+        description: displayInfo.description,
+        count: categoryExtensions.length,
+        extensions: categoryExtensions,
+      };
+    })
+    .filter(cat => cat.count > 0);
 
   categoryCache = categories;
-  return categories;
+  const mapping = createCategoryMapping(categories, apiCategories);
+  return { categories, mapping };
+}
+
+function getCategoryDisplayInfo(apiCategory: string): { name: string; description: string } {
+  const displayMap: { [key: string]: { name: string; description: string } } = {
+    Containers: {
+      name: 'Container Engines',
+      description: 'Docker, Podman, Lima integrations',
+    },
+    Kubernetes: {
+      name: 'Kubernetes',
+      description: 'Kind, Minikube, OpenShift tools',
+    },
+    AI: {
+      name: 'AI & Machine Learning',
+      description: 'GPU acceleration, model management',
+    },
+    Authentication: {
+      name: 'Authentication',
+      description: 'Login and authentication providers',
+    },
+    Development: {
+      name: 'Development Tools',
+      description: 'CLI tools, registries, debugging',
+    },
+    Tools: {
+      name: 'Tools',
+      description: 'Utilities and helper tools',
+    },
+    Other: {
+      name: 'Other',
+      description: 'Miscellaneous extensions',
+    },
+  };
+
+  return (
+    displayMap[apiCategory] || {
+      name: apiCategory,
+      description: `${apiCategory} extensions`,
+    }
+  );
+}
+
+function createCategoryMapping(categories: ExtensionCategory[], apiCategories: string[]): CategoryMapping {
+  const mapping: CategoryMapping = {};
+
+  // Create a reverse mapping from display names to API categories
+  categories.forEach(category => {
+    // Find the corresponding API category
+    const apiCategory = apiCategories.find(apiCat => {
+      const displayInfo = getCategoryDisplayInfo(apiCat);
+      return displayInfo.name === category.name;
+    });
+
+    if (apiCategory) {
+      mapping[category.name] = apiCategory;
+    }
+  });
+
+  return mapping;
 }
 
 export function getFeaturedExtensions(extensions: ProcessedExtension[], count: number = 3): ProcessedExtension[] {
@@ -210,6 +267,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       description: 'Build and run AI models with GPU acceleration',
       publisher: 'Podman Desktop',
       category: 'AI',
+      categories: ['AI'],
       icon: '/img/extensions/ai-lab.png',
       latestVersion: '1.0.0',
       lastUpdated: '2024-12-01T00:00:00Z',
@@ -218,7 +276,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       license: 'Apache-2.0',
       keywords: ['ai', 'gpu', 'machine-learning'],
       ociUri: 'ghcr.io/podman-desktop/extension-ai-lab:latest',
-      readmeUrl: 'https://registry.podman-desktop.io/api/extensions/podman-desktop/ai-lab/1.0.0/README.md',
+      readmeUrl: `${API_BASE_URL}/extensions/podman-desktop/ai-lab/1.0.0/README.md`,
     },
     {
       id: 'podman-desktop.kind',
@@ -226,6 +284,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       description: 'Run local Kubernetes clusters using containers',
       publisher: 'Podman Desktop',
       category: 'Kubernetes',
+      categories: ['Kubernetes'],
       icon: '/img/extensions/kind.png',
       latestVersion: '1.0.0',
       lastUpdated: '2024-12-01T00:00:00Z',
@@ -234,7 +293,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       license: 'Apache-2.0',
       keywords: ['kubernetes', 'kind', 'local'],
       ociUri: 'ghcr.io/podman-desktop/extension-kind:latest',
-      readmeUrl: 'https://registry.podman-desktop.io/api/extensions/podman-desktop/kind/1.0.0/README.md',
+      readmeUrl: `${API_BASE_URL}/extensions/podman-desktop/kind/1.0.0/README.md`,
     },
     {
       id: 'podman-desktop.compose',
@@ -242,6 +301,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       description: 'Multi-container Docker Compose support',
       publisher: 'Podman Desktop',
       category: 'Development',
+      categories: ['Development'],
       icon: '/img/extensions/compose.png',
       latestVersion: '1.0.0',
       lastUpdated: '2024-12-01T00:00:00Z',
@@ -250,7 +310,7 @@ function getFallbackExtensions(): ProcessedExtension[] {
       license: 'Apache-2.0',
       keywords: ['compose', 'docker', 'multi-container'],
       ociUri: 'ghcr.io/podman-desktop/extension-compose:latest',
-      readmeUrl: 'https://registry.podman-desktop.io/api/extensions/podman-desktop/compose/1.0.0/README.md',
+      readmeUrl: `${API_BASE_URL}/extensions/podman-desktop/compose/1.0.0/README.md`,
     },
   ];
 }

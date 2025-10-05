@@ -17,8 +17,8 @@ import ThemedImage from '@theme/ThemedImage';
 import React, { useEffect, useState } from 'react';
 
 import TailWindThemeSelector from '../../components/TailWindThemeSelector';
-import type { ExtensionCategory, ProcessedExtension } from '../../utils/extensionData';
-import { fetchExtensionCategories, fetchExtensions, getFeaturedExtensions } from '../../utils/extensionData';
+import type { ProcessedExtension } from '../../utils/extensionData';
+import { fetchExtensions, getFeaturedExtensions } from '../../utils/extensionData';
 
 function ExtendHero(): JSX.Element {
   return (
@@ -72,19 +72,6 @@ function ExtensionShowcase(): JSX.Element {
     });
   }, []);
 
-  const getCategoryIcon = (category: string): string => {
-    const iconMap: { [key: string]: string } = {
-      AI: '🤖',
-      Kubernetes: '☸️',
-      Containers: '🐳',
-      Authentication: '🔐',
-      Development: '🛠️',
-      Tools: '⚙️',
-      Other: '📦',
-    };
-    return iconMap[category] || '📦';
-  };
-
   if (loading) {
     return (
       <section className="py-24 bg-white dark:bg-charcoal-800">
@@ -99,7 +86,7 @@ function ExtensionShowcase(): JSX.Element {
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="bg-white dark:bg-charcoal-700 rounded-xl shadow-lg p-6 animate-pulse">
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded mr-4"></div>
+                  <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded mr-4 flex-shrink-0"></div>
                   <div className="flex-1">
                     <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
                     <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
@@ -134,7 +121,18 @@ function ExtensionShowcase(): JSX.Element {
               key={ext.id}
               className="bg-white dark:bg-charcoal-700 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center mb-4">
-                <div className="text-4xl mr-4">{getCategoryIcon(ext.category)}</div>
+                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mr-4">
+                  <img
+                    src={ext.icon}
+                    alt={`${ext.name} icon`}
+                    className="w-full h-full object-contain"
+                    onError={e => {
+                      // Hide image if it fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
                 <div>
                   <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white">{ext.name}</h3>
                   <span className="text-sm text-purple-600 bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">
@@ -153,75 +151,6 @@ function ExtensionShowcase(): JSX.Element {
                   Install →
                 </Link>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ExtensionCategories(): JSX.Element {
-  const [categories, setCategories] = useState<ExtensionCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadCategories = async (): Promise<void> => {
-      try {
-        const fetchedCategories = await fetchExtensionCategories();
-        setCategories(fetchedCategories);
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategories().catch((error: unknown) => {
-      console.error('Failed to load categories:', error);
-    });
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="py-24 bg-gray-50 dark:bg-charcoal-900">
-        <div className="container mx-auto px-5">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-charcoal-300 dark:text-white mb-4">Extension Categories</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">Find extensions organized by functionality</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-white dark:bg-charcoal-800 rounded-lg p-6 animate-pulse">
-                <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded mb-4"></div>
-                <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="py-24 bg-gray-50 dark:bg-charcoal-900">
-      <div className="container mx-auto px-5">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-charcoal-300 dark:text-white mb-4">Extension Categories</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">Find extensions organized by functionality</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-charcoal-800 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{category.icon}</div>
-              <h3 className="text-xl font-semibold text-charcoal-300 dark:text-white mb-2">{category.name}</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-3">{category.description}</p>
-              <span className="text-sm text-purple-600 font-medium">{category.count} extensions</span>
             </div>
           ))}
         </div>
@@ -250,7 +179,7 @@ function QuickActions(): JSX.Element {
       title: 'API Reference',
       description: 'Complete developer documentation',
       icon: faBook,
-      link: '/api',
+      link: '/docs/extensions/api',
       color: 'bg-purple-500',
     },
     {
@@ -298,7 +227,6 @@ export default function Home(): JSX.Element {
       <TailWindThemeSelector />
       <ExtendHero />
       <ExtensionShowcase />
-      <ExtensionCategories />
       <QuickActions />
 
       {/* Keep some of the original content for detailed information */}
@@ -355,14 +283,16 @@ export default function Home(): JSX.Element {
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300">See how extensions integrate with Podman Desktop</p>
           </div>
-          <ThemedImage
-            className="py-4 max-w-4xl mx-auto"
-            alt="Extensibility diagram"
-            sources={{
-              light: useBaseUrl('img/extend/extend-light.png'),
-              dark: useBaseUrl('img/extend/extend-dark.png'),
-            }}
-          />
+          <div className="flex justify-center items-center">
+            <ThemedImage
+              className="py-4 max-w-[550px] w-full h-auto"
+              alt="Extensibility diagram"
+              sources={{
+                light: useBaseUrl('img/extend/extend-light.png'),
+                dark: useBaseUrl('img/extend/extend-dark.png'),
+              }}
+            />
+          </div>
         </div>
       </section>
 
@@ -379,14 +309,16 @@ export default function Home(): JSX.Element {
               capabilities.
             </p>
           </div>
-          <ThemedImage
-            className="py-4 max-w-4xl mx-auto"
-            alt="Extend with Docker Desktop extensions"
-            sources={{
-              light: useBaseUrl('img/extend/extend-dd-light.png'),
-              dark: useBaseUrl('img/extend/extend-dd-dark.png'),
-            }}
-          />
+          <div className="flex justify-center items-center">
+            <ThemedImage
+              className="py-4 max-w-[550px] w-full h-auto"
+              alt="Extend with Docker Desktop extensions"
+              sources={{
+                light: useBaseUrl('img/extend/extend-dd-light.png'),
+                dark: useBaseUrl('img/extend/extend-dd-dark.png'),
+              }}
+            />
+          </div>
         </div>
       </section>
     </Layout>
