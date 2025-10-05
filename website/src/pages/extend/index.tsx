@@ -30,7 +30,7 @@ function ExtendHero(): JSX.Element {
           </h1>
           <p className="text-xl mb-8 text-white/90 leading-relaxed">
             Unlock unlimited possibilities with our growing ecosystem of extensions. Customize your container workflow
-            with tools for Kubernetes, AI, security, and more.
+            with tools for Kubernetes, AI, security, and container management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -147,7 +147,9 @@ function ExtensionShowcase(): JSX.Element {
                   <span className="text-sm text-gray-600 dark:text-gray-300">{ext.rating}</span>
                   <span className="text-sm text-gray-500 ml-2">({ext.installs})</span>
                 </div>
-                <Link to="/extensions" className="text-purple-600 hover:text-purple-700 font-medium">
+                <Link
+                  to={`/extensions?extension=${ext.id}`}
+                  className="text-purple-600 hover:text-purple-700 font-medium">
                   Install →
                 </Link>
               </div>
@@ -204,7 +206,7 @@ function QuickActions(): JSX.Element {
             <Link
               key={index}
               to={action.link}
-              className="group bg-white dark:bg-charcoal-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              className="group bg-white dark:bg-charcoal-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 no-underline">
               <div
                 className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white text-2xl mb-4 group-hover:scale-110 transition-transform`}>
                 <FontAwesomeIcon icon={action.icon} />
@@ -222,8 +224,8 @@ function QuickActions(): JSX.Element {
 export default function Home(): JSX.Element {
   return (
     <Layout
-      title="Extend Podman Desktop"
-      description="Extend Podman Desktop with extensions for Kubernetes, AI, security, and more">
+      title="Extend Podman Desktop - Customize Your Container Workflow"
+      description="Learn how to extend Podman Desktop with extensions for Kubernetes, AI, security, and container management. Build custom extensions and enhance your development workflow.">
       <TailWindThemeSelector />
       <ExtendHero />
       <ExtensionShowcase />

@@ -232,7 +232,7 @@ function ExtensionDetailModal({ extension, isOpen, onClose }: ExtensionDetailMod
                   }}
                   className="w-full bg-gray-100 dark:bg-charcoal-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-charcoal-500 transition-colors flex items-center justify-center cursor-pointer">
                   <FontAwesomeIcon icon={faCopy} className="mr-2" />
-                  {readmeState.copyFeedback ? 'Copied!' : 'Copy Permalink'}
+                  {readmeState.copyFeedback ? 'Copied!' : 'Share Extension'}
                 </button>
               </div>
             </div>
@@ -459,7 +459,9 @@ export default function ExtensionRegistry(): JSX.Element {
 
   if (loading) {
     return (
-      <Layout title="Extension Registry" description="Browse and install Podman Desktop extensions">
+      <Layout
+        title="Podman Desktop Extensions - Browse & Install Container Tools"
+        description="Discover and install Podman Desktop extensions for Kubernetes, AI, security, and container management. 50+ free extensions to enhance your development workflow.">
         <TailWindThemeSelector />
         <div className="container mx-auto px-5 py-24">
           <div className="text-center">
@@ -472,15 +474,17 @@ export default function ExtensionRegistry(): JSX.Element {
   }
 
   return (
-    <Layout title="Extension Registry" description="Browse and install Podman Desktop extensions">
+    <Layout
+      title="Podman Desktop Extensions - Browse & Install Container Tools"
+      description="Discover and install Podman Desktop extensions for Kubernetes, AI, security, and container management. 50+ free extensions to enhance your development workflow.">
       <TailWindThemeSelector />
 
       <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
         <div className="container mx-auto px-5 py-16">
           <div className="text-center">
-            <h1 className="text-5xl font-bold mb-4">Extension Registry</h1>
+            <h1 className="text-5xl font-bold mb-4">Podman Desktop Extension Registry</h1>
             <p className="text-xl text-white/90 mb-8">
-              Discover and install extensions to enhance your Podman Desktop experience
+              Discover and install extensions to enhance your Podman Desktop container management experience
             </p>
             <div className="max-w-2xl mx-auto">
               <div className="relative">
