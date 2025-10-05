@@ -418,6 +418,9 @@ export default function ExtensionRegistry(): JSX.Element {
       filtered = filtered.filter(ext => ext.category === actualCategory);
     }
 
+    // Clone the array before sorting to avoid mutating the original extensions array
+    filtered = [...filtered];
+
     // Sort extensions
     filtered.sort((a, b) => {
       switch (sortBy) {
