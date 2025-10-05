@@ -21,8 +21,8 @@ function ExtensionSpotlight(): JSX.Element {
           <div>
             <h2 className="text-4xl font-bold mb-6">Extend Your Workflow</h2>
             <p className="text-xl mb-8 text-white/90">
-              Discover 50+ extensions that enhance Podman Desktop with AI tools, Kubernetes integrations, security
-              scanners, and more.
+              Discover extensions to enhance Podman Desktop with AI tools, Kubernetes integrations, security scanners,
+              and more.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link

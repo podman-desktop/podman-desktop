@@ -136,10 +136,7 @@ export async function fetchExtensionCategories(): Promise<{
 }> {
   if (categoryCache) {
     // Return cached data with mapping
-    // We need to reconstruct apiCategories from the cached data
-    const extensions = await fetchExtensions();
-    const apiCategories = Array.from(new Set(extensions.map(ext => ext.category))).sort((a, b) => a.localeCompare(b));
-    const mapping = createCategoryMapping(categoryCache, apiCategories);
+    const mapping = createCategoryMapping(categoryCache);
     return { categories: categoryCache, mapping };
   }
 
@@ -162,12 +159,9 @@ export async function fetchExtensionCategories(): Promise<{
     .map(apiCategory => {
       const categoryExtensions = categoryMap.get(apiCategory) ?? [];
 
-      // Create display name and description based on API category
-      const displayInfo = getCategoryDisplayInfo(apiCategory);
-
       return {
-        name: displayInfo.name,
-        description: displayInfo.description,
+        name: apiCategory,
+        description: `${apiCategory} extensions`,
         count: categoryExtensions.length,
         extensions: categoryExtensions,
       };
@@ -175,64 +169,15 @@ export async function fetchExtensionCategories(): Promise<{
     .filter(cat => cat.count > 0);
 
   categoryCache = categories;
-  const mapping = createCategoryMapping(categories, apiCategories);
+  const mapping = createCategoryMapping(categories);
   return { categories, mapping };
 }
 
-function getCategoryDisplayInfo(apiCategory: string): { name: string; description: string } {
-  const displayMap: { [key: string]: { name: string; description: string } } = {
-    Containers: {
-      name: 'Container Engines',
-      description: 'Docker, Podman, Lima integrations',
-    },
-    Kubernetes: {
-      name: 'Kubernetes',
-      description: 'Kind, Minikube, OpenShift tools',
-    },
-    AI: {
-      name: 'AI & Machine Learning',
-      description: 'GPU acceleration, model management',
-    },
-    Authentication: {
-      name: 'Authentication',
-      description: 'Login and authentication providers',
-    },
-    Development: {
-      name: 'Development Tools',
-      description: 'CLI tools, registries, debugging',
-    },
-    Tools: {
-      name: 'Tools',
-      description: 'Utilities and helper tools',
-    },
-    Other: {
-      name: 'Other',
-      description: 'Miscellaneous extensions',
-    },
-  };
-
-  return (
-    displayMap[apiCategory] || {
-      name: apiCategory,
-      description: `${apiCategory} extensions`,
-    }
-  );
-}
-
-function createCategoryMapping(categories: ExtensionCategory[], apiCategories: string[]): CategoryMapping {
+function createCategoryMapping(categories: ExtensionCategory[]): CategoryMapping {
   const mapping: CategoryMapping = {};
 
-  // Create a reverse mapping from display names to API categories
   categories.forEach(category => {
-    // Find the corresponding API category
-    const apiCategory = apiCategories.find(apiCat => {
-      const displayInfo = getCategoryDisplayInfo(apiCat);
-      return displayInfo.name === category.name;
-    });
-
-    if (apiCategory) {
-      mapping[category.name] = apiCategory;
-    }
+    mapping[category.name] = category.name;
   });
 
   return mapping;
