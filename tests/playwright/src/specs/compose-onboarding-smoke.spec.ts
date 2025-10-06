@@ -107,7 +107,6 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     });
 
     await onboardingPage.cancelSetupButtion.click();
-
     const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
     const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
     await skipOkButton.click();
