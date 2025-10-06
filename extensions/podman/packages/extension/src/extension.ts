@@ -1408,7 +1408,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       let isDisguisedPodmanSocket: boolean;
       try {
         isDisguisedPodmanSocket = await isDisguisedPodman();
-      } catch (error) {
+      } catch (error: unknown) {
+        console.debug('Error while check if the socket is disguised', error);
         await extensionApi.window.showInformationMessage('Could not get if Podman is disguised');
         return;
       }

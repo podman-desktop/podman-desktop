@@ -130,7 +130,7 @@ export class ExtensionNotifications {
     let isDisguisedPodmanSocket: boolean;
     try {
       isDisguisedPodmanSocket = await isDisguisedPodman();
-    } catch (error) {
+    } catch (error: unknown) {
       console.debug('Error while check if the socket is disguised', error);
       return;
     }
@@ -175,7 +175,7 @@ export class ExtensionNotifications {
     let isDisguisedPodmanSocket: boolean;
     try {
       isDisguisedPodmanSocket = await isDisguisedPodman();
-    } catch (error) {
+    } catch (error: unknown) {
       console.debug('Error while check if the socket is disguised', error);
       return;
     }
