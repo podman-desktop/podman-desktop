@@ -55,6 +55,7 @@ import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
 import KubePodsList from './lib/kube/pods/PodsList.svelte';
 import PortForwardingList from './lib/kubernetes-port-forward/PortForwardingList.svelte';
 import ManifestDetails from './lib/manifest/ManifestDetails.svelte';
+import CreateNetwork from './lib/network/CreateNetwork.svelte';
 import NodeDetails from './lib/node/NodeDetails.svelte';
 import NodesList from './lib/node/NodesList.svelte';
 import Onboarding from './lib/onboarding/Onboarding.svelte';
@@ -88,6 +89,10 @@ import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
+
+// For testing
+// router.goto('/networks/create');
+window.router = router;
 
 //remember from where we come to preference pages
 let nonSettingsPage = '/';
@@ -186,6 +191,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/images/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
           <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
+        </Route>
+        <Route path="/networks/create" breadcrumb="Create Network">
+          <CreateNetwork />
         </Route>
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"

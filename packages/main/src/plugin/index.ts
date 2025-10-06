@@ -75,6 +75,8 @@ import type {
   ContainerInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  NetworkCreateOptions,
+  NetworkCreateResult,
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
