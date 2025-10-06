@@ -36,11 +36,14 @@ const frontendContainerName = 'frontend-1';
 const composeContainer = 'resources';
 const backendImageName = 'quay.io/podman-desktop-demo/podify-demo-backend';
 const frontendImageName = 'quay.io/podman-desktop-demo/podify-demo-frontend';
+let cliToolsPage: CLIToolsPage;
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('podman-compose-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+
+  cliToolsPage = new CLIToolsPage(page);
 });
 
 test.afterAll(async ({ page, runner }) => {
@@ -64,11 +67,13 @@ test.describe.serial('Compose compose workflow verification', { tag: '@smoke' },
     const settingsBar = new SettingsBar(page);
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
     await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+
+    await cliToolsPage.ensureAPIRateLimitNotReached();
     const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
     const setupButton = composeBox.setupButton;
     await playExpect(setupButton).toBeHidden();
 
-    const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
+    cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
     const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
     const composeVersionInfo = composeRow.getByLabel('cli-version');
     await playExpect(composeVersionInfo).toContainText('docker-compose');
