@@ -205,7 +205,7 @@ export class CLIToolsPage extends SettingsPage {
         console.log('Rate limit flag triggered!');
         this.rateLimitReachedFlag = true;
       }
-      if (msg.text().includes('/releases/') && msg.text().includes('403 with id')) {
+      if (msg.text().includes('/releases') && msg.text().includes('403 with id')) {
         console.log('Could not fetch releases - assuming rate limit exceeded');
         this.rateLimitReachedFlag = true;
       }
