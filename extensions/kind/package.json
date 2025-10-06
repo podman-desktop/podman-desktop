@@ -110,7 +110,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^22.0.0",
-    "@kubernetes/client-node": "^1.3.0",
+    "@kubernetes/client-node": "^1.4.0",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",
     "yaml": "^2.8.1"
