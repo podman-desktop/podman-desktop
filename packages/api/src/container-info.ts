@@ -275,12 +275,24 @@ export interface ContainerCreateOptions {
   pod?: string;
 }
 
-export interface NetworkCreateOptions {
-  Name: string;
-}
+export type NetworkCreateOptions = Dockerode.NetworkCreateOptions;
 
 export interface NetworkCreateResult {
   Id: string;
+}
+
+// Form state interface for creating networks in the UI
+export interface NetworkCreateFormInfo {
+  networkName: string;
+  labels: string[];
+  subnet: string;
+  ipRange: string;
+  gateway: string;
+  ipv6Enabled: boolean;
+  internalEnabled: boolean;
+  driver: string;
+  options: string[];
+  selectedProvider: ProviderContainerConnectionInfo | undefined;
 }
 
 export interface VolumeCreateOptions {
