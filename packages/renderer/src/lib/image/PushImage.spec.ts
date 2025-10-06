@@ -18,15 +18,20 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
+import type { ImageInfo } from '/@api/image-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
+import type { ProviderInfo } from '/@api/provider-info';
 
+import { imagesInfos } from '../../stores/images';
+import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
-import PushImageModal from './PushImageModal.svelte';
+import PushImage from './PushImage.svelte';
 
 vi.mock('@xterm/xterm', () => {
   const Terminal = vi.fn();
@@ -40,28 +45,19 @@ vi.mock('@xterm/xterm', () => {
   };
   return { Terminal };
 });
+vi.mock('./image-utils', () => {
+  const ImageUtils = vi.fn();
+  ImageUtils.prototype = {
+    getImageInfoUI: vi.fn(),
+  };
+  return {
+    ImageUtils,
+  };
+});
 
 const getConfigurationValueMock = vi.fn();
 const hasAuthMock = vi.fn();
 const pushImageMock = vi.fn();
-
-beforeAll(() => {
-  (window.events as unknown) = {
-    receive: (_channel: string, func: () => void): void => {
-      func();
-    },
-  };
-  Object.defineProperty(window, 'ResizeObserver', {
-    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
-  });
-  Object.defineProperty(window, 'getImageInspect', { value: vi.fn().mockImplementation(() => Promise.resolve({})) });
-  Object.defineProperty(window, 'logsContainer', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'refreshTerminal', { value: vi.fn() });
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'hasAuthconfigForImage', { value: hasAuthMock });
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
-  Object.defineProperty(window, 'pushImage', { value: pushImageMock });
-});
 
 // fake ImageInfoUI
 const fakedImage: ImageInfoUI = {
@@ -144,8 +140,35 @@ const fakedImageInspect: ImageInspectInfo = {
   engineName: 'engineName',
 };
 
+beforeAll(() => {
+  (window.events as unknown) = {
+    receive: (_channel: string, func: () => void): void => {
+      func();
+    },
+  };
+  Object.defineProperty(window, 'ResizeObserver', {
+    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
+  });
+  Object.defineProperty(window, 'getImageInspect', {
+    value: vi.fn().mockImplementation(() => Promise.resolve(fakedImageInspect)),
+  });
+  Object.defineProperty(window, 'logsContainer', { value: vi.fn().mockResolvedValue(undefined) });
+  Object.defineProperty(window, 'refreshTerminal', { value: vi.fn() });
+  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
+  Object.defineProperty(window, 'hasAuthconfigForImage', { value: hasAuthMock });
+  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
+  Object.defineProperty(window, 'pushImage', { value: pushImageMock });
+  imagesInfos.set([{} as unknown as ImageInfo]);
+  providerInfos.set([{ containerConnections: [{ status: 'started' }] } as unknown as ProviderInfo]);
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(ImageUtils.prototype.getImageInfoUI).mockReturnValue({} as unknown as ImageInfoUI);
+});
+
 async function waitRender(customProperties: object): Promise<void> {
-  render(PushImageModal, { ...customProperties });
+  render(PushImage, { ...customProperties });
   await tick();
 }
 
@@ -175,7 +198,7 @@ describe('Expect Push Image dialog', () => {
   ): Promise<void> {
     hasAuthMock.mockResolvedValue(authConfig);
     vi.mocked(window.getImageInspect).mockResolvedValue(fakedImageInspect);
-    pushImageMock.mockImplementation((_imageId, _imageTag, cb) => {
+    pushImageMock.mockImplementation((_engineId, _imageTag, _imageID, _base64RepoTag, cb) => {
       callback = cb;
     });
 
@@ -187,6 +210,9 @@ describe('Expect Push Image dialog', () => {
     if (step === 'DialogOpened') return;
 
     const pushButton = screen.getByRole('button', { name: 'Push image' });
+    await waitFor(() => {
+      expect(button('Push image')).toBeEnabled();
+    });
     await fireEvent.click(pushButton);
 
     if (step === 'PushPressed') return;
@@ -209,10 +235,6 @@ describe('Expect Push Image dialog', () => {
     callback?.('end');
   }
 
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
   test('have "Cancel" and "Push Image" buttons disabled after open when auth configuration is missing', async () => {
     await runTo('DialogOpened', false);
     expect(button('Push image')).toBeDisabled();
@@ -222,19 +244,11 @@ describe('Expect Push Image dialog', () => {
 
   test('have "Cancel" and "Push Image" buttons enable after open when auth configuration is present', async () => {
     await runTo('DialogOpened');
-    expect(button('Push image')).toBeEnabled();
+    await waitFor(() => {
+      expect(button('Push image')).toBeEnabled();
+    });
     expect(button('Cancel')).toBeEnabled();
     expect(terminal()).toBeNull();
-  });
-
-  test('to close when "Cancel" button pressed', async () => {
-    await runTo('DialogOpened');
-    const cancelButton = button('Cancel');
-    expect(cancelButton).toBeEnabled();
-    if (cancelButton) {
-      await fireEvent.click(cancelButton);
-    }
-    expect(closeCallback).toHaveBeenCalledOnce();
   });
 
   test('to have no "Cancel" button and "Push Image" button disabled after "Push Image" button pressed', async () => {
@@ -272,8 +286,11 @@ describe('Expect Push Image dialog', () => {
 
   test('to show "Cancel" and "Push image" buttons after push call finished with error', async () => {
     await runTo('EndAfterError');
-    expect(button('Push image')).toBeEnabled();
-    expect(button('Cancel')).toBeEnabled();
+    await waitFor(() => {
+      expect(button('Push image')).toBeEnabled();
+      expect(button('Cancel')).toBeEnabled();
+    });
+
     expect(terminal()).toBeVisible();
   });
 
@@ -283,15 +300,5 @@ describe('Expect Push Image dialog', () => {
     expect(button('Cancel')).toBe(null);
     expect(button('Done')).toBeEnabled();
     expect(terminal()).toBeVisible();
-  });
-
-  test('to close when "Done" button pressed', async () => {
-    await runTo('End');
-    const doneButton = button('Done');
-    expect(doneButton).toBeEnabled();
-    if (doneButton) {
-      await fireEvent.click(doneButton);
-    }
-    expect(closeCallback).toHaveBeenCalledOnce();
   });
 });
