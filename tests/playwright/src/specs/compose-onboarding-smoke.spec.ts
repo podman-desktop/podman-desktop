@@ -31,6 +31,7 @@ import { expect as playExpect, test } from '../utility/fixtures';
 import { isCI, isLinux } from '../utility/platform';
 
 const RESOURCE_NAME: string = 'Compose';
+let cliToolsPage: CLIToolsPage;
 
 let composeVersion: string;
 // property that will make sure that on linux we can run only partial tests, by default this is turned off
@@ -40,9 +41,10 @@ const skipComposeOnboardingTest = process.env.SKIP_COMPOSE_ONBOARDING_TEST ?? fa
 test.skip(!!skipComposeOnboardingTest, 'Skip test suite based on env. variable');
 test.skip(!!isCI && isLinux, 'Tests suite should not run on Linux platform');
 
-test.beforeAll(async ({ runner, welcomePage }) => {
+test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('compose-onboarding-e2e');
   await welcomePage.handleWelcomePage(true);
+  cliToolsPage = new CLIToolsPage(page);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -50,6 +52,12 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
+  test.beforeEach(async () => {
+    if (cliToolsPage.wasRateLimitReached()) {
+      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+      test.skip(true, 'Rate limit exceeded; skipping remaining compose onboarding checks');
+    }
+  });
   test.afterEach(async ({ navigationBar }) => {
     await navigationBar.openDashboard();
   });
@@ -76,8 +84,16 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
 
     const onboardingVersionPage = new ComposeVersionPage(page);
     await playExpect(onboardingVersionPage.onboardingStatusMessage).toHaveText('Compose download');
-    await playExpect(onboardingVersionPage.versionStatusMessage).toBeVisible();
 
+    const rateLimitExceededText = '${onboardingContext}';
+    const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
+
+    if ((await rateLimitExceededLocator.count()) > 0 || cliToolsPage.wasRateLimitReached()) {
+      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
+      test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
+    }
+
+    await playExpect(onboardingVersionPage.versionStatusMessage).toBeVisible();
     composeVersion = await onboardingVersionPage.getVersion();
   });
 
@@ -91,7 +107,6 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     });
 
     await onboardingPage.cancelSetupButtion.click();
-
     const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
     const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
     await skipOkButton.click();

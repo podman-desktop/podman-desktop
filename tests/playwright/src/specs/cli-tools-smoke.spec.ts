@@ -56,6 +56,13 @@ toolsToTest.forEach(tool => {
           .toBeFalsy();
       });
 
+      test.beforeEach(async () => {
+        if (cliToolsPage.wasRateLimitReached()) {
+          test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+          test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
+        }
+      });
+
       test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
         test.setTimeout(180_000);
 
