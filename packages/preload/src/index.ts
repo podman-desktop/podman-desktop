@@ -2438,6 +2438,14 @@ export function initExposure(): void {
     return ipcInvoke('webviewRegistry:makeDefaultWebviewVisible', webviewId);
   });
 
+  contextBridge.exposeInMainWorld('registerWebviewDevTools', async (webcontentId: number): Promise<void> => {
+    return ipcInvoke('webview:devtools:register', webcontentId);
+  });
+
+  contextBridge.exposeInMainWorld('cleanupWebviewDevTools', async (webcontentId: number): Promise<void> => {
+    return ipcInvoke('webview:devtools:cleanup', webcontentId);
+  });
+
   contextBridge.exposeInMainWorld(
     'fetchExtensionViewsContributions',
     async (extensionId: string): Promise<ViewInfoUI[]> => {

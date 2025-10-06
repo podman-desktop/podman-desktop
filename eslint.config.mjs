@@ -348,4 +348,14 @@ export default [
       'sonarjs/media-has-caption': 'off',
     },
   },
+
+  {
+    files: ['packages/renderer/src/lib/webview/*.svelte'],
+    rules: {
+      // TODO: Remove this workaround once eslint-plugin-sonarjs fixes the bug with Svelte reactive statements
+      // The sonarjs/no-unused-collection rule has a bug when analyzing Svelte files with reactive statements ($webviews)
+      // causing "Cannot read properties of null (reading 'type')" error during linting
+      'sonarjs/no-unused-collection': 'off',
+    },
+  },
 ];

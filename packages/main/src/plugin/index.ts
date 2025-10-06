@@ -212,6 +212,7 @@ import { Exec } from './util/exec.js';
 import { getFreePort, getFreePortRange, isFreePort } from './util/port.js';
 import { TaskConnectionUtils } from './util/task-connection-utils.js';
 import { ViewRegistry } from './view-registry.js';
+import { DevToolsManager } from './webview/devtools-manager.js';
 import { WebviewRegistry } from './webview/webview-registry.js';
 import { WelcomeInit } from './welcome/welcome-init.js';
 
@@ -683,6 +684,7 @@ export class PluginSystem {
     container.bind<ImageFilesRegistry>(ImageFilesRegistry).toSelf().inSingletonScope();
     container.bind<Troubleshooting>(Troubleshooting).toSelf().inSingletonScope();
     container.bind<ContributionManager>(ContributionManager).toSelf().inSingletonScope();
+    container.bind<DevToolsManager>(DevToolsManager).toSelf().inSingletonScope();
     container.bind<WebviewRegistry>(WebviewRegistry).toSelf().inSingletonScope();
 
     const webviewRegistry = container.get<WebviewRegistry>(WebviewRegistry);
@@ -2919,6 +2921,15 @@ export class PluginSystem {
     this.ipcHandle('viewRegistry:listViewsContributions', async (_listener): Promise<ViewInfoUI[]> => {
       return viewRegistry.listViewsContributions();
     });
+
+    this.ipcHandle('webview:devtools:register', async (_listener, webcontentId: number): Promise<void> => {
+      return webviewRegistry.registerWebviewDevTools(webcontentId);
+    });
+
+    this.ipcHandle('webview:devtools:cleanup', async (_listener, webcontentId: number): Promise<void> => {
+      return webviewRegistry.cleanupWebviewDevTools(webcontentId);
+    });
+
     this.ipcHandle('webviewRegistry:listWebviews', async (_listener): Promise<WebviewInfo[]> => {
       return webviewRegistry.listWebviews();
     });

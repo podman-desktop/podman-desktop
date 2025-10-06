@@ -30,6 +30,7 @@ import { Uri } from '/@/plugin/types/uri.js';
 import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
 import { getFreePort } from '../util/port.js';
+import { DevToolsManager } from './devtools-manager.js';
 import { WebviewImpl } from './webview-impl.js';
 import { WebviewPanelImpl } from './webview-panel-impl.js';
 
@@ -93,7 +94,10 @@ export class WebviewRegistry {
 
   #app: Application;
 
-  constructor(@inject(ApiSenderType) apiSender: ApiSenderType) {
+  constructor(
+    @inject(ApiSenderType) apiSender: ApiSenderType,
+    @inject(DevToolsManager) private devToolsManager: DevToolsManager,
+  ) {
     this.#apiSender = apiSender;
     this.#webviews = new Map();
     this.#uuidAndPaths = new Map();
@@ -285,6 +289,22 @@ export class WebviewRegistry {
 
   getRegistryHttpPort(): number {
     return this.#serverPort;
+  }
+
+  /**
+   * Register DevTools for a WebView when they are opened.
+   * This method is called via IPC from the renderer process.
+   */
+  async registerWebviewDevTools(webcontentId: number): Promise<void> {
+    return this.devToolsManager.registerDevTools(webcontentId);
+  }
+
+  /**
+   * Clean up DevTools when a WebView is being destroyed.
+   * This method is called via IPC from the renderer process.
+   */
+  async cleanupWebviewDevTools(webcontentId: number): Promise<void> {
+    return this.devToolsManager.cleanupDevTools(webcontentId);
   }
 
   listWebviews(): WebviewInfo[] {

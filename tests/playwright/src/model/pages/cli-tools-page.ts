@@ -30,6 +30,7 @@ export class CLIToolsPage extends SettingsPage {
   readonly toolsTable: Locator;
   readonly dropDownDialog: Locator;
   readonly versionInputField: Locator;
+  private rateLimitReachedFlag = false;
 
   constructor(page: Page) {
     super(page, 'CLI Tools');
@@ -40,6 +41,11 @@ export class CLIToolsPage extends SettingsPage {
     this.toolsTable = this.content.getByRole('table', { name: 'cli-tools' });
     this.dropDownDialog = page.getByRole('dialog', { name: 'drop-down-dialog' });
     this.versionInputField = this.dropDownDialog.getByRole('textbox');
+    this.attachRateLimitListener();
+  }
+
+  public wasRateLimitReached(): boolean {
+    return this.rateLimitReachedFlag;
   }
 
   public getToolRow(toolName: string): Locator {
@@ -94,6 +100,7 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.getInstallButton(toolName)).toBeEnabled();
       await this.getInstallButton(toolName).click();
 
+      await this.ensureAPIRateLimitNotReached();
       const confirmationDialog = this.page.getByRole('dialog', { name: toolName });
       try {
         await playExpect(confirmationDialog).toBeVisible();
@@ -137,6 +144,8 @@ export class CLIToolsPage extends SettingsPage {
 
       await playExpect(this.getDowngradeButton(toolName)).toBeEnabled();
       await this.getDowngradeButton(toolName).click();
+
+      await this.ensureAPIRateLimitNotReached();
       await playExpect(this.dropDownDialog).toBeVisible();
 
       if (!version) {
@@ -167,6 +176,8 @@ export class CLIToolsPage extends SettingsPage {
 
       await playExpect(this.getUpdateButton(toolName)).toBeEnabled();
       await this.getUpdateButton(toolName).click();
+
+      await this.ensureAPIRateLimitNotReached();
       await playExpect
         .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
         .not.toContain(currentVersion);
@@ -182,6 +193,23 @@ export class CLIToolsPage extends SettingsPage {
       const versionSplitInParts = currentVersion.split(' ');
       const versionNumber = versionSplitInParts[versionSplitInParts.length - 1];
       return this.dropDownDialog.getByRole('button').filter({ hasNotText: versionNumber }).first().innerText();
+    }
+  }
+
+  private attachRateLimitListener(): void {
+    this.page.on('console', msg => {
+      if (msg.text().includes('API rate limit exceeded')) {
+        console.log('Rate limit flag triggered!');
+        this.rateLimitReachedFlag = true;
+      }
+    });
+  }
+
+  private async ensureAPIRateLimitNotReached(): Promise<void> {
+    await this.page.waitForTimeout(2_000); //give some time for the listener to catch up
+    if (this.rateLimitReachedFlag) {
+      console.log('Skipping test due to API rate limit being reached');
+      test.skip(true, 'Skipping test due to API rate limit being reached');
     }
   }
 }
