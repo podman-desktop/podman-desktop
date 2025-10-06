@@ -19,7 +19,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PlayYamlRuntime } from '../model/core/operations';
 import { KubernetesResourceState } from '../model/core/states';
 import { KubernetesResources } from '../model/core/types';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
@@ -42,16 +41,11 @@ const CLUSTER_CREATION_TIMEOUT: number = 300_000;
 const KIND_NODE: string = `${CLUSTER_NAME}-control-plane`;
 const RESOURCE_NAME: string = 'kind';
 const KUBERNETES_CONTEXT: string = `kind-${CLUSTER_NAME}`;
-const KUBERNETES_NAMESPACE: string = 'default';
 
 const DEPLOYMENT_NAME: string = 'test-deployment-resource';
 const SERVICE_NAME: string = 'test-service-resource';
 const INGRESS_NAME: string = 'test-ingress-resource';
-const KUBERNETES_RUNTIME = {
-  runtime: PlayYamlRuntime.Kubernetes,
-  kubernetesContext: KUBERNETES_CONTEXT,
-  kubernetesNamespace: KUBERNETES_NAMESPACE,
-};
+
 const IMAGE_NAME: string = 'ghcr.io/podmandesktop-ci/nginx';
 const PULL_IMAGE_NAME: string = `${IMAGE_NAME}:latest`;
 const CONTAINER_NAME: string = 'nginx-container';
@@ -136,13 +130,7 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
 
       test('Create and verify a running Kubernetes deployment', async ({ page }) => {
         test.setTimeout(80_000);
-        await createKubernetesResource(
-          page,
-          KubernetesResources.Deployments,
-          DEPLOYMENT_NAME,
-          DEPLOYMENT_YAML_PATH,
-          KUBERNETES_RUNTIME,
-        );
+        await createKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, DEPLOYMENT_YAML_PATH);
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Deployments,
@@ -152,13 +140,7 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
         );
       });
       test('Create and verify a running Kubernetes service', async ({ page }) => {
-        await createKubernetesResource(
-          page,
-          KubernetesResources.Services,
-          SERVICE_NAME,
-          SERVICE_YAML_PATH,
-          KUBERNETES_RUNTIME,
-        );
+        await createKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME, SERVICE_YAML_PATH);
         await checkKubernetesResourceState(
           page,
           KubernetesResources.Services,
@@ -168,13 +150,7 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
         );
       });
       test('Create and verify a running Kubernetes ingress', async ({ page }) => {
-        await createKubernetesResource(
-          page,
-          KubernetesResources.IngeressesRoutes,
-          INGRESS_NAME,
-          INGRESS_YAML_PATH,
-          KUBERNETES_RUNTIME,
-        );
+        await createKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGRESS_NAME, INGRESS_YAML_PATH);
         await checkKubernetesResourceState(
           page,
           KubernetesResources.IngeressesRoutes,

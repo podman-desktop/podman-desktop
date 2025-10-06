@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { PlayYamlRuntime } from '../core/operations';
-import type { PlayKubernetesOptions } from '../core/types';
 import { BasePage } from './base-page';
 import { PodsPage } from './pods-page';
 
@@ -56,50 +54,17 @@ export class PlayKubeYamlPage extends BasePage {
     this.buildCheckbox = page.getByRole('checkbox', { name: 'Enable build' }).locator('..');
   }
 
-  async playYaml(
-    pathToYaml: string,
-    buildImage: boolean = false,
-    timeout: number = 120_000,
-    { runtime, kubernetesContext, kubernetesNamespace }: PlayKubernetesOptions = {
-      kubernetesContext: 'kind-kind-cluster',
-    },
-  ): Promise<PodsPage> {
+  async playYaml(pathToYaml: string, buildImage: boolean = false, timeout: number = 120_000): Promise<PodsPage> {
     return test.step('Podman Kube Play', async () => {
       if (!pathToYaml) {
         throw Error(`Path to Yaml file is incorrect or not provided!`);
       }
-
+      await playExpect(this.podmanRuntimeButton).toBeEnabled();
+      await this.podmanRuntimeButton.click();
+      await playExpect(this.podmanRuntimeButton).toHaveAttribute('aria-pressed', 'true');
       // TODO: evaluate() is required due to noninteractivity of fields currently, once https://github.com/containers/podman-desktop/issues/5479 is done they will no longer be needed
       await this.yamlPathInput.evaluate(node => node.removeAttribute('readonly'));
       await this.playButton.evaluate(node => node.removeAttribute('disabled'));
-
-      switch (runtime) {
-        case PlayYamlRuntime.Kubernetes:
-          await playExpect(this.kubernetesRuntimeButton).toBeEnabled();
-          await this.kubernetesRuntimeButton.locator('..').click();
-          await playExpect(this.kubernetesRuntimeButton).toHaveAttribute('aria-pressed', 'true');
-
-          await playExpect(this.kubernetesContext).toBeVisible();
-          await playExpect(this.kubernetesContext).toHaveValue(kubernetesContext);
-
-          if (kubernetesNamespace) {
-            await playExpect(this.kubernetesNamespaces).toBeVisible({ timeout: 15_000 });
-            await this.kubernetesNamespaces.click();
-
-            const namespaceSelection = this.kubernetesNamespaces
-              .getByRole('button', { name: kubernetesNamespace })
-              .first();
-
-            await playExpect(namespaceSelection).toBeEnabled();
-            await namespaceSelection.click();
-            await playExpect(this.kubernetesNamespaces).toContainText(kubernetesNamespace);
-          }
-          break;
-        default:
-          await playExpect(this.podmanRuntimeButton).toBeVisible();
-          await playExpect(this.podmanRuntimeButton).toHaveAttribute('aria-pressed', 'true');
-          break;
-      }
 
       await this.yamlPathInput.fill(pathToYaml);
       await playExpect(this.buildCheckbox).not.toBeChecked();
