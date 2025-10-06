@@ -84,9 +84,6 @@ function extractNavigationPaths(entries: NavigationRegistryEntry[]): GoToInfo[] 
       return;
     }
 
-    // Create a unique ID for the navigation entry
-    const id = entry.link.replace(/\//g, '-').replace(/^-/, '');
-
     // Determine the display name with appropriate prefix and count
     let displayName = entry.name;
 
