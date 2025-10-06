@@ -331,12 +331,21 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
 
-  extensions/docker:
+  extensions/docker/packages/api:
     dependencies:
       '@podman-desktop/api':
         specifier: workspace:*
-        version: link:../../packages/extension-api
+        version: link:../../../../packages/extension-api
+
+  extensions/docker/packages/extension:
+    dependencies:
+      '@podman-desktop/api':
+        specifier: workspace:*
+        version: link:../../../../packages/extension-api
     devDependencies:
+      '@podman-desktop/docker-extension-api':
+        specifier: workspace:*
+        version: link:../api
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
@@ -24216,8 +24225,6 @@ snapshots:
   undici-types@6.19.8: {}
 
   undici-types@6.21.0: {}
-
-  undici-types@7.13.0: {}
 
   undici-types@7.14.0:
     optional: true

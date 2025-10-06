@@ -21,15 +21,10 @@ import { existsSync, promises } from 'node:fs';
 import { join } from 'node:path';
 
 import { env } from '@podman-desktop/api';
+import type { DockerContextInfo, DockerContextParsingInfo } from '@podman-desktop/docker-extension-api';
 
-import { type DockerContextInfo, UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
+import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api.js';
 import type { DockerConfig } from './docker-config.js';
-
-// omit current context as it is coming from another source
-// disabling the rule as we're not only extending the interface but omitting one field
-// but the rule is not able to understand that
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface DockerContextParsingInfo extends Omit<DockerContextInfo, 'isCurrentContext'> {}
 
 /**
  * Handle the `docker context`, allowing to list them and switch between them.

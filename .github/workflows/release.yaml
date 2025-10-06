@@ -276,6 +276,13 @@ jobs:
           cd extensions/podman/packages/api
           pnpm publish --provenance --tag latest --no-git-checks --access public
 
+      - name: Publish Docker Extension API to npmjs
+        run: |
+          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
+          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/docker/packages/api/package.json
+          cd extensions/docker/packages/api
+          pnpm publish --provenance --tag latest --no-git-checks --access public
+
   # publish the pnpm store for flathub builds
   pnpm-store:
     needs: [tag, release]

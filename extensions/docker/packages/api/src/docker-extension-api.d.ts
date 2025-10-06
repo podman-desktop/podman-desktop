@@ -31,5 +31,12 @@ export interface DockerContextInfo {
   };
 }
 
-export const WINDOWS_NPIPE = '//./pipe/docker_engine';
-export const UNIX_SOCKET_PATH = '/var/run/docker.sock';
+// omit current context as it is coming from another source
+// disabling the rule as we're not only extending the interface but omitting one field
+// but the rule is not able to understand that
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DockerContextParsingInfo extends Omit<DockerContextInfo, 'isCurrentContext'> {}
+
+export interface DockerExtensionApi {
+  dummy: string;
+}

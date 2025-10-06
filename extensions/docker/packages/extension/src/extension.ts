@@ -20,6 +20,7 @@ import * as http from 'node:http';
 import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
+import type { DockerExtensionApi } from '@podman-desktop/docker-extension-api';
 
 import { UNIX_SOCKET_PATH, WINDOWS_NPIPE } from './docker-api';
 import { getDockerInstallation } from './docker-cli';
@@ -161,7 +162,7 @@ async function updateProvider(extensionContext: extensionApi.ExtensionContext): 
   }
 }
 
-export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<void> {
+export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<DockerExtensionApi> {
   const isWindows = os.platform() === 'win32';
   if (isWindows) {
     socketPath = WINDOWS_NPIPE;
@@ -185,6 +186,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       extensionApi.env.createTelemetryLogger().logError(String(err));
     }
   });
+  return {
+    dummy: '',
+  };
 }
 
 function initProvider(extensionContext: extensionApi.ExtensionContext): void {

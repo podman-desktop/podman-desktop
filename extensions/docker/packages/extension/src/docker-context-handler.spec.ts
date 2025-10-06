@@ -20,10 +20,10 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 
 import { env } from '@podman-desktop/api';
+import type { DockerContextParsingInfo } from '@podman-desktop/docker-extension-api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DockerConfig } from './docker-config.js';
-import type { DockerContextParsingInfo } from './docker-context-handler.js';
 import { DockerContextHandler } from './docker-context-handler.js';
 
 class TestDockerContextHandler extends DockerContextHandler {
