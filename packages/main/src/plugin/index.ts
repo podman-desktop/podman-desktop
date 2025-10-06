@@ -76,6 +76,8 @@ import type {
   ContainerInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  NetworkCreateOptions,
+  NetworkCreateResult,
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
@@ -840,6 +842,16 @@ export class PluginSystem {
         removeDNSServers: string[],
       ): Promise<void> => {
         return containerProviderRegistry.updateNetwork(engineId, networkId, addDNSServers, removeDNSServers);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:createNetwork',
+      async (
+        _listener,
+        providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+        options: NetworkCreateOptions,
+      ): Promise<NetworkCreateResult> => {
+        return containerProviderRegistry.createNetwork(providerContainerConnectionInfo, options);
       },
     );
     this.ipcHandle(

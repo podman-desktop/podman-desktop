@@ -54,6 +54,8 @@ import type {
   ContainerInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  NetworkCreateOptions,
+  NetworkCreateResult,
   SimpleContainerInfo,
   VolumeCreateOptions,
 } from '/@api/container-info';
@@ -312,6 +314,16 @@ export function initExposure(): void {
     'updateNetwork',
     async (engine: string, networkId: string, addDNSServers: string[], removeDNSServers: string[]): Promise<void> => {
       return ipcInvoke('container-provider-registry:updateNetwork', engine, networkId, addDNSServers, removeDNSServers);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
+    'createNetwork',
+    async (
+      providerContainerConnectionInfo: ProviderContainerConnectionInfo,
+      options: NetworkCreateOptions,
+    ): Promise<NetworkCreateResult> => {
+      return ipcInvoke('container-provider-registry:createNetwork', providerContainerConnectionInfo, options);
     },
   );
 
