@@ -1140,7 +1140,9 @@ export class ContainerProviderRegistry {
           firstMessage = false;
           callback('first-message', '');
         }
-        callback('data', chunk.toString('utf-8'));
+         // Use latin1 encoding to preserve all bytes and avoid replacement characters
+        // This ensures progress indicators and special characters are displayed correctly
+        callback('data', chunk.toString('latin1'));
       });
     } catch (error) {
       telemetryOptions = { error: error };
