@@ -19,6 +19,8 @@
 import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
+import { waitUntil } from '/@/utility/wait';
+
 import { handleConfirmationDialog } from '../../utility/operations';
 import { SettingsPage } from './settings-page';
 
@@ -155,6 +157,7 @@ export class CLIToolsPage extends SettingsPage {
       await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
       await this.getVersionSelectionButton(version).click();
 
+      await this.ensureAPIRateLimitNotReached();
       await playExpect
         .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
         .toContain(version);
@@ -202,15 +205,15 @@ export class CLIToolsPage extends SettingsPage {
         console.log('Rate limit flag triggered!');
         this.rateLimitReachedFlag = true;
       }
-      if (msg.text().includes('/kind/releases/') && msg.text().includes('403')) {
-        console.log('Could not fetch kind releases - assuming rate limit exceeded');
+      if (msg.text().includes('/releases/') && msg.text().includes('403 with id')) {
+        console.log('Could not fetch releases - assuming rate limit exceeded');
         this.rateLimitReachedFlag = true;
       }
     });
   }
 
   private async ensureAPIRateLimitNotReached(): Promise<void> {
-    await this.page.waitForTimeout(2_000); //give some time for the listener to catch up
+    await waitUntil(async () => this.wasRateLimitReached(), { timeout: 2_000, sendError: false });
     if (this.rateLimitReachedFlag) {
       console.log('Skipping test due to API rate limit being reached');
       test.skip(true, 'Skipping test due to API rate limit being reached');
