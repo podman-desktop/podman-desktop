@@ -123,7 +123,7 @@ export class Row<Type, ChildType = Type> {
   constructor(readonly info: RowInformation<Type, ChildType>) {}
 }
 
-export interface TablePersistenceCallbacks {
+export interface TablePersistence {
   load: (kind: string, columnNames: string[]) => Promise<ListOrganizerItem[]>;
   save: (kind: string, items: ListOrganizerItem[]) => Promise<void>;
   reset: (kind: string, columnNames: string[]) => Promise<ListOrganizerItem[]>;

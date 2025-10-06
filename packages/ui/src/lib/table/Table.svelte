@@ -18,7 +18,7 @@ import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 import ListOrganizer from '../layouts/ListOrganizer.svelte';
 /* eslint-enable import/no-duplicates */
 import type { Column, Row } from './table';
-import { tablePersistenceCallbacks } from './table-persistence-store';
+import { tablePersistence } from './table-persistence-store.svelte';
 
 export let kind: string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,8 +81,8 @@ onMount(async () => {
 
 // Load configuration
 async function loadColumnConfiguration(): Promise<ListOrganizerItem[]> {
-  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
-    const loadedItems = await $tablePersistenceCallbacks.load(
+  if (enableLayoutConfiguration && tablePersistence.storage) {
+    const loadedItems = await tablePersistence.storage.load(
       kind,
       columns.map(col => col.title),
     );
@@ -116,10 +116,10 @@ async function loadColumnConfiguration(): Promise<ListOrganizerItem[]> {
 
 // Save configuration
 async function saveColumnConfiguration(): Promise<void> {
-  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+  if (enableLayoutConfiguration && tablePersistence.storage) {
     // Create ordered items based on current state
     const orderedItems = getOrderedColumns();
-    await $tablePersistenceCallbacks.save(kind, orderedItems);
+    await tablePersistence.storage.save(kind, orderedItems);
   }
 }
 
@@ -291,7 +291,7 @@ $: {
   // custom columns
   visibleColumns.map(c => c.info.width ?? '1fr').forEach(w => columnWidths.push(w));
 
-  if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
+  if (enableLayoutConfiguration && tablePersistence) {
     // Add space for settings icon in header (32px)
     columnWidths.push('32px');
   } else {
@@ -343,8 +343,8 @@ function handleColumnToggle(itemId: string, enabled: boolean): void {
 // Reset columns to default state and clear saved configuration
 async function resetColumns(): Promise<void> {
   try {
-    if (enableLayoutConfiguration && $tablePersistenceCallbacks) {
-      columnItems = await $tablePersistenceCallbacks.reset(
+    if (enableLayoutConfiguration && tablePersistence.storage) {
+      columnItems = await tablePersistence.storage.reset(
         kind,
         columns.map(col => col.title),
       );
@@ -353,8 +353,8 @@ async function resetColumns(): Promise<void> {
       columnItems = getDefaultColumnItems();
       columnOrdering.clear();
     }
-  } catch (error) {
-    console.error('Failed to reset column configuration:', error);
+  } catch (error: unknown) {
+    console.error(`Failed to reset column configuration in table ${kind}: ${error}`);
     // Fallback to default configuration
     columnItems = getDefaultColumnItems();
     columnOrdering.clear();
@@ -412,13 +412,13 @@ async function resetColumns(): Promise<void> {
         </div>
       {/each}
       <!-- Empty space for settings - only when layout configuration is enabled -->
-      {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
+      {#if enableLayoutConfiguration && tablePersistence.storage}
         <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
       {/if}
     </div>
     
     <!-- Settings - only show when layout configuration is enabled -->
-    {#if enableLayoutConfiguration && $tablePersistenceCallbacks}
+    {#if enableLayoutConfiguration && tablePersistence.storage}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
         <ListOrganizer
           items={columnItems}
@@ -480,7 +480,7 @@ async function resetColumns(): Promise<void> {
                   : 'justify-self-start'} self-center {column.info.overflow === true
                 ? ''
                 : 'overflow-hidden'} max-w-full py-1.5"
-              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
+              class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
               role="cell">
               {#if column.info.renderer}
                 <svelte:component
@@ -518,7 +518,7 @@ async function resetColumns(): Promise<void> {
                       : 'justify-self-start'} self-center {column.info.overflow === true
                     ? ''
                     : 'overflow-hidden'} max-w-full py-1.5"
-                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && $tablePersistenceCallbacks}
+                  class:col-span-2={index === visibleColumns.length - 1 && enableLayoutConfiguration && tablePersistence.storage}
                   role="cell">
                   {#if column.info.renderer}
                     <svelte:component

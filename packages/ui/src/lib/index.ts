@@ -44,13 +44,13 @@ import StatusIcon from './statusIcon/StatusIcon.svelte';
 import Tab from './tab/Tab.svelte';
 import TableDurationColumn from './table/DurationColumn.svelte';
 import TableSimpleColumn from './table/SimpleColumn.svelte';
-import { Column as TableColumn, Row as TableRow, type TablePersistenceCallbacks } from './table/table';
+import { Column as TableColumn, Row as TableRow, type TablePersistence } from './table/table';
 import Table from './table/Table.svelte';
-import { tablePersistenceCallbacks } from './table/table-persistence-store';
+import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, ListOrganizerItem, TablePersistenceCallbacks };
+export type { ButtonType, ListOrganizerItem, TablePersistence };
 export {
   Button,
   Carousel,
@@ -84,4 +84,4 @@ export {
   TableSimpleColumn,
   Tooltip,
 };
-export { isFontAwesomeIcon, tablePersistenceCallbacks };
+export { isFontAwesomeIcon, tablePersistence };

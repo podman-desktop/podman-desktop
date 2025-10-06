@@ -18,59 +18,15 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { get } from 'svelte/store';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
-import { setup, tablePersistenceCallbacks } from './table-persistence-store';
+import { tablePersistence } from './table-persistence-store.svelte';
 
-const callbacks = new Map<string, any>();
-const eventEmitter = {
-  receive: (message: string, callback: any): void => {
-    callbacks.set(message, callback);
-  },
-};
-
-Object.defineProperty(window, 'addEventListener', {
-  value: eventEmitter.receive,
+test('tablePersistence starts as undefined', async () => {
+  expect(tablePersistence.storage).toBeUndefined();
 });
 
-beforeEach(() => {
-  vi.resetAllMocks();
-});
-
-test('tablePersistenceCallbacks starts as undefined, then gets set on table-persistence:setup', async () => {
-  setup();
-
-  expect(get(tablePersistenceCallbacks)).toBeUndefined();
-
-  // now we call the listener
-  const callback = callbacks.get('table-persistence:setup');
-
-  expect(callback).toBeDefined();
-
-  const mockCallbacks = {
-    load: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    reset: vi.fn().mockResolvedValue([]),
-  };
-
-  // Create a mock event with detail
-  const mockEvent = {
-    detail: mockCallbacks,
-  };
-
-  callback(mockEvent);
-
-  const storeValue = get(tablePersistenceCallbacks);
-  expect(storeValue).toBeDefined();
-  expect(storeValue?.load).toBe(mockCallbacks.load);
-  expect(storeValue?.save).toBe(mockCallbacks.save);
-  expect(storeValue?.reset).toBe(mockCallbacks.reset);
-});
-
-test('tablePersistenceCallbacks can be called after setup', async () => {
-  setup();
-
+test('tablePersistence can be called after setup', async () => {
   const mockCallbacks = {
     load: vi.fn().mockResolvedValue([
       { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
@@ -80,11 +36,9 @@ test('tablePersistenceCallbacks can be called after setup', async () => {
     reset: vi.fn().mockResolvedValue([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]),
   };
 
-  const callback = callbacks.get('table-persistence:setup');
-  const mockEvent = { detail: mockCallbacks };
-  callback(mockEvent);
+  tablePersistence.storage = mockCallbacks;
 
-  const storeValue = get(tablePersistenceCallbacks);
+  const storeValue = tablePersistence.storage;
   expect(storeValue).toBeDefined();
 
   // Test load callback

@@ -16,19 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Writable, writable } from 'svelte/store';
+import type { TablePersistence } from './table';
 
-import type { TablePersistenceCallbacks } from './table';
-
-export const tablePersistenceCallbacks = setup();
-
-export function setup(): Writable<TablePersistenceCallbacks | undefined> {
-  const store = writable<TablePersistenceCallbacks | undefined>();
-
-  window.addEventListener('table-persistence:setup', (event: Event) => {
-    const customEvent = event as CustomEvent;
-    tablePersistenceCallbacks.set(customEvent.detail as TablePersistenceCallbacks);
-  });
-
-  return store;
-}
+export const tablePersistence = $state<{ storage: TablePersistence | undefined }>({ storage: undefined });

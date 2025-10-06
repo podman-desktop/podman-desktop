@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2024 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, test, vi } from 'vitest';
 
-import { Table, TableColumn } from '/@/lib';
+import { Table, TableColumn, tablePersistence } from '/@/lib';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
 
@@ -489,21 +489,17 @@ describe('Table#collapsed', () => {
     expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
   });
 
-  test('should initialize with async/await pattern on mount when tablePersistenceCallbacks available', async () => {
-    const mockLoad = vi.fn().mockResolvedValue([
-      { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
-      { id: 'Age', label: 'Age', enabled: false, originalOrder: 1 },
-    ]);
-    const mockSave = vi.fn().mockResolvedValue(undefined);
-    const mockReset = vi.fn().mockResolvedValue([]);
+  test('should initialize with async/await pattern on mount when tablePersistence available', async () => {
+    const mockCallbacks = {
+      load: vi.fn().mockResolvedValue([
+        { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
+        { id: 'Age', label: 'Age', enabled: false, originalOrder: 1 },
+      ]),
+      save: vi.fn().mockResolvedValue(undefined),
+      reset: vi.fn().mockResolvedValue([]),
+    };
 
-    // Mock the tablePersistenceCallbacks store
-    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
-    tablePersistenceCallbacks.set({
-      load: mockLoad,
-      save: mockSave,
-      reset: mockReset,
-    });
+    tablePersistence.storage = mockCallbacks;
 
     render(Table, {
       kind: 'test',
@@ -518,25 +514,23 @@ describe('Table#collapsed', () => {
     // Wait for mount and async initialization
     await tick();
 
-    expect(mockLoad).toHaveBeenCalled();
+    expect(mockCallbacks.load).toHaveBeenCalled();
   });
 
-  test('should show layout management UI when tablePersistenceCallbacks available', async () => {
+  test('should show layout management UI when tablePersistence available', async () => {
     const mockCallbacks = {
       load: vi.fn().mockResolvedValue([]),
       save: vi.fn().mockResolvedValue(undefined),
       reset: vi.fn().mockResolvedValue([]),
     };
 
-    // Mock the tablePersistenceCallbacks store
-    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
-    tablePersistenceCallbacks.set(mockCallbacks);
+    tablePersistence.storage = mockCallbacks;
 
     render(Table, {
       kind: 'test',
       columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
       row: {
-        info: { selectable: () => true },
+        info: { selectable: (): boolean => true },
       },
       data: [],
       enableLayoutConfiguration: true,
@@ -553,16 +547,14 @@ describe('Table#collapsed', () => {
     expect(layoutButton).toBeInTheDocument();
   });
 
-  test('should not show layout management UI when no tablePersistenceCallbacks', async () => {
-    // Mock the tablePersistenceCallbacks store as undefined
-    const { tablePersistenceCallbacks } = await import('./table-persistence-store');
-    tablePersistenceCallbacks.set(undefined);
+  test('should not show layout management UI when no tablePersistence', async () => {
+    tablePersistence.storage = undefined;
 
     render(Table, {
       kind: 'test',
       columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
       row: {
-        info: { selectable: () => true },
+        info: { selectable: (): boolean => true },
       },
       data: [],
       enableLayoutConfiguration: true,
