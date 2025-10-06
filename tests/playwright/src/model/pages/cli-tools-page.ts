@@ -189,6 +189,14 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
+  public async ensureAPIRateLimitNotReached(): Promise<void> {
+    await waitUntil(async () => this.wasRateLimitReached(), { timeout: 2_000, sendError: false });
+    if (this.rateLimitReachedFlag) {
+      console.log('Skipping test due to API rate limit being reached');
+      test.skip(true, 'Skipping test due to API rate limit being reached');
+    }
+  }
+
   private async getFirstDifferentVersionFromList(currentVersion = ''): Promise<string> {
     if (!currentVersion) {
       return this.dropDownDialog.getByRole('button').first().innerText();
@@ -210,13 +218,5 @@ export class CLIToolsPage extends SettingsPage {
         this.rateLimitReachedFlag = true;
       }
     });
-  }
-
-  private async ensureAPIRateLimitNotReached(): Promise<void> {
-    await waitUntil(async () => this.wasRateLimitReached(), { timeout: 2_000, sendError: false });
-    if (this.rateLimitReachedFlag) {
-      console.log('Skipping test due to API rate limit being reached');
-      test.skip(true, 'Skipping test due to API rate limit being reached');
-    }
   }
 }
