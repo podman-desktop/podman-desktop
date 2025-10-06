@@ -29,10 +29,6 @@ import { context } from '/@/stores/context';
 import CommandPalette from './CommandPalette.svelte';
 
 const receiveFunctionMock = vi.fn();
-const executeCommandMock = vi.fn();
-const openExternalMock = vi.fn();
-const getOsPlatformMock = vi.fn();
-const getDocumentationItemsMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 
@@ -41,26 +37,10 @@ beforeAll(() => {
     receive: receiveFunctionMock,
   };
 
-  // mock window methods using Object.defineProperty for proper mocking
-  Object.defineProperty(window, 'executeCommand', {
-    value: executeCommandMock,
-  });
-
-  Object.defineProperty(window, 'openExternal', {
-    value: openExternalMock,
-  });
-
-  Object.defineProperty(window, 'getOsPlatform', {
-    value: getOsPlatformMock,
-  });
-
-  Object.defineProperty(window, 'getDocumentationItems', {
-    value: getDocumentationItemsMock,
-  });
-
-  // Set default return values
-  getOsPlatformMock.mockResolvedValue('linux');
-  getDocumentationItemsMock.mockResolvedValue([]);
+  vi.mocked(window.executeCommand).mockResolvedValue(undefined);
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  vi.mocked(window.getOsPlatform).mockResolvedValue('linux');
+  vi.mocked(window.getDocumentationItems).mockResolvedValue([]);
 
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -154,7 +134,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(executeCommandMock).toHaveBeenCalledWith('my-command-2');
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my-command-2');
   });
 
   test('Check keyup ⬆️', async () => {
@@ -224,7 +204,7 @@ describe('Command Palette', () => {
     // click on the item
     await userEvent.click(secondItem);
 
-    expect(executeCommandMock).toHaveBeenCalledWith('my-command-2');
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my-command-2');
   });
 
   test('Check Enter key', async () => {
@@ -265,7 +245,7 @@ describe('Command Palette', () => {
     // now, press the Enter key using fireEvent
     await fireEvent.keyDown(window, { key: 'Enter' });
 
-    expect(executeCommandMock).toHaveBeenCalledWith('my-command-1');
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my-command-1');
   });
 
   test('Check filtering', async () => {
@@ -328,7 +308,7 @@ describe('Command Palette', () => {
     // now, press the Enter key using fireEvent
     await fireEvent.keyDown(window, { key: 'Enter' });
 
-    expect(executeCommandMock).toHaveBeenCalledWith('my-command-1');
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my-command-1');
   });
 
   test('Check enablement', async () => {
@@ -391,7 +371,7 @@ describe('Command Palette', () => {
     // now, press the Enter key using fireEvent
     await fireEvent.keyDown(window, { key: 'Enter' });
 
-    expect(executeCommandMock).toHaveBeenCalledWith('my-command-enabled-1');
+    expect(vi.mocked(window.executeCommand)).toHaveBeenCalledWith('my-command-enabled-1');
   });
 
   // Test data for shortcut and tab combinations

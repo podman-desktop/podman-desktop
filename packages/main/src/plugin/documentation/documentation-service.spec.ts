@@ -97,7 +97,7 @@ describe('fetchDocumentation', () => {
     // Should include fallback items
     const introItem = items.find(item => item.id === 'docs-intro');
     expect(introItem).toBeDefined();
-    expect(introItem?.title).toBe('Introduction & Getting Started');
+    expect(introItem?.name).toBe('Introduction & Getting Started');
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
@@ -258,7 +258,7 @@ describe('parseDocumentationContent', () => {
     expect(tutorialItems.length).toBeGreaterThanOrEqual(1); // Core + parsed
 
     // Check specific parsed items
-    const introItem = items.find(item => item.title === 'Introduction & Getting Started' && item.id === 'docs-intro');
+    const introItem = items.find(item => item.name === 'Introduction & Getting Started' && item.id === 'docs-intro');
     expect(introItem).toBeDefined();
     expect(introItem?.category).toBe('Documentation');
     expect(introItem?.url).toBe('https://podman-desktop.io/docs/intro');
@@ -269,10 +269,10 @@ describe('parseDocumentationContent', () => {
     expect(coreTutorialItem?.category).toBe('Tutorial');
 
     // Check that filtered items are not included
-    const editItem = items.find(item => item.title.includes('Edit this page'));
+    const editItem = items.find(item => item.name.includes('Edit this page'));
     expect(editItem).toBeUndefined();
 
-    const nextItem = items.find(item => item.title.includes('Next'));
+    const nextItem = items.find(item => item.name.includes('Next'));
     expect(nextItem).toBeUndefined();
   });
 

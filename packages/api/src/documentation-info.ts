@@ -16,15 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface DocumentationJsonInfo {
+export interface DocumentationBaseInfo {
   name: string;
   url: string;
 }
 
-export interface DocumentationInfo {
+export interface DocumentationInfo extends DocumentationBaseInfo {
   id: string;
-  title: string;
   description: string;
-  url: string;
   category: string;
 }

@@ -16,10 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { createHash } from 'node:crypto';
+
 import { inject, injectable } from 'inversify';
 
-import { DocumentationInfo, DocumentationJsonInfo } from '/@api/documentation-info.js';
+import { DocumentationBaseInfo, DocumentationInfo } from '/@api/documentation-info.js';
 
+import fallbackDocumentation from '../../assets/fallback-documentation.json' with { type: 'json' };
 import { ApiSenderType } from '../api.js';
 import { Disposable } from '../types/disposable.js';
 
@@ -51,10 +54,10 @@ export class DocumentationService extends Disposable {
         throw new Error('Failed to fetch documentation JSON files');
       }
       this.isInitialized = true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch documentation at startup:', error);
       // Fallback to predefined documentation if fetching fails
-      this.documentation = this.getFallbackDocumentation();
+      this.documentation = fallbackDocumentation as DocumentationInfo[];
       this.isInitialized = true;
     }
   }
@@ -72,7 +75,7 @@ export class DocumentationService extends Disposable {
     this.apiSender.send('documentation-updated');
   }
 
-  private async fetchJsonContent(url: string): Promise<Array<{ name: string; url: string }> | null> {
+  private async fetchJsonContent(url: string): Promise<DocumentationBaseInfo[]> {
     try {
       const response = await fetch(url);
 
@@ -80,8 +83,12 @@ export class DocumentationService extends Disposable {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
-    } catch (error) {
+      const json = await response.json();
+      if (!Array.isArray(json)) {
+        throw new Error(`Invalid JSON format for ${url}`);
+      }
+      return json;
+    } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error(`Request timeout while fetching ${url}`);
@@ -93,15 +100,15 @@ export class DocumentationService extends Disposable {
   }
 
   private parseDocumentationFromJson(
-    docsJson: DocumentationJsonInfo[],
-    tutorialsJson: DocumentationJsonInfo[],
+    docsJson: DocumentationBaseInfo[],
+    tutorialsJson: DocumentationBaseInfo[],
   ): DocumentationInfo[] {
     const documentation: DocumentationInfo[] = [];
 
     // Validate input parameters
     if (!docsJson || !tutorialsJson) {
       console.warn('Missing JSON content for parsing documentation');
-      return this.getCoreDocumentationPages();
+      return fallbackDocumentation as DocumentationInfo[];
     }
 
     // Parse both docs and tutorials using generic logic
@@ -123,125 +130,25 @@ export class DocumentationService extends Disposable {
         for (const item of config.data) {
           if (item.name && item.url) {
             documentation.push({
-              id: `${config.category}-${this.generateId(item.name)}`,
-              title: item.name,
+              id: createHash('sha256').update(item.name).digest('hex'),
+              name: item.name,
               description: `${config.category}: ${item.name}`,
               url: item.url,
               category: config.category,
             });
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(config.errorMessage, error);
       }
     }
 
-    // Remove duplicates and add core pages
-    const corePages = this.getCoreDocumentationPages();
-    return [...corePages, ...this.removeDuplicates(documentation)];
-  }
-
-  private getCoreDocumentationPages(): DocumentationInfo[] {
-    return [
-      {
-        id: 'docs-intro',
-        title: 'Introduction & Getting Started',
-        description: 'Learn the basics of Podman Desktop',
-        url: 'https://podman-desktop.io/docs/intro',
-        category: 'Documentation',
-      },
-      {
-        id: 'tutorial-index',
-        title: 'Tutorials & Guides',
-        description: 'Step-by-step tutorials for common tasks',
-        url: 'https://podman-desktop.io/tutorial',
-        category: 'Tutorial',
-      },
-    ];
-  }
-
-  private getFallbackDocumentation(): DocumentationInfo[] {
-    return [
-      {
-        id: 'docs-intro',
-        title: 'Introduction & Getting Started',
-        description: 'Learn the basics of Podman Desktop',
-        url: 'https://podman-desktop.io/docs/intro',
-        category: 'Documentation',
-      },
-      {
-        id: 'tutorial-index',
-        title: 'Tutorials & Guides',
-        description: 'Step-by-step tutorials for common tasks',
-        url: 'https://podman-desktop.io/tutorial',
-        category: 'Tutorial',
-      },
-      {
-        id: 'docs-containers',
-        title: 'Containers Documentation',
-        description: 'Working with containers, images, and pods',
-        url: 'https://podman-desktop.io/docs/containers',
-        category: 'Documentation',
-      },
-      {
-        id: 'docs-kubernetes',
-        title: 'Kubernetes Documentation',
-        description: 'Deploy and manage Kubernetes applications',
-        url: 'https://podman-desktop.io/docs/kubernetes',
-        category: 'Documentation',
-      },
-      {
-        id: 'docs-extensions',
-        title: 'Extensions Development',
-        description: 'Create and develop extensions',
-        url: 'https://podman-desktop.io/docs/extensions/developing',
-        category: 'Documentation',
-      },
-      {
-        id: 'docs-troubleshooting',
-        title: 'Troubleshooting Guide',
-        description: 'Solve common issues and problems',
-        url: 'https://podman-desktop.io/docs/troubleshooting',
-        category: 'Documentation',
-      },
-    ];
-  }
-
-  private removeDuplicates(items: DocumentationInfo[]): DocumentationInfo[] {
-    if (!items || items.length === 0) {
-      return [];
+    // If no documentation was parsed, use fallback
+    if (documentation.length === 0) {
+      console.error('DocumentationService: No items parsed, using fallback documentation');
+      return fallbackDocumentation as DocumentationInfo[];
     }
 
-    const seen = new Set<string>();
-    return items.filter(item => {
-      if (!item?.url || !item.title) {
-        return false;
-      }
-
-      const key = `${item.url}-${item.title}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
-  }
-
-  private generateId(title: string): string {
-    if (!title || typeof title !== 'string') {
-      return 'unknown-' + Date.now();
-    }
-
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-      .trim() // Ensure no leading/trailing whitespace
-      .split(/\s+/) // Split by spaces
-      .filter(word => word.length > 0) // Remove empty strings
-      .join('-') // Join with dashes
-      .substring(0, 50);
-
-    // Ensure slug doesn't end with a dash (only case where trailing dash could occur)
-    return slug.endsWith('-') ? slug.slice(0, -1) : slug || 'doc-' + Date.now();
+    return documentation;
   }
 }

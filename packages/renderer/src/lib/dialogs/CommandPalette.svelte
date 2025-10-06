@@ -75,7 +75,7 @@ let filteredCommandInfoItems: CommandInfo[] = $derived(
 let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
   documentationItems.filter(item =>
     inputValue
-      ? item.title?.toLowerCase().includes(inputValue.toLowerCase()) ||
+      ? item.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
         item.description?.toLowerCase().includes(inputValue.toLowerCase()) ||
         item.category?.toLowerCase().includes(inputValue.toLowerCase())
       : true,
@@ -355,7 +355,7 @@ async function onAction(): Promise<void> {
                   <div class="flex flex-row w-full max-w-[700px] truncate">
                     <div class="text-base py-[2pt]">
                       {#if isDocItem}
-                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).title}
+                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).name}
                       {:else}
                         {(item as CommandInfo).title}
                       {/if}
@@ -371,11 +371,9 @@ async function onAction(): Promise<void> {
           <div class='flex grow items-center flex-col gap-2 py-4'>
             <Icon icon={NotFoundIcon} />
             <div class='text-lg font-bold'>No results matching '{inputValue}' found</div>
-            <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
             {#if searchOptionsSelectedIndex === 2}
+              <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
               <Button icon={faChevronRight} type='link' onclick={(): Promise<void> => window.openExternal('https://podman-desktop.io/docs')}>Browse All Documentation</Button>
-            {:else}
-              <Button icon={faChevronRight} type='link' onclick={(): void => {console.log('Variables clicked');}}>Variables</Button>
             {/if}
           </div>
         {/if}
