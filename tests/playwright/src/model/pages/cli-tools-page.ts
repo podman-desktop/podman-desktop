@@ -202,6 +202,10 @@ export class CLIToolsPage extends SettingsPage {
         console.log('Rate limit flag triggered!');
         this.rateLimitReachedFlag = true;
       }
+      if (msg.text().includes('/kind/releases/') && msg.text().includes('403')) {
+        console.log('Could not fetch kind releases - assuming rate limit exceeded');
+        this.rateLimitReachedFlag = true;
+      }
     });
   }
 
