@@ -15,10 +15,10 @@ import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
 import type { ContainerInfo } from '/@api/container-info';
+import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { PodInfo } from '/@api/pod-info';
-import type { DocumentationInfo, GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
@@ -77,6 +77,7 @@ let podInfos: PodInfo[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
+
 let goToItems: GoToInfo[] = $derived(
   createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
 );
@@ -340,6 +341,39 @@ function isGoToItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is G
 function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is DocumentationInfo {
   return 'category' in item;
 }
+
+function highlightText(
+  text: string | undefined,
+  searchTerm: string | undefined,
+): Array<{ text: string; hasMatch: boolean }> {
+  if (!searchTerm || !text) {
+    return [{ text: text ?? '', hasMatch: false }];
+  }
+
+  const escapedSearchTerm = searchTerm.replace(/[/\\:]/g, '\\$&');
+  const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+
+  return text
+    .split(regex)
+    .filter(part => part.length > 0)
+    .map(part => ({
+      text: part,
+      hasMatch: regex.test(part),
+    }));
+}
+
+function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): string {
+  if (isDocItem(item)) {
+    return `${item.category}: ${item.name}`;
+  } else if (isGoToItem(item)) {
+    if (item.type === 'Navigation') {
+      return `${item.name}`;
+    }
+    return `${item.type}: ${getGoToDisplayText(item)}`;
+  } else {
+    return item.title ?? '';
+  }
+}
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:mousedown={handleMousedown} />
@@ -391,7 +425,6 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
-            {@const docItem = isDocItem(item)}
             {@const goToItem = isGoToItem(item)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
               <button
@@ -402,17 +435,13 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
                     <div class="text-base py-[2pt]">
-                      {#if docItem}
-                        {(item.category)}: {(item.name)}
-                       {:else if goToItem}
-                        {#if item.type === 'Navigation'}
-                          {item.name}
+                      {#each highlightText(getTextToHighlight(item), inputValue) as part, i (i)}
+                        {#if part.hasMatch}
+                          <span class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</span>
                         {:else}
-                          {(item.type)}: {(getGoToDisplayText(item))}
+                          {part.text}
                         {/if}
-                      {:else}
-                        {(item.title)}
-                      {/if}
+                      {/each}
                     </div>
                   </div>
                 </div>
