@@ -47,6 +47,8 @@ import { PodmanInfoImpl } from '../utils/podman-info';
 import type { Installer } from './installer';
 import { MacOSInstaller } from './mac-os-installer';
 import { WinInstaller } from './win-installer';
+import { injectable, inject } from 'inversify';
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 export interface UpdateCheck {
   hasUpdate: boolean;
@@ -54,6 +56,7 @@ export interface UpdateCheck {
   bundledVersion?: string;
 }
 
+@injectable()
 export class PodmanInstall {
   private podmanInfo: PodmanInfo | undefined;
 
@@ -64,7 +67,9 @@ export class PodmanInstall {
   protected providerCleanup: extensionApi.ProviderCleanup | undefined;
 
   constructor(
+    @inject(ExtensionContextSymbol)
     readonly extensionContext: extensionApi.ExtensionContext,
+    @inject(TelemetryLoggerSymbol)
     readonly telemetryLogger: extensionApi.TelemetryLogger,
   ) {
     this.storagePath = extensionContext.storagePath;

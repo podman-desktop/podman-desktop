@@ -64,6 +64,9 @@ import {
   VMTYPE,
 } from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
+import { InversifyBinding } from './inject/inversify-binding';
+
+let inversifyBinding: InversifyBinding | undefined;
 
 type StatusHandler = (name: string, event: extensionApi.ProviderConnectionStatus) => void;
 
@@ -1283,7 +1286,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   initTelemetryLogger();
 
-  const podmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
+  // create inversify binding for the extension
+  inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
+  const inversifyContainer = await inversifyBinding.init();
+
+  // bind classes to the Inversify container
+  inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
+  const podmanInstall = inversifyContainer.get(PodmanInstall);
 
   const installedPodman = await getPodmanInstallation();
   const version: string | undefined = installedPodman?.version;
@@ -1881,6 +1890,9 @@ export async function deactivate(): Promise<void> {
   podmanMachinesInfo.clear();
   currentConnections.clear();
   containerProviderConnections.clear();
+
+  await inversifyBinding?.dispose();
+  inversifyBinding = undefined
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
