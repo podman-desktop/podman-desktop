@@ -23,3 +23,11 @@ export const SYSTEM_DEFAULTS_FILE_MAC = '/Library/Application Support/com.podman
 export const SYSTEM_DEFAULTS_FILE_WINDOWS_DIR = 'PodmanDesktop';
 export const SYSTEM_DEFAULTS_FILE_WINDOWS_FILE = 'default-settings.json';
 export const SYSTEM_DEFAULTS_FILE_LINUX = '/usr/share/podman-desktop/default-settings.json';
+
+// Below is the location of the managed locked file on different OS'
+// this will be the Managed by profile which will contain configuration keys that are "locked"
+// and cannot be changed by the user.
+export const SYSTEM_LOCKED_FILE_MAC = '/Library/Application Support/com.podman.desktop/locked.json';
+export const SYSTEM_LOCKED_FILE_WINDOWS_DIR = 'PodmanDesktop';
+export const SYSTEM_LOCKED_FILE_WINDOWS_FILE = 'locked.json';
+export const SYSTEM_LOCKED_FILE_LINUX = '/usr/share/podman-desktop/locked.json';

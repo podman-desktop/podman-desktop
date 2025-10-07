@@ -50,6 +50,11 @@ vi.mock(import('./default-configuration.js'), () => ({
   DefaultConfiguration: vi.fn(),
 }));
 
+// mock LockedConfiguration for the new managed locked functionality
+vi.mock('./locked-configuration.js', () => ({
+  LockedConfiguration: vi.fn(),
+}));
+
 let configurationRegistry: ConfigurationRegistry;
 
 const getConfigurationDirectoryMock = vi.fn();
@@ -94,6 +99,15 @@ beforeEach(async () => {
   // Setup DefaultConfiguration mock for the new functionality
   vi.mocked(DefaultConfiguration).mockReturnValue(DEFAULT_CONFIG_MOCK);
   vi.mocked(DEFAULT_CONFIG_MOCK.getContent).mockResolvedValue({});
+
+  // Setup LockedConfiguration mock for the new functionality
+  const { LockedConfiguration } = await import('./locked-configuration.js');
+  vi.mocked(LockedConfiguration).mockImplementation(
+    () =>
+      ({
+        getContent: vi.fn().mockResolvedValue({}),
+      }) as unknown as InstanceType<typeof LockedConfiguration>,
+  );
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories);
   await configurationRegistry.init();
@@ -459,6 +473,59 @@ describe('Managed Defaults', () => {
       testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
     ).configurationValues;
     const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE);
+
+    expect(managedConfig).toEqual({});
+  });
+});
+
+// Tests for the new managed locked functionality
+describe('Managed Locked', () => {
+  test('should load managed locked configuration', async () => {
+    const managedLocked = { locked: ['telemetry.enabled', 'some.other.setting'] };
+
+    // Setup LockedConfiguration mock to return specific locked settings
+    const { LockedConfiguration } = await import('./locked-configuration.js');
+    vi.mocked(LockedConfiguration).mockImplementation(
+      () =>
+        ({
+          getContent: vi.fn().mockResolvedValue(managedLocked),
+        }) as unknown as InstanceType<typeof LockedConfiguration>,
+    );
+
+    // Create new registry instance to test the managed locked loading
+    const testRegistry = new ConfigurationRegistry(apiSender, directories);
+    await testRegistry.init();
+
+    // Access private configurationValues to verify managed locked were loaded
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const { CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE } = await import('/@api/configuration/constants.js');
+    const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
+
+    expect(managedConfig).toEqual(managedLocked);
+  });
+
+  test('should handle empty managed locked', async () => {
+    // Setup LockedConfiguration mock to return empty locked
+    const { LockedConfiguration } = await import('./locked-configuration.js');
+    vi.mocked(LockedConfiguration).mockImplementation(
+      () =>
+        ({
+          getContent: vi.fn().mockResolvedValue({}),
+        }) as unknown as InstanceType<typeof LockedConfiguration>,
+    );
+
+    // Create new registry instance
+    const testRegistry = new ConfigurationRegistry(apiSender, directories);
+    await testRegistry.init();
+
+    // Access private configurationValues to verify empty managed locked
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const { CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE } = await import('/@api/configuration/constants.js');
+    const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
 
     expect(managedConfig).toEqual({});
   });
