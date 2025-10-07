@@ -67,8 +67,8 @@ export async function findPodmanInstallations(): Promise<string[]> {
       // where output: "C:\\Program\ Files\\podman\\podman.exe\nC:\\Users\\<user>\\AppData\\Local\\Microsoft\\WindowsApps\\podman.exe"
       // which -a output: "/usr/bin/podman\n/usr/bin/podman\n/bin/podman"
       paths = result.stdout
-        .trim()
-        .split('\n')
+        .split(/\r?\n/)
+        .map(line => line.trim())
         .filter(path => path.trim().length > 0);
     }
 
