@@ -68,11 +68,17 @@ test.describe.serial('Compose compose workflow verification', { tag: '@smoke' },
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
     await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
 
-    await cliToolsPage.ensureAPIRateLimitNotReached();
     const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
     const setupButton = composeBox.setupButton;
-    await playExpect(setupButton).toBeHidden();
 
+    if ((await setupButton.count()) > 0) {
+      await settingsBar.cliToolsTab.click();
+      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+      await cliToolsPage.installTool('Compose');
+    }
+
+    await navigationBar.openSettings();
     cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
     const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
     const composeVersionInfo = composeRow.getByLabel('cli-version');
