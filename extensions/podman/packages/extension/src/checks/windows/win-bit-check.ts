@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,23 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
-import os from 'node:os';
-
 import type { CheckResult } from '@podman-desktop/api';
 
-import { BaseCheck } from './base-check';
+import { BaseCheck } from '../base-check';
 
-export class WinVersionCheck extends BaseCheck {
-  title = 'Windows Version';
+export class WinBitCheck extends BaseCheck {
+  title = 'Windows 64bit';
 
-  private MIN_BUILD = 19043; //it represents version 21H1 windows 10
+  private ARCH_X64 = 'x64';
+  private ARCH_ARM = 'arm64';
+
   async execute(): Promise<CheckResult> {
-    const winRelease = os.release();
-    if (winRelease.startsWith('10.0.')) {
-      const splitRelease = winRelease.split('.');
-      const winBuild = splitRelease[2];
-      if (Number.parseInt(winBuild) >= this.MIN_BUILD) {
-        return { successful: true };
-      } else {
-        return this.createFailureResult({
-          description: `To be able to run WSL2 you need Windows 10 Build ${this.MIN_BUILD} or later.`,
-          docLinksDescription: 'Learn about WSL requirements:',
-          docLinks: {
-            url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',
-            title: 'WSL2 Manual Installation Steps',
-          },
-        });
-      }
+    const currentArch = process.arch;
+    if (this.ARCH_X64 === currentArch || this.ARCH_ARM === currentArch) {
+      return this.createSuccessfulResult();
     } else {
       return this.createFailureResult({
-        description: 'WSL2 works only on Windows 10 and newest OS',
+        description: 'WSL2 works only on 64bit OS.',
         docLinksDescription: 'Learn about WSL requirements:',
         docLinks: {
           url: 'https://docs.microsoft.com/en-us/windows/wsl/install-manual#step-2---check-requirements-for-running-wsl-2',

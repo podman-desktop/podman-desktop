@@ -20,7 +20,7 @@ import os from 'node:os';
 
 import type { CheckResult } from '@podman-desktop/api';
 
-import { BaseCheck } from './base-check';
+import { BaseCheck } from '../base-check';
 
 export class WinMemoryCheck extends BaseCheck {
   title = 'RAM';

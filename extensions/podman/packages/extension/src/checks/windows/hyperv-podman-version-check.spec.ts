@@ -18,11 +18,11 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { getPodmanInstallation } from '../utils/podman-cli';
+import { getPodmanInstallation } from '../../utils/podman-cli';
 import { HyperVPodmanVersionCheck } from './hyperv-podman-version-check';
 
 vi.mock(import('@podman-desktop/api'));
-vi.mock(import('../utils/podman-cli'), () => ({
+vi.mock(import('../../utils/podman-cli'), () => ({
   getPodmanInstallation: vi.fn(),
 }));
 

@@ -20,9 +20,9 @@ import type { CheckResult, ExtensionContext, RunError } from '@podman-desktop/ap
 import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 
-import { getPowerShellClient } from '../utils/powershell';
-import { normalizeWSLOutput } from '../utils/util';
-import { BaseCheck } from './base-check';
+import { getPowerShellClient } from '../../utils/powershell';
+import { normalizeWSLOutput } from '../../utils/util';
+import { BaseCheck } from '../base-check';
 
 export class WSL2Check extends BaseCheck {
   title = 'WSL2 Installed';

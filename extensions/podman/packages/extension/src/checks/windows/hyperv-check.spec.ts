@@ -18,12 +18,12 @@
 import type { TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { PowerShellClient } from '../utils/powershell';
-import { getPowerShellClient } from '../utils/powershell';
+import type { PowerShellClient } from '../../utils/powershell';
+import { getPowerShellClient } from '../../utils/powershell';
 import { HyperVCheck } from './hyperv-check';
 
 vi.mock(import('@podman-desktop/api'));
-vi.mock(import('../utils/powershell'), () => ({
+vi.mock(import('../../utils/powershell'), () => ({
   getPowerShellClient: vi.fn(),
 }));
 

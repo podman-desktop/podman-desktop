@@ -17,8 +17,8 @@
  ***********************************************************************/
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 
-import { getPowerShellClient } from '../utils/powershell';
-import { BaseCheck } from './base-check';
+import { getPowerShellClient } from '../../utils/powershell';
+import { BaseCheck } from '../base-check';
 
 export class HyperVCheck extends BaseCheck {
   title = 'Hyper-V installed';
