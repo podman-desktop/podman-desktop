@@ -25,7 +25,7 @@
     "@tsconfig/svelte": "^5.0.5",
     "@types/js-yaml": "^4.0.9",
     "@types/validator": "^13.15.3",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@xterm/addon-serialize": "^0.13.0",
     "eslint-plugin-svelte": "^3.12.4",
     "filesize": "^11.0.13",
