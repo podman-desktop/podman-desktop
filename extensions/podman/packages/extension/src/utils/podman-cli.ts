@@ -57,7 +57,11 @@ export async function findPodmanInstallations(): Promise<string[]> {
         .replace(/^podman:\s*/, '')
         .split(/\s+/)
         .filter(
-          path => path.startsWith('/') && !path.includes('/man/') && !path.includes('.gz') && path.includes('/bin/'),
+          path =>
+            path.startsWith('/') &&
+            !path.includes('/man/') &&
+            !path.includes('.gz') &&
+            (path.includes('/bin/') || path.includes('/libexec/') || path.includes('/local/bin/')),
         );
     } else {
       // where output: "C:\\Program\ Files\\podman\\podman.exe\nC:\\Users\\<user>\\AppData\\Local\\Microsoft\\WindowsApps\\podman.exe"
