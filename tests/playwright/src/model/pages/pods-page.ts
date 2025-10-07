@@ -21,7 +21,7 @@ import test, { expect as playExpect } from '@playwright/test';
 
 import { handleConfirmationDialog } from '../../utility/operations';
 import { MainPage } from './main-page';
-import { PlayKubeYamlPage } from './play-kube-yaml-page';
+import { PodmanKubePlayPage } from './podman-kube-play-page';
 import { PodDetailsPage } from './pods-details-page';
 
 export class PodsPage extends MainPage {
@@ -61,11 +61,11 @@ export class PodsPage extends MainPage {
     return (await this.getPodRowByName(name)) !== undefined;
   }
 
-  async openPodmanKubePlay(): Promise<PlayKubeYamlPage> {
+  async openPodmanKubePlay(): Promise<PodmanKubePlayPage> {
     return test.step('Open Podman Kube Play', async () => {
       await playExpect(this.podmanKubePlayButton).toBeEnabled();
       await this.podmanKubePlayButton.click();
-      return new PlayKubeYamlPage(this.page);
+      return new PodmanKubePlayPage(this.page);
     });
   }
 

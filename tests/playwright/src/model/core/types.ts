@@ -41,6 +41,11 @@ export interface DeployPodOptions {
   useOpenShiftRoutes?: boolean;
 }
 
+export enum PodmanKubePlayOptions {
+  SelectYamlFile,
+  CreateYamlFileFromScratch,
+}
+
 export enum KubernetesResources {
   Nodes = 'Nodes',
   Deployments = 'Deployments',
