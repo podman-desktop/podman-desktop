@@ -51,6 +51,11 @@ vi.mock('./default-configuration.js', () => ({
   DefaultConfiguration: vi.fn(),
 }));
 
+// mock LockedConfiguration for the new managed locked functionality
+vi.mock('./locked-configuration.js', () => ({
+  LockedConfiguration: vi.fn(),
+}));
+
 let configurationRegistry: ConfigurationRegistry;
 
 const getConfigurationDirectoryMock = vi.fn();
