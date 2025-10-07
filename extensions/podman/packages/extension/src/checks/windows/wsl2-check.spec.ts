@@ -20,7 +20,7 @@ import type { ExtensionContext, RunResult, TelemetryLogger } from '@podman-deskt
 import { commands, process } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { normalizeWSLOutput } from '../utils/util';
+import { normalizeWSLOutput } from '../../utils/util';
 import { WSL2Check } from './wsl2-check';
 
 vi.mock('@podman-desktop/api', () => ({
@@ -39,7 +39,7 @@ vi.mock('ps-list', async () => {
   };
 });
 
-vi.mock(import('../utils/util'), async () => {
+vi.mock(import('../../utils/util'), async () => {
   return {
     getAssetsFolder: vi.fn(),
     runCliCommand: vi.fn(),

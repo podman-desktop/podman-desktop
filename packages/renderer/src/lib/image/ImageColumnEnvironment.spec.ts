@@ -35,6 +35,7 @@ test('Expect simple column styling', async () => {
     tag: '',
     createdAt: 0,
     age: '',
+    arch: '',
     size: 0,
     humanSize: '',
     base64RepoTag: '',

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ViewContributionBadgeValue } from '/@api/view-info';
-
-export interface ImageInfoUI {
-  id: string;
-  shortId: string;
-  name: string;
-  engineId: string;
-  engineName: string;
-  tag: string;
-  createdAt: number;
-  age: string;
-  arch: string;
-  size: number;
-  humanSize: string;
-  // fully qualified tag of the image (should be one of the RepoTags field encoded with base64)
-  // no tag, we encode <none>
-  base64RepoTag: string;
-  selected: boolean;
-  status: 'USED' | 'UNUSED' | 'DELETING';
-  icon: unknown;
-  labels?: { [label: string]: string };
-  badges: ViewContributionBadgeValue[];
-  children?: ImageInfoUI[];
-  isManifest?: boolean;
-  digest?: string;
+export class MacosPlatform {
+  readonly type = 'macos';
 }

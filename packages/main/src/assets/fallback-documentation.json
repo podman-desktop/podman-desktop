@@ -1,0 +1,44 @@
+[
+  {
+    "id": "docs-intro",
+    "name": "Introduction & Getting Started",
+    "description": "Learn the basics of Podman Desktop",
+    "url": "https://podman-desktop.io/docs/intro",
+    "category": "Documentation"
+  },
+  {
+    "id": "tutorial-index",
+    "name": "Tutorials & Guides",
+    "description": "Step-by-step tutorials for common tasks",
+    "url": "https://podman-desktop.io/tutorial",
+    "category": "Tutorial"
+  },
+  {
+    "id": "docs-containers",
+    "name": "Containers Documentation",
+    "description": "Working with containers, images, and pods",
+    "url": "https://podman-desktop.io/docs/containers",
+    "category": "Documentation"
+  },
+  {
+    "id": "docs-kubernetes",
+    "name": "Kubernetes Documentation",
+    "description": "Deploy and manage Kubernetes applications",
+    "url": "https://podman-desktop.io/docs/kubernetes",
+    "category": "Documentation"
+  },
+  {
+    "id": "docs-extensions",
+    "name": "Extensions Development",
+    "description": "Create and develop extensions",
+    "url": "https://podman-desktop.io/docs/extensions/developing",
+    "category": "Documentation"
+  },
+  {
+    "id": "docs-troubleshooting",
+    "name": "Troubleshooting Guide",
+    "description": "Solve common issues and problems",
+    "url": "https://podman-desktop.io/docs/troubleshooting",
+    "category": "Documentation"
+  }
+]

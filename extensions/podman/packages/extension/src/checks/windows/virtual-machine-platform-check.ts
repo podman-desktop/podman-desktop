@@ -18,8 +18,8 @@
 
 import type extensionApi from '@podman-desktop/api';
 
-import { getPowerShellClient } from '../utils/powershell';
-import { BaseCheck } from './base-check';
+import { getPowerShellClient } from '../../utils/powershell';
+import { BaseCheck } from '../base-check';
 
 export class VirtualMachinePlatformCheck extends BaseCheck {
   title = 'Virtual Machine Platform Enabled';

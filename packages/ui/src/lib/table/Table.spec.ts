@@ -22,7 +22,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, test, vi } from 'vitest';
 
-import { Table } from '/@/lib';
+import { Table, TableColumn, tablePersistence } from '/@/lib';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
 
@@ -487,5 +487,87 @@ describe('Table#collapsed', () => {
 
     const foo2ExpandBtn = within(foo2).getByRole('button', { name: 'Collapse Row' });
     expect(foo2ExpandBtn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('should initialize with async/await pattern on mount when tablePersistence available', async () => {
+    const mockCallbacks = {
+      load: vi.fn().mockResolvedValue([
+        { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
+        { id: 'Age', label: 'Age', enabled: false, originalOrder: 1 },
+      ]),
+      save: vi.fn().mockResolvedValue(undefined),
+      reset: vi.fn().mockResolvedValue([]),
+    };
+
+    tablePersistence.storage = mockCallbacks;
+
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: {},
+      },
+      data: [],
+      enableLayoutConfiguration: true,
+    });
+
+    // Wait for mount and async initialization
+    await tick();
+
+    expect(mockCallbacks.load).toHaveBeenCalled();
+  });
+
+  test('should show layout management UI when tablePersistence available', async () => {
+    const mockCallbacks = {
+      load: vi.fn().mockResolvedValue([]),
+      save: vi.fn().mockResolvedValue(undefined),
+      reset: vi.fn().mockResolvedValue([]),
+    };
+
+    tablePersistence.storage = mockCallbacks;
+
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: { selectable: (): boolean => true },
+      },
+      data: [],
+      enableLayoutConfiguration: true,
+    });
+
+    await tick();
+
+    // Should have 5 headers: expansion(1) + checkbox(1) + columns(2) + layout(1)
+    const headers = await screen.findAllByRole('columnheader');
+    expect(headers.length).toBe(5);
+
+    // Should have layout management button
+    const layoutButton = screen.getByTitle('Configure Columns');
+    expect(layoutButton).toBeInTheDocument();
+  });
+
+  test('should not show layout management UI when no tablePersistence', async () => {
+    tablePersistence.storage = undefined;
+
+    render(Table, {
+      kind: 'test',
+      columns: [new TableColumn('Name', {}), new TableColumn('Age', {})],
+      row: {
+        info: { selectable: (): boolean => true },
+      },
+      data: [],
+      enableLayoutConfiguration: true,
+    });
+
+    await tick();
+
+    // Should have 4 headers: expansion(1) + checkbox(1) + columns(2)
+    const headers = await screen.findAllByRole('columnheader');
+    expect(headers.length).toBe(4);
+
+    // Should not have layout management button
+    const layoutButton = screen.queryByTitle('Configure Columns');
+    expect(layoutButton).not.toBeInTheDocument();
   });
 });

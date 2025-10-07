@@ -19,8 +19,8 @@
 import type extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 
-import { WslHelper } from '../helpers/wsl-helper';
-import { BaseCheck } from './base-check';
+import { WslHelper } from '../../helpers/wsl-helper';
+import { BaseCheck } from '../base-check';
 
 export class WSLVersionCheck extends BaseCheck {
   title = 'WSL Version';

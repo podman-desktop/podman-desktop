@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
  ***********************************************************************/
 
 import type { Component } from 'svelte';
+
+import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 
 /**
  * Options to be used when creating a Column.
@@ -119,4 +121,10 @@ export interface RowInformation<Type, ChildType> {
  */
 export class Row<Type, ChildType = Type> {
   constructor(readonly info: RowInformation<Type, ChildType>) {}
+}
+
+export interface TablePersistence {
+  load: (kind: string, columnNames: string[]) => Promise<ListOrganizerItem[]>;
+  save: (kind: string, items: ListOrganizerItem[]) => Promise<void>;
+  reset: (kind: string, columnNames: string[]) => Promise<ListOrganizerItem[]>;
 }

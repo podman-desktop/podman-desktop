@@ -62,6 +62,7 @@ import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
+import type { DocumentationInfo } from '/@api/documentation-info';
 import type { ExploreFeature } from '/@api/explore-feature';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
@@ -1612,6 +1613,14 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('refreshCatalogExtensions', async (): Promise<void> => {
     return ipcInvoke('catalog:refreshExtensions');
+  });
+
+  contextBridge.exposeInMainWorld('getDocumentationItems', async (): Promise<DocumentationInfo[]> => {
+    return ipcInvoke('documentation:getItems');
+  });
+
+  contextBridge.exposeInMainWorld('refreshDocumentationItems', async (): Promise<void> => {
+    return ipcInvoke('documentation:refresh');
   });
 
   contextBridge.exposeInMainWorld('getCommandPaletteCommands', async (): Promise<CommandInfo[]> => {

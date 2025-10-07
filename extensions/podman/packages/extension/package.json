@@ -437,8 +437,9 @@
     "@podman-desktop/api": "workspace:*",
     "async-mutex": "^0.5.0",
     "compare-versions": "^6.1.1",
+    "inversify": "^7.10.2",
     "mustache": "^4.2.0",
-    "ps-list": "^8.1.1",
+    "ps-list": "^9.0.0",
     "smol-toml": "1.4.2",
     "ssh2": "^1.17.0"
   },

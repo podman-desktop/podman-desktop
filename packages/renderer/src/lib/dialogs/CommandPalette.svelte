@@ -8,6 +8,7 @@ import type { Unsubscriber } from 'svelte/store';
 import { commandsInfos } from '/@/stores/commands';
 import { context } from '/@/stores/context';
 import type { CommandInfo } from '/@api/command-info';
+import type { DocumentationInfo } from '/@api/documentation-info';
 
 import type { ContextUI } from '../context/context';
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
@@ -60,20 +61,48 @@ let searchOptions: SearchOption[] = $derived([
 let searchOptionsSelectedIndex: number = $state(0);
 
 let commandInfoItems: CommandInfo[] = $state([]);
+let documentationItems: DocumentationInfo[] = $state([]);
 let globalContext: ContextUI;
 
+// Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
   commandInfoItems
     .filter(property => isPropertyValidInContext(property.enablement, globalContext))
     .filter(item => (inputValue ? item.title?.toLowerCase().includes(inputValue.toLowerCase()) : true)),
 );
 
+// Documentation items filtering (no enablement property needed)
+let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
+  documentationItems.filter(item =>
+    inputValue
+      ? item.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
+        item.description?.toLowerCase().includes(inputValue.toLowerCase()) ||
+        item.category?.toLowerCase().includes(inputValue.toLowerCase())
+      : true,
+  ),
+);
+
+let filteredItems = $derived.by(() => {
+  if (searchOptionsSelectedIndex === 1) {
+    // Commands mode
+    return filteredCommandInfoItems;
+  } else if (searchOptionsSelectedIndex === 2) {
+    // Documentation mode
+    return filteredDocumentationInfoItems;
+  } else if (searchOptionsSelectedIndex === 3) {
+    // Go to mode (could be different logic later)
+    return filteredCommandInfoItems;
+  } else {
+    // All mode - combine both
+    return [...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
+  }
+});
 let contextsUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
-
   isMac = platform === 'darwin';
+  documentationItems = await window.getDocumentationItems();
 });
 
 onMount(() => {
@@ -104,12 +133,11 @@ $effect(() => {
 });
 
 let selectedFilteredIndex = $state(0);
-let selectedIndex = 0;
 
 function displaySearchBar(): void {
   // clear the input value
   inputValue = '';
-  selectedIndex = 0;
+  selectedFilteredIndex = 0;
   // toggle the display
   display = true;
 }
@@ -149,18 +177,16 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
   }
 
   // no items, abort
-  if (filteredCommandInfoItems.length === 0) {
+  if (filteredItems.length === 0) {
     return;
   }
 
   if (e.key === ARROW_DOWN_KEY) {
     // if down key is pressed, move the index
     selectedFilteredIndex++;
-    if (selectedFilteredIndex >= filteredCommandInfoItems.length) {
+    if (selectedFilteredIndex >= filteredItems.length) {
       selectedFilteredIndex = 0;
     }
-
-    selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
 
     scrollElements[selectedFilteredIndex].scrollIntoView({
       behavior: 'smooth',
@@ -172,9 +198,8 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     // if up key is pressed, move the index
     selectedFilteredIndex--;
     if (selectedFilteredIndex < 0) {
-      selectedFilteredIndex = filteredCommandInfoItems.length - 1;
+      selectedFilteredIndex = filteredItems.length - 1;
     }
-    selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
     scrollElements[selectedFilteredIndex].scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
@@ -185,8 +210,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     // hide the command palette
     hideCommandPallete();
 
-    selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
-    await executeCommand(selectedIndex);
+    await executeAction(selectedFilteredIndex);
     e.preventDefault();
   } else if (e.key === TAB_KEY) {
     switchSearchOption(e.shiftKey ? -1 : 1);
@@ -200,14 +224,33 @@ function switchSearchOption(direction: 1 | -1): void {
   searchOptionsSelectedIndex = (searchOptionsSelectedIndex + direction + offset) % searchOptionsLength;
 }
 
-async function executeCommand(index: number): Promise<void> {
-  // get command id
-  const commandId = commandInfoItems[index].id;
-  // execute the command
-  try {
-    await window.executeCommand(commandId);
-  } catch (error) {
-    console.error('error executing command', error);
+async function executeAction(index: number): Promise<void> {
+  const item = filteredItems[index];
+  if (!item) return;
+
+  // Check if it's a documentation item by checking for 'category' property
+  const isDocItem = 'category' in item;
+
+  if (isDocItem) {
+    // Documentation item
+    const docItem = item as DocumentationInfo;
+    if (docItem.url) {
+      try {
+        await window.openExternal(docItem.url);
+      } catch (error) {
+        console.error('Error opening documentation URL', error);
+      }
+    }
+  } else {
+    // Command item
+    const commandItem = item as CommandInfo;
+    if (commandItem.id) {
+      try {
+        await window.executeCommand(commandItem.id);
+      } catch (error) {
+        console.error('error executing command', error);
+      }
+    }
   }
 }
 
@@ -230,17 +273,14 @@ async function clickOnItem(index: number): Promise<void> {
   // hide the command palette
   hideCommandPallete();
 
-  // select the index from the cursor
-  selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[index]);
-  await executeCommand(selectedIndex);
+  // execute the action based on current mode
+  selectedFilteredIndex = index;
+  await executeAction(selectedFilteredIndex);
 }
 
 async function onInputChange(): Promise<void> {
   // in case of quick pick, filter the items
   selectedFilteredIndex = 0;
-  if (filteredCommandInfoItems.length > 0) {
-    selectedIndex = commandInfoItems.indexOf(filteredCommandInfoItems[selectedFilteredIndex]);
-  }
 }
 
 async function onAction(): Promise<void> {
@@ -303,7 +343,8 @@ async function onAction(): Promise<void> {
           {/each}
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
-          {#each filteredCommandInfoItems as item, i (item.id)}
+          {#each filteredItems as item, i (i)}
+            {@const isDocItem = 'category' in item}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
@@ -312,7 +353,13 @@ async function onAction(): Promise<void> {
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base py-[2pt]">{item.title}</div>
+                    <div class="text-base py-[2pt]">
+                      {#if isDocItem}
+                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).name}
+                      {:else}
+                        {(item as CommandInfo).title}
+                      {/if}
+                    </div>
                   </div>
                 </div>
               </button>
@@ -320,12 +367,14 @@ async function onAction(): Promise<void> {
           {/each}
         </ul>
 
-        {#if filteredCommandInfoItems.length === 0}
+        {#if filteredItems.length === 0}
           <div class='flex grow items-center flex-col gap-2 py-4'>
             <Icon icon={NotFoundIcon} />
             <div class='text-lg font-bold'>No results matching '{inputValue}' found</div>
-            <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
-            <Button icon={faChevronRight} type='link' onclick={(): void => {console.log('Variables clicked');}}>Variables</Button>
+            {#if searchOptionsSelectedIndex === 2}
+              <div class='text-md'>Not what you expected? Double-check your spelling or try searching for:</div>
+              <Button icon={faChevronRight} type='link' onclick={(): Promise<void> => window.openExternal('https://podman-desktop.io/docs')}>Browse All Documentation</Button>
+            {/if}
           </div>
         {/if}
 
