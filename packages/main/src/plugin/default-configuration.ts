@@ -57,7 +57,13 @@ export class DefaultConfiguration {
       managedDefaultsData = JSON.parse(managedDefaultsContent);
       console.log(`[Managed-by]: Loaded managed defaults from: ${managedDefaultsFile}`);
     } catch (error) {
-      console.error(`[Managed-by]: Failed to parse managed defaults from ${managedDefaultsFile}:`, error);
+      // Handle file-not-found errors gracefully - this is expected when no managed config exists
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        console.debug(`[Managed-by]: No managed defaults file found at ${managedDefaultsFile}`);
+      } else {
+        // For other errors (like JSON parse errors), log as error
+        console.error(`[Managed-by]: Failed to parse managed defaults from ${managedDefaultsFile}:`, error);
+      }
     }
 
     return managedDefaultsData;
