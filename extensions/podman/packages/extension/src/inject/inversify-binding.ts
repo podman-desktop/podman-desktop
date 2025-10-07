@@ -44,6 +44,7 @@ export class InversifyBinding {
   async dispose(): Promise<void> {
     if (this.#inversifyContainer) {
       await this.#inversifyContainer.unbindAll();
+      this.#inversifyContainer = undefined;
     }
   }
 }
