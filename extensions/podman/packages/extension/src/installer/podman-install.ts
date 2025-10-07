@@ -43,6 +43,7 @@ import {
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
 } from '../extension';
+import { WinPlatform } from '../platforms/win-platform';
 import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from '../utils/podman-bundled';
 import type { InstalledPodman } from '../utils/podman-cli';
@@ -74,6 +75,8 @@ export class PodmanInstall {
     readonly extensionContext: extensionApi.ExtensionContext,
     @inject(TelemetryLoggerSymbol)
     readonly telemetryLogger: extensionApi.TelemetryLogger,
+    @inject(WinPlatform)
+    readonly winPlatform: WinPlatform,
   ) {
     this.storagePath = extensionContext.storagePath;
     if (extensionApi.env.isMac) {
@@ -81,7 +84,7 @@ export class PodmanInstall {
       this.installer = new MacOSInstaller();
     } else if (extensionApi.env.isWindows) {
       this.providerCleanup = new PodmanCleanupWindows();
-      this.installer = new WinInstaller(extensionContext, telemetryLogger);
+      this.installer = new WinInstaller(this.winPlatform);
     }
   }
 

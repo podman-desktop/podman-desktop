@@ -25,7 +25,7 @@ import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } 
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable, provider as apiProvider } from '@podman-desktop/api';
 import type { Mock } from 'vitest';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -50,6 +50,7 @@ import {
 } from './extension';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
+import { WinPlatform } from './platforms/win-platform';
 import * as compatibilityModeLib from './utils/compatibility-mode';
 import type { InstalledPodman } from './utils/podman-cli';
 import * as podmanCli from './utils/podman-cli';
@@ -167,6 +168,17 @@ vi.mock('./compatibility-mode', async () => {
   return {
     getSocketCompatibility: vi.fn(),
   };
+});
+
+let podmanInstall: PodmanInstall;
+let winPlatform: WinPlatform;
+
+beforeAll(async () => {
+  const extensionContext = { subscriptions: [] } as unknown as extensionApi.ExtensionContext;
+  extension.initExtensionContext(extensionContext);
+  const bindings = await extension.initInversify(extensionContext);
+  podmanInstall = bindings.podmanInstall;
+  winPlatform = bindings.winPlatform;
 });
 
 beforeEach(() => {
@@ -405,7 +417,7 @@ describe.each([
     { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
-  ])(`verify create command called with correct values for %s`, async ({ version, image }) => {
+  ])('verify create command called with correct values for %s', async ({ version, image }) => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: `podman version ${version}`,
     } as extensionApi.RunResult);
@@ -745,7 +757,7 @@ test.each([
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(arch).mockReturnValue(architecture);
   vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: `podman version 5.4.0`,
+    stdout: 'podman version 5.4.0',
   } as extensionApi.RunResult);
 
   await extension.createMachine(
@@ -761,7 +773,7 @@ test.each([
 
   expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
     podmanCli.getPodmanCli(),
-    expect.arrayContaining([`--image`, 'path']),
+    expect.arrayContaining(['--image', 'path']),
     {
       logger: undefined,
       token: undefined,
@@ -787,7 +799,7 @@ test.each([
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(arch).mockReturnValue(architecture);
   vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: `podman version 5.4.0`,
+    stdout: 'podman version 5.4.0',
   } as extensionApi.RunResult);
 
   await extension.createMachine(
@@ -802,7 +814,7 @@ test.each([
 
   expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
     podmanCli.getPodmanCli(),
-    expect.arrayContaining([`--image`, 'path']),
+    expect.arrayContaining(['--image', 'path']),
     {
       logger: undefined,
       token: undefined,
@@ -1284,7 +1296,7 @@ test('test checkDefaultMachine, if the default connection is not in sync with th
 
 test('ensure started machine reports default configuration', async () => {
   vi.mocked(extensionApi.env).isLinux = true;
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
       new Promise<extensionApi.RunResult>(resolve => {
@@ -1480,7 +1492,6 @@ test('ensure stopped machine reports configuration', async () => {
 
 test('ensure showNotification is not called during update', async () => {
   const showNotificationMock = vi.spyOn(extensionApi.window, 'showNotification');
-  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(
     (_command, args) =>
       new Promise<extensionApi.RunResult>((resolve, reject) => {
@@ -1492,8 +1503,6 @@ test('ensure showNotification is not called during update', async () => {
       }),
   );
 
-  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
       hasUpdate: true,
@@ -2461,17 +2470,8 @@ describe('calcPodmanMachineSetting', () => {
     vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
       version: '5.2.1',
     });
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
-      return new Promise<extensionApi.RunResult>(resolve => {
-        if (command === 'powershell.exe') {
-          resolve({
-            stdout: args?.[0] === '@(Get-Service vmms).Status' ? 'Running' : 'True',
-            stderr: '',
-            command: 'command',
-          });
-        }
-      });
-    });
+
+    vi.spyOn(winPlatform, 'isHyperVEnabled').mockResolvedValue(true);
     await extension.calcPodmanMachineSetting();
     expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
     expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
@@ -2490,7 +2490,11 @@ describe('calcPodmanMachineSetting', () => {
 
 test('checkForUpdate func should be called if there is no podman installed', async () => {
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    new WinPlatform(extensionContext, telemetryLogger),
+  );
 
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue(undefined);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
@@ -2868,117 +2872,23 @@ describe.each(['windows', 'mac', 'linux'])('podman machine properties audit on %
     });
     return;
   }
-  test(`reports error for image path and uri is used at the same time`, async () => {
+  test('reports error for image path and uri is used at the same time', async () => {
     await testAudit('path', 'registry/repo/image:version', expect);
   });
-  test(`reports no error for image path only is used`, async () => {
+  test('reports no error for image path only is used', async () => {
     await testAudit('path', '', expect.not);
   });
-  test(`reports no error for image uri only is used`, async () => {
+  test('reports no error for image uri only is used', async () => {
     await testAudit('', 'uri', expect.not);
   });
 });
 
-test('isHypervEnabled should return false if it is not windows', async () => {
-  vi.mocked(extensionApi.env).isWindows = false;
-  const hypervEnabled = await extension.isHyperVEnabled();
-  expect(hypervEnabled).toBeFalsy();
-});
-
-test('isHypervEnabled should return false if hyperv is not enabled', async () => {
-  vi.mocked(extensionApi.env).isWindows = true;
-  const hypervEnabled = await extension.isHyperVEnabled();
-  expect(hypervEnabled).toBeFalsy();
-});
-
-test('isHypervEnabled should return true if hyperv is enabled', async () => {
-  vi.mocked(extensionApi.env).isWindows = true;
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-    version: '5.2.1',
-  });
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
-    return new Promise<extensionApi.RunResult>(resolve => {
-      if (command === 'powershell.exe') {
-        resolve({
-          stdout: args?.[0] === '@(Get-Service vmms).Status' ? 'Running' : 'True',
-          stderr: '',
-          command: 'command',
-        });
-      }
-    });
-  });
-  const wslHypervEnabled = await extension.isHyperVEnabled();
-  expect(wslHypervEnabled).toBeTruthy();
-});
-
-test('isWSLEnabled should return false if it is not windows', async () => {
-  vi.mocked(extensionApi.env).isWindows = false;
-  const wslEnabled = await extension.isWSLEnabled();
-  expect(wslEnabled).toBeFalsy();
-});
-
-test('isWSLEnabled should return false if wsl is not enabled', async () => {
-  vi.mocked(extensionApi.env).isWindows = true;
-  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
-    stdout: 'unknown message: 1.2.5.0',
-    stderr: '',
-    command: 'command',
-  });
-  const wslEnabled = await extension.isWSLEnabled();
-  expect(wslEnabled).toBeFalsy();
-});
-
-test('isWSLEnabled should return true if wsl is enabled', async () => {
-  vi.mocked(extensionApi.env).isWindows = true;
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(command => {
-    return new Promise<extensionApi.RunResult>(resolve => {
-      if (command === 'wsl') {
-        resolve({
-          stdout:
-            'WSL version: 2.2.5.0\nKernel version: 5.15.90.1\nWSLg version: 1.0.51\nMSRDC version: 1.2.3770\nDirect3D version: 1.608.2-61064218\nDXCore version: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp\nWindows version: 10.0.22621.2134',
-          stderr: '',
-          command: 'command',
-        });
-      }
-      if (command === 'powershell.exe') {
-        resolve({
-          stdout: 'True',
-          stderr: '',
-          command: 'command',
-        });
-      }
-    });
-  });
-  const wslEnabled = await extension.isWSLEnabled();
-  expect(wslEnabled).toBeTruthy();
-});
-
 test('getJSONMachineList should only get machines from wsl if hyperv is not enabled', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
-    return new Promise<extensionApi.RunResult>(resolve => {
-      if (command !== 'wsl' && args?.[0] === '--version') {
-        resolve({
-          stdout: 'podman version 5.1.1',
-        } as extensionApi.RunResult);
-      }
-      if (command === 'wsl') {
-        resolve({
-          stdout:
-            'WSL version: 2.2.5.0\nKernel version: 5.15.90.1\nWSLg version: 1.0.51\nMSRDC version: 1.2.3770\nDirect3D version: 1.608.2-61064218\nDXCore version: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp\nWindows version: 10.0.22621.2134',
-          stderr: '',
-          command: 'command',
-        });
-      }
-      if (command === 'powershell.exe') {
-        resolve({
-          stdout: 'True',
-          stderr: '',
-          command: 'command',
-        });
-      }
-    });
-  });
+
+  vi.spyOn(winPlatform, 'isHyperVEnabled').mockResolvedValue(false);
+  vi.spyOn(winPlatform, 'isWSLEnabled').mockResolvedValue(true);
+
   const fakeJSON: MachineJSON[] = [
     {
       Name: 'podman-machine-default',
@@ -3014,6 +2924,7 @@ test('getJSONMachineList should only get machines from wsl if hyperv is not enab
   });
   await extension.getJSONMachineList();
   expect(execPodmanSpy).toBeCalledWith(['machine', 'list', '--format', 'json'], 'wsl');
+  expect(execPodmanSpy).toHaveBeenCalledTimes(1);
 });
 
 test('getJSONMachineList should only get machines from hyperv if wsl is not enabled', async () => {
@@ -3021,29 +2932,9 @@ test('getJSONMachineList should only get machines from hyperv if wsl is not enab
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
     version: '5.2.1',
   });
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
-    return new Promise<extensionApi.RunResult>(resolve => {
-      if (command !== 'wsl' && args?.[0] === '--version') {
-        resolve({
-          stdout: 'podman version 5.2.1',
-        } as extensionApi.RunResult);
-      }
-      if (command === 'wsl') {
-        resolve({
-          stdout: 'WSL version: invalid',
-          stderr: '',
-          command: 'command',
-        });
-      }
-      if (command === 'powershell.exe') {
-        resolve({
-          stdout: args?.[0] === '@(Get-Service vmms).Status' ? 'Running' : 'True',
-          stderr: '',
-          command: 'command',
-        });
-      }
-    });
-  });
+
+  vi.spyOn(winPlatform, 'isHyperVEnabled').mockResolvedValue(true);
+  vi.spyOn(winPlatform, 'isWSLEnabled').mockResolvedValue(false);
   const fakeJSON: MachineJSON[] = [
     {
       Name: 'podman-machine-default',
@@ -3079,6 +2970,7 @@ test('getJSONMachineList should only get machines from hyperv if wsl is not enab
   });
   await extension.getJSONMachineList();
   expect(execPodmanSpy).toBeCalledWith(['machine', 'list', '--format', 'json'], 'hyperv');
+  expect(execPodmanSpy).toHaveBeenCalledTimes(1);
 });
 
 test('getJSONMachineList should get machines from hyperv and wsl if both are enabled', async () => {
@@ -3086,30 +2978,10 @@ test('getJSONMachineList should get machines from hyperv and wsl if both are ena
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
     version: '5.2.1',
   });
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
-    return new Promise<extensionApi.RunResult>(resolve => {
-      if (command !== 'wsl' && args?.[0] === '--version') {
-        resolve({
-          stdout: 'podman version 5.2.1',
-        } as extensionApi.RunResult);
-      }
-      if (command === 'wsl') {
-        resolve({
-          stdout:
-            'WSL version: 2.2.5.0\nKernel version: 5.15.90.1\nWSLg version: 1.0.51\nMSRDC version: 1.2.3770\nDirect3D version: 1.608.2-61064218\nDXCore version: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp\nWindows version: 10.0.22621.2134',
-          stderr: '',
-          command: 'command',
-        });
-      }
-      if (command === 'powershell.exe') {
-        resolve({
-          stdout: args?.[0] === '@(Get-Service vmms).Status' ? 'Running' : 'True',
-          stderr: '',
-          command: 'command',
-        });
-      }
-    });
-  });
+
+  vi.spyOn(winPlatform, 'isHyperVEnabled').mockResolvedValue(true);
+  vi.spyOn(winPlatform, 'isWSLEnabled').mockResolvedValue(true);
+
   const fakeJSON: MachineJSON[] = [
     {
       Name: 'podman-machine-default',
@@ -3146,6 +3018,7 @@ test('getJSONMachineList should get machines from hyperv and wsl if both are ena
   await extension.getJSONMachineList();
   expect(execPodmanSpy).toHaveBeenNthCalledWith(1, ['machine', 'list', '--format', 'json'], 'wsl');
   expect(execPodmanSpy).toHaveBeenNthCalledWith(2, ['machine', 'list', '--format', 'json'], 'hyperv');
+  expect(execPodmanSpy).toHaveBeenCalledTimes(2);
 });
 
 describe('updateWSLHyperVEnabledValue', () => {
