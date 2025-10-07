@@ -16,6 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export class MacPlatform {
-  readonly type = 'mac';
+export class MacosPlatform {
+  readonly type = 'macos';
 }

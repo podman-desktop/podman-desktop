@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { LinuxPlatform } from './linux-platform';
-import type { MacPlatform } from './mac-platform';
+import type { MacosPlatform } from './macos-platform';
 import type { WinPlatform } from './win-platform';
 
 /**
@@ -25,4 +25,4 @@ import type { WinPlatform } from './win-platform';
  * This union is used to handle platform-specific logic
  * with type narrowing via the unique 'type' property on each class.
  */
-export type Platform = LinuxPlatform | MacPlatform | WinPlatform;
+export type Platform = LinuxPlatform | MacosPlatform | WinPlatform;
