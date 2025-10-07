@@ -113,12 +113,12 @@ describe('DefaultConfiguration', () => {
     error.code = 'ENOENT';
     vi.mocked(fsPromises.readFile).mockRejectedValue(error);
 
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
     const result = await defaultConfiguration.getContent();
 
     expect(result).toEqual({});
-    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No managed defaults file found'));
     consoleSpy.mockRestore();
   });
 
