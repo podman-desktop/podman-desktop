@@ -21,6 +21,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
@@ -158,6 +159,8 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
       return `kubernetes-connection:${this.scope.endpoint.apiURL}`;
     } else if (this.scope === CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE) {
       return CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE;
+    } else if (this.scope === CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE) {
+      return CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE;
     } else {
       return CONFIGURATION_DEFAULT_SCOPE;
     }
