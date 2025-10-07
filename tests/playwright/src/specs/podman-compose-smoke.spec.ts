@@ -59,6 +59,13 @@ test.afterAll(async ({ page, runner }) => {
 });
 
 test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
+  test.beforeEach(async () => {
+    if (cliToolsPage.wasRateLimitReached()) {
+      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+      test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
+    }
+  });
+
   test('Verify Compose was installed', async ({ page, navigationBar }) => {
     test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
     test.skip(!!isMac, 'Currently there is an issue with running this test on macOS platform');
