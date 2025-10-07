@@ -495,8 +495,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       ps-list:
-        specifier: ^8.1.1
-        version: 8.1.1
+        specifier: ^9.0.0
+        version: 9.0.0
       smol-toml:
         specifier: 1.4.2
         version: 1.4.2
@@ -9734,9 +9734,9 @@ packages:
     engines: {node: '>= 14'}
     hasBin: true
 
-  ps-list@8.1.1:
-    resolution: {integrity: sha512-OPS9kEJYVmiO48u/B9qneqhkMvgCxT+Tm28VCEJpheTpl8cJ0ffZRRNgS5mrQRTrX5yRTpaJ+hRDeefXYmmorQ==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+  ps-list@9.0.0:
+    resolution: {integrity: sha512-lxMEoIL/BQlk2KunFzxwUPwMvjFH7x7cmvzSLsSHpyMXl9FFfLUlfKrYwFc4wx/ZaIxxuXC4n8rjQ1CX/tkXVQ==}
+    engines: {node: '>=20'}
 
   pump@3.0.3:
     resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
@@ -22602,7 +22602,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ps-list@8.1.1: {}
+  ps-list@9.0.0: {}
 
   pump@3.0.3:
     dependencies:
