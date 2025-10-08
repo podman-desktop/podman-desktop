@@ -413,7 +413,7 @@ jobs:
           include_passed: true
           detailed_summary: true
           annotate_only: true
-          require_tests:  true
+          require_tests: true
           report_paths: '**/*results.xml'
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
