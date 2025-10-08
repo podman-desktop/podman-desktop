@@ -23,9 +23,9 @@ import { describe, expect, test } from 'vitest';
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
+import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 
 // Mock data for testing

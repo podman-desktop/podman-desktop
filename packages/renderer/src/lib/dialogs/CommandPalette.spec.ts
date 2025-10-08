@@ -35,13 +35,7 @@ const receiveFunctionMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
 
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 const mockContainerInfo = {
   Id: 'test-container-id',

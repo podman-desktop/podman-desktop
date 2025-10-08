@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '../../main/src/plugin/api/pod-info.js';
 import type { ContainerInfo } from './container-info.js';
 import type { ImageInfo } from './image-info.js';
+import type { PodInfo } from './pod-info.js';
 import type { VolumeInfo } from './volume-info.js';
 
 export interface DocumentationBaseInfo {

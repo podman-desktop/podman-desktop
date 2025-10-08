@@ -19,9 +19,8 @@
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
+import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
-
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info.js';
 
 // Helper function to get short ID (first 12 characters)
 function getShortId(id: string): string {
