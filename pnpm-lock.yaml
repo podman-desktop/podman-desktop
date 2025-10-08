@@ -215,8 +215,13 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
+<<<<<<< HEAD
         specifier: 38.2.0
         version: 38.2.0
+=======
+        specifier: 38.2.2
+        version: 38.2.2
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       electron-builder:
         specifier: 26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
@@ -330,11 +335,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/docker:
     dependencies:
@@ -349,11 +362,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/kind:
     dependencies:
@@ -386,11 +407,19 @@ importers:
         specifier: ^4.20.6
         version: 4.20.6
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/kube-context:
     dependencies:
@@ -411,11 +440,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/kubectl-cli:
     dependencies:
@@ -448,11 +485,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/lima:
     dependencies:
@@ -470,11 +515,19 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/podman/packages/api:
     dependencies:
@@ -526,7 +579,11 @@ importers:
         version: 3.0.1
       msw:
         specifier: ^2.11.2
+<<<<<<< HEAD
         version: 2.11.2(@types/node@24.5.2)(typescript@5.9.2)
+=======
+        version: 2.11.2(@types/node@24.7.0)(typescript@5.9.3)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       octokit:
         specifier: ^5.0.3
         version: 5.0.3
@@ -537,11 +594,19 @@ importers:
         specifier: ^4.20.6
         version: 4.20.6
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   extensions/registries:
     dependencies:
@@ -556,11 +621,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   packages/extension-api: {}
 
@@ -570,11 +643,19 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
+<<<<<<< HEAD
         specifier: 38.2.0
         version: 38.2.0
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: 38.2.2
+        version: 38.2.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   packages/renderer:
     dependencies:
@@ -611,10 +692,17 @@ importers:
         version: 7.0.1
       '@sveltejs/vite-plugin-svelte':
         specifier: 6.2.1
+<<<<<<< HEAD
         version: 6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.1.13(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        version: 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@tailwindcss/vite':
+        specifier: ^4.1.14
+        version: 4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -623,7 +711,11 @@ importers:
         version: 6.8.0
       '@testing-library/svelte':
         specifier: ^5.2.8
+<<<<<<< HEAD
         version: 5.2.8(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        version: 5.2.8(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
@@ -700,6 +792,7 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
@@ -708,6 +801,16 @@ importers:
       vitest-canvas-mock:
         specifier: ^0.3.3
         version: 0.3.3(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest-canvas-mock:
+        specifier: ^0.3.3
+        version: 0.3.3(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       yaml:
         specifier: ^2.8.1
         version: 2.8.1
@@ -741,10 +844,17 @@ importers:
         version: 2.5.4(svelte@5.39.6)(typescript@5.9.2)
       '@sveltejs/vite-plugin-svelte':
         specifier: 6.2.1
+<<<<<<< HEAD
         version: 6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.1.13(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        version: 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@tailwindcss/vite':
+        specifier: ^4.1.14
+        version: 4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -753,7 +863,11 @@ importers:
         version: 6.8.0
       '@testing-library/svelte':
         specifier: ^5.2.8
+<<<<<<< HEAD
         version: 5.2.8(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        version: 5.2.8(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
@@ -788,11 +902,19 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   packages/webview-api: {}
 
@@ -821,6 +943,7 @@ importers:
         version: 4.0.4(svelte@5.39.6)
     devDependencies:
       '@storybook/addon-docs':
+<<<<<<< HEAD
         specifier: ^9.1.6
         version: 9.1.6(@types/react@18.3.12)(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))
       '@storybook/addon-links':
@@ -832,15 +955,35 @@ importers:
       '@storybook/svelte-vite':
         specifier: ^9.1.6
         version: 9.1.6(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        specifier: ^9.1.10
+        version: 9.1.10(@types/react@18.3.12)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@storybook/addon-links':
+        specifier: ^9.1.10
+        version: 9.1.10(react@18.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@storybook/addon-svelte-csf':
+        specifier: 5.0.9
+        version: 5.0.9(@storybook/svelte@9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@storybook/svelte-vite':
+        specifier: ^9.1.10
+        version: 9.1.10(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@sveltejs/package':
         specifier: ^2.5.4
         version: 2.5.4(svelte@5.39.6)(typescript@5.9.2)
       '@sveltejs/vite-plugin-svelte':
         specifier: 6.2.1
+<<<<<<< HEAD
         version: 6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.1.13(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+        version: 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@tailwindcss/vite':
+        specifier: ^4.1.14
+        version: 4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@tsconfig/svelte':
         specifier: ^5.0.5
         version: 5.0.5
@@ -854,8 +997,13 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       eslint-plugin-storybook:
+<<<<<<< HEAD
         specifier: 9.1.8
         version: 9.1.8(eslint@9.36.0(jiti@2.6.0))(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))(typescript@5.9.2)
+=======
+        specifier: 9.1.10
+        version: 9.1.10(eslint@9.37.0(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       eslint-plugin-svelte:
         specifier: ^3.12.4
         version: 3.12.4(eslint@9.36.0(jiti@2.6.0))(svelte@5.39.6)
@@ -872,8 +1020,13 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.2.0)
       storybook:
+<<<<<<< HEAD
         specifier: ^9.0.14
         version: 9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2)
+=======
+        specifier: ^9.1.10
+        version: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       svelte:
         specifier: 5.39.6
         version: 5.39.6
@@ -887,11 +1040,19 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       vite:
+<<<<<<< HEAD
         specifier: ^7.1.7
         version: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        specifier: ^7.1.9
+        version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   tests/playwright:
     devDependencies:
@@ -902,8 +1063,13 @@ importers:
         specifier: ^22
         version: 22.18.6
       electron:
+<<<<<<< HEAD
         specifier: 38.2.0
         version: 38.2.0
+=======
+        specifier: 38.2.2
+        version: 38.2.2
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -991,7 +1157,11 @@ importers:
         version: 0.0.7(markdownlint-cli2@0.18.1)
       msw:
         specifier: ^2.11.2
+<<<<<<< HEAD
         version: 2.11.2(@types/node@24.5.2)(typescript@5.9.2)
+=======
+        version: 2.11.2(@types/node@24.7.0)(typescript@5.9.3)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -1009,7 +1179,11 @@ importers:
         version: 5.9.2
       vitest:
         specifier: ^3.2.4
+<<<<<<< HEAD
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   website-argos:
     devDependencies:
@@ -4220,6 +4394,9 @@ packages:
   '@types/node@24.5.2':
     resolution: {integrity: sha512-FYxk1I7wPv3K2XBaoyH2cTnocQEu8AOZ60hPbsyukMPLv5/5qr7V1i8PLHdl6Zf87I+xZXFvPCXYjiTFq+YSDQ==}
 
+  '@types/node@24.7.0':
+    resolution: {integrity: sha512-IbKooQVqUBrlzWTi79E8Fw78l8k1RNtlDDNWsFZs7XonuQSJ8oNYfEeclhprUldXISRMLzBpILuKgPlIxm+/Yw==}
+
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
@@ -6418,8 +6595,13 @@ packages:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
     engines: {node: '>=20'}
 
+<<<<<<< HEAD
   electron@38.2.0:
     resolution: {integrity: sha512-Cw5Mb+N5NxsG0Hc1qr8I65Kt5APRrbgTtEEn3zTod30UNJRnAE1xbGk/1NOaDn3ODzI/MYn6BzT9T9zreP7xWA==}
+=======
+  electron@38.2.2:
+    resolution: {integrity: sha512-OXSaVNXDlonXDjMRsFNQo1j5tzTKwKXh5/m46IjAFccBcZJZMISI+EjSI07oexIuhvKM8AZLuFuihVn4YjWWrA==}
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -11249,6 +11431,9 @@ packages:
   undici-types@7.12.0:
     resolution: {integrity: sha512-goOacqME2GYyOZZfb5Lgtu+1IDmAlAEu5xnD3+xTzS10hT0vzpf0SPjkXwAw9Jm+4n/mQGDP3LO8CPbYROeBfQ==}
 
+  undici-types@7.14.0:
+    resolution: {integrity: sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==}
+
   undici@7.12.0:
     resolution: {integrity: sha512-GrKEsc3ughskmGA9jevVlIOPMiiAHJ4OFUtaAH+NhfTUSiZ1wMPIQqQvAJUrJspFXJt3EBWgpAeoHEDVT1IBug==}
     engines: {node: '>=20.18.1'}
@@ -14665,12 +14850,21 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.18.6
 
+<<<<<<< HEAD
   '@inquirer/confirm@5.1.16(@types/node@24.5.2)':
     dependencies:
       '@inquirer/core': 10.2.0(@types/node@24.5.2)
       '@inquirer/type': 3.0.8(@types/node@24.5.2)
     optionalDependencies:
       '@types/node': 24.5.2
+=======
+  '@inquirer/confirm@5.1.16(@types/node@24.7.0)':
+    dependencies:
+      '@inquirer/core': 10.2.0(@types/node@24.7.0)
+      '@inquirer/type': 3.0.8(@types/node@24.7.0)
+    optionalDependencies:
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@inquirer/core@10.2.0(@types/node@22.18.6)':
     dependencies:
@@ -14685,10 +14879,17 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.18.6
 
+<<<<<<< HEAD
   '@inquirer/core@10.2.0(@types/node@24.5.2)':
     dependencies:
       '@inquirer/figures': 1.0.13
       '@inquirer/type': 3.0.8(@types/node@24.5.2)
+=======
+  '@inquirer/core@10.2.0(@types/node@24.7.0)':
+    dependencies:
+      '@inquirer/figures': 1.0.13
+      '@inquirer/type': 3.0.8(@types/node@24.7.0)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
       mute-stream: 2.0.0
@@ -14696,7 +14897,11 @@ snapshots:
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
+<<<<<<< HEAD
       '@types/node': 24.5.2
+=======
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@inquirer/figures@1.0.13': {}
 
@@ -14704,9 +14909,15 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.18.6
 
+<<<<<<< HEAD
   '@inquirer/type@3.0.8(@types/node@24.5.2)':
     optionalDependencies:
       '@types/node': 24.5.2
+=======
+  '@inquirer/type@3.0.8(@types/node@24.7.0)':
+    optionalDependencies:
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@inversifyjs/common@1.5.2': {}
 
@@ -15387,6 +15598,7 @@ snapshots:
       micromark-util-character: 1.2.0
       micromark-util-symbol: 1.1.0
 
+<<<<<<< HEAD
   '@storybook/addon-docs@9.1.6(@types/react@18.3.12)(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@18.3.12)(react@18.2.0)
@@ -15396,10 +15608,22 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       storybook: 9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2)
+=======
+  '@storybook/addon-docs@9.1.10(@types/react@18.3.12)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))':
+    dependencies:
+      '@mdx-js/react': 3.1.1(@types/react@18.3.12)(react@18.2.0)
+      '@storybook/csf-plugin': 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))
+      '@storybook/icons': 1.6.0(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
+      '@storybook/react-dom-shim': 9.1.10(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))
+      react: 18.2.0
+      react-dom: 18.3.1(react@18.2.0)
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       ts-dedent: 2.2.0
     transitivePeerDependencies:
       - '@types/react'
 
+<<<<<<< HEAD
   '@storybook/addon-links@9.1.6(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))':
     dependencies:
       '@storybook/global': 5.0.0
@@ -15434,6 +15658,42 @@ snapshots:
   '@storybook/csf-plugin@9.1.6(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))':
     dependencies:
       storybook: 9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2)
+=======
+  '@storybook/addon-links@9.1.10(react@18.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+    optionalDependencies:
+      react: 18.2.0
+
+  '@storybook/addon-svelte-csf@5.0.9(@storybook/svelte@9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@storybook/csf': 0.1.13
+      '@storybook/svelte': 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      dedent: 1.7.0
+      es-toolkit: 1.39.10
+      esrap: 1.4.9
+      magic-string: 0.30.19
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      svelte: 5.39.9
+      svelte-ast-print: 0.4.2(svelte@5.39.9)
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      zimmerframe: 1.1.4
+    transitivePeerDependencies:
+      - babel-plugin-macros
+
+  '@storybook/builder-vite@9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@storybook/csf-plugin': 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      ts-dedent: 2.2.0
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+
+  '@storybook/csf-plugin@9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))':
+    dependencies:
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       unplugin: 1.16.1
 
   '@storybook/csf@0.1.13':
@@ -15447,6 +15707,7 @@ snapshots:
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
 
+<<<<<<< HEAD
   '@storybook/react-dom-shim@9.1.6(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))':
     dependencies:
       react: 18.2.0
@@ -15469,6 +15730,30 @@ snapshots:
     dependencies:
       storybook: 9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2)
       svelte: 5.39.6
+=======
+  '@storybook/react-dom-shim@9.1.10(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))':
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.3.1(react@18.2.0)
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+
+  '@storybook/svelte-vite@9.1.10(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@storybook/builder-vite': 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      '@storybook/svelte': 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      magic-string: 0.30.19
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      svelte: 5.39.9
+      svelte2tsx: 0.7.44(svelte@5.39.9)(typescript@5.9.3)
+      typescript: 5.9.3
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+
+  '@storybook/svelte@9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)':
+    dependencies:
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      svelte: 5.39.9
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       ts-dedent: 2.2.0
       type-fest: 2.19.0
 
@@ -15487,6 +15772,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+<<<<<<< HEAD
   '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
@@ -15505,6 +15791,26 @@ snapshots:
       svelte: 5.39.6
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitefu: 1.1.1(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      debug: 4.4.3
+      svelte: 5.39.9
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+      debug: 4.4.3
+      deepmerge: 4.3.1
+      magic-string: 0.30.19
+      svelte: 5.39.9
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitefu: 1.1.1(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -15683,12 +15989,21 @@ snapshots:
       postcss: 8.5.6
       tailwindcss: 4.1.13
 
+<<<<<<< HEAD
   '@tailwindcss/vite@4.1.13(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@tailwindcss/node': 4.1.13
       '@tailwindcss/oxide': 4.1.13
       tailwindcss: 4.1.13
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+  '@tailwindcss/vite@4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@tailwindcss/node': 4.1.14
+      '@tailwindcss/oxide': 4.1.14
+      tailwindcss: 4.1.14
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -15710,13 +16025,22 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
+<<<<<<< HEAD
   '@testing-library/svelte@5.2.8(svelte@5.39.6)(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+=======
+  '@testing-library/svelte@5.2.8(svelte@5.39.9)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       '@testing-library/dom': 10.4.1
       svelte: 5.39.6
     optionalDependencies:
+<<<<<<< HEAD
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
@@ -16056,6 +16380,11 @@ snapshots:
   '@types/node@24.5.2':
     dependencies:
       undici-types: 7.12.0
+    optional: true
+
+  '@types/node@24.7.0':
+    dependencies:
+      undici-types: 7.14.0
     optional: true
 
   '@types/normalize-package-data@2.4.4': {}
@@ -16494,14 +16823,23 @@ snapshots:
       msw: 2.11.2(@types/node@22.18.6)(typescript@5.9.2)
       vite: 7.1.7(@types/node@22.18.6)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
 
+<<<<<<< HEAD
   '@vitest/mocker@3.2.4(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+=======
+  '@vitest/mocker@3.2.4(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
+<<<<<<< HEAD
       msw: 2.11.2(@types/node@24.5.2)(typescript@5.9.2)
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+      msw: 2.11.2(@types/node@24.7.0)(typescript@5.9.3)
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -18698,7 +19036,11 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
+<<<<<<< HEAD
   electron@38.2.0:
+=======
+  electron@38.2.2:
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.18.6
@@ -19072,11 +19414,19 @@ snapshots:
       semver: 7.7.2
       typescript: 5.9.2
 
+<<<<<<< HEAD
   eslint-plugin-storybook@9.1.8(eslint@9.36.0(jiti@2.6.0))(storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2))(typescript@5.9.2):
     dependencies:
       '@typescript-eslint/utils': 8.44.1(eslint@9.36.0(jiti@2.6.0))(typescript@5.9.2)
       eslint: 9.36.0(jiti@2.6.0)
       storybook: 9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2)
+=======
+  eslint-plugin-storybook@9.1.10(eslint@9.37.0(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3):
+    dependencies:
+      '@typescript-eslint/utils': 8.45.0(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)
+      eslint: 9.37.0(jiti@2.6.1)
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -21801,11 +22151,19 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
+<<<<<<< HEAD
   msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
       '@inquirer/confirm': 5.1.16(@types/node@24.5.2)
+=======
+  msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3):
+    dependencies:
+      '@bundled-es-modules/cookie': 2.0.1
+      '@bundled-es-modules/statuses': 1.0.1
+      '@inquirer/confirm': 5.1.16(@types/node@24.7.0)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@mswjs/interceptors': 0.39.6
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/until': 2.1.0
@@ -23856,12 +24214,20 @@ snapshots:
       es-errors: 1.3.0
       internal-slot: 1.1.0
 
+<<<<<<< HEAD
   storybook@9.0.15(@testing-library/dom@10.4.1)(prettier@3.6.2):
+=======
+  storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)):
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       '@storybook/global': 5.0.0
       '@testing-library/jest-dom': 6.8.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
       '@vitest/expect': 3.2.4
+<<<<<<< HEAD
+=======
+      '@vitest/mocker': 3.2.4(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@vitest/spy': 3.2.4
       better-opn: 3.0.2
       esbuild: 0.25.5
@@ -24493,6 +24859,9 @@ snapshots:
   undici-types@7.12.0:
     optional: true
 
+  undici-types@7.14.0:
+    optional: true
+
   undici@7.12.0: {}
 
   undici@7.16.0: {}
@@ -24744,13 +25113,21 @@ snapshots:
       - tsx
       - yaml
 
+<<<<<<< HEAD
   vite-node@3.2.4(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+=======
+  vite-node@3.2.4(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 2.0.3
+<<<<<<< HEAD
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -24782,7 +25159,11 @@ snapshots:
       tsx: 4.20.6
       yaml: 2.8.1
 
+<<<<<<< HEAD
   vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+=======
+  vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
     dependencies:
       esbuild: 0.25.10
       fdir: 6.5.0(picomatch@4.0.3)
@@ -24791,7 +25172,11 @@ snapshots:
       rollup: 4.52.0
       tinyglobby: 0.2.15
     optionalDependencies:
+<<<<<<< HEAD
       '@types/node': 24.5.2
+=======
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       fsevents: 2.3.3
       jiti: 2.6.0
       lightningcss: 1.30.1
@@ -24799,6 +25184,7 @@ snapshots:
       tsx: 4.20.6
       yaml: 2.8.1
 
+<<<<<<< HEAD
   vitefu@1.1.1(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)):
     optionalDependencies:
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
@@ -24807,6 +25193,16 @@ snapshots:
     dependencies:
       jest-canvas-mock: 2.5.2
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+=======
+  vitefu@1.1.1(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)):
+    optionalDependencies:
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+
+  vitest-canvas-mock@0.3.3(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)):
+    dependencies:
+      jest-canvas-mock: 2.5.2
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
 
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.6)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@22.18.6)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
@@ -24851,11 +25247,19 @@ snapshots:
       - tsx
       - yaml
 
+<<<<<<< HEAD
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
       '@vitest/mocker': 3.2.4(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+    dependencies:
+      '@types/chai': 5.2.2
+      '@vitest/expect': 3.2.4
+      '@vitest/mocker': 3.2.4(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -24873,12 +25277,21 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
+<<<<<<< HEAD
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vite-node: 3.2.4(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
       '@types/node': 24.5.2
+=======
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/debug': 4.1.12
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       jsdom: 26.1.0
     transitivePeerDependencies:
       - jiti
@@ -24894,11 +25307,19 @@ snapshots:
       - tsx
       - yaml
 
+<<<<<<< HEAD
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
       '@vitest/mocker': 3.2.4(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(vite@7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+=======
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.7.0)(jiti@2.6.1)(jsdom@27.0.0-beta.3(postcss@8.5.6))(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1):
+    dependencies:
+      '@types/chai': 5.2.2
+      '@vitest/expect': 3.2.4
+      '@vitest/mocker': 3.2.4(msw@2.11.2(@types/node@24.7.0)(typescript@5.9.3))(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -24916,12 +25337,21 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
+<<<<<<< HEAD
       vite: 7.1.7(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vite-node: 3.2.4(@types/node@24.5.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
       '@types/node': 24.5.2
+=======
+      vite: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/debug': 4.1.12
+      '@types/node': 24.7.0
+>>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
       jsdom: 27.0.0-beta.3(postcss@8.5.6)
     transitivePeerDependencies:
       - jiti
