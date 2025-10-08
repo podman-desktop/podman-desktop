@@ -4,15 +4,16 @@ import {
   Button,
   FilteredEmptyScreen,
   NavPage,
-  Table,
   TableColumn,
   TableDurationColumn,
   TableRow,
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
+import { SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 import { handleNavigation } from '/@/navigation';
 import type { ContainerInfo } from '/@api/container-info';
 import { NavigationPage } from '/@api/navigation-page';
@@ -49,6 +50,8 @@ interface Props {
 
 let { searchTerm = '' }: Props = $props();
 
+let selected: SvelteSet<string> = new SvelteSet();
+
 function fromExistingImage(): void {
   openChoiceModal = false;
   handleNavigation({ page: NavigationPage.EXISTING_IMAGE_CREATE_CONTAINER });
@@ -63,7 +66,9 @@ let providerConnections = $derived(
 
 // filter containers by group type pod
 function filterContainersByGroupTypePod(): ContainerGroupInfoUI[] {
-  return containerGroups.filter(group => group.type === ContainerGroupInfoTypeUI.POD).filter(pod => pod.selected);
+  return containerGroups
+    .filter(group => group.type === ContainerGroupInfoTypeUI.POD)
+    .filter(pod => selected.has(key(pod)));
 }
 
 // filter containers by group type different than pod
@@ -71,7 +76,7 @@ function filterContainersByGroupTypeNotPod(): ContainerInfoUI[] {
   return containerGroups
     .filter(group => group.type !== ContainerGroupInfoTypeUI.POD)
     .flatMap(group => group.containers)
-    .filter(container => container.selected);
+    .filter(container => selected.has(key(container)));
 }
 
 // delete the items selected in the list
@@ -193,7 +198,7 @@ function createPodFromContainers(): void {
   const selectedContainers = containerGroups
     .map(group => group.containers)
     .flat()
-    .filter(container => container.selected);
+    .filter(container => selected.has(key(container)));
 
   const podUtils = new PodUtils();
 
@@ -254,25 +259,6 @@ let containerGroups = $derived.by(() => {
   });
   // Remove groups with all containers filtered
   computedContainerGroups = computedContainerGroups.filter(group => group.containers.length > 0);
-
-  // update selected items based on current selected items
-  computedContainerGroups.forEach(group => {
-    const matchingGroup = computedContainerGroups.find(currentGroup => currentGroup.name === group.name);
-    if (matchingGroup) {
-      group.selected = matchingGroup.selected;
-      group.expanded = matchingGroup.expanded;
-      group.containers.forEach(container => {
-        const matchingContainer = matchingGroup.containers.find(
-          currentContainer => currentContainer.id === container.id,
-        );
-        if (matchingContainer) {
-          container.actionError = matchingContainer.actionError;
-          container.selected = matchingContainer.selected;
-        }
-      });
-    }
-  });
-
   return computedContainerGroups;
 });
 
@@ -296,8 +282,6 @@ function setRunningFilter(): void {
 function setStoppedFilter(): void {
   searchTerm = containerUtils.filterSetStopped(searchTerm);
 }
-
-let selectedItemsNumber = $state<number>();
 
 let statusColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Status', {
   align: 'center',
@@ -375,8 +359,18 @@ let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[] = $derived(
   containerGroups.map(group => (group?.type === ContainerGroupInfoTypeUI.STANDALONE ? group.containers[0] : group)),
 );
 
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
 function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
   return item.id;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
+  return item.name;
 }
 </script>
 
@@ -389,39 +383,37 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
     <Button on:click={toggleCreateContainer} icon={faPlusCircle} title="Create a container">Create</Button>
   {/snippet}
   {#snippet bottomAdditionalActions()}
-    {#if selectedItemsNumber && selectedItemsNumber > 0}
+    {#if selected.size > 0}
       <div class="inline-flex space-x-2">
         <Button
           on:click={(): Promise<void> =>
            runSelectedContainers()}
           aria-label="Run selected containers and pods"
-          title="Run {selectedItemsNumber} selected items"
+          title="Run {selected.size} selected items"
           inProgress={bulkRunInProgress}
           icon={faPlay}>
         </Button>
         <Button
           on:click={(): void => {
-            if (selectedItemsNumber !== undefined) {
-              withBulkConfirmation(
+            withBulkConfirmation(
                 deleteSelectedContainers,
-                `delete ${selectedItemsNumber} container${selectedItemsNumber > 1 ? 's' : ''}`,
+                `delete ${selected.size} container${selected.size > 1 ? 's' : ''}`,
               );
-            }
           }}
           aria-label="Delete selected containers and pods"
-          title="Delete {selectedItemsNumber} selected items"
+          title="Delete {selected.size} selected items"
           inProgress={bulkDeleteInProgress}
           icon={faTrash}>
         </Button>
 
         <Button
           on:click={createPodFromContainers}
-          title="Create Pod with {selectedItemsNumber} selected items"
+          title="Create Pod with {selected.size} selected items"
           icon={SolidPodIcon}>
           Create Pod
         </Button>
       </div>
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>On {selected.size} selected items.</span>
     {/if}
   {/snippet}
 
@@ -454,16 +446,17 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
             stoppedOnly={containerUtils.filterIsStopped(searchTerm)} />
         {/if}
       {:else}
-        <Table
+        <TableSvelte5
           kind="container"
-          bind:selectedItemsNumber={selectedItemsNumber}
+          bind:selected={selected}
           data={containersAndGroups}
           columns={columns}
           row={row}
           defaultSortColumn="Name"
           key={key}
-          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
-        </Table>
+          label={label}
+        >
+        </TableSvelte5>
       {/if}
     </div>
   {/snippet}
@@ -485,10 +478,10 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       </div>
       {/snippet}
     {#snippet buttons()}
-      
+
         <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
         <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
-      
+
       {/snippet}
   </Dialog>
 {/if}
