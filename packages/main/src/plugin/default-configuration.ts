@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { join } from 'node:path';
 
 import {
   SYSTEM_DEFAULTS_FILE_LINUX,
@@ -37,7 +37,7 @@ export class DefaultConfiguration {
       return SYSTEM_DEFAULTS_FILE_MAC;
     } else if (isWindows()) {
       const programData = process.env['PROGRAMDATA'] ?? 'C:\\ProgramData';
-      return path.join(programData, SYSTEM_DEFAULTS_FILE_WINDOWS_DIR, SYSTEM_DEFAULTS_FILE_WINDOWS_FILE);
+      return join(programData, SYSTEM_DEFAULTS_FILE_WINDOWS_DIR, SYSTEM_DEFAULTS_FILE_WINDOWS_FILE);
     } else if (isLinux()) {
       return SYSTEM_DEFAULTS_FILE_LINUX;
     }
