@@ -368,6 +368,7 @@ jobs:
             !./tests/**/traces/raw
   
   k8s-sanity-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: k8s sanity e2e tests
     runs-on: ubuntu-24.04
     continue-on-error: true
