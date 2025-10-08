@@ -1,7 +1,8 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
-import type { PodInspectInfo } from '../../../../main/src/plugin/api/pod-info';
+import type { PodInspectInfo } from '/@api/pod-info';
+
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 

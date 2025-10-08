@@ -25,8 +25,8 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { podsInfos } from '/@/stores/pods';
+import type { PodInfo } from '/@api/pod-info';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 import PodDetails from './PodDetails.svelte';
 
 const mocks = vi.hoisted(() => ({

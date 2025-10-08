@@ -18,7 +18,8 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
+import type { PodInfo } from '/@api/pod-info';
+
 import { podsInfos } from '../pods';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 

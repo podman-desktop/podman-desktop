@@ -21,8 +21,7 @@
 import { expect, test } from 'vitest';
 
 import { ensureRestrictedSecurityContext, PodUtils } from '/@/lib/pod/pod-utils';
-
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
+import type { PodInfo } from '/@api/pod-info';
 
 function verifyPodSecurityContext(containers: any[], type = 'RuntimeDefault'): void {
   containers.forEach(container => {

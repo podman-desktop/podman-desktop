@@ -19,7 +19,8 @@
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
+import type { PodInfo } from '/@api/pod-info';
+
 import type { PodInfoUI } from './PodInfoUI';
 
 export class PodUtils {

@@ -110,6 +110,7 @@ import type { NetworkInspectInfo } from '/@api/network-info.js';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
 import type { V1Route } from '/@api/openshift-types.js';
+import type { PodInfo, PodInspectInfo } from '/@api/pod-info.js';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
@@ -132,7 +133,6 @@ import { securityRestrictionCurrentHandler } from '../security-restrictions-hand
 import { TrayMenu } from '../tray-menu.js';
 import { isMac } from '../util.js';
 import { ApiSenderType } from './api.js';
-import type { PodInfo, PodInspectInfo } from './api/pod-info.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';

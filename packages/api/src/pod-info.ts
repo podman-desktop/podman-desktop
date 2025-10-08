@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,56 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ContainerProviderConnection, PodCreatePortOptions } from '@podman-desktop/api';
-
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
-
 import type {
-  PodInfo as LibPodPodInfo,
-  PodInspectInfo as LibPodPodInspectInfo,
-} from '../dockerode/libpod-dockerode.js';
+  ContainerProviderConnection,
+  HostConfigPortBinding,
+  PodContainerInfo,
+  PodCreatePortOptions,
+} from '@podman-desktop/api';
+
+import type { ProviderContainerConnectionInfo } from './provider-info.js';
+
+export interface LibPodPodInfo {
+  Cgroup: string;
+  Containers: PodContainerInfo[];
+  Created: string;
+  Id: string;
+  InfraId: string;
+  Labels: { [key: string]: string };
+  Name: string;
+  Namespace: string;
+  Networks: string[];
+  Status: string;
+}
+
+export interface LibPodPodInspectInfo {
+  CgroupParent: string;
+  CgroupPath: string;
+  Containers: PodContainerInfo[];
+  Created: string;
+  Hostname: string;
+  Id: string;
+  InfraContainerId: string;
+  memory_limit: number;
+  memory_swap: number;
+  Name: string;
+  Namespace: string;
+  NumContainers: number;
+  security_opt: string[];
+  SharedNamespaces: string[];
+  State: string;
+  volumes_from: string[];
+  ExitPolicy: 'continue' | 'stop';
+  RestartPolicy: string;
+  Labels: { [key: string]: string };
+  InfraConfig: {
+    DNSOption?: Array<string>;
+    DNSSearch?: Array<string>;
+    DNSServer?: Array<string>;
+    PortBindings?: HostConfigPortBinding;
+    Networks?: Array<string>;
+  };
+}
 
 export interface PodInfo extends LibPodPodInfo {
   engineId: string;

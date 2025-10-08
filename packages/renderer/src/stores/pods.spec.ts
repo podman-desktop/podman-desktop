@@ -22,7 +22,8 @@ import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { PodInfo } from '../../../main/src/plugin/api/pod-info';
+import type { PodInfo } from '/@api/pod-info';
+
 import { podsEventStore, podsInfos } from './pods';
 
 // first, path window object

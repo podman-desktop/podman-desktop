@@ -12,7 +12,8 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
+import type { PodInfo } from '/@api/pod-info';
+
 import { filtered, podsInfos, searchPattern } from '../../stores/pods';
 import { providerInfos } from '../../stores/providers';
 import { withBulkConfirmation } from '../actions/BulkActions';

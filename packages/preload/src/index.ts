@@ -91,6 +91,7 @@ import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
 import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding';
 import type { V1Route } from '/@api/openshift-types';
+import type { PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
@@ -112,7 +113,6 @@ import type { ListOrganizerItem } from '../../api/src/list-organizer';
 import type { ApiSenderType } from '../../main/src/plugin/api';
 import type { ContextInfo } from '../../main/src/plugin/api/context-info';
 import type { KubernetesGeneratorInfo } from '../../main/src/plugin/api/KubernetesGeneratorInfo';
-import type { PodCreateOptions, PodInfo, PodInspectInfo } from '../../main/src/plugin/api/pod-info';
 import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,

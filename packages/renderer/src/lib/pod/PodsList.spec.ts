@@ -33,9 +33,8 @@ import PodsList from '/@/lib/pod/PodsList.svelte';
 import { filtered, podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
+import type { PodInfo } from '/@api/pod-info';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
-
-import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
 
 const getProvidersInfoMock = vi.fn();
 const listPodsMock = vi.fn();

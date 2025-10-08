@@ -58,13 +58,13 @@ import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesO
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
+import type { LibPodPodInfo, PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
 import { isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
-import type { PodCreateOptions, PodInfo, PodInspectInfo } from './api/pod-info.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type {
   ContainerCreateMountOption,
@@ -73,7 +73,6 @@ import type {
   ContainerCreatePortMappingOption,
   LibPod,
   PlayKubeInfo,
-  PodInfo as LibpodPodInfo,
   PodmanDevice,
 } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
@@ -544,7 +543,7 @@ export class ContainerProviderRegistry {
             });
           }
 
-          let pods: LibpodPodInfo[] = [];
+          let pods: LibPodPodInfo[] = [];
           if (provider.libpodApi) {
             pods = await provider.libpodApi.listPods();
           }

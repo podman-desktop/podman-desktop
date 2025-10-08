@@ -25,7 +25,6 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PodInspectInfo } from '/@/plugin/api/pod-info.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
@@ -36,6 +35,7 @@ import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { BuildImageOptions as InternalBuildImageOptions } from '/@api/image-info.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
+import type { PodInspectInfo } from '/@api/pod-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
 import { getBase64Image } from '../../util.js';
