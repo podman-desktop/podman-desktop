@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfo } from '@podman-desktop/api';
-
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import type { VolumeInfo } from '/@api/volume-info';
+
+import type { PodInfo } from '../../../../main/src/plugin/api/pod-info.js';
 
 // Helper function to get short ID (first 12 characters)
 function getShortId(id: string): string {
@@ -32,6 +32,19 @@ function getShortId(id: string): string {
     return beforeSha256 + 'sha256:' + afterSha256.substring(0, 12);
   }
   return id;
+}
+
+export function getGoToDisplayText(goToInfo: GoToInfo): string {
+  if (goToInfo.type === 'Image') {
+    return getShortId(goToInfo.RepoTags?.[0] ?? goToInfo.Id);
+  } else if (goToInfo.type === 'Container') {
+    return goToInfo.Names[0].replace(/^\//, '');
+  } else if (goToInfo.type === 'Pod') {
+    return goToInfo.Name;
+  } else if (goToInfo.type === 'Volume') {
+    return goToInfo.Name.substring(0, 12);
+  }
+  return 'Unknown';
 }
 
 // Helper function to create GoToInfo items from resources
@@ -45,46 +58,22 @@ export function createGoToItems(
 
   // Add images
   images.forEach(image => {
-    const name = image.RepoTags?.[0] ? getShortId(image.RepoTags[0]) : image.Id;
-    items.push({
-      id: image.Id,
-      name: name,
-      kind: 'Image',
-      info: image,
-    });
+    items.push({ type: 'Image', ...image });
   });
 
   // Add containers
   containers.forEach(container => {
-    const name = container.Names?.[0]?.replace('/', '') || container.Id;
-    items.push({
-      id: container.Id,
-      name: name,
-      kind: 'Container',
-      info: container,
-    });
+    items.push({ type: 'Container', ...container });
   });
 
   // Add pods
   pods.forEach(pod => {
-    const shortId = getShortId(pod.Id);
-    const name = pod.Name || shortId;
-    items.push({
-      id: pod.Id,
-      name: name,
-      kind: 'Pod',
-      info: pod,
-    });
+    items.push({ type: 'Pod', ...pod });
   });
 
   // Add volumes
   volumes.forEach(volume => {
-    items.push({
-      id: volume.Name,
-      name: volume.Name.substring(0, 12),
-      kind: 'Volume',
-      info: volume,
-    });
+    items.push({ type: 'Volume', ...volume });
   });
 
   return items;

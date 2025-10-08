@@ -3,11 +3,10 @@ import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-i
 import type { ImageInfo, PodInfo } from '@podman-desktop/api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { Buffer } from 'buffer';
 import { onDestroy, onMount, tick } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
-import { router } from 'tinro';
 
+import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
@@ -17,6 +16,7 @@ import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
 import type { ContainerInfo } from '/@api/container-info';
 import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
+import { NavigationPage } from '/@api/navigation-page';
 import type { VolumeInfo } from '/@api/volume-info';
 
 import type { ContextUI } from '../context/context';
@@ -25,7 +25,7 @@ import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
 import EnterIcon from '../images/EnterIcon.svelte';
 import NotFoundIcon from '../images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
-import { createGoToItems } from './CommandPaletteUtils';
+import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 
 const ENTER_KEY = 'Enter';
 const ESCAPE_KEY = 'Escape';
@@ -100,8 +100,8 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
 let filteredGoToItems = $derived(
   goToItems.filter(item =>
     inputValue
-      ? item.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
-        item.kind?.toLowerCase().includes(inputValue.toLowerCase())
+      ? getGoToDisplayText(item).toLowerCase().includes(inputValue.toLowerCase()) ||
+        item.type.toLowerCase().includes(inputValue.toLowerCase())
       : true,
   ),
 );
@@ -275,7 +275,7 @@ async function executeAction(index: number): Promise<void> {
 
   // Check if it's a documentation item by checking for 'category' property
   const isDocItem = 'category' in item;
-  const isGoToItem = 'kind' in item;
+  const isGoToItem = 'type' in item;
 
   if (isDocItem) {
     // Documentation item
@@ -290,26 +290,35 @@ async function executeAction(index: number): Promise<void> {
   } else if (isGoToItem) {
     // Go to item
     const goToItem = item as GoToInfo;
-    const kind = goToItem.kind.toLowerCase();
 
-    switch (kind) {
-      case 'image':
-        router.goto(
-          `/images/${goToItem.id}/${goToItem.info.engineId}/${Buffer.from(((goToItem.info) as ImageInfo).RepoTags?.[0] ?? goToItem.id).toString('base64')}/summary`,
-        );
-        break;
-
-      case 'container':
-        router.goto(`/containers/${goToItem.id}/summary`);
-        break;
-
-      case 'pod':
-        router.goto(`/pods/podman/${goToItem.name}/${goToItem.info.engineId}/summary`);
-        break;
-
-      case 'volume':
-        router.goto(`/volumes/${goToItem.id}/${goToItem.info.engineId}/summary`);
-        break;
+    if (goToItem.type === 'Image') {
+      const repoTag = goToItem.RepoTags?.[0] ?? goToItem.Id;
+      handleNavigation({
+        page: NavigationPage.IMAGE,
+        parameters: {
+          id: goToItem.Id,
+          engineId: goToItem.engineId,
+          tag: repoTag,
+        },
+      });
+    } else if (goToItem.type === 'Container') {
+      handleNavigation({
+        page: NavigationPage.CONTAINER_SUMMARY,
+        parameters: { id: goToItem.Id },
+      });
+    } else if (goToItem.type === 'Pod') {
+      handleNavigation({
+        page: NavigationPage.PODMAN_POD_SUMMARY,
+        parameters: {
+          name: goToItem.Name,
+          engineId: goToItem.engineId,
+        },
+      });
+    } else if (goToItem.type === 'Volume') {
+      handleNavigation({
+        page: NavigationPage.VOLUME,
+        parameters: { name: goToItem.Name, engineId: goToItem.engineId },
+      });
     }
   } else {
     // Command item
@@ -415,8 +424,8 @@ async function onAction(): Promise<void> {
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
             {@const isDocItem = 'category' in item}
-            {@const isGoToItem = 'kind' in item}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
+            {@const isGoToItem = 'type' in item}
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={isGoToItem ? getGoToDisplayText(item as GoToInfo) : (item as CommandInfo | DocumentationInfo).id}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex
@@ -428,7 +437,8 @@ async function onAction(): Promise<void> {
                       {#if isDocItem}
                         {(item as DocumentationInfo).category}: {(item as DocumentationInfo).name}
                        {:else if isGoToItem}
-                         {(item as GoToInfo).kind}: {(item as GoToInfo).name}
+                         {@const goToInfo = item as GoToInfo}
+                         {(goToInfo.type)}: {(getGoToDisplayText(goToInfo))}
                       {:else}
                         {(item as CommandInfo).title}
                       {/if}

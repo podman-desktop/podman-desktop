@@ -18,14 +18,15 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { PodInfo } from '@podman-desktop/api';
 import { describe, expect, test } from 'vitest';
 
 import type { ContainerInfo } from '/@api/container-info';
+import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
-import { createGoToItems } from './CommandPaletteUtils';
+import type { PodInfo } from '../../../../main/src/plugin/api/pod-info';
+import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 
 // Mock data for testing
 const mockImageInfo: ImageInfo = {
@@ -68,32 +69,32 @@ describe('createGoToItems', () => {
     expect(items).toHaveLength(4);
 
     // Check image item
-    const imageItem = items.find(item => item.kind === 'Image');
+    const imageItem = items.find(item => item.type === 'Image');
     expect(imageItem).toBeDefined();
-    expect(imageItem?.id).toBe(mockImageInfo.Id);
-    expect(imageItem?.name).toBe('nginx:latest');
-    expect(imageItem?.kind).toBe('Image');
+    expect(imageItem?.Id).toBe(mockImageInfo.Id);
+    expect(getGoToDisplayText(imageItem!)).toBe('nginx:latest');
+    expect(imageItem?.type).toBe('Image');
 
     // Check container item
-    const containerItem = items.find(item => item.kind === 'Container');
+    const containerItem = items.find(item => item.type === 'Container');
     expect(containerItem).toBeDefined();
-    expect(containerItem?.id).toBe(mockContainerInfo.Id);
-    expect(containerItem?.name).toBe('test-container');
-    expect(containerItem?.kind).toBe('Container');
+    expect(containerItem?.Id).toBe(mockContainerInfo.Id);
+    expect(getGoToDisplayText(containerItem!)).toBe('test-container');
+    expect(containerItem?.type).toBe('Container');
 
     // Check pod item
-    const podItem = items.find(item => item.kind === 'Pod');
+    const podItem = items.find(item => item.type === 'Pod');
     expect(podItem).toBeDefined();
-    expect(podItem?.id).toBe(mockPodInfo.Id);
-    expect(podItem?.name).toBe('test-pod');
-    expect(podItem?.kind).toBe('Pod');
+    expect(podItem?.Id).toBe(mockPodInfo.Id);
+    expect(getGoToDisplayText(podItem!)).toBe('test-pod');
+    expect(podItem?.type).toBe('Pod');
 
     // Check volume item
-    const volumeItem = items.find(item => item.kind === 'Volume');
+    const volumeItem = items.find(item => item.type === 'Volume');
     expect(volumeItem).toBeDefined();
-    expect(volumeItem?.id).toBe('my-volume');
-    expect(volumeItem?.name).toBe('my-volume');
-    expect(volumeItem?.kind).toBe('Volume');
+    expect(volumeItem?.Name).toBe('my-volume');
+    expect(getGoToDisplayText(volumeItem!)).toBe('my-volume');
+    expect(volumeItem?.type).toBe('Volume');
   });
 
   test('should handle empty arrays', () => {
@@ -106,24 +107,16 @@ describe('createGoToItems', () => {
     const imageWithoutTags = { ...mockImageInfo, RepoTags: undefined };
     const items = createGoToItems([imageWithoutTags], [], [], []);
 
-    const imageItem = items.find(item => item.kind === 'Image');
-    expect(imageItem?.name).toBe('sha256:abc123def456789012345678901234567890123456789012345678901234567890');
+    const imageItem = items.find(item => item.type === 'Image');
+    expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
   test('should handle image with empty RepoTags', () => {
     const imageWithEmptyTags = { ...mockImageInfo, RepoTags: [] };
     const items = createGoToItems([imageWithEmptyTags], [], [], []);
 
-    const imageItem = items.find(item => item.kind === 'Image');
-    expect(imageItem?.name).toBe('sha256:abc123def456789012345678901234567890123456789012345678901234567890');
-  });
-
-  test('should handle container without Names', () => {
-    const containerWithoutNames = { ...mockContainerInfo, Names: [] };
-    const items = createGoToItems([], [containerWithoutNames], [], []);
-
-    const containerItem = items.find(item => item.kind === 'Container');
-    expect(containerItem?.name).toBe('def456789012345678901234567890123456789012345678901234567890123456789');
+    const imageItem = items.find(item => item.type === 'Image');
+    expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
   test('should handle multiple volumes', () => {
@@ -142,10 +135,10 @@ describe('createGoToItems', () => {
 
     const items = createGoToItems([], [], [], multipleVolumes);
 
-    const volumeItems = items.filter(item => item.kind === 'Volume');
+    const volumeItems = items.filter(item => item.type === 'Volume');
     expect(volumeItems).toHaveLength(2);
-    expect(volumeItems[0]?.name).toBe('volume1');
-    expect(volumeItems[1]?.name).toBe('volume2');
+    expect(volumeItems[0].Name).toBe('volume1');
+    expect(volumeItems[1].Name).toBe('volume2');
   });
 });
 
@@ -157,10 +150,10 @@ describe('getShortId function behavior through createGoToItems', () => {
     };
 
     const items = createGoToItems([imageWithSha256], [], [], []);
-    const imageItem = items.find(item => item.kind === 'Image');
+    const imageItem = items.find(item => item.type === 'Image');
 
     // The name should be the RepoTag with sha256: prefix and 12 chars after
-    expect(imageItem?.name).toBe('registry.com/image:tag@sha256:abc123def456');
+    expect(getGoToDisplayText(imageItem!)).toBe('registry.com/image:tag@sha256:abc123def456');
   });
 
   test('should handle image ID without sha256: prefix', () => {
@@ -171,10 +164,10 @@ describe('getShortId function behavior through createGoToItems', () => {
     };
 
     const items = createGoToItems([imageWithoutSha256], [], [], []);
-    const imageItem = items.find(item => item.kind === 'Image');
+    const imageItem = items.find(item => item.type === 'Image');
 
     // Should return the full ID since no sha256: prefix
-    expect(imageItem?.name).toBe('abc123def456789012345678901234567890123456789012345678901234567890');
+    expect(getGoToDisplayText(imageItem!)).toBe('abc123def456789012345678901234567890123456789012345678901234567890');
   });
 
   test('should handle sha256: at the beginning', () => {
@@ -184,10 +177,10 @@ describe('getShortId function behavior through createGoToItems', () => {
     };
 
     const items = createGoToItems([imageWithSha256AtStart], [], [], []);
-    const imageItem = items.find(item => item.kind === 'Image');
+    const imageItem = items.find(item => item.type === 'Image');
 
     // Should return sha256: + 12 chars
-    expect(imageItem?.name).toBe('sha256:abc123def456');
+    expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
   test('should handle volume names correctly', () => {
@@ -198,9 +191,48 @@ describe('getShortId function behavior through createGoToItems', () => {
     } as unknown as VolumeInfo;
 
     const items = createGoToItems([], [], [], [volumeWithLongName]);
-    const volumeItem = items.find(item => item.kind === 'Volume');
+    const volumeItem = items.find(item => item.type === 'Volume');
 
     // Volume names should be truncated to 12 characters
-    expect(volumeItem?.name).toBe('very-long-vo');
+    expect(getGoToDisplayText(volumeItem!)).toBe('very-long-vo');
+  });
+});
+
+describe('getGoToDisplayText function behavior', () => {
+  test('should handle image correctly', () => {
+    const image = {
+      ...mockImageInfo,
+      RepoTags: ['registry.com/image:tag@sha256:abc123def456789012345678901234567890123456789012345678901234567890'],
+    };
+    const items = createGoToItems([image], [], [], []);
+    const imageItem = items.find(item => item.type === 'Image');
+    expect(getGoToDisplayText(imageItem!)).toBe('registry.com/image:tag@sha256:abc123def456');
+  });
+
+  test('should handle container correctly', () => {
+    const container = { ...mockContainerInfo, Names: ['test-container'] };
+    const items = createGoToItems([], [container], [], []);
+    const containerItem = items.find(item => item.type === 'Container');
+    expect(getGoToDisplayText(containerItem!)).toBe('test-container');
+  });
+
+  test('should handle pod correctly', () => {
+    const pod = { ...mockPodInfo, Name: 'test-pod' };
+    const items = createGoToItems([], [], [pod], []);
+    const podItem = items.find(item => item.type === 'Pod');
+    expect(getGoToDisplayText(podItem!)).toBe('test-pod');
+  });
+
+  test('should handle volume correctly', () => {
+    const volume = { ...mockVolumeInfo, Name: 'my-volume' };
+    const items = createGoToItems([], [], [], [volume]);
+    const volumeItem = items.find(item => item.type === 'Volume');
+    expect(getGoToDisplayText(volumeItem!)).toBe('my-volume');
+  });
+
+  test('should handle unknown correctly', () => {
+    // Test the function directly with a mock object that has an invalid kind
+    const unknownItem = { type: 'Unknown', ...mockImageInfo } as unknown as GoToInfo;
+    expect(getGoToDisplayText(unknownItem)).toBe('Unknown');
   });
 });

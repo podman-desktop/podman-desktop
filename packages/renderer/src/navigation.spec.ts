@@ -183,7 +183,6 @@ test(`Test navigationHandle for ${NavigationPage.VOLUME}`, () => {
   handleNavigation({
     page: NavigationPage.VOLUME,
     parameters: {
-      engineId: 'dummyEngineId',
       name: 'dummyVolumeName',
       engineId: 'dummyEngineId',
     },
