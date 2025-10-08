@@ -42,6 +42,7 @@ import { PodmanBinaryLocationHelper } from './helpers/podman-binary-location-hel
 import { PodmanInfoHelper } from './helpers/podman-info-helper';
 import { QemuHelper } from './helpers/qemu-helper';
 import { WslHelper } from './helpers/wsl-helper';
+import { InversifyBinding } from './inject/inversify-binding';
 import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import { getSocketCompatibility } from './utils/compatibility-mode';
@@ -64,7 +65,6 @@ import {
   VMTYPE,
 } from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
-import { InversifyBinding } from './inject/inversify-binding';
 
 let inversifyBinding: InversifyBinding | undefined;
 
@@ -1892,7 +1892,7 @@ export async function deactivate(): Promise<void> {
   containerProviderConnections.clear();
 
   await inversifyBinding?.dispose();
-  inversifyBinding = undefined
+  inversifyBinding = undefined;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';

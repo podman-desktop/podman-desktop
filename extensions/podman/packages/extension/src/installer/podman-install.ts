@@ -21,6 +21,9 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
+import { inject, injectable } from 'inversify';
+
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getDetectionChecks } from '../checks/detection-checks';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
@@ -47,8 +50,6 @@ import { PodmanInfoImpl } from '../utils/podman-info';
 import type { Installer } from './installer';
 import { MacOSInstaller } from './mac-os-installer';
 import { WinInstaller } from './win-installer';
-import { injectable, inject } from 'inversify';
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 export interface UpdateCheck {
   hasUpdate: boolean;
