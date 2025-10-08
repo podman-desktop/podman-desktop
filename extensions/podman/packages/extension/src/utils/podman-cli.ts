@@ -39,7 +39,7 @@ export async function findPodmanInstallations(): Promise<string[]> {
     const paths: string[] = result.stdout
       .split(/\r?\n/)
       .map(line => line.trim())
-      .filter(path => path.trim().length > 0);
+      .filter(path => path.length > 0);
 
     // Return unique paths only
     return paths.filter((path, index) => paths.indexOf(path) === index);
