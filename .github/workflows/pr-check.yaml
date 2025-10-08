@@ -374,6 +374,12 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      - name: Set the default provider type variable
+        env:
+          DEFAULT_KIND_PROVIDER: 'docker'
+        run: |
+          echo "KIND_PROVIDER=${{ env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
+
       - name: Install Podman v5 using external action
         uses: redhat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
 
@@ -394,6 +400,9 @@ jobs:
         run: pnpm install
 
       - name: Run Smoke E2E tests in Development Mode
+        env:
+          SKIP_KIND_INSTALL: 'true'
+          KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
         run: pnpm test:e2e:k8s-sanity
 
       - name: Publish Test Report
