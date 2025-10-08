@@ -21,6 +21,9 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
+import { inject, injectable } from 'inversify';
+
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getDetectionChecks } from '../checks/detection-checks';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
@@ -54,6 +57,7 @@ export interface UpdateCheck {
   bundledVersion?: string;
 }
 
+@injectable()
 export class PodmanInstall {
   private podmanInfo: PodmanInfo | undefined;
 
@@ -64,7 +68,9 @@ export class PodmanInstall {
   protected providerCleanup: extensionApi.ProviderCleanup | undefined;
 
   constructor(
+    @inject(ExtensionContextSymbol)
     readonly extensionContext: extensionApi.ExtensionContext,
+    @inject(TelemetryLoggerSymbol)
     readonly telemetryLogger: extensionApi.TelemetryLogger,
   ) {
     this.storagePath = extensionContext.storagePath;
