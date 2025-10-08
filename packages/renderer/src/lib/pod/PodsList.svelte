@@ -5,12 +5,14 @@ import {
   FilteredEmptyScreen,
   Link,
   NavPage,
-  Table,
   TableColumn,
   TableDurationColumn,
   TableRow,
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
+
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 
 import type { PodInfo } from '/@api/pod-info';
 
@@ -35,6 +37,8 @@ interface Props {
 }
 
 let { searchTerm = $bindable('') }: Props = $props();
+
+let selected: SvelteSet<string> = new SvelteSet();
 
 $effect(() => {
   searchPattern.set(searchTerm);
@@ -74,14 +78,6 @@ onMount(() => {
     // Remove duplicates from engines by name
     // Set the engines to the global variable for the Prune functionality button
     enginesList = engines.filter((engine, index, self) => index === self.findIndex(t => t.name === engine.name));
-
-    // update selected items based on current selected items
-    computedPods.forEach(pod => {
-      const matchingPod = pods.find(currentPod => currentPod.id === pod.id && currentPod.engineId === pod.engineId);
-      if (matchingPod) {
-        pod.selected = matchingPod.selected;
-      }
-    });
     pods = computedPods;
   });
 });
@@ -89,7 +85,7 @@ onMount(() => {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
 async function deleteSelectedPods(): Promise<void> {
-  const selectedPods = pods.filter(pod => pod.selected);
+  const selectedPods = pods.filter(pod => selected.has(key(pod)));
   if (selectedPods.length === 0) {
     return;
   }
@@ -114,8 +110,6 @@ async function deleteSelectedPods(): Promise<void> {
 async function openKubePods(): Promise<void> {
   await window.navigateToRoute('kubernetes', { kind: 'Pod' });
 }
-
-let selectedItemsNumber: number = $state(0);
 
 let statusColumn = new TableColumn<PodInfoUI>('Status', {
   align: 'center',
@@ -154,6 +148,20 @@ const columns = [
 ];
 
 const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(pod: PodInfoUI): string {
+  return pod.id;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(pod: PodInfoUI): string {
+  return pod.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="pods">
@@ -167,17 +175,17 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
-    {#if selectedItemsNumber > 0}
+    {#if selected.size > 0}
       <Button
         on:click={(): void =>
           withBulkConfirmation(
             deleteSelectedPods,
-            `delete ${selectedItemsNumber} pod${selectedItemsNumber > 1 ? 's' : ''}`,
+            `delete ${selected.size} pod${selected.size > 1 ? 's' : ''}`,
           )}
-        title="Delete {selectedItemsNumber} selected items"
+        title="Delete {selected.size} selected items"
         inProgress={bulkDeleteInProgress}
         icon={faTrash} />
-      <span>On {selectedItemsNumber} selected items.</span>
+      <span>On {selected.size} selected items.</span>
     {/if}
   {/snippet}
 
@@ -242,15 +250,17 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
         <PodEmptyScreen />
       {/if}
     {:else}
-      <Table
+      <TableSvelte5
         kind="pod"
-        bind:selectedItemsNumber={selectedItemsNumber}
+        bind:selected={selected}
         data={pods}
         columns={columns}
         row={row}
         defaultSortColumn="Name"
-        on:update={(): PodInfoUI[] => (pods = pods)}>
-      </Table>
+        key={key}
+        label={label}
+      >
+      </TableSvelte5>
     {/if}
   </div>
   {/snippet}
