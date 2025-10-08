@@ -379,6 +379,11 @@ export interface GetImagesOptions {
   names: string[];
 }
 
+export interface NetworkUpdateOptions {
+  adddnsservers?: string[];
+  removednsservers?: string[];
+}
+
 // API of libpod that we want to expose on our side
 export interface LibPod {
   createPod(podOptions: PodCreateOptions): Promise<{ Id: string }>;
@@ -403,6 +408,7 @@ export interface LibPod {
   podmanInspectManifest(manifestName: string): Promise<ManifestInspectInfo>;
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
   podmanRemoveManifest(manifestName: string): Promise<void>;
+  updateNetwork(networkId: string, addDNSServer: string[], removeDNSServer: string[]): Promise<void>;
 }
 
 // change the method from private to public as we're overriding it
@@ -1084,6 +1090,33 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<{ Names: string[] }>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.updateNetwork = function (
+      networkId: string,
+      addDNSServer: string[],
+      removeDNSServer: string[],
+    ): Promise<void> {
+      const options: NetworkUpdateOptions = { adddnsservers: addDNSServer, removednsservers: removeDNSServer };
+      const optsf = {
+        path: `/v4.2.0/libpod/networks/${networkId}/update`,
+        method: 'POST',
+        options: options,
+        statusCodes: {
+          200: true,
+          204: true,
+          400: 'bad parameter',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
         });
       });
     };

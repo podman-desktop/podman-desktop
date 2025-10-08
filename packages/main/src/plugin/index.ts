@@ -822,6 +822,24 @@ export class PluginSystem {
       return containerProviderRegistry.listNetworks();
     });
     this.ipcHandle(
+      'container-provider-registry:removeNetwork',
+      async (_listener, engine: string, networkId: string): Promise<void> => {
+        return containerProviderRegistry.removeNetwork(engine, networkId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:updateNetwork',
+      async (
+        _listener,
+        engineId: string,
+        networkId: string,
+        addDNSServers: string[],
+        removeDNSServers: string[],
+      ): Promise<void> => {
+        return containerProviderRegistry.updateNetwork(engineId, networkId, addDNSServers, removeDNSServers);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:listVolumes',
       async (_listener, fetchUsage: boolean): Promise<VolumeListInfo[]> => {
         return containerProviderRegistry.listVolumes(fetchUsage);

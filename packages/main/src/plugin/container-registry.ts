@@ -800,6 +800,35 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async removeNetwork(engineId: string, networkId: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      await this.getMatchingEngine(engineId).getNetwork(networkId).remove();
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('removeNetwork', telemetryOptions);
+    }
+  }
+
+  async updateNetwork(
+    engineId: string,
+    networkId: string,
+    addDNSServer: string[],
+    removeDNSServer: string[],
+  ): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      await this.getMatchingPodmanEngineLibPod(engineId).updateNetwork(networkId, addDNSServer, removeDNSServer);
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('updateNetwork', telemetryOptions);
+    }
+  }
+
   async listVolumes(fetchUsage = false): Promise<VolumeListInfo[]> {
     let telemetryOptions = {};
     const volumes = await Promise.all(

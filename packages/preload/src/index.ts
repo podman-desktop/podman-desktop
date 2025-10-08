@@ -304,6 +304,17 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:listNetworks');
   });
 
+  contextBridge.exposeInMainWorld('removeNetwork', async (engine: string, networkId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:removeNetwork', engine, networkId);
+  });
+
+  contextBridge.exposeInMainWorld(
+    'updateNetwork',
+    async (engine: string, networkId: string, addDNSServers: string[], removeDNSServers: string[]): Promise<void> => {
+      return ipcInvoke('container-provider-registry:updateNetwork', engine, networkId, addDNSServers, removeDNSServers);
+    },
+  );
+
   contextBridge.exposeInMainWorld(
     'replicatePodmanContainer',
     async (

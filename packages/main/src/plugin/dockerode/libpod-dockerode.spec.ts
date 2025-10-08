@@ -434,3 +434,17 @@ test('check pod inspect', async () => {
   expect(response).toBeDefined();
   expect(response.Id).toStrictEqual('testId1');
 });
+
+test('Check update network', async () => {
+  server = setupServer(
+    http.post('http://localhost/v4.2.0/libpod/networks/network1/update', async info => {
+      const requestBoddy = await info.request.json();
+      expect(requestBoddy).toEqual({ adddnsservers: ['1.1.1.1'], removednsservers: [] });
+      return HttpResponse.json({}, { status: 204 });
+    }),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  await (api as unknown as LibPod).updateNetwork('network1', ['1.1.1.1'], []);
+});
