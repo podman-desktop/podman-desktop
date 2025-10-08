@@ -250,6 +250,9 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
         <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
           <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
+        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
+          <NetworksList />
+        </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
             <KubernetesDashboard />

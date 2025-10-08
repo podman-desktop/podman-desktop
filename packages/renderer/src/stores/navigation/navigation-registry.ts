@@ -28,6 +28,7 @@ import { createNavigationContainerEntry } from './navigation-registry-container.
 import { createNavigationExtensionEntry, createNavigationExtensionGroup } from './navigation-registry-extension.svelte';
 import { createNavigationImageEntry } from './navigation-registry-image.svelte';
 import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
+import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
 
@@ -69,6 +70,7 @@ const init = (): void => {
   values.push(createNavigationKubernetesGroup());
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
+  values.push(createNavigationNetworkEntry());
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 
