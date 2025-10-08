@@ -101,7 +101,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto('/volumes');
       break;
     case NavigationPage.VOLUME:
-      router.goto(`/volumes/${request.parameters.name}/`);
+      router.goto(`/volumes/${request.parameters.name}/${request.parameters.engineId}/summary`);
       break;
     case NavigationPage.CONTRIBUTION:
       router.goto(`/contribs/${request.parameters.name}/`);

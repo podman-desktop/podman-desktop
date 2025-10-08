@@ -166,10 +166,11 @@ test(`Test navigationHandle for ${NavigationPage.VOLUME}`, () => {
     page: NavigationPage.VOLUME,
     parameters: {
       name: 'dummyVolumeName',
+      engineId: 'dummyEngineId',
     },
   });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/volumes/dummyVolumeName/');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/volumes/dummyVolumeName/dummyEngineId/summary');
 });
 
 test(`Test navigationHandle for ${NavigationPage.CONTRIBUTION}`, () => {

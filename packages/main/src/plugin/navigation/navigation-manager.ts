@@ -235,6 +235,7 @@ export class NavigationManager {
       page: NavigationPage.VOLUME,
       parameters: {
         name: name,
+        engineId: engineId,
       },
     });
   }

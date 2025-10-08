@@ -39,7 +39,7 @@ export interface NavigationParameters {
   [NavigationPage.PODMAN_PODS]: never;
   [NavigationPage.PODMAN_POD]: { name: string; engineId: string };
   [NavigationPage.VOLUMES]: never;
-  [NavigationPage.VOLUME]: { name: string };
+  [NavigationPage.VOLUME]: { engineId: string; name: string };
   [NavigationPage.CONTRIBUTION]: { name: string };
   [NavigationPage.TROUBLESHOOTING]: never;
   [NavigationPage.HELP]: never;
