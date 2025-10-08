@@ -190,6 +190,8 @@ export class ContainerProviderRegistry {
         this.apiSender.send('pod-event');
       } else if (jsonEvent?.Type === 'volume') {
         this.apiSender.send('volume-event');
+      } else if (jsonEvent?.Type === 'network') {
+        this.apiSender.send('network-event');
       } else if (jsonEvent.status === 'remove' && jsonEvent?.Type === 'container') {
         this.apiSender.send('container-removed-event', jsonEvent.id);
       } else if (jsonEvent.status === 'pull' && jsonEvent?.Type === 'image') {
