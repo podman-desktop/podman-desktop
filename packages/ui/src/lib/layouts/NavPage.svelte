@@ -7,6 +7,7 @@ interface Props {
   title: string;
   searchTerm?: string;
   searchEnabled?: boolean;
+  searchPlaceholder?: string;
   additionalActions?: Snippet;
   bottomAdditionalActions?: Snippet;
   tabs?: Snippet;
@@ -17,6 +18,7 @@ let {
   title,
   searchTerm = $bindable(''),
   searchEnabled = true,
+  searchPlaceholder,
   additionalActions,
   bottomAdditionalActions,
   tabs,
@@ -43,7 +45,7 @@ let {
     {#if searchEnabled}
       <div class="flex flex-row pb-4" role="region" aria-label="search">
         <div class="pl-5 w-72">
-          <SearchInput bind:searchTerm={searchTerm} title={title} />
+          <SearchInput bind:searchTerm={searchTerm} title={title} placeholder={searchPlaceholder} />
         </div>
         <div class="flex flex-1 px-5" role="group" aria-label="bottomAdditionalActions">
           {#if bottomAdditionalActions}
