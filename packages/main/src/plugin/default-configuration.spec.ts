@@ -16,28 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { promises as fsPromises } from 'node:fs';
 import * as path from 'node:path';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isLinux, isMac, isWindows } from '../util.js';
 import { DefaultConfiguration } from './default-configuration.js';
 
-// mock constants
-vi.mock('/@api/configuration/constants.js', () => ({
-  SYSTEM_DEFAULTS_FILE_MAC: '/Library/Application Support/com.podman.desktop/default-settings.json',
-  SYSTEM_DEFAULTS_FILE_WINDOWS_DIR: 'PodmanDesktop',
-  SYSTEM_DEFAULTS_FILE_WINDOWS_FILE: 'default-settings.json',
-  SYSTEM_DEFAULTS_FILE_LINUX: '/usr/share/podman-desktop/default-settings.json',
-}));
-
 // mock the fs module as we don't want to check the read file / exists / promises, but rather
-vi.mock('node:fs', () => ({
-  readFileSync: vi.fn(),
-  existsSync: vi.fn(),
-  promises: {
-    readFile: vi.fn(),
-  },
-}));
+vi.mock(import('node:fs'));
 
 // mock util functions
 vi.mock('../util.js', () => ({
@@ -45,9 +33,6 @@ vi.mock('../util.js', () => ({
   isWindows: vi.fn(),
   isLinux: vi.fn(),
 }));
-
-const { isMac, isWindows, isLinux } = await import('../util.js');
-const { promises: fsPromises } = await import('node:fs');
 
 let defaultConfiguration: DefaultConfiguration;
 
