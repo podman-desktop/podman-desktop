@@ -399,7 +399,7 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Run Smoke E2E tests in Development Mode
+      - name: Run k8s sanity E2E tests in Development Mode
         env:
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
