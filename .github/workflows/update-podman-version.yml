@@ -87,7 +87,6 @@ jobs:
           CURRENT_VERSION="${{ env.CURRENT_VERSION }}"
 
           # Replace the version and filenames for assets
-          sed -i -E "s/\"version\"> \"$CURRENT_VERSION\"/\"version\":\"$NEW_VERSION\"/g" "$FILE"
           sed -i -E "s/$CURRENT_VERSION/$NEW_VERSION/g" "$FILE"
 
           echo "Validating JSON after modification..."
