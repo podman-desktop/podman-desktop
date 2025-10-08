@@ -74,8 +74,8 @@ importers:
         specifier: ^14.4.2
         version: 14.4.6
       hosted-git-info:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.0.1
+        version: 9.0.1
       hpagent:
         specifier: ^1.2.0
         version: 1.2.0
@@ -7209,8 +7209,8 @@ packages:
     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
     engines: {node: '>=10'}
 
-  hosted-git-info@9.0.0:
-    resolution: {integrity: sha512-gEf705MZLrDPkbbhi8PnoO4ZwYgKoNL+ISZ3AjZMht2r3N5tuTwncyDi6Fv2/qDnMmZxgs0yI8WDOyR8q3G+SQ==}
+  hosted-git-info@9.0.1:
+    resolution: {integrity: sha512-FLN0k/CSIHgTZr46YbK5od55jQEzWNGCNl8AufispkkTwcIpnxG1NMH52+O7lu0z3mI9bjPfGzcO7MhDesQ1kw==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
   hpack.js@2.1.6:
@@ -8222,8 +8222,8 @@ packages:
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
-  lru-cache@11.1.0:
-    resolution: {integrity: sha512-QIXZUBJUx+2zHUdQujWejBkcD9+cs94tLn0+YL8UrCh+D5sCXZ4c7LaEH48pNwRY3MLDgqUFyhlCyjJPf1WP0A==}
+  lru-cache@11.2.2:
+    resolution: {integrity: sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==}
     engines: {node: 20 || >=22}
 
   lru-cache@5.1.1:
@@ -10213,6 +10213,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.3:
+    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   send@0.19.0:
     resolution: {integrity: sha512-dW41u5VfLXu8SJh5bwRmyYUbAoSB3c9uQh6L8h/KtsFREPWpbX1lrljJo186Jc4nmci/sGUZ9a0a0J2zgfq2hw==}
     engines: {node: '>= 0.8.0'}
@@ -11863,7 +11868,7 @@ snapshots:
       '@csstools/css-color-parser': 3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
-      lru-cache: 11.1.0
+      lru-cache: 11.2.2
 
   '@asamuzakjp/dom-selector@6.5.4':
     dependencies:
@@ -13998,7 +14003,7 @@ snapshots:
       make-fetch-happen: 10.2.1
       nopt: 6.0.0
       proc-log: 2.0.1
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 6.2.1
       which: 2.0.2
     transitivePeerDependencies:
@@ -14037,7 +14042,7 @@ snapshots:
       node-gyp: 9.4.1
       ora: 5.4.1
       read-binary-file-arch: 1.0.6
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 6.2.1
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -14718,7 +14723,7 @@ snapshots:
   '@npmcli/fs@2.1.2':
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.7.2
+      semver: 7.7.3
 
   '@npmcli/move-file@2.0.1':
     dependencies:
@@ -16603,7 +16608,7 @@ snapshots:
       minimatch: 10.0.3
       resedit: 1.7.2
       sanitize-filename: 1.6.3
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 6.2.1
       temp-file: 3.4.0
     transitivePeerDependencies:
@@ -19723,9 +19728,9 @@ snapshots:
     dependencies:
       lru-cache: 6.0.0
 
-  hosted-git-info@9.0.0:
+  hosted-git-info@9.0.1:
     dependencies:
-      lru-cache: 11.1.0
+      lru-cache: 11.2.2
 
   hpack.js@2.1.6:
     dependencies:
@@ -20686,7 +20691,7 @@ snapshots:
 
   lru-cache@10.4.3: {}
 
-  lru-cache@11.1.0: {}
+  lru-cache@11.2.2: {}
 
   lru-cache@5.1.1:
     dependencies:
@@ -21611,7 +21616,7 @@ snapshots:
 
   node-abi@3.78.0:
     dependencies:
-      semver: 7.7.2
+      semver: 7.7.3
 
   node-addon-api@1.7.2:
     optional: true
@@ -21645,7 +21650,7 @@ snapshots:
       nopt: 6.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 6.2.1
       which: 2.0.2
     transitivePeerDependencies:
@@ -23209,6 +23214,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.2: {}
+
+  semver@7.7.3: {}
 
   send@0.19.0:
     dependencies:
