@@ -13,7 +13,10 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "/@/*": ["./src/*"]
+    }
   },
   "include": ["src", "types/*.d.ts", "scripts"]
 }
