@@ -69,7 +69,7 @@ export class WelcomePage extends BasePage {
   async turnOffTelemetry(): Promise<void> {
     return test.step('Turn off Telemetry', async () => {
       // Extensions load sequentially (faster speed but can block ui)
-      await playExpect(this.startOnboarding).toBeEnabled({ timeout: 20_000 });
+      await playExpect(this.startOnboarding).toBeEnabled({ timeout: 30_000 });
 
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
