@@ -37,6 +37,5 @@ export interface DockerContextInfo {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DockerContextParsingInfo extends Omit<DockerContextInfo, 'isCurrentContext'> {}
 
-export interface DockerExtensionApi {
-  dummy: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DockerExtensionApi {}
