@@ -1041,5 +1041,41 @@ export class LibpodDockerode {
         });
       });
     };
+
+    // Override pull() to support tlsVerify for Podman
+    const originalPull = prototypeOfDockerode.pull;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (prototypeOfDockerode as any).pull = function (
+      repoTag: string,
+      options?: { tlsVerify?: boolean; [key: string]: unknown },
+    ): Promise<NodeJS.ReadableStream> {
+      // If tlsVerify is specified and this is Podman, add it to the query string
+      if (options?.tlsVerify !== undefined) {
+        // Manually build the request to include tlsVerify parameter
+        const optsf = {
+          path: `/images/create?fromImage=${encodeURIComponent(repoTag)}&tlsVerify=${options.tlsVerify}`,
+          method: 'POST',
+          isStream: true,
+          options: options,
+          statusCodes: {
+            200: true,
+            404: 'no such image',
+            500: 'server error',
+          },
+        };
+
+        return new Promise((resolve, reject) => {
+          this.modem.dial(optsf, (err: unknown, stream: unknown) => {
+            if (err) {
+              return reject(err);
+            }
+            resolve(wrapAs<NodeJS.ReadableStream>(stream));
+          });
+        });
+      }
+
+      // Otherwise use original pull
+      return originalPull.call(this, repoTag, options);
+    };
   }
 }

@@ -1160,11 +1160,27 @@ export class ContainerProviderRegistry {
     try {
       const authconfig = this.imageRegistry.getAuthconfigForImage(imageName);
       const matchingEngine = this.getMatchingEngineFromConnection(providerContainerConnectionInfo);
-      const pullStream = await matchingEngine.pull(imageName, {
+
+      // Check if registry is insecure and add tlsVerify flag if so
+      const isInsecure = this.imageRegistry.isRegistryInsecure(imageName);
+      const pullOptions: {
+        authconfig?: Dockerode.AuthConfig;
+        platform?: string;
+        abortSignal?: AbortSignal;
+        tlsVerify?: boolean;
+      } = {
         authconfig,
         platform,
         abortSignal: abortController?.signal,
-      });
+      };
+
+      // Only add tlsVerify if registry is insecure (Podman will handle it)
+      if (isInsecure) {
+        pullOptions.tlsVerify = false;
+      }
+
+      const pullStream = await matchingEngine.pull(imageName, pullOptions);
+
       let resolve: () => void;
       let reject: (err: Error) => void;
       const promise = new Promise<void>((res, rej) => {
