@@ -16,9 +16,9 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ***********************************************************************/
 
-summary: Execute all Playwright end-to-end test, excluding those related to Kubernetes.
+summary: Execute all Playwright E2E tests.
 tag:
-  - e2e
+  - all
 duration: 2h
 result: custom
 framework: shell
@@ -26,6 +26,6 @@ test: |
   set +e
   cd $TMT_TREE
   pnpm install
-  pnpm test:e2e
+  pnpm test:e2e:all
   EXIT_CODE=$?
-  bash "$TMT_TREE/tmt/scripts/create-results.sh" "$EXIT_CODE" "e2e"
+  bash "$TMT_TREE/tests/tmt/scripts/create-results.sh" "$EXIT_CODE" "all"

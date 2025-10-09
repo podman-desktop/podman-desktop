@@ -56,7 +56,7 @@ prepare:
   - name: Install podman  
     how: shell
     script: | 
-      bash $TMT_TREE/tmt/scripts/install-podman.sh
+      bash $TMT_TREE/tests/tmt/scripts/install-podman.sh
 
   - name: Enable and start Podman rootless service
     how: shell
@@ -70,7 +70,7 @@ prepare:
   prepare+:
     - name: Install Docker Compose CLI
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-docker-compose.sh
   discover+: 
     filter: 'tag:e2e'
 
@@ -79,7 +79,7 @@ prepare:
   prepare+:
     - name: Install Docker Compose CLI
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-docker-compose.sh
   discover+: 
     filter: 'tag:smoke'
 
@@ -88,10 +88,10 @@ prepare:
   prepare+:
     - name: Install Kind CLI 
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-kind.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-kind.sh
     - name: Install Kubectl
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-kubectl.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-kubectl.sh
   discover+: 
     filter: 'tag:kubernetes'
 
@@ -100,12 +100,12 @@ prepare:
   prepare+:
     - name: Install Docker Compose CLI
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-docker-compose.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-docker-compose.sh
     - name: Install Kind CLI 
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-kind.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-kind.sh
     - name: Install Kubectl
       how: shell
-      script: bash $TMT_TREE/tmt/scripts/install-kubectl.sh
+      script: bash $TMT_TREE/tests/tmt/scripts/install-kubectl.sh
   discover+: 
     filter: 'tag:all'
