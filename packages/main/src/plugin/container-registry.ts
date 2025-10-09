@@ -1190,12 +1190,31 @@ export class ContainerProviderRegistry {
     let telemetryOptions = {};
     try {
       const authconfig = this.imageRegistry.getAuthconfigForImage(imageName);
-      const matchingEngine = this.getMatchingEngineFromConnection(providerContainerConnectionInfo);
-      const pullStream = await matchingEngine.pull(imageName, {
-        authconfig,
-        platform,
-        abortSignal: abortController?.signal,
-      });
+      const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+      const matchingEngine = matchingContainerProvider.api;
+
+      if (!matchingEngine) {
+        throw new Error('no running provider for the matching container');
+      }
+
+      // Check if registry is insecure and use LibPod API if so
+      const isInsecure = this.imageRegistry.isRegistryInsecure(imageName);
+      let pullStream: NodeJS.ReadableStream;
+
+      if (isInsecure && matchingContainerProvider.libpodApi) {
+        // Use LibPod API with tlsVerify=false for insecure registries
+        pullStream = await matchingContainerProvider.libpodApi.pullImage(imageName, {
+          tlsVerify: false,
+        });
+      } else {
+        // Use standard Dockerode pull for secure registries
+        pullStream = await matchingEngine.pull(imageName, {
+          authconfig,
+          platform,
+          abortSignal: abortController?.signal,
+        });
+      }
+
       let resolve: () => void;
       let reject: (err: Error) => void;
       const promise = new Promise<void>((res, rej) => {

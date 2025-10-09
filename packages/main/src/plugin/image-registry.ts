@@ -142,6 +142,73 @@ export class ImageRegistry {
     return undefined;
   }
 
+  isRegistryInsecure(imageName: string): boolean {
+    const registryServer = this.extractRegistryServerFromImage(imageName);
+    if (!registryServer) {
+      return false;
+    }
+
+    let matchingUrl = registryServer;
+    if (matchingUrl === 'index.docker.io') {
+      matchingUrl = 'docker.io';
+    }
+
+    // First check in-memory registries (these include insecure flag from system conf)
+    const matchingRegistry = this.getRegistries().find(
+      registry => registry.serverUrl.toLowerCase() === matchingUrl.toLowerCase(),
+    );
+
+    if (matchingRegistry?.insecure !== undefined) {
+      return matchingRegistry.insecure === true;
+    }
+
+    // If not found in memory, check system registries.conf directly
+    // This handles registries without authentication
+    return this.checkSystemRegistriesConf(matchingUrl);
+  }
+
+  private checkSystemRegistriesConf(registryServer: string): boolean {
+    try {
+      const fs = require('node:fs');
+      const toml = require('toml');
+      const path = require('node:path');
+
+      // Determine system registries.conf path based on platform
+      let confPath: string;
+      if (process.platform === 'linux') {
+        confPath = '/etc/containers/registries.conf';
+      } else if (process.platform === 'darwin') {
+        confPath = '/opt/podman/etc/containers/registries.conf';
+      } else if (process.platform === 'win32') {
+        const programFiles = process.env['PROGRAMFILES'] ?? 'C:\\Program Files';
+        confPath = path.join(programFiles, 'RedHat', 'Podman', 'etc', 'containers', 'registries.conf');
+      } else {
+        return false;
+      }
+
+      if (!fs.existsSync(confPath)) {
+        return false;
+      }
+
+      const content = fs.readFileSync(confPath, 'utf-8');
+      const parsed = toml.parse(content);
+
+      if (parsed?.registry && Array.isArray(parsed.registry)) {
+        const registry = parsed.registry.find(
+          (reg: { location?: string; insecure?: boolean }) =>
+            reg.location && reg.location.toLowerCase() === registryServer.toLowerCase(),
+        );
+        return registry?.insecure === true;
+      }
+
+      return false;
+    } catch (error) {
+      // If we can't read the file, assume secure
+      console.debug(`Could not read system registries.conf: ${error}`);
+      return false;
+    }
+  }
+
   /**
    * Provides authentication information from all registries.
    */

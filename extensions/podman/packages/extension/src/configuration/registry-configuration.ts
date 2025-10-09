@@ -43,7 +43,7 @@ interface ActionQuickPickItem extends QuickPickItem {
   actionName: ActionEnum;
 }
 
-interface RegistryConfigurationEntry {
+export interface RegistryConfigurationEntry {
   prefix?: string;
   insecure?: boolean;
   blocked?: boolean;
