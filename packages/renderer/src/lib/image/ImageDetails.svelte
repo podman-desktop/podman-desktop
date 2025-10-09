@@ -12,7 +12,6 @@ import type { ViewInfoUI } from '/@api/view-info';
 
 import Route from '../../Route.svelte';
 import { imagesInfos } from '../../stores/images';
-import type { ContextUI } from '../context/context';
 import Badge from '../ui/Badge.svelte';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
@@ -41,7 +40,6 @@ interface Props {
 
 let { imageID, engineId, base64RepoTag }: Props = $props();
 
-let globalContext: ContextUI = $derived($context);
 let viewContributions: ViewInfoUI[] = $derived.by(() => {
   return $viewsContributions.filter(
     view =>
@@ -69,22 +67,16 @@ function closeModals(): void {
   renameImageModal = false;
 }
 
-let imageInfo: ImageInfo | undefined = $derived.by(() => {
-  return $imagesInfos.find(c => c.Id === imageID && c.engineId === engineId);
-});
-let image: ImageInfoUI | undefined = $derived.by(() => {
-  return imageInfo
-    ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, globalContext, viewContributions)
-    : undefined;
-});
+let imageInfo: ImageInfo | undefined = $derived($imagesInfos.find(c => c.Id === imageID && c.engineId === engineId));
+let image: ImageInfoUI | undefined = $derived(
+  imageInfo
+    ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, $context, viewContributions)
+    : undefined,
+);
 let detailsPage: DetailsPage | undefined = $state();
 
-let showCheckTab: boolean = $derived.by(() => {
-  return $imageCheckerProviders.length > 0;
-});
-let showFilesTab: boolean = $derived.by(() => {
-  return $imageFilesProviders.length > 0;
-});
+let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
+let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
 
 $effect(() => {
   if (!image) {
@@ -116,8 +108,7 @@ $effect(() => {
           onRenameImage={handleRenameImageModal}
           detailed={true}
           dropdownMenu={false}
-          groupContributions={true}
-          on:update={(): ImageInfoUI | undefined => (image = image)} />
+          groupContributions={true} />
       {/if}
     {/snippet}
     {#snippet tabsSnippet()}
