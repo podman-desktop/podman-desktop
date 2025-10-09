@@ -1,7 +1,6 @@
 <script lang="ts">
 import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
@@ -39,33 +38,24 @@ let {
 const imageUtils = new ImageUtils();
 
 let contributions: Menu[] = $state([]);
-let globalContext: ContextUI | undefined = $state();
-let contextsUnsubscribe: Unsubscriber;
-let groupingContributions = $state(false);
+
+let groupingContributions = $derived(groupContributions && !dropdownMenu && contributions.length > 1);
+let globalContext: ContextUI = $derived.by(() => {
+  const ctx = new ContextUI();
+  const allValues = $context.collectAllValues();
+  for (const k in allValues) {
+    ctx.setValue(k, allValues[k]);
+  }
+
+  const labels = image.labels ? Object.keys(image.labels) : [];
+  ctx.setValue('imageLabelKeys', labels);
+  return ctx;
+});
 
 const dispatch = createEventDispatcher<{ update: ImageInfoUI }>();
 
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_IMAGE);
-  groupingContributions = groupContributions && !dropdownMenu && contributions.length > 1;
-  contextsUnsubscribe = context.subscribe(value => {
-    // Copy context, do not use reference
-    globalContext = new ContextUI();
-    const allValues = value.collectAllValues();
-    for (const k in allValues) {
-      globalContext.setValue(k, allValues[k]);
-    }
-
-    const labels = image.labels ? Object.keys(image.labels) : [];
-    globalContext.setValue('imageLabelKeys', labels);
-  });
-});
-
-onDestroy(() => {
-  // unsubscribe from the store
-  if (contextsUnsubscribe) {
-    contextsUnsubscribe();
-  }
 });
 
 async function runImage(imageInfo: ImageInfoUI): Promise<void> {
