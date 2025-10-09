@@ -116,7 +116,7 @@ let filteredItems = $derived.by(() => {
     return filteredGoToItems;
   } else {
     // All mode - combine both
-    return [...filteredCommandInfoItems, ...filteredDocumentationInfoItems, ...filteredGoToItems];
+    return [...filteredGoToItems, ...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
   }
 });
 

@@ -364,6 +364,13 @@ describe('Command Palette', () => {
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
+    // Switch to Commands mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
+
+    // Wait for items to appear
+    await screen.findByRole('button', { name: commandTitle1 });
+
     // Check some items are hidden
     const itemDisabled = screen.queryByRole('button', { name: commandTitle0 });
     expect(itemDisabled).not.toBeInTheDocument();

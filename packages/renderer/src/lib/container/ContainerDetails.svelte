@@ -3,8 +3,9 @@ import '@xterm/xterm/css/xterm.css';
 
 import { ErrorMessage, Link, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { onMount } from 'svelte';
 import { router } from 'tinro';
+
+import type { ContainerInfo } from '/@api/container-info';
 
 import Route from '../../Route.svelte';
 import { containersInfos } from '../../stores/containers';
@@ -25,6 +26,7 @@ import ContainerStatistics from './ContainerStatistics.svelte';
 interface Props {
   containerID: string;
 }
+
 let { containerID }: Props = $props();
 
 const containerUtils = new ContainerUtils();
