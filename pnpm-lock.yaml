@@ -74,8 +74,8 @@ importers:
         specifier: ^14.4.2
         version: 14.4.6
       hosted-git-info:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^9.0.2
+        version: 9.0.2
       hpagent:
         specifier: ^1.2.0
         version: 1.2.0
@@ -7212,8 +7212,8 @@ packages:
     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
     engines: {node: '>=10'}
 
-  hosted-git-info@9.0.1:
-    resolution: {integrity: sha512-FLN0k/CSIHgTZr46YbK5od55jQEzWNGCNl8AufispkkTwcIpnxG1NMH52+O7lu0z3mI9bjPfGzcO7MhDesQ1kw==}
+  hosted-git-info@9.0.2:
+    resolution: {integrity: sha512-M422h7o/BR3rmCQ8UHi7cyyMqKltdP9Uo+J2fXK+RSAY+wTcKOIRyhTuKv4qn+DJf3g+PL890AzId5KZpX+CBg==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
   hpack.js@2.1.6:
@@ -19739,7 +19739,7 @@ snapshots:
     dependencies:
       lru-cache: 6.0.0
 
-  hosted-git-info@9.0.1:
+  hosted-git-info@9.0.2:
     dependencies:
       lru-cache: 11.2.2
 
