@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import fs from 'node:fs';
+
 import * as extensionApi from '@podman-desktop/api';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
@@ -39,7 +41,17 @@ export async function findPodmanInstallations(): Promise<string[]> {
     const paths: string[] = result.stdout
       .split(/\r?\n/)
       .map(line => line.trim())
-      .filter(path => path.length > 0);
+      .filter(path => {
+        if (path.length === 0) {
+          return false; // Skip empty paths
+        }
+        try {
+          const stat = fs.lstatSync(path); // Try to get file status
+          return stat.isFile() && !stat.isSymbolicLink(); // Ensure it's a file excluding symlinks
+        } catch {
+          return false; // If lstatSync fails, the path is invalid
+        }
+      });
 
     // Return unique paths only
     return paths.filter((path, index) => paths.indexOf(path) === index);
