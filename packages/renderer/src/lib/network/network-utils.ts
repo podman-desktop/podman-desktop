@@ -22,7 +22,6 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 
 export class NetworkUtils {
   toVolumeInfoUI(networkInspectInfo: NetworkInspectInfo): NetworkInfoUI {
-    console.log(networkInspectInfo);
     return {
       id: networkInspectInfo.Id,
       shortId: networkInspectInfo.Id.substring(0, 12),

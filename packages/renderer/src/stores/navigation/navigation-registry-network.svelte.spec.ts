@@ -16,24 +16,35 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { get } from 'svelte/store';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+import type { NetworkInspectInfo } from '/@api/network-info';
 
 import { networksList } from '../networks';
-import type { NavigationRegistryEntry } from './navigation-registry';
+import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 
-const count = $derived(get(networksList).length);
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
-export function createNavigationNetworkEntry(): NavigationRegistryEntry {
-  const registry: NavigationRegistryEntry = {
-    name: 'Networks',
-    icon: { iconComponent: ContainerIcon },
-    link: '/networks',
-    tooltip: 'Networks',
-    type: 'entry',
-    get counter() {
-      return count;
-    },
-  };
-  return registry;
-}
+test('createNavigationNetworkEntry', async () => {
+  const entry = createNavigationNetworkEntry();
+  networksList.set([
+    {
+      Id: 'network1',
+      Name: 'network 1',
+    } as unknown as NetworkInspectInfo,
+    {
+      Id: 'network2',
+      Nmae: 'network 2',
+    } as unknown as NetworkInspectInfo,
+  ]);
+
+  expect(entry).toBeDefined();
+  expect(entry.name).toBe('Networks');
+  expect(entry.link).toBe('/networks');
+  expect(entry.tooltip).toBe('Networks');
+  await vi.waitFor(() => {
+    expect(entry.counter).toBe(2);
+  });
+});
