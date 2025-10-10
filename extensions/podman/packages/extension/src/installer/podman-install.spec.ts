@@ -136,8 +136,12 @@ vi.mock(import('../utils/util'), async () => {
   };
 });
 
+let podmanInstall: TestPodmanInstall;
+
 beforeEach(() => {
   vi.clearAllMocks();
+
+  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
   console.error = consoleErrorMock;
@@ -175,8 +179,6 @@ class TestPodmanInstall extends PodmanInstall {
 
 describe('update checks', () => {
   test('stopPodmanMachinesIfAnyBeforeUpdating with an error', async () => {
-    const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     // return empty machine list
     vi.mocked(extensionApi.process.exec).mockRejectedValue('invalid');
 
@@ -187,8 +189,6 @@ describe('update checks', () => {
   });
 
   test('stopPodmanMachinesIfAnyBeforeUpdating with no machine running', async () => {
-    const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     // return empty machine list
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: '[]',
@@ -201,8 +201,6 @@ describe('update checks', () => {
   });
 
   test('stopPodmanMachinesIfAnyBeforeUpdating with one machine running', async () => {
-    const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
@@ -229,8 +227,6 @@ describe('update checks', () => {
   });
 
   test('wipeAllDataBeforeUpdatingToV5 with podman 4.9 -> 5.0', async () => {
-    const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     // mock the getActions
     const providerCleanup = podmanInstall.getProviderCleanup();
     expect(providerCleanup).toBeDefined();
@@ -267,8 +263,6 @@ describe('update checks', () => {
   });
 
   test('wipeAllDataBeforeUpdatingToV5 no action with podman 4.9.1 -> 4.9.2', async () => {
-    const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     // mock the getActions
     const providerCleanup = podmanInstall.getProviderCleanup();
     expect(providerCleanup).toBeDefined();
@@ -292,14 +286,12 @@ describe('update checks', () => {
 });
 
 test('checkForUpdate should return no installed version if there is no lastRunInfo', async () => {
-  const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
   vi.spyOn(podmanInstall, 'getLastRunInfo').mockResolvedValue(undefined);
   const result = await podmanInstall.checkForUpdate(undefined);
   expect(result).toStrictEqual({ installedVersion: undefined, hasUpdate: false, bundledVersion: undefined });
 });
 
 test('checkForUpdate should return no installed version if there is lastRunInfo but it has no version', async () => {
-  const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
   vi.spyOn(podmanInstall, 'getLastRunInfo').mockResolvedValue({
     lastUpdateCheck: 0,
   });
@@ -308,7 +300,6 @@ test('checkForUpdate should return no installed version if there is lastRunInfo 
 });
 
 test('checkForUpdate should return installed version and no update if the installed version is the latest', async () => {
-  const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
   vi.spyOn(podmanInstall, 'getInstaller').mockReturnValue({
     requireUpdate: vi.fn().mockReturnValue(false),
   } as unknown as Installer);
@@ -326,7 +317,6 @@ test('checkForUpdate should return installed version and no update if the instal
 });
 
 test('checkForUpdate should return installed version and update if the installed version is NOT the latest', async () => {
-  const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
   vi.spyOn(podmanInstall, 'getInstaller').mockReturnValue({
     requireUpdate: vi.fn().mockReturnValue(true),
   } as unknown as Installer);
@@ -347,15 +337,12 @@ const providerMock: extensionApi.Provider = {} as unknown as extensionApi.Provid
 
 describe('performUpdate', () => {
   test('should raise an error if no podmanInfo provided', async () => {
-    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
     await expect(() => {
       return podmanInstall.performUpdate(providerMock, undefined);
     }).rejects.toThrowError('The podman extension has not been successfully initialized');
   });
 
   test('should call showWarningMessage if stopPodmanMachinesIfAnyBeforeUpdating resolve false', async () => {
-    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
     // mock initialized
     podmanInstall['podmanInfo'] = {} as unknown as PodmanInfo;
     // mock checkForUpdate
@@ -375,7 +362,6 @@ describe('performUpdate', () => {
   test('should call showInformationMessage ', async () => {
     vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue(undefined);
 
-    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
     // mock initialized
     podmanInstall['podmanInfo'] = {} as unknown as PodmanInfo;
 
@@ -405,7 +391,6 @@ describe('performUpdate', () => {
   test('user clicking on Open release note should open external link', async () => {
     vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Open release notes');
 
-    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
     // mock initialized
     podmanInstall['podmanInfo'] = {} as unknown as PodmanInfo;
 
@@ -429,7 +414,6 @@ describe('performUpdate', () => {
 
   test('should not start instalation when updating from Podman 5.3.1 to 5.4.X', async () => {
     vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Yes');
-    const podmanInstall: TestPodmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
     (extensionApi.env.isWindows as boolean) = true;
     // all podman machine are stopped
     vi.spyOn(podmanInstall, 'stopPodmanMachinesIfAnyBeforeUpdating').mockResolvedValue(true);
@@ -461,8 +445,6 @@ describe('performUpdate', () => {
 });
 
 test('check that podman installation refreshed machine settings', async () => {
-  const podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
-
   vi.spyOn(podmanInstall, 'getLastRunInfo').mockResolvedValue({
     lastUpdateCheck: 0,
     podmanVersion: '5.0.0',
