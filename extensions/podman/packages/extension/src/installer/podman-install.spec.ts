@@ -147,7 +147,11 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
 
-  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger, new WinPlatform(extensionContext, mockTelemetryLogger));
+  podmanInstall = new TestPodmanInstall(
+    extensionContext,
+    mockTelemetryLogger,
+    new WinPlatform(extensionContext, mockTelemetryLogger),
+  );
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
   console.error = consoleErrorMock;
