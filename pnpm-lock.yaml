@@ -958,7 +958,7 @@ importers:
         version: 4.0.0
       docusaurus-plugin-typedoc:
         specifier: ^1.4.2
-        version: 1.4.2(typedoc-plugin-markdown@4.8.1(typedoc@0.28.13(typescript@5.9.3)))
+        version: 1.4.2(typedoc-plugin-markdown@4.9.0(typedoc@0.28.13(typescript@5.9.3)))
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -1009,8 +1009,8 @@ importers:
         specifier: ^0.28.13
         version: 0.28.13(typescript@5.9.3)
       typedoc-plugin-markdown:
-        specifier: ^4.8.1
-        version: 4.8.1(typedoc@0.28.13(typescript@5.9.3))
+        specifier: ^4.9.0
+        version: 4.9.0(typedoc@0.28.13(typescript@5.9.3))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -11034,8 +11034,8 @@ packages:
     peerDependencies:
       typedoc-plugin-markdown: '>=4.8.0'
 
-  typedoc-plugin-markdown@4.8.1:
-    resolution: {integrity: sha512-ug7fc4j0SiJxSwBGLncpSo8tLvrT9VONvPUQqQDTKPxCoFQBADLli832RGPtj6sfSVJebNSrHZQRUdEryYH/7g==}
+  typedoc-plugin-markdown@4.9.0:
+    resolution: {integrity: sha512-9Uu4WR9L7ZBgAl60N/h+jqmPxxvnC9nQAlnnO/OujtG2ubjnKTVUFY1XDhcMY+pCqlX3N2HsQM2QTYZIU9tJuw==}
     engines: {node: '>= 18'}
     peerDependencies:
       typedoc: 0.28.x
@@ -18280,10 +18280,10 @@ snapshots:
 
   docusaurus-plugin-goatcounter@4.0.0: {}
 
-  docusaurus-plugin-typedoc@1.4.2(typedoc-plugin-markdown@4.8.1(typedoc@0.28.13(typescript@5.9.3))):
+  docusaurus-plugin-typedoc@1.4.2(typedoc-plugin-markdown@4.9.0(typedoc@0.28.13(typescript@5.9.3))):
     dependencies:
-      typedoc-docusaurus-theme: 1.4.2(typedoc-plugin-markdown@4.8.1(typedoc@0.28.13(typescript@5.9.3)))
-      typedoc-plugin-markdown: 4.8.1(typedoc@0.28.13(typescript@5.9.3))
+      typedoc-docusaurus-theme: 1.4.2(typedoc-plugin-markdown@4.9.0(typedoc@0.28.13(typescript@5.9.3)))
+      typedoc-plugin-markdown: 4.9.0(typedoc@0.28.13(typescript@5.9.3))
 
   dom-accessibility-api@0.5.16: {}
 
@@ -24166,11 +24166,11 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-docusaurus-theme@1.4.2(typedoc-plugin-markdown@4.8.1(typedoc@0.28.13(typescript@5.9.3))):
+  typedoc-docusaurus-theme@1.4.2(typedoc-plugin-markdown@4.9.0(typedoc@0.28.13(typescript@5.9.3))):
     dependencies:
-      typedoc-plugin-markdown: 4.8.1(typedoc@0.28.13(typescript@5.9.3))
+      typedoc-plugin-markdown: 4.9.0(typedoc@0.28.13(typescript@5.9.3))
 
-  typedoc-plugin-markdown@4.8.1(typedoc@0.28.13(typescript@5.9.3)):
+  typedoc-plugin-markdown@4.9.0(typedoc@0.28.13(typescript@5.9.3)):
     dependencies:
       typedoc: 0.28.13(typescript@5.9.3)
 
