@@ -80,7 +80,7 @@ test('should expect valid size', async () => {
 
   const networkInfo2 = networkUtils.toVolumeInfoUI(network2);
   expect(networkInfo2).toEqual({
-    id: '123456789123455',
+    id: '123456789123456',
     shortId: '123456789123',
     name: 'Network 2',
     driver: '',

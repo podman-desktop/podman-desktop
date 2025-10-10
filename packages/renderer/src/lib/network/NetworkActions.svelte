@@ -11,10 +11,9 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {
   network: NetworkInfoUI;
-  detailed: boolean;
 }
 
-let { network, detailed }: Props = $props();
+let { network }: Props = $props();
 
 let showUpdateNetworkDialog = $state(false);
 
@@ -32,8 +31,8 @@ async function removeNetwork(): Promise<void> {
 }
 
 async function updateNetwork(): Promise<void> {
-  const addList = addDNSServers ? addDNSServers.split(' ') : [];
-  const removeList = removeDNSServers ? removeDNSServers.split(' ') : [];
+  const addList = addDNSServers ? addDNSServers.trim().split(' ') : [];
+  const removeList = removeDNSServers ? removeDNSServers.trim().split(' ') : [];
   await window.updateNetwork(network.engineId, network.id, addList, removeList);
   addDNSServers = '';
   removeDNSServers = '';
@@ -45,14 +44,12 @@ async function updateNetwork(): Promise<void> {
   <ListItemButtonIcon
     title="Delete Network"
     onClick={(): void => withConfirmation(removeNetwork, `delete network ${network.name}`)}
-    detailed={detailed}
     icon={faTrash} />
 {/if}
 {#if network.engineType === 'podman'}
   <ListItemButtonIcon
     title="Update Network"
     onClick={(): void => {showUpdateNetworkDialog = true;}}
-    detailed={detailed}
     icon={faEdit} />
 {/if}
 
@@ -83,7 +80,7 @@ async function updateNetwork(): Promise<void> {
         type="primary"
         disabled={!addDNSServers.trim() &&
           !removeDNSServers.trim()}
-        onclick={updateNetwork}>Add</Button>
+        onclick={updateNetwork}>Update</Button>
     {/snippet}
   </Dialog>
 {/if}

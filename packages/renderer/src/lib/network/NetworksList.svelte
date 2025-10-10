@@ -1,14 +1,20 @@
 <script lang="ts">
-import { NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import { onDestroy } from 'svelte';
+
+import { filtered, searchPattern } from '/@/stores/networks';
 
 import { providerInfos } from '../../stores/providers';
+import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import { NetworkUtils } from './network-utils';
 import NetworkColumnActions from './NetworkColumnActions.svelte';
 import NetworkColumnDriver from './NetworkColumnDriver.svelte';
 import NetworkColumnId from './NetworkColumnId.svelte';
 import NetworkColumnName from './NetworkColumnName.svelte';
+import NetworkEmptyScreen from './NetworkEmptyScreen.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {
@@ -17,9 +23,13 @@ interface Props {
 
 let { searchTerm = '' }: Props = $props();
 
+$effect(() => {
+  $searchPattern = searchTerm;
+});
+
 let networkUtils = new NetworkUtils();
 
-let networks: NetworkInfoUI[] = $state<NetworkInfoUI[]>([]);
+let networks: NetworkInfoUI[] = $derived($filtered.map(network => networkUtils.toVolumeInfoUI(network)));
 
 let providerConnections = $derived(
   $providerInfos
@@ -28,13 +38,33 @@ let providerConnections = $derived(
     .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
 
-onMount(async () => {
-  networks = (await window.listNetworks()).map(network => networkUtils.toVolumeInfoUI(network));
-});
-
 onDestroy(() => {});
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number = $state(0);
+
+let bulkDeleteInProgress = $state(false);
+async function deleteSelectedNetworks(): Promise<void> {
+  const selectedNetworks = networks.filter(network => network.selected);
+
+  if (selectedNetworks.length === 0) {
+    return;
+  }
+
+  // mark volumes for deletion
+  bulkDeleteInProgress = true;
+  selectedNetworks.forEach(network => (network.status = 'DELETING'));
+
+  await Promise.all(
+    selectedNetworks.map(async network => {
+      try {
+        await window.removeNetwork(network.engineId, network.id);
+      } catch (error) {
+        console.error(`error while removing network ${network.name}`, error);
+      }
+    }),
+  );
+  bulkDeleteInProgress = false;
+}
 
 let idColumn = new TableColumn<NetworkInfoUI>('Id', {
   width: '100px',
@@ -70,7 +100,16 @@ const row = new TableRow<NetworkInfoUI>({
 
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
-      
+      <Button
+        on:click={(): void =>
+          withBulkConfirmation(
+            deleteSelectedNetworks,
+            `delete ${selectedItemsNumber} network${selectedItemsNumber > 1 ? 's' : ''}`,
+          )}
+        title="Delete {selectedItemsNumber} selected items"
+        inProgress={bulkDeleteInProgress}
+        icon={faTrash} />
+      <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}
 
@@ -79,6 +118,12 @@ const row = new TableRow<NetworkInfoUI>({
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
+    {:else if networks.length === 0}
+      {#if searchTerm}
+          <FilteredEmptyScreen icon={ContainerIcon} kind="networks" bind:searchTerm={searchTerm} />
+        {:else}
+          <NetworkEmptyScreen />
+        {/if}
     {:else}
       <Table
         kind="volume"
