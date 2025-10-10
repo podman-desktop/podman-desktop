@@ -88,6 +88,7 @@ import Route from './Route.svelte';
 import { lastSubmenuPages } from './stores/breadcrumb';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
+  import NetworkDetails from './lib/network/NetworkDetails.svelte';
 
 router.mode.memory();
 
@@ -262,6 +263,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/networks" breadcrumb="Networks" navigationHint="root">
           <NetworksList />
+        </Route>
+        <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+          <NetworkDetails networkName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
