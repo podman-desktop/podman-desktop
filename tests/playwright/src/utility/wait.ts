@@ -126,7 +126,10 @@ export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_00
       sendError: false,
     });
 
+    await dashboardPage.podmanStatusLabel.scrollIntoViewIfNeeded();
+
     try {
+      // sometimes the podman machine is stuck in STARTING state, so we try to reset it once
       await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout: timeoutOut });
     } catch (error) {
       console.log('Podman machine stuck in STARTING state, trying to restart it');
