@@ -20,7 +20,7 @@ import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { NavigationBar } from '../model/workbench/navigation';
-import { createPodmanMachineFromCLI } from './operations';
+import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from './operations';
 
 export async function wait(
   waitFunction: () => Promise<boolean>,
@@ -125,6 +125,15 @@ export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_00
       timeout: timeoutOut,
       sendError: false,
     });
+
+    try {
+      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout: timeoutOut });
+    } catch (error) {
+      console.log('Podman machine stuck in STARTING state, trying to restart it');
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+    }
+
     await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', {
       timeout: timeoutOut,
     });
