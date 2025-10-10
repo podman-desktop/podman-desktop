@@ -2,7 +2,6 @@
 import ImageActions from './ImageActions.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 import ManifestActions from './ManifestActions.svelte';
-import PushImageModal from './PushImageModal.svelte';
 import PushManifestModal from './PushManifestModal.svelte';
 import RenameImageModal from './RenameImageModal.svelte';
 
@@ -11,13 +10,6 @@ interface Props {
 }
 
 let { object }: Props = $props();
-
-let pushImageModal = $state(false);
-let pushImageModalImageInfo: ImageInfoUI | undefined = $state(undefined);
-function handlePushImageModal(imageInfo: ImageInfoUI): void {
-  pushImageModalImageInfo = imageInfo;
-  pushImageModal = true;
-}
 
 let renameImageModal = $state(false);
 let renameImageModalImageInfo: ImageInfoUI | undefined = $state(undefined);
@@ -34,7 +26,6 @@ function handlePushManifestModal(imageInfo: ImageInfoUI): void {
 }
 
 function closeModals(): void {
-  pushImageModal = false;
   renameImageModal = false;
   pushManifestModal = false;
 }
@@ -53,16 +44,10 @@ function closeModals(): void {
 {:else}
   <ImageActions
     image={object}
-    onPushImage={handlePushImageModal}
     onRenameImage={handleRenameImageModal}
     dropdownMenu={true}
     on:update />
 
-  {#if pushImageModal && pushImageModalImageInfo}
-    <PushImageModal
-      imageInfoToPush={pushImageModalImageInfo}
-      closeCallback={closeModals} />
-  {/if}
   {#if renameImageModal && renameImageModalImageInfo}
     <RenameImageModal
       imageInfoToRename={renameImageModalImageInfo}
