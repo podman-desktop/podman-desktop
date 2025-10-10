@@ -25,7 +25,7 @@ import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } 
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable, provider as apiProvider } from '@podman-desktop/api';
 import type { Mock } from 'vitest';
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -173,15 +173,12 @@ vi.mock('./compatibility-mode', async () => {
 let podmanInstall: PodmanInstall;
 let winPlatform: WinPlatform;
 
-beforeAll(async () => {
+beforeEach(async () => {
   const extensionContext = { subscriptions: [] } as unknown as extensionApi.ExtensionContext;
   extension.initExtensionContext(extensionContext);
   const bindings = await extension.initInversify(extensionContext);
   podmanInstall = bindings.podmanInstall;
   winPlatform = bindings.winPlatform;
-});
-
-beforeEach(() => {
   fakeMachineJSON = [
     {
       Name: machineDefaultName,
