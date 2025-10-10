@@ -44,6 +44,7 @@ test.describe
       await playExpect(preferencesPage.heading).toBeVisible();
       await preferencesPage.kubePathInput.scrollIntoViewIfNeeded();
       await preferencesPage.selectKubeFile(preferencesTestString);
+      await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
 
       //Change page and check new kubeconfig path persists
       await settingsBar.resourcesTab.click();
