@@ -119,7 +119,7 @@ export class ImageRegistry {
     return undefined;
   }
 
-  getAuthconfigForServer(registryServer: string): Dockerode.AuthConfig | undefined {
+  getAuthconfigForServer(registryServer: string): Dockerode.AuthConfigObject | undefined {
     let matchingUrl = registryServer;
     if (matchingUrl === 'index.docker.io') {
       matchingUrl = 'docker.io';
