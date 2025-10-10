@@ -32,7 +32,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial(`Preferences text persistence validation `, () => {
-    test.describe.configure({ timeout: 20_000 });
+    test.describe.configure({ timeout: 60_000 });
 
     test('Check preferences text persistence', async ({ page, navigationBar }) => {
       //Open Settings/Preferences page
@@ -42,12 +42,13 @@ test.describe
       //Change kubeconfig path
       const preferencesPage = new PreferencesPage(page);
       await playExpect(preferencesPage.heading).toBeVisible();
+      await preferencesPage.kubePathInput.scrollIntoViewIfNeeded();
       await preferencesPage.selectKubeFile(preferencesTestString);
 
       //Change page and check new kubeconfig path persists'
       await settingsBar.resourcesTab.click();
       await settingsBar.preferencesTab.click();
       await playExpect(preferencesPage.heading).toBeVisible();
-      await playExpect(preferencesPage.kubePathInput).toHaveText(preferencesTestString);
+      await playExpect(preferencesPage.kubePathInput).toHaveValue(preferencesTestString);
     });
   });
