@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.8ab3c4f4.css">
-<script src="/assets/js/runtime~main.8854271f.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0fb21e8d.js" defer="defer"></script>
 <script src="/assets/js/main.d8290a6b.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -40,19 +40,23 @@
 <h4 class="anchor anchorWithStickyNavbar_JmGV" id="procedure-start-port-forwarding">Procedure: Start port forwarding<a href="#procedure-start-port-forwarding" class="hash-link" aria-label="Direct link to Procedure: Start port forwarding" title="Direct link to Procedure: Start port forwarding">​</a></h4>
 <ol>
 <li>
-<p>Create a Kubernetes pod:</p>
-<ol>
-<li>Go to the <strong>Pods</strong> component page.</li>
-<li>Click <strong>Play Kubernetes YAML</strong>.
-<img decoding="async" loading="lazy" alt="play kubernetes yaml" src="/assets/images/play-kubernetes-yaml-7e4ade026ee9351a2d68d54bf6a609a1.png" width="1738" height="418" class="img_SS3x"></li>
-<li>Select a Kubernetes YAML file, such as <code>pod.yaml</code> from your local machine.</li>
-<li>Set the <strong>Runtime</strong> field to <code>Kubernetes cluster</code>.
-<img decoding="async" loading="lazy" alt="set runtime field" src="/assets/images/play-a-yaml-file-304dde4daca4247e19de116d95a65fec.png" width="1732" height="1082" class="img_SS3x"></li>
-<li>Click <strong>Play</strong> and then <strong>Done</strong>.</li>
-<li>Go to <strong>Kubernetes &gt; Pods</strong> to view the created Kubernetes pod.
-<img decoding="async" loading="lazy" alt="view the newly created pod" src="/assets/images/new-kubernetes-pod-9a6724f0a1302fefb393801bc4b9f726.png" width="1716" height="798" class="img_SS3x"></li>
-<li>Click the name of the pod and view the <strong>Summary</strong> tab.</li>
-</ol>
+<p>Go to the <strong>Kubernetes &gt; Pods</strong> component page.</p>
+</li>
+<li>
+<p>Click <strong>Apply YAML</strong>.</p>
+</li>
+<li>
+<p>Select your Kubernetes YAML file, such as <code>pod.yaml</code> from your local machine. A confirmation notification opens.</p>
+</li>
+<li>
+<p>Click <strong>OK</strong>.</p>
+</li>
+<li>
+<p>View the created Kubernetes pod on the same page.
+<img decoding="async" loading="lazy" alt="view the newly created pod" src="/assets/images/new-kubernetes-pod-9a6724f0a1302fefb393801bc4b9f726.png" width="1716" height="798" class="img_SS3x"></p>
+</li>
+<li>
+<p>Click the name of the pod and view the <strong>Summary</strong> tab.</p>
 </li>
 <li>
 <p>Click the <strong>Forward...</strong> button corresponding to the port you want to use for port forwarding.
