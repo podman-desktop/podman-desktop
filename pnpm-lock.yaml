@@ -59,8 +59,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       electron-updater:
-        specifier: 6.6.8
-        version: 6.6.8
+        specifier: 6.7.0
+        version: 6.7.0
       electron-util:
         specifier: ^1.0.0
         version: 1.0.0
@@ -5070,8 +5070,8 @@ packages:
     resolution: {integrity: sha512-2/egrNDDnRaxVwK3A+cJq6UOlqOdedGA7JPqCeJjN2Zjk1/QB/6QUi3b714ScIGS7HafFXTyzJEOr5b44I3kvQ==}
     engines: {node: '>=12.0.0'}
 
-  builder-util-runtime@9.4.0:
-    resolution: {integrity: sha512-omkpaKbutPYqC0nwLEeGq540xND1YPhfVzwT6CFyCFzxhNDt/X+fykr17Yo3jxiuwI3zaAnY/1tKFoRN+FeHhg==}
+  builder-util-runtime@9.5.0:
+    resolution: {integrity: sha512-7qmRMH8X/IzDM+1TysKNFo5cNWBbfacdLX4EqkuE5aiRTECAlYiKHSqEc6cc3c4Lrmpgk0utbxOPkj0iYaWAWQ==}
     engines: {node: '>=12.0.0'}
 
   builder-util@25.1.7:
@@ -6283,8 +6283,8 @@ packages:
   electron-to-chromium@1.5.230:
     resolution: {integrity: sha512-A6A6Fd3+gMdaed9wX83CvHYJb4UuapPD5X5SLq72VZJzxHSY0/LUweGXRWmQlh2ln7KV7iw7jnwXK7dlPoOnHQ==}
 
-  electron-updater@6.6.8:
-    resolution: {integrity: sha512-n8FeXRc7Q7BBweS85+H5h4/uzBz8hSSOYhDnwOumpbIhYdPk9EEzWLKDyoArMyf4RebywqWBUE96QDn9TETRhQ==}
+  electron-updater@6.7.0:
+    resolution: {integrity: sha512-j8ejBZCkp5kvv1MxJNoQaSjNvEbr/ZHSeQdwm0jbZGgVm+Z6ExqRpqE8oRxDsDacxQfk7l8hlBAnlq4qAk2wfw==}
 
   electron-util@1.0.0:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
@@ -6692,8 +6692,8 @@ packages:
     resolution: {integrity: sha512-JhFGDVJ7tmDJItKhYgJCGLOWjuK9vPxiXoUFLwLDc99NlmklilbiQJwoctZtt13+xMw91MCk/REan6MWHqDjyA==}
     engines: {node: '>=12.0.0'}
 
-  exponential-backoff@3.1.2:
-    resolution: {integrity: sha512-8QxYTVXUkuy7fIIoitQkPwGonB8F3Zj8eEO8Sqg9Zv/bkI7RJAzowee4gr81Hak/dUTpA2Z7VfQgoijjPNlUZA==}
+  exponential-backoff@3.1.3:
+    resolution: {integrity: sha512-ZgEeZXj30q+I0EN+CbSSpIyPaJ5HVQD18Z1m+u1FXbAeT94mr1zw50q4q6jiiC447Nl/YTcIYSAftiGqetwXCA==}
 
   express@4.21.2:
     resolution: {integrity: sha512-28HqgMZAmih1Czt9ny7qr6ek2qddF4FclbMzwhCREB6OFfH+rXAnuNCwo1/wFvrtbgsQDb4kSbX9de9lFbrXnA==}
@@ -14006,7 +14006,7 @@ snapshots:
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
     dependencies:
       env-paths: 2.2.1
-      exponential-backoff: 3.1.2
+      exponential-backoff: 3.1.3
       glob: 8.1.0
       graceful-fs: 4.2.11
       make-fetch-happen: 10.2.1
@@ -17090,7 +17090,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  builder-util-runtime@9.4.0:
+  builder-util-runtime@9.5.0:
     dependencies:
       debug: 4.4.3
       sax: 1.4.1
@@ -18478,15 +18478,15 @@ snapshots:
 
   electron-to-chromium@1.5.230: {}
 
-  electron-updater@6.6.8:
+  electron-updater@6.7.0:
     dependencies:
-      builder-util-runtime: 9.4.0
+      builder-util-runtime: 9.5.0
       fs-extra: 10.1.0
       js-yaml: 4.1.0
       lazy-val: 1.0.5
       lodash.escaperegexp: 4.1.2
       lodash.isequal: 4.5.0
-      semver: 7.7.3
+      semver: 7.7.2
       tiny-typed-emitter: 2.1.0
     transitivePeerDependencies:
       - supports-color
@@ -19063,7 +19063,7 @@ snapshots:
 
   expect-type@1.2.2: {}
 
-  exponential-backoff@3.1.2: {}
+  exponential-backoff@3.1.3: {}
 
   express@4.21.2:
     dependencies:
@@ -21658,7 +21658,7 @@ snapshots:
   node-gyp@9.4.1:
     dependencies:
       env-paths: 2.2.1
-      exponential-backoff: 3.1.2
+      exponential-backoff: 3.1.3
       glob: 7.2.3
       graceful-fs: 4.2.11
       make-fetch-happen: 10.2.1

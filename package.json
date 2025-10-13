@@ -196,7 +196,7 @@
     "date.js": "^0.3.3",
     "dockerode": "^4.0.9",
     "electron-context-menu": "4.1.1",
-    "electron-updater": "6.6.8",
+    "electron-updater": "6.7.0",
     "electron-util": "^1.0.0",
     "express": "^4.21.2",
     "getos": "^3.2.1",
