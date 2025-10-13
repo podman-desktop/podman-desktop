@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022-2024 Red Hat, Inc.
+# Copyright (C) 2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,10 +61,12 @@ jobs:
             echo "NEW_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
           else
             echo "No new version available."
+            echo "newVersion=none" >> $GITHUB_OUTPUT
             exit 0
           fi
 
       - name: Check for required assets in Podman release
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
         id: check_assets
         run: |
           REQUIRED_ASSETS=("podman-installer-windows-amd64.exe" "podman-installer-windows-arm64.exe" "podman-installer-macos-amd64.pkg" "podman-installer-macos-arm64.pkg" "podman-installer-macos-universal.pkg")
@@ -89,7 +91,7 @@ jobs:
           fi
 
       - name: Update podman5.json
-        if: env.NEW_VERSION != ''
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
         run: |
           set -euo pipefail
 
@@ -107,7 +109,7 @@ jobs:
           echo "Update complete and JSON is valid."
 
       - name: Create PR
-        if: env.NEW_VERSION != ''
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
         id: create_pr
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -116,9 +118,9 @@ jobs:
           set -euo pipefail
 
           git config --local user.name "${{ github.actor }}"
-          git config --local user.email "fbenoit@redhat.com"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
 
-          bumpedVersion="${{ env.NEW_VERSION }}"
+          bumpedVersion="${NEW_VERSION}"
           bumpedBranchName="update-podman-version-${bumpedVersion}"
           echo "branch name: $bumpedBranchName"
 
