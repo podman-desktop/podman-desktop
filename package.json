@@ -131,7 +131,7 @@
     "@podman-desktop/api": "workspace:",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.1.4",
     "@tsconfig/strictest": "^2.0.6",
     "@types/adm-zip": "^0.5.7",
