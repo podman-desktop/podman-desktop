@@ -83,7 +83,7 @@ test('expect WSLVersion preflight check return fail result if first line output 
   );
 });
 
-test('expect WSLVersion preflight check return fail result if first line output contain a version equal to the minimum supported version', async () => {
+test('expect WSLVersion preflight check return successful result if first line output contain a version equal to the minimum supported version', async () => {
   vi.mocked(process.exec).mockResolvedValue({
     stdout: 'WSL version: 1.2.5.0',
     stderr: '',
@@ -95,7 +95,7 @@ test('expect WSLVersion preflight check return fail result if first line output 
   expect(result.successful).toBeTruthy();
 });
 
-test('expect WSLVersion preflight check return fail result if first line output contain a version greater than the minimum supported version', async () => {
+test('expect WSLVersion preflight check return successful result if first line output contain a version greater than the minimum supported version', async () => {
   vi.mocked(process.exec).mockResolvedValue({
     stdout: 'WSL version: 2.4.0',
     stderr: '',
