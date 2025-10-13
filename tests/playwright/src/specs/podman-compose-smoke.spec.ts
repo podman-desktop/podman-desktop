@@ -25,7 +25,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
-import { isCI, isLinux, isMac } from '../utility/platform';
+import { isCI, isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const RESOURCE_NAME: string = 'Compose';
@@ -68,7 +68,6 @@ test.describe.serial('Compose compose workflow verification', { tag: '@smoke' },
 
   test('Verify Compose was installed', async ({ page, navigationBar }) => {
     test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
-    test.skip(!!isMac, 'Currently there is an issue with running this test on macOS platform');
 
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
