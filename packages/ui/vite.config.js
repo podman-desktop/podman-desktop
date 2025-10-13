@@ -37,7 +37,18 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ hot: !process.env.VITEST }), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    svelte({
+      hot: !process.env.VITEST,
+      compilerOptions: {
+        experimental: {
+          async: true,
+        },
+      },
+    }),
+    svelteTesting(),
+  ],
   test: {
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,
