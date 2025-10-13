@@ -559,6 +559,39 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:loadImages', options);
   });
 
+  let onDataCallbacksUpdateImages = 0;
+  const onDataCallbacksMapUpdateImages = new Map<
+    number,
+    (imageId: string, event: { status?: string; progress?: string; error?: string }) => void
+  >();
+
+  contextBridge.exposeInMainWorld(
+    'updateImages',
+    async (
+      images: { id: string; engineId: string }[],
+      callback: (imageId: string, event: { status?: string; progress?: string; error?: string }) => void,
+    ): Promise<{ id: string; updated: boolean; message: string }[]> => {
+      onDataCallbacksUpdateImages++;
+      const callbackId = onDataCallbacksUpdateImages;
+      onDataCallbacksMapUpdateImages.set(callbackId, callback);
+      try {
+        return await ipcInvoke('container-provider-registry:updateImages', images, callbackId);
+      } finally {
+        onDataCallbacksMapUpdateImages.delete(callbackId);
+      }
+    },
+  );
+
+  ipcRenderer.on(
+    'container-provider-registry:updateImages-onData',
+    (_, callbackId: number, imageId: string, event: { status?: string; progress?: string; error?: string }) => {
+      const callback = onDataCallbacksMapUpdateImages.get(callbackId);
+      if (callback) {
+        callback(imageId, event);
+      }
+    },
+  );
+
   let onDataCallbacksLogsContainerId = 0;
   const onDataCallbacksLogsContainer = new Map<number, (name: string, data: string) => void>();
 

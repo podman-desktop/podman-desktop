@@ -1,5 +1,13 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowCircleUp,
+  faArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
@@ -108,6 +116,44 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+async function updateImage(): Promise<void> {
+  const originalStatus = image.status;
+  image.status = 'UPDATING';
+  dispatch('update', image);
+
+  try {
+    // Get the image id for the update call
+    let imageId = `${image.name}:${image.tag}`;
+    if (imageId.startsWith('<none>')) {
+      imageId = image.shortId;
+    }
+
+    const results = await window.updateImages([{ id: imageId, engineId: image.engineId }], () => {
+      // Progress callback
+    });
+
+    // Handle the result
+    if (results && results.length > 0) {
+      if (results[0].updated) {
+        // Successfully updated - deselect the image
+        image.selected = false;
+        dispatch('update', image);
+      } else {
+        // Already on latest - restore status and deselect
+        image.status = originalStatus;
+        image.selected = false;
+        dispatch('update', image);
+      }
+    }
+    // If it was updated, the image list will refresh automatically
+  } catch (error) {
+    // Restore original status on error (keep selected for retry)
+    image.status = originalStatus;
+    dispatch('update', image);
+    await onError(`Error while updating image: ${String(error)}`);
+  }
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
@@ -154,6 +200,14 @@ function saveImage(): void {
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />
+
+  <ListItemButtonIcon
+    title="Update Image"
+    tooltip="Update image to the latest build"
+    onClick={(): void => withConfirmation(updateImage, `update image ${image.name}:${image.tag} to latest build`)}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faArrowCircleUp} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions

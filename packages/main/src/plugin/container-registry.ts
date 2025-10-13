@@ -1238,6 +1238,87 @@ export class ContainerProviderRegistry {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
+  async updateImage(
+    engineId: string,
+    imageId: string,
+    callback: (event: PullEvent) => void,
+  ): Promise<{ updated: boolean; message: string }> {
+    let telemetryOptions = {};
+    try {
+      // Get the image inspect info to check if it has a registry
+      const imageInspect = await this.getImageInspect(engineId, imageId);
+
+      // Check if image has RepoTags
+      if (!imageInspect.RepoTags || imageInspect.RepoTags.length === 0) {
+        return { updated: false, message: 'Image has no registry tags (localhost image)' };
+      }
+
+      // Get the first repo tag
+      const repoTag = imageInspect.RepoTags[0];
+      if (!repoTag) {
+        return { updated: false, message: 'Image has no valid repository tag' };
+      }
+
+      // Check if it's a localhost image
+      if (repoTag.includes('localhost/')) {
+        return { updated: false, message: 'Localhost images are always up to date' };
+      }
+
+      // Get the provider for this engine
+      const provider = this.internalProviders.get(engineId);
+      if (!provider) {
+        throw new Error('no engine matching this image');
+      }
+
+      if (!provider.connection.endpoint.socketPath) {
+        throw new Error('no socket path for this provider');
+      }
+
+      // Get the provider connection info
+      const providerConnectionInfo: ProviderContainerConnectionInfo = {
+        name: provider.connection.name,
+        displayName: provider.connection.name,
+        status: provider.connection.status(),
+        type: provider.connection.type,
+        endpoint: {
+          socketPath: provider.connection.endpoint.socketPath,
+        },
+      };
+
+      // Store the old image ID for comparison
+      const oldImageId = imageInspect.Id;
+
+      // Pull the latest build of the current tag
+      await this.pullImage(providerConnectionInfo, repoTag, callback);
+
+      // Get the new image inspect to check if it's different
+      // Note: After pull, the tag points to the new image if there was an update
+      const newImageInspect = await this.getImageInspect(engineId, repoTag);
+
+      // If the image IDs are the same, no update was needed
+      if (oldImageId === newImageInspect.Id) {
+        return { updated: false, message: 'Image is already on the latest version' };
+      }
+
+      // Only delete the old image if it had a single tag
+      if (imageInspect.RepoTags && imageInspect.RepoTags.length === 1) {
+        try {
+          await this.deleteImage(engineId, oldImageId);
+        } catch (error) {
+          console.warn(`Could not delete old image ${oldImageId}:`, error);
+          // Don't fail the update if we can't delete the old image
+        }
+      }
+
+      return { updated: true, message: 'Image updated successfully' };
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('updateImage', { imageId: this.getImageHash(imageId), ...telemetryOptions });
+    }
+  }
+
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
     let telemetryOptions = {};
     try {
