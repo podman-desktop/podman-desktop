@@ -19,10 +19,10 @@
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { get } from 'svelte/store';
 
-import { networksList } from '../networks';
+import { networksListInfo } from '../networks';
 import type { NavigationRegistryEntry } from './navigation-registry';
 
-const count = $derived(get(networksList).length);
+const count = $derived(get(networksListInfo).length);
 
 export function createNavigationNetworkEntry(): NavigationRegistryEntry {
   const registry: NavigationRegistryEntry = {

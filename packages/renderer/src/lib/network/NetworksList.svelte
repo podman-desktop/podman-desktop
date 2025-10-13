@@ -29,7 +29,7 @@ $effect(() => {
 
 let networkUtils = new NetworkUtils();
 
-let networks: NetworkInfoUI[] = $derived($filtered.map(network => networkUtils.toVolumeInfoUI(network)));
+let networks: NetworkInfoUI[] = $derived($filtered.map(network => networkUtils.toNetworkInfoUI(network)));
 
 let providerConnections = $derived(
   $providerInfos
@@ -50,7 +50,7 @@ async function deleteSelectedNetworks(): Promise<void> {
     return;
   }
 
-  // mark volumes for deletion
+  // mark networks for deletion
   bulkDeleteInProgress = true;
   selectedNetworks.forEach(network => (network.status = 'DELETING'));
 
@@ -91,8 +91,8 @@ const columns = [
 ];
 
 const row = new TableRow<NetworkInfoUI>({
-  selectable: (): boolean => true,
-  disabledText: 'Volume is used by a container',
+  selectable: (network): boolean => network.status === 'UNUSED',
+  disabledText: 'Network is used by a container',
 });
 </script>
 
@@ -126,7 +126,7 @@ const row = new TableRow<NetworkInfoUI>({
         {/if}
     {:else}
       <Table
-        kind="volume"
+        kind="network"
         bind:selectedItemsNumber={selectedItemsNumber}
         data={networks}
         columns={columns}

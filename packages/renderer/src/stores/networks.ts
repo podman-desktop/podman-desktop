@@ -52,7 +52,7 @@ export async function checkForUpdate(eventName: string): Promise<boolean> {
   return readyToUpdate;
 }
 
-export const networksList: Writable<NetworkInspectInfo[]> = writable([]);
+export const networksListInfo: Writable<NetworkInspectInfo[]> = writable([]);
 
 const listNetworks = (): Promise<NetworkInspectInfo[]> => {
   return window.listNetworks();
@@ -60,7 +60,7 @@ const listNetworks = (): Promise<NetworkInspectInfo[]> => {
 
 export const networksEventStore = new EventStore<NetworkInspectInfo[]>(
   'networks',
-  networksList,
+  networksListInfo,
   checkForUpdate,
   windowEvents,
   windowListeners,
@@ -71,6 +71,6 @@ networksEventStore.setupWithDebounce();
 
 export const searchPattern = writable('');
 
-export const filtered = derived([searchPattern, networksList], ([$searchPattern, $networksList]) =>
+export const filtered = derived([searchPattern, networksListInfo], ([$searchPattern, $networksList]) =>
   $networksList.filter(network => findMatchInLeaves(network, $searchPattern.toLowerCase())),
 );

@@ -24,7 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { IDisposable } from '/@api/disposable';
 import type { NetworkInspectInfo } from '/@api/network-info';
 
-import { networksEventStore, networksList } from './networks';
+import { networksEventStore, networksListInfo } from './networks';
 
 // first, path window object
 const callbacks = new Map<string, any>();
@@ -88,7 +88,7 @@ test.each([
 
   await vi.waitFor(() => {
     expect(vi.mocked(window.listNetworks).mock.calls.length).not.equal(0);
-    const networkListResult = get(networksList);
+    const networkListResult = get(networksListInfo);
     expect(networkListResult.length).toBe(1);
     expect(networkListResult[0].Id).toEqual('network1');
   });

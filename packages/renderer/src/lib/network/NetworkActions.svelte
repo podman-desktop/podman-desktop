@@ -11,9 +11,10 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {
   network: NetworkInfoUI;
+  detailed?: boolean;
 }
 
-let { network }: Props = $props();
+let { network, detailed = false }: Props = $props();
 
 let showUpdateNetworkDialog = $state(false);
 
@@ -44,13 +45,15 @@ async function updateNetwork(): Promise<void> {
   <ListItemButtonIcon
     title="Delete Network"
     onClick={(): void => withConfirmation(removeNetwork, `delete network ${network.name}`)}
-    icon={faTrash} />
+    icon={faTrash}
+    detailed={detailed} />
 {/if}
 {#if network.engineType === 'podman'}
   <ListItemButtonIcon
     title="Update Network"
     onClick={(): void => {showUpdateNetworkDialog = true;}}
-    icon={faEdit} />
+    icon={faEdit}
+    detailed={detailed} />
 {/if}
 
 {#if showUpdateNetworkDialog}

@@ -20,7 +20,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { NetworkInspectInfo } from '/@api/network-info';
 
-import { networksList } from '../networks';
+import { networksListInfo } from '../networks';
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 
 beforeEach(() => {
@@ -29,7 +29,7 @@ beforeEach(() => {
 
 test('createNavigationNetworkEntry', async () => {
   const entry = createNavigationNetworkEntry();
-  networksList.set([
+  networksListInfo.set([
     {
       Id: 'network1',
       Name: 'network 1',

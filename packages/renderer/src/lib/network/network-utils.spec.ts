@@ -64,7 +64,7 @@ beforeEach(() => {
 });
 
 test('should expect valid size', async () => {
-  const networkInfo = networkUtils.toVolumeInfoUI(network1);
+  const networkInfo = networkUtils.toNetworkInfoUI(network1);
   expect(networkInfo).toEqual({
     id: '123456789012345',
     shortId: '123456789012',
@@ -78,7 +78,7 @@ test('should expect valid size', async () => {
     status: 'UNUSED',
   });
 
-  const networkInfo2 = networkUtils.toVolumeInfoUI(network2);
+  const networkInfo2 = networkUtils.toNetworkInfoUI(network2);
   expect(networkInfo2).toEqual({
     id: '123456789123456',
     shortId: '123456789123',

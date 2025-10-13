@@ -21,7 +21,7 @@ import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
 export class NetworkUtils {
-  toVolumeInfoUI(networkInspectInfo: NetworkInspectInfo): NetworkInfoUI {
+  toNetworkInfoUI(networkInspectInfo: NetworkInspectInfo): NetworkInfoUI {
     return {
       id: networkInspectInfo.Id,
       shortId: networkInspectInfo.Id.substring(0, 12),
