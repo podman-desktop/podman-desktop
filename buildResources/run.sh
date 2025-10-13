@@ -6,4 +6,4 @@
 export XDG_SESSION_TYPE=x11
 
 # run the app
-"./podman-desktop" "$@"
+exec "./podman-desktop" "$@"
