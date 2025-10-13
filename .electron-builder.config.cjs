@@ -180,6 +180,7 @@ const config = {
       '--talk-name=org.kde.StatusNotifierWatcher',
       // Allow to interact with Flatpak system to execute commands outside the application's sandbox
       '--talk-name=org.freedesktop.Flatpak',
+      '--env=XDG_SESSION_TYPE=x11'
     ],
     useWaylandFlags: 'false',
     artifactName: 'podman-desktop-${version}.${ext}',
