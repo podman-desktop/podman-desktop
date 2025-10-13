@@ -26,6 +26,7 @@ import { deleteImage, deletePod } from '../utility/operations';
 import { isCI, isLinux } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
+const POD_NAME_FROM_SCRATCH: string = 'podman-kube-play-test';
 const POD_NAME_BUILD_OPTION: string = 'podman-kube-play-build-test';
 const LOCAL_IMAGE_NAME: string = 'localhost/foobar';
 const NGINX_IMAGE_NAME: string = 'docker.io/library/nginx';
@@ -43,26 +44,63 @@ const POD_BUILD_YAML_PATH: string = path.resolve(
   'podman-kube-play-build-test.yaml',
 );
 
-test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
+test.describe.serial('Podman Kube Play - Create Pod from Scratch', { tag: '@smoke' }, () => {
+  test.beforeAll(async ({ runner, page, welcomePage }) => {
+    runner.setVideoAndTraceName('podman-kube-play-from-scratch-smoke');
+    await welcomePage.handleWelcomePage(true);
+    await waitForPodmanMachineStartup(page);
+  });
 
-test.beforeAll(async ({ runner, page, welcomePage }) => {
-  runner.setVideoAndTraceName('podman-kube-play-build-smoke');
-  await welcomePage.handleWelcomePage(true);
-  await waitForPodmanMachineStartup(page);
-});
+  test.afterAll(async ({ page, runner }) => {
+    try {
+      await deletePod(page, POD_NAME_FROM_SCRATCH);
+      await deleteImage(page, NGINX_IMAGE_NAME);
+    } finally {
+      await runner.close(); // closes the app
+    }
+  });
 
-test.afterAll(async ({ page, runner }) => {
-  try {
-    await deletePod(page, POD_NAME_BUILD_OPTION);
-    await deleteImage(page, LOCAL_IMAGE_NAME);
-    await deleteImage(page, NGINX_IMAGE_NAME);
-  } finally {
-    await runner.close();
-  }
+  test('Deploy pod and verify it is running ', async ({ page, navigationBar }) => {
+    test.setTimeout(60_000);
+
+    const podsPage = await navigationBar.openPods();
+    const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
+    await podmanKubePlayPage.playYaml(PodmanKubePlayOptions.CreateYamlFileFromScratch);
+
+    await playExpect
+      .poll(async () => await podsPage.podExists(POD_NAME_FROM_SCRATCH), { timeout: 15_000 })
+      .toBeTruthy();
+    const podDetails = await podsPage.openPodDetails(POD_NAME_FROM_SCRATCH);
+    await playExpect.poll(async () => await podDetails.getState(), { timeout: 30_000 }).toBe(PodState.Running);
+
+    await deletePod(page, POD_NAME_FROM_SCRATCH);
+    const imagesPage = await navigationBar.openImages();
+    await playExpect
+      .poll(async () => await imagesPage.getCurrentStatusOfImage(NGINX_IMAGE_NAME))
+      .toEqual(ImageState.Unused);
+  });
 });
 
 test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' }, () => {
-  test('Deploy pod from YAML using build option and verify it is running', async ({ navigationBar }) => {
+  test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
+
+  //restarting the app due to issue: https://github.com/podman-desktop/podman-desktop/issues/14273
+  test.beforeAll(async ({ runner, page, welcomePage }) => {
+    runner.setVideoAndTraceName('podman-kube-play-build-smoke');
+    await welcomePage.handleWelcomePage(true);
+    await waitForPodmanMachineStartup(page);
+  });
+
+  test.afterAll(async ({ page, runner }) => {
+    try {
+      await deletePod(page, POD_NAME_BUILD_OPTION);
+      await deleteImage(page, LOCAL_IMAGE_NAME);
+      await deleteImage(page, NGINX_IMAGE_NAME);
+    } finally {
+      await runner.close();
+    }
+  });
+  test('Deploy pod and verify it is running', async ({ navigationBar }) => {
     const podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
     const playYamlPage = await podsPage.openPodmanKubePlay();
@@ -77,7 +115,7 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
   });
-  test('Verify that the deployed pod container uses the localhost image', async ({ page, navigationBar }) => {
+  test('Verify deployed pod uses localhost image', async ({ page, navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect
