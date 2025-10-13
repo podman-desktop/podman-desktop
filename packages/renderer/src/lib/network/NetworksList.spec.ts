@@ -94,7 +94,7 @@ test('Expect no container engines being displayed', async () => {
   // wait for stores to be populated
   await waitFor(
     () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
+      expect(get(networksListInfo)).not.toHaveLength(0);
     },
     { timeout: 2000 },
   );
