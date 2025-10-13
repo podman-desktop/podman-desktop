@@ -52,8 +52,6 @@ jobs:
       - name: Compare version numbers using semver
         id: compare_version_numbers
         run: |
-          CURRENT_VERSION="${{ env.CURRENT_VERSION }}"
-          LATEST_VERSION="${{ env.LATEST_VERSION }}"
 
           echo "Current version: $CURRENT_VERSION"
           echo "Latest version: $LATEST_VERSION"
@@ -99,9 +97,6 @@ jobs:
 
           echo "Validating JSON before modification..."
           jq empty "$FILE"
-
-          NEW_VERSION="${{ env.NEW_VERSION }}"
-          CURRENT_VERSION="${{ env.CURRENT_VERSION }}"
 
           # Replace the version and filenames for assets
           sed -i -E "s/$CURRENT_VERSION/$NEW_VERSION/g" "$FILE"
