@@ -1150,6 +1150,8 @@ declare module '@podman-desktop/api' {
 
     // Optional base64 PNG image (for transparency / non vector icons)
     icon?: string | { light: string; dark: string };
+    insecure?: boolean;
+    blocked?: boolean;
   }
 
   export interface Registry extends RegistryCreateOptions {

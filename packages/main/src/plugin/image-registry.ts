@@ -104,7 +104,9 @@ export class ImageRegistry {
       if ('registry' in registry) {
         this.suggestRegistry({
           name: registry.registry.prefix,
-          url: registry.registry.prefix,
+          url: registry.registry.location,
+          insecure: registry.registry.insecure,
+          blocked: registry.registry.blocked,
         });
       }
     });
