@@ -194,6 +194,8 @@ const config = {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
+    // Force X11 for all Linux launches
+    executableArgs: ['--ozone-platform=x11', '--enable-features=UseOzonePlatform'],
   },
   mac: {
     artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
