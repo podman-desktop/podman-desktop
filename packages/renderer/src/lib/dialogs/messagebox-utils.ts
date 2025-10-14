@@ -32,7 +32,7 @@ export function withConfirmation(func: (err?: unknown) => unknown, action: strin
       buttons: ['Yes', 'Cancel'],
     })
     .then(result => {
-      if (result && result.response === 0) {
+      if (result?.response === 0) {
         func();
       }
     })

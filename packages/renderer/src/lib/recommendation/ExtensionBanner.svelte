@@ -40,11 +40,11 @@ async function onClose(): Promise<void> {
       buttons: [`No, keep them`, 'Yes, hide'],
     });
 
-    if (result && result.response === 1) {
+    if (result?.response === 1) {
       await window.updateConfigurationValue(`extensions.ignoreBannerRecommendations`, true, 'DEFAULT');
     }
   } finally {
-    let choice: 'hide' | 'keep' = result && result.response === 1 ? 'hide' : 'keep';
+    let choice: 'hide' | 'keep' = result?.response === 1 ? 'hide' : 'keep';
     await window.telemetryTrack('hideRecommendationExtensionBanner', { choice });
   }
 }

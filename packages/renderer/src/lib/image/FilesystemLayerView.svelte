@@ -94,7 +94,7 @@ let arrowDown = $derived(expanded);
     <div class="font-mono">{tree.data && !tree.hidden ? modeString(tree.data) : ''}</div>
     <div class="text-right">{tree.data && !tree.hidden ? tree.data.uid + ':' + tree.data.gid : ''}</div>
     <span class="text-right">{!tree.hidden ? new ImageUtils().getHumanSize(tree.size) : ''}</span>
-    {#if children?.size || (file && file.type === 'directory')}
+    {#if children?.size || (file?.type === 'directory')}
       <button style="margin-left: {margin}rem" class={`text-left ${colorClass}`} onclick={toggleExpansion}>
         <span class="cursor-pointer inline-block mr-1" class:rotate-90={arrowDown}>&gt;</span>
         {label}<span class="text-[var(--pd-content-text)] opacity-70">{getLink(tree?.data)}</span>

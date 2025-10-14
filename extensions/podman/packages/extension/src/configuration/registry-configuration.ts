@@ -84,7 +84,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     const machineList = await getJSONMachineList();
 
     // check if the machine is running
-    if (!machineList || machineList.list.length === 0) {
+    if (machineList?.list.length === 0) {
       await window.showErrorMessage('No Podman machine running');
       return false;
     }

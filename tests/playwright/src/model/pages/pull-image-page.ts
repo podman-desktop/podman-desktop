@@ -191,7 +191,7 @@ export class PullImagePage extends BasePage {
     resultsExpected = true,
   ): Promise<string> {
     return test.step(`Handle form and result search string for ${imageName}:${imageTag}`, async () => {
-      if (!imageName || imageName.length === 0) {
+      if (imageName?.length === 0) {
         throw new Error('Image name is invalid');
       }
 

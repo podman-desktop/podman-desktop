@@ -65,7 +65,7 @@ function buildValidator(
   validators: ((value: string) => [boolean, string])[],
 ): (value: string, dirty: boolean) => Validation {
   return function validate(value: string, dirty: boolean): Validation {
-    if (!validators || validators.length === 0) {
+    if (validators?.length === 0) {
       return { dirty, valid: true };
     }
 
