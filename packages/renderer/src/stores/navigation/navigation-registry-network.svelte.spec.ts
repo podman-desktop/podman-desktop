@@ -36,7 +36,7 @@ test('createNavigationNetworkEntry', async () => {
     } as unknown as NetworkInspectInfo,
     {
       Id: 'network2',
-      Nmae: 'network 2',
+      Name: 'network 2',
     } as unknown as NetworkInspectInfo,
   ]);
 

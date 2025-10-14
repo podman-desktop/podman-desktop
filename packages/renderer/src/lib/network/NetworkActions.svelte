@@ -25,10 +25,17 @@ let removeDNSServers = $state('');
 const dispatch = createEventDispatcher<{ update: NetworkInfoUI }>();
 
 async function removeNetwork(): Promise<void> {
+  const oldStatus = network.status;
   network.status = 'DELETING';
   dispatch('update', network);
 
-  await window.removeNetwork(network.engineId, network.id);
+  try {
+    await window.removeNetwork(network.engineId, network.id);
+  } catch (error) {
+    console.error(`error while removing network ${network.name}`, error);
+    network.status = oldStatus;
+    dispatch('update', network);
+  }
 }
 
 async function updateNetwork(): Promise<void> {
