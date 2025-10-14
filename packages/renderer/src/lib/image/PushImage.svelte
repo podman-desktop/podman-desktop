@@ -2,21 +2,19 @@
 import { faCheckCircle, faCircleArrowUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
+import type { ImageInspectInfo } from 'dockerode';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ImageInfo } from '/@api/image-info';
 
 import { lastPage } from '../../stores/breadcrumb';
-import { imagesInfos } from '../../stores/images';
 import type { PushImageCallback } from '../../stores/push-images.svelte';
 import { getNextTaskId, getPushImageInfo, PushImageInfo } from '../../stores/push-images.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
-import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {
@@ -30,13 +28,11 @@ let { imageId, engineId, base64RepoTag, taskId = 0 }: Props = $props();
 
 let image: ImageInfoUI | undefined;
 let selectedImageTag = $state('');
-let imageTags: string[] = $state([]); // Original tags from inspect
-let displayTags: string[] = $state([]); // Tags to show in dropdown (includes parameter tag)
-let imageExists = $state(true);
+let displayTags: string[] = $state([]);
+let imageExists = $state(false);
 let imageLoadError = $state('');
-let tagExists = $state(true);
+let imageTags: string[] = $state([]);
 let tagCheckError = $state('');
-let parameterTagAdded = $state(false);
 
 let pushImageInfo = $state(new PushImageInfo());
 let logsTerminal: Terminal | undefined = $state();
@@ -47,8 +43,6 @@ let providerConnections = $derived(
     .flat()
     .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
-
-const imageUtils = new ImageUtils();
 
 function createCallback(): PushImageCallback {
   return {
@@ -91,63 +85,40 @@ function loadBackgroundPush(): void {
 }
 
 async function loadImageInfo(): Promise<void> {
+  imageExists = false;
+  let imageTags: string[] = [];
+  let inspectInfo: ImageInspectInfo | undefined = undefined;
   try {
-    const inspectInfo = await window.getImageInspect(engineId, imageId);
+    inspectInfo = await window.getImageInspect(engineId, imageId);
     imageTags = inspectInfo.RepoTags || []; // Keep original tags for existence checking
     imageExists = true;
     imageLoadError = '';
-    parameterTagAdded = false;
-
-    // Decode the parameter tag to check if it exists
-    let parameterTag: string;
-    try {
-      parameterTag = atob(base64RepoTag);
-    } catch (decodeError) {
-      console.error('Failed to decode base64RepoTag:', decodeError);
-      parameterTag = base64RepoTag;
-    }
-    displayTags = [...imageTags];
-    // Check if parameter tag exists in the original image tags
-    if (parameterTag && !imageTags.includes(parameterTag)) {
-      // Add parameter tag to display list only, mark as added
-      displayTags.push(parameterTag);
-      parameterTagAdded = true;
-    }
-    if (displayTags.length > 0) {
-      // Use parameter tag if it exists, otherwise first available tag
-      selectedImageTag = imageTags.includes(parameterTag) ? parameterTag : imageTags[0];
-    }
-
-    let imageInfo: ImageInfo | undefined = $imagesInfos.find(c => c.Id === imageId && c.engineId === engineId);
-    if (imageInfo) {
-      image = imageUtils.getImageInfoUI(imageInfo, base64RepoTag, []);
-    }
-
-    // Check if the selected tag exists in the original loaded tags
-    checkTagExists();
   } catch (error) {
-    // Image doesn't exist - handle gracefully
-    console.warn(`Image ${imageId} not found, using base64RepoTag as fallback`);
-    imageExists = false;
-    imageLoadError = `Image with ID ${imageId} does not exist`;
-    parameterTagAdded = false;
+    imageLoadError = `Image with ID ${imageId} does not exist.`;
+    console.warn(imageLoadError);
+  }
 
-    // Decode base64RepoTag and add it to tags list as fallback
-    try {
-      const decodedRepoTag = atob(base64RepoTag);
-      imageTags = []; // No original tags since image doesn't exist
-      displayTags = [decodedRepoTag];
-      selectedImageTag = decodedRepoTag;
-    } catch (decodeError) {
-      console.error('Failed to decode base64RepoTag:', decodeError);
-      imageTags = []; // No original tags since image doesn't exist
-      displayTags = [base64RepoTag]; // Use raw base64 as last resort
-      selectedImageTag = base64RepoTag;
-    }
+  let parameterTag: string;
+  try {
+    parameterTag = atob(base64RepoTag);
+  } catch (decodeError) {
+    console.error('Failed to decode base64RepoTag:', decodeError);
+    parameterTag = base64RepoTag;
+  }
 
-    // For fallback tags, mark as not existing locally
-    tagExists = false;
-    tagCheckError = `Tag '${selectedImageTag}' is a fallback from parameters`;
+  displayTags = [...imageTags];
+  // Check if parameter tag exists in the original image tags
+  if (!imageTags.includes(parameterTag)) {
+    // Add parameter tag to display list only, mark as added
+    displayTags = [parameterTag, ...displayTags];
+  }
+  if (displayTags.length > 0) {
+    // Use parameter tag if it exists, otherwise first available tag
+    selectedImageTag = imageTags.includes(parameterTag) ? parameterTag : imageTags[0];
+  }
+
+  if (inspectInfo && !inspectInfo.RepoTags.includes(selectedImageTag)) {
+    tagCheckError = `Tag '${selectedImageTag}' doesn't exist locally`;
   }
 }
 
@@ -157,29 +128,6 @@ async function checkRegistryAuthConfiguration(): Promise<void> {
     .hasAuthconfigForImage(imageName)
     .then(result => (isAuthenticatedForThisImage = result))
     .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageId}`, err));
-}
-
-function checkTagExists(): void {
-  // Always check against original imageTags (not displayTags)
-  if (imageTags.includes(selectedImageTag)) {
-    tagExists = true;
-    tagCheckError = '';
-  } else {
-    tagExists = false;
-    if (parameterTagAdded && selectedImageTag === getParameterTag()) {
-      tagCheckError = `Tag '${selectedImageTag}' was passed as parameter but does not exist locally`;
-    } else {
-      tagCheckError = `Tag '${selectedImageTag}' does not exist locally`;
-    }
-  }
-}
-
-function getParameterTag(): string {
-  try {
-    return atob(base64RepoTag);
-  } catch (decodeError) {
-    return base64RepoTag;
-  }
 }
 
 async function pushImage(): Promise<void> {
@@ -204,13 +152,6 @@ onMount(() => {
       .catch((err: unknown) => console.log(`Cannot load image info: ${err}`))
       .then(() => checkRegistryAuthConfiguration())
       .catch((err: unknown) => console.log(`Cannot check auth configuration: ${err}`));
-  });
-
-  // Check tag existence when selectedImageTag changes
-  $effect(() => {
-    if (selectedImageTag && displayTags.length > 0) {
-      checkTagExists();
-    }
   });
 });
 
@@ -248,9 +189,7 @@ function onInit(): void {
           bind:value={selectedImageTag}
           disabled={displayTags.length === 0}>
           {#each displayTags as imageTag, index (index)}
-            <option value={imageTag}>
-              {imageTag}{!imageExists ? ' (parameter tag)' : parameterTagAdded && imageTag === getParameterTag() ? ' (parameter tag - not found locally)' : ''}
-            </option>
+            <option value={imageTag}>{imageTag}{imageTags.includes(imageTag)? '' : ' (loaded from parameters)'}</option>
           {/each}
           {#if displayTags.length === 0}
             <option value="" disabled>No tags available</option>
@@ -263,16 +202,12 @@ function onInit(): void {
             {#if imageLoadError}
               {imageLoadError}.
             {/if}
+            {#if tagCheckError}
+              {tagCheckError}.
+            {/if}
           </p>
         {/if}
-
-        <!-- Warning for missing tag -->
-        {#if !tagExists && tagCheckError}
-          <p class="text-[var(--pd-state-warning)] pt-1">
-            {tagCheckError}.
-          </p>
-        {/if}
-        
+       
         <!-- If the image is UNAUTHENTICATED, show a warning that the image is unable to be pushed
         and to click to go to the registries page -->
         {#if !isAuthenticatedForThisImage}
