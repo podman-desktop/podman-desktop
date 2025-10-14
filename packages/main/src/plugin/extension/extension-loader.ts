@@ -895,6 +895,15 @@ export class ExtensionLoader implements AsyncDisposable {
       onDidRegisterContainerConnection: (listener, thisArg, disposables) => {
         return providerRegistry.onDidRegisterContainerConnection(listener, thisArg, disposables);
       },
+      onDidSetConnectionFactory: (listener, thisArg, disposables) => {
+        return providerRegistry.onDidSetConnectionFactory(listener, thisArg, disposables);
+      },
+      onDidUnsetConnectionFactory: (listener, thisArg, disposables) => {
+        return providerRegistry.onDidUnsetConnectionFactory(listener, thisArg, disposables);
+      },
+      getConnectionFactories: () => {
+        return providerRegistry.getConnectionFactories();
+      },
       getContainerConnections: () => {
         return providerRegistry.getContainerConnections();
       },

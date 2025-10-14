@@ -20,6 +20,8 @@ import type {
   AuditRequestItems,
   AuditResult,
   CancellationToken,
+  ConnectionFactory,
+  ConnectionFactoryDetails,
   ContainerProviderConnection,
   KubernetesProviderConnection,
   Logger,
@@ -29,6 +31,7 @@ import type {
   ProviderCleanupAction,
   ProviderCleanupExecuteOptions,
   ProviderConnection,
+  ProviderConnectionFactory,
   ProviderConnectionShellAccess,
   ProviderConnectionShellAccessSession,
   ProviderConnectionShellDimensions,
@@ -156,6 +159,12 @@ export class ProviderRegistry {
   private readonly _onDidRegisterContainerConnection = new Emitter<RegisterContainerConnectionEvent>();
   readonly onDidRegisterContainerConnection: Event<RegisterContainerConnectionEvent> =
     this._onDidRegisterContainerConnection.event;
+
+  private readonly _onDidSetConnectionFactory = new Emitter<ConnectionFactoryDetails>();
+  readonly onDidSetConnectionFactory: Event<ConnectionFactoryDetails> = this._onDidSetConnectionFactory.event;
+
+  private readonly _onDidUnsetConnectionFactory = new Emitter<ConnectionFactory>();
+  readonly onDidUnsetConnectionFactory: Event<ConnectionFactory> = this._onDidUnsetConnectionFactory.event;
 
   constructor(
     @inject(ApiSenderType)
@@ -1304,6 +1313,65 @@ export class ProviderRegistry {
     this.connectionLifecycleContexts.set(kubernetesProviderConnection, new LifecycleContextImpl());
     this.apiSender.send('provider-register-kubernetes-connection', { name: kubernetesProviderConnection.name });
     this._onDidRegisterKubernetesConnection.fire({ providerId: provider.id });
+  }
+
+  onDidSetConnectionFactoryCallback(
+    provider: ProviderImpl,
+    factory: ProviderConnectionFactory,
+    factoryType: 'container' | 'kubernetes' | 'vm',
+  ): void {
+    this._onDidSetConnectionFactory.fire({
+      providerId: provider.id,
+      type: factoryType,
+      creationDisplayName: factory.creationDisplayName,
+      creationButtonTitle: factory.creationButtonTitle,
+      emptyConnectionMarkdownDescription: provider.emptyConnectionMarkdownDescription,
+      images: provider.images,
+    });
+  }
+
+  onDidUnsetConnectionFactoryCallback(provider: ProviderImpl, factoryType: 'container' | 'kubernetes' | 'vm'): void {
+    this._onDidUnsetConnectionFactory.fire({
+      providerId: provider.id,
+      type: factoryType,
+    });
+  }
+
+  getConnectionFactories(): ConnectionFactoryDetails[] {
+    const factories: ConnectionFactoryDetails[] = [];
+    this.providers.forEach(provider => {
+      if (provider.containerProviderConnectionFactory?.create) {
+        factories.push({
+          providerId: provider.id,
+          type: 'container',
+          creationDisplayName: provider.containerProviderConnectionFactory?.creationDisplayName,
+          creationButtonTitle: provider.containerProviderConnectionFactory?.creationButtonTitle,
+          emptyConnectionMarkdownDescription: provider.emptyConnectionMarkdownDescription,
+          images: provider.images,
+        });
+      }
+      if (provider.kubernetesProviderConnectionFactory?.create) {
+        factories.push({
+          providerId: provider.id,
+          type: 'kubernetes',
+          creationDisplayName: provider.kubernetesProviderConnectionFactory?.creationDisplayName,
+          creationButtonTitle: provider.kubernetesProviderConnectionFactory?.creationButtonTitle,
+          emptyConnectionMarkdownDescription: provider.emptyConnectionMarkdownDescription,
+          images: provider.images,
+        });
+      }
+      if (provider.vmProviderConnectionFactory?.create) {
+        factories.push({
+          providerId: provider.id,
+          type: 'vm',
+          creationDisplayName: provider.vmProviderConnectionFactory?.creationDisplayName,
+          creationButtonTitle: provider.vmProviderConnectionFactory?.creationButtonTitle,
+          emptyConnectionMarkdownDescription: provider.emptyConnectionMarkdownDescription,
+          images: provider.images,
+        });
+      }
+    });
+    return factories;
   }
 
   onDidRegisterVmConnectionCallback(provider: ProviderImpl, vmProviderConnection: VmProviderConnection): void {

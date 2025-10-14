@@ -840,6 +840,18 @@ declare module '@podman-desktop/api' {
     connection: ContainerProviderConnection;
   }
 
+  export interface ConnectionFactory {
+    type: 'container' | 'kubernetes' | 'vm';
+    providerId: string;
+  }
+
+  export interface ConnectionFactoryDetails extends ConnectionFactory {
+    creationDisplayName?: string;
+    creationButtonTitle?: string;
+    emptyConnectionMarkdownDescription?: string;
+    images?: ProviderImages;
+  }
+
   /**
    * Callback for openning shell session
    */
@@ -1020,6 +1032,18 @@ declare module '@podman-desktop/api' {
     export const onDidUpdateKubernetesConnection: Event<UpdateKubernetesConnectionEvent>;
     export const onDidUnregisterContainerConnection: Event<UnregisterContainerConnectionEvent>;
     export const onDidRegisterContainerConnection: Event<RegisterContainerConnectionEvent>;
+    /**
+     * Fired when a connection factory is set
+     */
+    export const onDidSetConnectionFactory: Event<ConnectionFactoryDetails>;
+    /**
+     * Fired when a connection factory is unset
+     */
+    export const onDidUnsetConnectionFactory: Event<ConnectionFactory>;
+    /**
+     * Returns the current connection factories
+     */
+    export function getConnectionFactories(): ConnectionFactoryDetails[];
     export function getContainerConnections(): ProviderContainerConnection[];
     /**
      * It returns the lifecycle context for the provider connection.
