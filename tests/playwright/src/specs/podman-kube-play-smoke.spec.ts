@@ -84,7 +84,7 @@ test.describe.serial('Podman Kube Play - Create Pod from Scratch', { tag: '@smok
 test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' }, () => {
   test.skip(!!isCI && isLinux, 'Skipping E2E test on GitHub Actions due to an outdated Podman version');
 
-  //restarting the app due to issue: https://github.com/podman-desktop/podman-desktop/issues/14273
+  //restarting the app between suites due to issue: https://github.com/podman-desktop/podman-desktop/issues/14273
   test.beforeAll(async ({ runner, page, welcomePage }) => {
     runner.setVideoAndTraceName('podman-kube-play-build-smoke');
     await welcomePage.handleWelcomePage(true);
