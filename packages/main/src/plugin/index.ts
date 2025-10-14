@@ -840,6 +840,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:inspectNetwork',
+      async (_listener, engine: string, networkId: string): Promise<NetworkInspectInfo> => {
+        return containerProviderRegistry.inspectNetwork(engine, networkId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:listVolumes',
       async (_listener, fetchUsage: boolean): Promise<VolumeListInfo[]> => {
         return containerProviderRegistry.listVolumes(fetchUsage);

@@ -316,6 +316,13 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
+    'inspectNetwork',
+    async (engine: string, networkId: string): Promise<NetworkInspectInfo> => {
+      return ipcInvoke('container-provider-registry:inspectNetwork', engine, networkId);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'replicatePodmanContainer',
     async (
       source: { engineId: string; id: string },
