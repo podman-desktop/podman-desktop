@@ -17,14 +17,16 @@
  ***********************************************************************/
 
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { get } from 'svelte/store';
 
 import { networksListInfo } from '../networks';
 import type { NavigationRegistryEntry } from './navigation-registry';
 
-const count = $derived(get(networksListInfo).length);
+let count = $state(0);
 
 export function createNavigationNetworkEntry(): NavigationRegistryEntry {
+  networksListInfo.subscribe(networks => {
+    count = networks.length;
+  });
   const registry: NavigationRegistryEntry = {
     name: 'Networks',
     icon: { iconComponent: ContainerIcon },
