@@ -24,13 +24,8 @@
   "devDependencies": {
     "@playwright/test": "1.55.1",
     "@types/node": "^22",
-<<<<<<< HEAD
-    "electron": "38.2.0",
-    "typescript": "^5.9.2",
-=======
     "electron": "38.2.2",
-    "typescript": "^5.9.3",
->>>>>>> 3a52bb60 (chore(deps-dev): bump electron from 38.2.1 to 38.2.2)
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
 }
