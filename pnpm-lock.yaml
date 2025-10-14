@@ -570,8 +570,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 38.2.0
-        version: 38.2.0
+        specifier: 38.2.2
+        version: 38.2.2
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)(jiti@2.6.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.2(@types/node@24.5.2)(typescript@5.9.2))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
@@ -902,8 +902,8 @@ importers:
         specifier: ^22
         version: 22.18.6
       electron:
-        specifier: 38.2.0
-        version: 38.2.0
+        specifier: 38.2.2
+        version: 38.2.2
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -6420,6 +6420,11 @@ packages:
 
   electron@38.2.0:
     resolution: {integrity: sha512-Cw5Mb+N5NxsG0Hc1qr8I65Kt5APRrbgTtEEn3zTod30UNJRnAE1xbGk/1NOaDn3ODzI/MYn6BzT9T9zreP7xWA==}
+    engines: {node: '>= 12.20.55'}
+    hasBin: true
+
+  electron@38.2.2:
+    resolution: {integrity: sha512-OXSaVNXDlonXDjMRsFNQo1j5tzTKwKXh5/m46IjAFccBcZJZMISI+EjSI07oexIuhvKM8AZLuFuihVn4YjWWrA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -15754,7 +15759,7 @@ snapshots:
 
   '@types/asn1@0.2.4':
     dependencies:
-      '@types/node': 20.17.13
+      '@types/node': 22.18.6
 
   '@types/aws-lambda@8.10.149': {}
 
@@ -16028,7 +16033,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 22.16.0
+      '@types/node': 22.18.6
       form-data: 4.0.2
 
   '@types/node-forge@1.3.11':
@@ -16144,7 +16149,7 @@ snapshots:
 
   '@types/stream-buffers@3.0.7':
     dependencies:
-      '@types/node': 22.16.0
+      '@types/node': 22.18.6
 
   '@types/stream-chain@2.1.0':
     dependencies:
@@ -18699,6 +18704,14 @@ snapshots:
       new-github-issue-url: 1.1.0
 
   electron@38.2.0:
+    dependencies:
+      '@electron/get': 2.0.3
+      '@types/node': 22.18.6
+      extract-zip: 2.0.1
+    transitivePeerDependencies:
+      - supports-color
+
+  electron@38.2.2:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.18.6
