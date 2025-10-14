@@ -1065,17 +1065,19 @@ export class ProviderRegistry {
 
   getMatchingConnectionFromProvider(
     internalProviderId: string,
-    providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
+    providerConnectionInfo: ProviderConnectionInfo,
   ): ProviderConnection {
-    if (this.isProviderContainerConnection(providerContainerConnectionInfo)) {
-      return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else if (this.isProviderKubernetesConnectionInfo(providerContainerConnectionInfo)) {
-      return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else {
-      return this.getMatchingVmConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
+    switch (providerConnectionInfo.connectionType) {
+      case 'container':
+        return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerConnectionInfo);
+      case 'kubernetes':
+        return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerConnectionInfo);
+      case 'vm':
+        return this.getMatchingVmConnectionFromProvider(internalProviderId, providerConnectionInfo);
+      default:
+        throw new Error(`Unknown provider connection type: ${JSON.stringify(providerConnectionInfo)}`);
     }
   }
-
   isProviderContainerConnection(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
