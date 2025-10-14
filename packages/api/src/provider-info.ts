@@ -44,8 +44,8 @@ export interface ProviderContainerConnectionInfo {
   shellAccess?: boolean;
   type: 'docker' | 'podman';
   vmType?: { id: string; name: string };
+  connectionType: 'container';
 }
-
 export interface ProviderKubernetesConnectionInfo {
   name: string;
   status: ProviderConnectionStatus;
@@ -53,12 +53,13 @@ export interface ProviderKubernetesConnectionInfo {
     apiURL: string;
   };
   lifecycleMethods?: LifecycleMethod[];
+  connectionType: 'kubernetes';
 }
-
 export interface ProviderVmConnectionInfo {
   name: string;
   status: ProviderConnectionStatus;
   lifecycleMethods?: LifecycleMethod[];
+  connectionType: 'vm';
 }
 
 export type ProviderConnectionInfo =
