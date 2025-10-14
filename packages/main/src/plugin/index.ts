@@ -852,6 +852,12 @@ export class PluginSystem {
         options: NetworkCreateOptions,
       ): Promise<NetworkCreateResult> => {
         return containerProviderRegistry.createNetwork(providerContainerConnectionInfo, options);
+      }
+    );
+    this.ipcHandle(
+      'container-provider-registry:inspectNetwork',
+      async (_listener, engine: string, networkId: string): Promise<NetworkInspectInfo> => {
+        return containerProviderRegistry.inspectNetwork(engine, networkId);
       },
     );
     this.ipcHandle(

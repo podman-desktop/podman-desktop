@@ -27,4 +27,11 @@ export interface NetworkInfoUI {
   engineType: string;
   selected: boolean;
   status: string;
+  containers: NetworkContainer[];
+  ipv6_enabled: boolean;
+}
+
+export interface NetworkContainer {
+  name: string;
+  id: string;
 }
