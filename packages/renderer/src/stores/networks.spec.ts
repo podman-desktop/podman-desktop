@@ -73,7 +73,6 @@ test.each([
   // clear mock calls
   vi.mocked(window.listNetworks).mockClear();
 
-  // now, setup listVolumesMock
   vi.mocked(window.listNetworks).mockResolvedValue([
     {
       Name: 'network1',
