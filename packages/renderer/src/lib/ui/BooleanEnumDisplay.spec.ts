@@ -28,8 +28,7 @@ describe('BooleanEnumDisplay', () => {
     const props = {
       value: false,
       options: ['disabled', 'enabled'],
-      description: 'Test property',
-      id: 'test.property',
+      ariaLabel: 'test.property',
     };
 
     const { getByText } = render(BooleanEnumDisplay, props);
@@ -40,8 +39,7 @@ describe('BooleanEnumDisplay', () => {
     const props = {
       value: true,
       options: ['disabled', 'enabled'],
-      description: 'Test property',
-      id: 'test.property',
+      ariaLabel: 'test.property',
     };
 
     const { getByText } = render(BooleanEnumDisplay, props);
@@ -52,34 +50,31 @@ describe('BooleanEnumDisplay', () => {
     const props = {
       value: true,
       options: ['only-one'],
-      description: 'Test property',
-      id: 'test.property',
+      ariaLabel: 'test.property',
     };
 
     const { queryByText } = render(BooleanEnumDisplay, props);
     expect(queryByText('only-one')).not.toBeInTheDocument();
   });
 
-  test('should include aria-label with description', () => {
+  test('should include aria-label when provided', () => {
     const props = {
       value: true,
       options: ['rootless', 'rootful'],
-      description: 'Machine with root privileges',
-      id: 'podman.machine.rootful',
+      ariaLabel: 'Machine with root privileges: rootful',
     };
 
     const { getByLabelText } = render(BooleanEnumDisplay, props);
     expect(getByLabelText('Machine with root privileges: rootful')).toBeInTheDocument();
   });
 
-  test('should use id as fallback for aria-label when description is not provided', () => {
+  test('should use displayText as fallback for aria-label when aria-label is not provided', () => {
     const props = {
       value: false,
       options: ['rootless', 'rootful'],
-      id: 'podman.machine.rootful',
     };
 
     const { getByLabelText } = render(BooleanEnumDisplay, props);
-    expect(getByLabelText('podman.machine.rootful: rootless')).toBeInTheDocument();
+    expect(getByLabelText('rootless')).toBeInTheDocument();
   });
 });
