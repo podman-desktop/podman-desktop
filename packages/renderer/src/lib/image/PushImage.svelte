@@ -29,7 +29,6 @@ let { imageId, engineId, base64RepoTag, taskId = 0 }: Props = $props();
 let image: ImageInfoUI | undefined;
 let selectedImageTag = $state('');
 let displayTags: string[] = $state([]);
-let imageExists = $state(false);
 let imageLoadError = $state('');
 let imageTags: string[] = $state([]);
 let tagCheckError = $state('');
@@ -85,39 +84,36 @@ function loadBackgroundPush(): void {
 }
 
 async function loadImageInfo(): Promise<void> {
-  imageExists = false;
-  let imageTags: string[] = [];
   let inspectInfo: ImageInspectInfo | undefined = undefined;
   try {
     inspectInfo = await window.getImageInspect(engineId, imageId);
     imageTags = inspectInfo.RepoTags || []; // Keep original tags for existence checking
-    imageExists = true;
     imageLoadError = '';
   } catch (error) {
     imageLoadError = `Image with ID ${imageId} does not exist.`;
     console.warn(imageLoadError);
   }
 
-  let parameterTag: string;
   try {
-    parameterTag = atob(base64RepoTag);
+    selectedImageTag = atob(base64RepoTag);
   } catch (decodeError) {
     console.error('Failed to decode base64RepoTag:', decodeError);
-    parameterTag = base64RepoTag;
+    selectedImageTag = base64RepoTag;
   }
 
   displayTags = [...imageTags];
   // Check if parameter tag exists in the original image tags
-  if (!imageTags.includes(parameterTag)) {
+  if (!imageTags.includes(selectedImageTag)) {
     // Add parameter tag to display list only, mark as added
-    displayTags = [parameterTag, ...displayTags];
+    displayTags = [selectedImageTag, ...displayTags];
+    tagCheckError = `Tag '${selectedImageTag}' doesn't exist locally`;
   }
-  if (displayTags.length > 0) {
-    // Use parameter tag if it exists, otherwise first available tag
-    selectedImageTag = imageTags.includes(parameterTag) ? parameterTag : imageTags[0];
-  }
+}
 
-  if (inspectInfo && !inspectInfo.RepoTags.includes(selectedImageTag)) {
+function onChangeImageTag(): void {
+  if (imageTags.includes(selectedImageTag)) {
+    tagCheckError = '';
+  } else {
     tagCheckError = `Tag '${selectedImageTag}' doesn't exist locally`;
   }
 }
@@ -187,6 +183,7 @@ function onInit(): void {
             : 'outline-[var(--pd-state-warning)]'} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
           name="imageChoice"
           bind:value={selectedImageTag}
+          onchange={onChangeImageTag}
           disabled={displayTags.length === 0}>
           {#each displayTags as imageTag, index (index)}
             <option value={imageTag}>{imageTag}{imageTags.includes(imageTag)? '' : ' (loaded from parameters)'}</option>
@@ -197,14 +194,14 @@ function onInit(): void {
         </select>
         
         <!-- Additional warning for missing image -->
-        {#if !imageExists}
+        {#if imageLoadError}
           <p class="text-[var(--pd-state-warning)] pt-1 text-sm">
-            {#if imageLoadError}
               {imageLoadError}.
-            {/if}
-            {#if tagCheckError}
-              {tagCheckError}.
-            {/if}
+          </p>
+        {/if}
+        {#if !imageLoadError && tagCheckError}
+          <p class="text-[var(--pd-state-warning)] pt-1 text-sm">
+            {tagCheckError}.
           </p>
         {/if}
        
