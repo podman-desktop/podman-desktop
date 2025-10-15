@@ -179,33 +179,3 @@ export function calcHalfCpuCores(osCpu: string): number {
   const hCores = Math.floor(cores / 2);
   return hCores === 0 ? 1 : hCores;
 }
-
-/**
- * Maps boolean configuration values to their enum display text as defined in package.json
- * @param config Configuration property from package.json definition
- * @returns Display text from enum array or undefined if no enum defined
- */
-function getBooleanDisplayText(config: IProviderConnectionConfigurationPropertyRecorded): string | undefined {
-  if (!config.enum) {
-    return undefined;
-  }
-  return config.enum[config.value ? 1 : 0];
-}
-
-export function getContainerRootlessInfo(
-  providerContainerConfiguration: Map<string, IProviderConnectionConfigurationPropertyRecorded[]>,
-  providerId: string,
-  containerName: string,
-): string | undefined {
-  if (!providerContainerConfiguration.has(providerId)) {
-    return undefined;
-  }
-
-  const providerConfiguration = providerContainerConfiguration.get(providerId) ?? [];
-  const containerConfig = providerConfiguration.filter(conf => conf.connection === containerName);
-  const rootfulConfig = containerConfig.find(conf => conf.id === 'podman.machine.rootful');
-  if (!rootfulConfig) {
-    return undefined;
-  }
-  return getBooleanDisplayText(rootfulConfig);
-}

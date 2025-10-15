@@ -12,6 +12,7 @@ import { router } from 'tinro';
 
 import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
+import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
@@ -38,7 +39,6 @@ import PreferencesProviderInstallationModal from './PreferencesProviderInstallat
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import {
-  getContainerRootlessInfo,
   getProviderConnectionName,
   type IConnectionRestart,
   type IConnectionStatus,
@@ -344,6 +344,22 @@ interface Props {
   focus: string | undefined;
 }
 
+function getRootfulDisplayInfo(
+  provider: ProviderInfo,
+  container: ProviderConnectionInfo,
+): IProviderConnectionConfigurationPropertyRecorded | undefined {
+  if (!providerContainerConfiguration.has(provider.internalId)) {
+    return undefined;
+  }
+
+  const providerConfiguration = providerContainerConfiguration.get(provider.internalId) ?? [];
+  const rootfulSetting = providerConfiguration.find(
+    conf => conf.connection === container.name && conf.id === 'podman.machine.rootful',
+  );
+
+  return rootfulSetting;
+}
+
 let { properties = [], focus }: Props = $props();
 let providerElementMap = $state<Record<string, HTMLElement>>({});
 
@@ -515,7 +531,7 @@ $effect(() => {
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
-            {@const rootlessInfo = getContainerRootlessInfo(providerContainerConfiguration, provider.internalId, container.name)}
+            {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
             <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
@@ -534,9 +550,12 @@ $effect(() => {
               </div>
               <div class="{container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''} font-semibold">
                 {container.displayName}
-                {#if rootlessInfo}
-                  <span class="text-xs font-normal text-[var(--pd-content-sub-header)]" role="status" aria-label="Machine running in {rootlessInfo} mode">
-                    ({rootlessInfo})
+                {#if rootfulInfo}
+                  <span class="ml-2 text-sm text-[var(--pd-content-sub-header)]">
+                    (<BooleanEnumDisplay 
+                      value={rootfulInfo.value}
+                      options={rootfulInfo.enum ?? []}
+                      ariaLabel="{rootfulInfo.description}: {rootfulInfo.value}" />)
                   </span>
                 {/if}
               </div>
