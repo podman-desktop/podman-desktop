@@ -130,7 +130,7 @@ test('Expect no container engines being displayed', async () => {
 });
 
 test('Expect filter empty screen when there are no matches for search term', async () => {
-  await init();
+  await init('No match');
 
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
   expect(filterButton).toBeInTheDocument();
@@ -160,7 +160,7 @@ test('Expect empty page when there are no networks', async () => {
 });
 
 test('Expect networks to be order by name by default', async () => {
-  await init('No match');
+  await init();
 
   const network1Name = screen.getByRole('cell', { name: 'Network 1' });
   const network2Name = screen.getByRole('cell', { name: 'Network 2' });
@@ -174,29 +174,33 @@ test('Expect to have edit action for Podman networks', async () => {
   await init();
 
   const editButtons = screen.getAllByRole('button', { name: 'Update Network' });
-  expect(editButtons.length).toBe(1);
+  expect(editButtons.length).toBe(2);
 
   const podmanNetworkRow = screen.getByRole('row', { name: 'Network 2' });
   expect(podmanNetworkRow).toBeInTheDocument();
   expect(podmanNetworkRow).toContain(editButtons[0]);
+
+  expect(editButtons[0]).toBeDisabled();
 });
 
 test('Expect to have delete action for unused networks', async () => {
   await init();
 
   const deleteButtons = screen.getAllByRole('button', { name: 'Delete Network' });
-  expect(deleteButtons.length).toBe(1);
+  expect(deleteButtons.length).toBe(2);
 
   const unusedNetworkRow = screen.getByRole('row', { name: 'Network 1' });
   expect(unusedNetworkRow).toBeInTheDocument();
   expect(unusedNetworkRow).toContain(deleteButtons[0]);
+
+  expect(deleteButtons[1]).toBeDisabled();
 });
 
 test('Expect user confirmation for bulk delete when required', async () => {
   await init();
 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle network' });
-  expect(checkboxes).toHaveLength(1);
+  expect(checkboxes).toHaveLength(2);
   // unused network
   expect(checkboxes[0]).not.toBeDisabled();
   // used network
