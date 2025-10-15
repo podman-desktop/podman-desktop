@@ -67,10 +67,10 @@ const init = (): void => {
   values.push(createNavigationPodEntry());
   values.push(createNavigationImageEntry());
   values.push(createNavigationVolumeEntry());
+  values.push(createNavigationNetworkEntry());
   values.push(createNavigationKubernetesGroup());
   values.push(createNavigationExtensionEntry());
   values.push(createNavigationExtensionGroup());
-  values.push(createNavigationNetworkEntry());
   hideItems().catch((err: unknown) => console.error('Error hiding navigation items', err));
 };
 

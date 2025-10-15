@@ -2,18 +2,17 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { onDestroy } from 'svelte';
 
 import { filtered, searchPattern } from '/@/stores/networks';
 
 import { providerInfos } from '../../stores/providers';
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
+import NetworkColumnActions from './columns/NetworkColumnActions.svelte';
+import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
+import NetworkColumnId from './columns/NetworkColumnId.svelte';
+import NetworkColumnName from './columns/NetworkColumnName.svelte';
 import { NetworkUtils } from './network-utils';
-import NetworkColumnActions from './NetworkColumnActions.svelte';
-import NetworkColumnDriver from './NetworkColumnDriver.svelte';
-import NetworkColumnId from './NetworkColumnId.svelte';
-import NetworkColumnName from './NetworkColumnName.svelte';
 import NetworkEmptyScreen from './NetworkEmptyScreen.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
@@ -37,8 +36,6 @@ let providerConnections = $derived(
     .flat()
     .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
-
-onDestroy(() => {});
 
 let selectedItemsNumber: number = $state(0);
 
@@ -133,8 +130,7 @@ const row = new TableRow<NetworkInfoUI>({
         data={networks}
         columns={columns}
         row={row}
-        defaultSortColumn="Name"
-        on:update={(): NetworkInfoUI[] => (networks = networks)}>
+        defaultSortColumn="Name">
       </Table>
     {/if}
   </div>

@@ -76,6 +76,27 @@ const providerInfoMock = {
   ],
 } as unknown as ProviderInfo;
 
+async function init(): Promise<void> {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
+
+  vi.mocked(window.listNetworks).mockResolvedValue([network1, network2]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  // wait for stores to be populated
+  await waitFor(
+    () => {
+      expect(get(providerInfos)).not.toHaveLength(0);
+      expect(get(networksListInfo)).not.toHaveLength(0);
+    },
+    { timeout: 2000 },
+  );
+
+  render(NetworksList, { searchTerm: 'No match' });
+  await tick();
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.listNetworks).mockResolvedValue([]);
@@ -156,24 +177,7 @@ test('Expect empty page when there are no networks', async () => {
 });
 
 test('Expect networks to be order by name by default', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
-
-  vi.mocked(window.listNetworks).mockResolvedValue([network2, network1]);
-
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-
-  // wait for stores to be populated
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(networksListInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
-
-  render(NetworksList);
-  await tick();
+  await init();
 
   const network1Name = screen.getByRole('cell', { name: 'Network 1' });
   const network2Name = screen.getByRole('cell', { name: 'Network 2' });
@@ -184,24 +188,7 @@ test('Expect networks to be order by name by default', async () => {
 });
 
 test('Expect to have edit action for Podman networks', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
-
-  vi.mocked(window.listNetworks).mockResolvedValue([network2, network1]);
-
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-
-  // wait for stores to be populated
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(networksListInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
-
-  render(NetworksList);
-  await tick();
+  await init();
 
   const editButtons = screen.getAllByRole('button', { name: 'Update Network' });
   expect(editButtons.length).toBe(1);
@@ -212,24 +199,7 @@ test('Expect to have edit action for Podman networks', async () => {
 });
 
 test('Expect to have delete action for unused networks', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
-
-  vi.mocked(window.listNetworks).mockResolvedValue([network2, network1]);
-
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-
-  // wait for stores to be populated
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(networksListInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
-
-  render(NetworksList);
-  await tick();
+  await init();
 
   const deleteButtons = screen.getAllByRole('button', { name: 'Delete Network' });
   expect(deleteButtons.length).toBe(1);
@@ -240,26 +210,10 @@ test('Expect to have delete action for unused networks', async () => {
 });
 
 test('Expect user confirmation for bulk delete when required', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
-
-  vi.mocked(window.listNetworks).mockResolvedValue([network2, network1]);
-
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-
-  // wait for stores to be populated
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(networksListInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
-
-  render(NetworksList);
-  await tick();
+  await init();
 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle network' });
+  expect(checkboxes).toHaveLength(1);
   // unused network
   expect(checkboxes[0]).not.toBeDisabled();
   // used network

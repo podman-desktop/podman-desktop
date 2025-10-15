@@ -88,7 +88,7 @@ test.each([
   await vi.waitFor(() => {
     expect(vi.mocked(window.listNetworks).mock.calls.length).not.equal(0);
     const networkListResult = get(networksListInfo);
-    expect(networkListResult.length).toBe(1);
+    expect(networkListResult).toHaveLength(1);
     expect(networkListResult[0].Id).toEqual('network1');
   });
 });

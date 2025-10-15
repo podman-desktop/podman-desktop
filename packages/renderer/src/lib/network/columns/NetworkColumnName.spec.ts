@@ -21,8 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import NetworkColumnId from './NetworkColumnId.svelte';
-import type { NetworkInfoUI } from './NetworkInfoUI';
+import type { NetworkInfoUI } from '../NetworkInfoUI';
+import NetworkColumnName from './NetworkColumnName.svelte';
 
 const network: NetworkInfoUI = {
   engineId: 'engine1',
@@ -31,16 +31,16 @@ const network: NetworkInfoUI = {
   name: 'Network 1',
   id: '123456789012345',
   created: '',
-  shortId: '123456789012',
+  shortId: '',
   driver: '',
   selected: false,
   status: 'UNUSED',
 };
 
 test('Expect simple column styling', async () => {
-  render(NetworkColumnId, { object: network });
+  render(NetworkColumnName, { object: network });
 
-  const text = screen.getByText(network.shortId);
+  const text = screen.getByText(network.name);
   expect(text).toBeInTheDocument();
   expect(text).toHaveClass('text-[var(--pd-table-body-text-highlight)]');
 });

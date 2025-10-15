@@ -21,10 +21,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import NetworkColumnActions from './NetworkColumnActions.svelte';
-import type { NetworkInfoUI } from './NetworkInfoUI';
+import type { NetworkInfoUI } from '../NetworkInfoUI';
+import NetworkColumnDriver from './NetworkColumnDriver.svelte';
 
-const network1: NetworkInfoUI = {
+const network: NetworkInfoUI = {
   engineId: 'engine1',
   engineName: 'Engine 1',
   engineType: 'podman',
@@ -32,17 +32,15 @@ const network1: NetworkInfoUI = {
   id: '123456789012345',
   created: '',
   shortId: '',
-  driver: '',
+  driver: 'bridge',
   selected: false,
   status: 'UNUSED',
 };
 
-test('Expect action buttons', async () => {
-  render(NetworkColumnActions, { object: network1 });
+test('Expect simple column styling', async () => {
+  render(NetworkColumnDriver, { object: network });
 
-  const buttons = await screen.findAllByRole('button');
-  expect(buttons).toHaveLength(2);
-
-  expect(screen.getByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.getByTitle('Update Network')).toBeInTheDocument();
+  const text = screen.getByText(network.driver);
+  expect(text).toBeInTheDocument();
+  expect(text).toHaveClass('text-[var(--pd-table-body-text-highlight)]');
 });

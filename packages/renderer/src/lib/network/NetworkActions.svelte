@@ -1,13 +1,11 @@
 <script lang="ts">
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, Input } from '@podman-desktop/ui-svelte';
-import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
-import Dialog from '../dialogs/Dialog.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
+import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
 
 interface Props {
   network: NetworkInfoUI;
@@ -18,79 +16,37 @@ let { network, detailed = false }: Props = $props();
 
 let showUpdateNetworkDialog = $state(false);
 
-let addDNSServers = $state('');
-
-let removeDNSServers = $state('');
-
-const dispatch = createEventDispatcher<{ update: NetworkInfoUI }>();
-
 async function removeNetwork(): Promise<void> {
   const oldStatus = network.status;
   network.status = 'DELETING';
-  dispatch('update', network);
 
   try {
     await window.removeNetwork(network.engineId, network.id);
   } catch (error) {
     console.error(`error while removing network ${network.name}`, error);
     network.status = oldStatus;
-    dispatch('update', network);
   }
 }
 
-async function updateNetwork(): Promise<void> {
-  const addList = addDNSServers ? addDNSServers.trim().split(' ') : [];
-  const removeList = removeDNSServers ? removeDNSServers.trim().split(' ') : [];
-  await window.updateNetwork(network.engineId, network.id, addList, removeList);
-  addDNSServers = '';
-  removeDNSServers = '';
+function closeUpdateDialog(): void {
   showUpdateNetworkDialog = false;
 }
 </script>
 
-{#if network.status === 'UNUSED'}
-  <ListItemButtonIcon
-    title="Delete Network"
-    onClick={(): void => withConfirmation(removeNetwork, `delete network ${network.name}`)}
-    icon={faTrash}
-    detailed={detailed} />
-{/if}
-{#if network.engineType === 'podman'}
-  <ListItemButtonIcon
-    title="Update Network"
-    onClick={(): void => {showUpdateNetworkDialog = true;}}
-    icon={faEdit}
-    detailed={detailed} />
-{/if}
+<ListItemButtonIcon
+  title="Update Network"
+  onClick={(): void => {showUpdateNetworkDialog = true;}}
+  icon={faEdit}
+  detailed={detailed}
+  enabled={network.engineType === 'podman'} />
+
+<ListItemButtonIcon
+  title="Delete Network"
+  onClick={(): void => withConfirmation(removeNetwork, `delete network ${network.name}`)}
+  icon={faTrash}
+  detailed={detailed}
+  enabled={network.status === 'UNUSED'} />
 
 {#if showUpdateNetworkDialog}
-  <Dialog
-    title={`Edit Network ${network.name}`}
-    onclose={(): void => {
-      showUpdateNetworkDialog = false;
-    }}>
-    {#snippet content()}
-      <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
-        <div>
-          <div>DNS servers to add (for multiple servers, separate with a space)</div>
-          <Input placeholder="8.8.8.8 1.1.1.1" bind:value={addDNSServers}></Input>
-        </div>
-
-        <div>
-          <div>DNS servers to drop (for multiple servers, separate with a space)</div>
-          <Input placeholder="8.8.8.8 1.1.1.1" bind:value={removeDNSServers}></Input>
-        </div>
-
-      </div>
-    {/snippet}
-    {#snippet buttons()}
-      
-      <Button type="link" onclick={(): boolean => (showUpdateNetworkDialog = false)}>Cancel</Button>
-      <Button
-        type="primary"
-        disabled={!addDNSServers.trim() &&
-          !removeDNSServers.trim()}
-        onclick={updateNetwork}>Update</Button>
-    {/snippet}
-  </Dialog>
+  <UpdateNetworkDialog network={network} closeDialog={closeUpdateDialog} />
 {/if}
