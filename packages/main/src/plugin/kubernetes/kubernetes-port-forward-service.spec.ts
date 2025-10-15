@@ -29,7 +29,7 @@ import {
   KubernetesPortForwardServiceProvider,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import type { ConfigManagementService } from '/@/plugin/kubernetes/kubernetes-port-forward-storage.js';
-import type { IDisposable } from '/@/plugin/types/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
 import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 

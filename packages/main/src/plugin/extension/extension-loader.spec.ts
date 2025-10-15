@@ -31,6 +31,7 @@ import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
+import type { IDisposable } from '/@api/disposable.js';
 import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { BuildImageOptions as InternalBuildImageOptions } from '/@api/image-info.js';
 import { NavigationPage } from '/@api/navigation-page.js';
@@ -68,7 +69,6 @@ import type { NotificationRegistry } from '../tasks/notification-registry.js';
 import { type ProgressImpl, ProgressLocation } from '../tasks/progress-impl.js';
 import type { Telemetry } from '../telemetry/telemetry.js';
 import type { TrayMenuRegistry } from '../tray-menu-registry.js';
-import type { IDisposable } from '../types/disposable.js';
 import { Disposable } from '../types/disposable.js';
 import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';

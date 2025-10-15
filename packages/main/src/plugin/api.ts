@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IDisposable } from './types/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 export const ApiSenderType = Symbol.for('ApiSenderType');
 export type ApiSenderType = {

@@ -19,9 +19,9 @@
 import type { BrowserWindow } from 'electron';
 
 import type { IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { IDisposable } from '/@api/disposable.js';
 
 import { AppearanceSettings } from './appearance-settings.js';
-import type { IDisposable } from './types/disposable.js';
 
 export class ZoomLevelHandler {
   #browserWindow: BrowserWindow;

@@ -27,12 +27,12 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { Certificates } from '/@/plugin/certificates.js';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ensureURL, Proxy } from '/@/plugin/proxy.js';
+import type { IDisposable } from '/@api/disposable.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import type { ApiSenderType } from './api.js';
 import type { Directories } from './directories.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
-import type { IDisposable } from './types/disposable.js';
 
 const URL = 'https://podman-desktop.io';
 

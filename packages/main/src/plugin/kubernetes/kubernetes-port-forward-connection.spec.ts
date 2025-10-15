@@ -30,7 +30,7 @@ import {
   PortForwardConnectionService,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-connection.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import { type IDisposable } from '/@/plugin/types/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';

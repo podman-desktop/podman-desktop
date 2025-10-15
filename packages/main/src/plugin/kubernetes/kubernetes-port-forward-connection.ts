@@ -22,9 +22,9 @@ import { PortForward } from '@kubernetes/client-node';
 
 import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import type { ForwardConfigRequirements } from '/@/plugin/kubernetes/kubernetes-port-forward-validation.js';
-import type { IDisposable } from '/@/plugin/types/disposable.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { requireNonUndefined } from '/@/util.js';
+import type { IDisposable } from '/@api/disposable.js';
 import type { ForwardConfig, PortMapping } from '/@api/kubernetes-port-forward-model.js';
 import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
