@@ -22,15 +22,17 @@ import { join } from 'node:path';
 
 import { injectable, preDestroy } from 'inversify';
 
+import { IAsyncDisposable } from '/@api/async-disposable.js';
+
 /**
  * Service for managing temporary files (YAML, configuration files, etc.)
  */
 @injectable()
-export class TempFileService implements AsyncDisposable {
+export class TempFileService implements IAsyncDisposable {
   private tempFiles: Set<string> = new Set();
 
   @preDestroy()
-  async [Symbol.asyncDispose](): Promise<void> {
+  async dispose(): Promise<void> {
     await this.cleanup();
   }
 
