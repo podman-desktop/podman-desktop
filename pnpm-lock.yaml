@@ -201,8 +201,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.10)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
       '@vitest/eslint-plugin':
-        specifier: ^1.3.18
-        version: 1.3.18(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.10)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^1.3.20
+        version: 1.3.20(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.10)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))
       cross-env:
         specifier: 10.1.0
         version: 10.1.0
@@ -4510,8 +4510,8 @@ packages:
       '@vitest/browser':
         optional: true
 
-  '@vitest/eslint-plugin@1.3.18':
-    resolution: {integrity: sha512-ZzuosBA/IcbT8B0Tt1Htek7lGNnLuKJALCMGudMW97nikNXC2iZ2sSntpMUTZvpVGesyNoJ//gxOAQ/qDzWphQ==}
+  '@vitest/eslint-plugin@1.3.20':
+    resolution: {integrity: sha512-0VkFSFjfAkNLkgWcfcrJjU+4CQs48LuYH/2zrjNhHPX6iD+SMJzX0aidzesBHmdgnyIxiz4jDM0rzhE9SkJqOw==}
     peerDependencies:
       eslint: '>= 8.57.0'
       typescript: '>= 5.0.0'
@@ -16392,7 +16392,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/eslint-plugin@1.3.18(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.10)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
+  '@vitest/eslint-plugin@1.3.20(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.18.10)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@typescript-eslint/scope-manager': 8.46.1
       '@typescript-eslint/utils': 8.46.1(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)
