@@ -170,32 +170,6 @@ test('Expect networks to be order by name by default', async () => {
   expect(network1Name.compareDocumentPosition(network2Name)).toBe(4);
 });
 
-test('Expect to have edit action for Podman networks', async () => {
-  await init();
-
-  const editButtons = screen.getAllByRole('button', { name: 'Update Network' });
-  expect(editButtons.length).toBe(2);
-
-  const podmanNetworkRow = screen.getByRole('row', { name: 'Network 2' });
-  expect(podmanNetworkRow).toBeInTheDocument();
-  expect(podmanNetworkRow).toContain(editButtons[0]);
-
-  expect(editButtons[0]).toBeDisabled();
-});
-
-test('Expect to have delete action for unused networks', async () => {
-  await init();
-
-  const deleteButtons = screen.getAllByRole('button', { name: 'Delete Network' });
-  expect(deleteButtons.length).toBe(2);
-
-  const unusedNetworkRow = screen.getByRole('row', { name: 'Network 1' });
-  expect(unusedNetworkRow).toBeInTheDocument();
-  expect(unusedNetworkRow).toContain(deleteButtons[0]);
-
-  expect(deleteButtons[1]).toBeDisabled();
-});
-
 test('Expect user confirmation for bulk delete when required', async () => {
   await init();
 
