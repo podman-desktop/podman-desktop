@@ -25,6 +25,7 @@
 <li><strong>Apply Kubernetes YAML Files with Ease</strong>: Allows you to apply YAML without creating a file in the local filesystem <a href="https://github.com/podman-desktop/podman-desktop/pull/13751" target="_blank" rel="noopener noreferrer">#13751</a></li>
 <li><strong>Transparent Proxy Support</strong>: Configures your CA certificates for all HTTP/HTTPS requests to avoid self signed certificate errors <a href="https://github.com/podman-desktop/podman-desktop/pull/13789" target="_blank" rel="noopener noreferrer">#13789</a></li>
 <li><strong>Include ARM64 Podman Installer for Windows</strong>: Provides a Podman installer for Windows running on the ARM64 platform <a href="https://github.com/podman-desktop/podman-desktop/pull/13815" target="_blank" rel="noopener noreferrer">#13815</a></li>
+<li><strong>Podman Desktop Main Window Display Issue on Linux with Wayland</strong>: Workaround for running Podman Desktop binary on Linux with Wayland <a href="https://github.com/podman-desktop/podman-desktop/issues/14387" target="_blank" rel="noopener noreferrer">#14387</a></li>
 </ul>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_JmGV" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.22#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details">​</a></h2>
@@ -67,6 +68,17 @@ performance and compatibility on ARM-based devices. Podman Desktop now includes 
 and AMD64 Podman installers, automatically selecting the appropriate version based on your
 system architecture. This enhancement ensures a seamless setup experience for Windows users
 on modern ARM64 devices.</p>
+<h3 class="anchor anchorWithStickyNavbar_JmGV" id="podman-desktop-main-window-display-issue-on-linux-with-wayland">Podman Desktop Main Window Display Issue on Linux with Wayland<a href="https://podman-desktop.io/blog/podman-desktop-release-1.22#podman-desktop-main-window-display-issue-on-linux-with-wayland" class="hash-link" aria-label="Direct link to Podman Desktop Main Window Display Issue on Linux with Wayland" title="Direct link to Podman Desktop Main Window Display Issue on Linux with Wayland">​</a></h3>
+<p>A known bug <a href="https://github.com/podman-desktop/podman-desktop/issues/14387" target="_blank" rel="noopener noreferrer">#14387</a>
+in Podman Desktop may prevent the main window from displaying after start on Linux systems
+running Wayland, due to a regression issue <a href="https://github.com/electron/electron/issues/48430" target="_blank" rel="noopener noreferrer">#48430</a> in Electron where the <code>ready-to-show</code> event fails to trigger correctly.
+As a workaround, users running binaries directly can set the environment variable
+<code>XDG_SESSION_TYPE=x11</code> in the same command line (e.g., <code>XDG_SESSION_TYPE=x11 podman-desktop</code>)
+to force the application to use the XWayland (X11 backend) within a Wayland session, ensuring
+proper window rendering. This is necessary because the user environment may already have
+<code>XDG_SESSION_TYPE</code> set to <code>wayland</code>. This workaround is not required for Flatpak packages, as
+<code>XDG_SESSION_TYPE=x11</code> is automatically added during Flatpak execution,
+making them unaffected by this regression.</p>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_JmGV" id="community-thank-you">Community Thank You<a href="https://podman-desktop.io/blog/podman-desktop-release-1.22#community-thank-you" class="hash-link" aria-label="Direct link to Community Thank You" title="Direct link to Community Thank You">​</a></h2>
 <p>🎉 We’d like to say a big thank you to everyone who helped to make Podman Desktop even better.</p>
