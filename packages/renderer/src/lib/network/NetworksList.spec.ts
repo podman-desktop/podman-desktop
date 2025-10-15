@@ -76,7 +76,7 @@ const providerInfoMock = {
   ],
 } as unknown as ProviderInfo;
 
-async function init(): Promise<void> {
+async function init(searchTerm?: string): Promise<void> {
   vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
 
   vi.mocked(window.listNetworks).mockResolvedValue([network1, network2]);
@@ -93,7 +93,7 @@ async function init(): Promise<void> {
     { timeout: 2000 },
   );
 
-  render(NetworksList, { searchTerm: 'No match' });
+  render(NetworksList, { searchTerm: searchTerm });
   await tick();
 }
 
@@ -130,24 +130,7 @@ test('Expect no container engines being displayed', async () => {
 });
 
 test('Expect filter empty screen when there are no matches for search term', async () => {
-  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
-
-  vi.mocked(window.listNetworks).mockResolvedValue([network1, network2]);
-
-  window.dispatchEvent(new CustomEvent('extensions-already-started'));
-  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-
-  // wait for stores to be populated
-  await waitFor(
-    () => {
-      expect(get(providerInfos)).not.toHaveLength(0);
-      expect(get(networksListInfo)).not.toHaveLength(0);
-    },
-    { timeout: 2000 },
-  );
-
-  render(NetworksList, { searchTerm: 'No match' });
-  await tick();
+  await init();
 
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
   expect(filterButton).toBeInTheDocument();
@@ -177,7 +160,7 @@ test('Expect empty page when there are no networks', async () => {
 });
 
 test('Expect networks to be order by name by default', async () => {
-  await init();
+  await init('No match');
 
   const network1Name = screen.getByRole('cell', { name: 'Network 1' });
   const network2Name = screen.getByRole('cell', { name: 'Network 2' });
