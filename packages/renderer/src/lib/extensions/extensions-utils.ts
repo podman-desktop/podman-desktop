@@ -201,4 +201,18 @@ export class ExtensionsUtils {
     });
     return values;
   }
+
+  filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return extensions.filter(extension => {
+      return `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
+    });
+  }
+
+  filterCatalogExtensions(extensions: CatalogExtensionInfoUI[], searchTerm: string): CatalogExtensionInfoUI[] {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return extensions.filter(extension => {
+      return `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(lowerCaseSearchTerm);
+    });
+  }
 }

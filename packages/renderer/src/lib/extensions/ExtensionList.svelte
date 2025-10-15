@@ -22,12 +22,8 @@ let { searchTerm = '' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
-const lowerCaseSearchTerm = $derived(searchTerm.toLowerCase());
-
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
-  $combinedInstalledExtensions.filter(extension => {
-    return `${extension.displayName} ${extension.description}`.toLowerCase().includes(lowerCaseSearchTerm);
-  }),
+  extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
 );
 
 let filteredInstalledItems: number = $derived($combinedInstalledExtensions.length - filteredInstalledExtensions.length);
@@ -43,9 +39,7 @@ const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 );
 
 const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
-  enhancedCatalogExtensions.filter(extension => {
-    return `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(lowerCaseSearchTerm);
-  }),
+  extensionsUtils.filterCatalogExtensions(enhancedCatalogExtensions, searchTerm),
 );
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
