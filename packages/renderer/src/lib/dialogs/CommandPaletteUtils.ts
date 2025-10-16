@@ -43,6 +43,8 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
     return goToInfo.Name;
   } else if (goToInfo.type === 'Volume') {
     return goToInfo.Name.substring(0, 12);
+  } else if (goToInfo.type === 'Navigation') {
+    return goToInfo.name;
   }
   return 'Unknown';
 }

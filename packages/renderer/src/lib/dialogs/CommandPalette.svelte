@@ -350,7 +350,7 @@ function highlightText(
     return [{ text: text ?? '', hasMatch: false }];
   }
 
-  const escapedSearchTerm = searchTerm.replace(/[/\\:]/g, '\\$&');
+  const escapedSearchTerm = searchTerm.replace(/[.\\]/g, '\\$&');
   const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
 
   return text
