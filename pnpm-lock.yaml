@@ -210,8 +210,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 38.2.2
-        version: 38.2.2
+        specifier: 38.3.0
+        version: 38.3.0
       electron-builder:
         specifier: 26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
@@ -577,8 +577,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 38.2.2
-        version: 38.2.2
+        specifier: 38.3.0
+        version: 38.3.0
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.7.2)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.11.5(@types/node@24.7.2)(typescript@5.9.3))(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
@@ -909,8 +909,8 @@ importers:
         specifier: ^22
         version: 22.18.10
       electron:
-        specifier: 38.2.2
-        version: 38.2.2
+        specifier: 38.3.0
+        version: 38.3.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -4237,9 +4237,6 @@ packages:
   '@types/node@22.18.10':
     resolution: {integrity: sha512-anNG/V/Efn/YZY4pRzbACnKxNKoBng2VTFydVu8RRs5hQjikP8CQfaeAV59VFSCzKNp90mXiVXW2QzV56rwMrg==}
 
-  '@types/node@22.18.8':
-    resolution: {integrity: sha512-pAZSHMiagDR7cARo/cch1f3rXy0AEXwsVsVH09FcyeJVAzCnGgmYis7P3JidtTUjyadhTeSo8TgRPswstghDaw==}
-
   '@types/node@24.6.2':
     resolution: {integrity: sha512-d2L25Y4j+W3ZlNAeMKcy7yDsK425ibcAOO2t7aPTz6gNMH0z2GThtwENCDc0d/Pw9wgyRqE5Px1wkV7naz8ang==}
 
@@ -6483,8 +6480,8 @@ packages:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
     engines: {node: '>=20'}
 
-  electron@38.2.2:
-    resolution: {integrity: sha512-OXSaVNXDlonXDjMRsFNQo1j5tzTKwKXh5/m46IjAFccBcZJZMISI+EjSI07oexIuhvKM8AZLuFuihVn4YjWWrA==}
+  electron@38.3.0:
+    resolution: {integrity: sha512-Wij4AzX4SAV0X/ktq+NrWrp5piTCSS8F6YWh1KAcG+QRtNzyns9XLKERP68nFHIwfprhxF2YCN2uj7nx9DaeJw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -14808,7 +14805,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -15813,13 +15810,13 @@ snapshots:
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 22.18.8
+      '@types/node': 22.18.10
       '@types/responselike': 1.0.3
 
   '@types/chai@5.2.2':
@@ -15829,7 +15826,7 @@ snapshots:
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 5.0.1
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/connect@3.4.38':
     dependencies:
@@ -15998,7 +15995,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.0.1':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -16036,7 +16033,7 @@ snapshots:
 
   '@types/http-proxy@1.17.15':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -16058,7 +16055,7 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 22.18.8
+      '@types/node': 22.18.10
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -16079,7 +16076,7 @@ snapshots:
 
   '@types/node-forge@1.3.11':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/node@17.0.45': {}
 
@@ -16095,10 +16092,6 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@22.18.8':
-    dependencies:
-      undici-types: 6.21.0
-
   '@types/node@24.6.2':
     dependencies:
       undici-types: 7.13.0
@@ -16106,6 +16099,7 @@ snapshots:
   '@types/node@24.7.2':
     dependencies:
       undici-types: 7.14.0
+    optional: true
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -16151,13 +16145,13 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 22.18.8
+      '@types/node': 22.18.10
 
   '@types/retry@0.12.0': {}
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 22.18.10
 
   '@types/semver@7.7.1': {}
 
@@ -16178,7 +16172,7 @@ snapshots:
 
   '@types/sockjs@0.3.36':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/ssh2@1.15.5':
     dependencies:
@@ -16234,7 +16228,7 @@ snapshots:
 
   '@types/ws@8.18.0':
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -16244,7 +16238,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.18.8
+      '@types/node': 22.18.10
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.46.0(@typescript-eslint/parser@8.46.0(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)':
@@ -18820,10 +18814,10 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@38.2.2:
+  electron@38.3.0:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 22.18.8
+      '@types/node': 22.18.10
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -19388,7 +19382,7 @@ snapshots:
 
   eval@0.1.8:
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       require-like: 0.1.2
 
   eventemitter3@4.0.7: {}
@@ -20650,7 +20644,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -20658,13 +20652,13 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 24.7.2
+      '@types/node': 22.18.10
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -24587,7 +24581,8 @@ snapshots:
 
   undici-types@7.13.0: {}
 
-  undici-types@7.14.0: {}
+  undici-types@7.14.0:
+    optional: true
 
   undici@7.12.0: {}
 
