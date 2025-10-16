@@ -23,7 +23,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import type { Registry } from '@podman-desktop/api';
+import type {
+  Configuration,
+  DefaultRegistry,
+  DefaultRegistryMirror,
+  Registry,
+  RegistrySuggestedProvider,
+} from '@podman-desktop/api';
 import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
@@ -44,6 +50,7 @@ import imageRegistryManifestMultiArchJson from '../../tests/resources/data/plugi
 };
 import type { ApiSenderType } from './api.js';
 import type { Certificates } from './certificates.js';
+import type { ConfigurationRegistry } from './configuration-registry.js';
 import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
 import type { EventType, Telemetry } from './telemetry/telemetry.js';
@@ -75,8 +82,12 @@ const apiSender: ApiSenderType = {
   send(_channel: string, _data?: any): void {},
 } as ApiSenderType;
 
+const configurationRegistry: ConfigurationRegistry = {
+  getConfiguration: vi.fn(),
+} as unknown as ConfigurationRegistry;
+
 beforeAll(async () => {
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
 });
 
 beforeEach(() => {
@@ -1012,7 +1023,7 @@ test('getOptions uses proxy settings', () => {
     httpsProxy: 'http://192.168.1.1:3128',
     noProxy: '',
   });
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
   const options = imageRegistry.getOptions();
   expect(options.agent).toBeDefined();
   expect(options.agent?.http).toBeDefined();
@@ -1027,7 +1038,7 @@ test('searchImages with proxy', async () => {
 
     noProxy: '',
   });
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
 
   const handlers = [
     http.get('https://index.docker.io/v1/search', () => {
@@ -1126,4 +1137,116 @@ test('listImageTags', async () => {
 
   const result = await imageRegistry.listImageTags({ image: 'an-image' });
   expect(result).toEqual(['1', '2', '3']);
+});
+
+const userRegistry1: DefaultRegistry = {
+  registry: {
+    prefix: 'registry1',
+    location: '/registry1/foo',
+    blocked: true,
+  },
+};
+
+const userRegistryMirror1: DefaultRegistryMirror = {
+  'registry.mirror': {
+    location: 'mirror1/foo',
+  },
+};
+
+const userRegistry2: DefaultRegistry = {
+  registry: {
+    prefix: 'registry2',
+    location: '/registry2/foo',
+    blocked: true,
+  },
+};
+
+const userRegistryMirror2: DefaultRegistryMirror = {
+  'registry.mirror': {
+    location: 'mirror2/foo',
+  },
+};
+
+const userRegistry3: DefaultRegistry = {
+  registry: {
+    prefix: 'registry3',
+    location: '/registry3/foo',
+  },
+};
+
+test('loadUserDefaultRegistryConfig', () => {
+  const getMock = vi.fn().mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistryMirror2]);
+
+  vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
+    get: getMock,
+  } as unknown as Configuration);
+
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
+
+  imageRegistry.loadUserDefaultRegistryConfig();
+
+  expect(configurationRegistry.getConfiguration).toHaveBeenCalledWith('registries');
+  expect(getMock).toHaveBeenCalledWith('defaults', []);
+
+  const suggestedRegistries = imageRegistry.getSuggestedRegistries();
+  expect(suggestedRegistries).toStrictEqual([
+    { name: 'registry1', url: '/registry1/foo', blocked: true, insecure: undefined },
+    { name: 'registry2', url: '/registry2/foo', blocked: true, insecure: undefined },
+  ]);
+});
+
+test('Handle conflicts with existing suggested registries and user default registries', async () => {
+  const originalConsoleLog = console.log;
+  const consoleLogMock = vi.fn();
+  console.log = consoleLogMock;
+
+  const getMock = vi
+    .fn()
+    .mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistryMirror2, userRegistry3]);
+
+  vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
+    get: getMock,
+  } as unknown as Configuration);
+
+  const suggestedRegistry1: RegistrySuggestedProvider = {
+    name: 'Suggested registry 1',
+    url: '/registry1/foo',
+  };
+
+  const suggestedRegistry2: RegistrySuggestedProvider = {
+    name: 'Suggested registry 2',
+    url: '/registry2/foo',
+    blocked: true,
+  };
+
+  const suggestedRegistry3: RegistrySuggestedProvider = {
+    name: 'Suggested registry 3',
+    url: '/registry3/bar',
+  };
+
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
+
+  imageRegistry.suggestRegistry(suggestedRegistry1, false);
+  imageRegistry.suggestRegistry(suggestedRegistry2, false);
+  imageRegistry.suggestRegistry(suggestedRegistry3, false);
+
+  imageRegistry.loadUserDefaultRegistryConfig();
+
+  expect(configurationRegistry.getConfiguration).toHaveBeenCalledWith('registries');
+  expect(getMock).toHaveBeenCalledWith('defaults', []);
+
+  expect(consoleLogMock).toHaveBeenCalledWith(
+    'User default registry already registered and blocked status adjusted: /registry1/foo',
+  );
+  expect(consoleLogMock).toHaveBeenCalledWith('Registry already registered: /registry2/foo');
+
+  const suggestedRegistries = imageRegistry.getSuggestedRegistries();
+  expect(suggestedRegistries).toStrictEqual([
+    { ...suggestedRegistry1, blocked: true },
+    suggestedRegistry2,
+    suggestedRegistry3,
+    { name: 'registry3', url: '/registry3/foo', blocked: undefined, insecure: undefined },
+  ]);
+
+  console.log = originalConsoleLog;
 });
