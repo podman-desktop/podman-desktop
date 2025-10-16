@@ -78,6 +78,11 @@ test.afterAll(async ({ page, runner }) => {
 
   try {
     await deletePod(page, podToRun);
+    await deleteContainer(page, backendContainer);
+    await deleteContainer(page, frontendContainer);
+    await deleteImage(page, backendImage);
+    await deleteImage(page, frontendImage);
+
     if (!resetTestData) return;
 
     for (const pod of podNames) {
@@ -87,10 +92,6 @@ test.afterAll(async ({ page, runner }) => {
     for (const container of containerNames) {
       await deleteContainer(page, container);
     }
-    await deleteContainer(page, backendContainer);
-    await deleteContainer(page, frontendContainer);
-    await deleteImage(page, backendImage);
-    await deleteImage(page, frontendImage);
   } finally {
     await runner.close();
   }
