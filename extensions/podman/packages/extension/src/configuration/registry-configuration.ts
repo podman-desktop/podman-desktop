@@ -127,7 +127,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
           duplicateRegistry.location !== defaultRegistry.location
         ) {
           console.warn(
-            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties don't match. Please update this registry in ... or ...`,
+            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties don't match. Please update this registry`,
           );
         } else {
           defaultRegistry.mirror?.forEach(mirror => {
