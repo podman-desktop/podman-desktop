@@ -102,12 +102,15 @@ export class ImageRegistry {
     this.defaultRegistries = this.configurationRegistry.getConfiguration('registries').get('defaults', []);
     this.defaultRegistries.forEach(registry => {
       if ('registry' in registry) {
-        this.suggestRegistry({
-          name: registry.registry.prefix,
-          url: registry.registry.location,
-          insecure: registry.registry.insecure,
-          blocked: registry.registry.blocked,
-        });
+        this.suggestRegistry(
+          {
+            name: registry.registry.prefix,
+            url: registry.registry.location,
+            insecure: registry.registry.insecure,
+            blocked: registry.registry.blocked,
+          },
+          true,
+        );
       }
     });
   }
@@ -201,12 +204,22 @@ export class ImageRegistry {
     });
   }
 
-  suggestRegistry(registry: containerDesktopAPI.RegistrySuggestedProvider): Disposable {
-    // Do not add it to the list if it's already been suggested by name & URL (Quay, DockerHub, etc.).
+  suggestRegistry(
+    registry: containerDesktopAPI.RegistrySuggestedProvider,
+    isUserDefaultRegistry?: boolean,
+  ): Disposable {
+    // Do not add it to the list if it's already been suggested by URL (Quay, DockerHub, etc.).
     // this may have been done by another extension.
-    if (this.suggestedRegistries.find(reg => reg.url === registry.url && reg.name === registry.name)) {
-      // Ignore and don't register
-      console.log(`Registry already registered: ${registry.url}`);
+    const matchingRegistry = this.suggestedRegistries.find(reg => reg.url === registry.url);
+    if (matchingRegistry) {
+      if (isUserDefaultRegistry && matchingRegistry.blocked !== registry.blocked) {
+        // user default registry blocked status overrides other blocked values for the same location
+        matchingRegistry.blocked = registry.blocked;
+        console.log(`User default registry already registered and blocked status adjusted: ${registry.url}`);
+      } else {
+        // Ignore and don't register
+        console.log(`Registry already registered: ${registry.url}`);
+      }
       return Disposable.noop();
     }
 
