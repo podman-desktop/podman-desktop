@@ -77,12 +77,12 @@ test.afterAll(async ({ page, runner }) => {
   test.setTimeout(120_000);
 
   try {
+    await deletePod(page, podToRun);
     if (!resetTestData) return;
 
     for (const pod of podNames) {
       await deletePod(page, pod);
     }
-    await deletePod(page, podToRun);
 
     for (const container of containerNames) {
       await deleteContainer(page, container);
