@@ -178,7 +178,32 @@ describe('readRegistriesConfContent', async () => {
     expect(content).toStrictEqual({
       registry: [
         {
+          prefix: undefined,
+          insecure: undefined,
+          blocked: undefined,
           location: 'docker.io',
+          mirror: undefined,
+        },
+      ],
+    });
+    expect(registryConfiguration.saveRegistriesConfContent).toBeCalled();
+  });
+
+  test('read the content with insecure parameter', async () => {
+    vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+    vi.spyOn(registryConfiguration, 'getRegistryConfFilePath').mockReturnValue('fake-path');
+    vi.mocked(existsSync).mockReturnValue(true);
+
+    vi.mocked(readFile).mockResolvedValue('[[registry]]\nlocation = "insecure-registry.com"\ninsecure = true');
+    const content = await registryConfiguration.readRegistriesConfContent();
+    expect(content).toStrictEqual({
+      registry: [
+        {
+          prefix: undefined,
+          insecure: true,
+          blocked: undefined,
+          location: 'insecure-registry.com',
+          mirror: undefined,
         },
       ],
     });
@@ -204,6 +229,23 @@ describe('saveRegistriesConfContent', async () => {
     expect(writeFile).toBeCalledWith(
       expect.stringContaining('registries.conf'),
       '[[registry]]\nlocation = "docker.io"\n\n[[registry.mirror]]\nlocation = "localhost:5000"',
+      'utf-8',
+    );
+  });
+
+  test('file with insecure parameter', async () => {
+    const content: RegistryConfigurationFile = {
+      registry: [
+        {
+          location: 'insecure-registry.com',
+          insecure: true,
+        },
+      ],
+    };
+    await registryConfiguration.saveRegistriesConfContent(content);
+    expect(writeFile).toBeCalledWith(
+      expect.stringContaining('registries.conf'),
+      '[[registry]]\nlocation = "insecure-registry.com"\ninsecure = true',
       'utf-8',
     );
   });
@@ -256,12 +298,9 @@ describe('displayRegistryQuickPick', () => {
     vi.mocked(window.showQuickPick).mockResolvedValueOnce(actionQuickPickItem);
     // then it's asking the location registry and we will enter docker.io
     vi.mocked(window.showInputBox).mockResolvedValueOnce('docker.io');
-
-    // now we select the mirror action
-    const selectARegitryChoice = { entry: { location: 'docker.io' }, label: 'docker.io' };
-    vi.mocked(window.showQuickPick).mockResolvedValueOnce(selectARegitryChoice);
-    // then we say we want to use ghcr.io as mirror
-    vi.mocked(window.showInputBox).mockResolvedValueOnce('ghcr.io');
+    // then it's asking if the registry is insecure and we select No (secure)
+    const insecureChoice = { label: 'No (secure)', value: false };
+    vi.mocked(window.showQuickPick).mockResolvedValueOnce(insecureChoice);
 
     // then we say we end the configuration
     const endQuickPickItem = { actionName: ActionEnum.END_REGISTRY_ACTION, label: ActionEnum.END_REGISTRY_ACTION };
@@ -274,11 +313,7 @@ describe('displayRegistryQuickPick', () => {
       registry: [
         {
           location: 'docker.io',
-          mirror: [
-            {
-              location: 'ghcr.io',
-            },
-          ],
+          insecure: false,
         },
       ],
     });

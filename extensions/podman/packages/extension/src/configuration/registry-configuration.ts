@@ -43,7 +43,7 @@ interface ActionQuickPickItem extends QuickPickItem {
   actionName: ActionEnum;
 }
 
-interface RegistryConfigurationEntry {
+export interface RegistryConfigurationEntry {
   prefix?: string;
   insecure?: boolean;
   blocked?: boolean;
@@ -51,7 +51,7 @@ interface RegistryConfigurationEntry {
   mirror?: RegistryConfigurationMirrorEntry[];
 }
 
-interface RegistryConfigurationMirrorEntry {
+export interface RegistryConfigurationMirrorEntry {
   location?: string;
   insecure?: boolean;
 }
@@ -179,7 +179,24 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
         placeHolder: 'Enter a registry location',
       });
       if (registryName) {
-        configFileContent.registry.push({ location: registryName });
+        // Ask if the registry is insecure
+        const isInsecure = await window.showQuickPick(
+          [
+            { label: 'No (secure)', value: false },
+            { label: 'Yes (insecure)', value: true },
+          ],
+          {
+            title: 'Is this registry insecure?',
+            placeHolder: 'Select if the registry uses insecure certificates',
+          },
+        );
+
+        const registryEntry: RegistryConfigurationEntry = {
+          location: registryName,
+          insecure: isInsecure?.value ?? false,
+        };
+
+        configFileContent.registry.push(registryEntry);
         await this.saveRegistriesConfContent(configFileContent);
       }
     } else if (response.actionName === ActionEnum.END_REGISTRY_ACTION) {
@@ -230,7 +247,14 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     const registries: RegistryConfigurationEntry[] = tomlConfigFile.registry as RegistryConfigurationEntry[];
 
     for (const registryEntry of registries) {
-      registry.push(registryEntry);
+      // Preserve all properties including insecure parameter
+      registry.push({
+        prefix: registryEntry.prefix,
+        insecure: registryEntry.insecure,
+        blocked: registryEntry.blocked,
+        location: registryEntry.location,
+        mirror: registryEntry.mirror,
+      });
     }
 
     const configurationFile = { registry };
