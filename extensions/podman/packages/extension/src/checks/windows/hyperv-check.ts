@@ -18,9 +18,10 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
-import { getPowerShellClient } from '/@/utils/powershell';
+
+import { getPowerShellClient } from '../../utils/powershell';
+import { BaseCheck } from '../base-check';
 
 @injectable()
 export class HyperVCheck extends BaseCheck {
