@@ -16,8 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import { get } from 'svelte/store';
+
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import { isDark } from '/@/stores/appearance';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
-import type { GoToInfo } from '/@api/documentation-info';
+import type { GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
@@ -46,34 +54,136 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
   return 'Unknown';
 }
 
+// Helper function to extract and capitalize path prefix from link
+function extractPathPrefix(link: string, entryName: string): string | undefined {
+  // Remove leading slash and split by '/'
+  const pathSegments = link.replace(/^\//, '').split('/');
+
+  if (pathSegments.length === 0 || pathSegments[0] === '') {
+    return;
+  }
+
+  const firstSegment = pathSegments[0];
+
+  // For submenu items (like Kubernetes Dashboard), use the parent category
+  if (pathSegments.length > 1) {
+    const capitalizedSegment = firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
+    return capitalizedSegment;
+  }
+
+  // For main navigation items, don't add prefix if name matches path
+  const capitalizedSegment = firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
+  if (entryName.toLowerCase() === firstSegment.toLowerCase()) {
+    return;
+  }
+
+  // Capitalize first letter and return
+  return capitalizedSegment;
+}
+
+// Helper function to extract navigation paths from navigation registry
+function extractNavigationPaths(entries: NavigationRegistryEntry[]): GoToInfo[] {
+  const items: GoToInfo[] = [];
+
+  function processEntry(entry: NavigationRegistryEntry, parentName = ''): void {
+    // Skip hidden entries
+    if (entry.hidden) {
+      return;
+    }
+
+    // Determine the display name with appropriate prefix and count
+    let displayName = entry.name;
+
+    // Add count in parentheses if available
+    const count = entry.counter || 0;
+    const countSuffix = count > 0 ? ` (${count})` : '';
+
+    // Add prefix based on the entry type and parent context
+    if (parentName) {
+      // For submenu items, use the parent name as prefix
+      displayName = `${parentName}: ${entry.name}${countSuffix}`;
+    } else {
+      // Extract prefix from the link path dynamically
+      const pathPrefix = extractPathPrefix(entry.link, entry.name);
+      if (pathPrefix) {
+        displayName = `${pathPrefix}> ${entry.name}${countSuffix}`;
+      } else {
+        // No prefix needed, just add count
+        displayName = `${entry.name}${countSuffix}`;
+      }
+    }
+
+    // Only add actual navigation entries (type 'entry'), not groups or submenus
+    if (entry.type === 'entry') {
+      let iconImage = entry.icon?.iconImage;
+      if (iconImage && typeof iconImage !== 'string') {
+        iconImage = get(isDark) ? iconImage.dark : iconImage.light;
+      }
+
+      items.push({
+        type: 'Navigation',
+        icon: {
+          iconComponent: entry.icon?.iconComponent,
+          faIcon: entry.icon?.faIcon?.definition,
+          iconImage: iconImage,
+        },
+        ...({
+          name: displayName,
+          link: entry.link,
+        } as NavigationInfo),
+      });
+    }
+
+    // Process submenu items if they exist
+    if (entry.items && entry.items.length > 0) {
+      entry.items.forEach(subItem => {
+        processEntry(subItem, entry.name);
+      });
+    }
+  }
+
+  entries.forEach(entry => {
+    processEntry(entry);
+  });
+
+  return items;
+}
+
 // Helper function to create GoToInfo items from resources
 export function createGoToItems(
   images: ImageInfo[],
   containers: ContainerInfo[],
   pods: PodInfo[],
   volumes: VolumeInfo[],
+  navigationEntries: NavigationRegistryEntry[] = [],
 ): GoToInfo[] {
   const items: GoToInfo[] = [];
 
   // Add images
   images.forEach(image => {
-    items.push({ type: 'Image', ...image });
+    items.push({ type: 'Image', ...image, icon: { iconComponent: ImageIcon } });
   });
 
   // Add containers
   containers.forEach(container => {
-    items.push({ type: 'Container', ...container });
+    items.push({ type: 'Container', ...container, icon: { iconComponent: ContainerIcon } });
   });
 
   // Add pods
   pods.forEach(pod => {
-    items.push({ type: 'Pod', ...pod });
+    items.push({ type: 'Pod', ...pod, icon: { iconComponent: PodIcon } });
   });
 
   // Add volumes
   volumes.forEach(volume => {
-    items.push({ type: 'Volume', ...volume });
+    items.push({ type: 'Volume', ...volume, icon: { iconComponent: VolumeIcon } });
   });
+
+  // Add navigation registry entries
+  if (navigationEntries.length > 0) {
+    const navigationItems = extractNavigationPaths(navigationEntries);
+    items.push(...navigationItems);
+  }
 
   return items;
 }

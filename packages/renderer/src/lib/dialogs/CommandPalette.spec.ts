@@ -21,7 +21,6 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { commandsInfos } from '/@/stores/commands';
@@ -542,17 +541,41 @@ describe('Command Palette', () => {
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
   });
 
-  test('should call router.goto when clicking on container item', async () => {
+  test('Expect that highlighting works correctly', async () => {
+    const commandTitle1 = 'My command 1';
+    const commandTitle2 = 'Test Command 2';
+
+    commandsInfos.set([
+      {
+        id: 'my-command-1',
+        title: commandTitle1,
+      },
+      {
+        id: 'my-command-2',
+        title: commandTitle2,
+      },
+    ]);
+
     render(CommandPalette, { display: true });
 
-    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
-    await userEvent.click(gotoTab);
-    await tick();
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(input).toBeInTheDocument();
 
-    const containerItem = screen.getByRole('button', { name: 'Container: test-container' });
-    await userEvent.click(containerItem);
-    await tick();
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
 
-    expect(router.goto).toHaveBeenCalledWith('/containers/test-container-id/summary');
+    await userEvent.type(input, 'My ');
+
+    const item = screen.getByRole('button', { name: 'My command 1' });
+    expect(item).toBeInTheDocument();
+
+    const highlightedText = screen.getByText('My');
+    expect(highlightedText).toHaveClass('text-[var(--pd-label-primary-text)]');
+    expect(highlightedText).toHaveClass('font-semibold');
+
+    const normalText = screen.getByText('command 1');
+    expect(normalText).toBeInTheDocument();
+    expect(normalText).not.toHaveClass('text-[var(--pd-label-primary-text)]');
+    expect(normalText).not.toHaveClass('font-semibold');
   });
 });
