@@ -17,14 +17,20 @@
  ***********************************************************************/
 
 import type extensionApi from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import { getPowerShellClient } from '../../utils/powershell';
-import { BaseCheck } from '../base-check';
+import { BaseCheck } from '/@/checks/base-check';
+import { TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { getPowerShellClient } from '/@/utils/powershell';
 
+@injectable()
 export class VirtualMachinePlatformCheck extends BaseCheck {
   title = 'Virtual Machine Platform Enabled';
 
-  constructor(private telemetryLogger: extensionApi.TelemetryLogger) {
+  constructor(
+    @inject(TelemetryLoggerSymbol)
+    private telemetryLogger: extensionApi.TelemetryLogger,
+  ) {
     super();
   }
 

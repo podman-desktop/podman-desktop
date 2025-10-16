@@ -19,17 +19,23 @@
 import type { CheckResult, ExtensionContext, RunError } from '@podman-desktop/api';
 import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
 
-import { getPowerShellClient } from '../../utils/powershell';
+import { BaseCheck } from '/@/checks/base-check';
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { getPowerShellClient } from '/@/utils/powershell';
+
 import { normalizeWSLOutput } from '../../utils/util';
-import { BaseCheck } from '../base-check';
 
+@injectable()
 export class WSL2Check extends BaseCheck {
   title = 'WSL2 Installed';
   installWSLCommandId = 'podman.onboarding.installWSL';
 
   constructor(
+    @inject(TelemetryLoggerSymbol)
     private telemetryLogger: extensionApi.TelemetryLogger,
+    @inject(ExtensionContextSymbol)
     private extensionContext?: ExtensionContext,
   ) {
     super();

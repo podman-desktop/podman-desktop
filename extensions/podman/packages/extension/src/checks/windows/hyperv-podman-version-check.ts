@@ -17,10 +17,12 @@
  ********************************************************************/
 import type { CheckResult } from '@podman-desktop/api';
 import { compareVersions } from 'compare-versions';
+import { injectable } from 'inversify';
 
-import { getPodmanInstallation } from '../../utils/podman-cli';
-import { BaseCheck } from '../base-check';
+import { BaseCheck } from '/@/checks/base-check';
+import { getPodmanInstallation } from '/@/utils/podman-cli';
 
+@injectable()
 export class HyperVPodmanVersionCheck extends BaseCheck {
   title = 'Minimum Podman Version for Hyper-V';
   static readonly PODMAN_MINIMUM_VERSION_FOR_HYPERV = '5.2.0';
