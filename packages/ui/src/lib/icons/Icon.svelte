@@ -28,8 +28,8 @@ const IconComponent = icon;
     <!-- -icon for extension icons e.g. 'kind-icon' -->
     {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-') || icon.endsWith('-icon')}
         <i class={`${icon} ${size} ${className}`} {role} {title}></i>
-    {:else}
-        <img src={icon} alt={title ?? ''} {role} class={className} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
+    {:else if icon.startsWith('data:image/')}
+        <img src={icon} alt={title ?? ''} {title} {role} class={className} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
     {/if}
 {:else}
     {#if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
