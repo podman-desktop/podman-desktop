@@ -21,7 +21,7 @@ import os from 'node:os';
 import type { CheckResult } from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
+import { BaseCheck } from '../base-check';
 
 @injectable()
 export class WinMemoryCheck extends BaseCheck {

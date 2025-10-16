@@ -21,11 +21,11 @@ import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
-import { getPowerShellClient } from '/@/utils/powershell';
 
+import { getPowerShellClient } from '../../utils/powershell';
 import { normalizeWSLOutput } from '../../utils/util';
+import { BaseCheck } from '../base-check';
 
 @injectable()
 export class WSL2Check extends BaseCheck {
