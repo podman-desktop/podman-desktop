@@ -19,8 +19,8 @@ import type { CheckResult } from '@podman-desktop/api';
 import { compareVersions } from 'compare-versions';
 import { injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
-import { getPodmanInstallation } from '/@/utils/podman-cli';
+import { getPodmanInstallation } from '../../utils/podman-cli';
+import { BaseCheck } from '../base-check';
 
 @injectable()
 export class HyperVPodmanVersionCheck extends BaseCheck {
