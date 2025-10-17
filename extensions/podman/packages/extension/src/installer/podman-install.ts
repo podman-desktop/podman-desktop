@@ -23,6 +23,12 @@ import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 import { inject, injectable } from 'inversify';
 
+import {
+  PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
+  ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
+  START_NOW_MACHINE_INIT_SUPPORTED_KEY,
+  USER_MODE_NETWORKING_SUPPORTED_KEY,
+} from '/@/constants';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getDetectionChecks } from '../checks/detection-checks';
@@ -36,10 +42,6 @@ import {
   isRootfulMachineInitSupported,
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
-  PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
-  ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
-  START_NOW_MACHINE_INIT_SUPPORTED_KEY,
-  USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '../extension';
 import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from '../utils/podman-bundled';

@@ -27,6 +27,24 @@ import * as extensionApi from '@podman-desktop/api';
 import { Mutex } from 'async-mutex';
 import { compareVersions } from 'compare-versions';
 
+import {
+  CLEANUP_REQUIRED_MACHINE_KEY,
+  CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_MACHINE_CPU_SUPPORTED_KEY,
+  PODMAN_MACHINE_DISK_SUPPORTED_KEY,
+  PODMAN_MACHINE_EDIT_CPU,
+  PODMAN_MACHINE_EDIT_DISK_SIZE,
+  PODMAN_MACHINE_EDIT_MEMORY,
+  PODMAN_MACHINE_EDIT_ROOTFUL,
+  PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
+  PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
+  ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
+  START_NOW_MACHINE_INIT_SUPPORTED_KEY,
+  USER_MODE_NETWORKING_SUPPORTED_KEY,
+  WSL_HYPERV_ENABLED_KEY,
+} from '/@/constants';
+
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
@@ -1027,22 +1045,6 @@ export async function registerUpdatesIfAny(
     });
   }
 }
-
-export const ROOTFUL_MACHINE_INIT_SUPPORTED_KEY = 'podman.isRootfulMachineInitSupported';
-export const USER_MODE_NETWORKING_SUPPORTED_KEY = 'podman.isUserModeNetworkingSupported';
-export const START_NOW_MACHINE_INIT_SUPPORTED_KEY = 'podman.isStartNowAtMachineInitSupported';
-export const CLEANUP_REQUIRED_MACHINE_KEY = 'podman.needPodmanMachineCleanup';
-export const PODMAN_MACHINE_CPU_SUPPORTED_KEY = 'podman.podmanMachineCpuSupported';
-export const PODMAN_MACHINE_MEMORY_SUPPORTED_KEY = 'podman.podmanMachineMemorySupported';
-export const PODMAN_MACHINE_DISK_SUPPORTED_KEY = 'podman.podmanMachineDiskSupported';
-export const PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY = 'podman.isLibkrunSupported';
-export const CREATE_WSL_MACHINE_OPTION_SELECTED_KEY = 'podman.isCreateWSLOptionSelected';
-export const WSL_HYPERV_ENABLED_KEY = 'podman.wslHypervEnabled';
-export const PODMAN_DOCKER_COMPAT_ENABLE_KEY = 'podman.podmanDockerCompatibilityEnabled';
-export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
-export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
-export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
-export const PODMAN_MACHINE_EDIT_ROOTFUL = 'podman.podmanMachineEditRootfulSupported';
 
 export function initTelemetryLogger(): void {
   telemetryLogger = extensionApi.env.createTelemetryLogger();
