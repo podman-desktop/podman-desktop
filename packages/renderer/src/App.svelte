@@ -55,6 +55,7 @@ import KubePodDetails from './lib/kube/pods/PodDetails.svelte';
 import KubePodsList from './lib/kube/pods/PodsList.svelte';
 import PortForwardingList from './lib/kubernetes-port-forward/PortForwardingList.svelte';
 import ManifestDetails from './lib/manifest/ManifestDetails.svelte';
+import NetworksList from './lib/network/NetworksList.svelte';
 import NodeDetails from './lib/node/NodeDetails.svelte';
 import NodesList from './lib/node/NodesList.svelte';
 import Onboarding from './lib/onboarding/Onboarding.svelte';
@@ -254,6 +255,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
           <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+        </Route>
+        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
+          <NetworksList />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
