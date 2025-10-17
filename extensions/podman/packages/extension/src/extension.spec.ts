@@ -39,7 +39,6 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
-
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
 
 import * as extension from './extension';
