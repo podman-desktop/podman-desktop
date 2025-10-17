@@ -47,6 +47,7 @@ import {
 import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
+import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
@@ -113,6 +114,9 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 
 // Telemetry
 let telemetryLogger: extensionApi.TelemetryLogger;
+
+let certificateDetectionService: CertificateDetectionService | undefined;
+let certificateDetectionInterval: NodeJS.Timeout | undefined;
 
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
@@ -1241,6 +1245,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   initTelemetryLogger();
 
+  if (telemetryLogger) {
+    await initializeCertificateDetection(telemetryLogger);
+  }
+
   // create inversify binding for the extension
   inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
   const inversifyContainer = await inversifyBinding.init();
@@ -1852,6 +1860,12 @@ export async function deactivate(): Promise<void> {
 
   await inversifyBinding?.dispose();
   inversifyBinding = undefined;
+
+  if (certificateDetectionInterval) {
+    clearInterval(certificateDetectionInterval);
+    certificateDetectionInterval = undefined;
+  }
+  certificateDetectionService = undefined;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
@@ -2242,4 +2256,25 @@ export function updateWSLHyperVEnabledContextValue(value: boolean): void {
     wslAndHypervEnabledContextValue = value;
     extensionApi.context.setValue(WSL_HYPERV_ENABLED_KEY, value);
   }
+}
+
+async function initializeCertificateDetection(telemetryLogger: extensionApi.TelemetryLogger): Promise<void> {
+  certificateDetectionService = new CertificateDetectionService(telemetryLogger, {
+    enableTelemetry: true,
+  });
+
+  // Initial detection
+  await certificateDetectionService.detectCustomCertificates();
+
+  // Set up periodic detection (every 24 hours)
+  certificateDetectionInterval = setInterval(
+    () => {
+      if (certificateDetectionService) {
+        certificateDetectionService.detectCustomCertificates().catch((error: unknown) => {
+          console.warn(`Can't detect custom registry certificates: ${error}`);
+        });
+      }
+    },
+    24 * 60 * 60 * 1000,
+  );
 }
