@@ -49,33 +49,6 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
   return 'Unknown';
 }
 
-// Helper function to extract and capitalize path prefix from link
-function extractPathPrefix(link: string, entryName: string): string | undefined {
-  // Remove leading slash and split by '/'
-  const pathSegments = link.replace(/^\//, '').split('/');
-
-  if (pathSegments.length === 0 || pathSegments[0] === '') {
-    return;
-  }
-
-  const firstSegment = pathSegments[0];
-
-  // For submenu items (like Kubernetes Dashboard), use the parent category
-  if (pathSegments.length > 1) {
-    const capitalizedSegment = firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
-    return capitalizedSegment;
-  }
-
-  // For main navigation items, don't add prefix if name matches path
-  const capitalizedSegment = firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
-  if (entryName.toLowerCase() === firstSegment.toLowerCase()) {
-    return;
-  }
-
-  // Capitalize first letter and return
-  return capitalizedSegment;
-}
-
 // Helper function to process a single navigation entry
 function processNavigationEntry(entry: NavigationRegistryEntry, items: NavigationInfo[], parentName = ''): void {
   // Skip hidden entries
@@ -95,14 +68,7 @@ function processNavigationEntry(entry: NavigationRegistryEntry, items: Navigatio
     // For submenu items, use the parent name as prefix
     displayName = `${parentName}: ${entry.name}${countSuffix}`;
   } else {
-    // Extract prefix from the link path dynamically
-    const pathPrefix = extractPathPrefix(entry.link, entry.name);
-    if (pathPrefix) {
-      displayName = `${pathPrefix}> ${entry.name}${countSuffix}`;
-    } else {
-      // No prefix needed, just add count
-      displayName = `${entry.name}${countSuffix}`;
-    }
+    displayName = `${entry.name}${countSuffix}`;
   }
 
   // Only add actual navigation entries (type 'entry'), not groups or submenus
