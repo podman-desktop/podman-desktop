@@ -45,6 +45,8 @@ import {
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
 
+import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
+
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
@@ -126,54 +128,6 @@ let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
 
 const extensionNotifications = new ExtensionNotifications();
-
-export type MachineJSON = {
-  Name: string;
-  CPUs: number;
-  Memory: string;
-  DiskSize: string;
-  Running: boolean;
-  Starting: boolean;
-  Default: boolean;
-  VMType: string;
-  UserModeNetworking?: boolean;
-  Port: number;
-  RemoteUsername: string;
-  IdentityPath: string;
-};
-
-export type ConnectionJSON = {
-  Name: string;
-  URI: string;
-  Identity: string;
-  IsMachine: boolean;
-  Default: boolean;
-};
-
-export type MachineInfo = {
-  name: string;
-  cpus: number;
-  memory: number;
-  diskSize: number;
-  userModeNetworking: boolean;
-  cpuUsage: number;
-  diskUsage: number;
-  memoryUsage: number;
-  vmType: string;
-  port: number;
-  remoteUsername: string;
-  identityPath: string;
-};
-
-export type MachineListOutput = {
-  stdout: string;
-  stderr: string;
-};
-
-export type MachineJSONListOutput = {
-  list: MachineJSON[];
-  error: string;
-};
 
 export function isIncompatibleMachineOutput(output: string | undefined): boolean {
   // apple HV v4 to v5 machine config error

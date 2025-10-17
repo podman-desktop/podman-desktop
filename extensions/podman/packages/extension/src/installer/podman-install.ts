@@ -30,11 +30,11 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '/@/constants';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { MachineJSON } from '/@/types';
 
 import { getDetectionChecks } from '../checks/detection-checks';
 import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
-import type { MachineJSON } from '../extension';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
