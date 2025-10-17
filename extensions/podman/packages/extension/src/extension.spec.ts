@@ -754,7 +754,7 @@ test.each([
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(arch).mockReturnValue(architecture);
   vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: 'podman version 5.4.0',
+    stdout: `podman version 5.4.0`,
   } as extensionApi.RunResult);
 
   await extension.createMachine(
@@ -770,7 +770,7 @@ test.each([
 
   expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
     podmanCli.getPodmanCli(),
-    expect.arrayContaining(['--image', 'path']),
+    expect.arrayContaining([`--image`, 'path']),
     {
       logger: undefined,
       token: undefined,
