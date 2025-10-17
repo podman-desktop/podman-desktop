@@ -3,12 +3,14 @@ import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-i
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, tick } from 'svelte';
+import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imagesInfos } from '/@/stores/images';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
@@ -74,8 +76,11 @@ let containerInfos: ContainerInfo[] = $derived($containersInfos);
 let podInfos: PodInfo[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
+let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 
-let goToItems: GoToInfo[] = $derived(createGoToItems(imageInfos, containerInfos, podInfos, volumInfos));
+let goToItems: GoToInfo[] = $derived(
+  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
+);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
@@ -274,6 +279,8 @@ async function executeAction(index: number): Promise<void> {
         page: NavigationPage.VOLUME,
         parameters: { name: item.Name, engineId: item.engineId },
       });
+    } else if (item.type === 'Navigation') {
+      router.goto(item.link);
     }
   } else {
     // Command item
@@ -334,6 +341,39 @@ function isGoToItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is G
 function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is DocumentationInfo {
   return 'category' in item;
 }
+
+function highlightText(
+  text: string | undefined,
+  searchTerm: string | undefined,
+): Array<{ text: string; hasMatch: boolean }> {
+  if (!searchTerm || !text) {
+    return [{ text: text ?? '', hasMatch: false }];
+  }
+
+  const escapedSearchTerm = searchTerm.replace(/[.\\]/g, '\\$&');
+  const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+
+  return text
+    .split(regex)
+    .filter(part => part.length > 0)
+    .map(part => ({
+      text: part,
+      hasMatch: regex.test(part),
+    }));
+}
+
+function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): string {
+  if (isDocItem(item)) {
+    return `${item.category}: ${item.name}`;
+  } else if (isGoToItem(item)) {
+    if (item.type === 'Navigation') {
+      return `${item.name}`;
+    }
+    return `${item.type}: ${getGoToDisplayText(item)}`;
+  } else {
+    return item.title ?? '';
+  }
+}
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:mousedown={handleMousedown} />
@@ -385,7 +425,6 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
-            {@const docItem = isDocItem(item)}
             {@const goToItem = isGoToItem(item)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
               <button
@@ -396,13 +435,13 @@ function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is Do
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
                     <div class="text-base py-[2pt]">
-                      {#if docItem}
-                        {(item.category)}: {(item.name)}
-                       {:else if goToItem}
-                         {(item.type)}: {(getGoToDisplayText(item))}
-                      {:else}
-                        {(item.title)}
-                      {/if}
+                      {#each highlightText(getTextToHighlight(item), inputValue) as part, i (i)}
+                        {#if part.hasMatch}
+                          <span class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</span>
+                        {:else}
+                          {part.text}
+                        {/if}
+                      {/each}
                     </div>
                   </div>
                 </div>
