@@ -16,6 +16,73 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { InstallCheck } from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
+
+import { OrCheck, SequenceCheck } from '../checks/base-check';
+import { HyperVCheck } from '../checks/windows/hyperv-check';
+import { HyperVPodmanVersionCheck } from '../checks/windows/hyperv-podman-version-check';
+import { VirtualMachinePlatformCheck } from '../checks/windows/virtual-machine-platform-check';
+import { WinBitCheck } from '../checks/windows/win-bit-check';
+import { WinMemoryCheck } from '../checks/windows/win-memory-check';
+import { WinVersionCheck } from '../checks/windows/win-version-check';
+import { WSLVersionCheck } from '../checks/windows/wsl-version-check';
+import { WSL2Check } from '../checks/windows/wsl2-check';
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '../inject/symbols';
+
+@injectable()
 export class WinPlatform {
   readonly type = 'win';
+
+  private readonly winBitCheck: WinBitCheck;
+  private readonly winVersionCheck: WinVersionCheck;
+  private readonly winMemoryCheck: WinMemoryCheck;
+  private readonly windowsVirtualizationCheck: OrCheck;
+  private readonly wslCheck: SequenceCheck;
+  private readonly hyperVCheck: SequenceCheck;
+
+  constructor(
+    @inject(ExtensionContextSymbol)
+    readonly extensionContext: extensionApi.ExtensionContext,
+    @inject(TelemetryLoggerSymbol)
+    readonly telemetryLogger: extensionApi.TelemetryLogger,
+  ) {
+    this.winBitCheck = new WinBitCheck();
+    this.winVersionCheck = new WinVersionCheck();
+    this.winMemoryCheck = new WinMemoryCheck();
+
+    this.hyperVCheck = new SequenceCheck('Hyper-V Platform', [
+      new HyperVPodmanVersionCheck(),
+      new HyperVCheck(this.telemetryLogger),
+    ]);
+
+    this.wslCheck = new SequenceCheck('WSL platform', [
+      new VirtualMachinePlatformCheck(this.telemetryLogger),
+      new WSLVersionCheck(),
+      new WSL2Check(this.telemetryLogger, this.extensionContext),
+    ]);
+
+    this.windowsVirtualizationCheck = new OrCheck('Windows virtualization', this.wslCheck, this.hyperVCheck);
+  }
+
+  getPreflightChecks(): InstallCheck[] {
+    return [this.winBitCheck, this.winVersionCheck, this.winMemoryCheck, this.windowsVirtualizationCheck];
+  }
+
+  async isWSLEnabled(): Promise<boolean> {
+    if (!extensionApi.env.isWindows) {
+      return false;
+    }
+    const wslCheckResult = await this.wslCheck.execute();
+    return wslCheckResult.successful;
+  }
+
+  async isHyperVEnabled(): Promise<boolean> {
+    if (!extensionApi.env.isWindows) {
+      return false;
+    }
+    const hyperVCheckResult = await this.hyperVCheck.execute();
+    return hyperVCheckResult.successful;
+  }
 }
