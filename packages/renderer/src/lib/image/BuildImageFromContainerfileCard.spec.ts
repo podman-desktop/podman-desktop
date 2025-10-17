@@ -79,8 +79,11 @@ test('Expect default tooltip', async () => {
     icon: undefined,
   });
 
-  // check we have a div tooltip with aria-label tooltip
-  const tooltip = screen.getByText('Default platform of your computer');
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  expect(tooltipTrigger).toBeInTheDocument();
+  await fireEvent.mouseEnter(tooltipTrigger);
+
+  const tooltip = await screen.findByText('Default platform of your computer');
   expect(tooltip).toBeInTheDocument();
 });
 

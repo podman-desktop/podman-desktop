@@ -67,9 +67,10 @@ test('check we have list of webviews in navigation bar', async () => {
   // check we have 2 links
   expect(links).toHaveLength(2);
 
-  // now check detail of each link
-  expect(links[0]).toHaveTextContent('Podman Desktop1');
-  expect(links[1]).toHaveTextContent('Podman Desktop2');
+  // when iconWithTitle is false, the webview names are only in tooltips (not visible text)
+  // so we check aria-label instead which contains the tooltip text from NavItem
+  expect(links[0]).toHaveAttribute('aria-label', 'Podman Desktop1');
+  expect(links[1]).toHaveAttribute('aria-label', 'Podman Desktop2');
 
   // check link href
   expect(links[0]).toHaveAttribute('href', '/webviews/webviewId1');

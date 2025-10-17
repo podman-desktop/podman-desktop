@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -45,8 +45,13 @@ test('check default on arm64', async () => {
   await tick();
   const button = screen.getByRole('button', { name: 'linux/arm64' });
   expect(button).toBeInTheDocument();
-  // should contain the text Default platform of your computer
-  expect(button.textContent).toContain('Default platform of your computer');
+
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  expect(tooltipTrigger).toBeInTheDocument();
+  await fireEvent.mouseEnter(tooltipTrigger);
+
+  const tooltip = await screen.findByText('Default platform of your computer');
+  expect(tooltip).toBeInTheDocument();
 });
 
 test('check default on amd64', async () => {
@@ -61,6 +66,11 @@ test('check default on amd64', async () => {
   await tick();
   const button = screen.getByRole('button', { name: 'linux/amd64' });
   expect(button).toBeInTheDocument();
-  // should contain the text Default platform of your computer
-  expect(button.textContent).toContain('Default platform of your computer');
+
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  expect(tooltipTrigger).toBeInTheDocument();
+  await fireEvent.mouseEnter(tooltipTrigger);
+
+  const tooltip = await screen.findByText('Default platform of your computer');
+  expect(tooltip).toBeInTheDocument();
 });

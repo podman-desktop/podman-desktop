@@ -164,6 +164,9 @@ test('Expect that counter is rendered', async () => {
   const element2 = screen.getByLabelText('Foo');
   expect(element2).toBeInTheDocument();
 
-  // get text of the element
-  expect(element2.textContent).toContain('Foo (4)');
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await fireEvent.mouseEnter(tooltipTrigger);
+
+  const tooltipContent = await screen.findByText(/Foo \(4\)/);
+  expect(tooltipContent).toBeInTheDocument();
 });

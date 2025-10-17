@@ -49,7 +49,10 @@ test('Expect tooltip if value input is invalid', async () => {
   await userEvent.clear(input);
   await userEvent.keyboard('5');
 
-  const tooltip = screen.getByLabelText('tooltip');
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await userEvent.hover(tooltipTrigger);
+
+  const tooltip = await screen.findByLabelText('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toContain('The value cannot be less than 10');
 });

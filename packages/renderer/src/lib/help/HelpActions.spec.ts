@@ -26,14 +26,11 @@ import { Items } from './HelpItems';
 
 let toggleMenuCallback: () => void;
 
-const resizeObserverMock = vi.fn();
-
 suite('HelpActions component', () => {
   beforeAll(() => {
     (window.events as unknown) = {
       receive: vi.fn(),
     };
-    Object.defineProperty(window, 'ResizeObserver', { value: resizeObserverMock });
   });
 
   beforeEach(() => {
@@ -44,7 +41,6 @@ suite('HelpActions component', () => {
         dispose: (): void => {},
       };
     });
-    resizeObserverMock.mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() });
   });
 
   test('by default is not visible', () => {
