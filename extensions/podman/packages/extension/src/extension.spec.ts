@@ -27,6 +27,19 @@ import { Disposable, provider as apiProvider } from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import {
+  CLEANUP_REQUIRED_MACHINE_KEY,
+  CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_MACHINE_CPU_SUPPORTED_KEY,
+  PODMAN_MACHINE_DISK_SUPPORTED_KEY,
+  PODMAN_MACHINE_EDIT_CPU,
+  PODMAN_MACHINE_EDIT_DISK_SIZE,
+  PODMAN_MACHINE_EDIT_MEMORY,
+  PODMAN_MACHINE_EDIT_ROOTFUL,
+  PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
+  WSL_HYPERV_ENABLED_KEY,
+} from '/@/constants';
+
 import * as extension from './extension';
 import {
   initCheckAndRegisterUpdate,
@@ -1552,10 +1565,10 @@ test('provider is registered with edit capabilities on MacOS', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, true);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_DISK_SIZE, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_ROOTFUL, true);
 });
 
 test('display name is beautified version of the name', async () => {
@@ -1625,10 +1638,10 @@ test('provider is registered with limited edit capabilities on (non-HyperV) Wind
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_ROOTFUL, true);
 });
 
 test('provider is registered with limited edit capabilities on (HyperV) Windows', async () => {
@@ -1668,10 +1681,10 @@ test('provider is registered with limited edit capabilities on (HyperV) Windows'
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_ROOTFUL, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_ROOTFUL, true);
 
   await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, {
     'podman.machine.cpus': 1,
@@ -1713,9 +1726,9 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {
@@ -1753,7 +1766,7 @@ test('Should notify clean machine if getJSONMachineList is erroring due to an in
   });
   await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('description');
   expect(extensionApi.window.showNotification).toBeCalled();
-  expect(extensionApi.context.setValue).toBeCalledWith(extension.CLEANUP_REQUIRED_MACHINE_KEY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(CLEANUP_REQUIRED_MACHINE_KEY, true);
 });
 
 test('No updates of machines in parallel', async () => {
@@ -2438,9 +2451,9 @@ describe('calcPodmanMachineSetting', () => {
   test('setValue to true if OS is MacOS', async () => {
     vi.mocked(extensionApi.env).isWindows = false;
     await extension.calcPodmanMachineSetting();
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_DISK_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_DISK_SUPPORTED_KEY, true);
   });
   test('setValue to true if OS is Windows and uses HyperV', async () => {
     vi.mocked(extensionApi.env).isWindows = true;
@@ -2459,18 +2472,18 @@ describe('calcPodmanMachineSetting', () => {
       });
     });
     await extension.calcPodmanMachineSetting();
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_DISK_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_DISK_SUPPORTED_KEY, true);
   });
   test('setValue to true if OS is Windows and uses WSL', async () => {
     vi.mocked(extensionApi.env).isWindows = true;
     process.env.CONTAINERS_MACHINE_PROVIDER = 'wsl';
     vi.spyOn(podmanConfiguration, 'matchRegexpInContainersConfig').mockResolvedValue(false);
     await extension.calcPodmanMachineSetting();
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_CPU_SUPPORTED_KEY, false);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, false);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_DISK_SUPPORTED_KEY, false);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_CPU_SUPPORTED_KEY, false);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, false);
+    expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_DISK_SUPPORTED_KEY, false);
   });
 });
 
@@ -3141,7 +3154,7 @@ describe('updateWSLHyperVEnabledValue', () => {
   });
   test('setValue should be called if new value is different than wslAndHypervEnabled', async () => {
     extension.updateWSLHyperVEnabledContextValue(false);
-    expect(extensionApi.context.setValue).toBeCalledWith(extension.WSL_HYPERV_ENABLED_KEY, false);
+    expect(extensionApi.context.setValue).toBeCalledWith(WSL_HYPERV_ENABLED_KEY, false);
   });
   test('setValue should not be called if new value is equal to wslAndHypervEnabled', async () => {
     extension.updateWSLHyperVEnabledContextValue(true);
@@ -3160,10 +3173,7 @@ describe('connectionAuditor', () => {
     await extension.connectionAuditor({
       'podman.factory.machine.win.provider': 'wsl',
     });
-    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(
-      extension.CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
-      true,
-    );
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, true);
   });
   test('check if podman.isCreateWSLOptionSelected is set to true if podman.factory.machine.win.provider is undefined but wsl is enabled', async () => {
     // be sure isCreateWSLOptionSelected is set to false
@@ -3177,10 +3187,7 @@ describe('connectionAuditor', () => {
     await extension.connectionAuditor({
       'podman.factory.machine.win.provider': undefined,
     });
-    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(
-      extension.CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
-      true,
-    );
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, true);
   });
   test('check if podman.isCreateWSLOptionSelected is set to false if podman.factory.machine.win.provider = hyperv', async () => {
     // be sure isCreateWSLOptionSelected is set to true
@@ -3192,10 +3199,7 @@ describe('connectionAuditor', () => {
     await extension.connectionAuditor({
       'podman.factory.machine.win.provider': 'hyperv',
     });
-    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(
-      extension.CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
-      false,
-    );
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, false);
   });
   test('check if podman.isCreateWSLOptionSelected is set to false if podman.factory.machine.win.provider is undefined and wsl is NOT enabled', async () => {
     // be sure isCreateWSLOptionSelected is set to true
@@ -3209,10 +3213,7 @@ describe('connectionAuditor', () => {
     await extension.connectionAuditor({
       'podman.factory.machine.win.provider': undefined,
     });
-    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(
-      extension.CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
-      false,
-    );
+    expect(extensionApi.context.setValue).toHaveBeenLastCalledWith(CREATE_WSL_MACHINE_OPTION_SELECTED_KEY, false);
   });
 });
 
