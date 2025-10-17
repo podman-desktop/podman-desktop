@@ -19,7 +19,8 @@
 import { Client } from 'ssh2';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { MachineInfo } from '../extension';
+import type { MachineInfo } from '/@/types';
+
 import { ProviderConnectionShellAccessImpl } from './podman-machine-stream';
 
 const onMock = vi.fn();
