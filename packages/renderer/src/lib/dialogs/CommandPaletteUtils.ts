@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
-import type { GoToInfo } from '/@api/documentation-info';
+import type { GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
@@ -42,8 +43,61 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
     return goToInfo.Name;
   } else if (goToInfo.type === 'Volume') {
     return goToInfo.Name.substring(0, 12);
+  } else if (goToInfo.type === 'Navigation') {
+    return goToInfo.name;
   }
   return 'Unknown';
+}
+
+// Helper function to process a single navigation entry
+function processNavigationEntry(entry: NavigationRegistryEntry, items: NavigationInfo[], parentName = ''): void {
+  // Skip hidden entries
+  if (entry.hidden) {
+    return;
+  }
+
+  // Determine the display name with appropriate prefix and count
+  let displayName = entry.name;
+
+  // Add count in parentheses if available
+  const count = entry.counter || 0;
+  const countSuffix = count > 0 ? ` (${count})` : '';
+
+  // Add prefix based on the entry type and parent context
+  if (parentName) {
+    // For submenu items, use the parent name as prefix
+    displayName = `${parentName}: ${entry.name}${countSuffix}`;
+  } else {
+    displayName = `${entry.name}${countSuffix}`;
+  }
+
+  // Only add actual navigation entries (type 'entry'), not groups or submenus
+  if (entry.type === 'entry') {
+    const navigationInfo: NavigationInfo = {
+      name: displayName,
+      link: entry.link,
+    };
+
+    items.push(navigationInfo);
+  }
+
+  // Process submenu items if they exist
+  if (entry.items && entry.items.length > 0) {
+    entry.items.forEach(subItem => {
+      processNavigationEntry(subItem, items, entry.name);
+    });
+  }
+}
+
+// Helper function to extract navigation paths from navigation registry
+function extractNavigationPaths(entries: NavigationRegistryEntry[]): NavigationInfo[] {
+  const items: NavigationInfo[] = [];
+
+  entries.forEach(entry => {
+    processNavigationEntry(entry, items);
+  });
+
+  return items;
 }
 
 // Helper function to create GoToInfo items from resources
@@ -52,6 +106,7 @@ export function createGoToItems(
   containers: ContainerInfo[],
   pods: PodInfo[],
   volumes: VolumeInfo[],
+  navigationEntries: NavigationRegistryEntry[] = [],
 ): GoToInfo[] {
   const items: GoToInfo[] = [];
 
@@ -74,6 +129,14 @@ export function createGoToItems(
   volumes.forEach(volume => {
     items.push({ type: 'Volume', ...volume });
   });
+
+  // Add navigation registry entries
+  if (navigationEntries.length > 0) {
+    const navigationInfos = extractNavigationPaths(navigationEntries);
+    navigationInfos.forEach(navigationInfo => {
+      items.push({ type: 'Navigation', ...navigationInfo });
+    });
+  }
 
   return items;
 }
