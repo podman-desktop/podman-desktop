@@ -31,7 +31,7 @@ import { EventEmitter } from '@podman-desktop/api';
 import type { ClientChannel } from 'ssh2';
 import { Client } from 'ssh2';
 
-import type { MachineInfo } from '../extension';
+import type { MachineInfo } from '/@/types';
 
 export class ProviderConnectionShellAccessImpl implements ProviderConnectionShellAccess, Disposable {
   #host: string;
