@@ -217,6 +217,7 @@ export class ExtensionsUtils {
     const terms = this.filterTerms(lowerCaseSearchTerm);
     const categories = this.filterCategories(lowerCaseSearchTerm);
     const keywords = this.filterKeywords(lowerCaseSearchTerm);
+    const installed = this.filterBoolean(lowerCaseSearchTerm, 'installed');
     return extensions.filter(extension => {
       return (
         (terms.length === 0 ||
@@ -224,13 +225,22 @@ export class ExtensionsUtils {
         (categories.length === 0 ||
           categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
         (keywords.length === 0 ||
-          keywords.every(keyword => extension.keywords.map(k => k.toLowerCase()).includes(keyword)))
+          keywords.every(keyword => extension.keywords.map(k => k.toLowerCase()).includes(keyword))) &&
+        (installed === undefined || installed === extension.isInstalled)
       );
     });
   }
 
   filterTerms(searchTerm: string): string[] {
-    return searchTerm.split(' ').filter(part => !part.startsWith('category:') && !part.startsWith('keyword:'));
+    return searchTerm
+      .split(' ')
+      .filter(
+        part =>
+          !part.startsWith('category:') &&
+          !part.startsWith('keyword:') &&
+          !part.startsWith('is:') &&
+          !part.startsWith('not:'),
+      );
   }
 
   filterCategories(searchTerm: string): string[] {
@@ -245,5 +255,14 @@ export class ExtensionsUtils {
       .split(' ')
       .filter(part => part.startsWith('keyword:'))
       .map(part => part.replace('keyword:', ''));
+  }
+
+  // filter for boolean values like is:installed or not:installed, and only get the first value in consideration
+  filterBoolean(searchTerm: string, key: string): boolean | undefined {
+    const filter = searchTerm.split(' ').find(part => part === `is:${key}` || part === `not:${key}`);
+    if (!filter) {
+      return undefined;
+    }
+    return filter === `is:${key}`;
   }
 }

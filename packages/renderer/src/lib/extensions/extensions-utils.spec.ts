@@ -392,6 +392,44 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
+  test('filterCatalogExtensions with single word and installed', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar is:installed',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with single word and not installed', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar not:installed',
+    );
+    expect(filteredCatalogExtensions.length).toBe(0);
+  });
+
+  test('filterCatalogExtensions with single word and installed and not installed, only first boolean is used', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar is:installed not:installed',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
   test('filterCatalogExtensions with multiple words found', () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
       extensionsUtils.extractCatalogExtensions(
