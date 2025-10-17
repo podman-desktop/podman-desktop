@@ -53,6 +53,8 @@ test('Expect to have more details working', async () => {
     publisherDisplayName: 'Foo publisher',
     isInstalled: false,
     shortDescription: 'my description',
+    categories: [],
+    keywords: [],
   };
 
   render(CatalogExtension, { catalogExtensionUI });
@@ -88,6 +90,8 @@ test('Expect to see featured and fetch button', async () => {
     publisherDisplayName: 'Foo publisher',
     isInstalled: false,
     shortDescription: 'my description',
+    categories: [],
+    keywords: [],
   };
 
   render(CatalogExtension, { catalogExtensionUI });
@@ -129,6 +133,8 @@ test('Expect to have version of installed one', async () => {
     publisherDisplayName: 'Foo publisher',
     isInstalled: true,
     shortDescription: 'my description',
+    categories: [],
+    keywords: [],
   };
 
   render(CatalogExtension, { catalogExtensionUI });
