@@ -173,7 +173,8 @@ export class ExtensionsUtils {
 
         const shortDescription = catalogExtension.shortDescription;
         const installedVersion = installed?.version;
-
+        const categories = catalogExtension.categories;
+        const keywords = catalogExtension.keywords;
         return {
           id: catalogExtension.id,
           displayName: catalogExtension.displayName,
@@ -186,6 +187,8 @@ export class ExtensionsUtils {
           isInstalled,
           installedVersion,
           shortDescription,
+          categories,
+          keywords,
         };
       });
 
@@ -211,8 +214,36 @@ export class ExtensionsUtils {
 
   filterCatalogExtensions(extensions: CatalogExtensionInfoUI[], searchTerm: string): CatalogExtensionInfoUI[] {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const terms = this.filterTerms(lowerCaseSearchTerm);
+    const categories = this.filterCategories(lowerCaseSearchTerm);
+    const keywords = this.filterKeywords(lowerCaseSearchTerm);
     return extensions.filter(extension => {
-      return `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(lowerCaseSearchTerm);
+      return (
+        (terms.length === 0 ||
+          terms.every(term => `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(term))) &&
+        (categories.length === 0 ||
+          categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
+        (keywords.length === 0 ||
+          keywords.every(keyword => extension.keywords.map(k => k.toLowerCase()).includes(keyword)))
+      );
     });
+  }
+
+  filterTerms(searchTerm: string): string[] {
+    return searchTerm.split(' ').filter(part => !part.startsWith('category:') && !part.startsWith('keyword:'));
+  }
+
+  filterCategories(searchTerm: string): string[] {
+    return searchTerm
+      .split(' ')
+      .filter(part => part.startsWith('category:'))
+      .map(part => part.replace('category:', ''));
+  }
+
+  filterKeywords(searchTerm: string): string[] {
+    return searchTerm
+      .split(' ')
+      .filter(part => part.startsWith('keyword:'))
+      .map(part => part.replace('keyword:', ''));
   }
 }
