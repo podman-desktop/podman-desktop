@@ -324,8 +324,8 @@ describe('filters', () => {
     publisherDisplayName: 'Foo Publisher',
     extensionName: 'a-extension',
     displayName: 'A Extension',
-    categories: [],
-    keywords: [],
+    categories: ['category1', 'category2'],
+    keywords: ['keyword1', 'keyword2'],
     unlisted: false,
     versions: [
       {
@@ -390,6 +390,107 @@ describe('filters', () => {
     );
     expect(filteredCatalogExtensions.length).toBe(1);
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words found', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words and one is not found', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar notfound',
+    );
+    expect(filteredCatalogExtensions.length).toBe(0);
+  });
+
+  test('filterCatalogExtensions with multiple words found and one category', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word category:category1',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words found and multiple categories found', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word category:category1 category:category2',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words found and multiple categories with one not found ', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word category:category1 category:category3',
+    );
+    expect(filteredCatalogExtensions.length).toBe(0);
+  });
+
+  test('filterCatalogExtensions with multiple words found and one keyword', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word keyword:keyword1',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words found and multiple keywords found', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word keyword:keyword1 keyword:keyword2',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterCatalogExtensions with multiple words found and multiple keywords with one not found ', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar word keyword:keyword1 keyword:keyword3',
+    );
+    expect(filteredCatalogExtensions.length).toBe(0);
   });
 
   test('filterInstalledExtensions with single word', () => {
