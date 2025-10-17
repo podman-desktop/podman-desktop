@@ -1290,8 +1290,6 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
   const inversifyContainer = await inversifyBinding.init();
 
-  // bind classes to the Inversify container
-  inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
   const podmanInstall = inversifyContainer.get(PodmanInstall);
 
   const installedPodman = await getPodmanInstallation();
