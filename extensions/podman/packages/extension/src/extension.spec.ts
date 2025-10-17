@@ -796,7 +796,7 @@ test.each([
   vi.mocked(extensionApi.env).isMac = true;
   vi.mocked(arch).mockReturnValue(architecture);
   vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: 'podman version 5.4.0',
+    stdout: `podman version 5.4.0`,
   } as extensionApi.RunResult);
 
   await extension.createMachine(
@@ -811,7 +811,7 @@ test.each([
 
   expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
     podmanCli.getPodmanCli(),
-    expect.arrayContaining(['--image', 'path']),
+    expect.arrayContaining([`--image`, 'path']),
     {
       logger: undefined,
       token: undefined,
@@ -2869,13 +2869,13 @@ describe.each(['windows', 'mac', 'linux'])('podman machine properties audit on %
     });
     return;
   }
-  test('reports error for image path and uri is used at the same time', async () => {
+  test(`reports error for image path and uri is used at the same time`, async () => {
     await testAudit('path', 'registry/repo/image:version', expect);
   });
-  test('reports no error for image path only is used', async () => {
+  test(`reports no error for image path only is used`, async () => {
     await testAudit('path', '', expect.not);
   });
-  test('reports no error for image uri only is used', async () => {
+  test(`reports no error for image uri only is used`, async () => {
     await testAudit('', 'uri', expect.not);
   });
 });
