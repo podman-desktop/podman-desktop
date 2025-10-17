@@ -28,4 +28,6 @@ export interface CatalogExtensionInfoUI {
   isInstalled: boolean;
   installedVersion?: string;
   shortDescription: string;
+  categories: string[];
+  keywords: string[];
 }
