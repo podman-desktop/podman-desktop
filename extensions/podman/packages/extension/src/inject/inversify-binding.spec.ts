@@ -26,6 +26,16 @@ import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
 
+vi.mock('@podman-desktop/api', () => {
+  return {
+    env: {
+      isWindows: false,
+      isMac: true,
+      isLinux: false,
+    },
+  };
+});
+
 describe('inversifyBinding', () => {
   let inversifyBinding: InversifyBinding;
 
