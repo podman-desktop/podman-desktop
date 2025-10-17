@@ -79,6 +79,7 @@ const provider: extensionApi.Provider = {
   registerInstallation: vi.fn(),
   registerUpdate: registerUpdateMock,
   registerAutostart: vi.fn(),
+  registerAutostop: vi.fn(),
   registerCleanup: vi.fn(),
   dispose: vi.fn(),
   name: '',
