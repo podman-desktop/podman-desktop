@@ -72,7 +72,7 @@ export * from './model/pages/kubernetes-resource-details-page';
 export * from './model/pages/kubernetes-resource-page';
 export * from './model/pages/main-page';
 export * from './model/pages/onboarding-page';
-export * from './model/pages/play-kube-yaml-page';
+export * from './model/pages/podman-kube-play-page';
 export * from './model/pages/podman-machine-details-page';
 export * from './model/pages/podman-onboarding-page';
 export * from './model/pages/pods-details-page';
