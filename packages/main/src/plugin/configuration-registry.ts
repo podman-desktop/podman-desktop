@@ -24,7 +24,11 @@ import { isDeepStrictEqual } from 'node:util';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import {
+  CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
+} from '/@api/configuration/constants.js';
 import type {
   ConfigurationScope,
   IConfigurationChangeEvent,
@@ -38,8 +42,10 @@ import type { NotificationCardOptions } from '/@api/notification.js';
 
 import { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
+import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
 
 @injectable()
@@ -70,6 +76,8 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationContributors = [];
     this.configurationValues = new Map();
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {});
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
   }
 
   protected getSettingsFile(): string {
@@ -121,6 +129,17 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       configData = {};
     }
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
+    // Load managed defaults
+    const defaultConfiguration = new DefaultConfiguration();
+    const defaults = await defaultConfiguration.getContent();
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
+
+    // Load managed locked
+    const lockedConfiguration = new LockedConfiguration();
+    const locked = await lockedConfiguration.getContent();
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);
+
     return notifications;
   }
 
