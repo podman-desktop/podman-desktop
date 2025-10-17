@@ -44,6 +44,8 @@ const extensionA: CatalogExtensionInfoUI = {
   publisherDisplayName: 'Foo publisher',
   isInstalled: false,
   shortDescription: 'my description1',
+  categories: [],
+  keywords: [],
 };
 
 const extensionB: CatalogExtensionInfoUI = {
@@ -56,6 +58,8 @@ const extensionB: CatalogExtensionInfoUI = {
   publisherDisplayName: 'Foo publisher',
   isInstalled: false,
   shortDescription: 'my description2',
+  categories: [],
+  keywords: [],
 };
 test('Check with empty', async () => {
   render(CatalogExtensionList, { catalogExtensions: [] });
