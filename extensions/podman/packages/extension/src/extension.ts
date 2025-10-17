@@ -1234,6 +1234,18 @@ async function exec(args: string[], options?: PodmanRunOptions): Promise<extensi
   return execPodman(args, options?.connection?.connection.vmTypeDisplayName, options);
 }
 
+export async function initInversify(
+  extensionContext: extensionApi.ExtensionContext,
+): Promise<{ podmanInstall: PodmanInstall }> {
+  // create inversify binding for the extension
+  inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
+  const inversifyContainer = await inversifyBinding.init();
+
+  const podmanInstall = inversifyContainer.get(PodmanInstall);
+
+  return { podmanInstall };
+}
+
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<PodmanExtensionApi> {
   stopLoop = false;
 
@@ -1241,11 +1253,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   initTelemetryLogger();
 
-  // create inversify binding for the extension
-  inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
-  const inversifyContainer = await inversifyBinding.init();
-
-  const podmanInstall = inversifyContainer.get(PodmanInstall);
+  const { podmanInstall } = await initInversify(extensionContext);
 
   const installedPodman = await getPodmanInstallation();
   const version: string | undefined = installedPodman?.version;
