@@ -3763,10 +3763,24 @@ declare module '@podman-desktop/api' {
 
   export interface NetworkCreateOptions {
     Name: string;
+    CheckDuplicate?: boolean;
+    Driver?: string;
+    Scope?: string;
+    EnableIPv4?: boolean;
+    EnableIPv6?: boolean;
+    IPAM?: IPAM;
+    Internal?: boolean;
+    Attachable?: boolean;
+    Ingress?: boolean;
+    ConfigOnly?: boolean;
+    ConfigFrom?: { Network: string };
+    Options?: { [option: string]: string };
+    Labels?: { [label: string]: string };
   }
 
   export interface NetworkCreateResult {
     Id: string;
+    Warning?: string;
   }
 
   /**

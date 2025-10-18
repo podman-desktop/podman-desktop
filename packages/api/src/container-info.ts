@@ -275,12 +275,26 @@ export interface ContainerCreateOptions {
   pod?: string;
 }
 
-export interface NetworkCreateOptions {
-  Name: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface NetworkCreateOptions extends Dockerode.NetworkCreateOptions {}
 
 export interface NetworkCreateResult {
   Id: string;
+  Warning?: string;
+}
+
+// Form state interface for creating networks in the UI
+export interface NetworkCreateFormInfo {
+  networkName: string;
+  label: string;
+  subnet: string;
+  ipRange: string;
+  gateway: string;
+  ipv6Enabled: boolean;
+  internalEnabled: boolean;
+  driver: string;
+  options: string;
+  selectedProvider: ProviderContainerConnectionInfo | undefined;
 }
 
 export interface VolumeCreateOptions {
