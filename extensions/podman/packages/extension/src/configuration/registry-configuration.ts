@@ -98,11 +98,11 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
 
     userDefaultRegistries.forEach(registry => {
       if ('registry' in registry) {
-        defaultRegistries.push(registry.registry);
+        defaultRegistries.push({ ...registry.registry });
       } else if (defaultRegistries.length > 0) {
         // mirror registries come after the registry to which they belong
         defaultRegistries[defaultRegistries.length - 1].mirror ??= [];
-        defaultRegistries[defaultRegistries.length - 1].mirror?.push(registry['registry.mirror']);
+        defaultRegistries[defaultRegistries.length - 1].mirror?.push({ ...registry['registry.mirror'] });
       }
     });
 
