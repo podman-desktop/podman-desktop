@@ -44,6 +44,7 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import { WinPlatform } from '/@/platforms/win-platform';
 import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
@@ -113,6 +114,8 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 
 // Telemetry
 let telemetryLogger: extensionApi.TelemetryLogger;
+
+let winPlatform: WinPlatform;
 
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
@@ -1237,14 +1240,15 @@ async function exec(args: string[], options?: PodmanRunOptions): Promise<extensi
 export async function initInversify(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<{ podmanInstall: PodmanInstall }> {
+): Promise<{ podmanInstall: PodmanInstall; winPlatform: WinPlatform }> {
   // create inversify binding for the extension
   inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
   const inversifyContainer = await inversifyBinding.init();
 
   const podmanInstall = inversifyContainer.get(PodmanInstall);
+  winPlatform = inversifyContainer.get(WinPlatform);
 
-  return { podmanInstall };
+  return { podmanInstall, winPlatform };
 }
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<PodmanExtensionApi> {

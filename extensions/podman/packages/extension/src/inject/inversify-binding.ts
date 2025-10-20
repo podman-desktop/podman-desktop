@@ -20,6 +20,7 @@ import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
 import { PodmanInstall } from '/@/installer/podman-install';
+import { WinPlatform } from '/@/platforms/win-platform';
 
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
 
@@ -40,6 +41,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(ExtensionContextSymbol).toConstantValue(this.#extensionContext);
     this.#inversifyContainer.bind(TelemetryLoggerSymbol).toConstantValue(this.#telemetryLogger);
     this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
 
     return this.#inversifyContainer;
   }

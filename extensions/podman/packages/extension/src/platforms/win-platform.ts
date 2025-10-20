@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class WinPlatform {
   readonly type = 'win';
 }
