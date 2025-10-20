@@ -1236,6 +1236,7 @@ async function exec(args: string[], options?: PodmanRunOptions): Promise<extensi
 
 export async function initInversify(
   extensionContext: extensionApi.ExtensionContext,
+  telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<{ podmanInstall: PodmanInstall }> {
   // create inversify binding for the extension
   inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
@@ -1253,7 +1254,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   initTelemetryLogger();
 
-  const { podmanInstall } = await initInversify(extensionContext);
+  const { podmanInstall } = await initInversify(extensionContext, telemetryLogger);
 
   const installedPodman = await getPodmanInstallation();
   const version: string | undefined = installedPodman?.version;
