@@ -69,6 +69,8 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     private apiSender: ApiSenderType,
     @inject(Directories)
     private directories: Directories,
+    @inject(DefaultConfiguration)
+    private defaultConfiguration: DefaultConfiguration,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];
@@ -128,8 +130,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
 
     // Load managed defaults
-    const defaultConfiguration = new DefaultConfiguration();
-    const defaults = await defaultConfiguration.getContent();
+    const defaults = await this.defaultConfiguration.getContent();
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
 
     return notifications;

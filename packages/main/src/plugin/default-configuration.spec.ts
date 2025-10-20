@@ -17,70 +17,30 @@
  ***********************************************************************/
 
 import { promises as fsPromises } from 'node:fs';
-import * as path from 'node:path';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { isLinux, isMac, isWindows } from '../util.js';
 import { DefaultConfiguration } from './default-configuration.js';
+import type { Directories } from './directories.js';
 
-// mock the fs module as we don't want to check the read file / exists / promises, but rather
-vi.mock(import('node:fs'));
-
-// mock util functions
-vi.mock('../util.js', () => ({
-  isMac: vi.fn(),
-  isWindows: vi.fn(),
-  isLinux: vi.fn(),
-}));
+// mock the fs module
+vi.mock('node:fs');
 
 let defaultConfiguration: DefaultConfiguration;
+const getManagedDefaultsDirectoryMock = vi.fn();
+const directories = {
+  getManagedDefaultsDirectory: getManagedDefaultsDirectoryMock,
+} as unknown as Directories;
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  defaultConfiguration = new DefaultConfiguration();
+  defaultConfiguration = new DefaultConfiguration(directories);
 });
 
 describe('DefaultConfiguration', () => {
-  test('should get correct managed defaults file path for Mac', () => {
-    vi.mocked(isMac).mockReturnValue(true);
-    vi.mocked(isWindows).mockReturnValue(false);
-    vi.mocked(isLinux).mockReturnValue(false);
-
-    const managedDefaultsFile = defaultConfiguration['getManagedDefaultsFile']();
-    expect(managedDefaultsFile).toBe('/Library/Application Support/com.podman.desktop/default-settings.json');
-  });
-
-  test('should get correct managed defaults file path for Windows', () => {
-    vi.mocked(isMac).mockReturnValue(false);
-    vi.mocked(isWindows).mockReturnValue(true);
-    vi.mocked(isLinux).mockReturnValue(false);
-
-    process.env['PROGRAMDATA'] = 'C:\\ProgramData';
-    const managedDefaultsFile = defaultConfiguration['getManagedDefaultsFile']();
-    expect(managedDefaultsFile).toBe(path.join('C:\\ProgramData', 'PodmanDesktop', 'default-settings.json'));
-  });
-
-  test('should get correct managed defaults file path for Linux', () => {
-    vi.mocked(isMac).mockReturnValue(false);
-    vi.mocked(isWindows).mockReturnValue(false);
-    vi.mocked(isLinux).mockReturnValue(true);
-
-    const managedDefaultsFile = defaultConfiguration['getManagedDefaultsFile']();
-    expect(managedDefaultsFile).toBe('/usr/share/podman-desktop/default-settings.json');
-  });
-
-  test('should fallback to Linux path for unknown platforms', () => {
-    vi.mocked(isMac).mockReturnValue(false);
-    vi.mocked(isWindows).mockReturnValue(false);
-    vi.mocked(isLinux).mockReturnValue(false);
-
-    const managedDefaultsFile = defaultConfiguration['getManagedDefaultsFile']();
-    expect(managedDefaultsFile).toBe('/usr/share/podman-desktop/default-settings.json');
-  });
-
   test('should load managed defaults when file exists', async () => {
+    getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const managedDefaults = { 'managed.setting': 'managedValue' };
     vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedDefaults));
 
@@ -94,6 +54,7 @@ describe('DefaultConfiguration', () => {
   });
 
   test('should handle missing managed defaults file gracefully', async () => {
+    getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
     vi.mocked(fsPromises.readFile).mockRejectedValue(error);
@@ -108,6 +69,7 @@ describe('DefaultConfiguration', () => {
   });
 
   test('should handle corrupted managed defaults file gracefully', async () => {
+    getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     vi.mocked(fsPromises.readFile).mockResolvedValue('invalid json');
 
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -123,6 +85,7 @@ describe('DefaultConfiguration', () => {
   });
 
   test('should load managed defaults configuration with valid JSON', async () => {
+    getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const managedDefaults = { 'managed.setting': 'managedValue', 'another.setting': 'anotherValue' };
     vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedDefaults));
 
