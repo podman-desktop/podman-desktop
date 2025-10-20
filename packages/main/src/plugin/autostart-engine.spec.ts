@@ -45,7 +45,11 @@ beforeEach(() => {
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories, {} as DefaultConfiguration);
+  configurationRegistry = new ConfigurationRegistry(
+    {} as ApiSenderType,
+    {} as Directories,
+    {} as DefaultConfiguration,
+  );
   providerRegistry = {} as unknown as ProviderRegistry;
   autostartEngine = new AutostartEngine(configurationRegistry, providerRegistry);
   configurationRegistry.registerConfigurations = mockRegisterConfiguration;

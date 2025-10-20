@@ -85,7 +85,11 @@ describe('DefaultConfiguration', () => {
   });
 
   test('should load managed defaults configuration with valid JSON', async () => {
+<<<<<<< HEAD
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
+=======
+    getManagedDefaultsFileMock.mockReturnValue('/test/path/default-settings.json');
+>>>>>>> 8299ba70dc4 (chore: update to use inversify and directories based on review)
     const managedDefaults = { 'managed.setting': 'managedValue', 'another.setting': 'anotherValue' };
     vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedDefaults));
 
