@@ -31,6 +31,7 @@ import type { IDisposable } from '/@api/disposable.js';
 import { ProxyState } from '/@api/proxy.js';
 
 import type { ApiSenderType } from './api.js';
+import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
 
@@ -77,10 +78,15 @@ const directories = {
   getContributionStorageDir: () => '/fake-contribution-storage-directory',
   getSafeStorageDirectory: () => '/fake-safe-storage-directory',
   getDataDirectory: () => '/fake-data-directory',
+  getManagedDefaultsDirectory: () => '/fake-managed-defaults-directory',
 } as unknown as Directories;
 
+const defaultConfiguration = {
+  getContent: vi.fn().mockResolvedValue({}),
+} as unknown as DefaultConfiguration;
+
 function getConfigurationRegistry(): ConfigurationRegistry {
-  return new ConfigurationRegistry(apiSender, directories);
+  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
 }
 
 async function buildProxy(): Promise<ProxyServer> {
