@@ -27,6 +27,7 @@ import { AppearanceSettings } from './appearance-settings.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
+import type { DefaultConfiguration } from './default-configuration.js';
 
 let configurationRegistry: ConfigurationRegistry;
 
