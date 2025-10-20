@@ -17,37 +17,23 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { join } from 'node:path';
+import * as path from 'node:path';
 
-import {
-  SYSTEM_DEFAULTS_FILE_LINUX,
-  SYSTEM_DEFAULTS_FILE_MAC,
-  SYSTEM_DEFAULTS_FILE_WINDOWS_DIR,
-  SYSTEM_DEFAULTS_FILE_WINDOWS_FILE,
-} from '/@api/configuration/system-defaults.js';
+import { inject, injectable } from 'inversify';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { Directories } from './directories.js';
+import { SYSTEM_DEFAULTS_FILENAME } from './managed-by-constants.js';
 
+@injectable()
 export class DefaultConfiguration {
-  // If all else fails, we will fallback to Linux-style path as it's the most "generic" and
-  // likely to work in more environments where the OS isn't detected properly, such as "unix-like"
-  // platforms like FreeBSD, etc.
-  protected getManagedDefaultsFile(): string {
-    if (isMac()) {
-      return SYSTEM_DEFAULTS_FILE_MAC;
-    } else if (isWindows()) {
-      const programData = process.env['PROGRAMDATA'] ?? 'C:\\ProgramData';
-      return join(programData, SYSTEM_DEFAULTS_FILE_WINDOWS_DIR, SYSTEM_DEFAULTS_FILE_WINDOWS_FILE);
-    } else if (isLinux()) {
-      return SYSTEM_DEFAULTS_FILE_LINUX;
-    }
-    // Fallback to Linux-style path
-    return SYSTEM_DEFAULTS_FILE_LINUX;
-  }
+  constructor(
+    @inject(Directories)
+    private directories: Directories,
+  ) {}
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
-    // "Create" the managed defaults file
-    const managedDefaultsFile = this.getManagedDefaultsFile();
+    // Get the managed defaults file path from directories
+    const managedDefaultsFile = path.join(this.directories.getManagedDefaultsDirectory(), SYSTEM_DEFAULTS_FILENAME);
     let managedDefaultsData = {};
 
     // It's important that we at least log to console what is happening here, as it's common for logs
