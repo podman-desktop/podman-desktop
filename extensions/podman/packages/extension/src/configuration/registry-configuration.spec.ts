@@ -25,7 +25,7 @@ import type { Configuration, DefaultRegistry, DefaultRegistryMirror } from '@pod
 import { commands, configuration, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RegistryConfigurationFile } from './registry-configuration';
+import type { RegistryConfigurationEntry, RegistryConfigurationFile } from './registry-configuration';
 import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfigurationImpl;
@@ -348,4 +348,102 @@ test('loadDefaultUserRegistries', async () => {
       },
     ],
   });
+});
+
+test('resolveDefaultRegistryConflicts', () => {
+  const userRegistry1: RegistryConfigurationEntry = {
+    prefix: 'registry1',
+    location: '/registry1/foo',
+    blocked: true,
+  };
+
+  const userRegistry1dup: RegistryConfigurationEntry = {
+    prefix: 'registry1',
+    location: '/registry1/foo',
+    blocked: false,
+    mirror: [
+      {
+        location: 'mirror1/foo',
+      },
+    ],
+  };
+
+  const userRegistry2: RegistryConfigurationEntry = {
+    prefix: 'registry2',
+    location: '/registry2/foo',
+    blocked: true,
+    mirror: [
+      {
+        location: 'mirror2/foo',
+      },
+    ],
+  };
+
+  const userRegistry2dup: RegistryConfigurationEntry = {
+    prefix: 'registry2',
+    location: '/registry2/foo',
+    blocked: true,
+    mirror: [
+      {
+        location: 'mirror2/bar',
+      },
+      {
+        location: 'mirror2/foo',
+      },
+    ],
+  };
+
+  const userRegistry3: RegistryConfigurationEntry = {
+    prefix: 'registry3',
+    location: '/registry3/foo',
+    mirror: [
+      {
+        location: 'mirror3/bar',
+        insecure: true,
+      },
+    ],
+  };
+
+  const originalConsoleWarn = console.warn;
+  console.warn = vi.fn();
+
+  const resolvedRegistries = registryConfiguration.resolveDefaultRegistryConflicts(
+    [userRegistry1dup, userRegistry2dup],
+    [userRegistry1, userRegistry2, userRegistry3],
+  );
+  expect(console.warn).toBeCalledWith(
+    'Default user registry registry1 already exists in the registries.conf.d file, but some of its properties do not match. Please update this registry',
+  );
+  expect(resolvedRegistries).toStrictEqual([
+    {
+      prefix: 'registry1',
+      location: '/registry1/foo',
+      blocked: true,
+    },
+    {
+      prefix: 'registry2',
+      location: '/registry2/foo',
+      blocked: true,
+      mirror: [
+        {
+          location: 'mirror2/foo',
+        },
+        {
+          location: 'mirror2/bar',
+        },
+      ],
+    },
+    {
+      prefix: 'registry3',
+      location: '/registry3/foo',
+      mirror: [
+        {
+          location: 'mirror3/bar',
+          insecure: true,
+        },
+      ],
+    },
+  ]);
+
+  console.warn = originalConsoleWarn;
 });

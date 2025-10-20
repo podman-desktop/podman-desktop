@@ -43,7 +43,7 @@ interface ActionQuickPickItem extends QuickPickItem {
   actionName: ActionEnum;
 }
 
-interface RegistryConfigurationEntry {
+export interface RegistryConfigurationEntry {
   prefix?: string;
   insecure?: boolean;
   blocked?: boolean;
@@ -127,12 +127,12 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
           duplicateRegistry.location !== defaultRegistry.location
         ) {
           console.warn(
-            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties don't match. Please update this registry`,
+            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match. Please update this registry`,
           );
         } else {
           defaultRegistry.mirror?.forEach(mirror => {
             duplicateRegistry.mirror ??= [];
-            if (!duplicateRegistry.mirror?.includes(mirror)) {
+            if (!duplicateRegistry.mirror?.map(dupMirror => dupMirror.location).includes(mirror.location)) {
               duplicateRegistry.mirror.push(mirror);
             }
           });
