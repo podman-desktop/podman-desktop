@@ -72,7 +72,11 @@ beforeEach(async () => {
   vi.resetAllMocks();
   vi.clearAllMocks();
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
+<<<<<<< HEAD
   getManagedDefaultsDirectoryMock.mockReturnValue('/usr/share/podman-desktop');
+=======
+  getManagedDefaultsFileMock.mockReturnValue('/usr/share/podman-desktop/default-settings.json');
+>>>>>>> 8299ba70dc4 (chore: update to use inversify and directories based on review)
 
   // Mock basic fs functions needed for initialization
   const readFileSync = vi.mocked(fs.readFileSync);
