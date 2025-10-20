@@ -27,6 +27,7 @@ import EnterIcon from '../images/EnterIcon.svelte';
 import NotFoundIcon from '../images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
+import TextHighLight from './TextHighLight.svelte';
 
 const ENTER_KEY = 'Enter';
 const ESCAPE_KEY = 'Escape';
@@ -44,6 +45,8 @@ interface SearchOption {
   text: string;
   shortCut?: string[];
 }
+
+type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
 
 let { display = false, onclose }: Props = $props();
 
@@ -334,35 +337,15 @@ async function onAction(): Promise<void> {
     });
 }
 
-function isGoToItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is GoToInfo {
+function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
   return 'type' in item;
 }
 
-function isDocItem(item: CommandInfo | DocumentationInfo | GoToInfo): item is DocumentationInfo {
+function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
   return 'category' in item;
 }
 
-function highlightText(
-  text: string | undefined,
-  searchTerm: string | undefined,
-): Array<{ text: string; hasMatch: boolean }> {
-  if (!searchTerm || !text) {
-    return [{ text: text ?? '', hasMatch: false }];
-  }
-
-  const escapedSearchTerm = searchTerm.replace(/[.\\]/g, '\\$&');
-  const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
-
-  return text
-    .split(regex)
-    .filter(part => part.length > 0)
-    .map(part => ({
-      text: part,
-      hasMatch: regex.test(part),
-    }));
-}
-
-function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): string {
+function getTextToHighlight(item: CommandPaletteItem): string {
   if (isDocItem(item)) {
     return `${item.category}: ${item.name}`;
   } else if (isGoToItem(item)) {
@@ -435,13 +418,7 @@ function getTextToHighlight(item: CommandInfo | DocumentationInfo | GoToInfo): s
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
                     <div class="text-base py-[2pt]">
-                      {#each highlightText(getTextToHighlight(item), inputValue) as part, i (i)}
-                        {#if part.hasMatch}
-                          <span class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</span>
-                        {:else}
-                          {part.text}
-                        {/if}
-                      {/each}
+                      <TextHighLight text={getTextToHighlight(item)} query={inputValue ?? ''} />
                     </div>
                   </div>
                 </div>

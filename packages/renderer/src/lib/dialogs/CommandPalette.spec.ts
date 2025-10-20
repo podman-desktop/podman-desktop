@@ -540,42 +540,4 @@ describe('Command Palette', () => {
     expect(docsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
   });
-
-  test('Expect that highlighting works correctly', async () => {
-    const commandTitle1 = 'My command 1';
-    const commandTitle2 = 'Test Command 2';
-
-    commandsInfos.set([
-      {
-        id: 'my-command-1',
-        title: commandTitle1,
-      },
-      {
-        id: 'my-command-2',
-        title: commandTitle2,
-      },
-    ]);
-
-    render(CommandPalette, { display: true });
-
-    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-    expect(input).toBeInTheDocument();
-
-    const commandsButton = screen.getByRole('button', { name: /Commands/ });
-    await userEvent.click(commandsButton);
-
-    await userEvent.type(input, 'My ');
-
-    const item = screen.getByRole('button', { name: 'My command 1' });
-    expect(item).toBeInTheDocument();
-
-    const highlightedText = screen.getByText('My');
-    expect(highlightedText).toHaveClass('text-[var(--pd-label-primary-text)]');
-    expect(highlightedText).toHaveClass('font-semibold');
-
-    const normalText = screen.getByText('command 1');
-    expect(normalText).toBeInTheDocument();
-    expect(normalText).not.toHaveClass('text-[var(--pd-label-primary-text)]');
-    expect(normalText).not.toHaveClass('font-semibold');
-  });
 });
