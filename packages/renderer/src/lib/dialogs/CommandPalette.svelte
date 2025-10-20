@@ -138,8 +138,9 @@ onMount(async () => {
 $effect(() => {
   if (display && inputElement) {
     tick()
-      .then(() => {
+      .then(async () => {
         inputElement?.focus();
+        await window.telemetryTrack('globalSearch.opened');
       })
       .catch((error: unknown) => {
         console.error('Unable to focus input box', error);
@@ -243,6 +244,9 @@ async function executeAction(index: number): Promise<void> {
   const item = filteredItems[index];
   if (!item) return;
 
+  let itemType: string;
+  let itemLabel: string | undefined = undefined;
+
   if (isDocItem(item)) {
     // Documentation item
     if (item.url) {
@@ -252,6 +256,8 @@ async function executeAction(index: number): Promise<void> {
         console.error('Error opening documentation URL', error);
       }
     }
+    itemType = item.category;
+    itemLabel = item.name;
   } else if (isGoToItem(item)) {
     // Go to item
     if (item.type === 'Image') {
@@ -285,6 +291,7 @@ async function executeAction(index: number): Promise<void> {
     } else if (item.type === 'Navigation') {
       router.goto(item.link);
     }
+    itemType = item.type;
   } else {
     // Command item
     if (item.id) {
@@ -294,7 +301,20 @@ async function executeAction(index: number): Promise<void> {
         console.error('error executing command', error);
       }
     }
+    itemType = 'Command';
+    itemLabel = item.title;
   }
+
+  const telemetryOptions = {
+    // All / Commands / Docs / Go To
+    selectedTab: searchOptions[searchOptionsSelectedIndex].text,
+    // Pod or Image or Documentation or Command
+    itemType: itemType,
+    // Sent only when itemtype is GoTo or Documentation
+    itemLabel: itemLabel,
+  };
+
+  await window.telemetryTrack('globalSearch.itemClicked', telemetryOptions);
 }
 
 function handleMousedown(e: MouseEvent): void {
