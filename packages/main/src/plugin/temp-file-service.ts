@@ -32,7 +32,7 @@ export class TempFileService implements IAsyncDisposable {
   private tempFiles: Set<string> = new Set();
 
   @preDestroy()
-  async dispose(): Promise<void> {
+  async asyncDispose(): Promise<void> {
     await this.cleanup();
   }
 

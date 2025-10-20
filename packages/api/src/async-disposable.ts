@@ -17,5 +17,5 @@
  ********************************************************************/
 
 export interface IAsyncDisposable {
-  dispose(): Promise<void>;
+  asyncDispose(): Promise<void>;
 }
