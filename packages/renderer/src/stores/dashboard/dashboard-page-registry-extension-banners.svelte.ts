@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import ExtensionBanners from '../../lib/recommendation/ExtensionBanners.svelte';
-import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+import ExtensionBanners from '/@/lib/recommendation/ExtensionBanners.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
 
 export function createExtensionBanners(): DashboardPageRegistryEntry {
   return {

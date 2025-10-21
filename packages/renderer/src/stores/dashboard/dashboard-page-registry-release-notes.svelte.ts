@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import ReleaseNotesBox from '../../lib/dashboard/ReleaseNotesBox.svelte';
-import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+import ReleaseNotesBox from '/@/lib/dashboard/ReleaseNotesBox.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
 
 export function createReleaseNotesBox(): DashboardPageRegistryEntry {
   return {

@@ -25,26 +25,26 @@ import {
   convertToListOrganizerItems,
   type DashboardPageRegistryEntry,
   getDefaultSectionNames,
-} from './dashboard-page-registry';
+} from './dashboard-page-registry.svelte';
 
 // Mock the individual registry creation functions
-vi.mock('../../lib/dashboard/ExtensionBanners.svelte', () => ({
+vi.mock(import('/@/lib/recommendation/ExtensionBanners.svelte'), () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../../lib/dashboard/LearningCenter.svelte', () => ({
+vi.mock(import('/@/lib/learning-center/LearningCenter.svelte'), () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../../lib/dashboard/Providers.svelte', () => ({
+vi.mock(import('/@/lib/dashboard/ProvidersSection.svelte'), () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../../lib/ReleaseNotesBox.svelte', () => ({
+vi.mock(import('/@/lib/dashboard/ReleaseNotesBox.svelte'), () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../../lib/explore-features/ExploreFeatures.svelte', () => ({
+vi.mock(import('/@/lib/explore-features/ExploreFeatures.svelte'), () => ({
   default: vi.fn(),
 }));
 

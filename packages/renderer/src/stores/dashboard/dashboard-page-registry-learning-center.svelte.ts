@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import LearningCenter from '../../lib/learning-center/LearningCenter.svelte';
-import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+import LearningCenter from '/@/lib/learning-center/LearningCenter.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
 
 export function createLearningCenter(): DashboardPageRegistryEntry {
   return {

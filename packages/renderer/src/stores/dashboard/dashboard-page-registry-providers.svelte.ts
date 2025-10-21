@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import ProvidersSection from '../../lib/dashboard/ProvidersSection.svelte';
-import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+import ProvidersSection from '/@/lib/dashboard/ProvidersSection.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
 
 export function createProviders(): DashboardPageRegistryEntry {
   return {

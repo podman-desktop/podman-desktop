@@ -18,9 +18,6 @@
 
 import type { ListOrganizerItem } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
-import { type Writable, writable } from 'svelte/store';
-
-import { EventStore } from '/@/stores/event-store';
 
 import { createExploreFeatures } from './dashboard-page-registry-explore-features';
 import { createExtensionBanners } from './dashboard-page-registry-extension-banners.svelte';
@@ -35,13 +32,9 @@ export interface DashboardPageRegistryEntry {
   component?: Component;
 }
 
-const windowEvents: string[] = [];
-const windowListeners = ['extensions-already-started', 'system-ready'];
-
-export const dashboardPageRegistry: Writable<DashboardPageRegistryEntry[]> = writable([]);
+export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntry[] }>({ entries: [] });
 
 let values: DashboardPageRegistryEntry[] = [];
-let initialized = false;
 
 const init = (): void => {
   values.push(createReleaseNotesBox());
@@ -49,43 +42,25 @@ const init = (): void => {
   values.push(createExploreFeatures());
   values.push(createLearningCenter());
   values.push(createProviders());
+
+  // Set originalOrder for each entry based on their position
+  values.forEach((entry, index) => {
+    entry.originalOrder = index;
+  });
+
+  // Update the store
+  dashboardPageRegistry.entries = values;
 };
 
-// use helper here as window methods are initialized after the store in tests
-const grabList = async (): Promise<DashboardPageRegistryEntry[]> => {
-  if (!initialized) {
-    init();
-    initialized = true;
-  }
-
-  return values;
-};
-
-export const dashboardPageRegistryEventStore = new EventStore<DashboardPageRegistryEntry[]>(
-  'dashboard-page-registry',
-  dashboardPageRegistry,
-  // should initialize when app is initializing
-  () => Promise.resolve(true),
-  windowEvents,
-  windowListeners,
-  grabList,
-);
-const dashboardPageRegistryEventStoreInfo = dashboardPageRegistryEventStore.setup();
-
-export const fetchDashboardPageRegistries = async (): Promise<void> => {
-  await dashboardPageRegistryEventStoreInfo.fetch();
-};
+// Initialize the registry immediately
+init();
 
 export const resetDashboardPageRegistries = async (): Promise<void> => {
   // Reset to initial state
   values = [];
-  initialized = false;
 
   // Re-initialize with default values
   init();
-
-  // Update the store
-  dashboardPageRegistry.set(values);
 };
 
 // Get default section names in their registry order

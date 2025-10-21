@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import ExploreFeatures from '../../lib/explore-features/ExploreFeatures.svelte';
-import type { DashboardPageRegistryEntry } from './dashboard-page-registry';
+import ExploreFeatures from '/@/lib/explore-features/ExploreFeatures.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
 
 export function createExploreFeatures(): DashboardPageRegistryEntry {
   return {
