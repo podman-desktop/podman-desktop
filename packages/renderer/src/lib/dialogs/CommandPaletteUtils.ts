@@ -16,9 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import { get } from 'svelte/store';
+
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import { isDark } from '/@/stores/appearance';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
-import type { GoToInfo, NavigationInfo } from '/@api/documentation-info';
+import type { GoToIcon, GoToInfo, NavigationInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
 import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
@@ -50,7 +57,11 @@ export function getGoToDisplayText(goToInfo: GoToInfo): string {
 }
 
 // Helper function to process a single navigation entry
-function processNavigationEntry(entry: NavigationRegistryEntry, items: NavigationInfo[], parentName = ''): void {
+function processNavigationEntry(
+  entry: NavigationRegistryEntry,
+  items: Array<NavigationInfo & { icon: GoToIcon }>,
+  parentName = '',
+): void {
   // Skip hidden entries
   if (entry.hidden) {
     return;
@@ -71,27 +82,38 @@ function processNavigationEntry(entry: NavigationRegistryEntry, items: Navigatio
     displayName = `${entry.name}${countSuffix}`;
   }
 
-  // Only add actual navigation entries (type 'entry'), not groups or submenus
-  if (entry.type === 'entry') {
-    const navigationInfo: NavigationInfo = {
-      name: displayName,
-      link: entry.link,
-    };
-
-    items.push(navigationInfo);
+  // group: Extensions / AI Lab / Kubernetes (After moving to extensions)
+  if (entry.type === 'group') {
+    entry.items?.forEach(subItem => {
+      processNavigationEntry(subItem, items, entry.name);
+    });
   }
 
-  // Process submenu items if they exist
-  if (entry.items && entry.items.length > 0) {
-    entry.items.forEach(subItem => {
-      processNavigationEntry(subItem, items, entry.name);
+  // entry: Images / Containers / Pods / Volumes
+  // submenu: Kubernetes (Before moving to extensions)
+  if (entry.type === 'entry' || entry.type === 'submenu') {
+    let iconImage = entry.icon?.iconImage;
+    if (iconImage && typeof iconImage !== 'string') {
+      iconImage = get(isDark) ? iconImage.dark : iconImage.light;
+    }
+
+    items.push({
+      icon: {
+        iconComponent: entry.icon?.iconComponent,
+        faIcon: entry.icon?.faIcon?.definition,
+        iconImage: iconImage,
+      },
+      ...{
+        name: displayName,
+        link: entry.link,
+      },
     });
   }
 }
 
 // Helper function to extract navigation paths from navigation registry
-function extractNavigationPaths(entries: NavigationRegistryEntry[]): NavigationInfo[] {
-  const items: NavigationInfo[] = [];
+function extractNavigationPaths(entries: NavigationRegistryEntry[]): Array<NavigationInfo & { icon: GoToIcon }> {
+  const items: Array<NavigationInfo & { icon: GoToIcon }> = [];
 
   entries.forEach(entry => {
     processNavigationEntry(entry, items);
@@ -112,22 +134,22 @@ export function createGoToItems(
 
   // Add images
   images.forEach(image => {
-    items.push({ type: 'Image', ...image });
+    items.push({ type: 'Image', ...image, icon: { iconComponent: ImageIcon } });
   });
 
   // Add containers
   containers.forEach(container => {
-    items.push({ type: 'Container', ...container });
+    items.push({ type: 'Container', ...container, icon: { iconComponent: ContainerIcon } });
   });
 
   // Add pods
   pods.forEach(pod => {
-    items.push({ type: 'Pod', ...pod });
+    items.push({ type: 'Pod', ...pod, icon: { iconComponent: PodIcon } });
   });
 
   // Add volumes
   volumes.forEach(volume => {
-    items.push({ type: 'Volume', ...volume });
+    items.push({ type: 'Volume', ...volume, icon: { iconComponent: VolumeIcon } });
   });
 
   // Add navigation registry entries

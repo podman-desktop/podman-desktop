@@ -1,8 +1,16 @@
 <script lang="ts">
-import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUpRightFromSquare,
+  faChevronRight,
+  faFileLines,
+  faFilePen,
+  faMagnifyingGlass,
+  faTerminal,
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { onMount, tick } from 'svelte';
+import { type Component, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
 import { handleNavigation } from '/@/navigation';
@@ -80,7 +88,6 @@ let podInfos: PodInfo[] = $derived($podsInfos);
 let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
-
 let goToItems: GoToInfo[] = $derived(
   createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
 );
@@ -357,6 +364,22 @@ function getTextToHighlight(item: CommandPaletteItem): string {
     return item.title ?? '';
   }
 }
+
+function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefinition | Component | string {
+  if (isDocItem(item)) {
+    return item.category === 'Tutorial' ? faFilePen : faFileLines;
+  } else if (isGoToItem(item)) {
+    // All goto items now have icons set in Utils
+    if (item.icon) {
+      return (item.icon.iconComponent ?? item.icon.faIcon ?? item.icon.iconImage ?? faTerminal) as
+        | IconDefinition
+        | Component
+        | string;
+    }
+  }
+  // Commands and fallback
+  return faTerminal;
+}
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:mousedown={handleMousedown} />
@@ -409,6 +432,8 @@ function getTextToHighlight(item: CommandPaletteItem): string {
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
             {@const goToItem = isGoToItem(item)}
+            {@const docItem = isDocItem(item)}
+            {@const itemIcon = getIcon(item)}
             <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
@@ -417,8 +442,14 @@ function getTextToHighlight(item: CommandPaletteItem): string {
                   : 'hover:bg-[var(--pd-dropdown-bg)]'}  px-1">
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
-                    <div class="text-base py-[2pt]">
-                      <TextHighLight text={getTextToHighlight(item)} query={inputValue ?? ''} />
+                    <div class="text-base py-[2pt] flex items-center gap-1">
+                      <Icon class='w-[1.2em] h-[1.2em]' icon={itemIcon} />
+                      <span>
+                        <TextHighLight text={getTextToHighlight(item)} query={inputValue ?? ''} />
+                      </span>
+                      {#if docItem}
+                        <Icon icon={faArrowUpRightFromSquare}/>
+                      {/if}
                     </div>
                   </div>
                 </div>

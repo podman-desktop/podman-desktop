@@ -18,8 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { faCube, faImage } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
 import { describe, expect, test } from 'vitest';
 
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
@@ -61,6 +64,92 @@ const mockVolumeInfo: VolumeInfo = {
   engineId: 'podman',
   engineName: 'Podman',
 } as unknown as VolumeInfo;
+
+// Mock navigation entries for testing
+const mockNavigationEntries: NavigationRegistryEntry[] = [
+  // Entry type - visible with counter
+  {
+    name: 'Images',
+    link: '/images',
+    type: 'entry',
+    counter: 5,
+    tooltip: 'Images',
+    icon: {
+      iconComponent: 'ImageIcon' as unknown as Component,
+      faIcon: { definition: faImage, size: '1x' },
+    },
+  },
+  // Entry type - visible without counter
+  {
+    name: 'Settings',
+    link: '/settings',
+    type: 'entry',
+    counter: 0,
+    tooltip: 'Settings',
+    icon: {
+      iconComponent: 'SettingsIcon' as unknown as Component,
+    },
+  },
+  // Group type with children
+  {
+    name: 'Extensions',
+    type: 'group',
+    counter: 2,
+    tooltip: 'Extensions',
+    icon: {},
+    link: '',
+    items: [
+      {
+        name: 'AI Lab',
+        link: '/extensions/ai-lab',
+        type: 'entry',
+        counter: 4,
+        tooltip: 'AI Lab',
+        icon: {
+          iconComponent: 'AIIcon' as unknown as Component,
+        },
+      },
+      {
+        name: 'Kubernetes',
+        link: '/extensions/kubernetes',
+        type: 'entry',
+        counter: 1,
+        tooltip: 'Kubernetes',
+        icon: {
+          iconComponent: 'K8sIcon' as unknown as Component,
+        },
+      },
+      // Hidden child
+      {
+        name: 'Hidden Child',
+        link: '/hidden-child',
+        type: 'entry',
+        counter: 0,
+        tooltip: 'Hidden Child',
+        icon: {},
+        hidden: true,
+      },
+    ],
+  },
+  // Submenu type
+  {
+    name: 'Kubernetes',
+    link: '/kubernetes',
+    type: 'submenu',
+    counter: 8,
+    tooltip: 'Kubernetes',
+    icon: {
+      iconComponent: 'K8sIcon' as unknown as Component,
+      faIcon: { definition: faCube, size: '1x' },
+    },
+  },
+  // Hidden entry
+  {
+    name: 'Hidden Item',
+    type: 'entry',
+    hidden: true,
+  } as NavigationRegistryEntry,
+];
 
 describe('createGoToItems', () => {
   test('should create GoToInfo items for all resource types', () => {
@@ -234,5 +323,50 @@ describe('getGoToDisplayText function behavior', () => {
     // Test the function directly with a mock object that has an invalid kind
     const unknownItem = { type: 'Unknown', ...mockImageInfo } as unknown as GoToInfo;
     expect(getGoToDisplayText(unknownItem)).toBe('Unknown');
+  });
+});
+
+describe('Navigation Items', () => {
+  test('should handle all navigation entry types correctly', () => {
+    const items = createGoToItems([], [], [], [], mockNavigationEntries);
+    const navigationItems = items.filter(item => item.type === 'Navigation');
+
+    // Should have 5 visible items: Images (5), Settings, Extensions children (2), Kubernetes (8)
+    expect(navigationItems).toHaveLength(5);
+
+    // Entry type with counter
+    const imagesItem = navigationItems.find(item => item.name === 'Images (5)');
+    expect(imagesItem).toBeDefined();
+    expect(imagesItem?.link).toBe('/images');
+    expect(imagesItem?.icon?.iconComponent).toBe('ImageIcon' as unknown as Component);
+    expect(imagesItem?.icon?.faIcon).toEqual(faImage);
+
+    // Entry type without counter (counter is 0)
+    const settingsItem = navigationItems.find(item => item.name === 'Settings');
+    expect(settingsItem).toBeDefined();
+    expect(settingsItem?.link).toBe('/settings');
+
+    // Group children with parent prefix
+    const aiLabItem = navigationItems.find(item => item.name === 'Extensions: AI Lab (4)');
+    expect(aiLabItem).toBeDefined();
+    expect(aiLabItem?.link).toBe('/extensions/ai-lab');
+
+    const k8sExtensionItem = navigationItems.find(item => item.name === 'Extensions: Kubernetes (1)');
+    expect(k8sExtensionItem).toBeDefined();
+    expect(k8sExtensionItem?.link).toBe('/extensions/kubernetes');
+
+    // Submenu type
+    const k8sSubmenuItem = navigationItems.find(item => item.name === 'Kubernetes (8)');
+    expect(k8sSubmenuItem).toBeDefined();
+    expect(k8sSubmenuItem?.link).toBe('/kubernetes');
+    expect(k8sSubmenuItem?.icon?.faIcon).toEqual(faCube);
+
+    // Hidden items should not be present
+    const hiddenItem = navigationItems.find(item => item.name?.includes('Hidden'));
+    expect(hiddenItem).toBeUndefined();
+
+    // Test getGoToDisplayText for Navigation type
+    expect(getGoToDisplayText(imagesItem!)).toBe('Images (5)');
+    expect(getGoToDisplayText(settingsItem!)).toBe('Settings');
   });
 });
