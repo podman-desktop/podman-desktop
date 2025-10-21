@@ -138,9 +138,8 @@ onMount(async () => {
 $effect(() => {
   if (display && inputElement) {
     tick()
-      .then(async () => {
+      .then(() => {
         inputElement?.focus();
-        await window.telemetryTrack('globalSearch.opened');
       })
       .catch((error: unknown) => {
         console.error('Unable to focus input box', error);
@@ -156,6 +155,7 @@ function displaySearchBar(): void {
   selectedFilteredIndex = 0;
   // toggle the display
   display = true;
+  window.telemetryTrack('globalSearch.opened').catch(console.error);
 }
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
@@ -289,6 +289,7 @@ async function executeAction(index: number): Promise<void> {
         parameters: { name: item.Name, engineId: item.engineId },
       });
     } else if (item.type === 'Navigation') {
+      itemLabel = item.name;
       router.goto(item.link);
     }
     itemType = item.type;
