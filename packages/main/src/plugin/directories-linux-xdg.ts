@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { injectable } from 'inversify';
 
 import type { Directories } from './directories.js';
+import { SYSTEM_DEFAULTS_FOLDER_LINUX } from './managed-by-constants.js';
 
 /**
  * Directory provider that follows XDG Base Directory Specification for Linux
@@ -82,5 +83,9 @@ export class LinuxXDGDirectories implements Directories {
 
   getDataDirectory(): string {
     return this.dataDirectory;
+  }
+
+  getManagedDefaultsDirectory(): string {
+    return SYSTEM_DEFAULTS_FOLDER_LINUX;
   }
 }

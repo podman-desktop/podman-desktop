@@ -22,7 +22,13 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
+import { isLinux, isMac, isWindows } from '../util.js';
 import type { Directories } from './directories.js';
+import {
+  SYSTEM_DEFAULTS_FOLDER_LINUX,
+  SYSTEM_DEFAULTS_FOLDER_MACOS,
+  SYSTEM_DEFAULTS_FOLDER_WINDOWS,
+} from './managed-by-constants.js';
 
 /**
  * Directory provider that uses the traditional/legacy directory structure
@@ -90,5 +96,18 @@ export class LegacyDirectories implements Directories {
 
   getDataDirectory(): string {
     return this.dataDirectory;
+  }
+
+  getManagedDefaultsDirectory(): string {
+    if (isMac()) {
+      return SYSTEM_DEFAULTS_FOLDER_MACOS;
+    } else if (isWindows()) {
+      const programData = process.env['PROGRAMDATA'] ?? 'C:\\ProgramData';
+      return path.join(programData, SYSTEM_DEFAULTS_FOLDER_WINDOWS);
+    } else if (isLinux()) {
+      return SYSTEM_DEFAULTS_FOLDER_LINUX;
+    }
+    // Fallback to Linux-style path
+    return SYSTEM_DEFAULTS_FOLDER_LINUX;
   }
 }

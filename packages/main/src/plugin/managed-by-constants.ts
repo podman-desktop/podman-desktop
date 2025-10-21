@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const Directories = Symbol.for('Directories');
-export interface Directories {
-  getConfigurationDirectory(): string;
-  getPluginsDirectory(): string;
-  getPluginsScanDirectory(): string;
-  getExtensionsStorageDirectory(): string;
-  getContributionStorageDir(): string;
-  getSafeStorageDirectory(): string;
-  getDataDirectory(): string;
-  getManagedDefaultsDirectory(): string;
-}
+// Below is the location of the managed defaults file on different OS'
+// this will be the Managed by profile which will show some "suggested defaults" by
+// the system administrator.
+
+// Filename for the managed defaults file
+export const SYSTEM_DEFAULTS_FILENAME = 'default-settings.json';
+
+// Folders for managed defaults on different platforms
+export const SYSTEM_DEFAULTS_FOLDER_MACOS = '/Library/Application Support/com.podman.desktop';
+export const SYSTEM_DEFAULTS_FOLDER_WINDOWS = 'PodmanDesktop';
+export const SYSTEM_DEFAULTS_FOLDER_LINUX = '/usr/share/podman-desktop';
