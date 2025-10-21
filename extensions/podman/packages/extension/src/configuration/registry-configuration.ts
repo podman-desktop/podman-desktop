@@ -89,7 +89,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     }
 
     const defaultRegistries: RegistryConfigurationEntry[] = [];
-    const userDefaultRegistries = configuration.getConfiguration('registries').get('defaults') as (
+    const userDefaultRegistries = configuration.getConfiguration('registries').get('defaults', []) as (
       | DefaultRegistry
       | DefaultRegistryMirror
     )[];
