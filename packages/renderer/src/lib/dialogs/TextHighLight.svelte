@@ -31,7 +31,7 @@ function highlightText(
 
 {#each highlightedParts as part, i (i)}
   {#if part.hasMatch}
-    <mark class="text-[var(--pd-label-primary-text)] font-semibold">{part.text}</mark>
+    <mark class="text-[var(--pd-label-primary-text)] font-semibold bg-transparent">{part.text}</mark>
   {:else}
     {part.text}
   {/if}
