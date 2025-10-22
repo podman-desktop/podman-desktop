@@ -1,5 +1,6 @@
 <script lang="ts">
 import { CloseButton, NavPage } from '@podman-desktop/ui-svelte';
+import { SvelteSet } from 'svelte/reactivity';
 
 import { filtered, searchPattern } from '/@/stores/tasks';
 
@@ -17,13 +18,13 @@ interface Props {
 
 let { searchTerm = $bindable('') }: Props = $props();
 
+let selected: SvelteSet<string> = new SvelteSet();
+
 // display or not the tasks manager (defaut is false)
 let showTaskManager = $state(false);
 
 // to filter
 let outsideWindow: HTMLDivElement | undefined = $state();
-
-let selectedItemsNumber: number = $state(0);
 
 // hide the task manager
 function hide(): void {
@@ -36,7 +37,7 @@ $effect(() => {
 });
 
 // task or tasks depending on the number of selected items
-const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
+const taskWordPlural = $derived(selected.size > 1 ? 'tasks' : 'task');
 </script>
 
 <!-- track keys like "ESC" or clicking outside the window, etc. -->
@@ -56,17 +57,18 @@ const taskWordPlural = $derived(selectedItemsNumber > 1 ? 'tasks' : 'task');
       {/snippet}
 
       {#snippet bottomAdditionalActions()}
-        {#if selectedItemsNumber > 0}
+        {#if selected.size > 0}
           <TaskManagerBulkDeleteButton
-            title="Delete {selectedItemsNumber} selected {taskWordPlural}"
-            bulkOperationTitle="delete {selectedItemsNumber} {taskWordPlural}" />
-          <span>On {selectedItemsNumber} selected {taskWordPlural}.</span>
+            selected={selected}
+            title="Delete {selected.size} selected {taskWordPlural}"
+            bulkOperationTitle="delete {selected.size} {taskWordPlural}" />
+          <span>On {selected.size} selected {taskWordPlural}.</span>
         {/if}
       {/snippet}
 
       {#snippet content()}
       <div class="flex min-w-full h-full">
-        <TaskManagerTable bind:selectedItemsNumber={selectedItemsNumber} tasks={$filtered} />
+        <TaskManagerTable bind:selected={selected} tasks={$filtered} />
         {#if $filtered.length === 0}
           <TaskManagerNoFilteredTasks bind:searchTerm={searchTerm} />
         {/if}
