@@ -17,6 +17,7 @@
  ********************************************************************/
 
 import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
+import { env as envAPI } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
 import { HyperVCheck } from '/@/checks/windows/hyperv-check';
@@ -27,10 +28,12 @@ import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
+import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
+import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, InstallerSymbol, TelemetryLoggerSymbol } from './symbols';
 
 export class InversifyBinding {
   #inversifyContainer: InversifyContainer | undefined;
@@ -59,6 +62,14 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(VirtualMachinePlatformCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
+
+    if (envAPI.isWindows) {
+      this.#inversifyContainer.bind(InstallerSymbol).to(WinInstaller).inSingletonScope();
+    } else if (envAPI.isMac) {
+      this.#inversifyContainer.bind(InstallerSymbol).to(MacOSInstaller).inSingletonScope();
+    } else {
+      this.#inversifyContainer.bind(InstallerSymbol).toConstantValue(undefined);
+    }
 
     return this.#inversifyContainer;
   }
