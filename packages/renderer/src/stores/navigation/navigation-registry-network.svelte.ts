@@ -18,7 +18,8 @@
 
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
-import { networksListInfo } from '../networks';
+import { networksListInfo } from '/@/stores/networks';
+
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);

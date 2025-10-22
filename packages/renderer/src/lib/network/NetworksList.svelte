@@ -4,8 +4,8 @@ import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } fr
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
 import { filtered, searchPattern } from '/@/stores/networks';
+import { providerInfos } from '/@/stores/providers';
 
-import { providerInfos } from '../../stores/providers';
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
