@@ -1,9 +1,10 @@
 <script lang="ts">
 import { faEthernet } from '@fortawesome/free-solid-svg-icons';
-import { EmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import { EmptyScreen, NavPage, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import PortForwardIcon from '/@/lib/kubernetes-port-forward/PortForwardIcon.svelte';
+import TableSvelte5 from '/@/lib/table/TableSvelte5.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
 import type { ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
@@ -45,19 +46,36 @@ const columns = [
 ];
 
 const row = new TableRow<ForwardConfig>({});
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(config: ForwardConfig): string {
+  return config.id;
+}
+
+/**
+ * Utility function for the Table to get the label to display for each item
+ */
+function label(config: ForwardConfig): string {
+  return config.name;
+}
 </script>
 
 <NavPage searchEnabled={false} title="Port forwarding">
   {#snippet content()}
   <div class="flex min-w-full h-full">
     {#if $kubernetesCurrentContextPortForwards.length > 0}
-      <Table
+      <TableSvelte5
         kind="port"
         data={$kubernetesCurrentContextPortForwards}
         columns={columns}
         row={row}
-        defaultSortColumn="Name">
-      </Table>
+        defaultSortColumn="Name"
+        key={key}
+        label={label}
+      >
+      </TableSvelte5>
     {:else}
       <EmptyScreen message="To forward ports, open the Summary tab on the relevant resource (Pod, Service, or Deployment)" icon={faEthernet} title="No port forwarding configured"/>
     {/if}
