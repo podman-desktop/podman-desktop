@@ -127,24 +127,23 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
-  const providerSocket = extensionApi.provider
+  const providerSockets = extensionApi.provider
     .getContainerConnections()
-    .find(connection => connection.connection.type === provider);
+    .filter(connection => connection.connection.type === provider);
 
-  if (!providerSocket) return auditResult;
+  if (providerSockets.length === 0) return auditResult;
 
-  // check if provider is running
-  const providerStatus = providerSocket.connection.status();
-  if (providerStatus !== 'started') {
+  // Check if any connection from the list is running
+  const runningConnection = providerSockets.find(connection => connection.connection.status() === 'started');
+
+  if (!runningConnection) {
     records.push({
       type: 'error',
       record: `The ${provider} provider is not running. Please start the ${provider} provider to create a Kind cluster.`,
     });
-  }
-
-  // Only check memory if provider is running
-  if (providerStatus === 'started') {
-    const memTotal = await getMemTotalInfo(providerSocket.connection.endpoint.socketPath);
+  } else {
+    // Only check memory if provider is running
+    const memTotal = await getMemTotalInfo(runningConnection.connection.endpoint.socketPath);
     // check if configured memory is less than 6GB
     if (memTotal < 6000000000) {
       records.push({

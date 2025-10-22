@@ -498,7 +498,7 @@ test('check that auditItems returns error message when HTTPS port is not availab
   expect(checks.records[0].type).toBe('error');
 });
 
-test('check that auditItems returns error message when provider is not running', async () => {
+test('check that auditItems returns error message when no provider connections are running', async () => {
   // Mock provider connection with stopped status
   vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
     {
@@ -605,4 +605,80 @@ test('check that auditItems returns multiple error messages when both ports are 
   expect(checks.records[1].type).toBe('error');
   expect(checks.records[1].record).toContain('Invalid HTTPS Port 888888');
   expect(checks.records[1].record).toContain('Please enter a port number between 0 and 65535.');
+});
+
+test('check that auditItems returns error message when multiple VMs exist but all are stopped', async () => {
+  // Mock multiple provider connections where all are stopped
+  vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-default',
+        type: 'podman',
+        endpoint: { socketPath: 'socket1' },
+        status: (): extensionApi.ProviderConnectionStatus => 'stopped',
+      },
+    },
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-custom',
+        type: 'podman',
+        endpoint: { socketPath: 'socket2' },
+        status: (): extensionApi.ProviderConnectionStatus => 'stopped',
+      },
+    },
+  ]);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+
+  const checks = await connectionAuditor('podman', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toContain('The podman provider is not running');
+});
+
+test('check that auditItems does not return error when multiple VMs exist and one is running', async () => {
+  // Mock multiple provider connections where one is stopped and one is running
+  vi.spyOn(extensionApi.provider, 'getContainerConnections').mockReturnValue([
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-default',
+        type: 'podman',
+        endpoint: { socketPath: 'socket1' },
+        status: (): extensionApi.ProviderConnectionStatus => 'stopped',
+      },
+    },
+    {
+      providerId: 'podman',
+      connection: {
+        name: 'podman-machine-custom',
+        type: 'podman',
+        endpoint: { socketPath: 'socket2' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+  vi.mocked(getMemTotalInfo).mockResolvedValue(8000000000); // 8GB
+
+  const checks = await connectionAuditor('podman', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  // Should not have the "not running" error since one VM is running
+  const errorRecords = checks.records.filter(r => r.type === 'error');
+  expect(errorRecords.length).toBe(0);
+  // Should have called getMemTotalInfo with the running connection's socket
+  expect(getMemTotalInfo).toHaveBeenCalledWith('socket2');
 });
