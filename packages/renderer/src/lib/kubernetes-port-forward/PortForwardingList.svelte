@@ -45,6 +45,13 @@ const columns = [
 ];
 
 const row = new TableRow<ForwardConfig>({});
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(config: ForwardConfig): string {
+  return config.id;
+}
 </script>
 
 <NavPage searchEnabled={false} title="Port forwarding">
@@ -56,6 +63,7 @@ const row = new TableRow<ForwardConfig>({});
         data={$kubernetesCurrentContextPortForwards}
         columns={columns}
         row={row}
+        key={key}
         defaultSortColumn="Name">
       </Table>
     {:else}
