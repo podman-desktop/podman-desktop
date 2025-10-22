@@ -23,7 +23,7 @@ import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { connectionAuditor, createCluster, getKindClusterConfig } from './create-cluster';
+import { connectionAuditor, createCluster, getKindClusterConfig, waitForCoreDNSReady } from './create-cluster';
 import { getKindPath, getMemTotalInfo } from './util';
 
 vi.mock('node:fs', () => ({
@@ -681,4 +681,69 @@ test('check that auditItems does not return error when multiple VMs exist and on
   expect(errorRecords.length).toBe(0);
   // Should have called getMemTotalInfo with the running connection's socket
   expect(getMemTotalInfo).toHaveBeenCalledWith('socket2');
+  test('waitForCoreDNSReady should execute kubectl wait for all components on success', async () => {
+    const mockExec = vi
+      .fn()
+      .mockResolvedValueOnce({ stdout: '' }) // kubectl wait nodes
+      .mockResolvedValueOnce({ stdout: '' }) // kubectl wait scheduler
+      .mockResolvedValueOnce({ stdout: '' }) // kubectl wait controller-manager
+      .mockResolvedValueOnce({ stdout: '' }); // kubectl wait CoreDNS
+
+    vi.mocked(extensionApi.process.exec).mockImplementation(mockExec);
+
+    await waitForCoreDNSReady();
+
+    expect(mockExec).toHaveBeenCalledTimes(4);
+
+    // Check first call - nodes
+    expect(mockExec).toHaveBeenNthCalledWith(1, 'kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'node',
+      '--all',
+      '--timeout=60s',
+    ]);
+
+    // Check second call - scheduler
+    expect(mockExec).toHaveBeenNthCalledWith(2, 'kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'component=kube-scheduler',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+
+    // Check third call - controller-manager
+    expect(mockExec).toHaveBeenNthCalledWith(3, 'kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'component=kube-controller-manager',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+
+    // Check fourth call - CoreDNS
+    expect(mockExec).toHaveBeenNthCalledWith(4, 'kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'k8s-app=kube-dns',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+  });
+
+  test('waitForCoreDNSReady should propagate kubectl errors with context', async () => {
+    vi.mocked(extensionApi.process.exec).mockRejectedValue(new Error('connection refused'));
+
+    await expect(waitForCoreDNSReady()).rejects.toThrow('Cluster not ready');
+  });
 });

@@ -67,6 +67,57 @@ function getTags(tags: Tags): Tags {
   return tags;
 }
 
+/**
+ * Wait for CoreDNS to be ready before installing ingress controller
+ * This prevents DNS timeout issues when Contour tries to resolve names
+ */
+export async function waitForCoreDNSReady(): Promise<void> {
+  try {
+    // wait for the control plane to be fully ready
+    await extensionApi.process.exec('kubectl', ['wait', '--for=condition=ready', 'node', '--all', '--timeout=60s']);
+
+    // wait for system pods to be ready (scheduler, controller-manager, etc.)
+    await extensionApi.process.exec('kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'component=kube-scheduler',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+
+    // Wait for kube-controller-manager to be ready
+    await extensionApi.process.exec('kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'component=kube-controller-manager',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+
+    // Now wait for CoreDNS pods to be ready
+    await extensionApi.process.exec('kubectl', [
+      'wait',
+      '--for=condition=ready',
+      'pod',
+      '-l',
+      'k8s-app=kube-dns',
+      '-n',
+      'kube-system',
+      '--timeout=60s',
+    ]);
+
+    // CoreDNS is ready - DNS should be functional
+  } catch (error) {
+    throw new Error(`Cluster not ready: ${String(error)}`);
+  }
+}
+
 export async function setupIngressController(clusterName: string): Promise<void> {
   const manifest = convertYamlFrom11to12(ingressManifests);
   const yml = loadAllYaml(manifest);
@@ -271,6 +322,12 @@ export async function createCluster(
     }
 
     disposeOnDidUpdate.dispose();
+
+    // Wait for CoreDNS to be ready before installing ingress controller
+    // This prevents DNS timeout issues when Contour tries to resolve names
+    if (ingressController) {
+      await waitForCoreDNSReady();
+    }
 
     // Create ingress controller resources depending on whether a configFile was provided or not
     if (ingressController && configFile) {
