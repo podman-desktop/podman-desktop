@@ -412,6 +412,41 @@ test('Expect table to have proper css style', async () => {
   expect(dummyComponent.style.gridTemplateColumns).toBe('');
 });
 
+describe('Table#label', () => {
+  interface Item {
+    id: string;
+    name?: string;
+  }
+
+  const ROW = new Row<Item>({});
+
+  const SIMPLE_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name ?? 'unknown',
+    renderer: SimpleColumn,
+  });
+
+  test('expect table to set aria-label from label prop if item has undefined name', () => {
+    const { queryByRole } = render(Table<Item>, {
+      kind: 'demo',
+      data: [
+        {
+          id: 'foo',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['foo'],
+      // create special value for the label
+      label: (item): string => `label-${item.id}`,
+      key: (item): string => item.id,
+    });
+
+    const row = queryByRole('row', { name: 'label-foo' });
+    expect(row).toBeDefined();
+  });
+});
+
 describe('Table#collapsed', () => {
   interface Item {
     id: string;

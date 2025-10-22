@@ -33,6 +33,12 @@ export let collapsed: string[] = [];
  * By default, it will use the object name property
  */
 export let key: (object: T) => string = item => item.name ?? String(item);
+/**
+ * Specify the aria-label for a given item
+ *
+ * By default, it will use the object name property
+ */
+export let label: (object: T) => string = item => item.name ?? String(item);
 
 export let enableLayoutConfiguration: boolean = false;
 
@@ -416,7 +422,7 @@ async function resetColumns(): Promise<void> {
         <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
       {/if}
     </div>
-    
+
     <!-- Settings - only show when layout configuration is enabled -->
     {#if enableLayoutConfiguration && tablePersistence.storage}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
@@ -447,7 +453,7 @@ async function resetColumns(): Promise<void> {
           class:rounded-lg={collapsed.includes(itemKey) ||
             children.length === 0}
           role="row"
-          aria-label={object.name}>
+          aria-label={label(object)}>
           <div class="whitespace-nowrap place-self-center" role="cell">
             {#if children.length > 0}
               <button
