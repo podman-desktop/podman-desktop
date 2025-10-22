@@ -18,6 +18,7 @@
 
 import type { InstallCheck } from '@podman-desktop/api';
 
+export const Installer = Symbol.for('Installer');
 export interface Installer {
   getPreflightChecks(): InstallCheck[] | undefined;
   getUpdatePreflightChecks(): InstallCheck[] | undefined;
