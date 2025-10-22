@@ -288,7 +288,7 @@ const row = new TableRow<ImageInfoUI>({
  * Utility function for the Table to get the key to use for each item
  */
 function key(item: ImageInfoUI): string {
-  return item.id;
+  return `${item.engineId}:${item.id}`;
 }
 </script>
 
