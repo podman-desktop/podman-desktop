@@ -226,13 +226,24 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
       await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
       await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
       if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Starting) {
-        console.log('Podman machine is in starting currently, will send stop command via CLI');
-        // eslint-disable-next-line sonarjs/os-command
-        execSync(`podman machine stop ${machineVisibleName}`);
+        console.log('[deletePodmanMachine] Podman machine is in STARTING state, will send stop command via CLI');
+        try {
+          // eslint-disable-next-line sonarjs/os-command
+          const output = execSync(`podman machine stop ${machineVisibleName}`, { encoding: 'utf-8' });
+          console.log('[deletePodmanMachine] Stop command output:', output);
+        } catch (error) {
+          console.error('[deletePodmanMachine] Stop command error:', error);
+          if (error && typeof error === 'object' && 'stderr' in error && error.stderr) {
+            console.error('[deletePodmanMachine] Stop stderr:', error.stderr.toString());
+          }
+          if (error && typeof error === 'object' && 'stdout' in error && error.stdout) {
+            console.error('[deletePodmanMachine] Stop stdout:', error.stdout.toString());
+          }
+        }
         await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
           timeout: 30_000,
         });
-        console.log('Podman machine stopped via CLI');
+        console.log('[deletePodmanMachine] Podman machine stopped via CLI');
       }
       if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Running) {
         try {
@@ -243,9 +254,20 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
             { timeout: 30_000, sendError: true },
           );
         } catch (error) {
-          console.log('Podman machine stop failed, will try to stop it via CLI');
-          // eslint-disable-next-line sonarjs/os-command
-          execSync(`podman machine stop ${machineVisibleName}`);
+          console.log('[deletePodmanMachine] UI stop failed, will try to stop it via CLI');
+          try {
+            // eslint-disable-next-line sonarjs/os-command
+            const output = execSync(`podman machine stop ${machineVisibleName}`, { encoding: 'utf-8' });
+            console.log('[deletePodmanMachine] CLI stop output:', output);
+          } catch (cliError) {
+            console.error('[deletePodmanMachine] CLI stop error:', cliError);
+            if (cliError && typeof cliError === 'object' && 'stderr' in cliError && cliError.stderr) {
+              console.error('[deletePodmanMachine] CLI stop stderr:', cliError.stderr.toString());
+            }
+            if (cliError && typeof cliError === 'object' && 'stdout' in cliError && cliError.stdout) {
+              console.error('[deletePodmanMachine] CLI stop stdout:', cliError.stdout.toString());
+            }
+          }
         }
         await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
           timeout: 30_000,
@@ -323,21 +345,57 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
     const userModeNetworking = process.env.PODMAN_NETWORKING === '1' ? '--user-networking' : '';
 
     try {
+      console.log('[createPodmanMachineFromCLI] Executing: podman machine init');
       // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
-      execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`);
+      const output = execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`, { encoding: 'utf-8' });
+      console.log('[createPodmanMachineFromCLI] Init output:', output);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM already exists')) {
-        console.log(`Podman machine already exists, skipping creation.`);
+        console.log(`[createPodmanMachineFromCLI] Podman machine already exists, skipping creation.`);
+        // Log stderr if available from the error
+        if ('stderr' in error && error.stderr) {
+          console.log('[createPodmanMachineFromCLI] Init stderr:', error.stderr.toString());
+        }
+        if ('stdout' in error && error.stdout) {
+          console.log('[createPodmanMachineFromCLI] Init stdout:', error.stdout.toString());
+        }
+      } else {
+        console.error('[createPodmanMachineFromCLI] Init error:', error);
+        if (error && typeof error === 'object' && 'stderr' in error && error.stderr) {
+          console.error('[createPodmanMachineFromCLI] Init stderr:', error.stderr.toString());
+        }
+        if (error && typeof error === 'object' && 'stdout' in error && error.stdout) {
+          console.error('[createPodmanMachineFromCLI] Init stdout:', error.stdout.toString());
+        }
+        throw error;
       }
     }
 
     try {
+      console.log('[createPodmanMachineFromCLI] Executing: podman machine start');
       // eslint-disable-next-line sonarjs/no-os-command-from-path
-      execSync('podman machine start');
-      console.log('Default podman machine started');
+      const output = execSync('podman machine start', { encoding: 'utf-8' });
+      console.log('[createPodmanMachineFromCLI] Start output:', output);
+      console.log('[createPodmanMachineFromCLI] Default podman machine started');
     } catch (error) {
       if (error instanceof Error && error.message.includes('already running')) {
-        console.log('Default podman machine already started, skipping start.');
+        console.log('[createPodmanMachineFromCLI] Default podman machine already started, skipping start.');
+        // Log stderr if available from the error
+        if ('stderr' in error && error.stderr) {
+          console.log('[createPodmanMachineFromCLI] Start stderr:', error.stderr.toString());
+        }
+        if ('stdout' in error && error.stdout) {
+          console.log('[createPodmanMachineFromCLI] Start stdout:', error.stdout.toString());
+        }
+      } else {
+        console.error('[createPodmanMachineFromCLI] Start error:', error);
+        if (error && typeof error === 'object' && 'stderr' in error && error.stderr) {
+          console.error('[createPodmanMachineFromCLI] Start stderr:', error.stderr.toString());
+        }
+        if (error && typeof error === 'object' && 'stdout' in error && error.stdout) {
+          console.error('[createPodmanMachineFromCLI] Start stdout:', error.stdout.toString());
+        }
+        throw error;
       }
     }
   });
@@ -346,11 +404,30 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
 export async function deletePodmanMachineFromCLI(podmanMachineName: string): Promise<void> {
   return test.step('Delete Podman machine from CLI', () => {
     try {
+      console.log(`[deletePodmanMachineFromCLI] Executing: podman machine rm ${podmanMachineName} -f`);
       // eslint-disable-next-line sonarjs/os-command
-      execSync(`podman machine rm ${podmanMachineName} -f`);
+      const output = execSync(`podman machine rm ${podmanMachineName} -f`, { encoding: 'utf-8' });
+      console.log('[deletePodmanMachineFromCLI] Delete output:', output);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM does not exist')) {
-        console.log(`Podman machine [${podmanMachineName}] does not exist, skipping deletion.`);
+        console.log(
+          `[deletePodmanMachineFromCLI] Podman machine [${podmanMachineName}] does not exist, skipping deletion.`,
+        );
+        if ('stderr' in error && error.stderr) {
+          console.log('[deletePodmanMachineFromCLI] Delete stderr:', error.stderr.toString());
+        }
+        if ('stdout' in error && error.stdout) {
+          console.log('[deletePodmanMachineFromCLI] Delete stdout:', error.stdout.toString());
+        }
+      } else {
+        console.error('[deletePodmanMachineFromCLI] Delete error:', error);
+        if (error && typeof error === 'object' && 'stderr' in error && error.stderr) {
+          console.error('[deletePodmanMachineFromCLI] Delete stderr:', error.stderr.toString());
+        }
+        if (error && typeof error === 'object' && 'stdout' in error && error.stdout) {
+          console.error('[deletePodmanMachineFromCLI] Delete stdout:', error.stdout.toString());
+        }
+        throw error;
       }
     }
   });
@@ -358,7 +435,20 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
 
 export async function resetPodmanMachinesFromCLI(): Promise<void> {
   return test.step('Reset Podman machine from CLI', () => {
-    execSync(`podman machine reset -f`);
+    try {
+      console.log('[resetPodmanMachinesFromCLI] Executing: podman machine reset -f');
+      const output = execSync(`podman machine reset -f`, { encoding: 'utf-8' });
+      console.log('[resetPodmanMachinesFromCLI] Reset output:', output);
+    } catch (error) {
+      console.error('[resetPodmanMachinesFromCLI] Reset error:', error);
+      if (error && typeof error === 'object' && 'stderr' in error && error.stderr) {
+        console.error('[resetPodmanMachinesFromCLI] Reset stderr:', error.stderr.toString());
+      }
+      if (error && typeof error === 'object' && 'stdout' in error && error.stdout) {
+        console.error('[resetPodmanMachinesFromCLI] Reset stdout:', error.stdout.toString());
+      }
+      throw error;
+    }
   });
 }
 
