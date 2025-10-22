@@ -173,6 +173,12 @@ const row = new TableRow<VolumeInfoUI>({
   selectable: (volume): boolean => volume.status === 'UNUSED',
   disabledText: 'Volume is used by a container',
 });
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(obj: VolumeInfoUI): string {
+  return `${obj.engineId}:${obj.name}`;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
@@ -228,6 +234,7 @@ const row = new TableRow<VolumeInfoUI>({
         row={row}
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
+        key={key}
         on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
       </Table>
     {/if}
