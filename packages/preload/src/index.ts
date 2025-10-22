@@ -1457,6 +1457,13 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'createHash',
+    async (input: string, algorithm: string = 'sha512'): Promise<string> => {
+      return ipcInvoke('util:createHash', algorithm, input);
+    },
+  );
+
   contextBridge.exposeInMainWorld('getImageRegistries', async (): Promise<readonly containerDesktopAPI.Registry[]> => {
     return ipcInvoke('image-registry:getRegistries');
   });

@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { Buffer } from 'node:buffer';
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 
@@ -77,4 +78,8 @@ export function formatName(id: string): string {
     .split('.')
     .map(part => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
     .join(' ');
+}
+
+export function createHash(input: string, algorithm: string = 'sha512'): string {
+  return crypto.createHash(algorithm).update(input).digest('hex');
 }

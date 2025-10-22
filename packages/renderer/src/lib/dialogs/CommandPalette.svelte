@@ -245,7 +245,8 @@ async function executeAction(index: number): Promise<void> {
   if (!item) return;
 
   let itemType: string;
-  let itemLabel: string | undefined = undefined;
+  let pageLink: string | undefined = undefined;
+  let commandHash: string | undefined = undefined;
 
   if (isDocItem(item)) {
     // Documentation item
@@ -257,7 +258,7 @@ async function executeAction(index: number): Promise<void> {
       }
     }
     itemType = item.category;
-    itemLabel = item.name;
+    pageLink = item.url;
   } else if (isGoToItem(item)) {
     // Go to item
     if (item.type === 'Image') {
@@ -289,7 +290,6 @@ async function executeAction(index: number): Promise<void> {
         parameters: { name: item.Name, engineId: item.engineId },
       });
     } else if (item.type === 'Navigation') {
-      itemLabel = item.name;
       router.goto(item.link);
     }
     itemType = item.type;
@@ -303,7 +303,7 @@ async function executeAction(index: number): Promise<void> {
       }
     }
     itemType = 'Command';
-    itemLabel = item.title;
+    commandHash = await window.createHash(item.title ?? 'Unknown command');
   }
 
   const telemetryOptions = {
@@ -311,8 +311,8 @@ async function executeAction(index: number): Promise<void> {
     selectedTab: searchOptions[searchOptionsSelectedIndex].text,
     // Pod or Image or Documentation or Command
     itemType: itemType,
-    // Sent only when itemtype is GoTo or Documentation
-    itemLabel: itemLabel,
+    pageLink: pageLink,
+    commandHash: commandHash,
   };
 
   await window.telemetryTrack('globalSearch.itemClicked', telemetryOptions);
