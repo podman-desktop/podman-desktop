@@ -34,58 +34,25 @@ export interface DashboardPageRegistryEntry {
 
 export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntry[] }>({ entries: [] });
 
-let values: DashboardPageRegistryEntry[] = [];
+function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
+  return [
+    createReleaseNotesBox(),
+    createExtensionBanners(),
+    createExploreFeatures(),
+    createLearningCenter(),
+    createProviders(),
+  ];
+}
 
-const init = (): void => {
-  values.push(createReleaseNotesBox());
-  values.push(createExtensionBanners());
-  values.push(createExploreFeatures());
-  values.push(createLearningCenter());
-  values.push(createProviders());
+setupDashboardPageRegistry();
 
-  // Set originalOrder for each entry based on their position
-  values.forEach((entry, index) => {
-    entry.originalOrder = index;
-  });
-
-  // Update the store
-  dashboardPageRegistry.entries = values;
-};
-
-// Initialize the registry immediately
-init();
-
-export const resetDashboardPageRegistries = async (): Promise<void> => {
-  // Reset to initial state
-  values = [];
-
+export function setupDashboardPageRegistry(): void {
   // Re-initialize with default values
-  init();
-};
+  dashboardPageRegistry.entries = getDashboardPageRegistry();
+}
 
 // Get default section names in their registry order
-export const getDefaultSectionNames = (): string[] => {
-  // Create a temporary registry to get the default values
-  const tempValues: DashboardPageRegistryEntry[] = [];
-  tempValues.push(createReleaseNotesBox());
-  tempValues.push(createExtensionBanners());
-  tempValues.push(createExploreFeatures());
-  tempValues.push(createLearningCenter());
-  tempValues.push(createProviders());
-
-  // Return the IDs in the same order as they are pushed
-  return tempValues.map(entry => entry.id);
-};
-
-// Helper function to convert dashboard registry entries to ListOrganizerItems
-export function convertToListOrganizerItems(entries: DashboardPageRegistryEntry[]): ListOrganizerItem[] {
-  return entries.map(entry => ({
-    id: entry.id,
-    label: entry.id, // ListOrganizer will handle formatting
-    enabled: !entry.hidden, // enabled is opposite of hidden
-    originalOrder: entry.originalOrder,
-  }));
-}
+export const defaultSectionNames = getDashboardPageRegistry().map(entry => entry.id);
 
 // Helper function to convert ListOrganizerItems back to dashboard registry entries
 export function convertFromListOrganizerItems(
