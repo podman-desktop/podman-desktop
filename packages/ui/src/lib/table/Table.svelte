@@ -416,7 +416,7 @@ async function resetColumns(): Promise<void> {
         <div class="whitespace-nowrap justify-self-end place-self-center" role="columnheader"></div>
       {/if}
     </div>
-    
+
     <!-- Settings - only show when layout configuration is enabled -->
     {#if enableLayoutConfiguration && tablePersistence.storage}
       <div class="absolute top-0 right-0 h-7 flex items-center pr-2 z-10">
@@ -457,7 +457,7 @@ async function resetColumns(): Promise<void> {
               >
                 <Icon size="0.8x"
                   class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={object.name && !collapsed.includes(object.name) ? faChevronDown : faChevronRight}/>
+                  icon={!collapsed.includes(itemKey) ? faChevronDown : faChevronRight}/>
               </button>
             {/if}
           </div>
