@@ -68,7 +68,8 @@ describe('inversifyBinding', () => {
 
     const container = await inversifyBinding.init();
 
-    container.get(InstallerSymbol);
+    const value = container.get(InstallerSymbol);
+    expect(value).not.toBeUndefined();
 
     expect(WinInstaller).toHaveBeenCalledOnce();
     expect(MacOSInstaller).not.toHaveBeenCalled();
@@ -79,7 +80,8 @@ describe('inversifyBinding', () => {
 
     const container = await inversifyBinding.init();
 
-    container.get(InstallerSymbol);
+    const value = container.get(InstallerSymbol);
+    expect(value).not.toBeUndefined();
 
     expect(WinInstaller).not.toHaveBeenCalled();
     expect(MacOSInstaller).toHaveBeenCalled();
