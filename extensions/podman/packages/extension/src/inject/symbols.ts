@@ -18,3 +18,5 @@
 
 export const ExtensionContextSymbol = Symbol.for('ExtensionContext');
 export const TelemetryLoggerSymbol = Symbol.for('TelemetryLogger');
+
+export const InstallerSymbol = Symbol.for('InstallerSymbol');
