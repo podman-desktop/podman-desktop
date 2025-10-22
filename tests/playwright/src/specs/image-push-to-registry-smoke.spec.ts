@@ -106,7 +106,7 @@ test.describe.serial('Push image to container registry', { tag: '@smoke1' }, () 
     await playExpect(pushImagePage.heading).toBeVisible();
 
     await pushImagePage.pushImage();
-    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect(imageDetailsPage.heading).toBeVisible();
   });
 
   test('Delete image', async ({ navigationBar }) => {

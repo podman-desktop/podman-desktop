@@ -59,25 +59,11 @@ const getConfigurationValueMock = vi.fn();
 const hasAuthMock = vi.fn();
 const pushImageMock = vi.fn();
 
-// fake ImageInfoUI
-const fakedImage: ImageInfoUI = {
-  id: 'id',
-  shortId: 'shortId',
-  name: 'name',
-  engineId: 'engineId',
-  engineName: 'engineName',
-  tag: 'tag',
-  createdAt: 0,
-  age: 'age',
-  size: 0,
-  humanSize: 'humanSize',
-  base64RepoTag: 'base64RepoTag',
-  selected: false,
-  status: 'UNUSED',
-  icon: {},
-  badges: [],
-  digest: 'sha256:1234567890',
-};
+const engineId = 'engineId';
+const base64RepoTag = btoa('base64RepoTag');
+const imageId = 'imageId';
+const taskId = 0;
+
 const fakedImageInspect: ImageInspectInfo = {
   Architecture: '',
   Author: '',
@@ -130,7 +116,7 @@ const fakedImageInspect: ImageInspectInfo = {
   Os: '',
   Parent: '',
   RepoDigests: [],
-  RepoTags: [],
+  RepoTags: ['base64RepoTag'],
   RootFS: {
     Type: '',
   },
@@ -176,8 +162,7 @@ type CallbackType = (name: string, data?: string) => void;
 
 describe('Expect Push Image dialog', () => {
   let callback: CallbackType | undefined;
-  const closeCallback = vi.fn();
-  function button(name: 'Cancel' | 'Push image' | 'Done'): HTMLElement | null {
+  function button(name: 'Push image' | 'Done'): HTMLElement | null {
     return screen.queryByRole('button', { name });
   }
 
@@ -203,8 +188,10 @@ describe('Expect Push Image dialog', () => {
     });
 
     await waitRender({
-      imageInfoToPush: fakedImage,
-      closeCallback,
+      engineId,
+      imageId,
+      base64RepoTag,
+      taskId,
     });
 
     if (step === 'DialogOpened') return;
@@ -228,6 +215,7 @@ describe('Expect Push Image dialog', () => {
 
     if (step === 'EndAfterError' || step === 'DataErrorMessage') {
       callback?.('error', 'DataErrorMessage');
+      callback?.('end');
     }
 
     if (step === 'DataErrorMessage') return;
@@ -235,30 +223,25 @@ describe('Expect Push Image dialog', () => {
     callback?.('end');
   }
 
-  test('have "Cancel" and "Push Image" buttons disabled after open when auth configuration is missing', async () => {
+  test('have "Push Image" button disabled after open when auth configuration is missing', async () => {
     await runTo('DialogOpened', false);
     expect(button('Push image')).toBeDisabled();
-    expect(button('Cancel')).toBeEnabled();
     expect(terminal()).toBeNull();
   });
 
-  test('have "Cancel" and "Push Image" buttons enable after open when auth configuration is present', async () => {
+  test('have "Push Image" buttons enable after open when auth configuration is present', async () => {
     await runTo('DialogOpened');
     await waitFor(() => {
       expect(button('Push image')).toBeEnabled();
     });
-    expect(button('Cancel')).toBeEnabled();
     expect(terminal()).toBeNull();
   });
 
-  test('to have no "Cancel" button and "Push Image" button disabled after "Push Image" button pressed', async () => {
+  test('to have "Push Image" button disabled after it has been pressed', async () => {
     await runTo('PushPressed');
     // the click on 'Push Image' button should set callback
-    expect(callback).not.toBe(undefined);
-    // window.pushImage() called, `Cancel` and `Push Image` buttons are
-    // disabled and waiting for callback being called with first-message/data/end events
+    expect(callback).toBeDefined();
     expect(button('Push image')).toBeDisabled();
-    expect(button('Cancel')).toBe(null);
     expect(screen.queryByRole('term')).toBeVisible();
   });
 
@@ -273,31 +256,27 @@ describe('Expect Push Image dialog', () => {
     await runTo('DataMessage');
     expect(terminalWriteSpy).toBeCalledWith('DataMessage\n\r');
     expect(button('Push image')).toBeDisabled();
-    expect(button('Cancel')).toBe(null);
   });
 
   test('to write error message to terminal from "data" event and reset buttons to initial state', async () => {
     const terminalWriteSpy = vi.spyOn(Terminal.prototype, 'write');
     await runTo('DataErrorMessage');
     expect(terminalWriteSpy).toBeCalledWith('DataErrorMessage\n\r');
-    expect(button('Push image')).toBeDisabled();
-    expect(button('Cancel')).toBe(null);
+    expect(button('Push image')).toBeEnabled();
   });
 
-  test('to show "Cancel" and "Push image" buttons after push call finished with error', async () => {
+  test('to have "Push image" button enabled after push call finished with error', async () => {
     await runTo('EndAfterError');
     await waitFor(() => {
       expect(button('Push image')).toBeEnabled();
-      expect(button('Cancel')).toBeEnabled();
     });
 
     expect(terminal()).toBeVisible();
   });
 
-  test('to show "Done" button after successful push', async () => {
+  test('to enable "Push image" button after successful push', async () => {
     await runTo('End');
-    expect(button('Push image')).toBe(null);
-    expect(button('Cancel')).toBe(null);
+    expect(button('Push image')).toBeEnabled();
     expect(button('Done')).toBeEnabled();
     expect(terminal()).toBeVisible();
   });
