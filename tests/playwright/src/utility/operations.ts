@@ -184,7 +184,7 @@ export async function handleConfirmationDialog(
     const button = confirm
       ? dialog.getByRole('button', { name: confirmationButton })
       : dialog.getByRole('button', { name: cancelButton });
-    await playExpect(button).toBeEnabled();
+    await playExpect(button).toBeEnabled({ timeout: timeout });
     await button.click();
 
     if (moreThanOneConsecutiveDialogs) {
