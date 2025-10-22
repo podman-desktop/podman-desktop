@@ -18,6 +18,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { PlayYamlOptions } from '../core/types';
 import { PodmanKubePlayOptions } from '../core/types';
 import { BasePage } from './base-page';
 import { PodsPage } from './pods-page';
@@ -57,7 +58,7 @@ export class PodmanKubePlayPage extends BasePage {
     await playExpect(this.buildCheckbox).toBeChecked();
   }
 
-  private async createFromScratch(): Promise<void> {
+  private async createFromScratch(jsonResourceDefinition: string): Promise<void> {
     await playExpect(this.createYamlFromScratchButton).toBeEnabled();
     await this.createYamlFromScratchButton.click();
     await playExpect(this.createYamlFromScratchButton).toHaveAttribute('aria-pressed', 'true');
@@ -67,9 +68,7 @@ export class PodmanKubePlayPage extends BasePage {
     await codeSection.click();
     // Workaround: Insert YAML into the Monaco editor using keyboard.type()
     // because Playwright's fill() method does not work with it
-    await this.page.keyboard.type(
-      '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"podman-kube-play-test"},"spec":{"containers":[{"name":"my-container","image":"nginx:latest","ports":[{"containerPort":80,"hostPort":8080}]}]}}',
-    );
+    await this.page.keyboard.type(jsonResourceDefinition);
   }
 
   private async selectYamlFile(pathToYaml: string): Promise<void> {
@@ -85,19 +84,15 @@ export class PodmanKubePlayPage extends BasePage {
     await this.yamlPathInput.fill(pathToYaml);
   }
 
-  async playYaml(
-    podmanKubePlayOption: PodmanKubePlayOptions,
-    pathToYaml: string = '',
-    buildImage: boolean = false,
-    timeout: number = 120_000,
-  ): Promise<PodsPage> {
+  async playYaml(options: PlayYamlOptions, buildImage: boolean = false, timeout: number = 120_000): Promise<PodsPage> {
     return test.step('Podman Kube Play', async () => {
+      const podmanKubePlayOption = options.podmanKubePlayOption;
       switch (podmanKubePlayOption) {
         case PodmanKubePlayOptions.SelectYamlFile:
-          await this.selectYamlFile(pathToYaml);
+          await this.selectYamlFile(options.pathToYaml);
           break;
         case PodmanKubePlayOptions.CreateYamlFileFromScratch:
-          await this.createFromScratch();
+          await this.createFromScratch(options.jsonResourceDefinition);
           break;
       }
 

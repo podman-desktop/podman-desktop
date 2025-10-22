@@ -29,7 +29,8 @@ import { waitForPodmanMachineStartup } from '../utility/wait';
 const POD_NAME_FROM_SCRATCH: string = 'podman-kube-play-test';
 const POD_NAME_BUILD_OPTION: string = 'podman-kube-play-build-test';
 const LOCAL_IMAGE_NAME: string = 'localhost/foobar';
-const NGINX_IMAGE_NAME: string = 'docker.io/library/nginx';
+const NGINX_IMAGE_NAME: string = 'ghcr.io/podmandesktop-ci/nginx:latest';
+const JSON_RESOURCE_DEFINITION = `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"${POD_NAME_FROM_SCRATCH}"},"spec":{"containers":[{"name":"my-container","image":"${NGINX_IMAGE_NAME}","ports":[{"containerPort":80,"hostPort":8080}]}]}}`;
 const CONTAINER_IMAGE: string = `${LOCAL_IMAGE_NAME}:latest`;
 const CONTAINER_NAME: string = `${POD_NAME_BUILD_OPTION}-container`;
 
@@ -60,13 +61,15 @@ test.describe.serial('Podman Kube Play - Create Pod from Scratch', { tag: '@smok
     }
   });
 
-  test('Deploy pod and verify it is running ', async ({ page, navigationBar }) => {
+  test('Create pod and verify it is running ', async ({ page, navigationBar }) => {
     test.setTimeout(60_000);
 
     const podsPage = await navigationBar.openPods();
     const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
-    await podmanKubePlayPage.playYaml(PodmanKubePlayOptions.CreateYamlFileFromScratch);
-
+    await podmanKubePlayPage.playYaml({
+      podmanKubePlayOption: PodmanKubePlayOptions.CreateYamlFileFromScratch,
+      jsonResourceDefinition: JSON_RESOURCE_DEFINITION,
+    });
     await playExpect
       .poll(async () => await podsPage.podExists(POD_NAME_FROM_SCRATCH), { timeout: 15_000 })
       .toBeTruthy();
@@ -100,13 +103,16 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
       await runner.close();
     }
   });
-  test('Deploy pod and verify it is running', async ({ navigationBar }) => {
+  test('Create pod and verify it is running', async ({ navigationBar }) => {
     const podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
-    const playYamlPage = await podsPage.openPodmanKubePlay();
-    await playExpect(playYamlPage.heading).toBeVisible();
+    const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
+    await playExpect(podmanKubePlayPage.heading).toBeVisible();
 
-    await playYamlPage.playYaml(PodmanKubePlayOptions.SelectYamlFile, POD_BUILD_YAML_PATH, true);
+    await podmanKubePlayPage.playYaml(
+      { podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile, pathToYaml: POD_BUILD_YAML_PATH },
+      true,
+    );
     await playExpect(podsPage.heading).toBeVisible();
     await playExpect
       .poll(async () => await podsPage.podExists(POD_NAME_BUILD_OPTION), { timeout: 40_000 })
@@ -115,7 +121,7 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect.poll(async () => await podDetails.getState(), { timeout: 15_000 }).toBe(PodState.Running);
   });
-  test('Verify deployed pod uses localhost image', async ({ page, navigationBar }) => {
+  test('Verify created pod uses localhost image', async ({ page, navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect
