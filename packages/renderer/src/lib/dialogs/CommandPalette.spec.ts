@@ -58,6 +58,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
 });
 
 describe('Command Palette', () => {

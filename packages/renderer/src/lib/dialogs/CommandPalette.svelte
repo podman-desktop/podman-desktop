@@ -312,7 +312,7 @@ async function executeAction(index: number): Promise<void> {
     // Pod or Image or Documentation or Command
     itemType: itemType,
     // Sent only when itemtype is GoTo or Documentation
-    itemLabel: itemLabel,
+    itemLabel: itemLabel ? await window.createHash(itemLabel) : undefined,
   };
 
   await window.telemetryTrack('globalSearch.itemClicked', telemetryOptions);

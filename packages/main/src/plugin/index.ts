@@ -131,7 +131,7 @@ import type { WebviewInfo } from '/@api/webview-info.js';
 import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
-import { isMac } from '../util.js';
+import { createHash, isMac } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
@@ -1939,6 +1939,13 @@ export class PluginSystem {
       'showMessageBox:onSelect',
       async (_listener, id: number, index: number | undefined, dropdownIndex?: number): Promise<void> => {
         return messageBox.onDidSelectButton(id, index, dropdownIndex);
+      },
+    );
+
+    this.ipcHandle(
+      'util:createHash',
+      async (_listener, input: string, algorithm: string = 'sha512'): Promise<string> => {
+        return createHash(algorithm, input);
       },
     );
 
