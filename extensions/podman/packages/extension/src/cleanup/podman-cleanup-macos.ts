@@ -21,11 +21,13 @@ import { resolve as pathResolve } from 'node:path';
 
 import type { ProviderCleanupExecuteOptions } from '@podman-desktop/api';
 import { process } from '@podman-desktop/api';
+import { injectable } from 'inversify';
 import psList from 'ps-list';
 
 import { AbsPodmanCleanup } from './podman-cleanup-abstract';
 
 // Handle cleanup of Podman on macOS
+@injectable()
 export class PodmanCleanupMacOS extends AbsPodmanCleanup {
   async terminateProcess(processId: number): Promise<void> {
     await process.exec('/bin/kill', ['-SIGTERM', String(processId)]);
