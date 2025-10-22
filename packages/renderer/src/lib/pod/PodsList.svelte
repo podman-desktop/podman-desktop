@@ -159,7 +159,7 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
  * Utility function for the Table to get the key to use for each item
  */
 function key(pod: PodInfoUI): string {
-  return pod.id;
+  return `${pod.engineId}:${pod.id}`;
 }
 </script>
 
