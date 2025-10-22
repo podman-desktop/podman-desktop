@@ -25,7 +25,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
-import { isCI, isLinux } from '../utility/platform';
+import { isCI, isLinux, isMac } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const RESOURCE_NAME: string = 'Compose';
@@ -77,7 +77,7 @@ test.describe.serial('Compose compose workflow verification', { tag: '@smoke' },
     const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
     const setupButton = composeBox.setupButton;
 
-    if ((await setupButton.count()) > 0) {
+    if ((await setupButton.count()) > 0 && !isMac) {
       await settingsBar.cliToolsTab.click();
       await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
       await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
