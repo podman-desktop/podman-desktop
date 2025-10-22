@@ -92,7 +92,7 @@ export class PushImageInfo {
           }
         } else if (eventName === 'error') {
           this.error = data;
-          this.replay += `${data}n\r`;
+          this.replay += `${data}\n\r`;
           this.cb?.onError(data);
         } else if (eventName === 'end') {
           this.finished = true;

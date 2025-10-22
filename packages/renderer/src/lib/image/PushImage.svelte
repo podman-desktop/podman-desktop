@@ -15,7 +15,6 @@ import type { PushImageCallback } from '../../stores/push-images.svelte';
 import { getNextTaskId, getPushImageInfo, PushImageInfo } from '../../stores/push-images.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
-import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {
   imageId: string;
@@ -26,7 +25,6 @@ interface Props {
 
 let { imageId, engineId, base64RepoTag, taskId = 0 }: Props = $props();
 
-let image: ImageInfoUI | undefined;
 let selectedImageTag = $state('');
 let displayTags: string[] = $state([]);
 let imageLoadError = $state('');
@@ -72,6 +70,7 @@ function loadBackgroundPush(): void {
     if (bgPushImageInfo.inProgress) {
       pushImageInfo = bgPushImageInfo;
     } else {
+      pushImageInfo = new PushImageInfo();
       pushImageInfo.inProgress = $state.snapshot(bgPushImageInfo.inProgress);
       pushImageInfo.finished = $state.snapshot(bgPushImageInfo.finished);
       pushImageInfo.error = $state.snapshot(bgPushImageInfo.error);
@@ -97,17 +96,20 @@ async function loadImageInfo(): Promise<void> {
   try {
     selectedImageTag = atob(base64RepoTag);
   } catch (decodeError) {
-    console.error('Failed to decode base64RepoTag:', decodeError);
+    console.error(`Failed to decode base64RepoTag ${base64RepoTag}:`, decodeError);
     selectedImageTag = base64RepoTag;
   }
 
   displayTags = [...imageTags];
   // Check if parameter tag exists in the original image tags
-  if (!imageTags.includes(selectedImageTag)) {
+  if (selectedImageTag !== '<none>' && !imageTags.includes(selectedImageTag)) {
     // Add parameter tag to display list only, mark as added
     displayTags = [selectedImageTag, ...displayTags];
     tagCheckError = `Tag '${selectedImageTag}' doesn't exist locally`;
+  } else {
+    tagCheckError = '';
   }
+  await checkRegistryAuthConfiguration();
 }
 
 function onChangeImageTag(): void {
@@ -119,9 +121,8 @@ function onChangeImageTag(): void {
 }
 
 async function checkRegistryAuthConfiguration(): Promise<void> {
-  const imageName = image ? image.name : atob(base64RepoTag);
   window
-    .hasAuthconfigForImage(imageName)
+    .hasAuthconfigForImage(selectedImageTag)
     .then(result => (isAuthenticatedForThisImage = result))
     .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageId}`, err));
 }
@@ -129,25 +130,26 @@ async function checkRegistryAuthConfiguration(): Promise<void> {
 async function pushImage(): Promise<void> {
   logsTerminal?.reset();
   pushImageInfo.connectUI(createCallback());
-  return pushImageInfo.pushImage(engineId, selectedImageTag, imageId, base64RepoTag, getNextTaskId());
+  const selectedBase64RepoTag = btoa(selectedImageTag);
+  const bgPush = pushImageInfo.pushImage(engineId, selectedImageTag, imageId, selectedBase64RepoTag, getNextTaskId());
+  taskId = pushImageInfo.taskId;
+  return bgPush;
 }
 
 function pushImageFinished(): void {
   router.goto(get(lastPage).path);
 }
 let isAuthenticatedForThisImage = $state(false);
+let isWarning = $derived(!isAuthenticatedForThisImage || tagCheckError || displayTags.length === 0);
 
 onMount(() => {
   loadBackgroundPush();
+  loadImageInfo().catch((err: unknown) => console.log(`Cannot load image info: ${String(err)}`));
   $effect(() => {
     if (taskId && taskId !== pushImageInfo.taskId) {
-      //
       loadBackgroundPush();
+      loadImageInfo().catch((err: unknown) => console.log(`Cannot load image info: ${String(err)}`));
     }
-    loadImageInfo()
-      .catch((err: unknown) => console.log(`Cannot load image info: ${err}`))
-      .then(() => checkRegistryAuthConfiguration())
-      .catch((err: unknown) => console.log(`Cannot check auth configuration: ${err}`));
   });
 });
 
@@ -171,29 +173,28 @@ function onInit(): void {
     <div class="space-y-6">
       <div class="w-full">
         <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
-        {#if isAuthenticatedForThisImage}
+        {#if !isWarning}
           <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
         {:else}
           <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-warning)]" size="1x" icon={faTriangleExclamation} />
         {/if}
 
         <select
-          class="text-sm rounded-lg block w-full p-2.5 bg-[var(--pd-dropdown-bg)] pl-6 border-r-8 border-transparent outline-1 outline {isAuthenticatedForThisImage
+          class="text-sm rounded-lg block w-full p-2.5 bg-[var(--pd-dropdown-bg)] pl-6 border-r-8 border-transparent outline-1 outline {!isWarning
             ? 'outline-[var(--pd-modal-border)]'
             : 'outline-[var(--pd-state-warning)]'} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
           name="imageChoice"
           bind:value={selectedImageTag}
           onchange={onChangeImageTag}
-          disabled={displayTags.length === 0}>
+          disabled={displayTags.length === 0 || pushImageInfo.inProgress}>
           {#each displayTags as imageTag, index (index)}
             <option value={imageTag}>{imageTag}{imageTags.includes(imageTag)? '' : ' (loaded from parameters)'}</option>
           {/each}
-          {#if displayTags.length === 0}
-            <option value="" disabled>No tags available</option>
+          {#if displayTags.length === undefined || displayTags.length=== 0}
+            <option value="<none>" disabled>No tags available</option>
           {/if}
         </select>
         
-        <!-- Additional warning for missing image -->
         {#if imageLoadError}
           <p class="text-[var(--pd-state-warning)] pt-1 text-sm">
               {imageLoadError}.
@@ -205,12 +206,9 @@ function onInit(): void {
           </p>
         {/if}
        
-        <!-- If the image is UNAUTHENTICATED, show a warning that the image is unable to be pushed
-        and to click to go to the registries page -->
         {#if !isAuthenticatedForThisImage}
           <p class="text-[var(--pd-state-warning)] pt-1">
-            No registry with push permissions found. <Link on:click={(): void => router.goto('/preferences/registries')}
-              >Add a registry now.</Link>
+            No registry with push permissions found. <Link on:click={():void  => router.goto('/preferences/registries')}>Add a registry now.</Link>
           </p>
         {/if}
       </div>
@@ -218,21 +216,18 @@ function onInit(): void {
       <div class="h-[185px]" hidden={!pushImageInfo.inProgress && !pushImageInfo.finished}>
         <TerminalWindow class="h-full" on:init={onInit} bind:terminal={logsTerminal} disableStdIn />
       </div>
-      {#if !pushImageInfo.inProgress && !pushImageInfo.finished}
-        <Button class="w-auto" type="secondary" on:click={pushImageFinished}>Cancel</Button>
-      {/if}
-      {#if !pushImageInfo.finished}
-        <Button
-          class="w-auto"
-          icon={faCircleArrowUp}
-          disabled={!isAuthenticatedForThisImage || displayTags.length === 0}
-          on:click={pushImage}
-          inProgress={pushImageInfo.inProgress}>
-          Push image
-        </Button>
-      {:else}
-        <Button on:click={pushImageFinished} class="w-auto">Done</Button>
-      {/if}
+      <div class="flex justify-middle gap-2">
+        <Button class="w-auto" type="secondary" on:click={pushImageFinished}>{pushImageInfo.finished ? `Done` : `Close`}</Button>
+
+          <Button
+            class="w-auto"
+            icon={faCircleArrowUp}
+            disabled={pushImageInfo.inProgress || isWarning || displayTags.length === 0}
+            on:click={pushImage}
+            inProgress={pushImageInfo.inProgress}>
+            Push image
+          </Button>
+      </div>
     </div>
   {/snippet}
 </EngineFormPage>
