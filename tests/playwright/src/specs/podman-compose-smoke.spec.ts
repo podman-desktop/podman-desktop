@@ -58,6 +58,11 @@ test.afterAll(async ({ page, runner }) => {
   }
 });
 
+test.skip(
+  !!isCI && !!isMac,
+  'Tests suite should not run on Mac platform in CICD due to being unable  to ensure Compose is installed',
+);
+
 test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
   test.beforeEach(async () => {
     if (cliToolsPage.wasRateLimitReached()) {
