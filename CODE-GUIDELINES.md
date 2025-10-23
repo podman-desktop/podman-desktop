@@ -283,3 +283,36 @@ test('compo1 calls fct1 of obj on mount', async () => {
   expect(obj.fct1).toHaveBeenCalledWith('a name'); // check the method has been called
 });
 ```
+
+### Using Fake Timers with Svelte Components
+
+When testing Svelte components in the `packages/renderer` package, **always enable automatic time advancement** by using:
+
+```ts
+vi.useFakeTimers({ shouldAdvanceTime: true });
+```
+
+Avoid calling `vi.useFakeTimers()` without options.
+
+If `shouldAdvanceTime` is not enabled, fake timers will **completely freeze time**, which can lead to deadlocks when:
+
+- Svelte’s internal async updates wait for the next event loop tick
+- Testing Library’s async queries (`findBy*`, `waitFor`) continuously poll for elements
+
+By setting `shouldAdvanceTime: true`, timers will automatically advance during pending async operations. This prevents hangs while still allowing manual time control with `vi.advanceTimersByTime()`.
+
+✅ **Use this pattern:**
+
+```ts
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+```
+
+🚫 **Instead of:**
+
+```ts
+afterEach(() => {
+  vi.useRealTimers();
+});
+```
