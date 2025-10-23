@@ -378,6 +378,9 @@ let containersAndGroups: (ContainerGroupInfoUI | ContainerInfoUI)[] = $derived(
 function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
   return item.id;
 }
+function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
+  return item.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
@@ -462,6 +465,7 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           row={row}
           defaultSortColumn="Name"
           key={key}
+          label={label}
           enableLayoutConfiguration={true}
           on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
         </Table>
@@ -486,10 +490,10 @@ function key(item: ContainerGroupInfoUI | ContainerInfoUI): string {
       </div>
       {/snippet}
     {#snippet buttons()}
-      
+
         <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
         <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
-      
+
       {/snippet}
   </Dialog>
 {/if}
