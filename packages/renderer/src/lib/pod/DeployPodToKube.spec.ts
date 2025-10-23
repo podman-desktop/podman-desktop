@@ -547,7 +547,7 @@ test('Should display Open pod button after successful deployment', async () => {
     }),
   );
 
-  vi.useFakeTimers();
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   await fireEvent.click(createButton);
   await vi.runAllTimersAsync();
 

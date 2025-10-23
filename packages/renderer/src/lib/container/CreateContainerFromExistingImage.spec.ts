@@ -117,7 +117,7 @@ const providerInfo = {
 } as unknown as ProviderInfo;
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.resetAllMocks();
   vi.mocked(window.listImages).mockResolvedValue(localImageList);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);

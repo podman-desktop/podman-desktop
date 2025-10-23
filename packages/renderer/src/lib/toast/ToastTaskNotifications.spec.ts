@@ -142,7 +142,7 @@ test('Check a toast is being updated after a task is updated', async () => {
 
 describe('Toast disappearing and notifying again', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
   afterEach(() => {
     vi.useRealTimers();

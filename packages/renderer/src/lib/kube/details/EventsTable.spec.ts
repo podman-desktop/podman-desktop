@@ -25,7 +25,7 @@ import type { EventUI } from '../../events/EventUI';
 import EventsTable from './EventsTable.svelte';
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
 afterEach(() => {
