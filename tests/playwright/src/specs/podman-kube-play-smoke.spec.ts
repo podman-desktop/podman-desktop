@@ -29,8 +29,9 @@ import { waitForPodmanMachineStartup } from '../utility/wait';
 const POD_NAME_FROM_SCRATCH: string = 'podman-kube-play-test';
 const POD_NAME_BUILD_OPTION: string = 'podman-kube-play-build-test';
 const LOCAL_IMAGE_NAME: string = 'localhost/foobar';
-const NGINX_IMAGE_NAME: string = 'ghcr.io/podmandesktop-ci/nginx:latest';
-const JSON_RESOURCE_DEFINITION = `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"${POD_NAME_FROM_SCRATCH}"},"spec":{"containers":[{"name":"my-container","image":"${NGINX_IMAGE_NAME}","ports":[{"containerPort":80,"hostPort":8080}]}]}}`;
+const NGINX_IMAGE: string = 'ghcr.io/podmandesktop-ci/nginx:latest';
+const NGINX_IMAGE_NAME: string = 'ghcr.io/podmandesktop-ci/nginx';
+const JSON_RESOURCE_DEFINITION = `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"${POD_NAME_FROM_SCRATCH}"},"spec":{"containers":[{"name":"my-container","image":"${NGINX_IMAGE}","ports":[{"containerPort":80,"hostPort":8080}]}]}}`;
 const CONTAINER_IMAGE: string = `${LOCAL_IMAGE_NAME}:latest`;
 const CONTAINER_NAME: string = `${POD_NAME_BUILD_OPTION}-container`;
 

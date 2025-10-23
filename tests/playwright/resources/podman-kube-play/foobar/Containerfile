@@ -1,1 +1,1 @@
-FROM docker.io/library/nginx:alpine
+FROM ghcr.io/podmandesktop-ci/nginx:latest
