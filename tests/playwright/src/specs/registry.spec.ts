@@ -74,8 +74,9 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
     await registryPage.cancelDialogButton.click();
 
     await registryPage.createRegistry(registryUrl, 'invalidName', 'invalidPswd');
-    const credsErrorMsg = page.getByText('Wrong Username or Password.');
+    const credsErrorMsg = page.getByLabel('Error Message Content');
     await playExpect(credsErrorMsg).toBeVisible({ timeout: 30_000 });
+    await playExpect(credsErrorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
     await playExpect(registryPage.cancelDialogButton).toBeEnabled();
     await registryPage.cancelDialogButton.click();
   });
@@ -98,8 +99,9 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
         const registryPage = new RegistriesPage(page);
 
         await registryPage.editRegistry(registryName, 'invalidName', 'invalidPswd');
-        const errorMsg = page.getByText('Wrong Username or Password.');
+        const errorMsg = page.getByLabel('Error Message Content');
         await playExpect(errorMsg).toBeVisible({ timeout: 30_000 });
+        await playExpect(errorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
 
         const cancelButton = page.getByRole('button', { name: 'Cancel' });
         await cancelButton.click();
