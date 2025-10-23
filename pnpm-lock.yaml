@@ -156,8 +156,8 @@ importers:
         specifier: ^16.0.3
         version: 16.0.3(rollup@4.52.5)
       '@rollup/plugin-typescript':
-        specifier: ^12.1.4
-        version: 12.1.4(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: ^12.2.0
+        version: 12.2.0(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)
       '@tsconfig/strictest':
         specifier: ^2.0.6
         version: 2.0.6
@@ -3491,8 +3491,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/plugin-typescript@12.1.4':
-    resolution: {integrity: sha512-s5Hx+EtN60LMlDBvl5f04bEiFZmAepk27Q+mr85L/00zPDn1jtzlTV6FWn81MaIwqfWzKxmOJrBWHU6vtQyedQ==}
+  '@rollup/plugin-typescript@12.2.0':
+    resolution: {integrity: sha512-g7krmoYCaNhL/jSF1wCYiiUNsWPTj0HwcPDnxIyaonxsQIVp/jc08muGpSz+eGGK+0ajHfl8tpf1lahHXSOF7Q==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^4.22.5
@@ -3506,15 +3506,6 @@ packages:
 
   '@rollup/pluginutils@5.1.4':
     resolution: {integrity: sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^4.22.5
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
-  '@rollup/pluginutils@5.2.0':
-    resolution: {integrity: sha512-qWJ2ZTbmumwiLFomfzTyt5Kng4hwPi9rwCYN4SHb6eaRU1KNO4ccxINHr/VhH4GgPlt1XfSTLX2LBTme8ne4Zw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^4.22.5
@@ -10275,6 +10266,11 @@ packages:
     engines: {node: '>= 0.4'}
     hasBin: true
 
+  resolve@1.22.11:
+    resolution: {integrity: sha512-RfqAvLnMl313r7c9oclB1HhUEAezcpLjz95wFH4LVuhk9JF/r22qmVP9AMmOU4vMX7Q8pN8jwNg/CSpdFnMjTQ==}
+    engines: {node: '>= 0.4'}
+    hasBin: true
+
   responselike@2.0.1:
     resolution: {integrity: sha512-4gl03wn3hj1HP3yzgdI7d3lCkF95F21Pz4BPGvKHinyQzALR5CapwC8yIi0Rh58DEMQ/SguC03wFj2k0M/mHhw==}
 
@@ -12198,7 +12194,7 @@ snapshots:
       '@babel/helper-plugin-utils': 7.25.9
       debug: 4.4.3
       lodash.debounce: 4.0.8
-      resolve: 1.22.10
+      resolve: 1.22.11
     transitivePeerDependencies:
       - supports-color
 
@@ -15341,24 +15337,16 @@ snapshots:
     optionalDependencies:
       rollup: 4.52.5
 
-  '@rollup/plugin-typescript@12.1.4(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)':
+  '@rollup/plugin-typescript@12.2.0(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
-      '@rollup/pluginutils': 5.2.0(rollup@4.52.5)
-      resolve: 1.22.10
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
+      resolve: 1.22.11
       typescript: 5.9.3
     optionalDependencies:
       rollup: 4.52.5
       tslib: 2.8.1
 
   '@rollup/pluginutils@5.1.4(rollup@4.52.5)':
-    dependencies:
-      '@types/estree': 1.0.8
-      estree-walker: 2.0.2
-      picomatch: 4.0.3
-    optionalDependencies:
-      rollup: 4.52.5
-
-  '@rollup/pluginutils@5.2.0(rollup@4.52.5)':
     dependencies:
       '@types/estree': 1.0.8
       estree-walker: 2.0.2
@@ -19118,7 +19106,7 @@ snapshots:
     dependencies:
       debug: 3.2.7
       is-core-module: 2.16.1
-      resolve: 1.22.10
+      resolve: 1.22.11
     transitivePeerDependencies:
       - supports-color
 
@@ -22087,7 +22075,7 @@ snapshots:
   normalize-package-data@2.5.0:
     dependencies:
       hosted-git-info: 2.8.9
-      resolve: 1.22.10
+      resolve: 1.22.11
       semver: 5.7.2
       validate-npm-package-license: 3.0.4
 
@@ -23433,6 +23421,12 @@ snapshots:
   resolve-pkg-maps@1.0.0: {}
 
   resolve@1.22.10:
+    dependencies:
+      is-core-module: 2.16.1
+      path-parse: 1.0.7
+      supports-preserve-symlinks-flag: 1.0.0
+
+  resolve@1.22.11:
     dependencies:
       is-core-module: 2.16.1
       path-parse: 1.0.7
