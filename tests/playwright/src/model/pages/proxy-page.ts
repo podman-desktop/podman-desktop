@@ -45,7 +45,6 @@ export class ProxyPage extends SettingsPage {
 
   public async getProxyType(): Promise<ProxyTypes> {
     const selectionOption = (await this.toggleProxyButton.textContent())?.trim();
-    console.log(`Checking: ${selectionOption}`);
     switch (selectionOption) {
       case 'Disabled':
         return ProxyTypes.Disabled;
@@ -54,7 +53,7 @@ export class ProxyPage extends SettingsPage {
       case 'System':
         return ProxyTypes.System;
       default:
-        throw new Error(`Unknown proxy type: ${await this.toggleProxyButton.textContent()}`);
+        throw new Error(`Unknown proxy type: ${selectionOption}`);
     }
   }
 
@@ -76,8 +75,9 @@ export class ProxyPage extends SettingsPage {
   }
 
   private async fillProxyInput(input: Locator, value: string): Promise<void> {
-    await test.step(`Filling ${await input.textContent()}: ${value}`, async () => {
-      await playExpect(input, `Proxy input field ${await input.textContent()} is not enabled`).toBeEnabled();
+    const inputName = await input.evaluate(el => el.getAttribute('id'));
+    await test.step(`Filling ${inputName}: ${value}`, async () => {
+      await playExpect(input, `Proxy input field ${inputName} is not enabled`).toBeEnabled();
       await input.fill('');
       await input.pressSequentially(value, { delay: 100 });
       await playExpect(input).toHaveValue(value);
