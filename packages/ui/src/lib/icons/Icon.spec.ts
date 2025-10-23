@@ -143,3 +143,43 @@ describe('component icon', () => {
     expect(img).toBeInTheDocument();
   });
 });
+
+describe('string icon', () => {
+  test('basic icon should be created', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    render(Icon, { icon: icon });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', icon);
+  });
+
+  test('icon should reflect prefered {number} size', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    render(Icon, { icon: icon, size: 42 });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toHaveAttribute('style', 'width: 42px; height: 42px;');
+    expect(img).toHaveAttribute('src', icon);
+  });
+
+  test('icon should have class', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    render(Icon, { icon: icon, class: 'some-class' });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveClass('some-class');
+    expect(img).toHaveAttribute('src', icon);
+  });
+
+  test('icon should have title', () => {
+    const icon = 'data:image/png;base64,fooBar';
+    render(Icon, { icon: icon, title: 'test title' });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('alt', 'test title');
+    expect(img).toHaveAttribute('src', icon);
+  });
+});

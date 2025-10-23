@@ -18,7 +18,7 @@
 
 import { expect, test, vi } from 'vitest';
 
-import type { IDisposable } from '/@/plugin/types/disposable.js';
+import type { IDisposable } from '/@api/disposable.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 
 import type { ApiSenderType } from '../api.js';

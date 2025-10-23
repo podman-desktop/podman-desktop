@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -175,7 +175,7 @@ describe('CLI Tool item', () => {
     expect(updateLoadingButton).not.toBeInTheDocument();
   });
 
-  test('check tool infos are displayed as expected and version is specified but there is no new version available', () => {
+  test('check tool infos are displayed as expected and version is specified but there is no new version available', async () => {
     render(PreferencesCliTool, {
       cliTool: cliToolInfoItem2,
     });
@@ -191,7 +191,11 @@ describe('CLI Tool item', () => {
     const versionElement = screen.getByLabelText('cli-version');
     expect(versionElement).toBeDefined();
     expect(versionElement.textContent).equal(`${cliToolInfoItem2.name} v${cliToolInfoItem2.version}`);
-    const displayFullPathElement = screen.getByText('Path: path/to/tool-name-2');
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    const displayFullPathElement = await screen.findByText('Path: path/to/tool-name-2');
     expect(displayFullPathElement).toBeInTheDocument();
     const updateLoadingButton = screen.queryByRole('button', { name: 'Update' });
     expect(updateLoadingButton).not.toBeInTheDocument();

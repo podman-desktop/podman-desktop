@@ -18,8 +18,9 @@
 
 import type * as extensionApi from '@podman-desktop/api';
 
+import type { IDisposable } from '/@api/disposable.js';
+
 import { Emitter } from './events/emitter.js';
-import type { IDisposable } from './types/disposable.js';
 
 const shortcutEvent: extensionApi.Event<unknown> = Object.freeze((callback, context?): IDisposable => {
   const handle = setTimeout(callback.bind(context), 0);

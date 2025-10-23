@@ -19,9 +19,11 @@
 import os from 'node:os';
 
 import type { CheckResult } from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { BaseCheck } from '../base-check';
 
+@injectable()
 export class WinMemoryCheck extends BaseCheck {
   title = 'RAM';
   private REQUIRED_MEM = 5 * 1024 * 1024 * 1024; // 5Gb

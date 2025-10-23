@@ -24,13 +24,22 @@ import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { commandsInfos } from '/@/stores/commands';
+import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import type { ContainerInfo } from '/@api/container-info';
 
 import CommandPalette from './CommandPalette.svelte';
 
 const receiveFunctionMock = vi.fn();
 
 const COMMAND_PALETTE_ARIA_LABEL = 'Command palette command input';
+
+vi.mock(import('tinro'));
+
+const mockContainerInfo = {
+  Id: 'test-container-id',
+  Names: ['test-container'],
+} as unknown as ContainerInfo;
 
 beforeAll(() => {
   (window.events as unknown) = {
@@ -42,6 +51,7 @@ beforeAll(() => {
   vi.mocked(window.getOsPlatform).mockResolvedValue('linux');
   vi.mocked(window.getDocumentationItems).mockResolvedValue([]);
 
+  containersInfos.set([mockContainerInfo]);
   // mock missing scrollIntoView method
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -352,6 +362,13 @@ describe('Command Palette', () => {
     // check we have the command palette input field
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
+
+    // Switch to Commands mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    await userEvent.click(commandsButton);
+
+    // Wait for items to appear
+    await screen.findByRole('button', { name: commandTitle1 });
 
     // Check some items are hidden
     const itemDisabled = screen.queryByRole('button', { name: commandTitle0 });

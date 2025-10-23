@@ -74,3 +74,13 @@ for (const methodName of methodNames) {
     writable: true,
   });
 }
+
+// Mock ResizeObserver for @floating-ui/dom
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+global.ResizeObserver = ResizeObserverMock;
+global.window.ResizeObserver = ResizeObserverMock;

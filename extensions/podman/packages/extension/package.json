@@ -115,6 +115,10 @@
         "podman.machine.rootful": {
           "type": "boolean",
           "default": true,
+          "enum": [
+            "rootless",
+            "rootful"
+          ],
           "scope": "ContainerConnection",
           "description": "Machine with root privileges",
           "when": "podman.podmanMachineEditRootfulSupported",
@@ -437,7 +441,7 @@
     "@podman-desktop/api": "workspace:*",
     "async-mutex": "^0.5.0",
     "compare-versions": "^6.1.1",
-    "inversify": "^7.10.2",
+    "inversify": "^7.10.3",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
     "smol-toml": "1.4.2",
@@ -450,11 +454,11 @@
     "adm-zip": "^0.5.16",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
-    "msw": "^2.11.5",
-    "octokit": "^5.0.3",
+    "msw": "^2.11.6",
+    "octokit": "^5.0.4",
     "sshpk": "^1.18.0",
     "tsx": "^4.20.6",
-    "vite": "^7.1.9",
+    "vite": "^7.1.11",
     "vitest": "^3.2.4"
   }
 }

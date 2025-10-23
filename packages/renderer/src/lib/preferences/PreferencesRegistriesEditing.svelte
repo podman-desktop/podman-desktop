@@ -370,7 +370,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
           </div>
         </div>
         <div class="flex flex-row-reverse w-full pb-3 -mt-2">
-          <span class="w-2/3 pl-4 font-bold">
+          <span role="alert" class="w-2/3 pl-4 font-bold" aria-label="Error Message Content">
             {#if originRegistries.some(r => r.serverUrl === registry.serverUrl)}
               {errorResponses.find(o => o.serverUrl === registry.serverUrl)?.error ?? ''}
             {/if}
@@ -439,7 +439,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
           </div>
           <div class="flex flex-row w-full pb-3 -mt-2 pl-10">
             {#if listedSuggestedRegistries[i]}
-              <span class="font-bold whitespace-pre-line">
+              <span role='alert' class="font-bold whitespace-pre-line" aria-label="Error Message Content">
                 {errorResponses.find(o => o.serverUrl === newRegistryRequest.serverUrl)?.error ?? ''}
               </span>
             {/if}

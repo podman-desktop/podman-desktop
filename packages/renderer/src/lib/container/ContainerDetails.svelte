@@ -3,8 +3,9 @@ import '@xterm/xterm/css/xterm.css';
 
 import { ErrorMessage, Link, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { onMount } from 'svelte';
 import { router } from 'tinro';
+
+import type { ContainerInfo } from '/@api/container-info';
 
 import Route from '../../Route.svelte';
 import { containersInfos } from '../../stores/containers';
@@ -22,49 +23,46 @@ import ContainerDetailsTtyTerminal from './ContainerDetailsTtyTerminal.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 import ContainerStatistics from './ContainerStatistics.svelte';
 
-export let containerID: string;
+interface Props {
+  containerID: string;
+}
 
-let container: ContainerInfoUI;
+let { containerID }: Props = $props();
 
-let detailsPage: DetailsPage;
+const containerUtils = new ContainerUtils();
 
-let displayTty = false;
-// update current route scheme
-let currentRouterPath: string;
+let detailsPage = $state<DetailsPage | undefined>();
+let displayTty: boolean = $state(false);
 
-onMount(() => {
-  const containerUtils = new ContainerUtils();
+let container: ContainerInfoUI | undefined = $derived(
+  getContainerInfoUI($containersInfos.find(c => c.Id === containerID)),
+);
 
-  router.subscribe(route => {
-    currentRouterPath = route.path;
-  });
-
-  // loading container info
-  return containersInfos.subscribe(containers => {
-    const matchingContainer = containers.find(c => c.Id === containerID);
-    if (matchingContainer) {
-      container = containerUtils.getContainerInfoUI(matchingContainer);
-      // look if tty is supported by this container
-      window
-        .getContainerInspect(container.engineId, container.id)
-        .then(inspect => {
-          displayTty = (inspect.Config.Tty ?? false) && (inspect.Config.OpenStdin ?? false);
-          // if we comes with a / redirect to /logs or to /tty if tty is supported
-          if (currentRouterPath.endsWith('/')) {
-            if (displayTty) {
-              router.goto(`${currentRouterPath}tty`);
-            } else {
-              router.goto(`${currentRouterPath}logs`);
-            }
+$effect(() => {
+  if (container) {
+    window
+      .getContainerInspect(container.engineId, container.id)
+      .then(inspect => {
+        displayTty = (inspect.Config.Tty ?? false) && (inspect.Config.OpenStdin ?? false);
+        // Redirect to appropriate tab if we're at the root path
+        const currentRouterPath = $router.path;
+        if (currentRouterPath.endsWith('/')) {
+          if (displayTty) {
+            router.goto(`${currentRouterPath}tty`);
+          } else {
+            router.goto(`${currentRouterPath}logs`);
           }
-        })
-        .catch((err: unknown) => console.error(`Error getting container inspect ${container.id}`, err));
-    } else if (detailsPage) {
-      // the container has been deleted
-      detailsPage.close();
-    }
-  });
+        }
+      })
+      .catch((err: unknown) => console.error(`Error getting container inspect ${container?.id}: ${err}`));
+  } else {
+    detailsPage?.close();
+  }
 });
+
+function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | undefined {
+  return cont ? containerUtils.getContainerInfoUI(cont) : undefined;
+}
 </script>
 
 {#if container}
@@ -89,7 +87,7 @@ onMount(() => {
           <div>&nbsp;</div>
         {/if}
       </div>
-      <ContainerActions container={container} detailed={true} on:update={(): ContainerInfoUI => (container = container)} />
+      <ContainerActions container={container} detailed={true} />
     {/snippet}
     {#snippet detailSnippet()}
       <div class="flex py-2 w-full justify-end text-sm text-[var(--pd-content-text)]">

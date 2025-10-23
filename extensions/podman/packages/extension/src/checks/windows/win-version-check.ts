@@ -19,9 +19,11 @@
 import os from 'node:os';
 
 import type { CheckResult } from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { BaseCheck } from '../base-check';
 
+@injectable()
 export class WinVersionCheck extends BaseCheck {
   title = 'Windows Version';
 

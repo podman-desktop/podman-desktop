@@ -18,7 +18,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -92,7 +92,7 @@ test('Expect the prop command to be used when it is passed with the entry', asyn
   expect(router.goto).toBeCalledWith('/some/page');
 });
 
-test('Expect tooltip to include container provider connections', () => {
+test('Expect tooltip to include container provider connections', async () => {
   providerMock.containerConnections = [
     { name: 'connection 1', status: 'ready' } as unknown as ProviderContainerConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderContainerConnectionInfo,
@@ -100,6 +100,9 @@ test('Expect tooltip to include container provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await fireEvent.mouseEnter(tooltipTrigger);
+
   expect(screen.getAllByText('Running').length).toBe(2);
   expect(screen.getAllByText('Off').length).toBe(1);
 
@@ -108,7 +111,7 @@ test('Expect tooltip to include container provider connections', () => {
   expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });
 
-test('Expect tooltip to include Kubernetes provider connections', () => {
+test('Expect tooltip to include Kubernetes provider connections', async () => {
   providerMock.kubernetesConnections = [
     { name: 'connection 1', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderKubernetesConnectionInfo,
@@ -116,6 +119,9 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   ];
   render(ProviderWidget, { entry: providerMock });
 
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await fireEvent.mouseEnter(tooltipTrigger);
+
   expect(screen.getAllByText('Running').length).toBe(2);
   expect(screen.getAllByText('Off').length).toBe(1);
 
@@ -124,13 +130,16 @@ test('Expect tooltip to include Kubernetes provider connections', () => {
   expect(screen.getByText(': connection 3')).toBeInTheDocument();
 });
 
-test('Expect tooltip to include VM provider connections', () => {
+test('Expect tooltip to include VM provider connections', async () => {
   providerMock.vmConnections = [
     { name: 'connection 1', status: 'ready' } as unknown as ProviderVmConnectionInfo,
     { name: 'connection 2', status: 'ready' } as unknown as ProviderVmConnectionInfo,
     { name: 'connection 3', status: 'stopped' } as unknown as ProviderVmConnectionInfo,
   ];
   render(ProviderWidget, { entry: providerMock });
+
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await fireEvent.mouseEnter(tooltipTrigger);
 
   expect(screen.getAllByText('Running').length).toBe(2);
   expect(screen.getAllByText('Off').length).toBe(1);
@@ -150,8 +159,12 @@ test('class props should be propagated to button', async () => {
   expect(widget).toHaveClass('potatoes');
 });
 
-test('Expect tooltip to show Update available text if the provider has an update', () => {
+test('Expect tooltip to show Update available text if the provider has an update', async () => {
   providerMock.updateInfo = { version: '1.1.0' };
   render(ProviderWidget, { entry: providerMock });
+
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await fireEvent.mouseEnter(tooltipTrigger);
+
   expect(screen.getByText('Update available')).toBeInTheDocument();
 });

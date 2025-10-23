@@ -16,14 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
+
+import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
 import { BaseCheck } from '../base-check';
 
+@injectable()
 export class HyperVCheck extends BaseCheck {
   title = 'Hyper-V installed';
 
-  constructor(private telemetryLogger: TelemetryLogger) {
+  constructor(
+    @inject(TelemetryLoggerSymbol)
+    private telemetryLogger: TelemetryLogger,
+  ) {
     super();
   }
 

@@ -40,10 +40,11 @@ import type {
   VmProviderConnectionFactory,
 } from '@podman-desktop/api';
 
+import type { IDisposable } from '/@api/disposable.js';
+
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { Emitter } from './events/emitter.js';
 import type { ProviderRegistry } from './provider-registry.js';
-import type { IDisposable } from './types/disposable.js';
 import { Disposable } from './types/disposable.js';
 
 export class ProviderImpl implements Provider, IDisposable {
@@ -213,9 +214,11 @@ export class ProviderImpl implements Provider, IDisposable {
   ): Disposable {
     this._containerProviderConnectionFactory = containerProviderConnectionFactory;
     this._connectionAuditor = connectionAuditor;
+    this.providerRegistry.onDidSetConnectionFactoryCallback(this, containerProviderConnectionFactory, 'container');
     return Disposable.create(() => {
       this._containerProviderConnectionFactory = undefined;
       this._connectionAuditor = undefined;
+      this.providerRegistry.onDidUnsetConnectionFactoryCallback(this, 'container');
     });
   }
 
@@ -225,9 +228,11 @@ export class ProviderImpl implements Provider, IDisposable {
   ): Disposable {
     this._kubernetesProviderConnectionFactory = kubernetesProviderConnectionFactory;
     this._connectionAuditor = connectionAuditor;
+    this.providerRegistry.onDidSetConnectionFactoryCallback(this, kubernetesProviderConnectionFactory, 'kubernetes');
     return Disposable.create(() => {
       this._kubernetesProviderConnectionFactory = undefined;
       this._connectionAuditor = undefined;
+      this.providerRegistry.onDidUnsetConnectionFactoryCallback(this, 'kubernetes');
     });
   }
 
@@ -248,9 +253,11 @@ export class ProviderImpl implements Provider, IDisposable {
   ): Disposable {
     this._vmProviderConnectionFactory = vmProviderConnectionFactory;
     this._connectionAuditor = connectionAuditor;
+    this.providerRegistry.onDidSetConnectionFactoryCallback(this, vmProviderConnectionFactory, 'vm');
     return Disposable.create(() => {
       this._vmProviderConnectionFactory = undefined;
       this._connectionAuditor = undefined;
+      this.providerRegistry.onDidUnsetConnectionFactoryCallback(this, 'vm');
     });
   }
 

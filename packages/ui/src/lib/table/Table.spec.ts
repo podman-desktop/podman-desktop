@@ -18,11 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Table, TableColumn, tablePersistence } from '/@/lib';
+import { Icon } from '/@/lib/icons';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
 
@@ -412,6 +414,41 @@ test('Expect table to have proper css style', async () => {
   expect(dummyComponent.style.gridTemplateColumns).toBe('');
 });
 
+describe('Table#label', () => {
+  interface Item {
+    id: string;
+    name?: string;
+  }
+
+  const ROW = new Row<Item>({});
+
+  const SIMPLE_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name ?? 'unknown',
+    renderer: SimpleColumn,
+  });
+
+  test('expect table to set aria-label from label prop if item has undefined name', () => {
+    const { queryByRole } = render(Table<Item>, {
+      kind: 'demo',
+      data: [
+        {
+          id: 'foo',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      collapsed: ['foo'],
+      // create special value for the label
+      label: (item): string => `label-${item.id}`,
+      key: (item): string => item.id,
+    });
+
+    const row = queryByRole('row', { name: 'label-foo' });
+    expect(row).toBeDefined();
+  });
+});
+
 describe('Table#collapsed', () => {
   interface Item {
     id: string;
@@ -432,6 +469,63 @@ describe('Table#collapsed', () => {
     width: '3fr',
     renderMapping: (obj): string => obj.name ?? 'unknown',
     renderer: SimpleColumn,
+  });
+
+  describe('collapse icons', () => {
+    let chevronDown: HTMLImageElement;
+    let chevronRight: HTMLImageElement;
+
+    beforeEach(() => {
+      const { container: chevronDownContainer } = render(Icon, {
+        icon: faChevronDown,
+        size: '0.8x',
+        class: 'text-[var(--pd-table-body-text)] cursor-pointer',
+      });
+      chevronDown = within(chevronDownContainer).getByRole('img', { hidden: true });
+
+      const { container: chevronRightContainer } = render(Icon, {
+        icon: faChevronRight,
+      });
+      chevronRight = within(chevronRightContainer).getByRole('img', { hidden: true });
+    });
+
+    test('item without name should have correct icon when expanded', async () => {
+      const { getByRole } = render(Table<Item>, {
+        kind: 'demo',
+        data: [
+          {
+            id: 'foo',
+          },
+        ],
+        columns: [SIMPLE_COLUMN],
+        row: ROW,
+        key: ({ id }: Item): string => id,
+        // nothing is collapsed
+        collapsed: [],
+      });
+
+      const button = getByRole('button', { name: 'Collapse Row' });
+      expect(button).toContainHTML(chevronDown.innerHTML);
+    });
+
+    test('item without name should have correct icon when collapsed', async () => {
+      const { getByRole } = render(Table<Item>, {
+        kind: 'demo',
+        data: [
+          {
+            id: 'foo',
+          },
+        ],
+        columns: [SIMPLE_COLUMN],
+        row: ROW,
+        key: ({ id }: Item): string => id,
+        // the item is collapsed
+        collapsed: ['foo'],
+      });
+
+      const button = getByRole('button', { name: 'Expand Row' });
+      expect(button).toContainHTML(chevronRight.innerHTML);
+    });
   });
 
   test('Table#collapsed prop should be used for collapsed', async () => {

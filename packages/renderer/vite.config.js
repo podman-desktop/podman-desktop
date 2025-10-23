@@ -53,6 +53,7 @@ export default defineConfig({
         find: /^monaco-editor$/,
         replacement: `${PACKAGE_ROOT}/../../node_modules/monaco-editor/esm/vs/editor/editor.api`,
       },
+      { find: '@floating-ui/dom', replacement: `${PACKAGE_ROOT}/__mocks__/@floating-ui/dom.ts` },
     ],
     deps: {
       inline: ['moment'],

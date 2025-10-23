@@ -21,9 +21,11 @@ import { resolve as pathResolve } from 'node:path';
 
 import type { ProviderCleanupExecuteOptions } from '@podman-desktop/api';
 import { process } from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { AbsPodmanCleanup } from './podman-cleanup-abstract';
 
+@injectable()
 export class PodmanCleanupWindows extends AbsPodmanCleanup {
   async stopPodmanProcesses(options: ProviderCleanupExecuteOptions): Promise<void> {
     // stop all running podman machine if there are some

@@ -1,55 +1,23 @@
 <style>
-.tooltip.top {
-  left: 50%;
-  transform: translate(-50%, -100%);
-  margin-top: -8px;
+.tooltip-content {
+  max-width: 400px;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
-.tooltip.bottom {
-  left: 50%;
-  bottom: 0;
-  transform: translate(-50%, 100%);
-  margin-bottom: -8px;
+
+.tooltip-content :global(.flex) {
+  min-width: 0;
 }
-.tooltip.left {
-  left: 0;
-  transform: translateX(-100%);
-  margin-left: -8px;
-}
-.tooltip.right {
-  right: 0;
-  transform: translate(100%, -50%);
-  margin-top: -10px;
-  margin-right: -8px;
-}
-.tooltip.top-left {
-  left: 0;
-  transform: translate(-80%, -100%);
-  margin-top: -8px;
-}
-.tooltip.bottom-left {
-  left: 0;
-  bottom: 0;
-  transform: translate(-80%, 100%);
-  margin-top: -8px;
-}
-.tooltip.bottom-right {
-  left: 0;
-  bottom: 0;
-  transform: translate(0%, 100%);
-  margin-top: -8px;
-}
-.tooltip.top-right {
-  left: 0;
-  transform: translate(0%, -100%);
-  margin-top: -8px;
-}
-.tooltip-slot:hover + .tooltip {
-  opacity: 1;
-  visibility: initial;
+
+.tooltip-content :global(.flex-row) {
+  flex-wrap: wrap;
 }
 </style>
 
 <script lang="ts">
+import type { Placement } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 import type { Snippet } from 'svelte';
 
 import { tooltipHidden } from './tooltip-store';
@@ -85,35 +53,118 @@ let {
   children,
   'aria-label': ariaLabel,
 }: Props = $props();
+
+let referenceElement: HTMLElement | undefined = $state(undefined);
+let tooltipElement: HTMLElement | undefined = $state(undefined);
+let isVisible = $state(false);
+let isPositioned = $state(false);
+let cleanupAutoUpdate: (() => void) | undefined;
+
+function getPreferredPlacement(): Placement {
+  if (top) return 'top';
+  if (topLeft) return 'top-start';
+  if (topRight) return 'top-end';
+  if (bottom) return 'bottom';
+  if (bottomLeft) return 'bottom-start';
+  if (bottomRight) return 'bottom-end';
+  if (left) return 'left';
+  if (right) return 'right';
+  return 'top';
+}
+
+async function updateTooltipPosition(): Promise<void> {
+  if (!referenceElement || !tooltipElement) return;
+
+  const { x, y } = await computePosition(referenceElement, tooltipElement, {
+    placement: getPreferredPlacement(),
+    middleware: [
+      offset(8),
+      flip({
+        fallbackAxisSideDirection: 'start',
+        padding: 5,
+      }),
+      shift({ padding: 5 }),
+    ],
+  });
+
+  // Re-check after async operation - element may have been unmounted
+  if (!tooltipElement) return;
+
+  Object.assign(tooltipElement.style, {
+    left: `${x}px`,
+    top: `${y}px`,
+  });
+
+  isPositioned = true;
+}
+
+function handleMouseEnter(): void {
+  if ($tooltipHidden || (!tip && !tipSnippet)) return;
+
+  isVisible = true;
+  isPositioned = false;
+}
+
+function handleMouseLeave(): void {
+  isVisible = false;
+  isPositioned = false;
+
+  if (cleanupAutoUpdate) {
+    cleanupAutoUpdate();
+    cleanupAutoUpdate = undefined;
+  }
+}
+
+$effect((): (() => void) => {
+  if (isVisible && referenceElement && tooltipElement) {
+    // Initial positioning
+    updateTooltipPosition().catch(console.error);
+
+    // Setup auto-update for dynamic positioning
+    cleanupAutoUpdate = autoUpdate(referenceElement, tooltipElement, () => {
+      updateTooltipPosition().catch(console.error);
+    });
+  }
+
+  return (): void => {
+    if (cleanupAutoUpdate) {
+      cleanupAutoUpdate();
+      cleanupAutoUpdate = undefined;
+    }
+  };
+});
 </script>
 
 <div class="relative inline-block" aria-label={ariaLabel}>
-  <span class="group tooltip-slot {className}">
+  <span
+    role="none"
+    data-testid="tooltip-trigger"
+    class="group tooltip-slot {className}"
+    bind:this={referenceElement}
+    onmouseenter={handleMouseEnter}
+    onmouseleave={handleMouseLeave}>
     {@render children?.()}
   </span>
-  <div
-    class="whitespace-nowrap absolute tooltip opacity-0 inline-block transition-opacity duration-150 ease-in-out pointer-events-none text-sm z-60"
-    class:left={left}
-    class:right={right}
-    class:bottom={bottom}
-    class:top={top}
-    class:top-left={topLeft}
-    class:top-right={topRight}
-    class:bottom-left={bottomLeft}
-    class:bottom-right={bottomRight}>
-    {#if tip && !$tooltipHidden}
-      <div
-        class="inline-block py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-        aria-label="tooltip">
-        {tip}
-      </div>
-    {/if}
-    {#if tipSnippet && !tip && !$tooltipHidden}
-      <div
-        class="inline-block rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-        aria-label="tooltip">
-        {@render tipSnippet?.()}
-      </div>
-    {/if}
-  </div>
+  {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}
+    <div
+      bind:this={tooltipElement}
+      class="fixed tooltip-content transition-opacity duration-150 ease-in-out pointer-events-none text-sm z-[9999]"
+      class:opacity-0={!isPositioned}
+      style="left: 0; top: 0;">
+      {#if tip}
+        <div
+          class="py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          aria-label="tooltip">
+          {tip}
+        </div>
+      {/if}
+      {#if tipSnippet && !tip}
+        <div
+          class="rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          aria-label="tooltip">
+          {@render tipSnippet?.()}
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>

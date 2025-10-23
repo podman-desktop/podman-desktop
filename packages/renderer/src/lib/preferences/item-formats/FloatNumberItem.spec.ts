@@ -45,7 +45,10 @@ test('Expect tooltip if value input is NaN', async () => {
   await userEvent.clear(input);
   await userEvent.keyboard('unknown');
 
-  const tooltip = screen.getByLabelText('tooltip');
+  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+  await userEvent.hover(tooltipTrigger);
+
+  const tooltip = await screen.findByLabelText('tooltip');
   expect(tooltip).toBeInTheDocument();
   expect(tooltip.textContent).toContain('Expecting a number');
 });

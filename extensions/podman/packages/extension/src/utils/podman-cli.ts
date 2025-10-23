@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import fs from 'node:fs';
+
 import * as extensionApi from '@podman-desktop/api';
 
 const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
@@ -31,20 +33,29 @@ export async function findPodmanInstallations(): Promise<string[]> {
       // Windows: Use 'where podman' command
       result = await extensionApi.process.exec('where', ['podman']);
     } else {
-      // Unix/macOS: Use 'type -a podman' command
-      result = await extensionApi.process.exec('sh', ['-c', 'type -a podman']);
+      // Unix/macOS: use 'which -a podman' command
+      result = await extensionApi.process.exec('which', ['-a', 'podman']);
     }
 
-    // Remove duplicates and return array of unique lines (installations)
-    const uniqueLines = new Set(
-      result.stdout
-        .trim()
-        .split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => line.replace(/podman is /g, '')),
-    );
-    return Array.from(uniqueLines);
-  } catch (error) {
+    // Parse output for which and where combined
+    const paths: string[] = result.stdout
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(path => {
+        if (path.length === 0) {
+          return false; // Skip empty paths
+        }
+        try {
+          const stat = fs.lstatSync(path); // Try to get file status
+          return stat.isFile() && !stat.isSymbolicLink(); // Ensure it's a file excluding symlinks
+        } catch {
+          return false; // If lstatSync fails, the path is invalid
+        }
+      });
+
+    // Return unique paths only
+    return paths.filter((path, index) => paths.indexOf(path) === index);
+  } catch (error: unknown) {
     console.warn('Failed to detect podman installations:', error);
     return [];
   }

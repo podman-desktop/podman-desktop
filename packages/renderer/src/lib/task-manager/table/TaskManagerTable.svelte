@@ -46,6 +46,12 @@ const row = new TableRow<TaskInfoUI>({
   selectable: (task): boolean => task.state === 'completed',
   disabledText: 'Task is still running',
 });
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(task: TaskInfoUI): string {
+  return task.id;
+}
 </script>
 
 <Table
@@ -54,4 +60,5 @@ const row = new TableRow<TaskInfoUI>({
   data={tasks}
   columns={columns}
   row={row}
+  key={key}
   defaultSortColumn="Age" />

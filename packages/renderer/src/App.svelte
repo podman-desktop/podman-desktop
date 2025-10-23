@@ -2,6 +2,7 @@
 import './app.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
@@ -68,6 +69,7 @@ import ServiceDetails from './lib/service/ServiceDetails.svelte';
 import ServicesList from './lib/service/ServicesList.svelte';
 import StatusBar from './lib/statusbar/StatusBar.svelte';
 import IconsStyle from './lib/style/IconsStyle.svelte';
+import { PodmanDesktopStoragePersist } from './lib/table/PodmanDesktopStoragePersist';
 import LegacyTaskManager from './lib/task-manager/LegacyTaskManager.svelte';
 import TaskManager from './lib/task-manager/TaskManager.svelte';
 import ToastHandler from './lib/toast/ToastHandler.svelte';
@@ -115,6 +117,9 @@ window.events?.receive('navigate', (navigationRequest: unknown) => {
 window.events?.receive('kubernetes-navigation', (args: unknown) => {
   navigateTo(args as KubernetesNavigationRequest);
 });
+
+// Initialize table persistence callbacks immediately
+tablePersistence.storage = new PodmanDesktopStoragePersist();
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>

@@ -22,6 +22,8 @@ import type {
   AutostartContext,
   CancellationToken,
   CheckResult,
+  ConnectionFactory,
+  ConnectionFactoryDetails,
   ContainerProviderConnection,
   InstallCheck,
   KubernetesProviderConnection,
@@ -31,6 +33,7 @@ import type {
   ProviderConnectionShellAccess,
   ProviderConnectionShellAccessSession,
   ProviderConnectionStatus,
+  ProviderImages,
   ProviderInstallation,
   ProviderLifecycle,
   ProviderUpdate,
@@ -135,6 +138,54 @@ test('should initialize provider if there is kubernetes connection provider', as
   } else {
     assert.fail('providerInternalId not initialized');
   }
+});
+
+test('onDidSetConnectionFactory is called when a container connection factory is set and onDidUnsetConnectionFactory is called when the disposable is disposed', async () => {
+  const onDidSetConnectionFactoryMock: (e: ConnectionFactoryDetails) => void = vi.fn();
+  providerRegistry.onDidSetConnectionFactory(onDidSetConnectionFactoryMock);
+
+  const onDidUnsetConnectionFactoryMock: (e: ConnectionFactory) => void = vi.fn();
+  providerRegistry.onDidUnsetConnectionFactory(onDidUnsetConnectionFactoryMock);
+
+  const images = {
+    icon: {
+      light: 'a light image',
+      dark: 'a dark image',
+    },
+    logo: {
+      light: 'a light image',
+      dark: 'a dark image',
+    },
+  } as ProviderImages;
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'aProviderId',
+    name: 'aProviderName',
+    status: 'installed',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+    images,
+  });
+
+  const disposable = provider.setContainerProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+
+  expect(onDidSetConnectionFactoryMock).toHaveBeenCalledWith({
+    type: 'container',
+    providerId: 'aProviderId',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+    images,
+  });
+
+  disposable.dispose();
+  expect(onDidUnsetConnectionFactoryMock).toHaveBeenCalledWith({
+    type: 'container',
+    providerId: 'aProviderId',
+  });
 });
 
 test('should initialize provider if there is VM connection provider', async () => {
@@ -257,6 +308,54 @@ test('should initialize provider if there is container connection provider', asy
   } else {
     assert.fail('providerInternalId not initialized');
   }
+});
+
+test('onDidSetConnectionFactory is called when a kubernetes connection factory is set and onDidUnsetConnectionFactory is called when the disposable is disposed', async () => {
+  const onDidSetConnectionFactoryMock: (e: ConnectionFactoryDetails) => void = vi.fn();
+  providerRegistry.onDidSetConnectionFactory(onDidSetConnectionFactoryMock);
+
+  const onDidUnsetConnectionFactoryMock: (e: ConnectionFactory) => void = vi.fn();
+  providerRegistry.onDidUnsetConnectionFactory(onDidUnsetConnectionFactoryMock);
+
+  const images = {
+    icon: {
+      light: 'a light image',
+      dark: 'a dark image',
+    },
+    logo: {
+      light: 'a light image',
+      dark: 'a dark image',
+    },
+  } as ProviderImages;
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'aProviderId',
+    name: 'aProviderName',
+    status: 'installed',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+    images,
+  });
+
+  const disposable = provider.setKubernetesProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+
+  expect(onDidSetConnectionFactoryMock).toHaveBeenCalledWith({
+    type: 'kubernetes',
+    providerId: 'aProviderId',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+    images,
+  });
+
+  disposable.dispose();
+  expect(onDidUnsetConnectionFactoryMock).toHaveBeenCalledWith({
+    type: 'kubernetes',
+    providerId: 'aProviderId',
+  });
 });
 
 test('connections should contain the display name provided when registering', async () => {
@@ -676,6 +775,54 @@ describe('a vm provider is registered', async () => {
       const token = {} as CancellationToken;
       await providerRegistry.createVmProviderConnection('0', params, logHandler, token);
       expect(factory.create).toHaveBeenCalledWith(params, logHandler, token);
+    });
+
+    test('onDidSetConnectionFactory is called when a vm connection factory is set and onDidUnsetConnectionFactory is called when the disposable is disposed', async () => {
+      const onDidSetConnectionFactoryMock: (e: ConnectionFactoryDetails) => void = vi.fn();
+      providerRegistry.onDidSetConnectionFactory(onDidSetConnectionFactoryMock);
+
+      const onDidUnsetConnectionFactoryMock: (e: ConnectionFactory) => void = vi.fn();
+      providerRegistry.onDidUnsetConnectionFactory(onDidUnsetConnectionFactoryMock);
+
+      const images = {
+        icon: {
+          light: 'a light image',
+          dark: 'a dark image',
+        },
+        logo: {
+          light: 'a light image',
+          dark: 'a dark image',
+        },
+      } as ProviderImages;
+      const provider = providerRegistry.createProvider('id', 'name', {
+        id: 'aProviderId',
+        name: 'aProviderName',
+        status: 'installed',
+        emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+        images,
+      });
+
+      const disposable = provider.setVmProviderConnectionFactory({
+        initialize: async () => {},
+        create: async () => {},
+        creationDisplayName: 'a creation Display Name',
+        creationButtonTitle: 'a creation Button Title',
+      });
+
+      expect(onDidSetConnectionFactoryMock).toHaveBeenCalledWith({
+        type: 'vm',
+        providerId: 'aProviderId',
+        creationDisplayName: 'a creation Display Name',
+        creationButtonTitle: 'a creation Button Title',
+        emptyConnectionMarkdownDescription: 'an empty connection markdown description',
+        images,
+      });
+
+      disposable.dispose();
+      expect(onDidUnsetConnectionFactoryMock).toHaveBeenCalledWith({
+        type: 'vm',
+        providerId: 'aProviderId',
+      });
     });
   });
 });
@@ -2376,4 +2523,107 @@ test('should retrieve provider info from provider internal id', async () => {
   expect(provider2?.id).toBe('internal2');
   expect(provider2?.name).toBe('internal2name');
   expect(provider2?.extensionId).toBe('id2');
+});
+
+test('getConnectionFactories should return an empty array if there are no providers', async () => {
+  const connectionFactories = providerRegistry.getConnectionFactories();
+  expect(connectionFactories).toHaveLength(0);
+});
+
+test('getConnectionFactories should return the connection factories', async () => {
+  const provider1Images = {
+    icon: {
+      light: 'a light image 1',
+      dark: 'a dark image 1',
+    },
+    logo: {
+      light: 'a light image 1',
+      dark: 'a dark image 1',
+    },
+  } as ProviderImages;
+  const provider1 = providerRegistry.createProvider('id', 'name', {
+    id: 'provider1',
+    name: 'Provider1',
+    status: 'installed',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 1',
+    images: provider1Images,
+  });
+
+  provider1.setContainerProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+  provider1.setKubernetesProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+  provider1.setVmProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+
+  const provider2Images = {
+    icon: {
+      light: 'a light image 2',
+      dark: 'a dark image 2',
+    },
+    logo: {
+      light: 'a light image 2',
+      dark: 'a dark image 2',
+    },
+  } as ProviderImages;
+
+  const provider2 = providerRegistry.createProvider('id', 'name', {
+    id: 'provider2',
+    name: 'Provider2',
+    status: 'installed',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 2',
+    images: provider2Images,
+  });
+  provider2.setContainerProviderConnectionFactory({
+    initialize: async () => {},
+    create: async () => {},
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+  });
+  const connectionFactories = providerRegistry.getConnectionFactories();
+  expect(connectionFactories).toHaveLength(4);
+  expect(connectionFactories).toContainEqual({
+    type: 'container',
+    providerId: 'provider1',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 1',
+    images: provider1Images,
+  });
+  expect(connectionFactories).toContainEqual({
+    type: 'kubernetes',
+    providerId: 'provider1',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 1',
+    images: provider1Images,
+  });
+  expect(connectionFactories).toContainEqual({
+    type: 'vm',
+    providerId: 'provider1',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 1',
+    images: provider1Images,
+  });
+  expect(connectionFactories).toContainEqual({
+    type: 'container',
+    providerId: 'provider2',
+    creationDisplayName: 'a creation Display Name',
+    creationButtonTitle: 'a creation Button Title',
+    emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 2',
+    images: provider2Images,
+  });
 });

@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
@@ -151,10 +151,15 @@ test('Expect memory donut', async () => {
   const memValue = screen.getByText('256 B');
   expect(memValue).toBeInTheDocument();
 
-  const memTooltip = screen.getByText('25% MEM usage');
+  const tooltipSlots = result.container.querySelectorAll('.tooltip-slot');
+  const memTooltipSlot = tooltipSlots[1]; // Second donut is memory
+  await fireEvent.mouseEnter(memTooltipSlot);
+
+  const memTooltip = await screen.findByText('25% MEM usage');
   expect(memTooltip).toBeInTheDocument();
 
-  const memArc = screen.getAllByTestId('arc')[1];
+  const memArcs = screen.getAllByTestId('arc');
+  const memArc = memArcs[1];
   expect(memArc).toHaveClass('stroke-[var(--pd-state-success)]');
 });
 
@@ -170,9 +175,14 @@ test('Expect CPU donut', async () => {
   const cpuValue = screen.getByText('88.9%');
   expect(cpuValue).toBeInTheDocument();
 
-  const cpuTooltip = screen.getByText('89% vCPUs usage');
+  const tooltipSlots = result.container.querySelectorAll('.tooltip-slot');
+  const cpuTooltipSlot = tooltipSlots[0]; // First donut is CPU
+  await fireEvent.mouseEnter(cpuTooltipSlot);
+
+  const cpuTooltip = await screen.findByText('89% vCPUs usage');
   expect(cpuTooltip).toBeInTheDocument();
 
-  const cpuArc = screen.getAllByTestId('arc')[0];
+  const cpuArcs = screen.getAllByTestId('arc');
+  const cpuArc = cpuArcs[0];
   expect(cpuArc).toHaveClass('stroke-[var(--pd-state-error)]');
 });

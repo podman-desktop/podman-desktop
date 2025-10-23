@@ -16,9 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CheckResult } from '@podman-desktop/api';
+import { injectable } from 'inversify';
 
 import { BaseCheck } from '../base-check';
 
+@injectable()
 export class WinBitCheck extends BaseCheck {
   title = 'Windows 64bit';
 

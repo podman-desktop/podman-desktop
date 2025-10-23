@@ -60,7 +60,8 @@ app.once('before-quit', event => {
     return;
   }
   event.preventDefault();
-  extensionLoader[Symbol.asyncDispose]()
+  extensionLoader
+    .asyncDispose()
     .then(() => {
       console.log('Stopped all extensions');
     })

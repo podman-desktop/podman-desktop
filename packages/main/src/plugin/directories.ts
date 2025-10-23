@@ -25,4 +25,5 @@ export interface Directories {
   getContributionStorageDir(): string;
   getSafeStorageDirectory(): string;
   getDataDirectory(): string;
+  getManagedDefaultsDirectory(): string;
 }

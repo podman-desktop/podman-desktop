@@ -182,11 +182,12 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
     containers = await navigationBar.openContainers();
     await playExpect(containers.heading).toBeVisible();
 
+    const stopStatusArray = [ContainerState.Stopped, ContainerState.Exited];
+    const stopStatusRegex = new RegExp(`${stopStatusArray.join('|')}`);
+
     const containerDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containerDetails.heading).toBeVisible({ timeout: 10_000 });
-    await playExpect
-      .poll(async () => containerDetails.getState(), { timeout: 30_000 })
-      .toContain(ContainerState.Exited);
+    await playExpect.poll(async () => containerDetails.getState(), { timeout: 30_000 }).toMatch(stopStatusRegex);
 
     containers = await navigationBar.openContainers();
     await playExpect(containers.heading).toBeVisible();

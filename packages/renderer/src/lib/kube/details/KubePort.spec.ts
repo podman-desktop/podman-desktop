@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
@@ -194,6 +194,9 @@ describe('port forwarding', () => {
 
     const port80 = queryByTitle('Forward port 80');
     expect(port80).toBeNull();
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
 
     const tooltip = getByText('UDP cannot be forwarded.');
     expect(tooltip).toBeDefined();

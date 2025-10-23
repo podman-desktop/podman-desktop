@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
@@ -122,8 +123,9 @@ test('receive context menu visible event from main', async () => {
   // wait for dispatch method to be called
   await waitFor(() => expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(Event)));
 
-  const eventSent = vi.mocked(dispatchEventMock).mock.calls[0][0];
-  expect((eventSent as Event).type).toBe('tooltip-hide');
+  const tooltipHideCall = vi.mocked(dispatchEventMock).mock.calls.find(call => call[0].type === 'tooltip-hide');
+  expect(tooltipHideCall).toBeDefined();
+  expect(tooltipHideCall![0].type).toBe('tooltip-hide');
 });
 
 test('receive context menu not visible event from main', async () => {
@@ -134,8 +136,9 @@ test('receive context menu not visible event from main', async () => {
   //  wait for dispatch method to be called
   await waitFor(() => expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(Event)));
 
-  const eventSent = vi.mocked(dispatchEventMock).mock.calls[0][0];
-  expect((eventSent as Event).type).toBe('tooltip-show');
+  const tooltipShowCall = vi.mocked(dispatchEventMock).mock.calls.find(call => call[0].type === 'tooltip-show');
+  expect(tooltipShowCall).toBeDefined();
+  expect(tooltipShowCall![0].type).toBe('tooltip-show');
 });
 
 test('opens submenu when a `submenu` menu is opened', async () => {
@@ -255,4 +258,57 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
   router.goto('/pods');
   await tick();
   expect(get(lastPage).name).equals('Dashboard Page');
+});
+
+describe('Table persistence functionality', () => {
+  test('should set tablePersistenceCallbacks store on app initialization', async () => {
+    render(App);
+
+    expect(tablePersistence.storage).toBeDefined();
+    expect(tablePersistence.storage).toHaveProperty('load');
+    expect(tablePersistence.storage).toHaveProperty('save');
+    expect(tablePersistence.storage).toHaveProperty('reset');
+  });
+
+  test('should provide working load callback through store', async () => {
+    vi.mocked(window.loadListConfig).mockResolvedValue([
+      { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
+    ]);
+    render(App);
+
+    // Get the callbacks from the store
+    expect(tablePersistence.storage).toBeDefined();
+
+    // Test the load callback
+    const result = await tablePersistence.storage!.load('test-kind', ['Name', 'Age']);
+
+    expect(vi.mocked(window.loadListConfig)).toHaveBeenCalledWith('test-kind', ['Name', 'Age']);
+    expect(result).toEqual([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+  });
+
+  test('should provide working save callback through store', async () => {
+    vi.mocked(window.saveListConfig).mockResolvedValue(undefined);
+    render(App);
+
+    // Test the save callback
+    const items = [{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }];
+    await tablePersistence.storage!.save('test-kind', items);
+    expect(vi.mocked(window.saveListConfig)).toHaveBeenCalledWith('test-kind', items);
+  });
+
+  test('should provide working reset callback through store', async () => {
+    vi.mocked(window.resetListConfig).mockResolvedValue([
+      { id: 'Name', label: 'Name', enabled: true, originalOrder: 0 },
+    ]);
+
+    render(App);
+
+    expect(tablePersistence.storage).toBeDefined();
+
+    // Test the reset callback
+    const result = await tablePersistence.storage!.reset('test-kind', ['Name', 'Age']);
+
+    expect(vi.mocked(window.resetListConfig)).toHaveBeenCalledWith('test-kind', ['Name', 'Age']);
+    expect(result).toEqual([{ id: 'Name', label: 'Name', enabled: true, originalOrder: 0 }]);
+  });
 });

@@ -315,3 +315,86 @@ describe('extractExtensionDetail', () => {
     expect(extensionDetail?.error?.stack).toBe('line1\nline2');
   });
 });
+
+describe('filters', () => {
+  const aFakeExtension: CatalogExtension = {
+    id: 'idAInstalled',
+    publisherName: 'FooPublisher',
+    shortDescription: 'this is short A. The word bar appears here but not in the title',
+    publisherDisplayName: 'Foo Publisher',
+    extensionName: 'a-extension',
+    displayName: 'A Extension',
+    categories: [],
+    keywords: [],
+    unlisted: false,
+    versions: [
+      {
+        version: '1.0.0A',
+        preview: false,
+        files: [
+          {
+            assetType: 'icon',
+            data: 'iconA',
+          },
+        ],
+        ociUri: 'linkA',
+        lastUpdated: new Date(),
+      },
+    ],
+  };
+
+  const bFakeExtension: CatalogExtension = {
+    id: 'idB',
+    publisherName: 'FooPublisher',
+    shortDescription: 'this is short B',
+    publisherDisplayName: 'Foo Publisher',
+    extensionName: 'b-extension',
+    displayName: 'B Extension',
+    categories: [],
+    keywords: [],
+    unlisted: false,
+    versions: [
+      {
+        version: '1.0.0B',
+        preview: false,
+        files: [
+          {
+            assetType: 'icon',
+            data: 'iconB',
+          },
+        ],
+        ociUri: 'linkB',
+        lastUpdated: new Date(),
+      },
+    ],
+  };
+
+  const combined: CombinedExtensionInfoUI[] = [
+    {
+      id: 'idAInstalled',
+      displayName: 'A installed Extension',
+      description: 'The word bar appears here but not in the title',
+      removable: true,
+      state: 'started',
+    },
+  ] as unknown[] as CombinedExtensionInfoUI[];
+
+  test('filterCatalogExtensions with single word', () => {
+    const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
+      extensionsUtils.extractCatalogExtensions(
+        [aFakeExtension, bFakeExtension],
+        featuredExtensions,
+        installedExtensions,
+      ),
+      'bar',
+    );
+    expect(filteredCatalogExtensions.length).toBe(1);
+    expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
+  });
+
+  test('filterInstalledExtensions with single word', () => {
+    const filteredInstalledExtensions = extensionsUtils.filterInstalledExtensions(combined, 'bar');
+    expect(filteredInstalledExtensions.length).toBe(1);
+    expect(filteredInstalledExtensions[0].id).toBe('idAInstalled');
+  });
+});

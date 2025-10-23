@@ -283,6 +283,13 @@ const row = new TableRow<ImageInfoUI>({
     return image.children ?? [];
   },
 });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(item: ImageInfoUI): string {
+  return `${item.engineId}:${item.id}`;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="images">
@@ -347,6 +354,8 @@ const row = new TableRow<ImageInfoUI>({
         columns={columns}
         row={row}
         defaultSortColumn="Age"
+        key={key}
+        enableLayoutConfiguration={true}
         on:update={(): ImageInfoUI[] => (images = images)}>
       </Table>
     {/if}

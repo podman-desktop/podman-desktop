@@ -61,6 +61,7 @@ import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
+import type { IDisposable } from '/@api/disposable';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 import type { DocumentationInfo } from '/@api/documentation-info';
 import type { ExploreFeature } from '/@api/explore-feature';
@@ -127,7 +128,6 @@ import type {
 } from '../../main/src/plugin/kubernetes/kube-generator-registry';
 import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
-import type { IDisposable } from '../../main/src/plugin/types/disposable';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;

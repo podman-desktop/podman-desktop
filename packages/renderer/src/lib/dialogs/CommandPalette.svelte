@@ -2,20 +2,32 @@
 import { faChevronRight, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-import { onDestroy, onMount, tick } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { onMount, tick } from 'svelte';
+import { router } from 'tinro';
 
+import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
+import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { imagesInfos } from '/@/stores/images';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import { podsInfos } from '/@/stores/pods';
+import { volumeListInfos } from '/@/stores/volumes';
 import type { CommandInfo } from '/@api/command-info';
-import type { DocumentationInfo } from '/@api/documentation-info';
+import type { ContainerInfo } from '/@api/container-info';
+import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
+import type { ImageInfo } from '/@api/image-info';
+import { NavigationPage } from '/@api/navigation-page';
+import type { PodInfo } from '/@api/pod-info';
+import type { VolumeInfo } from '/@api/volume-info';
 
-import type { ContextUI } from '../context/context';
 import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
 import EnterIcon from '../images/EnterIcon.svelte';
 import NotFoundIcon from '../images/NotFoundIcon.svelte';
 import { isPropertyValidInContext } from '../preferences/Util';
+import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
+import TextHighLight from './TextHighLight.svelte';
 
 const ENTER_KEY = 'Enter';
 const ESCAPE_KEY = 'Escape';
@@ -33,6 +45,8 @@ interface SearchOption {
   text: string;
   shortCut?: string[];
 }
+
+type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
 
 let { display = false, onclose }: Props = $props();
 
@@ -60,14 +74,21 @@ let searchOptions: SearchOption[] = $derived([
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
 
-let commandInfoItems: CommandInfo[] = $state([]);
 let documentationItems: DocumentationInfo[] = $state([]);
-let globalContext: ContextUI;
+let containerInfos: ContainerInfo[] = $derived($containersInfos);
+let podInfos: PodInfo[] = $derived($podsInfos);
+let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volumes).flat());
+let imageInfos: ImageInfo[] = $derived($imagesInfos);
+let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
+
+let goToItems: GoToInfo[] = $derived(
+  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
+);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
-  commandInfoItems
-    .filter(property => isPropertyValidInContext(property.enablement, globalContext))
+  $commandsInfos
+    .filter(property => isPropertyValidInContext(property.enablement, $context))
     .filter(item => (inputValue ? item.title?.toLowerCase().includes(inputValue.toLowerCase()) : true)),
 );
 
@@ -82,6 +103,15 @@ let filteredDocumentationInfoItems: DocumentationInfo[] = $derived(
   ),
 );
 
+let filteredGoToItems = $derived(
+  goToItems.filter(item =>
+    inputValue
+      ? getGoToDisplayText(item).toLowerCase().includes(inputValue.toLowerCase()) ||
+        item.type.toLowerCase().includes(inputValue.toLowerCase())
+      : true,
+  ),
+);
+
 let filteredItems = $derived.by(() => {
   if (searchOptionsSelectedIndex === 1) {
     // Commands mode
@@ -91,32 +121,17 @@ let filteredItems = $derived.by(() => {
     return filteredDocumentationInfoItems;
   } else if (searchOptionsSelectedIndex === 3) {
     // Go to mode (could be different logic later)
-    return filteredCommandInfoItems;
+    return filteredGoToItems;
   } else {
     // All mode - combine both
-    return [...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
+    return [...filteredGoToItems, ...filteredCommandInfoItems, ...filteredDocumentationInfoItems];
   }
 });
-let contextsUnsubscribe: Unsubscriber;
 
 onMount(async () => {
   const platform = await window.getOsPlatform();
   isMac = platform === 'darwin';
   documentationItems = await window.getDocumentationItems();
-});
-
-onMount(() => {
-  contextsUnsubscribe = context.subscribe(value => {
-    globalContext = value;
-  });
-  // subscribe to the commands
-  return commandsInfos.subscribe(infos => {
-    commandInfoItems = infos;
-  });
-});
-
-onDestroy(() => {
-  contextsUnsubscribe?.();
 });
 
 // Focus the input when the command palette becomes visible
@@ -228,25 +243,53 @@ async function executeAction(index: number): Promise<void> {
   const item = filteredItems[index];
   if (!item) return;
 
-  // Check if it's a documentation item by checking for 'category' property
-  const isDocItem = 'category' in item;
-
-  if (isDocItem) {
+  if (isDocItem(item)) {
     // Documentation item
-    const docItem = item as DocumentationInfo;
-    if (docItem.url) {
+    if (item.url) {
       try {
-        await window.openExternal(docItem.url);
+        await window.openExternal(item.url);
       } catch (error) {
         console.error('Error opening documentation URL', error);
       }
     }
+  } else if (isGoToItem(item)) {
+    // Go to item
+    if (item.type === 'Image') {
+      const repoTag = item.RepoTags?.[0] ?? item.Id;
+      handleNavigation({
+        page: NavigationPage.IMAGE,
+        parameters: {
+          id: item.Id,
+          engineId: item.engineId,
+          tag: repoTag,
+        },
+      });
+    } else if (item.type === 'Container') {
+      handleNavigation({
+        page: NavigationPage.CONTAINER_SUMMARY,
+        parameters: { id: item.Id },
+      });
+    } else if (item.type === 'Pod') {
+      handleNavigation({
+        page: NavigationPage.PODMAN_POD_SUMMARY,
+        parameters: {
+          name: item.Name,
+          engineId: item.engineId,
+        },
+      });
+    } else if (item.type === 'Volume') {
+      handleNavigation({
+        page: NavigationPage.VOLUME,
+        parameters: { name: item.Name, engineId: item.engineId },
+      });
+    } else if (item.type === 'Navigation') {
+      router.goto(item.link);
+    }
   } else {
     // Command item
-    const commandItem = item as CommandInfo;
-    if (commandItem.id) {
+    if (item.id) {
       try {
-        await window.executeCommand(commandItem.id);
+        await window.executeCommand(item.id);
       } catch (error) {
         console.error('error executing command', error);
       }
@@ -292,6 +335,27 @@ async function onAction(): Promise<void> {
     .catch((error: unknown) => {
       console.error('Unable to focus input box', error);
     });
+}
+
+function isGoToItem(item: CommandPaletteItem): item is GoToInfo {
+  return 'type' in item;
+}
+
+function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
+  return 'category' in item;
+}
+
+function getTextToHighlight(item: CommandPaletteItem): string {
+  if (isDocItem(item)) {
+    return `${item.category}: ${item.name}`;
+  } else if (isGoToItem(item)) {
+    if (item.type === 'Navigation') {
+      return `${item.name}`;
+    }
+    return `${item.type}: ${getGoToDisplayText(item)}`;
+  } else {
+    return item.title ?? '';
+  }
 }
 </script>
 
@@ -344,8 +408,8 @@ async function onAction(): Promise<void> {
         </div>
         <ul class="max-h-[50vh] overflow-y-auto flex flex-col mt-1">
           {#each filteredItems as item, i (i)}
-            {@const isDocItem = 'category' in item}
-            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={item.id}>
+            {@const goToItem = isGoToItem(item)}
+            <li class="flex w-full flex-row" bind:this={scrollElements[i]} aria-label={goToItem ? getGoToDisplayText(item) : (item.id)}>
               <button
                 onclick={(): Promise<void> => clickOnItem(i)}
                 class="text-[var(--pd-dropdown-item-text)] text-left relative w-full rounded-sm {i === selectedFilteredIndex
@@ -354,11 +418,7 @@ async function onAction(): Promise<void> {
                 <div class="flex flex-col w-full">
                   <div class="flex flex-row w-full max-w-[700px] truncate">
                     <div class="text-base py-[2pt]">
-                      {#if isDocItem}
-                        {(item as DocumentationInfo).category}: {(item as DocumentationInfo).name}
-                      {:else}
-                        {(item as CommandInfo).title}
-                      {/if}
+                      <TextHighLight text={getTextToHighlight(item)} query={inputValue ?? ''} />
                     </div>
                   </div>
                 </div>

@@ -18,10 +18,12 @@
 
 import type extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
+import { injectable } from 'inversify';
 
 import { WslHelper } from '../../helpers/wsl-helper';
 import { BaseCheck } from '../base-check';
 
+@injectable()
 export class WSLVersionCheck extends BaseCheck {
   title = 'WSL Version';
 

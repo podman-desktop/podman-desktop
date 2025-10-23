@@ -19,6 +19,17 @@
 import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
+import { HyperVCheck } from '/@/checks/windows/hyperv-check';
+import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyperv-podman-version-check';
+import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
+import { WinBitCheck } from '/@/checks/windows/win-bit-check';
+import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
+import { WinVersionCheck } from '/@/checks/windows/win-version-check';
+import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
+import { WSL2Check } from '/@/checks/windows/wsl2-check';
+import { PodmanInstall } from '/@/installer/podman-install';
+import { WinPlatform } from '/@/platforms/win-platform';
+
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
 
 export class InversifyBinding {
@@ -37,6 +48,17 @@ export class InversifyBinding {
 
     this.#inversifyContainer.bind(ExtensionContextSymbol).toConstantValue(this.#extensionContext);
     this.#inversifyContainer.bind(TelemetryLoggerSymbol).toConstantValue(this.#telemetryLogger);
+    this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
+
+    this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WinMemoryCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(HyperVPodmanVersionCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(HyperVCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(VirtualMachinePlatformCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
 
     return this.#inversifyContainer;
   }

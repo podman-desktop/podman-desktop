@@ -32,6 +32,7 @@ import {
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { IAsyncDisposable } from '/@api/async-disposable.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
@@ -117,7 +118,7 @@ export interface AnalyzedExtensionWithApi extends AnalyzedExtension {
  * Handle the loading of an extension
  */
 @injectable()
-export class ExtensionLoader implements AsyncDisposable {
+export class ExtensionLoader implements IAsyncDisposable {
   private moduleLoader: ModuleLoader;
 
   protected activatedExtensions = new Map<string, ActivatedExtension>();
@@ -224,7 +225,7 @@ export class ExtensionLoader implements AsyncDisposable {
   }
 
   @preDestroy()
-  async [Symbol.asyncDispose](): Promise<void> {
+  async asyncDispose(): Promise<void> {
     await this.stopAllExtensions();
 
     // clear maps
@@ -894,6 +895,15 @@ export class ExtensionLoader implements AsyncDisposable {
       },
       onDidRegisterContainerConnection: (listener, thisArg, disposables) => {
         return providerRegistry.onDidRegisterContainerConnection(listener, thisArg, disposables);
+      },
+      onDidSetConnectionFactory: (listener, thisArg, disposables) => {
+        return providerRegistry.onDidSetConnectionFactory(listener, thisArg, disposables);
+      },
+      onDidUnsetConnectionFactory: (listener, thisArg, disposables) => {
+        return providerRegistry.onDidUnsetConnectionFactory(listener, thisArg, disposables);
+      },
+      getConnectionFactories: () => {
+        return providerRegistry.getConnectionFactories();
       },
       getContainerConnections: () => {
         return providerRegistry.getContainerConnections();

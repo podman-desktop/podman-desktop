@@ -20,8 +20,18 @@ import fs from 'node:fs';
 import { arch } from 'node:os';
 import path from 'node:path';
 
-import type { ExtensionContext, InstallCheck, RunError, TelemetryLogger } from '@podman-desktop/api';
-import { process as processAPI, ProgressLocation, window } from '@podman-desktop/api';
+import {
+  ExtensionContext,
+  InstallCheck,
+  process as processAPI,
+  ProgressLocation,
+  RunError,
+  TelemetryLogger,
+  window,
+} from '@podman-desktop/api';
+import { inject, injectable } from 'inversify';
+
+import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { OrCheck, SequenceCheck } from '../checks/base-check';
 import { HyperVCheck } from '../checks/windows/hyperv-check';
@@ -35,10 +45,13 @@ import podman5Json from '../podman5.json';
 import { getAssetsFolder } from '../utils/util';
 import { BaseInstaller } from './base-installer';
 
+@injectable()
 export class WinInstaller extends BaseInstaller {
   constructor(
-    private extensionContext: ExtensionContext,
-    private telemetryLogger: TelemetryLogger,
+    @inject(ExtensionContextSymbol)
+    readonly extensionContext: ExtensionContext,
+    @inject(TelemetryLoggerSymbol)
+    readonly telemetryLogger: TelemetryLogger,
   ) {
     super();
   }
