@@ -46,7 +46,7 @@ export enum PodmanKubePlayOptions {
   CreateYamlFileFromScratch,
 }
 
-export interface PlayFromSratch {
+export interface PlayFromScratch {
   podmanKubePlayOption: PodmanKubePlayOptions.CreateYamlFileFromScratch;
   jsonResourceDefinition: string;
 }
@@ -56,7 +56,7 @@ export interface PlayFromYaml {
   pathToYaml: string;
 }
 
-export type PlayYamlOptions = PlayFromSratch | PlayFromYaml;
+export type PlayYamlOptions = PlayFromScratch | PlayFromYaml;
 
 export enum KubernetesResources {
   Nodes = 'Nodes',

@@ -126,7 +126,7 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
     await playExpect
-      .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME, 40_000), { timeout: 0 })
+      .poll(async () => await imagesPage.waitForImageExists(LOCAL_IMAGE_NAME), { timeout: 40_000 })
       .toBeTruthy();
     await playExpect
       .poll(async () => await imagesPage.getCurrentStatusOfImage(LOCAL_IMAGE_NAME), { timeout: 15_000 })
