@@ -68,8 +68,6 @@ export class InversifyBinding {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
-    } else {
-      this.#inversifyContainer.bind(Installer).toConstantValue(undefined);
     }
 
     return this.#inversifyContainer;

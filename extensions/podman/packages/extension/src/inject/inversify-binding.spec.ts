@@ -93,8 +93,9 @@ describe('inversifyBinding', () => {
 
     const container = await inversifyBinding.init();
 
-    const value = container.get(Installer);
-    expect(value).toBeUndefined();
+    expect(() => {
+      container.get(Installer);
+    }).toThrowError('No bindings found for service: "Symbol(Installer)"');
 
     expect(WinInstaller).not.toHaveBeenCalled();
     expect(MacOSInstaller).not.toHaveBeenCalled();
