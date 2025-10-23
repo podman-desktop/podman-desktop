@@ -93,7 +93,9 @@ beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'matchMedia', {
     value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     }),
   });
   Object.defineProperty(window, 'openDialog', { value: vi.fn().mockResolvedValue(['Containerfile']) });
