@@ -165,7 +165,7 @@
     "eslint-plugin-sonarjs": "^3.0.5",
     "eslint-plugin-unicorn": "^61.0.2",
     "fzstd": "^0.1.1",
-    "get-tsconfig": "^4.12.0",
+    "get-tsconfig": "^4.13.0",
     "globals": "^16.4.0",
     "husky": "^9.1.7",
     "inversify": "^7.10.3",
