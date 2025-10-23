@@ -46,7 +46,7 @@ const POD_BUILD_YAML_PATH: string = path.resolve(
   'podman-kube-play-build-test.yaml',
 );
 
-test.describe.serial('Podman Kube Play - Create Pod from Scratch', { tag: '@smoke' }, () => {
+test.describe.serial('Podman Kube Play Yaml - Create Pod from Scratch', { tag: '@smoke' }, () => {
   test.beforeAll(async ({ runner, page, welcomePage }) => {
     runner.setVideoAndTraceName('podman-kube-play-from-scratch-smoke');
     await welcomePage.handleWelcomePage(true);
