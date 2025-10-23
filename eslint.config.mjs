@@ -35,6 +35,7 @@ import redundantUndefined from 'eslint-plugin-redundant-undefined';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import fileProgress from 'eslint-plugin-file-progress';
 import vitest from '@vitest/eslint-plugin';
+import svelteConfig from './svelte.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -259,6 +260,7 @@ export default [
       sourceType: 'script',
       parserOptions: {
         parser: tsParser,
+        svelteConfig,
       },
     },
 
