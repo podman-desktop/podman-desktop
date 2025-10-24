@@ -17,11 +17,19 @@
  ********************************************************************/
 
 import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
+import { env } from '@podman-desktop/api';
 import type { Container as InversifyContainer } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { Installer } from '/@/installer/installer';
+import { MacOSInstaller } from '/@/installer/mac-os-installer';
+import { WinInstaller } from '/@/installer/win-installer';
+
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
+
+vi.mock(import('/@/installer/win-installer'));
+vi.mock(import('/@/installer/mac-os-installer'));
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -42,6 +50,10 @@ describe('inversifyBinding', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     inversifyBinding = new InversifyBinding(extensionContextMock, telemetryLoggerMock);
+
+    vi.mocked(env).isWindows = false;
+    vi.mocked(env).isMac = false;
+    vi.mocked(env).isLinux = false;
   });
 
   test('should initialize bindings correctly', async () => {
@@ -50,5 +62,42 @@ describe('inversifyBinding', () => {
 
     expect(container.get(ExtensionContextSymbol)).toBe(extensionContextMock);
     expect(container.get(TelemetryLoggerSymbol)).toBe(telemetryLoggerMock);
+  });
+
+  test('InversifyBinding#init should bind WinInstaller for Installer on windows', async () => {
+    vi.mocked(env).isWindows = true;
+
+    const container = await inversifyBinding.init();
+
+    const value = container.get(Installer);
+    expect(value).not.toBeUndefined();
+
+    expect(WinInstaller).toHaveBeenCalledOnce();
+    expect(MacOSInstaller).not.toHaveBeenCalled();
+  });
+
+  test('InversifyBinding#init should bind MacOSInstaller for Installer on macos', async () => {
+    vi.mocked(env).isMac = true;
+
+    const container = await inversifyBinding.init();
+
+    const value = container.get(Installer);
+    expect(value).not.toBeUndefined();
+
+    expect(WinInstaller).not.toHaveBeenCalled();
+    expect(MacOSInstaller).toHaveBeenCalled();
+  });
+
+  test('InversifyBinding#init should bind undefined on Installer on linux', async () => {
+    vi.mocked(env).isLinux = true;
+
+    const container = await inversifyBinding.init();
+
+    expect(() => {
+      container.get(Installer);
+    }).toThrowError('No bindings found for service: "Symbol(Installer)"');
+
+    expect(WinInstaller).not.toHaveBeenCalled();
+    expect(MacOSInstaller).not.toHaveBeenCalled();
   });
 });
