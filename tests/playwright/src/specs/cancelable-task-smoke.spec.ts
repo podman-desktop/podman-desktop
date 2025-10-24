@@ -39,7 +39,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Cancelable task verification', { tag: '@smoke' }, () => {
+test.describe.serial('Cancelable task verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
   test('Enable all experimental features', async ({ navigationBar }) => {
     const settingsBar = await navigationBar.openSettings();
 

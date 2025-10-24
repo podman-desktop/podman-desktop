@@ -97,7 +97,7 @@ test.afterAll(async ({ page, runner }) => {
   }
 });
 
-test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' }, () => {
+test.describe.serial('Verification of pod creation workflow', { tag: ['@smoke', '@windows_sanity'] }, () => {
   test('Pulling images', async ({ navigationBar }) => {
     test.setTimeout(180_000);
 

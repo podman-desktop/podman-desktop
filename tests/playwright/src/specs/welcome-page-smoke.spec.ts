@@ -28,7 +28,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Basic e2e verification of podman desktop start', { tag: '@smoke' }, () => {
+test.describe.serial('Basic e2e verification of podman desktop start', { tag: ['@smoke', '@windows_sanity'] }, () => {
   test.describe
     .serial('Welcome page handling', () => {
       test('Check the Welcome page is displayed', async ({ welcomePage }) => {

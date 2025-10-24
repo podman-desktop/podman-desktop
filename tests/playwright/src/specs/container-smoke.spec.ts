@@ -72,7 +72,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Verification of container creation workflow', { tag: '@smoke' }, () => {
+test.describe.serial('Verification of container creation workflow', { tag: ['@smoke', '@windows_sanity'] }, () => {
   test.describe.configure({ retries: 2 });
 
   test(`Pulling of '${imageToPull}:${imageTag}' image`, async ({ navigationBar }) => {

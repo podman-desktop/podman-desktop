@@ -54,7 +54,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
+test.describe.serial('Volume workflow verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
   test('Create new Volume', async ({ navigationBar }) => {
     let volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();

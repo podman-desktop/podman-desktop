@@ -64,7 +64,7 @@ for (const {
   extensionName,
   extensionFullName,
 } of extensionsInstallationSmokeList) {
-  test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
+  test.describe.serial(`Extension installation for ${extensionName}`, { tag: ['@smoke', '@windows_sanity'] }, () => {
     test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
 
     test.beforeAll(async () => {
