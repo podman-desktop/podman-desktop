@@ -17,6 +17,12 @@
  ***********************************************************************/
 
 /** @type {import('@sveltejs/kit').Config} */
-const config = {};
+const config = {
+  compilerOptions: {
+    experimental: {
+      async: true,
+    },
+  },
+};
 
 export default config;
