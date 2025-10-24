@@ -28,7 +28,9 @@ import type { ProviderInfo } from '/@api/provider-info.js';
 import * as util from '../../util.js';
 import type { ApiSenderType } from '../api.js';
 import { ConfigurationRegistry } from '../configuration-registry.js';
+import type { DefaultConfiguration } from '../default-configuration.js';
 import type { Directories } from '../directories.js';
+import type { LockedConfiguration } from '../locked-configuration.js';
 import type { ProviderRegistry } from '../provider-registry.js';
 import { DockerCompatibility } from './docker-compatibility.js';
 
@@ -78,7 +80,12 @@ vi.mock('../../util', () => {
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories);
+  configurationRegistry = new ConfigurationRegistry(
+    {} as ApiSenderType,
+    {} as Directories,
+    {} as DefaultConfiguration,
+    {} as LockedConfiguration,
+  );
   configurationRegistry.registerConfigurations = vi.fn();
   configurationRegistry.deregisterConfigurations = vi.fn();
 });
