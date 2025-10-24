@@ -56,22 +56,24 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect non-podman unused network to have delete option but not edit', async () => {
+test('Expect non-podman unused network to have delete option and disabled edit', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(NetworkActions, { network: network1 });
 
   expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Update Network')).not.toBeInTheDocument();
+  expect(screen.queryByTitle('Update Network')).toBeInTheDocument();
+  expect(screen.queryByTitle('Update Network')).toBeDisabled();
 
   const deleteButton = screen.getByTitle('Delete Network');
   await fireEvent.click(deleteButton);
   expect(window.removeNetwork).toHaveBeenCalledWith(network1.engineId, network1.id);
 });
 
-test('Expect podman used network to have edit option but not delete', async () => {
+test('Expect podman used network to have edit option and disabled delete', async () => {
   render(NetworkActions, { network: network2 });
 
-  expect(screen.queryByTitle('Delete Network')).not.toBeInTheDocument();
+  expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
+  expect(screen.queryByTitle('Delete Network')).toBeDisabled();
   expect(screen.queryByTitle('Update Network')).toBeInTheDocument();
 
   const updateButton = screen.getByTitle('Update Network');

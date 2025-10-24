@@ -178,7 +178,7 @@ test('Expect to have edit action for Podman networks', async () => {
 
   const podmanNetworkRow = screen.getByRole('row', { name: 'Network 2' });
   expect(podmanNetworkRow).toBeInTheDocument();
-  expect(podmanNetworkRow).toContain(editButtons[0]);
+  expect(podmanNetworkRow).toContain(editButtons[1]);
 
   expect(editButtons[0]).toBeDisabled();
 });
