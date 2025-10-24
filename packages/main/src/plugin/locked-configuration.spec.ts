@@ -20,8 +20,8 @@ import { promises as fsPromises } from 'node:fs';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { LockedConfiguration } from './locked-configuration.js';
 import type { Directories } from './directories.js';
+import { LockedConfiguration } from './locked-configuration.js';
 
 // mock the fs module
 vi.mock('node:fs');
