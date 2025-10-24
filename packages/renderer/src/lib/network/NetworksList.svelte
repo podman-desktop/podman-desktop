@@ -8,6 +8,7 @@ import { providerInfos } from '/@/stores/providers';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
+import NetworkColumnActions from './columns/NetworkColumnActions.svelte';
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
 import NetworkColumnEnvironment from './columns/NetworkColumnEnvironment.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
@@ -87,7 +88,13 @@ let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
-const columns = [idColumn, nameColumn, envColumn, driverColumn];
+const columns = [
+  idColumn,
+  nameColumn,
+  envColumn,
+  driverColumn,
+  new TableColumn<NetworkInfoUI>('Actions', { align: 'right', renderer: NetworkColumnActions, overflow: true }),
+];
 
 const row = new TableRow<NetworkInfoUI>({
   selectable: (network): boolean => network.status === 'UNUSED',
